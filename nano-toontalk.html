@@ -53,6 +53,11 @@
            background: rgba(255,255,255,.07); border: 1px solid var(--edge);
            border-radius: 8px; padding: 6px 11px; cursor: pointer; }
   button:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+  /* the generic hover above out-specifies the colour classes, which turned the
+     coloured buttons grey on hover -- restore their colour and just brighten */
+  button.go:hover:not(:disabled) { background: var(--go); filter: brightness(1.1); }
+  button.think:hover:not(:disabled) { background: var(--think); filter: brightness(1.1); }
+  button.primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.1); }
   button:disabled { opacity: .35; cursor: default; }
   button.think { background: var(--think); border-color: var(--think); color: #06212e; font-weight: 650; }
   button.go { background: var(--go); border-color: var(--go); color: #06301e; font-weight: 650; }
@@ -244,7 +249,10 @@ const OP_STYLE = {
   '/': { ink: '#0e6b50', edge: '#14957c', face: '#d9f0e5', shell: 0xcdead9, glyph: '÷' },
   '^': { ink: '#8a5410', edge: '#c08a1a', face: '#f7ecd2', shell: 0xf0e0b8, glyph: '^' },
 };
-const MAX_DIGITS = 60;      // refuse results too big to be meaningful (or drawable)
+// Numbers are unbounded BigInts as in ToonTalk; the only limit is a guard so a
+// runaway `^` cannot lock the browser building a million-digit result. The
+// display handles any length, so this is generous rather than tight.
+const MAX_DIGITS = 20000;
 
 function bgcd(a, b) {
   if (a < 0n) a = -a;
@@ -272,14 +280,21 @@ function applyOp(a, op, b) {
   else if (op === '^') {
     if (b.d !== 1n) return null;                                // integer powers only
     let e = b.n;
-    if (e > 400n || e < -400n) return null;
     const neg = e < 0n;
     if (neg) e = -e;
+    // size the result *before* computing it, so we never start a calculation
+    // that would hang
+    const widest = Math.max(String(a.n < 0n ? -a.n : a.n).length, String(a.d).length);
+    if (e > 1000000n || Number(e) * widest > MAX_DIGITS) return null;
     r = neg ? rat(a.d ** e, a.n ** e) : rat(a.n ** e, a.d ** e);
   }
   return tooBig(r) ? null : r;
 }
 const ratText = (r) => !r ? '?' : (r.d === 1n ? String(r.n) : `${r.n}/${r.d}`);
+// for panels and hints, where a 20000-digit string would be useless
+const shortNum = (s) => s.length <= 26 ? s : `${s.slice(0, 11)}…${s.slice(-11)} (${s.length} digits)`;
+const ratShort = (r) => !r ? '?' : (r.d === 1n ? shortNum(String(r.n))
+                                              : `${shortNum(String(r.n))}/${shortNum(String(r.d))}`);
 
 // --- numbers --------------------------------------------------------------
 function fitFont(c, text, maxW, startPx) {
@@ -290,37 +305,48 @@ function fitFont(c, text, maxW, startPx) {
     px = Math.floor(px * 0.9);
   }
 }
-// Numbers draw at a uniform size while they fit. Once they don't, they fall
-// back to ToonTalk's trick: digits grow left to right on a shared baseline, so
-// the least significant end stays readable however many digits there are and
-// the leading ones simply shrink away to nothing.
-const WEDGE_RATIO = 0.86;
+// Numbers draw at a uniform size while they fit. Once they don't, they render
+// the way ToonTalk does: both ends stay full size and legible, the digits taper
+// down towards the middle, and an ellipsis stands for everything omitted. That
+// keeps the most *and* least significant ends readable at any length.
+const FULL_DIGITS = 2;                    // full-size digits at each end
+const TAPER = [0.70, 0.45, 0.26];         // shrinking run inwards from those
 function drawNum(c, s, cx, cyMid, maxW, maxH) {
   const cap = Math.min(176, Math.floor(maxH * 0.98));
-  const uni = fitFont(c, s, maxW, cap);
-  if (uni >= 56 || s.length <= 3) {
+  const shown = 2 * (FULL_DIGITS + TAPER.length);
+  if (s.length <= shown) {
+    const uni = fitFont(c, s, maxW, cap);
     c.font = `bold ${uni}px Georgia, serif`;
     c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText(s, cx, cyMid);
     return c.measureText(s).width;
   }
+  // sizes as multiples of the full size, left half then mirrored right half
+  const half = [...Array(FULL_DIGITS).fill(1), ...TAPER];
+  const weights = [...half, ...half.slice().reverse()];
   c.font = 'bold 100px Georgia, serif';
-  const unit = c.measureText('8').width / 100;         // advance per px of size
-  let S = 0;
-  for (let i = 0; i < s.length; i++) S += Math.pow(WEDGE_RATIO, s.length - 1 - i);
-  const smax = Math.min(cap, maxW / (unit * S));
-  const total = unit * smax * S;
+  const unit = c.measureText('8').width / 100;          // advance per px of size
+  const ellipsisW = 1.15;                               // in units of one full digit
+  const sum = weights.reduce((a, b) => a + b, 0) + ellipsisW;
+  const F = Math.min(cap, maxW / (unit * sum));
+  const total = unit * F * sum;
+
+  const head = s.slice(0, half.length);
+  const tail = s.slice(-half.length);
   let x = cx - total / 2;
-  const baseline = cyMid + smax * 0.35;
+  const baseline = cyMid + F * 0.35;
   c.textAlign = 'left'; c.textBaseline = 'alphabetic';
-  for (let i = 0; i < s.length; i++) {
-    const size = smax * Math.pow(WEDGE_RATIO, s.length - 1 - i);
-    if (size >= 0.35) {                                 // below this nothing renders anyway
-      c.font = `bold ${size}px Georgia, serif`;
-      c.fillText(s[i], x, baseline);
-    }
+  const put = (ch, mult) => {
+    const size = F * mult;
+    c.font = `bold ${size}px Georgia, serif`;
+    c.fillText(ch, x, baseline);
     x += unit * size;
-  }
+  };
+  head.split('').forEach((ch, i) => put(ch, half[i]));
+  c.font = `bold ${F * 0.5}px Georgia, serif`;
+  c.fillText('…', x, baseline);
+  x += unit * F * ellipsisW;
+  tail.split('').forEach((ch, i) => put(ch, half[half.length - 1 - i]));
   c.textAlign = 'center'; c.textBaseline = 'middle';
   return total;
 }
@@ -503,7 +529,7 @@ function condText(c) {
   if (!c) return 'an empty hole';
   if (c.kind === 'wild') return 'anything';
   if (c.kind === 'number') {
-    return `the number ${ratText(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
+    return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
   }
   return `a box of ${c.holes.map(condText).join(' and ')}`;
 }
@@ -552,7 +578,7 @@ const STATION_DEFS = [
   { id: 'p1',      label: 'pillar 1',              kind: 'pillar' },
   { id: 'p2',      label: 'pillar 2',              kind: 'pillar' },
   { id: 'p3',      label: 'pillar 3',              kind: 'pillar' },
-  { id: 'train',   label: 'the thinking pad',      kind: 'train' },
+  { id: 'train',   label: 'the blue pillar',       kind: 'train' },
   { id: 'copier',  label: 'the copier',            kind: 'copier' },
 ].map((d, i, all) => ({ ...d, x: (i - (all.length - 1) / 2) * ROW_STEP }));
 const stations = {};
@@ -613,16 +639,38 @@ function makeCopier(height, st) {
   return g;
 }
 
-function refillStack(st) {
+const stackY = (st, c, i) => st.plinth + c.userData.rest + i * st.pitch;
+
+// New stock joins at the *bottom*; with `animate` the whole column then rises
+// one place, so taking the top one reads as the stack restoring itself rather
+// than everything blinking into new positions.
+function refillStack(st, animate = false) {
+  const added = [];
   while (st.cubes.length < st.stackN) {
     const t = st.id === 'numbers' ? makeNumber(rat(1)) : makeBox();
     scene.add(t);
     setPick(t, { kind: 'station', id: st.id });
     st.cubes.unshift(t);
+    added.push(t);
+    t.position.set(st.point.x, stackY(st, t, 0) - st.pitch, st.point.z);
+    t.quaternion.identity(); t.scale.setScalar(1);
   }
-  st.cubes.forEach((c, i) => {
-    c.position.set(st.point.x, st.plinth + c.userData.rest + i * st.pitch, st.point.z);
-    c.quaternion.identity(); c.scale.setScalar(1);
+  if (!animate) {
+    st.cubes.forEach((c, i) => {
+      c.position.set(st.point.x, stackY(st, c, i), st.point.z);
+      c.quaternion.identity(); c.scale.setScalar(1);
+    });
+    return;
+  }
+  const from = st.cubes.map(c => c.position.y);
+  const to = st.cubes.map((c, i) => stackY(st, c, i));
+  enqueueNext({
+    dur: 0.38,
+    update(t) {
+      const e = ease(t);
+      st.cubes.forEach((c, i) => { c.position.y = lerp(from[i], to[i], e); });
+    },
+    end() { st.cubes.forEach((c, i) => { c.position.y = to[i]; }); },
   });
 }
 
@@ -791,7 +839,7 @@ function actionPick(stationId, path) {
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.8));
   enqueue(doNow(() => {
     let obj;
-    if (st.kind === 'stack' && !path.length) { obj = st.cubes.pop(); refillStack(st); }
+    if (st.kind === 'stack' && !path.length) { obj = st.cubes.pop(); refillStack(st, true); }
     else { obj = thingAt(stationId, path); detach(obj); }
     if (!obj) {
       // Replaying into a world that no longer matches: stop rather than limp on.
@@ -867,7 +915,11 @@ function actionPlace(stationId, path) {
       held = copy;
       valueAtPickup = copy.userData.value ?? null;
       opAtPickup = copy.userData.op ?? '+';
+      holesAtPickup = copy.userData.holes?.length ?? 0;
       enqueueNext(graspSettle(copy));
+      // the original stays on the machine and the copy leaves in the claw --
+      // say so, or it looks like nothing happened
+      if (mode !== 'replay') say('Copied — the original stays, the robot has the copy.');
       refreshUI();
     }));
     enqueue(armTo(POSE.carry, JAW_CLOSED, 0.6));
@@ -1314,7 +1366,7 @@ function resetWorld() {
 function runProgram() {
   if (!program.length) return say('The robot has not been trained yet.');
   const given = stations.train.occupant;
-  if (!given) return say('Put something on the thinking pad for it to work on.');
+  if (!given) return say('Put something on the blue pillar for it to work on.');
   if (!matches(condition, specOf(given))) {
     flagMismatch(mismatchPaths(condition, specOf(given)));
     return say(`It only runs when given ${condText(condition)} — see the red parts.`);
@@ -1391,14 +1443,14 @@ function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList
 // 'train' is deliberately described as "what it was given" -- at run time it
 // resolves to whatever is on the pad then, which is the whole point.
 function labelFor(stationId, path) {
-  const base = stationId === 'train' ? 'what it was given' : stations[stationId].label;
-  return base + (path.length ? ` · hole ${path.map(i => i + 1).join('.')}` : '');
+  return stations[stationId].label
+    + (path.length ? ` · hole ${path.map(i => i + 1).join('.')}` : '');
 }
 function describe(s) {
   return s.type === 'pick' ? `pick up from ${labelFor(s.station, s.path)}`
        : s.type === 'place' ? `put it on ${labelFor(s.station, s.path)}`
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
-       : `make it ${ratText(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
+       : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
 function renderProgram() {
   const ul = $('steps');
@@ -1432,8 +1484,8 @@ function refreshUI() {
   if (held) {
     const isNum = held.userData.kind === 'number';
     $('heldVal').textContent = isNum
-      ? ratText(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
-      : 'a box';
+      ? ratShort(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
+      : `a box of ${held.userData.holes.length}`;
     $('heldTip').textContent = isNum ? 'type digits, or + − * / ^ to set what it does'
                                      : 'click a pillar or a hole';
   }
@@ -1442,9 +1494,9 @@ function refreshUI() {
     mode === 'replay' ? 'Watching it repeat what it learned…' :
     training ? (held ? 'Put it somewhere — a pillar, or a hole in a box.'
                      : 'Every move is being remembered. Leave when done.') :
-    held ? (program.length ? 'Put it on the thinking pad to give it something new to work on.'
-                           : 'Drop it on the thinking pad to train the robot on it.') :
-    program.length ? 'Give it something on the pad, then run what it learned.' :
+    held ? (program.length ? 'Put it on the blue pillar to give it something new to work on.'
+                           : 'Drop it on the blue pillar to train the robot on it.') :
+    program.length ? 'Put something on the blue pillar, then run what it learned.' :
     'Click a stack to fetch a number or a box.';
 }
 

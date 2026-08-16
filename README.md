@@ -18,9 +18,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **Exact arithmetic.** Numbers are BigInt fractions in lowest terms. Type
   digits to set a value and `+ - * / ^` to set what a number *does* when
   dropped on another; each operation colours the block and shows a badge.
-  Division gives a real fraction, not a float. Numbers too long to fit fall
-  back to ToonTalk's wedge: digits grow left to right on a shared baseline, so
-  the least significant end stays readable however many there are.
+  Division gives a real fraction, not a float. Numbers too long to fit render
+  the ToonTalk way — full size at both ends, tapering to an ellipsis in the
+  middle — so the most and least significant digits both stay readable at any
+  length. Numerators and denominators are laid out independently.
 - **A robot library.** Name a trained robot and save it; it persists in
   `localStorage` and reloads with its condition and actions intact.
 - **A robot that walks the bench** and picks things up with a two-jaw claw.
@@ -71,7 +72,9 @@ worth keeping back into the script.
 ## Known limits
 
 - The robot pivots and walks, but has no path-finding; stations are a fixed row.
-- `^` takes integer exponents only, and results are capped at 60 digits.
+- `^` takes integer exponents only. Results are unbounded BigInts; the only
+  limit is a guard that refuses a power whose size is estimated past 20000
+  digits, so a runaway loop cannot lock the browser mid-calculation.
 - The condition matches structure, values and operations, with wildcards — but
   you cannot yet express "any box" or constrain a number's range.
 - One robot. No teams, no birds, no nests.
