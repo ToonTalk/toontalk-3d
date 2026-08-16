@@ -20,8 +20,11 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **A condition.** The robot records the exact thing it was trained on and will
   only run when given something that matches. It is shown as a thought floating
   above the pad.
+  Refuse a run and the offending parts glow red in the bubble.
 - **Dusty the vacuum** erases parts of that condition into wildcards (`?`),
   which is what turns a one-off into something general.
+- **A copier.** Put anything on it and it produces an independent deep copy —
+  boxes come back with their contents duplicated, not shared.
 - **Running.** The robot repeats its trained actions on whatever it is given,
   and *keeps* repeating while its condition still holds — so a loop is just a
   condition that stays true.

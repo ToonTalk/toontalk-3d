@@ -140,7 +140,9 @@ let userMoved = false;
 orbit.addEventListener('start', () => { userMoved = true; });
 function frameScene() {
   if (userMoved) return;
-  const centre = new THREE.Vector3(0, 1.0, 0.8), halfW = 2.6, halfH = 1.3;
+  // wide enough for Dusty's mat at one end, tall enough for the thought bubble
+  // riding above the robot's head
+  const centre = new THREE.Vector3(0, 1.10, 0.8), halfW = 3.0, halfH = 1.78;
   const vFov = camera.fov * DEG;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
   const d = Math.max(halfH / Math.tan(vFov / 2), halfW / Math.tan(hFov / 2)) + 1.15;
@@ -383,14 +385,15 @@ function putInHole(hole, thing) {
 // A straight bench rather than an arc: on an arc the stations sit at different
 // depths and overlap in projection, and the robot keeps turning away. In a row
 // it walks left-right and always faces the viewer.
-const ROW_Z = 1.35, ROW_STEP = 0.68;
+const ROW_Z = 1.35, ROW_STEP = 0.64;
 const STATION_DEFS = [
-  { id: 'numbers', label: 'the number stack', kind: 'stack' },
-  { id: 'boxes',   label: 'the box stack',    kind: 'stack' },
-  { id: 'p1',      label: 'pillar 1',         kind: 'pillar' },
-  { id: 'p2',      label: 'pillar 2',         kind: 'pillar' },
-  { id: 'p3',      label: 'pillar 3',         kind: 'pillar' },
-  { id: 'train',   label: 'the thinking pad', kind: 'train' },
+  { id: 'numbers', label: 'the number stack',      kind: 'stack' },
+  { id: 'boxes',   label: 'the box stack',         kind: 'stack' },
+  { id: 'copier',  label: 'the copier',            kind: 'copier' },
+  { id: 'p1',      label: 'pillar 1',              kind: 'pillar' },
+  { id: 'p2',      label: 'pillar 2',              kind: 'pillar' },
+  { id: 'p3',      label: 'pillar 3',              kind: 'pillar' },
+  { id: 'train',   label: 'the thinking pad',      kind: 'train' },
 ].map((d, i, all) => ({ ...d, x: (i - (all.length - 1) / 2) * ROW_STEP }));
 const stations = {};
 const pickables = [];
@@ -415,6 +418,38 @@ function makePillar(height, special) {
       g.add(b);
     }
   }
+  return g;
+}
+
+// The duplicating machine: a platform between two posts, with a scan bar that
+// sweeps whatever is put on it.
+function makeCopier(height, st) {
+  const g = new THREE.Group();
+  const dark = new THREE.MeshStandardMaterial({ color: 0x242a34, roughness: 0.65, metalness: 0.25 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.19, height, 32), dark);
+  base.position.y = height / 2; base.castShadow = true; base.receiveShadow = true;
+  g.add(base);
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.185, 0.04, 32),
+    new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.45 }));
+  plate.position.y = height; plate.castShadow = true; plate.receiveShadow = true;
+  g.add(plate);
+  for (const s of [-1, 1]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), dark);
+    post.position.set(0.215 * s, height + 0.25, 0);
+    post.castShadow = true;
+    g.add(post);
+  }
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.05, 0.07), dark);
+  cap.position.set(0, height + 0.5, 0);
+  g.add(cap);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.028, 0.10),
+    new THREE.MeshStandardMaterial({ color: 0x0b3d4d, roughness: 0.2,
+      emissive: 0x2fd3ff, emissiveIntensity: 2.6, toneMapped: false }));
+  bar.position.set(0, height + 0.46, 0);
+  g.add(bar);
+  st.scanBar = bar;
+  st.scanTop = height + 0.46;
+  st.scanBottom = height + 0.07;
   return g;
 }
 
@@ -602,6 +637,8 @@ function actionPlace(stationId, path) {
   enqueue(walkTo(standForSlot(stationId, path)));
   enqueue(armTo(POSE.reach, JAW_CLOSED, 0.75));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.4));
+  const copying = st.kind === 'copier' && !path.length;
+  let copy = null;
   enqueue(doNow(() => {
     const dropped = held; held = null;
     const from = dropped.getWorldPosition(new THREE.Vector3());
@@ -614,7 +651,45 @@ function actionPlace(stationId, path) {
     }
     refreshUI();
   }));
-  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.85));
+
+  if (copying) {
+    // scan down over the original, materialise the copy above it, hand it over
+    enqueue({
+      dur: 0.7,
+      update(t) {
+        const e = Math.sin(Math.PI * t);
+        st.scanBar.position.y = lerp(st.scanTop, st.scanBottom, e);
+        st.scanBar.material.emissiveIntensity = 2.6 + 3.4 * e;
+      },
+      end() { st.scanBar.position.y = st.scanTop; st.scanBar.material.emissiveIntensity = 2.6; },
+    });
+    enqueue({
+      dur: 0.5,
+      start() {
+        copy = buildThing(specOf(st.occupant));
+        scene.add(copy);
+        const p = st.occupant.getWorldPosition(new THREE.Vector3());
+        copy.position.copy(p);
+        copy.scale.setScalar(0.01);
+        flash(p);
+      },
+      update(t) {
+        const e = ease(t);
+        copy.scale.setScalar(0.01 + 0.99 * e);
+        copy.position.y = st.point.y + 0.30 * e;
+      },
+    });
+    enqueue(doNow(() => {
+      grip.attach(copy);
+      held = copy;
+      valueAtPickup = copy.userData.value ?? null;
+      enqueueNext(graspSettle(copy));
+      refreshUI();
+    }));
+    enqueue(armTo(POSE.carry, JAW_CLOSED, 0.6));
+  } else {
+    enqueue(armTo(POSE.rest, JAW_CLOSED, 0.85));
+  }
 }
 
 // Draw a just-grasped thing into the claw, and a just-released one into its
@@ -719,6 +794,7 @@ function handleClick(target) {
     const st = stations[target.id];
     if (held) {
       if (st.kind === 'stack') return say('Stacks only give things out.');
+      if (st.kind === 'copier' && st.occupant) return say('The copier is full — take that off first.');
       if (st.occupant && st.occupant.userData.kind === 'box') return say('Click one of its holes.');
       go({ type: 'place', station: st.id, path: [] });
     } else {
@@ -801,7 +877,6 @@ function buildCondNode(cond, path, marks) {
 function rebuildCondition() {
   if (condDisplay) { scene.remove(condDisplay); condDisplay = null; }
   if (!condition) { refreshUI(); return; }
-  const pad = stations.train;
   const marks = [];
   const inner = buildCondNode(condition, [], marks);
   ghostify(inner);
@@ -816,14 +891,56 @@ function rebuildCondition() {
   const halo = new THREE.Mesh(new THREE.SphereGeometry(0.34, 28, 20), bubbleMat.clone());
   halo.material.opacity = 0.16;
   condDisplay.add(halo);
-  for (const [dy, r] of [[-0.34, 0.055], [-0.46, 0.034]]) {
+  // tail straight down toward the head it belongs to
+  for (const [dy, r] of [[-0.40, 0.058], [-0.55, 0.036], [-0.66, 0.022]]) {
     const b = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), halo.material);
-    b.position.set(-0.06, dy, 0.02);
+    b.position.set(0, dy, 0);
     condDisplay.add(b);
   }
-  condDisplay.position.set(pad.point.x, pad.point.y + 0.78, pad.point.z);
+  condDisplay.position.copy(condAnchor());
   scene.add(condDisplay);
   refreshUI();
+}
+// The condition belongs to the robot, so it rides above its head.
+function condAnchor() {
+  const head = robot?.getObjectByName('head');
+  const p = head ? head.getWorldPosition(new THREE.Vector3()) : new THREE.Vector3(0, 1.65, 0);
+  return p.add(new THREE.Vector3(0, 0.80, 0));
+}
+
+// --- showing why a run was refused ----------------------------------------
+// Walk condition and given side by side and collect the deepest parts that
+// disagree, so the highlight points at the actual culprit rather than the whole
+// pattern.
+function mismatchPaths(cond, spec, path = [], out = []) {
+  if (matches(cond, spec)) return out;
+  if (cond?.kind === 'box' && spec?.kind === 'box' && cond.holes.length === spec.holes.length) {
+    cond.holes.forEach((c, i) => mismatchPaths(c, spec.holes[i], path.concat(i), out));
+  } else {
+    out.push(path);
+  }
+  return out;
+}
+let flagged = [], flagTime = 0;
+function clearFlags() {
+  for (const f of flagged) {
+    f.m.emissive.copy(f.emissive);
+    f.m.emissiveIntensity = f.intensity;
+  }
+  flagged = [];
+}
+function flagMismatch(paths) {
+  clearFlags();
+  for (const p of paths) {
+    condNodeAt(p)?.traverse(o => {
+      if (!o.isMesh || !o.material?.emissive) return;
+      flagged.push({ m: o.material, emissive: o.material.emissive.clone(),
+                     intensity: o.material.emissiveIntensity });
+      o.material.emissive.setHex(0xff3b2f);
+      o.material.toneMapped = false;
+    });
+  }
+  flagTime = flagged.length ? 3.0 : 0;
 }
 function condNodeAt(path) {
   let found = null;
@@ -910,8 +1027,11 @@ function runProgram() {
   if (!program.length) return say('The robot has not been trained yet.');
   const given = stations.train.occupant;
   if (!given) return say('Put something on the thinking pad for it to work on.');
-  if (!matches(condition, specOf(given)))
-    return say(`It only runs when given ${condText(condition)}.`);
+  if (!matches(condition, specOf(given))) {
+    flagMismatch(mismatchPaths(condition, specOf(given)));
+    return say(`It only runs when given ${condText(condition)} — see the red parts.`);
+  }
+  clearFlags();
   // No world reset: the robot acts for real, on whatever it has been given.
   mode = 'replay'; busy = true; runCount = 0;
   nextIteration();
@@ -1093,10 +1213,11 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
       refillStack(st);
       st.cubes.forEach(c => pickables.push(c));
     } else {
-      const pillar = makePillar(Math.max(0.15, st.topY), def.kind === 'train');
-      pillar.position.set(point.x, 0, point.z);
-      setPick(pillar, { kind: 'station', id: def.id });
-      scene.add(pillar); pickables.push(pillar);
+      const h = Math.max(0.15, st.topY);
+      const obj = def.kind === 'copier' ? makeCopier(h, st) : makePillar(h, def.kind === 'train');
+      obj.position.set(point.x, 0, point.z);
+      setPick(obj, { kind: 'station', id: def.id });
+      scene.add(obj); pickables.push(obj);
       stations[def.id] = st;
     }
   }
@@ -1120,7 +1241,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
         m.toneMapped = false;
       }
     });
-    dustyHome = new THREE.Vector3(STATION_DEFS[0].x - 0.95, 0, ROW_Z - 0.25);
+    dustyHome = new THREE.Vector3(STATION_DEFS[0].x - 0.72, 0, ROW_Z - 0.25);
     dusty.position.copy(dustyHome);
     dusty.rotation.y = -0.5;
     setPick(dusty, { kind: 'dusty' });
@@ -1141,6 +1262,15 @@ renderer.setAnimationLoop((now) => {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
   if (root) tick(dt);
+  if (condDisplay) {
+    condDisplay.position.lerp(condAnchor(), Math.min(1, dt * 7));
+    if (flagTime > 0) {
+      flagTime -= dt;
+      const pulse = 0.7 + 0.9 * Math.abs(Math.sin(flagTime * 7));
+      for (const f of flagged) f.m.emissiveIntensity = pulse;
+      if (flagTime <= 0) clearFlags();
+    }
+  }
   bubbleNow += (bubbleTarget - bubbleNow) * Math.min(1, dt * 4);
   bubbleMat.opacity = BUBBLE_OPACITY * bubbleNow;
   bubble.visible = bubbleNow > 0.01;
@@ -1175,6 +1305,7 @@ window.__nano = {
   run() { runProgram(); },
   dusty(on = true) { dustyActive = on; refreshUI(); },
   erase(path) { dustyErase(path); },
+  get flagged() { return flagged.length; },
   get condition() { return condition; },
   get condText() { return condText(condition); },
   get hint() { return document.getElementById('hint').textContent; },
