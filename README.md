@@ -12,11 +12,17 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 `nano-toontalk.html` — a small but complete programming-by-demonstration loop:
 
 - **Numbers and boxes.** Numbers come off an infinite stack. Boxes have holes;
-  a hole holds a number *or another box*, so structures nest.
+  a hole holds a number *or another box*, so structures nest. Type a digit on a
+  held box to give it that many holes (up to 8) — the holes shrink rather than
+  the box growing off its pillar.
 - **Exact arithmetic.** Numbers are BigInt fractions in lowest terms. Type
   digits to set a value and `+ - * / ^` to set what a number *does* when
-  dropped on another; division gives you a real fraction, not a float. Long
-  numbers wrap across the cube face instead of shrinking away.
+  dropped on another; each operation colours the block and shows a badge.
+  Division gives a real fraction, not a float. Numbers too long to fit fall
+  back to ToonTalk's wedge: digits grow left to right on a shared baseline, so
+  the least significant end stays readable however many there are.
+- **A robot library.** Name a trained robot and save it; it persists in
+  `localStorage` and reloads with its condition and actions intact.
 - **A robot that walks the bench** and picks things up with a two-jaw claw.
 - **Training.** Put something on the glowing *thinking pad* and the robot goes
   into its thought bubble. Everything you do there is recorded. Leaving the

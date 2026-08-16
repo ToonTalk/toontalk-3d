@@ -38,6 +38,14 @@
   #steps .n { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 14px; }
   #steps li.now { color: var(--go); }
   #steps .empty { color: var(--dim); font-style: italic; }
+  #library { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--edge); }
+  #library .row { display: flex; gap: 5px; }
+  #library .row + .row { margin-top: 5px; }
+  #library input, #library select { flex: 1; min-width: 0; font: inherit; font-size: 12px;
+    color: var(--ink); background: rgba(255,255,255,.07);
+    border: 1px solid var(--edge); border-radius: 7px; padding: 4px 7px; }
+  #library button { padding: 4px 9px; font-size: 12px; }
+  #library option { background: #171b23; }
 
   #bar { left: 50%; bottom: 16px; transform: translateX(-50%);
          display: flex; align-items: center; gap: 8px; padding: 9px 10px; }
@@ -81,6 +89,12 @@
   <h2>Trained actions</h2>
   <p id="trainedOn"></p>
   <ul id="steps"><li class="empty">not trained yet</li></ul>
+  <div id="library">
+    <div class="row"><input id="robotName" placeholder="name this robot" maxlength="28">
+      <button id="saveBtn">Save</button></div>
+    <div class="row"><select id="robotList"></select>
+      <button id="loadBtn">Load</button><button id="delBtn" title="Delete">×</button></div>
+  </div>
 </div>
 
 <div id="held" class="card">
@@ -209,7 +223,7 @@ scene.add(bubble);
 // ---------------------------------------------------------------- things
 // A "thing" is a number or a box. Boxes have holes; holes hold things, boxes
 // included, so the whole structure is a tree rooted at a station.
-const HOLES = 2, HOLE_W = 0.19;
+const HOLES = 2, HOLE_W = 0.19, MAX_HOLES = 8, BOX_MAX_W = 0.62;
 const CUBE = 0.24;
 const cubeGeo = new THREE.BoxGeometry(CUBE, CUBE, CUBE);
 const faceGeo = new THREE.PlaneGeometry(CUBE * 0.86, CUBE * 0.86);
@@ -276,23 +290,39 @@ function fitFont(c, text, maxW, startPx) {
     px = Math.floor(px * 0.9);
   }
 }
-// Long numbers wrap across several lines rather than shrinking to a hairline:
-// pick whichever line count leaves the digits biggest.
-function drawBlock(c, s, cx, cy, maxW, maxH) {
-  let best = { px: 0, L: 1, per: s.length };
-  for (let L = 1; L <= 8; L++) {
-    const per = Math.ceil(s.length / L);
-    const px = Math.min(fitFont(c, '8'.repeat(per), maxW, 180),
-                        Math.floor((maxH / L) * 0.9));
-    if (px > best.px) best = { px, L, per };
+// Numbers draw at a uniform size while they fit. Once they don't, they fall
+// back to ToonTalk's trick: digits grow left to right on a shared baseline, so
+// the least significant end stays readable however many digits there are and
+// the leading ones simply shrink away to nothing.
+const WEDGE_RATIO = 0.86;
+function drawNum(c, s, cx, cyMid, maxW, maxH) {
+  const cap = Math.min(176, Math.floor(maxH * 0.98));
+  const uni = fitFont(c, s, maxW, cap);
+  if (uni >= 56 || s.length <= 3) {
+    c.font = `bold ${uni}px Georgia, serif`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(s, cx, cyMid);
+    return c.measureText(s).width;
   }
-  c.font = `bold ${best.px}px Georgia, serif`;
-  const lines = [];
-  for (let i = 0; i < s.length; i += best.per) lines.push(s.slice(i, i + best.per));
-  const lh = best.px * 1.03;
-  const y0 = cy - (lines.length - 1) * lh / 2;
-  lines.forEach((ln, i) => c.fillText(ln, cx, y0 + i * lh));
-  return Math.max(...lines.map(ln => c.measureText(ln).width));
+  c.font = 'bold 100px Georgia, serif';
+  const unit = c.measureText('8').width / 100;         // advance per px of size
+  let S = 0;
+  for (let i = 0; i < s.length; i++) S += Math.pow(WEDGE_RATIO, s.length - 1 - i);
+  const smax = Math.min(cap, maxW / (unit * S));
+  const total = unit * smax * S;
+  let x = cx - total / 2;
+  const baseline = cyMid + smax * 0.35;
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  for (let i = 0; i < s.length; i++) {
+    const size = smax * Math.pow(WEDGE_RATIO, s.length - 1 - i);
+    if (size >= 0.35) {                                 // below this nothing renders anyway
+      c.font = `bold ${size}px Georgia, serif`;
+      c.fillText(s[i], x, baseline);
+    }
+    x += unit * size;
+  }
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  return total;
 }
 
 function makeNumber(value, op = '+') {
@@ -330,15 +360,10 @@ function makeNumber(value, op = '+') {
       c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
       c.fillText(label, 128, 140);
     } else if (v && v.d === 1n) {
-      // Only wrap once a single line would get genuinely small -- a wrapped
-      // integer otherwise reads like a fraction.
-      const s = String(v.n);
-      const one = fitFont(c, s, 188, 176);
-      if (one >= 38) { c.font = `bold ${one}px Georgia, serif`; c.fillText(s, 128, 142); }
-      else drawBlock(c, s, 128, 142, 188, 176);
+      drawNum(c, String(v.n), 128, 142, 190, 168);
     } else if (v) {
-      const wn = drawBlock(c, String(v.n), 128, 96, 180, 78);
-      const wd = drawBlock(c, String(v.d), 128, 190, 180, 78);
+      const wn = drawNum(c, String(v.n), 128, 96, 182, 76);
+      const wd = drawNum(c, String(v.d), 128, 190, 182, 76);
       c.strokeStyle = st.ink; c.lineWidth = 9;
       const w = Math.max(wn, wd) / 2 + 12;
       c.beginPath(); c.moveTo(128 - w, 143); c.lineTo(128 + w, 143); c.stroke();
@@ -360,10 +385,15 @@ function makeNumber(value, op = '+') {
   return g;
 }
 
-function makeBox() {
+function makeBox(n = HOLES) {
+  n = Math.max(1, Math.min(MAX_HOLES, n | 0));
   const g = new THREE.Group();
-  const W = HOLES * HOLE_W + (HOLES + 1) * 0.035;      // outer width from holes + walls
-  const D = HOLE_W + 0.07, H = 0.11;
+  // Holes shrink rather than the box growing without limit, so an 8-hole box
+  // still fits its pillar.
+  const wall = 0.032;
+  const holeW = Math.min(HOLE_W, (BOX_MAX_W - (n + 1) * wall) / n);
+  const W = n * holeW + (n + 1) * wall;
+  const D = holeW + 0.07, H = 0.11;
   const woodMat = new THREE.MeshStandardMaterial({ color: 0xe2cfa6, roughness: 0.62 });
   const base = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), woodMat);
   base.castShadow = true; base.receiveShadow = true;
@@ -371,25 +401,26 @@ function makeBox() {
 
   const holes = [];
   const pocketMat = new THREE.MeshStandardMaterial({ color: 0x4a3f2e, roughness: 0.85 });
-  for (let i = 0; i < HOLES; i++) {
-    const x = -W / 2 + 0.035 + HOLE_W / 2 + i * (HOLE_W + 0.035);
-    const pocket = new THREE.Mesh(new THREE.BoxGeometry(HOLE_W, 0.055, HOLE_W), pocketMat);
+  for (let i = 0; i < n; i++) {
+    const x = -W / 2 + wall + holeW / 2 + i * (holeW + wall);
+    const pocket = new THREE.Mesh(new THREE.BoxGeometry(holeW, 0.055, holeW), pocketMat);
     pocket.position.set(x, H / 2 - 0.026, 0);
     pocket.receiveShadow = true;
     g.add(pocket);
     const anchor = new THREE.Object3D();
     anchor.position.set(x, H / 2 - 0.05, 0);
     g.add(anchor);
-    const hole = { index: i, anchor, thing: null, pocket };
+    const hole = { index: i, anchor, thing: null, pocket, w: holeW };
     setPick(pocket, { kind: 'hole', box: g, index: i });
     holes.push(hole);
   }
-  Object.assign(g.userData, { id: nextId++, kind: 'box', holes, width: W, rest: H / 2 });
+  Object.assign(g.userData, { id: nextId++, kind: 'box', holes, width: W, rest: H / 2, holeW });
   setPick(g, { kind: 'thing', thing: g });
   return g;
 }
 
-const fitScale = (thing, outerScale = 1) => (HOLE_W * 0.94) / thing.userData.width;
+// Contents scale to the hole they sit in, which now varies with hole count.
+const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / thing.userData.width;
 
 // ---------------------------------------------------------------- tree helpers
 function holesOf(t) { return t?.userData.kind === 'box' ? t.userData.holes : null; }
@@ -440,7 +471,7 @@ function specOf(thing) {
 function buildThing(spec) {
   if (!spec) return null;
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
-  const b = makeBox();
+  const b = makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   return b;
 }
@@ -504,8 +535,9 @@ function putInHole(hole, thing) {
   hole.anchor.add(thing);
   thing.position.set(0, 0, 0);
   thing.quaternion.identity();
-  thing.scale.setScalar(fitScale(thing));
-  thing.position.y = thing.userData.rest * fitScale(thing);
+  const s = fitScale(thing, hole);
+  thing.scale.setScalar(s);
+  thing.position.y = thing.userData.rest * s;
   hole.thing = thing;
 }
 
@@ -654,7 +686,7 @@ const HOME = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
 
 // ---------------------------------------------------------------- state
 let held = null, mode = 'world', program = [], busy = false;
-let valueAtPickup = null, opAtPickup = '+';
+let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0;
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
@@ -770,6 +802,7 @@ function actionPick(stationId, path) {
       setPick(held, { kind: 'thing', thing: held });
       valueAtPickup = held.userData.value ?? null;
       opAtPickup = held.userData.op ?? '+';
+      holesAtPickup = held.userData.holes?.length ?? 0;
       grip.attach(held);          // keeps its world spot; graspSettle draws it in
       enqueueNext(graspSettle(held));
     }
@@ -843,6 +876,31 @@ function actionPlace(stationId, path) {
   }
 }
 
+// Typing a number on a held box gives it that many holes. Rebuilt rather than
+// reshaped, since hole width depends on the count.
+function resizeHeldBox(n) {
+  n = Math.max(1, Math.min(MAX_HOLES, n));
+  const old = held;
+  const oldHoles = old.userData.holes;
+  if (n === oldHoles.length) return;
+  for (let i = n; i < oldHoles.length; i++) {
+    if (oldHoles[i].thing) return say(`Hole ${i + 1} still has something in it.`);
+  }
+  const nb = makeBox(n);
+  for (let i = 0; i < Math.min(n, oldHoles.length); i++) {
+    const t = oldHoles[i].thing;
+    if (t) { oldHoles[i].thing = null; putInHole(nb.userData.holes[i], t); }
+  }
+  const parent = old.parent;
+  nb.position.copy(old.position);
+  nb.quaternion.copy(old.quaternion);
+  nb.scale.copy(old.scale);
+  parent.add(nb);
+  parent.remove(old);
+  held = nb;
+  refreshUI();
+}
+
 // Draw a just-grasped thing into the claw, and a just-released one into its
 // slot, instead of snapping. Both animate local position so the parenting is
 // already final and nothing can drift.
@@ -894,7 +952,7 @@ function combine(slot, incoming, isHole, fromWorld) {
   scene.attach(incoming);
   const start = fromWorld ? fromWorld.clone() : incoming.position.clone();
   const dest = target.getWorldPosition(new THREE.Vector3());
-  const base = isHole ? fitScale(target) : 1;
+  const base = isHole ? fitScale(target, slot) : 1;
   // enqueueNext, not enqueue: otherwise the merge waits until after the robot
   // has retracted and walked home, leaving the number hanging in mid-air.
   enqueueNext({
@@ -991,6 +1049,10 @@ function go(step) {
     const v = held.userData.value, o = held.userData.op;
     if (!ratEq(v, valueAtPickup) || o !== opAtPickup) record({ type: 'setValue', value: v, op: o });
   }
+  if (step.type === 'place' && held && held.userData.kind === 'box') {
+    const n = held.userData.holes.length;
+    if (n !== holesAtPickup) record({ type: 'setHoles', n });
+  }
   record(step);
   if (step.type === 'pick') actionPick(step.station, step.path);
   else actionPlace(step.station, step.path);
@@ -1025,7 +1087,7 @@ function buildCondNode(cond, path, marks) {
   else if (cond.kind === 'wild') { g = makeNumber(rat(0)); g.setLabel('?'); }
   else if (cond.kind === 'number') g = makeNumber(cond.value, cond.op);
   else {
-    g = makeBox();
+    g = makeBox(cond.holes.length);
     cond.holes.forEach((h, i) => {
       const child = buildCondNode(h, path.concat(i), marks);
       if (h) putInHole(g.userData.holes[i], child);
@@ -1132,6 +1194,71 @@ function dustyErase(path) {
   });
 }
 
+// --- saving trained robots -------------------------------------------------
+// BigInt has no JSON representation, so rationals go to and from strings.
+const STORE_KEY = 'nano-toontalk.robots';
+const ratOut = (r) => r ? { n: String(r.n), d: String(r.d) } : null;
+const ratIn = (o) => o ? { n: BigInt(o.n), d: BigInt(o.d) } : null;
+
+function condOut(c) {
+  if (!c) return null;
+  if (c.kind === 'wild') return { kind: 'wild' };
+  if (c.kind === 'number') return { kind: 'number', value: ratOut(c.value), op: c.op };
+  return { kind: 'box', holes: c.holes.map(condOut) };
+}
+function condIn(o) {
+  if (!o) return null;
+  if (o.kind === 'wild') return WILD;
+  if (o.kind === 'number') return { kind: 'number', value: ratIn(o.value), op: o.op };
+  return { kind: 'box', holes: o.holes.map(condIn) };
+}
+const stepOut = (s) => s.type === 'setValue' ? { ...s, value: ratOut(s.value) } : s;
+const stepIn = (s) => s.type === 'setValue' ? { ...s, value: ratIn(s.value) } : s;
+
+function loadLibrary() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveLibrary(lib) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(lib)); }
+  catch (e) { say('Could not save: ' + e.message); }
+}
+function saveRobot(name) {
+  if (!name) return say('Give the robot a name first.');
+  if (!program.length) return say('Train it before saving it.');
+  const lib = loadLibrary();
+  lib[name] = { program: program.map(stepOut), condition: condOut(condition) };
+  saveLibrary(lib);
+  refreshLibrary(name);
+  say(`Saved “${name}”.`);
+}
+function loadRobot(name) {
+  const rec = loadLibrary()[name];
+  if (!rec) return say('No robot by that name.');
+  if (mode === 'training') leaveTraining();
+  program = rec.program.map(stepIn);
+  condition = condIn(rec.condition);
+  rebuildCondition(); renderProgram(); refreshUI();
+  say(`Loaded “${name}” — give it ${condText(condition)} and run it.`);
+}
+function deleteRobot(name) {
+  const lib = loadLibrary();
+  if (!lib[name]) return;
+  delete lib[name];
+  saveLibrary(lib);
+  refreshLibrary();
+  say(`Deleted “${name}”.`);
+}
+function refreshLibrary(select) {
+  const names = Object.keys(loadLibrary()).sort();
+  const sel = $('robotList');
+  sel.innerHTML = names.length
+    ? names.map(n => `<option${n === select ? ' selected' : ''}>${n}</option>`).join('')
+    : '<option value="">(none saved)</option>';
+  $('loadBtn').disabled = !names.length;
+  $('delBtn').disabled = !names.length;
+}
+
 function snapshotWorld() {
   return Object.fromEntries(Object.values(stations)
     .filter(s => s.kind !== 'stack')
@@ -1220,6 +1347,12 @@ function nextIteration() {
     enqueue(doNow(() => highlight(i)));
     if (step.type === 'pick') actionPick(step.station, step.path);
     else if (step.type === 'place') actionPlace(step.station, step.path);
+    else if (step.type === 'setHoles') {
+      enqueue({
+        dur: 0.3,
+        start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); },
+      });
+    }
     else if (step.type === 'setValue') {
       enqueue({
         dur: 0.4,
@@ -1264,6 +1397,7 @@ function labelFor(stationId, path) {
 function describe(s) {
   return s.type === 'pick' ? `pick up from ${labelFor(s.station, s.path)}`
        : s.type === 'place' ? `put it on ${labelFor(s.station, s.path)}`
+       : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratText(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
 function renderProgram() {
@@ -1320,6 +1454,9 @@ $('runBtn').onclick = () => {
   else runProgram();
 };
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
+$('saveBtn').onclick = () => saveRobot($('robotName').value.trim());
+$('loadBtn').onclick = () => loadRobot($('robotList').value);
+$('delBtn').onclick = () => deleteRobot($('robotList').value);
 $('speed').onchange = (e) => {
   speed = e.target.value === 'inf' ? Infinity : +e.target.value;
 };
@@ -1337,7 +1474,14 @@ $('clearBtn').onclick = () => {
 let bubbleTarget = 0, bubbleNow = 0;
 
 addEventListener('keydown', (e) => {
-  if (!held || busy || mode === 'replay' || held.userData.kind !== 'number') return;
+  if (!held || busy || mode === 'replay') return;
+  if (held.userData.kind === 'box') {
+    if (/^[1-9]$/.test(e.key)) {
+      resizeHeldBox(+e.key);
+      say(`A box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}.`);
+    }
+    return;
+  }
   const v = held.userData.value;
   if (/^[0-9]$/.test(e.key)) {
     // typing digits builds a whole number; it replaces a fraction outright
@@ -1427,6 +1571,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
 
   applyArm(POSE.rest.sh, POSE.rest.el); applyJaw(JAW_CLOSED);
   frameScene();
+  refreshLibrary();
   renderProgram(); refreshUI();
   $('loading').classList.add('gone');
 
@@ -1514,6 +1659,10 @@ window.__nano = {
   dusty(on = true) { dustyActive = on; refreshUI(); },
   erase(path) { dustyErase(path); },
   get flagged() { return flagged.length; },
+  save(name) { saveRobot(name); },
+  load(name) { loadRobot(name); },
+  library() { return Object.keys(loadLibrary()); },
+  holes(n) { if (held?.userData.kind === 'box') resizeHeldBox(n); },
   get condition() { return condition; },
   get condText() { return condText(condition); },
   get hint() { return document.getElementById('hint').textContent; },
