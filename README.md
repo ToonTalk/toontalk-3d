@@ -13,6 +13,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 
 - **Numbers and boxes.** Numbers come off an infinite stack. Boxes have holes;
   a hole holds a number *or another box*, so structures nest.
+- **Exact arithmetic.** Numbers are BigInt fractions in lowest terms. Type
+  digits to set a value and `+ - * / ^` to set what a number *does* when
+  dropped on another; division gives you a real fraction, not a float. Long
+  numbers wrap across the cube face instead of shrinking away.
 - **A robot that walks the bench** and picks things up with a two-jaw claw.
 - **Training.** Put something on the glowing *thinking pad* and the robot goes
   into its thought bubble. Everything you do there is recorded. Leaving the
@@ -61,7 +65,7 @@ worth keeping back into the script.
 ## Known limits
 
 - The robot pivots and walks, but has no path-finding; stations are a fixed row.
-- Combining is addition only. Operations are a later step.
-- The condition matches structure and values, with wildcards — but you cannot
-  yet express "any box" or constrain a number's range.
+- `^` takes integer exponents only, and results are capped at 60 digits.
+- The condition matches structure, values and operations, with wildcards — but
+  you cannot yet express "any box" or constrain a number's range.
 - One robot. No teams, no birds, no nests.

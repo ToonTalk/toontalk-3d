@@ -49,6 +49,11 @@
   button.think { background: var(--think); border-color: var(--think); color: #06212e; font-weight: 650; }
   button.go { background: var(--go); border-color: var(--go); color: #06301e; font-weight: 650; }
   .sep { width: 1px; height: 20px; background: var(--edge); margin: 0 2px; }
+  label[for=speed] { font-size: 12px; color: var(--dim); }
+  select { font: inherit; font-size: 12.5px; color: var(--ink);
+           background: rgba(255,255,255,.07); border: 1px solid var(--edge);
+           border-radius: 8px; padding: 5px 7px; }
+  select option { background: #171b23; }
 
   #held { left: 50%; bottom: 74px; transform: translateX(-50%); padding: 7px 13px;
           display: none; align-items: center; gap: 9px; }
@@ -88,6 +93,16 @@
   <button id="runBtn" class="go">Run what it learned</button>
   <button id="againBtn">Train again</button>
   <button id="dustyBtn">Dusty: asleep</button>
+  <span class="sep"></span>
+  <label for="speed">Speed</label>
+  <select id="speed">
+    <option value="0.5">½×</option>
+    <option value="1" selected>1×</option>
+    <option value="2">2×</option>
+    <option value="4">4×</option>
+    <option value="8">8×</option>
+    <option value="inf">Instant</option>
+  </select>
   <span class="sep"></span>
   <button id="resetBtn">Reset</button>
   <button id="clearBtn">Forget training</button>
@@ -202,7 +217,76 @@ let nextId = 1;
 
 function setPick(obj, data) { obj.__pick = data; }
 
-function makeNumber(value) {
+// --- exact rational arithmetic --------------------------------------------
+// Division has to produce something honest, so numbers are BigInt fractions
+// kept in lowest terms rather than floats.
+const OPS = ['+', '-', '*', '/', '^'];
+const MAX_DIGITS = 60;      // refuse results too big to be meaningful (or drawable)
+
+function bgcd(a, b) {
+  if (a < 0n) a = -a;
+  if (b < 0n) b = -b;
+  while (b) { const t = a % b; a = b; b = t; }
+  return a;
+}
+function rat(n, d = 1n) {
+  n = BigInt(n); d = BigInt(d);
+  if (d === 0n) return null;
+  if (d < 0n) { n = -n; d = -d; }
+  const g = bgcd(n, d) || 1n;
+  return { n: n / g, d: d / g };
+}
+const ratEq = (a, b) => !!a && !!b && a.n === b.n && a.d === b.d;
+const tooBig = (r) => !r || String(r.n < 0n ? -r.n : r.n).length > MAX_DIGITS
+                       || String(r.d).length > MAX_DIGITS;
+
+function applyOp(a, op, b) {
+  let r = null;
+  if (op === '+') r = rat(a.n * b.d + b.n * a.d, a.d * b.d);
+  else if (op === '-') r = rat(a.n * b.d - b.n * a.d, a.d * b.d);
+  else if (op === '*') r = rat(a.n * b.n, a.d * b.d);
+  else if (op === '/') r = rat(a.n * b.d, a.d * b.n);          // null if b is 0
+  else if (op === '^') {
+    if (b.d !== 1n) return null;                                // integer powers only
+    let e = b.n;
+    if (e > 400n || e < -400n) return null;
+    const neg = e < 0n;
+    if (neg) e = -e;
+    r = neg ? rat(a.d ** e, a.n ** e) : rat(a.n ** e, a.d ** e);
+  }
+  return tooBig(r) ? null : r;
+}
+const ratText = (r) => !r ? '?' : (r.d === 1n ? String(r.n) : `${r.n}/${r.d}`);
+
+// --- numbers --------------------------------------------------------------
+function fitFont(c, text, maxW, startPx) {
+  let px = startPx;
+  for (;;) {
+    c.font = `bold ${px}px Georgia, serif`;
+    if (c.measureText(text).width <= maxW || px <= 8) return px;
+    px = Math.floor(px * 0.9);
+  }
+}
+// Long numbers wrap across several lines rather than shrinking to a hairline:
+// pick whichever line count leaves the digits biggest.
+function drawBlock(c, s, cx, cy, maxW, maxH) {
+  let best = { px: 0, L: 1, per: s.length };
+  for (let L = 1; L <= 8; L++) {
+    const per = Math.ceil(s.length / L);
+    const px = Math.min(fitFont(c, '8'.repeat(per), maxW, 180),
+                        Math.floor((maxH / L) * 0.9));
+    if (px > best.px) best = { px, L, per };
+  }
+  c.font = `bold ${best.px}px Georgia, serif`;
+  const lines = [];
+  for (let i = 0; i < s.length; i += best.per) lines.push(s.slice(i, i + best.per));
+  const lh = best.px * 1.03;
+  const y0 = cy - (lines.length - 1) * lh / 2;
+  lines.forEach((ln, i) => c.fillText(ln, cx, y0 + i * lh));
+  return Math.max(...lines.map(ln => c.measureText(ln).width));
+}
+
+function makeNumber(value, op = '+') {
   const g = new THREE.Group();
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 256;
@@ -219,18 +303,39 @@ function makeNumber(value) {
     q.position.set(px, 0, pz); q.rotation.y = ry;
     g.add(q);
   }
-  Object.assign(g.userData, { id: nextId++, kind: 'number', op: '+', width: CUBE, rest: CUBE / 2 });
-  g.setValue = (v) => {
-    g.userData.value = v;
-    const s = String(v), c = canvas.getContext('2d');
+  Object.assign(g.userData, { id: nextId++, kind: 'number', op, width: CUBE, rest: CUBE / 2 });
+
+  function draw() {
+    const c = canvas.getContext('2d');
     c.fillStyle = '#f3e8d0'; c.fillRect(0, 0, 256, 256);
     c.strokeStyle = '#b8241a'; c.lineWidth = 12; c.strokeRect(16, 16, 224, 224);
-    c.fillStyle = '#8f1c14';
-    c.font = `bold ${s.length > 3 ? 92 : s.length > 2 ? 120 : s.length > 1 ? 148 : 176}px Georgia, serif`;
     c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText(s, 128, 136);
+    c.fillStyle = '#8f1c14';
+
+    const label = g.userData.label;
+    const v = g.userData.value;
+    if (label != null) {
+      c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
+      c.fillText(label, 128, 140);
+    } else if (v && v.d === 1n) {
+      drawBlock(c, String(v.n), 128, 142, 188, 176);
+    } else if (v) {
+      const wn = drawBlock(c, String(v.n), 128, 96, 180, 78);
+      const wd = drawBlock(c, String(v.d), 128, 190, 180, 78);
+      c.strokeStyle = '#8f1c14'; c.lineWidth = 9;
+      const w = Math.max(wn, wd) / 2 + 12;
+      c.beginPath(); c.moveTo(128 - w, 143); c.lineTo(128 + w, 143); c.stroke();
+    }
+    // the operation this number will apply when dropped on another
+    c.fillStyle = '#c8836f';
+    c.font = 'bold 46px Georgia, serif';
+    c.fillText(g.userData.op, 48, 50);
     tex.needsUpdate = true;
-  };
+  }
+
+  g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; draw(); };
+  g.setOp = (o) => { g.userData.op = o; draw(); };
+  g.setLabel = (t) => { g.userData.label = t; draw(); };
   g.setValue(value);
   setPick(g, { kind: 'thing', thing: g });
   return g;
@@ -310,12 +415,12 @@ function slotAt(stationId, path) {
 function specOf(thing) {
   if (!thing) return null;
   return thing.userData.kind === 'number'
-    ? { kind: 'number', value: thing.userData.value }
+    ? { kind: 'number', value: thing.userData.value, op: thing.userData.op }
     : { kind: 'box', holes: thing.userData.holes.map(h => specOf(h.thing)) };
 }
 function buildThing(spec) {
   if (!spec) return null;
-  if (spec.kind === 'number') return makeNumber(spec.value);
+  if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
   const b = makeBox();
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   return b;
@@ -335,7 +440,9 @@ function matches(cond, spec) {
   if (cond === null || cond === undefined) return spec == null;
   if (cond.kind === 'wild') return spec != null;
   if (!spec) return false;
-  if (cond.kind === 'number') return spec.kind === 'number' && spec.value === cond.value;
+  if (cond.kind === 'number') {
+    return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op;
+  }
   if (cond.kind === 'box') {
     return spec.kind === 'box' && spec.holes.length === cond.holes.length
       && cond.holes.every((c, i) => matches(c, spec.holes[i]));
@@ -345,7 +452,9 @@ function matches(cond, spec) {
 function condText(c) {
   if (!c) return 'an empty hole';
   if (c.kind === 'wild') return 'anything';
-  if (c.kind === 'number') return `the number ${c.value}`;
+  if (c.kind === 'number') {
+    return `the number ${ratText(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
+  }
   return `a box of ${c.holes.map(condText).join(' and ')}`;
 }
 function eraseAt(cond, path) {
@@ -389,11 +498,11 @@ const ROW_Z = 1.35, ROW_STEP = 0.64;
 const STATION_DEFS = [
   { id: 'numbers', label: 'the number stack',      kind: 'stack' },
   { id: 'boxes',   label: 'the box stack',         kind: 'stack' },
-  { id: 'copier',  label: 'the copier',            kind: 'copier' },
   { id: 'p1',      label: 'pillar 1',              kind: 'pillar' },
   { id: 'p2',      label: 'pillar 2',              kind: 'pillar' },
   { id: 'p3',      label: 'pillar 3',              kind: 'pillar' },
   { id: 'train',   label: 'the thinking pad',      kind: 'train' },
+  { id: 'copier',  label: 'the copier',            kind: 'copier' },
 ].map((d, i, all) => ({ ...d, x: (i - (all.length - 1) / 2) * ROW_STEP }));
 const stations = {};
 const pickables = [];
@@ -455,7 +564,7 @@ function makeCopier(height, st) {
 
 function refillStack(st) {
   while (st.cubes.length < st.stackN) {
-    const t = st.id === 'numbers' ? makeNumber(1) : makeBox();
+    const t = st.id === 'numbers' ? makeNumber(rat(1)) : makeBox();
     scene.add(t);
     setPick(t, { kind: 'station', id: st.id });
     st.cubes.unshift(t);
@@ -525,11 +634,13 @@ const standForSlot = (stationId, path) => () => standForPoint(targetPoint(statio
 const HOME = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
 
 // ---------------------------------------------------------------- state
-let held = null, mode = 'world', program = [], valueAtPickup = null, busy = false;
+let held = null, mode = 'world', program = [], busy = false;
+let valueAtPickup = null, opAtPickup = '+';
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
 let runCount = 0;
+let speed = 1;             // Infinity == run everything inside a single frame
 const MAX_ITER = 20;       // a robot whose condition never fails would loop forever
 
 // ---------------------------------------------------------------- sequencer
@@ -552,6 +663,24 @@ function tick(dt) {
 }
 let pendingAfter = null;
 function afterQueue() { const f = pendingAfter; pendingAfter = null; if (f) f(); refreshUI(); }
+
+// Instant speed: snap each step straight to its finished state instead of
+// simulating every frame of it. Stepping through the animation at a big dt
+// still cost seconds of blocking for a 20-round loop.
+function fastForward(maxSteps = 100000) {
+  let n = 0;
+  while ((current || queue.length) && n++ < maxSteps) {
+    if (!current) {
+      current = queue.shift();
+      if (!current) break;
+      current.start && current.start();
+    }
+    current.update && current.update(1);
+    current.end && current.end();
+    current = null;
+  }
+  if (busy && !current && !queue.length) { busy = false; afterQueue(); }
+}
 
 // `target` may be a function, resolved when the step starts -- stand positions
 // depend on where a hole is, which is only known once earlier steps have run.
@@ -620,6 +749,7 @@ function actionPick(stationId, path) {
     if (held) {
       setPick(held, { kind: 'thing', thing: held });
       valueAtPickup = held.userData.value ?? null;
+      opAtPickup = held.userData.op ?? '+';
       grip.attach(held);          // keeps its world spot; graspSettle draws it in
       enqueueNext(graspSettle(held));
     }
@@ -683,6 +813,7 @@ function actionPlace(stationId, path) {
       grip.attach(copy);
       held = copy;
       valueAtPickup = copy.userData.value ?? null;
+      opAtPickup = copy.userData.op ?? '+';
       enqueueNext(graspSettle(copy));
       refreshUI();
     }));
@@ -728,9 +859,18 @@ function combine(slot, incoming, isHole, fromWorld) {
     say('Only numbers combine — boxes need a hole of their own.');
     return;
   }
-  const result = target.userData.op === '+'
-    ? target.userData.value + incoming.userData.value
-    : target.userData.value + incoming.userData.value;
+  // The arriving number's own operation is what gets applied -- that is what
+  // typing "*" on a number before dropping it means.
+  const op = incoming.userData.op;
+  const result = applyOp(target.userData.value, op, incoming.userData.value);
+  if (!result) {
+    const free = Object.values(stations).find(s => s.kind === 'pillar' && !s.occupant);
+    if (free) putOnStation(free, incoming); else scene.remove(incoming);
+    say(op === '/' && incoming.userData.value.n === 0n
+      ? 'Nothing can be divided by zero.'
+      : `That ${op} makes a number too big to hold.`);
+    return;
+  }
   scene.attach(incoming);
   const start = fromWorld ? fromWorld.clone() : incoming.position.clone();
   const dest = target.getWorldPosition(new THREE.Vector3());
@@ -756,6 +896,7 @@ function combine(slot, incoming, isHole, fromWorld) {
 
 const flashes = [];
 function flash(pos) {
+  if (speed === Infinity) return;      // nothing to see at instant speed
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 12),
     new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.55,
       blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -826,9 +967,9 @@ function handleClick(target) {
 // Perform a step and, while training, remember it.
 function go(step) {
   busy = true;
-  if (step.type === 'place' && held) {
-    const v = held.userData.value;
-    if (v != null && v !== valueAtPickup) record({ type: 'setValue', value: v });
+  if (step.type === 'place' && held && held.userData.kind === 'number') {
+    const v = held.userData.value, o = held.userData.op;
+    if (!ratEq(v, valueAtPickup) || o !== opAtPickup) record({ type: 'setValue', value: v, op: o });
   }
   record(step);
   if (step.type === 'pick') actionPick(step.station, step.path);
@@ -861,8 +1002,8 @@ function ghostify(root) {
 function buildCondNode(cond, path, marks) {
   let g;
   if (!cond) g = new THREE.Group();                       // an empty hole
-  else if (cond.kind === 'wild') g = makeNumber('?');
-  else if (cond.kind === 'number') g = makeNumber(cond.value);
+  else if (cond.kind === 'wild') { g = makeNumber(rat(0)); g.setLabel('?'); }
+  else if (cond.kind === 'number') g = makeNumber(cond.value, cond.op);
   else {
     g = makeBox();
     cond.holes.forEach((h, i) => {
@@ -1054,7 +1195,7 @@ function nextIteration() {
     else if (step.type === 'setValue') {
       enqueue({
         dur: 0.4,
-        start() { if (held) { held.setValue(step.value); flash(held.getWorldPosition(new THREE.Vector3())); } },
+        start() { if (held) { held.setValue(step.value, step.op); flash(held.getWorldPosition(new THREE.Vector3())); } },
         update(t) { if (held) held.scale.setScalar(1 + 0.26 * Math.sin(Math.PI * t)); },
         end() { if (held) held.scale.setScalar(1); refreshUI(); },
       });
@@ -1083,7 +1224,7 @@ function labelFor(stationId, path) {
 function describe(s) {
   return s.type === 'pick' ? `pick up from ${labelFor(s.station, s.path)}`
        : s.type === 'place' ? `put it on ${labelFor(s.station, s.path)}`
-       : `make it ${s.value}`;
+       : `make it ${ratText(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
 function renderProgram() {
   const ul = $('steps');
@@ -1116,8 +1257,11 @@ function refreshUI() {
   $('held').classList.toggle('on', showHeld);
   if (held) {
     const isNum = held.userData.kind === 'number';
-    $('heldVal').textContent = isNum ? held.userData.value : 'a box';
-    $('heldTip').textContent = isNum ? 'type digits to change it' : 'click a pillar or a hole';
+    $('heldVal').textContent = isNum
+      ? ratText(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
+      : 'a box';
+    $('heldTip').textContent = isNum ? 'type digits, or + − * / ^ to set what it does'
+                                     : 'click a pillar or a hole';
   }
   if (hintTimer) return;
   $('hint').textContent =
@@ -1136,6 +1280,9 @@ $('runBtn').onclick = () => {
   else runProgram();
 };
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
+$('speed').onchange = (e) => {
+  speed = e.target.value === 'inf' ? Infinity : +e.target.value;
+};
 $('againBtn').onclick = () => { if (!busy) enterTraining(); };
 $('resetBtn').onclick = () => {
   if (mode === 'training') leaveTraining(false);      // discard, don't rewind
@@ -1151,8 +1298,21 @@ let bubbleTarget = 0, bubbleNow = 0;
 
 addEventListener('keydown', (e) => {
   if (!held || busy || mode === 'replay' || held.userData.kind !== 'number') return;
-  if (/^[0-9]$/.test(e.key)) { held.setValue(Math.min(999999, held.userData.value * 10 + (+e.key))); refreshUI(); }
-  else if (e.key === 'Backspace') { held.setValue(Math.floor(held.userData.value / 10)); refreshUI(); e.preventDefault(); }
+  const v = held.userData.value;
+  if (/^[0-9]$/.test(e.key)) {
+    // typing digits builds a whole number; it replaces a fraction outright
+    const base = v.d === 1n ? v.n : 0n;
+    held.setValue(rat(base * 10n + BigInt(e.key)));
+    refreshUI();
+  } else if (e.key === 'Backspace') {
+    held.setValue(v.d === 1n ? rat(v.n / 10n) : rat(0));
+    refreshUI(); e.preventDefault();
+  } else if (OPS.includes(e.key) || e.key === 'x' || e.key === 'X') {
+    const op = (e.key === 'x' || e.key === 'X') ? '*' : e.key;
+    held.setOp(op);
+    say(`This number will ${ {'+':'add','-':'subtract','*':'multiply by','/':'divide by','^':'raise to the power of'}[op] } when you drop it on another.`);
+    refreshUI();
+  }
 });
 renderer.domElement.addEventListener('pointermove', (ev) => {
   renderer.domElement.style.cursor = (!busy && mode !== 'replay' && resolve(ev)) ? 'pointer' : '';
@@ -1241,7 +1401,8 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
         m.toneMapped = false;
       }
     });
-    dustyHome = new THREE.Vector3(STATION_DEFS[0].x - 0.72, 0, ROW_Z - 0.25);
+    // Dusty and the copier both live beyond the thinking pad now
+    dustyHome = new THREE.Vector3(STATION_DEFS[STATION_DEFS.length - 1].x + 0.72, 0, ROW_Z - 0.25);
     dusty.position.copy(dustyHome);
     dusty.rotation.y = -0.5;
     setPick(dusty, { kind: 'dusty' });
@@ -1261,7 +1422,10 @@ let last = performance.now();
 renderer.setAnimationLoop((now) => {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
-  if (root) tick(dt);
+  if (root) {
+    if (speed === Infinity) fastForward();
+    else tick(dt * speed);
+  }
   if (condDisplay) {
     condDisplay.position.lerp(condAnchor(), Math.min(1, dt * 7));
     if (flagTime > 0) {
@@ -1290,7 +1454,9 @@ window.__nano = {
   THREE, scene, camera, renderer, stations,
   get ready() { return !!root; },
   get state() { return { mode, busy, program, queued: queue.length,
-    held: held ? (held.userData.kind === 'number' ? held.userData.value : 'box') : null }; },
+    held: held ? (held.userData.kind === 'number'
+      ? ratText(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
+      : 'box') : null }; },
   step(dt, n = 1) { for (let i = 0; i < n; i++) tick(dt); },
   settle(max = 9000) { let i = 0; while ((current || queue.length || busy) && i++ < max) tick(1 / 60); return i; },
   draw() { renderer.render(scene, camera); },
@@ -1299,7 +1465,9 @@ window.__nano = {
   clickHole(station, index) { handleClick({ kind: 'hole', box: stations[station].occupant, index }); },
   clickHoleAt(station, path, index) { handleClick({ kind: 'hole', box: thingAt(station, path), index }); },
   clickThing(station, path = []) { handleClick({ kind: 'thing', thing: thingAt(station, path) }); },
-  type(v) { if (held) { held.setValue(v); refreshUI(); } },
+  type(v, op) { if (held) { held.setValue(rat(v), op); refreshUI(); } },
+  setOp(op) { if (held) { held.setOp(op); refreshUI(); } },
+  speed(s) { speed = s === 'inf' ? Infinity : s; document.getElementById('speed').value = s; },
   exit() { leaveTraining(); },
   again() { enterTraining(); },
   run() { runProgram(); },
@@ -1311,7 +1479,8 @@ window.__nano = {
   get hint() { return document.getElementById('hint').textContent; },
   dump() {
     const describeThing = (t) => !t ? null
-      : t.userData.kind === 'number' ? t.userData.value
+      : t.userData.kind === 'number'
+        ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
       : { box: t.userData.holes.map(h => describeThing(h.thing)) };
     return Object.fromEntries(Object.values(stations).map(s => [s.id, describeThing(s.occupant)]));
   },
