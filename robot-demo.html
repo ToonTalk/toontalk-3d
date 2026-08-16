@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ToonTalk 3D — pick up and put down</title>
+<style>
+  :root {
+    --ink: #eef1f6;
+    --dim: #98a3b4;
+    --panel: rgba(16, 20, 28, 0.82);
+    --edge: rgba(255, 255, 255, 0.12);
+    --accent: #ff7a5c;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #12151b;
+    color: var(--ink);
+    font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  .card {
+    position: fixed;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    padding: 12px 14px;
+  }
+  #title { top: 16px; left: 16px; max-width: 300px; }
+  #title h1 { margin: 0 0 4px; font-size: 15px; font-weight: 650; letter-spacing: .01em; }
+  #title p { margin: 0; font-size: 12px; color: var(--dim); }
+
+  #hud { top: 16px; right: 16px; min-width: 176px; }
+  #hud .row { display: flex; justify-content: space-between; gap: 14px; font-size: 12px; }
+  #hud .row + .row { margin-top: 5px; }
+  #hud .k { color: var(--dim); }
+  #hud .v { font-variant-numeric: tabular-nums; }
+  #phase { color: var(--accent); font-weight: 650; }
+
+  #bar {
+    left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+  }
+  button {
+    font: inherit; font-size: 12.5px;
+    color: var(--ink); background: rgba(255,255,255,.07);
+    border: 1px solid var(--edge); border-radius: 8px;
+    padding: 6px 11px; cursor: pointer;
+  }
+  button:hover { background: rgba(255,255,255,.14); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #23130e; font-weight: 650; }
+  .sep { width: 1px; height: 20px; background: var(--edge); margin: 0 3px; }
+  label { display: flex; align-items: center; gap: 7px; color: var(--dim); font-size: 12px; }
+  input[type=range] { width: 92px; accent-color: var(--accent); }
+
+  #loading {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    background: #12151b; z-index: 10; font-size: 13px; color: var(--dim);
+    transition: opacity .4s ease;
+  }
+  #loading.gone { opacity: 0; pointer-events: none; }
+  #err { color: #ff9a8a; max-width: 520px; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="title" class="card">
+  <h1>Pick up &amp; put down</h1>
+  <p>The robot walks a box between two pedestals. Drag to orbit, scroll to zoom.</p>
+</div>
+
+<div id="hud" class="card">
+  <div class="row"><span class="k">Phase</span><span class="v" id="phase">—</span></div>
+  <div class="row"><span class="k">Cycle</span><span class="v" id="cycle">0</span></div>
+  <div class="row"><span class="k">Holding</span><span class="v" id="holding">no</span></div>
+</div>
+
+<div id="bar" class="card">
+  <button id="playBtn" class="on">Pause</button>
+  <label>Speed <input id="speed" type="range" min="0.25" max="2" step="0.05" value="1"></label>
+  <span class="sep"></span>
+  <button data-view="threequarter" class="on">3/4</button>
+  <button data-view="front">Front</button>
+  <button data-view="eye">First-person</button>
+</div>
+
+<div id="loading"><span id="err">Loading robot…</span></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.185.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.185.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const DEG = Math.PI / 180;
+
+// ---------------------------------------------------------------- renderer
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;   // PCFSoft is deprecated in r185
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.32;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x151922);
+scene.fog = new THREE.Fog(0x151922, 12, 34);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.05, 200);
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true;
+orbit.dampingFactor = 0.06;
+orbit.minDistance = 0.8;
+orbit.maxDistance = 16;
+orbit.maxPolarAngle = Math.PI * 0.495;
+
+const VIEWS = {
+  // The robot works across a +/-45 deg arc, so the camera sits near the
+  // bisector -- off to one side and it spends half the loop facing away.
+  threequarter: { pos: [1.10, 1.95, 3.20], tgt: [0, 0.95, 0.32] },
+  front:        { pos: [0, 1.35, 3.45],    tgt: [0, 0.95, 0.30] },
+  eye:          { pos: [0.10, 1.62, 2.05], tgt: [0, 1.05, 0.25] },
+};
+function setView(name) {
+  const v = VIEWS[name];
+  camera.position.set(...v.pos);
+  orbit.target.set(...v.tgt);
+  orbit.update();
+  document.querySelectorAll('[data-view]').forEach(b =>
+    b.classList.toggle('on', b.dataset.view === name));
+}
+
+// ---------------------------------------------------------------- lighting
+scene.add(new THREE.HemisphereLight(0x9fb4d8, 0x2a3038, 1.05));
+
+const key = new THREE.DirectionalLight(0xfff2e6, 3.5);
+key.position.set(4.2, 6.0, 4.4);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 3;
+key.shadow.bias = -0.0009;
+const sc = key.shadow.camera;
+sc.left = -5; sc.right = 5; sc.top = 5; sc.bottom = -5; sc.near = 0.5; sc.far = 22;
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0xbcd2ff, 0.85);
+fill.position.set(-5, 2.6, 2.2);
+scene.add(fill);
+
+const rim = new THREE.DirectionalLight(0xcfe2ff, 1.35);
+rim.position.set(-2.2, 3.4, -5.0);
+scene.add(rim);
+
+// ---------------------------------------------------------------- ground
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(24, 64).rotateX(-Math.PI / 2),
+  new THREE.MeshStandardMaterial({ color: 0x1b1f28, roughness: 0.92, metalness: 0.0 })
+);
+ground.receiveShadow = true;
+scene.add(ground);
+
+const grid = new THREE.GridHelper(24, 48, 0x2c3341, 0x232935);
+grid.material.transparent = true;
+grid.material.opacity = 0.5;
+grid.position.y = 0.002;
+scene.add(grid);
+
+// ---------------------------------------------------------------- the box
+function numberTexture(text) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#b8241a'; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = '#efe2c6';
+  g.font = 'bold 168px Georgia, serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text, 128, 140);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+const BOX_SIZE = 0.24;
+const box = new THREE.Group();
+{
+  const shell = new THREE.Mesh(
+    new THREE.BoxGeometry(BOX_SIZE, BOX_SIZE, BOX_SIZE),
+    new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.55 })
+  );
+  shell.castShadow = true;
+  shell.receiveShadow = true;
+  box.add(shell);
+  const face = new THREE.MeshStandardMaterial({ map: numberTexture('7'), roughness: 0.5 });
+  const p = BOX_SIZE / 2 + 0.001;
+  for (const [px, py, pz, ry] of [[0, 0, p, 0], [0, 0, -p, Math.PI],
+                                  [p, 0, 0, Math.PI / 2], [-p, 0, 0, -Math.PI / 2]]) {
+    const q = new THREE.Mesh(new THREE.PlaneGeometry(BOX_SIZE * 0.8, BOX_SIZE * 0.8), face);
+    q.position.set(px, py, pz);
+    q.rotation.y = ry;
+    box.add(q);
+  }
+}
+scene.add(box);
+
+// ---------------------------------------------------------------- pedestals
+function pedestal(height) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.115, 0.155, height, 40),
+    new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7, metalness: 0.1 })
+  );
+  body.position.y = height / 2;
+  body.castShadow = true; body.receiveShadow = true;
+  g.add(body);
+  const top = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.185, 0.185, 0.035, 40),
+    new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 })
+  );
+  top.position.y = height;
+  top.castShadow = true; top.receiveShadow = true;
+  g.add(top);
+  return g;
+}
+
+// ---------------------------------------------------------------- robot
+// Both stations sit ahead of the feet rather than out to the sides -- wider
+// than this and the robot reads as straddling the pedestals.
+const YAW_A = -35 * DEG, YAW_B = 35 * DEG;
+
+// Arm pose deltas, relative to the rest pose authored in Blender.
+const POSE = {
+  rest:  { sh: 0,         el: 0 },
+  reach: { sh: -38 * DEG, el:  33 * DEG },
+  carry: { sh:  -8 * DEG, el: -30 * DEG },
+};
+const JAW_CLOSED = 0.103;   // metres of extra opening from the modelled rest gap
+const JAW_OPEN   = 0.200;
+
+let robot, root, shoulder, elbow, jawA, jawB, grip;
+const jawBase = { a: 0, b: 0 };
+let jawSign = 1;
+const initQ = new Map();
+const _qd = new THREE.Quaternion();
+const _axisX = new THREE.Vector3(1, 0, 0);
+
+function setJoint(node, angle) {
+  _qd.setFromAxisAngle(_axisX, angle);
+  node.quaternion.copy(initQ.get(node)).multiply(_qd);
+}
+function applyArm(sh, el) {
+  setJoint(shoulder, sh);
+  setJoint(elbow, el);
+}
+function applyJaw(open) {
+  jawA.position.x = jawBase.a - jawSign * open;
+  jawB.position.x = jawBase.b + jawSign * open;
+}
+
+const loader = new GLTFLoader();
+loader.load('robot_v4.glb', (gltf) => {
+  robot = gltf.scene;
+  root = robot.getObjectByName('ROBOT_root') || robot;
+  robot.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true;
+    o.receiveShadow = true;
+    // Blender's emission survives the export, but reads flat under ACES tone
+    // mapping -- lift it so the eyes and chest screen actually glow.
+    const m = o.material;
+    if (m && m.emissive && m.emissive.getHex() !== 0x000000) {
+      m.emissiveIntensity = Math.max(m.emissiveIntensity || 1, 1) * 2.6;
+      m.toneMapped = false;
+    }
+  });
+  scene.add(robot);
+
+  shoulder = robot.getObjectByName('shoulderP_R');
+  elbow    = robot.getObjectByName('elbowP_R');
+  jawA     = robot.getObjectByName('jaw_R_a');
+  jawB     = robot.getObjectByName('jaw_R_b');
+  grip     = robot.getObjectByName('grip_R');
+  if (!shoulder || !elbow || !jawA || !jawB || !grip) {
+    return fail('Expected joint nodes missing from robot_v4.glb');
+  }
+
+  initQ.set(shoulder, shoulder.quaternion.clone());
+  initQ.set(elbow, elbow.quaternion.clone());
+  jawBase.a = jawA.position.x;
+  jawBase.b = jawB.position.x;
+  jawSign = Math.sign(jawB.position.x - jawA.position.x) || 1;
+
+  // Rather than solve IK, put the pedestals exactly where the claw lands in the
+  // reach pose: sample the grip's world position once, then rotate that offset
+  // by each yaw the robot turns to.
+  root.rotation.y = 0;
+  applyArm(POSE.reach.sh, POSE.reach.el);
+  robot.updateMatrixWorld(true);
+  const reachPt = grip.getWorldPosition(new THREE.Vector3());
+
+  const stations = [YAW_A, YAW_B].map(yaw => {
+    const p = reachPt.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+    const ped = pedestal(Math.max(0.15, p.y - BOX_SIZE / 2));
+    ped.position.set(p.x, 0, p.z);
+    scene.add(ped);
+    return { yaw, point: p };
+  });
+
+  applyArm(POSE.rest.sh, POSE.rest.el);
+  applyJaw(JAW_CLOSED);
+  root.rotation.y = YAW_A;
+  box.position.copy(stations[0].point);
+
+  startTimeline(stations);
+  document.getElementById('loading').classList.add('gone');
+  setView('threequarter');
+}, undefined, (e) => fail('Could not load robot_v4.glb — ' + e.message));
+
+function fail(msg) {
+  document.getElementById('err').textContent = msg;
+}
+
+// ---------------------------------------------------------------- timeline
+const ease = t => t * t * (3 - 2 * t);
+const lerp = (a, b, t) => a + (b - a) * t;
+
+let timeline = null, playing = true, speed = 1, cycles = 0;
+
+function startTimeline(stations) {
+  let from = 0, to = 1;
+
+  const phases = [
+    { name: 'settle',  dur: 0.5, run: () => {} },
+    { name: 'reach',   dur: 1.0, run: (t) => {
+        const e = ease(t);
+        applyArm(lerp(POSE.rest.sh, POSE.reach.sh, e), lerp(POSE.rest.el, POSE.reach.el, e));
+        applyJaw(lerp(JAW_CLOSED, JAW_OPEN, e));
+      } },
+    { name: 'grip',    dur: 0.45, run: (t) => applyJaw(lerp(JAW_OPEN, JAW_CLOSED, ease(t))),
+      end: () => { grip.attach(box); setHolding(true); } },
+    { name: 'lift',    dur: 0.85, run: (t) => {
+        const e = ease(t);
+        applyArm(lerp(POSE.reach.sh, POSE.carry.sh, e), lerp(POSE.reach.el, POSE.carry.el, e));
+      } },
+    { name: 'turn',    dur: 1.25, run: (t) => {
+        root.rotation.y = lerp(stations[from].yaw, stations[to].yaw, ease(t));
+      } },
+    { name: 'place',   dur: 0.85, run: (t) => {
+        const e = ease(t);
+        applyArm(lerp(POSE.carry.sh, POSE.reach.sh, e), lerp(POSE.carry.el, POSE.reach.el, e));
+      } },
+    { name: 'release', dur: 0.45, run: (t) => applyJaw(lerp(JAW_CLOSED, JAW_OPEN, ease(t))),
+      end: () => {
+        scene.attach(box);
+        box.position.copy(stations[to].point);
+        box.quaternion.identity();
+        setHolding(false);
+      } },
+    { name: 'retract', dur: 1.0, run: (t) => {
+        const e = ease(t);
+        applyArm(lerp(POSE.reach.sh, POSE.rest.sh, e), lerp(POSE.reach.el, POSE.rest.el, e));
+        applyJaw(lerp(JAW_OPEN, JAW_CLOSED, e));
+      },
+      end: () => {
+        [from, to] = [to, from];          // next cycle carries it back
+        cycles++;
+        document.getElementById('cycle').textContent = cycles;
+      } },
+  ];
+
+  let idx = 0, t = 0;
+  timeline = (dt) => {
+    const ph = phases[idx];
+    t += dt / ph.dur;
+    if (t >= 1) {
+      ph.run(1);
+      ph.end && ph.end();
+      idx = (idx + 1) % phases.length;
+      t = 0;
+      document.getElementById('phase').textContent = phases[idx].name;
+    } else {
+      ph.run(t);
+    }
+  };
+  document.getElementById('phase').textContent = phases[0].name;
+}
+
+function setHolding(v) {
+  document.getElementById('holding').textContent = v ? 'the 7 box' : 'no';
+}
+
+// ---------------------------------------------------------------- UI
+const playBtn = document.getElementById('playBtn');
+playBtn.onclick = () => {
+  playing = !playing;
+  playBtn.textContent = playing ? 'Pause' : 'Play';
+  playBtn.classList.toggle('on', playing);
+};
+document.getElementById('speed').oninput = (e) => { speed = +e.target.value; };
+document.querySelectorAll('[data-view]').forEach(b => {
+  b.onclick = () => setView(b.dataset.view);
+});
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ---------------------------------------------------------------- loop
+let last = performance.now();
+renderer.setAnimationLoop((now) => {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (timeline && playing) timeline(dt * speed);
+  orbit.update();
+  renderer.render(scene, camera);
+});
+
+// Dev hook: lets the animation be stepped and inspected without a visible
+// window (headless checks, and handy from the console).
+window.__tt3d = {
+  THREE, scene, camera, renderer,
+  get ready() { return !!timeline; },
+  get box() { return box; },
+  node(name) { return robot.getObjectByName(name); },
+  get phase() { return document.getElementById('phase').textContent; },
+  step(dt, n = 1) { for (let i = 0; i < n; i++) timeline(dt); },
+  draw() { renderer.render(scene, camera); },
+  world(name) {
+    const o = name === 'box' ? box : robot.getObjectByName(name);
+    return o ? o.getWorldPosition(new THREE.Vector3()).toArray().map(v => +v.toFixed(4)) : null;
+  },
+  jawGap() {
+    const a = jawA.getWorldPosition(new THREE.Vector3());
+    const b = jawB.getWorldPosition(new THREE.Vector3());
+    return +a.distanceTo(b).toFixed(4);
+  },
+  boxParent() { return box.parent ? box.parent.name || box.parent.type : null },
+};
+</script>
+</body>
+</html>

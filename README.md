@@ -1,0 +1,64 @@
+# toontalk-3d
+
+An experiment in rebuilding [ToonTalk](https://en.wikipedia.org/wiki/ToonTalk)'s ideas with real 3D
+assets rather than the original's pre-rendered sprites — and in seeing how far
+LLM-driven asset creation can carry a project like this.
+
+Nothing here tries to copy the original's artwork. The characters are new
+designs, generated from Blender Python scripts rather than modelled by hand.
+
+## What works today
+
+`nano-toontalk.html` — a small but complete programming-by-demonstration loop:
+
+- **Numbers and boxes.** Numbers come off an infinite stack. Boxes have holes;
+  a hole holds a number *or another box*, so structures nest.
+- **A robot that walks the bench** and picks things up with a two-jaw claw.
+- **Training.** Put something on the glowing *thinking pad* and the robot goes
+  into its thought bubble. Everything you do there is recorded. Leaving the
+  bubble rewinds the world — the daydream was never real.
+- **A condition.** The robot records the exact thing it was trained on and will
+  only run when given something that matches. It is shown as a thought floating
+  above the pad.
+- **Dusty the vacuum** erases parts of that condition into wildcards (`?`),
+  which is what turns a one-off into something general.
+- **Running.** The robot repeats its trained actions on whatever it is given,
+  and *keeps* repeating while its condition still holds — so a loop is just a
+  condition that stays true.
+
+`robot-demo.html` — the earlier standalone pick-up-and-put-down demo.
+
+## Running it
+
+Needs any static server; the repo assumes port 8311.
+
+```bash
+node serve.js 8311
+```
+
+Then open <http://localhost:8311/nano-toontalk.html>.
+
+`serve.js` also accepts `POST /capture`, which the pages use to write rendered
+frames to `captures/` — that is how the 3D work gets reviewed without a human
+having to eyeball every change.
+
+## Assets
+
+The `.py` files are the source of truth, **not** the `.blend` files: each one
+regenerates its model, its turntable renders and its `.glb` from scratch.
+
+```bash
+blender --background --factory-startup --python robot_v4.py
+blender --background --factory-startup --python dusty_v1.py
+```
+
+Edits made in Blender's GUI will be overwritten by a re-run, so fold anything
+worth keeping back into the script.
+
+## Known limits
+
+- The robot pivots and walks, but has no path-finding; stations are a fixed row.
+- Combining is addition only. Operations are a later step.
+- The condition matches structure and values, with wildcards — but you cannot
+  yet express "any box" or constrain a number's range.
+- One robot. No teams, no birds, no nests.

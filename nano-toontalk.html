@@ -1,0 +1,1190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nano-ToonTalk</title>
+<style>
+  :root {
+    --ink: #eef1f6; --dim: #97a2b3; --panel: rgba(15, 19, 27, 0.86);
+    --edge: rgba(255,255,255,.12); --accent: #ff7a5c; --go: #6ee7a8; --think: #7fd4ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: #12151b; color: var(--ink);
+         font: 14px/1.5 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  .card { position: fixed; background: var(--panel); border: 1px solid var(--edge);
+          border-radius: 12px; backdrop-filter: blur(8px); padding: 12px 14px; }
+  #title { top: 14px; left: 14px; max-width: 300px; }
+  #title h1 { margin: 0 0 3px; font-size: 15px; font-weight: 650; }
+  #title h1 .badge { font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase;
+                     padding: 2px 7px; border-radius: 999px; margin-left: 6px;
+                     background: rgba(255,255,255,.1); color: var(--dim); vertical-align: 2px; }
+  #title h1 .badge.training { background: rgba(127,212,255,.2); color: var(--think); }
+  #title p { margin: 0; font-size: 12px; color: var(--dim); }
+  #hint { margin-top: 8px !important; color: var(--accent) !important; }
+
+  #prog { top: 14px; right: 14px; width: 232px; max-height: 60vh; overflow: auto; }
+  #prog h2 { margin: 0 0 4px; font-size: 11px; letter-spacing: .09em;
+             text-transform: uppercase; color: var(--dim); font-weight: 650; }
+  #trainedOn { margin: 0 0 8px; font-size: 11.5px; color: var(--think); }
+  #trainedOn:empty { display: none; }
+  #steps { margin: 0; padding: 0; list-style: none; font-size: 12.5px; }
+  #steps li { display: flex; gap: 8px; padding: 3px 0; border-top: 1px solid rgba(255,255,255,.06); }
+  #steps li:first-child { border-top: 0; }
+  #steps .n { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 14px; }
+  #steps li.now { color: var(--go); }
+  #steps .empty { color: var(--dim); font-style: italic; }
+
+  #bar { left: 50%; bottom: 16px; transform: translateX(-50%);
+         display: flex; align-items: center; gap: 8px; padding: 9px 10px; }
+  button { font: inherit; font-size: 12.5px; color: var(--ink);
+           background: rgba(255,255,255,.07); border: 1px solid var(--edge);
+           border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+  button:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+  button:disabled { opacity: .35; cursor: default; }
+  button.think { background: var(--think); border-color: var(--think); color: #06212e; font-weight: 650; }
+  button.go { background: var(--go); border-color: var(--go); color: #06301e; font-weight: 650; }
+  .sep { width: 1px; height: 20px; background: var(--edge); margin: 0 2px; }
+
+  #held { left: 50%; bottom: 74px; transform: translateX(-50%); padding: 7px 13px;
+          display: none; align-items: center; gap: 9px; }
+  #held.on { display: flex; }
+  #held .v { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums;
+             color: var(--accent); min-width: 24px; text-align: center; }
+  #held .k { font-size: 11.5px; color: var(--dim); }
+
+  #loading { position: fixed; inset: 0; display: grid; place-items: center;
+             background: #12151b; z-index: 10; color: var(--dim); font-size: 13px;
+             transition: opacity .4s ease; }
+  #loading.gone { opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="title" class="card">
+  <h1>nano-ToonTalk<span class="badge" id="badge">the workshop</span></h1>
+  <p>Numbers, boxes with holes, and a robot that learns by watching.</p>
+  <p id="hint">Click a stack to have the robot fetch something.</p>
+</div>
+
+<div id="prog" class="card">
+  <h2>Trained actions</h2>
+  <p id="trainedOn"></p>
+  <ul id="steps"><li class="empty">not trained yet</li></ul>
+</div>
+
+<div id="held" class="card">
+  <span class="k">holding</span><span class="v" id="heldVal">–</span>
+  <span class="k" id="heldTip">type digits to change it</span>
+</div>
+
+<div id="bar" class="card">
+  <button id="exitBtn" class="think" style="display:none">Leave thought bubble</button>
+  <button id="runBtn" class="go">Run what it learned</button>
+  <button id="againBtn">Train again</button>
+  <button id="dustyBtn">Dusty: asleep</button>
+  <span class="sep"></span>
+  <button id="resetBtn">Reset</button>
+  <button id="clearBtn">Forget training</button>
+</div>
+
+<div id="loading">Loading…</div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://unpkg.com/three@0.185.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.185.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const DEG = Math.PI / 180;
+const ease = t => t * t * (3 - 2 * t);
+const lerp = (a, b, t) => a + (b - a) * t;
+const shortAngle = (a, b) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a));
+
+// ---------------------------------------------------------------- renderer
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;   // PCFSoft is deprecated in r185
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.32;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141821);
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 200);
+camera.position.set(0.40, 3.05, 5.45);
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true; orbit.dampingFactor = 0.06;
+orbit.minDistance = 1.5; orbit.maxDistance = 16;
+orbit.maxPolarAngle = Math.PI * 0.495;
+orbit.target.set(0, 0.68, 0.95);
+orbit.update();
+
+// The bench is wide, so frame it from the aspect ratio rather than hard-coding
+// a camera spot that only suits one window shape. Backs off once the user
+// orbits, so we never yank the view out from under them.
+let userMoved = false;
+orbit.addEventListener('start', () => { userMoved = true; });
+function frameScene() {
+  if (userMoved) return;
+  const centre = new THREE.Vector3(0, 1.0, 0.8), halfW = 2.6, halfH = 1.3;
+  const vFov = camera.fov * DEG;
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+  const d = Math.max(halfH / Math.tan(vFov / 2), halfW / Math.tan(hFov / 2)) + 1.15;
+  camera.position.copy(centre).addScaledVector(new THREE.Vector3(0.07, 0.44, 1).normalize(), d);
+  orbit.target.copy(centre);
+  orbit.update();
+}
+
+scene.add(new THREE.HemisphereLight(0x9fb4d8, 0x2a3038, 1.05));
+const key = new THREE.DirectionalLight(0xfff2e6, 3.5);
+key.position.set(4.6, 6.4, 5.0);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 3; key.shadow.bias = -0.0009;
+Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: .5, far: 24 });
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xbcd2ff, 0.85); fill.position.set(-5, 2.6, 3.0); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xcfe2ff, 1.35); rim.position.set(-2.2, 3.4, -5.0); scene.add(rim);
+
+const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 64).rotateX(-Math.PI / 2),
+  new THREE.MeshStandardMaterial({ color: 0x1b1f28, roughness: 0.92 }));
+ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(30, 60, 0x2c3341, 0x232935);
+grid.material.transparent = true; grid.material.opacity = 0.45; grid.position.y = 0.002;
+scene.add(grid);
+
+// ---------------------------------------------------------------- thought bubble
+// Additive only: with no environment map a physical/clearcoat bubble reflects
+// black and smears a dark disc over the floor.
+const BUBBLE_OPACITY = 0.11;
+const bubbleMat = new THREE.MeshBasicMaterial({
+  color: 0x9fd8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending,
+  side: THREE.DoubleSide, depthWrite: false });
+const bubble = new THREE.Group();
+{
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(3.35, 48, 32, 0, Math.PI * 2, 0, Math.PI * 0.66), bubbleMat);
+  dome.position.set(0, 0.95, 0.75);
+  bubble.add(dome);
+  for (const [x, y, z, r] of [[2.85, 0.6, 2.5, 0.24], [3.25, 0.32, 2.85, 0.15], [3.55, 0.15, 3.1, 0.09]]) {
+    const b = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), bubbleMat);
+    b.position.set(x, y, z);
+    bubble.add(b);
+  }
+}
+scene.add(bubble);
+
+// ---------------------------------------------------------------- things
+// A "thing" is a number or a box. Boxes have holes; holes hold things, boxes
+// included, so the whole structure is a tree rooted at a station.
+const HOLES = 2, HOLE_W = 0.19;
+const CUBE = 0.24;
+const cubeGeo = new THREE.BoxGeometry(CUBE, CUBE, CUBE);
+const faceGeo = new THREE.PlaneGeometry(CUBE * 0.86, CUBE * 0.86);
+let nextId = 1;
+
+function setPick(obj, data) { obj.__pick = data; }
+
+function makeNumber(value) {
+  const g = new THREE.Group();
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 256;
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+
+  const shell = new THREE.Mesh(cubeGeo, new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 }));
+  shell.castShadow = true; shell.receiveShadow = true;
+  g.add(shell);
+  const faceMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45 });
+  const p = CUBE / 2 + 0.0015;
+  for (const [px, pz, ry] of [[0, p, 0], [0, -p, Math.PI], [p, 0, Math.PI / 2], [-p, 0, -Math.PI / 2]]) {
+    const q = new THREE.Mesh(faceGeo, faceMat);
+    q.position.set(px, 0, pz); q.rotation.y = ry;
+    g.add(q);
+  }
+  Object.assign(g.userData, { id: nextId++, kind: 'number', op: '+', width: CUBE, rest: CUBE / 2 });
+  g.setValue = (v) => {
+    g.userData.value = v;
+    const s = String(v), c = canvas.getContext('2d');
+    c.fillStyle = '#f3e8d0'; c.fillRect(0, 0, 256, 256);
+    c.strokeStyle = '#b8241a'; c.lineWidth = 12; c.strokeRect(16, 16, 224, 224);
+    c.fillStyle = '#8f1c14';
+    c.font = `bold ${s.length > 3 ? 92 : s.length > 2 ? 120 : s.length > 1 ? 148 : 176}px Georgia, serif`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(s, 128, 136);
+    tex.needsUpdate = true;
+  };
+  g.setValue(value);
+  setPick(g, { kind: 'thing', thing: g });
+  return g;
+}
+
+function makeBox() {
+  const g = new THREE.Group();
+  const W = HOLES * HOLE_W + (HOLES + 1) * 0.035;      // outer width from holes + walls
+  const D = HOLE_W + 0.07, H = 0.11;
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0xe2cfa6, roughness: 0.62 });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), woodMat);
+  base.castShadow = true; base.receiveShadow = true;
+  g.add(base);
+
+  const holes = [];
+  const pocketMat = new THREE.MeshStandardMaterial({ color: 0x4a3f2e, roughness: 0.85 });
+  for (let i = 0; i < HOLES; i++) {
+    const x = -W / 2 + 0.035 + HOLE_W / 2 + i * (HOLE_W + 0.035);
+    const pocket = new THREE.Mesh(new THREE.BoxGeometry(HOLE_W, 0.055, HOLE_W), pocketMat);
+    pocket.position.set(x, H / 2 - 0.026, 0);
+    pocket.receiveShadow = true;
+    g.add(pocket);
+    const anchor = new THREE.Object3D();
+    anchor.position.set(x, H / 2 - 0.05, 0);
+    g.add(anchor);
+    const hole = { index: i, anchor, thing: null, pocket };
+    setPick(pocket, { kind: 'hole', box: g, index: i });
+    holes.push(hole);
+  }
+  Object.assign(g.userData, { id: nextId++, kind: 'box', holes, width: W, rest: H / 2 });
+  setPick(g, { kind: 'thing', thing: g });
+  return g;
+}
+
+const fitScale = (thing, outerScale = 1) => (HOLE_W * 0.94) / thing.userData.width;
+
+// ---------------------------------------------------------------- tree helpers
+function holesOf(t) { return t?.userData.kind === 'box' ? t.userData.holes : null; }
+
+// Address of a thing as {station, path} where path is a chain of hole indices.
+function findLoc(thing) {
+  for (const st of Object.values(stations)) {
+    const found = search(st.occupant, []);
+    if (found) return { station: st.id, path: found };
+  }
+  return null;
+  function search(node, path) {
+    if (!node) return null;
+    if (node === thing) return path;
+    const hs = holesOf(node);
+    if (!hs) return null;
+    for (const h of hs) {
+      const r = search(h.thing, path.concat(h.index));
+      if (r) return r;
+    }
+    return null;
+  }
+}
+function thingAt(stationId, path) {
+  let node = stations[stationId].occupant;
+  for (const i of path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
+  return node;
+}
+// The container a path addresses: either the station surface or a specific hole.
+function slotAt(stationId, path) {
+  const st = stations[stationId];
+  if (!path.length) return { station: st };
+  const parent = thingAt(stationId, path.slice(0, -1));
+  const hs = holesOf(parent);
+  return hs ? { hole: hs[path[path.length - 1]] } : null;
+}
+
+// --- things as plain data -------------------------------------------------
+// Needed for three separate jobs: snapshotting the world before the robot
+// daydreams, rebuilding it afterwards, and comparing what the robot was trained
+// on against what it is later given.
+function specOf(thing) {
+  if (!thing) return null;
+  return thing.userData.kind === 'number'
+    ? { kind: 'number', value: thing.userData.value }
+    : { kind: 'box', holes: thing.userData.holes.map(h => specOf(h.thing)) };
+}
+function buildThing(spec) {
+  if (!spec) return null;
+  if (spec.kind === 'number') return makeNumber(spec.value);
+  const b = makeBox();
+  spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
+  return b;
+}
+// Structure without values: what the robot's condition actually matches on.
+function shapeOf(spec) {
+  if (!spec) return '_';
+  return spec.kind === 'number' ? 'n' : '[' + spec.holes.map(shapeOf).join(',') + ']';
+}
+// --- the robot's condition ------------------------------------------------
+// Starts as an exact copy of what it was trained on, so it only fires on that
+// very thing. Dusty erases parts of it into wildcards, which is what turns a
+// one-off into something general.
+const WILD = { kind: 'wild' };
+
+function matches(cond, spec) {
+  if (cond === null || cond === undefined) return spec == null;
+  if (cond.kind === 'wild') return spec != null;
+  if (!spec) return false;
+  if (cond.kind === 'number') return spec.kind === 'number' && spec.value === cond.value;
+  if (cond.kind === 'box') {
+    return spec.kind === 'box' && spec.holes.length === cond.holes.length
+      && cond.holes.every((c, i) => matches(c, spec.holes[i]));
+  }
+  return false;
+}
+function condText(c) {
+  if (!c) return 'an empty hole';
+  if (c.kind === 'wild') return 'anything';
+  if (c.kind === 'number') return `the number ${c.value}`;
+  return `a box of ${c.holes.map(condText).join(' and ')}`;
+}
+function eraseAt(cond, path) {
+  if (!path.length) return WILD;
+  const [i, ...rest] = path;
+  if (cond?.kind !== 'box') return cond;
+  const holes = cond.holes.slice();
+  holes[i] = eraseAt(holes[i], rest);
+  return { kind: 'box', holes };
+}
+
+function detach(thing) {
+  const loc = findLoc(thing);
+  if (!loc) return;
+  const slot = slotAt(loc.station, loc.path);
+  if (slot?.hole) slot.hole.thing = null;
+  else stations[loc.station].occupant = null;
+}
+
+function putOnStation(st, thing) {
+  scene.add(thing);
+  thing.scale.setScalar(1);
+  thing.quaternion.identity();
+  thing.position.set(st.point.x, st.topY + thing.userData.rest, st.point.z);
+  st.occupant = thing;
+}
+function putInHole(hole, thing) {
+  hole.anchor.add(thing);
+  thing.position.set(0, 0, 0);
+  thing.quaternion.identity();
+  thing.scale.setScalar(fitScale(thing));
+  thing.position.y = thing.userData.rest * fitScale(thing);
+  hole.thing = thing;
+}
+
+// ---------------------------------------------------------------- stations
+// A straight bench rather than an arc: on an arc the stations sit at different
+// depths and overlap in projection, and the robot keeps turning away. In a row
+// it walks left-right and always faces the viewer.
+const ROW_Z = 1.35, ROW_STEP = 0.68;
+const STATION_DEFS = [
+  { id: 'numbers', label: 'the number stack', kind: 'stack' },
+  { id: 'boxes',   label: 'the box stack',    kind: 'stack' },
+  { id: 'p1',      label: 'pillar 1',         kind: 'pillar' },
+  { id: 'p2',      label: 'pillar 2',         kind: 'pillar' },
+  { id: 'p3',      label: 'pillar 3',         kind: 'pillar' },
+  { id: 'train',   label: 'the thinking pad', kind: 'train' },
+].map((d, i, all) => ({ ...d, x: (i - (all.length - 1) / 2) * ROW_STEP }));
+const stations = {};
+const pickables = [];
+
+function makePillar(height, special) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.16, height, 36),
+    new THREE.MeshStandardMaterial({ color: special ? 0x1d3040 : 0x272d38, roughness: 0.7, metalness: 0.1 }));
+  body.position.y = height / 2; body.castShadow = true; body.receiveShadow = true;
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.035, 36),
+    new THREE.MeshStandardMaterial({
+      color: special ? 0x2b6f8f : 0xefe2c6, roughness: 0.45,
+      emissive: special ? 0x1b6f92 : 0x000000, emissiveIntensity: special ? 2.4 : 0 }));
+  top.position.y = height; top.castShadow = true; top.receiveShadow = true;
+  g.add(body, top);
+  if (special) {                                  // little thought-bubble finial
+    for (const [dy, r] of [[0.10, 0.05], [0.185, 0.032], [0.245, 0.02]]) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 12),
+        new THREE.MeshBasicMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.5,
+          blending: THREE.AdditiveBlending, depthWrite: false }));
+      b.position.set(0.13, height + dy, -0.05);
+      g.add(b);
+    }
+  }
+  return g;
+}
+
+function refillStack(st) {
+  while (st.cubes.length < st.stackN) {
+    const t = st.id === 'numbers' ? makeNumber(1) : makeBox();
+    scene.add(t);
+    setPick(t, { kind: 'station', id: st.id });
+    st.cubes.unshift(t);
+  }
+  st.cubes.forEach((c, i) => {
+    c.position.set(st.point.x, st.plinth + c.userData.rest + i * st.pitch, st.point.z);
+    c.quaternion.identity(); c.scale.setScalar(1);
+  });
+}
+
+// ---------------------------------------------------------------- robot
+const POSE = {
+  rest:  { sh: 0,         el: 0 },
+  reach: { sh: -38 * DEG, el:  33 * DEG },
+  carry: { sh:  -8 * DEG, el: -30 * DEG },
+};
+const JAW_CLOSED = 0.103, JAW_OPEN = 0.200;
+const WALK_SPEED = 1.25, STRIDE = 0.55;
+
+let robot, root, shoulder, elbow, jawA, jawB, grip;
+let hipL, hipR, kneeL, kneeR;
+const initQ = new Map(), jawBase = {};
+let jawSign = 1, armPose = { ...POSE.rest }, jawNow = JAW_CLOSED;
+let reachLocal = null, reachR = 0, reachBeta = 0;
+const _qd = new THREE.Quaternion(), _axisX = new THREE.Vector3(1, 0, 0);
+
+function remember(n) { if (n) initQ.set(n, n.quaternion.clone()); }
+function setJoint(node, a) {
+  if (!node) return;
+  _qd.setFromAxisAngle(_axisX, a);
+  node.quaternion.copy(initQ.get(node)).multiply(_qd);
+}
+function applyArm(sh, el) { armPose = { sh, el }; setJoint(shoulder, sh); setJoint(elbow, el); }
+function applyJaw(open) {
+  jawNow = open;
+  jawA.position.x = jawBase.a - jawSign * open;
+  jawB.position.x = jawBase.b + jawSign * open;
+}
+function setLegs(phase, amount) {
+  const s = Math.sin(phase) * amount;
+  setJoint(hipL, 22 * DEG * s);
+  setJoint(hipR, -22 * DEG * s);
+  setJoint(kneeL, -18 * DEG * Math.max(0, -s));
+  setJoint(kneeR, -18 * DEG * Math.max(0, s));
+  root.position.y = 0.022 * Math.abs(Math.sin(phase * 2)) * amount;
+}
+
+// Where the robot must stand, and which way to face, to have its claw land on a
+// station: same bearing as the station, one arm's reach short of it.
+function standForPoint(p) {
+  return { pos: new THREE.Vector3(p.x, 0, p.z - reachR), yaw: -reachBeta };
+}
+// Where the claw should actually go. A hole sits off to one side of its box, so
+// aiming at the station centre made things visibly land in the wrong place and
+// then jump.
+function targetPoint(stationId, path) {
+  const st = stations[stationId];
+  if (!path.length) return st.point.clone();
+  const hole = slotAt(stationId, path)?.hole;
+  if (!hole) return st.point.clone();
+  scene.updateMatrixWorld(true);
+  const p = hole.anchor.getWorldPosition(new THREE.Vector3());
+  p.y = st.point.y;                       // the claw always works at its own height
+  return p;
+}
+const standForSlot = (stationId, path) => () => standForPoint(targetPoint(stationId, path));
+const HOME = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
+
+// ---------------------------------------------------------------- state
+let held = null, mode = 'world', program = [], valueAtPickup = null, busy = false;
+let condition = null;      // what it must be given before it will run
+let preTraining = null;    // world snapshot taken when the daydream began
+let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
+let runCount = 0;
+const MAX_ITER = 20;       // a robot whose condition never fails would loop forever
+
+// ---------------------------------------------------------------- sequencer
+const queue = [];
+let current = null, tCur = 0;
+function enqueue(...steps) { queue.push(...steps); }
+// Steps spawned from inside a running step (settling into a hole, combining)
+// must happen *now*, not after the retract-and-walk-home already in the queue.
+function enqueueNext(...steps) { queue.unshift(...steps); }
+function tick(dt) {
+  if (!current) {
+    current = queue.shift(); tCur = 0;
+    if (!current) { if (busy) { busy = false; afterQueue(); } return; }
+    current.start && current.start();
+  }
+  tCur += dt;
+  const t = Math.min(1, tCur / (current.dur || 0.0001));
+  current.update && current.update(t);
+  if (t >= 1) { current.end && current.end(); current = null; }
+}
+let pendingAfter = null;
+function afterQueue() { const f = pendingAfter; pendingAfter = null; if (f) f(); refreshUI(); }
+
+// `target` may be a function, resolved when the step starts -- stand positions
+// depend on where a hole is, which is only known once earlier steps have run.
+const walkTo = (target) => {
+  let p0, y0, y1, dist, tgt;
+  return {
+    dur: 0.01,
+    start() {
+      tgt = typeof target === 'function' ? target() : target;
+      p0 = root.position.clone(); p0.y = 0;
+      y0 = root.rotation.y;
+      y1 = shortAngle(y0, tgt.yaw);
+      dist = p0.distanceTo(tgt.pos);
+      // already standing there: don't burn a beat shuffling in place
+      this.dur = (dist < 0.02 && Math.abs(y1 - y0) < 0.02)
+        ? 0.0001 : Math.max(0.4, dist / WALK_SPEED, Math.abs(y1 - y0) * 0.42);
+    },
+    update(t) {
+      const e = ease(t);
+      root.position.x = lerp(p0.x, tgt.pos.x, e);
+      root.position.z = lerp(p0.z, tgt.pos.z, e);
+      root.rotation.y = lerp(y0, y1, e);
+      const travelled = dist * e;
+      setLegs((travelled / STRIDE) * Math.PI * 2, dist > 0.12 ? Math.sin(Math.PI * t) : 0);
+    },
+    end() { setLegs(0, 0); root.position.y = 0; },
+  };
+};
+const armTo = (pose, jaw, dur = 0.8) => {
+  let a0, j0;
+  return {
+    dur,
+    start() { a0 = { ...armPose }; j0 = jawNow; },
+    update(t) {
+      const e = ease(t);
+      applyArm(lerp(a0.sh, pose.sh, e), lerp(a0.el, pose.el, e));
+      applyJaw(lerp(j0, jaw, e));
+    },
+  };
+};
+const doNow = (fn) => ({ dur: 0.0001, end: fn });
+const pause = (d) => ({ dur: d });
+
+function abort(msg) {
+  queue.length = 0;
+  pendingAfter = null;
+  if (mode === 'replay') mode = 'world';
+  highlight(-1);
+  say(msg);
+}
+
+// ---------------------------------------------------------------- actions
+function actionPick(stationId, path) {
+  const st = stations[stationId];
+  enqueue(walkTo(standForSlot(stationId, path)));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.8));
+  enqueue(doNow(() => {
+    let obj;
+    if (st.kind === 'stack' && !path.length) { obj = st.cubes.pop(); refillStack(st); }
+    else { obj = thingAt(stationId, path); detach(obj); }
+    if (!obj) {
+      // Replaying into a world that no longer matches: stop rather than limp on.
+      return abort(`The robot expected something at ${labelFor(stationId, path)} and found nothing.`);
+    }
+    held = obj;
+    if (held) {
+      setPick(held, { kind: 'thing', thing: held });
+      valueAtPickup = held.userData.value ?? null;
+      grip.attach(held);          // keeps its world spot; graspSettle draws it in
+      enqueueNext(graspSettle(held));
+    }
+  }));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.4));
+  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.75));
+  // No walk back to centre: in the row layout the robot faces the viewer
+  // wherever it stands, so returning home only added a pointless there-and-back
+  // between two actions at the same station.
+  enqueue(doNow(refreshUI));
+}
+
+function actionPlace(stationId, path) {
+  const st = stations[stationId];
+  enqueue(walkTo(standForSlot(stationId, path)));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.75));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.4));
+  enqueue(doNow(() => {
+    const dropped = held; held = null;
+    const from = dropped.getWorldPosition(new THREE.Vector3());
+    const slot = slotAt(stationId, path);
+    if (slot?.hole && slot.hole.thing) combine(slot.hole, dropped, true, from);
+    else if (!path.length && st.occupant) combine(st, dropped, false, from);
+    else {
+      if (slot?.hole) putInHole(slot.hole, dropped); else putOnStation(st, dropped);
+      enqueueNext(settleInto(dropped, from));    // drop it in rather than teleport
+    }
+    refreshUI();
+  }));
+  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.85));
+}
+
+// Draw a just-grasped thing into the claw, and a just-released one into its
+// slot, instead of snapping. Both animate local position so the parenting is
+// already final and nothing can drift.
+function graspSettle(thing, dur = 0.2) {
+  const p0 = thing.position.clone(), s0 = thing.scale.x;
+  const to = new THREE.Vector3(0, 0, 0);
+  return {
+    dur,
+    update(t) {
+      const e = ease(t);
+      thing.position.lerpVectors(p0, to, e);
+      thing.scale.setScalar(lerp(s0, 1, e));
+    },
+    end() { thing.position.copy(to); thing.scale.setScalar(1); },
+  };
+}
+function settleInto(thing, fromWorld, dur = 0.22) {
+  const to = thing.position.clone();
+  const from = thing.parent.worldToLocal(fromWorld.clone());
+  return {
+    dur,
+    update(t) { thing.position.lerpVectors(from, to, ease(t)); },
+    end() { thing.position.copy(to); },
+  };
+}
+
+// Where Bammer will eventually fly in with his hammer. Only numbers combine.
+function combine(slot, incoming, isHole, fromWorld) {
+  const target = isHole ? slot.thing : slot.occupant;
+  if (target.userData.kind !== 'number' || incoming.userData.kind !== 'number') {
+    // nothing sensible to do -- park it back on the nearest free pillar
+    const free = Object.values(stations).find(s => s.kind === 'pillar' && !s.occupant);
+    if (free) putOnStation(free, incoming); else scene.remove(incoming);
+    say('Only numbers combine — boxes need a hole of their own.');
+    return;
+  }
+  const result = target.userData.op === '+'
+    ? target.userData.value + incoming.userData.value
+    : target.userData.value + incoming.userData.value;
+  scene.attach(incoming);
+  const start = fromWorld ? fromWorld.clone() : incoming.position.clone();
+  const dest = target.getWorldPosition(new THREE.Vector3());
+  const base = isHole ? fitScale(target) : 1;
+  // enqueueNext, not enqueue: otherwise the merge waits until after the robot
+  // has retracted and walked home, leaving the number hanging in mid-air.
+  enqueueNext({
+    dur: 0.42,
+    start() { incoming.position.copy(start); },
+    update(t) {
+      const e = ease(t);
+      incoming.position.lerpVectors(start, dest, e);
+      incoming.scale.setScalar(1 - 0.85 * e);
+    },
+    end() { scene.remove(incoming); },
+  }, {
+    dur: 0.4,
+    start() { target.setValue(result); flash(dest); },
+    update(t) { target.scale.setScalar(base * (1 + 0.3 * Math.sin(Math.PI * t))); },
+    end() { target.scale.setScalar(base); refreshUI(); },
+  });
+}
+
+const flashes = [];
+function flash(pos) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.position.copy(pos); scene.add(m); flashes.push({ m, t: 0 });
+}
+
+// ---------------------------------------------------------------- interaction
+function resolve(ev) {
+  const ndc = new THREE.Vector2((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  for (const h of ray.intersectObjects(pickables, true)) {
+    let o = h.object;
+    while (o && !o.__pick) o = o.parent;
+    if (o) return o.__pick;
+  }
+  return null;
+}
+const ray = new THREE.Raycaster();
+
+function handleClick(target) {
+  if (!target || busy || mode === 'replay') return;
+
+  if (target.kind === 'dusty') {
+    dustyActive = !dustyActive;
+    say(dustyActive ? 'Dusty is awake — click part of the robot’s thought to erase it.'
+                    : 'Dusty settles down.');
+    return refreshUI();
+  }
+  if (target.kind === 'cond') {
+    if (!dustyActive) return say('Wake Dusty up first, then click to erase.');
+    dustyErase(target.path);
+    return;
+  }
+
+  if (target.kind === 'station') {
+    const st = stations[target.id];
+    if (held) {
+      if (st.kind === 'stack') return say('Stacks only give things out.');
+      if (st.occupant && st.occupant.userData.kind === 'box') return say('Click one of its holes.');
+      go({ type: 'place', station: st.id, path: [] });
+    } else {
+      if (st.kind === 'stack') go({ type: 'pick', station: st.id, path: [] });
+      else if (st.occupant) go({ type: 'pick', station: st.id, path: [] });
+      else say('Nothing there to pick up.');
+    }
+    return;
+  }
+  if (target.kind === 'thing') {
+    const loc = findLoc(target.thing);
+    if (!loc) return;
+    if (held) go({ type: 'place', station: loc.station, path: loc.path });   // combine onto it
+    else go({ type: 'pick', station: loc.station, path: loc.path });
+    return;
+  }
+  if (target.kind === 'hole') {
+    // A thing sits down inside its pocket, so a click meant for it can land on
+    // the pocket instead. An occupied hole always means the thing in it.
+    const occupant = target.box.userData.holes[target.index].thing;
+    if (occupant) return handleClick({ kind: 'thing', thing: occupant });
+    if (!held) return say('That hole is empty.');
+    const loc = findLoc(target.box);
+    if (!loc) return;
+    go({ type: 'place', station: loc.station, path: loc.path.concat(target.index) });
+  }
+}
+
+// Perform a step and, while training, remember it.
+function go(step) {
+  busy = true;
+  if (step.type === 'place' && held) {
+    const v = held.userData.value;
+    if (v != null && v !== valueAtPickup) record({ type: 'setValue', value: v });
+  }
+  record(step);
+  if (step.type === 'pick') actionPick(step.station, step.path);
+  else actionPlace(step.station, step.path);
+  // Handing the robot something onto an *empty* pad is what starts training --
+  // but only while it is still untrained. Once it knows a routine, putting
+  // something there is giving it new input to run on, not a fresh lesson.
+  // (Use "Train again" to deliberately start over.)
+  if (step.type === 'place' && step.station === 'train' && mode === 'world'
+      && !step.path.length && !stations.train.occupant && !program.length) {
+    pendingAfter = enterTraining;
+  }
+  refreshUI();
+}
+function record(step) {
+  if (mode !== 'training') return;
+  program.push(step);
+  renderProgram();
+}
+
+// ---------------------------------------------------------------- training
+// --- the condition, shown as a thought floating over the thinking pad -------
+function ghostify(root) {
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = false; o.receiveShadow = false;
+    if (o.material) { o.material.transparent = true; o.material.opacity = 0.78; }
+  });
+}
+function buildCondNode(cond, path, marks) {
+  let g;
+  if (!cond) g = new THREE.Group();                       // an empty hole
+  else if (cond.kind === 'wild') g = makeNumber('?');
+  else if (cond.kind === 'number') g = makeNumber(cond.value);
+  else {
+    g = makeBox();
+    cond.holes.forEach((h, i) => {
+      const child = buildCondNode(h, path.concat(i), marks);
+      if (h) putInHole(g.userData.holes[i], child);
+      else { child.position.set(0, 0, 0); g.userData.holes[i].anchor.add(child); }
+    });
+  }
+  marks.push([g, path]);
+  return g;
+}
+function rebuildCondition() {
+  if (condDisplay) { scene.remove(condDisplay); condDisplay = null; }
+  if (!condition) { refreshUI(); return; }
+  const pad = stations.train;
+  const marks = [];
+  const inner = buildCondNode(condition, [], marks);
+  ghostify(inner);
+  // picks are assigned after a clean sweep, so number/hole picks from the
+  // ordinary constructors can't shadow the condition's own targets
+  inner.traverse(o => { delete o.__pick; });
+  marks.forEach(([o, p]) => setPick(o, { kind: 'cond', path: p }));
+
+  condDisplay = new THREE.Group();
+  inner.scale.setScalar(0.72);
+  condDisplay.add(inner);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.34, 28, 20), bubbleMat.clone());
+  halo.material.opacity = 0.16;
+  condDisplay.add(halo);
+  for (const [dy, r] of [[-0.34, 0.055], [-0.46, 0.034]]) {
+    const b = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), halo.material);
+    b.position.set(-0.06, dy, 0.02);
+    condDisplay.add(b);
+  }
+  condDisplay.position.set(pad.point.x, pad.point.y + 0.78, pad.point.z);
+  scene.add(condDisplay);
+  refreshUI();
+}
+function condNodeAt(path) {
+  let found = null;
+  condDisplay?.traverse(o => {
+    if (!found && o.__pick?.kind === 'cond' && o.__pick.path.join() === path.join()) found = o;
+  });
+  return found;
+}
+
+// --- Dusty ----------------------------------------------------------------
+function dustyErase(path) {
+  const node = condNodeAt(path);
+  if (!node || !dusty) return;
+  busy = true;
+  const dest = node.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, -0.12, 0.34));
+  const from = dusty.position.clone();
+  enqueue({ dur: 0.45, update(t) { dusty.position.lerpVectors(from, dest, ease(t)); } });
+  enqueue({
+    dur: 0.5,
+    start() { flash(node.getWorldPosition(new THREE.Vector3())); },
+    update(t) { dusty.position.z = dest.z - 0.05 * Math.sin(Math.PI * t * 3); },
+    end() { condition = eraseAt(condition, path); rebuildCondition(); },
+  });
+  enqueue({
+    dur: 0.45,
+    update(t) { dusty.position.lerpVectors(dest, dustyHome, ease(t)); },
+    end() { dusty.position.copy(dustyHome); refreshUI(); },
+  });
+}
+
+function snapshotWorld() {
+  return Object.fromEntries(Object.values(stations)
+    .filter(s => s.kind !== 'stack')
+    .map(s => [s.id, specOf(s.occupant)]));
+}
+function restoreWorld(snap) {
+  queue.length = 0; current = null; busy = false; pendingAfter = null;
+  if (held) { scene.remove(held); held = null; }
+  for (const st of Object.values(stations)) {
+    if (st.kind === 'stack') continue;
+    if (st.occupant) { scene.remove(st.occupant); st.occupant = null; }
+    if (snap[st.id]) putOnStation(st, buildThing(snap[st.id]));
+  }
+  root.position.set(0, 0, 0); root.rotation.y = 0; setLegs(0, 0);
+  applyArm(POSE.rest.sh, POSE.rest.el); applyJaw(JAW_CLOSED);
+}
+
+function enterTraining() {
+  const given = stations.train.occupant;
+  if (!given) return;
+  condition = specOf(given);         // exact at first; Dusty loosens it
+  rebuildCondition();
+  preTraining = snapshotWorld();     // the daydream must not disturb the world
+  mode = 'training';
+  program = [];
+  bubbleTarget = 1;
+  renderProgram(); refreshUI();
+  say('The robot is imagining. Everything you do now, it learns.');
+}
+// Leaving the bubble rewinds the world: what happened in the daydream was never
+// real. The robot keeps only the actions it learned.
+function leaveTraining(restore = true) {
+  mode = 'world';
+  bubbleTarget = 0;
+  if (restore && preTraining) restoreWorld(preTraining);
+  preTraining = null;
+  renderProgram(); refreshUI();
+}
+
+function resetWorld() {
+  for (const st of Object.values(stations)) {
+    if (st.occupant) { scene.remove(st.occupant); st.occupant = null; }
+    if (st.kind === 'stack') { st.cubes.forEach(c => scene.remove(c)); st.cubes = []; refillStack(st); }
+  }
+  if (held) { scene.remove(held); held = null; }
+  root.position.set(0, 0, 0); root.rotation.y = 0;
+  setLegs(0, 0);
+  applyArm(POSE.rest.sh, POSE.rest.el); applyJaw(JAW_CLOSED);
+  queue.length = 0; current = null; busy = false; pendingAfter = null;
+  refreshUI();
+}
+
+function runProgram() {
+  if (!program.length) return say('The robot has not been trained yet.');
+  const given = stations.train.occupant;
+  if (!given) return say('Put something on the thinking pad for it to work on.');
+  if (!matches(condition, specOf(given)))
+    return say(`It only runs when given ${condText(condition)}.`);
+  // No world reset: the robot acts for real, on whatever it has been given.
+  mode = 'replay'; busy = true; runCount = 0;
+  nextIteration();
+  refreshUI();
+}
+
+// A robot keeps going as long as its condition still holds -- that is how a
+// loop is expressed here, so the cap is the only thing stopping a runaway.
+function nextIteration() {
+  if (!matches(condition, specOf(stations.train.occupant))) {
+    return finishRun(runCount ? `Ran ${runCount}×, then its condition stopped matching.`
+                              : 'Its condition no longer matches.');
+  }
+  if (runCount >= MAX_ITER) return finishRun(`Stopped after ${MAX_ITER} rounds.`);
+  runCount++;
+  program.forEach((step, i) => {
+    enqueue(doNow(() => highlight(i)));
+    if (step.type === 'pick') actionPick(step.station, step.path);
+    else if (step.type === 'place') actionPlace(step.station, step.path);
+    else if (step.type === 'setValue') {
+      enqueue({
+        dur: 0.4,
+        start() { if (held) { held.setValue(step.value); flash(held.getWorldPosition(new THREE.Vector3())); } },
+        update(t) { if (held) held.scale.setScalar(1 + 0.26 * Math.sin(Math.PI * t)); },
+        end() { if (held) held.scale.setScalar(1); refreshUI(); },
+      });
+    }
+  });
+  enqueue(pause(0.25), doNow(nextIteration));
+}
+function finishRun(msg) {
+  highlight(-1);
+  mode = 'world';
+  if (msg) say(msg);
+  refreshUI();
+}
+
+// ---------------------------------------------------------------- UI
+const $ = (id) => document.getElementById(id);
+let hintTimer = null;
+function say(msg) { $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, 2800); }
+function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i)); }
+// 'train' is deliberately described as "what it was given" -- at run time it
+// resolves to whatever is on the pad then, which is the whole point.
+function labelFor(stationId, path) {
+  const base = stationId === 'train' ? 'what it was given' : stations[stationId].label;
+  return base + (path.length ? ` · hole ${path.map(i => i + 1).join('.')}` : '');
+}
+function describe(s) {
+  return s.type === 'pick' ? `pick up from ${labelFor(s.station, s.path)}`
+       : s.type === 'place' ? `put it on ${labelFor(s.station, s.path)}`
+       : `make it ${s.value}`;
+}
+function renderProgram() {
+  const ul = $('steps');
+  $('trainedOn').textContent = condition ? `runs on ${condText(condition)}` : '';
+  if (!program.length) {
+    ul.innerHTML = `<li class="empty">${mode === 'training' ? 'watching…' : 'not trained yet'}</li>`;
+    return;
+  }
+  ul.innerHTML = program.map((s, i) =>
+    `<li><span class="n">${i + 1}</span><span>${describe(s)}</span></li>`).join('');
+}
+function refreshUI() {
+  const training = mode === 'training';
+  $('badge').textContent = mode === 'replay' ? 'repeating' : training ? 'inside the thought' : 'the workshop';
+  $('badge').className = 'badge' + (training ? ' training' : '');
+  $('exitBtn').style.display = training ? '' : 'none';
+  $('runBtn').style.display = training ? 'none' : '';
+  $('againBtn').style.display = training ? 'none' : '';
+  const running = mode === 'replay';
+  $('runBtn').textContent = running ? 'Stop' : 'Run what it learned';
+  $('runBtn').disabled = !running && !program.length;
+  $('againBtn').disabled = running || busy || !stations.train.occupant;
+  $('resetBtn').disabled = running;
+  $('clearBtn').disabled = running;
+  $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
+  $('dustyBtn').classList.toggle('think', dustyActive);
+  $('dustyBtn').disabled = running || busy || !condition || !dusty;
+
+  const showHeld = !!held && mode !== 'replay';
+  $('held').classList.toggle('on', showHeld);
+  if (held) {
+    const isNum = held.userData.kind === 'number';
+    $('heldVal').textContent = isNum ? held.userData.value : 'a box';
+    $('heldTip').textContent = isNum ? 'type digits to change it' : 'click a pillar or a hole';
+  }
+  if (hintTimer) return;
+  $('hint').textContent =
+    mode === 'replay' ? 'Watching it repeat what it learned…' :
+    training ? (held ? 'Put it somewhere — a pillar, or a hole in a box.'
+                     : 'Every move is being remembered. Leave when done.') :
+    held ? (program.length ? 'Put it on the thinking pad to give it something new to work on.'
+                           : 'Drop it on the thinking pad to train the robot on it.') :
+    program.length ? 'Give it something on the pad, then run what it learned.' :
+    'Click a stack to fetch a number or a box.';
+}
+
+$('exitBtn').onclick = () => { if (!busy) leaveTraining(); };
+$('runBtn').onclick = () => {
+  if (mode === 'replay') { abort('Stopped.'); busy = false; refreshUI(); }
+  else runProgram();
+};
+$('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
+$('againBtn').onclick = () => { if (!busy) enterTraining(); };
+$('resetBtn').onclick = () => {
+  if (mode === 'training') leaveTraining(false);      // discard, don't rewind
+  resetWorld(); say('Scene reset.');
+};
+$('clearBtn').onclick = () => {
+  program = []; condition = null; dustyActive = false;
+  rebuildCondition(); renderProgram(); refreshUI();
+  say('Training forgotten.');
+};
+
+let bubbleTarget = 0, bubbleNow = 0;
+
+addEventListener('keydown', (e) => {
+  if (!held || busy || mode === 'replay' || held.userData.kind !== 'number') return;
+  if (/^[0-9]$/.test(e.key)) { held.setValue(Math.min(999999, held.userData.value * 10 + (+e.key))); refreshUI(); }
+  else if (e.key === 'Backspace') { held.setValue(Math.floor(held.userData.value / 10)); refreshUI(); e.preventDefault(); }
+});
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  renderer.domElement.style.cursor = (!busy && mode !== 'replay' && resolve(ev)) ? 'pointer' : '';
+});
+renderer.domElement.addEventListener('click', (ev) => handleClick(resolve(ev)));
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  frameScene();
+});
+
+// ---------------------------------------------------------------- load
+new GLTFLoader().load('robot_v4.glb', (gltf) => {
+  robot = gltf.scene;
+  root = robot.getObjectByName('ROBOT_root') || robot;
+  robot.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    const m = o.material;
+    if (m && m.emissive && m.emissive.getHex() !== 0x000000) {
+      m.emissiveIntensity = Math.max(m.emissiveIntensity || 1, 1) * 2.6;
+      m.toneMapped = false;
+    }
+  });
+  scene.add(robot);
+
+  const N = (n) => robot.getObjectByName(n);
+  shoulder = N('shoulderP_R'); elbow = N('elbowP_R');
+  jawA = N('jaw_R_a'); jawB = N('jaw_R_b'); grip = N('grip_R');
+  hipL = N('hip_L'); hipR = N('hip_R'); kneeL = N('knee_L'); kneeR = N('knee_R');
+  [shoulder, elbow, hipL, hipR, kneeL, kneeR].forEach(remember);
+  jawBase.a = jawA.position.x; jawBase.b = jawB.position.x;
+  jawSign = Math.sign(jawB.position.x - jawA.position.x) || 1;
+
+  // Sample the claw in the reach pose; every station hangs off that one offset.
+  root.position.set(0, 0, 0); root.rotation.y = 0;
+  applyArm(POSE.reach.sh, POSE.reach.el);
+  robot.updateMatrixWorld(true);
+  reachLocal = grip.getWorldPosition(new THREE.Vector3());
+  reachR = Math.hypot(reachLocal.x, reachLocal.z);
+  reachBeta = Math.atan2(reachLocal.x, reachLocal.z);
+
+  for (const def of STATION_DEFS) {
+    const point = new THREE.Vector3(def.x, reachLocal.y, ROW_Z);
+    const st = { ...def, point, topY: point.y - CUBE / 2, occupant: null, cubes: [] };
+    if (def.kind === 'stack') {
+      st.stackN = 4;
+      st.pitch = def.id === 'numbers' ? 0.25 : 0.15;
+      st.plinth = Math.max(0.02, st.topY - (st.stackN - 1) * st.pitch);
+      const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.27, st.plinth, 36),
+        new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7 }));
+      plate.position.set(point.x, st.plinth / 2, point.z);
+      plate.castShadow = true; plate.receiveShadow = true;
+      setPick(plate, { kind: 'station', id: def.id });
+      scene.add(plate); pickables.push(plate);
+      stations[def.id] = st;
+      refillStack(st);
+      st.cubes.forEach(c => pickables.push(c));
+    } else {
+      const pillar = makePillar(Math.max(0.15, st.topY), def.kind === 'train');
+      pillar.position.set(point.x, 0, point.z);
+      setPick(pillar, { kind: 'station', id: def.id });
+      scene.add(pillar); pickables.push(pillar);
+      stations[def.id] = st;
+    }
+  }
+  // things become pickable as they are created; simplest is to test everything
+  pickables.length = 0;
+  pickables.push(scene);
+
+  applyArm(POSE.rest.sh, POSE.rest.el); applyJaw(JAW_CLOSED);
+  frameScene();
+  renderProgram(); refreshUI();
+  $('loading').classList.add('gone');
+
+  new GLTFLoader().load('dusty_v1.glb', (dg) => {
+    dusty = dg.scene;
+    dusty.traverse(o => {
+      if (!o.isMesh) return;
+      o.castShadow = true; o.receiveShadow = true;
+      const m = o.material;
+      if (m && m.emissive && m.emissive.getHex() !== 0x000000) {
+        m.emissiveIntensity = Math.max(m.emissiveIntensity || 1, 1) * 2.6;
+        m.toneMapped = false;
+      }
+    });
+    dustyHome = new THREE.Vector3(STATION_DEFS[0].x - 0.95, 0, ROW_Z - 0.25);
+    dusty.position.copy(dustyHome);
+    dusty.rotation.y = -0.5;
+    setPick(dusty, { kind: 'dusty' });
+    scene.add(dusty);
+    const mat = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32).rotateX(-Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.8 }));
+    mat.position.set(dustyHome.x, 0.004, dustyHome.z);
+    mat.receiveShadow = true;
+    setPick(mat, { kind: 'dusty' });
+    scene.add(mat);
+    refreshUI();
+  });
+});
+
+// ---------------------------------------------------------------- loop
+let last = performance.now();
+renderer.setAnimationLoop((now) => {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (root) tick(dt);
+  bubbleNow += (bubbleTarget - bubbleNow) * Math.min(1, dt * 4);
+  bubbleMat.opacity = BUBBLE_OPACITY * bubbleNow;
+  bubble.visible = bubbleNow > 0.01;
+  for (let i = flashes.length - 1; i >= 0; i--) {
+    const f = flashes[i];
+    f.t += dt / 0.45;
+    f.m.scale.setScalar(1 + f.t * 1.7);
+    f.m.material.opacity = 0.55 * (1 - f.t);
+    if (f.t >= 1) { scene.remove(f.m); flashes.splice(i, 1); }
+  }
+  orbit.update();
+  renderer.render(scene, camera);
+});
+
+// dev hook -- lets the whole thing be driven headlessly (see serve.js /capture)
+window.__nano = {
+  THREE, scene, camera, renderer, stations,
+  get ready() { return !!root; },
+  get state() { return { mode, busy, program, queued: queue.length,
+    held: held ? (held.userData.kind === 'number' ? held.userData.value : 'box') : null }; },
+  step(dt, n = 1) { for (let i = 0; i < n; i++) tick(dt); },
+  settle(max = 9000) { let i = 0; while ((current || queue.length || busy) && i++ < max) tick(1 / 60); return i; },
+  draw() { renderer.render(scene, camera); },
+  pick(station, path = []) { handleClick({ kind: 'station', id: station }); if (path.length) throw new Error('use pickAt'); },
+  click(station) { handleClick({ kind: 'station', id: station }); },
+  clickHole(station, index) { handleClick({ kind: 'hole', box: stations[station].occupant, index }); },
+  clickHoleAt(station, path, index) { handleClick({ kind: 'hole', box: thingAt(station, path), index }); },
+  clickThing(station, path = []) { handleClick({ kind: 'thing', thing: thingAt(station, path) }); },
+  type(v) { if (held) { held.setValue(v); refreshUI(); } },
+  exit() { leaveTraining(); },
+  again() { enterTraining(); },
+  run() { runProgram(); },
+  dusty(on = true) { dustyActive = on; refreshUI(); },
+  erase(path) { dustyErase(path); },
+  get condition() { return condition; },
+  get condText() { return condText(condition); },
+  get hint() { return document.getElementById('hint').textContent; },
+  dump() {
+    const describeThing = (t) => !t ? null
+      : t.userData.kind === 'number' ? t.userData.value
+      : { box: t.userData.holes.map(h => describeThing(h.thing)) };
+    return Object.fromEntries(Object.values(stations).map(s => [s.id, describeThing(s.occupant)]));
+  },
+};
+</script>
+</body>
+</html>

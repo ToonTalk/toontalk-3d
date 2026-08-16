@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nano-ToonTalk</title>
+<style>
+  :root {
+    --ink: #eef1f6; --dim: #97a2b3; --panel: rgba(15, 19, 27, 0.86);
+    --edge: rgba(255,255,255,.12); --accent: #ff7a5c; --go: #6ee7a8;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: #12151b; color: var(--ink);
+         font: 14px/1.5 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  .card { position: fixed; background: var(--panel); border: 1px solid var(--edge);
+          border-radius: 12px; backdrop-filter: blur(8px); padding: 12px 14px; }
+  #title { top: 14px; left: 14px; max-width: 285px; }
+  #title h1 { margin: 0 0 3px; font-size: 15px; font-weight: 650; }
+  #title p { margin: 0; font-size: 12px; color: var(--dim); }
+  #hint { margin-top: 8px !important; color: var(--accent) !important; font-size: 12px; }
+
+  #prog { top: 14px; right: 14px; width: 216px; max-height: 62vh; overflow: auto; }
+  #prog h2 { margin: 0 0 8px; font-size: 11px; letter-spacing: .09em;
+             text-transform: uppercase; color: var(--dim); font-weight: 650; }
+  #steps { margin: 0; padding: 0; list-style: none; font-size: 12.5px; }
+  #steps li { display: flex; gap: 8px; padding: 3px 0; border-top: 1px solid rgba(255,255,255,.06); }
+  #steps li:first-child { border-top: 0; }
+  #steps .n { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 14px; }
+  #steps li.now { color: var(--go); }
+  #steps .empty { color: var(--dim); font-style: italic; }
+
+  #bar { left: 50%; bottom: 16px; transform: translateX(-50%);
+         display: flex; align-items: center; gap: 8px; padding: 9px 10px; }
+  button { font: inherit; font-size: 12.5px; color: var(--ink);
+           background: rgba(255,255,255,.07); border: 1px solid var(--edge);
+           border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+  button:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+  button:disabled { opacity: .35; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent);
+                   color: #23130e; font-weight: 650; }
+  button.go { background: var(--go); border-color: var(--go); color: #06301e; font-weight: 650; }
+  .sep { width: 1px; height: 20px; background: var(--edge); margin: 0 2px; }
+
+  #held { left: 50%; bottom: 74px; transform: translateX(-50%); padding: 7px 13px;
+          display: none; align-items: center; gap: 9px; }
+  #held.on { display: flex; }
+  #held .v { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums;
+             color: var(--accent); min-width: 26px; text-align: center; }
+  #held .k { font-size: 11.5px; color: var(--dim); }
+
+  #loading { position: fixed; inset: 0; display: grid; place-items: center;
+             background: #12151b; z-index: 10; color: var(--dim); font-size: 13px;
+             transition: opacity .4s ease; }
+  #loading.gone { opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="title" class="card">
+  <h1>nano-ToonTalk</h1>
+  <p>You are inside the robot's thought bubble. What you do here, it learns.</p>
+  <p id="hint">Click the stack of numbers to pick one up.</p>
+</div>
+
+<div id="prog" class="card">
+  <h2>Trained actions</h2>
+  <ul id="steps"><li class="empty">nothing yet</li></ul>
+</div>
+
+<div id="held" class="card">
+  <span class="k">holding</span><span class="v" id="heldVal">–</span>
+  <span class="k">type digits to change it</span>
+</div>
+
+<div id="bar" class="card">
+  <button id="exitBtn" class="primary">Leave thought bubble</button>
+  <button id="runBtn" class="go" style="display:none">Run what it learned</button>
+  <button id="enterBtn" style="display:none">Train some more</button>
+  <span class="sep"></span>
+  <button id="resetBtn">Reset</button>
+  <button id="clearBtn">Forget training</button>
+</div>
+
+<div id="loading">Loading…</div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://unpkg.com/three@0.185.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.185.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const DEG = Math.PI / 180;
+const ease = t => t * t * (3 - 2 * t);
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// ---------------------------------------------------------------- renderer
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.32;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x141821);
+const camera = new THREE.PerspectiveCamera(44, innerWidth / innerHeight, 0.05, 200);
+// High and near-frontal: the robot pivots up to 75 deg to reach its stations,
+// and looking down on the arc keeps that readable instead of showing its back.
+camera.position.set(0.28, 2.72, 4.15);
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true; orbit.dampingFactor = 0.06;
+orbit.minDistance = 1.2; orbit.maxDistance = 12;
+orbit.maxPolarAngle = Math.PI * 0.495;
+orbit.target.set(0, 0.85, 0.22);
+orbit.update();
+
+scene.add(new THREE.HemisphereLight(0x9fb4d8, 0x2a3038, 1.05));
+const key = new THREE.DirectionalLight(0xfff2e6, 3.5);
+key.position.set(4.2, 6.0, 4.4);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 3; key.shadow.bias = -0.0009;
+Object.assign(key.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: .5, far: 22 });
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xbcd2ff, 0.85); fill.position.set(-5, 2.6, 2.2); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xcfe2ff, 1.35); rim.position.set(-2.2, 3.4, -5.0); scene.add(rim);
+
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(24, 64).rotateX(-Math.PI / 2),
+  new THREE.MeshStandardMaterial({ color: 0x1b1f28, roughness: 0.92 }));
+ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(24, 48, 0x2c3341, 0x232935);
+grid.material.transparent = true; grid.material.opacity = 0.45; grid.position.y = 0.002;
+scene.add(grid);
+
+// ---------------------------------------------------------------- thought bubble
+// Additive: with no environment map a physical/clearcoat bubble reflects black
+// and smears a dark disc across the floor. This can only lighten.
+const BUBBLE_OPACITY = 0.11;
+const bubbleMat = new THREE.MeshBasicMaterial({
+  color: 0x9fd8ff, transparent: true, opacity: BUBBLE_OPACITY,
+  blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+const bubble = new THREE.Group();
+{
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(2.45, 48, 32, 0, Math.PI * 2, 0, Math.PI * 0.68), bubbleMat);
+  dome.position.y = 1.0;
+  bubble.add(dome);
+  // the tail that makes it read as a *thought*, not a dome
+  for (const [x, y, z, r] of [[1.95, 0.55, 1.85, 0.22], [2.30, 0.30, 2.15, 0.14],
+                              [2.55, 0.14, 2.38, 0.085]]) {
+    const b = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), bubbleMat);
+    b.position.set(x, y, z);
+    bubble.add(b);
+  }
+}
+scene.add(bubble);
+
+// ---------------------------------------------------------------- numbers
+const CUBE = 0.24;
+const cubeGeo = new THREE.BoxGeometry(CUBE, CUBE, CUBE);
+const faceGeo = new THREE.PlaneGeometry(CUBE * 0.86, CUBE * 0.86);
+
+function makeNumber(value) {
+  const g = new THREE.Group();
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 256;
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+
+  const shell = new THREE.Mesh(cubeGeo,
+    new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 }));
+  shell.castShadow = true; shell.receiveShadow = true;
+  g.add(shell);
+
+  const faceMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45 });
+  const p = CUBE / 2 + 0.0015;
+  for (const [px, pz, ry] of [[0, p, 0], [0, -p, Math.PI], [p, 0, Math.PI / 2], [-p, 0, -Math.PI / 2]]) {
+    const q = new THREE.Mesh(faceGeo, faceMat);
+    q.position.set(px, 0, pz); q.rotation.y = ry;
+    g.add(q);
+  }
+
+  g.userData.kind = 'number';
+  g.userData.op = '+';                       // operations are a later step
+  g.setValue = (v) => {
+    g.userData.value = v;
+    const s = String(v);
+    const c = canvas.getContext('2d');
+    c.fillStyle = '#f3e8d0'; c.fillRect(0, 0, 256, 256);
+    c.strokeStyle = '#b8241a'; c.lineWidth = 12;
+    c.strokeRect(16, 16, 224, 224);
+    c.fillStyle = '#8f1c14';
+    c.font = `bold ${s.length > 3 ? 96 : s.length > 2 ? 124 : s.length > 1 ? 150 : 176}px Georgia, serif`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(s, 128, 136);
+    tex.needsUpdate = true;
+  };
+  g.setValue(value);
+  return g;
+}
+
+// ---------------------------------------------------------------- stations
+// All four sit on the arm's reach circle (the robot pivots, it doesn't walk),
+// so they have to be spread wide or they crowd each other: the stack goes off
+// to one side and the three pillars fan out in front.
+const STATION_DEFS = [
+  { id: 'stack', yaw: -75 * DEG, label: 'the stack' },
+  { id: 'p1',    yaw: -25 * DEG, label: 'pillar 1' },
+  { id: 'p2',    yaw:  15 * DEG, label: 'pillar 2' },
+  { id: 'p3',    yaw:  55 * DEG, label: 'pillar 3' },
+];
+const stations = {};
+const pickables = [];
+
+function makePillar(height) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.145, height, 36),
+    new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7, metalness: 0.1 }));
+  body.position.y = height / 2; body.castShadow = true; body.receiveShadow = true;
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.155, 0.035, 36),
+    new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 }));
+  top.position.y = height; top.castShadow = true; top.receiveShadow = true;
+  g.add(body, top);
+  return g;
+}
+
+// ---------------------------------------------------------------- robot
+const POSE = {
+  rest:  { sh: 0,         el: 0 },
+  reach: { sh: -38 * DEG, el:  33 * DEG },
+  carry: { sh:  -8 * DEG, el: -30 * DEG },
+};
+const JAW_CLOSED = 0.103, JAW_OPEN = 0.200;
+const NEUTRAL_YAW = 0;   // faced after picking, so the held number is visible
+const STACK_N = 4, STACK_PITCH = 0.25;
+
+let robot, root, shoulder, elbow, jawA, jawB, grip;
+const initQ = new Map(), jawBase = {};
+let jawSign = 1, armPose = { ...POSE.rest }, jawNow = JAW_CLOSED;
+const _qd = new THREE.Quaternion(), _axisX = new THREE.Vector3(1, 0, 0);
+
+function setJoint(node, a) { _qd.setFromAxisAngle(_axisX, a); node.quaternion.copy(initQ.get(node)).multiply(_qd); }
+function applyArm(sh, el) { armPose = { sh, el }; setJoint(shoulder, sh); setJoint(elbow, el); }
+function applyJaw(open) { jawNow = open; jawA.position.x = jawBase.a - jawSign * open; jawB.position.x = jawBase.b + jawSign * open; }
+
+// ---------------------------------------------------------------- state
+let held = null;                 // the number currently in the claw
+let mode = 'training';           // 'training' | 'outside' | 'replay'
+let program = [];                // the trained action list
+let valueAtPickup = null;
+let busy = false;
+
+// ---------------------------------------------------------------- sequencer
+const queue = [];
+let current = null, tCur = 0;
+
+function enqueue(...steps) { queue.push(...steps); }
+function tick(dt) {
+  if (!current) {
+    current = queue.shift();
+    tCur = 0;
+    if (!current) { if (busy) { busy = false; refreshUI(); } return; }
+    current.start && current.start();
+  }
+  tCur += dt;
+  const d = current.dur || 0.0001;
+  const t = Math.min(1, tCur / d);
+  current.update && current.update(t);
+  if (t >= 1) { current.end && current.end(); current = null; }
+}
+
+const turnTo = (yaw) => {
+  let from = 0;
+  return {
+    dur: 0.01, start() { from = root.rotation.y; this.dur = Math.max(0.35, Math.abs(yaw - from) * 1.15); },
+    update(t) { root.rotation.y = lerp(from, yaw, ease(t)); },
+  };
+};
+const armTo = (pose, jaw, dur = 0.8) => {
+  let a0, j0;
+  return {
+    dur, start() { a0 = { ...armPose }; j0 = jawNow; },
+    update(t) {
+      const e = ease(t);
+      applyArm(lerp(a0.sh, pose.sh, e), lerp(a0.el, pose.el, e));
+      applyJaw(lerp(j0, jaw, e));
+    },
+  };
+};
+const doNow = (fn) => ({ dur: 0.0001, end: fn });
+const pause = (d) => ({ dur: d });
+
+// ---------------------------------------------------------------- actions
+function stackTopY(st) { return st.plinth + CUBE / 2 + (st.cubes.length - 1) * STACK_PITCH; }
+
+function refillStack(st) {
+  while (st.cubes.length < STACK_N) {
+    const n = makeNumber(1);
+    n.position.set(st.point.x, st.plinth + CUBE / 2 + st.cubes.length * STACK_PITCH, st.point.z);
+    scene.add(n);
+    st.cubes.unshift(n);
+  }
+  st.cubes.forEach((c, i) => { c.position.y = st.plinth + CUBE / 2 + i * STACK_PITCH; });
+}
+
+// Pick up whatever is at `station` (the stack always yields a fresh 1).
+function actionPick(st) {
+  enqueue(turnTo(st.yaw));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.85));
+  enqueue(doNow(() => {
+    let obj;
+    if (st.id === 'stack') { obj = st.cubes.pop(); }
+    else { obj = st.occupant; st.occupant = null; }
+    held = obj;
+    valueAtPickup = obj.userData.value;
+  }));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.42));
+  enqueue(doNow(() => {
+    grip.attach(held);
+    if (st.id === 'stack') refillStack(st);
+    refreshUI();
+  }));
+  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.8));
+  // turn back to front so the number it is holding is facing the user
+  enqueue(turnTo(NEUTRAL_YAW));
+}
+
+// Put the held number down at `station`; if something is already there, combine.
+function actionPlace(st) {
+  enqueue(turnTo(st.yaw));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.8));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.42));
+  enqueue(doNow(() => {
+    const dropped = held;
+    held = null;
+    scene.attach(dropped);
+    dropped.position.copy(st.point);
+    dropped.quaternion.identity();
+    if (st.occupant) combine(st, dropped); else st.occupant = dropped;
+    refreshUI();
+  }));
+  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.9));
+}
+
+// Where Bammer will eventually fly in with his hammer. For now the arriving
+// number folds into the resident one and the result pulses.
+function combine(st, incoming) {
+  const target = st.occupant;
+  const a = target.userData.value, b = incoming.userData.value;
+  const result = target.userData.op === '+' ? a + b : a + b;
+  const start = incoming.position.clone();
+  enqueue({
+    dur: 0.45,
+    update(t) {
+      const e = ease(t);
+      incoming.position.lerpVectors(start, target.position, e);
+      incoming.scale.setScalar(1 - 0.85 * e);
+    },
+    end() { scene.remove(incoming); incoming.scale.setScalar(1); },
+  });
+  enqueue({
+    dur: 0.4,
+    start() { target.setValue(result); flash(target.position); },
+    update(t) { const s = 1 + 0.34 * Math.sin(Math.PI * t); target.scale.setScalar(s); },
+    end() { target.scale.setScalar(1); refreshUI(); },
+  });
+}
+
+const flashes = [];
+function flash(pos) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 12),
+    new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.position.copy(pos);
+  scene.add(m);
+  flashes.push({ m, t: 0 });
+}
+
+// ---------------------------------------------------------------- clicks
+function clickStation(st) {
+  if (busy || mode === 'replay') return;
+  if (held) {
+    busy = true;
+    if (st.id === 'stack') { busy = false; return say('Put that down on a pillar first.'); }
+    record({ type: 'setValue', value: held.userData.value }, true);
+    record({ type: 'place', station: st.id });
+    actionPlace(st);
+  } else {
+    if (st.id !== 'stack' && !st.occupant) return say('Nothing on that pillar to pick up.');
+    busy = true;
+    record({ type: 'pick', station: st.id });
+    actionPick(st);
+  }
+  refreshUI();
+}
+
+// `coalesce` replaces a trailing setValue rather than stacking duplicates.
+function record(step, coalesce = false) {
+  if (mode !== 'training') return;
+  if (coalesce) {
+    if (step.type === 'setValue' && step.value === valueAtPickup) return;  // unchanged
+    const last = program[program.length - 1];
+    if (last && last.type === 'setValue') { program[program.length - 1] = step; renderProgram(); return; }
+  }
+  program.push(step);
+  renderProgram();
+}
+
+// ---------------------------------------------------------------- replay
+function resetWorld() {
+  for (const st of Object.values(stations)) {
+    if (st.occupant) { scene.remove(st.occupant); st.occupant = null; }
+    if (st.id === 'stack') { st.cubes.forEach(c => scene.remove(c)); st.cubes = []; refillStack(st); }
+  }
+  if (held) { scene.remove(held); held = null; }
+  root.rotation.y = 0;
+  applyArm(POSE.rest.sh, POSE.rest.el);
+  applyJaw(JAW_CLOSED);
+  queue.length = 0; current = null; busy = false;
+  refreshUI();
+}
+
+function runProgram() {
+  if (!program.length) return say('Nothing trained yet.');
+  resetWorld();
+  mode = 'replay';
+  busy = true;
+  program.forEach((step, i) => {
+    enqueue(doNow(() => highlight(i)));
+    if (step.type === 'pick') actionPick(stations[step.station]);
+    else if (step.type === 'place') actionPlace(stations[step.station]);
+    else if (step.type === 'setValue') {
+      enqueue({
+        dur: 0.4,
+        start() { if (held) { held.setValue(step.value); flash(held.getWorldPosition(new THREE.Vector3())); } },
+        update(t) { if (held) held.scale.setScalar(1 + 0.28 * Math.sin(Math.PI * t)); },
+        end() { if (held) held.scale.setScalar(1); refreshUI(); },
+      });
+    }
+  });
+  enqueue(pause(0.3), doNow(() => { highlight(-1); mode = 'outside'; busy = false; refreshUI(); }));
+  refreshUI();
+}
+
+// ---------------------------------------------------------------- UI
+const $ = (id) => document.getElementById(id);
+let hintTimer = null;
+function say(msg) {
+  $('hint').textContent = msg;
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(refreshUI, 2600);
+}
+function highlight(i) {
+  [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i));
+}
+function renderProgram() {
+  const ul = $('steps');
+  if (!program.length) { ul.innerHTML = '<li class="empty">nothing yet</li>'; return; }
+  ul.innerHTML = program.map((s, i) => {
+    const txt = s.type === 'pick' ? `pick up from ${stations[s.station].label}`
+              : s.type === 'place' ? `put down on ${stations[s.station].label}`
+              : `make it ${s.value}`;
+    return `<li><span class="n">${i + 1}</span><span>${txt}</span></li>`;
+  }).join('');
+}
+function refreshUI() {
+  const inside = mode === 'training';
+  $('exitBtn').style.display = inside ? '' : 'none';
+  $('runBtn').style.display = inside ? 'none' : '';
+  $('enterBtn').style.display = inside ? 'none' : '';
+  $('runBtn').disabled = mode === 'replay' || !program.length;
+  $('enterBtn').disabled = mode === 'replay';
+  $('resetBtn').disabled = mode === 'replay';
+  $('clearBtn').disabled = mode === 'replay';
+
+  $('held').classList.toggle('on', !!held && inside);
+  if (held) $('heldVal').textContent = held.userData.value;
+
+  if (hintTimer) return;
+  $('hint').textContent =
+    mode === 'replay' ? 'Watching it repeat what it learned…' :
+    mode === 'outside' ? 'Outside the bubble. Run it to watch the robot repeat itself.' :
+    held ? 'Type digits to change it, then click a pillar to put it down.' :
+    'Click the stack of numbers to pick one up.';
+}
+
+$('exitBtn').onclick = () => {
+  if (busy) return;
+  mode = 'outside';
+  fadeBubble(0);
+  refreshUI();
+};
+$('enterBtn').onclick = () => { mode = 'training'; fadeBubble(1); refreshUI(); };
+$('runBtn').onclick = () => runProgram();
+$('resetBtn').onclick = () => { resetWorld(); say('Scene reset.'); };
+$('clearBtn').onclick = () => { program = []; renderProgram(); say('Training forgotten.'); };
+
+let bubbleTarget = 1, bubbleNow = 1;
+function fadeBubble(v) { bubbleTarget = v; }
+
+addEventListener('keydown', (e) => {
+  if (mode !== 'training' || !held || busy) return;
+  if (/^[0-9]$/.test(e.key)) {
+    const v = Math.min(999999, held.userData.value * 10 + (+e.key));
+    held.setValue(v); refreshUI();
+  } else if (e.key === 'Backspace') {
+    held.setValue(Math.floor(held.userData.value / 10)); refreshUI();
+    e.preventDefault();
+  }
+});
+
+// hover + click picking
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let hovered = null;
+function hit(ev) {
+  ndc.x = (ev.clientX / innerWidth) * 2 - 1;
+  ndc.y = -(ev.clientY / innerHeight) * 2 + 1;
+  ray.setFromCamera(ndc, camera);
+  const h = ray.intersectObjects(pickables, true)[0];
+  if (!h) return null;
+  let o = h.object;
+  while (o && !o.userData.stationId) o = o.parent;
+  return o ? stations[o.userData.stationId] : null;
+}
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  const st = mode === 'training' && !busy ? hit(ev) : null;
+  if (st !== hovered) {
+    hovered = st;
+    renderer.domElement.style.cursor = st ? 'pointer' : '';
+  }
+});
+renderer.domElement.addEventListener('click', (ev) => {
+  const st = hit(ev);
+  if (st) clickStation(st);
+});
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ---------------------------------------------------------------- load
+new GLTFLoader().load('robot_v4.glb', (gltf) => {
+  robot = gltf.scene;
+  root = robot.getObjectByName('ROBOT_root') || robot;
+  robot.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    const m = o.material;
+    if (m && m.emissive && m.emissive.getHex() !== 0x000000) {
+      m.emissiveIntensity = Math.max(m.emissiveIntensity || 1, 1) * 2.6;
+      m.toneMapped = false;
+    }
+  });
+  scene.add(robot);
+
+  shoulder = robot.getObjectByName('shoulderP_R');
+  elbow = robot.getObjectByName('elbowP_R');
+  jawA = robot.getObjectByName('jaw_R_a');
+  jawB = robot.getObjectByName('jaw_R_b');
+  grip = robot.getObjectByName('grip_R');
+  initQ.set(shoulder, shoulder.quaternion.clone());
+  initQ.set(elbow, elbow.quaternion.clone());
+  jawBase.a = jawA.position.x; jawBase.b = jawB.position.x;
+  jawSign = Math.sign(jawB.position.x - jawA.position.x) || 1;
+
+  // Sample where the claw lands in the reach pose, then hang every station off
+  // that same offset -- so the claw always meets its target exactly.
+  root.rotation.y = 0;
+  applyArm(POSE.reach.sh, POSE.reach.el);
+  robot.updateMatrixWorld(true);
+  const reachPt = grip.getWorldPosition(new THREE.Vector3());
+
+  for (const def of STATION_DEFS) {
+    const point = reachPt.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), def.yaw);
+    const st = { ...def, point, occupant: null, cubes: [] };
+    if (def.id === 'stack') {
+      st.plinth = Math.max(0.02, point.y - CUBE / 2 - (STACK_N - 1) * STACK_PITCH);
+      const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, st.plinth, 36),
+        new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7 }));
+      plate.position.set(point.x, st.plinth / 2, point.z);
+      plate.castShadow = true; plate.receiveShadow = true;
+      scene.add(plate);
+      refillStack(st);
+      // one generous hit target for the whole column
+      const hitbox = new THREE.Mesh(new THREE.BoxGeometry(0.36, point.y + 0.2, 0.36),
+        new THREE.MeshBasicMaterial({ visible: false }));
+      hitbox.position.set(point.x, (point.y + 0.2) / 2, point.z);
+      hitbox.userData.stationId = def.id;
+      scene.add(hitbox); pickables.push(hitbox);
+    } else {
+      const pillar = makePillar(Math.max(0.15, point.y - CUBE / 2));
+      pillar.position.set(point.x, 0, point.z);
+      scene.add(pillar);
+      const hitbox = new THREE.Mesh(new THREE.BoxGeometry(0.4, point.y + 0.25, 0.4),
+        new THREE.MeshBasicMaterial({ visible: false }));
+      hitbox.position.set(point.x, (point.y + 0.25) / 2, point.z);
+      hitbox.userData.stationId = def.id;
+      scene.add(hitbox); pickables.push(hitbox);
+    }
+    stations[def.id] = st;
+  }
+
+  applyArm(POSE.rest.sh, POSE.rest.el);
+  applyJaw(JAW_CLOSED);
+  root.rotation.y = 0;
+  renderProgram(); refreshUI();
+  $('loading').classList.add('gone');
+});
+
+// ---------------------------------------------------------------- loop
+let last = performance.now();
+renderer.setAnimationLoop((now) => {
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (root) tick(dt);
+  bubbleNow += (bubbleTarget - bubbleNow) * Math.min(1, dt * 4);
+  bubbleMat.opacity = BUBBLE_OPACITY * bubbleNow;
+  bubble.visible = bubbleNow > 0.01;
+  for (let i = flashes.length - 1; i >= 0; i--) {
+    const f = flashes[i];
+    f.t += dt / 0.45;
+    f.m.scale.setScalar(1 + f.t * 1.7);
+    f.m.material.opacity = 0.55 * (1 - f.t);
+    if (f.t >= 1) { scene.remove(f.m); flashes.splice(i, 1); }
+  }
+  orbit.update();
+  renderer.render(scene, camera);
+});
+
+// dev hook (see serve.js /capture) -- lets the scene be stepped headlessly
+window.__nano = {
+  THREE, scene, camera, renderer,
+  get ready() { return !!root; },
+  get state() { return { mode, busy, held: held?.userData.value ?? null, program, queued: queue.length }; },
+  step(dt, n = 1) { for (let i = 0; i < n; i++) tick(dt); },
+  // `busy` clears on the tick *after* the queue drains, so wait on it too
+  settle(max = 4000) { let i = 0; while ((current || queue.length || busy) && i++ < max) tick(1 / 60); return i; },
+  draw() { renderer.render(scene, camera); },
+  click(id) { clickStation(stations[id]); },
+  type(v) { if (held) { held.setValue(v); refreshUI(); } },
+  exit() { $('exitBtn').onclick(); },
+  run() { runProgram(); },
+  pillars() { return Object.values(stations).filter(s => s.id !== 'stack')
+    .map(s => ({ id: s.id, value: s.occupant?.userData.value ?? null })); },
+};
+</script>
+</body>
+</html>
