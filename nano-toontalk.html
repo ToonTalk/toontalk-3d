@@ -221,6 +221,15 @@ function setPick(obj, data) { obj.__pick = data; }
 // Division has to produce something honest, so numbers are BigInt fractions
 // kept in lowest terms rather than floats.
 const OPS = ['+', '-', '*', '/', '^'];
+// Each operation gets its own colour and badge so what a number will *do* is
+// readable at a glance, not just from a small corner glyph.
+const OP_STYLE = {
+  '+': { ink: '#8f1c14', edge: '#b8241a', face: '#f3e8d0', shell: 0xefe2c6, glyph: '+' },
+  '-': { ink: '#14468f', edge: '#1f63c4', face: '#dde8f7', shell: 0xd2ddf0, glyph: '−' },
+  '*': { ink: '#5b1a8f', edge: '#8028c0', face: '#e9ddf7', shell: 0xdccff0, glyph: '×' },
+  '/': { ink: '#0e6b50', edge: '#14957c', face: '#d9f0e5', shell: 0xcdead9, glyph: '÷' },
+  '^': { ink: '#8a5410', edge: '#c08a1a', face: '#f7ecd2', shell: 0xf0e0b8, glyph: '^' },
+};
 const MAX_DIGITS = 60;      // refuse results too big to be meaningful (or drawable)
 
 function bgcd(a, b) {
@@ -293,7 +302,8 @@ function makeNumber(value, op = '+') {
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
 
-  const shell = new THREE.Mesh(cubeGeo, new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 }));
+  const shellMat = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 });
+  const shell = new THREE.Mesh(cubeGeo, shellMat);
   shell.castShadow = true; shell.receiveShadow = true;
   g.add(shell);
   const faceMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45 });
@@ -306,11 +316,13 @@ function makeNumber(value, op = '+') {
   Object.assign(g.userData, { id: nextId++, kind: 'number', op, width: CUBE, rest: CUBE / 2 });
 
   function draw() {
+    const st = OP_STYLE[g.userData.op] || OP_STYLE['+'];
+    shellMat.color.setHex(st.shell);
     const c = canvas.getContext('2d');
-    c.fillStyle = '#f3e8d0'; c.fillRect(0, 0, 256, 256);
-    c.strokeStyle = '#b8241a'; c.lineWidth = 12; c.strokeRect(16, 16, 224, 224);
+    c.fillStyle = st.face; c.fillRect(0, 0, 256, 256);
+    c.strokeStyle = st.edge; c.lineWidth = 12; c.strokeRect(16, 16, 224, 224);
     c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = '#8f1c14';
+    c.fillStyle = st.ink;
 
     const label = g.userData.label;
     const v = g.userData.value;
@@ -318,18 +330,25 @@ function makeNumber(value, op = '+') {
       c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
       c.fillText(label, 128, 140);
     } else if (v && v.d === 1n) {
-      drawBlock(c, String(v.n), 128, 142, 188, 176);
+      // Only wrap once a single line would get genuinely small -- a wrapped
+      // integer otherwise reads like a fraction.
+      const s = String(v.n);
+      const one = fitFont(c, s, 188, 176);
+      if (one >= 38) { c.font = `bold ${one}px Georgia, serif`; c.fillText(s, 128, 142); }
+      else drawBlock(c, s, 128, 142, 188, 176);
     } else if (v) {
       const wn = drawBlock(c, String(v.n), 128, 96, 180, 78);
       const wd = drawBlock(c, String(v.d), 128, 190, 180, 78);
-      c.strokeStyle = '#8f1c14'; c.lineWidth = 9;
+      c.strokeStyle = st.ink; c.lineWidth = 9;
       const w = Math.max(wn, wd) / 2 + 12;
       c.beginPath(); c.moveTo(128 - w, 143); c.lineTo(128 + w, 143); c.stroke();
     }
-    // the operation this number will apply when dropped on another
-    c.fillStyle = '#c8836f';
-    c.font = 'bold 46px Georgia, serif';
-    c.fillText(g.userData.op, 48, 50);
+    // badge showing what this number does when dropped on another
+    c.beginPath(); c.arc(54, 54, 30, 0, Math.PI * 2);
+    c.fillStyle = st.ink; c.fill();
+    c.fillStyle = st.face;
+    c.font = 'bold 42px Georgia, serif';
+    c.fillText(st.glyph, 54, 57);
     tex.needsUpdate = true;
   }
 
@@ -641,7 +660,7 @@ let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
 let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
-const MAX_ITER = 20;       // a robot whose condition never fails would loop forever
+const MAX_ITER = 100;      // a robot whose condition never fails would loop forever
 
 // ---------------------------------------------------------------- sequencer
 const queue = [];
@@ -729,6 +748,7 @@ function abort(msg) {
   pendingAfter = null;
   if (mode === 'replay') mode = 'world';
   highlight(-1);
+  stowHeld();
   say(msg);
 }
 
@@ -1182,11 +1202,19 @@ function runProgram() {
 // A robot keeps going as long as its condition still holds -- that is how a
 // loop is expressed here, so the cap is the only thing stopping a runaway.
 function nextIteration() {
-  if (!matches(condition, specOf(stations.train.occupant))) {
-    return finishRun(runCount ? `Ran ${runCount}×, then its condition stopped matching.`
-                              : 'Its condition no longer matches.');
+  // A pass never ends with something still in the claw: put it down first, so
+  // the condition is judged against a settled world.
+  stowHeld();
+  const given = specOf(stations.train.occupant);
+  if (!matches(condition, given)) {
+    // same red highlight you get from pressing Run on something that doesn't fit
+    flagMismatch(mismatchPaths(condition, given));
+    return finishRun(runCount ? `Ran ${runCount}× — stopped, see the red parts.`
+                              : 'Its condition no longer matches — see the red parts.');
   }
-  if (runCount >= MAX_ITER) return finishRun(`Stopped after ${MAX_ITER} rounds.`);
+  if (runCount >= MAX_ITER) {
+    return finishRun(`Stopped after ${MAX_ITER} rounds — that is the safety cap, not its condition.`);
+  }
   runCount++;
   program.forEach((step, i) => {
     enqueue(doNow(() => highlight(i)));
@@ -1203,9 +1231,21 @@ function nextIteration() {
   });
   enqueue(pause(0.25), doNow(nextIteration));
 }
+// A run must never end with something stuck in the claw: it would sit there
+// invisible to the next run and make the pad look empty.
+function stowHeld() {
+  if (!held) return;
+  const pad = stations.train;
+  const dest = !pad.occupant ? pad
+    : Object.values(stations).find(s => s.kind === 'pillar' && !s.occupant);
+  if (!dest) return;
+  const t = held; held = null;
+  putOnStation(dest, t);
+}
 function finishRun(msg) {
   highlight(-1);
   mode = 'world';
+  stowHeld();
   if (msg) say(msg);
   refreshUI();
 }
