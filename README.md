@@ -25,9 +25,15 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **A robot library.** Name a trained robot and save it; it persists in
   `localStorage` and reloads with its condition and actions intact.
 - **A robot that walks the bench** and picks things up with a two-jaw claw.
-- **Training.** Put something on the glowing *thinking pad* and the robot goes
-  into its thought bubble. Everything you do there is recorded. Leaving the
-  bubble rewinds the world — the daydream was never real.
+- **You move things; the robot doesn't.** In the workshop you pick things up
+  and put them down yourself — what you carry follows the pointer. The robot
+  stands idle and only ever acts inside its thought bubble, or when repeating
+  what it learned.
+- **Training starts by giving.** Hand something to an untrained robot and it
+  goes into its thought bubble to learn on it; from then on you direct the
+  robot and everything it does is recorded. Leaving the bubble rewinds the
+  world — the daydream was never real. Giving a *trained* robot something is
+  just handing it work to run on.
 - **A condition.** The robot records the exact thing it was trained on and will
   only run when given something that matches. It is shown as a thought floating
   above the pad.
