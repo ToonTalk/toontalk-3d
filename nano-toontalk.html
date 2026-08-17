@@ -1256,6 +1256,7 @@ function detach(thing) {
     if (pi >= 0) { n.userData.pile.splice(pi, 1); restackNest(n); return; }
   }
   for (const st of Object.values(stations)) if (st.occupant === thing) { st.occupant = null; return; }
+  for (const st of allStands) if (st.occupant === thing) { st.occupant = null; return; }
   const hole = holeContaining(thing);
   if (hole) hole.thing = null;
 }
@@ -1524,6 +1525,36 @@ function setLegs(phase, amount) {
 }
 
 const HOME = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
+// More than one robot can stand behind the bench: the one being worked with
+// takes the middle, and any robot still keeping a vigil over a nest steps back
+// and to the side, out of the way but still on duty. Each has its own desk,
+// which travels with it -- whatever it was given rides along.
+const ASIDE_SLOTS = [{ dx: -1.5, dz: -1.05 }, { dx: 1.5, dz: -1.05 },
+                     { dx: -2.9, dz: -1.75 }, { dx: 2.9, dz: -1.75 }];
+const allStands = [];             // every desk in play, middle and aside
+const homeFor = (bot) => bot?.home ?? HOME;
+function makeStandStation(dx, dz) {
+  const point = reachLocal.clone().add(new THREE.Vector3(dx, 0, dz));
+  const st = { id: 'stand', kind: 'stand', label: 'its stand', point, dx, dz,
+               topY: point.y - CUBE / 2, occupant: null, cubes: [] };
+  const obj = makeMiniDesk(Math.max(0.15, st.topY), 0.52, 0.44, 0xcabc98);
+  obj.position.set(point.x, 0, point.z);
+  setPick(obj, { kind: 'station', id: 'stand', st });
+  scene.add(obj);
+  st.obj = obj;
+  allStands.push(st);
+  return st;
+}
+function freeAsideSlot() {
+  return ASIDE_SLOTS.find(sl => !allStands.some(st => st.dx === sl.dx && st.dz === sl.dz))
+      ?? ASIDE_SLOTS[ASIDE_SLOTS.length - 1];
+}
+function dropStand(st) {
+  if (!st || st === defaultStand) return;
+  st.obj?.removeFromParent();
+  const i = allStands.indexOf(st);
+  if (i >= 0) allStands.splice(i, 1);
+}
 // Where the robot must stand for its claw to land on a given point.
 function standForPoint(p) {
   return { pos: new THREE.Vector3(p.x, 0, p.z - reachR), yaw: -reachBeta };
@@ -1535,6 +1566,7 @@ let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0;
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
+let defaultStand = null;          // the middle desk, shared by whoever stands there
 let dustyT = 0, dustyBase = null;   // idle wobble while he is awake
 let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
@@ -1558,8 +1590,10 @@ function makeBot(node) {
     jawA: N('jaw_R_a'), jawB: N('jaw_R_b'), grip: N('grip_R'),
     hipL: N('hip_L'), hipR: N('hip_R'), kneeL: N('knee_L'), kneeR: N('knee_R') };
   [parts.shoulder, parts.elbow, parts.hipL, parts.hipR, parts.kneeL, parts.kneeR].forEach(remember);
+  // home, stand and waiting are filled in when it comes to the bench
   const bot = { id: nextBotId++, node, root: N('ROBOT_root') || node, parts,
-                program: [], condition: null, team: [] };
+                program: [], condition: null, team: [],
+                home: null, stand: null, waiting: false, rounds: 0 };
   node.userData.kind = 'robot';
   node.__bot = bot;   // expando, not userData: clone() JSON-copies userData and the record is circular
   node.userData.rest = 0;            // stands on its feet
@@ -1575,6 +1609,9 @@ function makeMiniRobot() {
 }
 function bindBot(bot) {
   activeBot = bot;
+  bot.home ??= HOME;
+  bot.stand ??= defaultStand;
+  stations.stand = bot.stand;      // a robot works at its own desk
   robot = bot.node; root = bot.root;
   shoulder = bot.parts.shoulder; elbow = bot.parts.elbow;
   jawA = bot.parts.jawA; jawB = bot.parts.jawB; grip = bot.parts.grip;
@@ -1605,7 +1642,14 @@ function tick(dt) {
   if (t >= 1) { current.end && current.end(); current = null; }
 }
 let pendingAfter = null;
-function afterQueue() { const f = pendingAfter; pendingAfter = null; if (f) f(); refreshUI(); }
+function afterQueue() {
+  const f = pendingAfter; pendingAfter = null;
+  if (f) f();
+  // a delivery that arrived while something else was running can be acted on
+  // now that the floor is free
+  checkWaiting();
+  refreshUI();
+}
 
 // Instant speed: snap each step straight to its finished state instead of
 // simulating every frame of it. Stepping through the animation at a big dt
@@ -1703,7 +1747,7 @@ function actionNew(kind) {
 // Where the robot stands to work on a container. The copier's two surfaces
 // share one stance; the stand is worked from home.
 const walkTargetFor = (c) =>
-  c === 'given' ? HOME
+  c === 'given' ? (() => homeFor(activeBot))
   : (c === 'in' || c === 'out') ? () => standForPoint(stations.copyOut.point)
   : () => standForPoint(stationOf(c).point);
 
@@ -2156,15 +2200,26 @@ function userClick(target) {
       return activateBot(bot);
     }
     if (bot === activeBot) return miniaturizeActive();
+    // a robot standing aside is on duty, not lying about: a click brings it
+    // back into focus rather than snatching it off its feet
+    if (bot.stand) {
+      syncBot();
+      bindBot(bot);
+      renderProgram(); rebuildCondition(); refreshUI();
+      return say(bot.waiting
+        ? `${bot.name ? `“${bot.name}”` : 'That robot'} is waiting on its nest — click again to pick it up.`
+        : `Now showing ${bot.name ? `“${bot.name}”` : 'that robot'}.`);
+    }
     return userTake(bot.node);       // pick a mini off the bench
   }
   if (target.kind === 'station') {
-    const st = stations[target.id];
+    const st = target.st ?? stations[target.id];
     // both surfaces of the copier count as "the copier": holding something
     // puts it on the platform; an empty hand takes the copy, then the original
     const isCopier = st.kind === 'copyIn' || st.kind === 'copyOut';
     if (!held) {
       if (st.kind === 'stack') return userTakeFromStack(st);
+      if (st.kind === 'stand' && st.occupant) return userTake(st.occupant);
       if (isCopier) {
         // take from the surface actually clicked, falling back to the other
         const first = st.kind === 'copyIn' ? stations.copyIn : stations.copyOut;
@@ -2185,7 +2240,12 @@ function userClick(target) {
       return userUseCopier();
     }
     // the stand belongs to the robot: dropping something there IS giving it
-    if (st.kind === 'stand' && activeBot) return giveToRobot();
+    if (st.kind === 'stand') {
+      if (st !== stations.stand) {
+        return say('That desk belongs to a robot standing aside — click the robot first.');
+      }
+      if (activeBot) return giveToRobot();
+    }
     return say('Hand it to the robot instead.');
   }
   if (target.kind === 'bench') {
@@ -2427,6 +2487,10 @@ function activateBot(bot, after) {
   busy = true;
   detach(bot.node);
   scene.attach(bot.node);
+  bot.home = HOME;                       // it takes the middle
+  bot.stand = defaultStand;
+  bot.root.position.set(0, 0, 0);
+  bot.root.scale.setScalar(1);
   const from = bot.node.position.clone();
   const fromScale = bot.node.scale.x;
   enqueue({
@@ -2454,11 +2518,16 @@ function activateBot(bot, after) {
 function miniaturizeActive() {
   if (!activeBot || busy || mode !== 'world') return;
   const bot = activeBot;
-  cancelWaiting();
+  cancelWaiting(bot);
   clearUndo();
   syncBot();
   returnGivenToTable();
   clearScratch();
+  parkRobot();
+  dropStand(bot.stand);
+  bot.stand = null; bot.home = HOME;
+  bot.root.position.set(0, 0, 0);
+  stations.stand = defaultStand;
   activeBot = null; robot = null; root = null;
   program = []; condition = null;
   renderProgram(); rebuildCondition();
@@ -2873,18 +2942,66 @@ function applyLoaded(rec, name) {
   rebuildCondition(); renderProgram(); refreshUI();
   say(`Loaded “${name}” — give it ${condText(condition)} and run it.`);
 }
+// Loading never overwrites the robot already at the bench -- it brings in
+// another one. A robot that was working or has stopped shrinks onto the table,
+// training and all; a robot keeping a vigil over a nest stays on its feet and
+// steps aside, still waiting.
 function loadRobot(name) {
   const rec = loadLibrary()[name];
   if (!rec) return say('No robot by that name.');
   if (mode === 'training') leaveTraining();
-  if (activeBot) return applyLoaded(rec, name);
-  // no robot at the bench: wake one -- a bench mini if there is one, else a
-  // fresh one straight off the stack
-  const miniNode = benchThings.find(t => t.userData.kind === 'robot')
-    ?? stations.minis.cubes.pop();
-  if (!miniNode) return say('No robot to load into.');
-  refillStack(stations.minis, true);
-  activateBot(miniNode.__bot, () => applyLoaded(rec, name));
+  if (busy || mode === 'replay') return say('Wait for the robot to finish first.');
+  const spare = (except) => {
+    const onBench = benchThings.find(t => t.userData.kind === 'robot' && t.__bot !== except);
+    if (onBench) return onBench.__bot;
+    const fromStack = stations.minis.cubes.pop();
+    if (!fromStack) return null;
+    refillStack(stations.minis, true);
+    return fromStack.__bot;
+  };
+  const current = activeBot;
+  const bot = spare(current);
+  if (!bot) return say('No robot to load into.');
+  if (current) {
+    if (current.waiting) stepAside(current);
+    else parkActiveOnTable();
+    syncBot();
+    activeBot = null; robot = null; root = null;
+    program = []; condition = null;
+    stations.stand = defaultStand;
+  }
+  activateBot(bot, () => applyLoaded(rec, name));
+}
+// Shrink whoever is at the bench down onto the table, keeping its training --
+// the same as picking it up, except it lands on the bench, not in the hand.
+function parkActiveOnTable() {
+  const bot = activeBot;
+  if (!bot) return;
+  syncBot();
+  cancelWaiting(bot);
+  returnGivenToTable();
+  clearScratch();
+  parkRobot();
+  dropStand(bot.stand);
+  bot.stand = null; bot.home = HOME;
+  const node = bot.node, spot = benchSpot();
+  const from = node.position.clone();
+  enqueue({
+    dur: 0.6,
+    update(t) {
+      const e = ease(t);
+      node.scale.setScalar(lerp(1, MINI, e));
+      node.position.set(lerp(from.x, spot.x, e), lerp(from.y, BENCH_TOP, e),
+                        lerp(from.z, spot.z, e));
+    },
+    end() {
+      bot.root.position.set(0, 0, 0);
+      bot.root.scale.setScalar(1);
+      putOnBench(node, spot);
+      setPick(node, { kind: 'botThing', bot });
+      refreshUI();
+    },
+  });
 }
 function deleteRobot(name) {
   const lib = loadLibrary();
@@ -3001,7 +3118,13 @@ function clearWorld() {
     activeBot = null; robot = null; root = null;
   }
   collapseScratch();
-  waitingRun = false;
+  for (const b of [...waiters]) { cancelWaiting(b); b.node.removeFromParent(); }
+  waiters.clear();
+  for (const st of [...allStands]) {
+    if (st.occupant) { st.occupant.removeFromParent(); st.occupant = null; }
+    dropStand(st);
+  }
+  stations.stand = defaultStand;
   program = []; condition = null;
   renderProgram(); rebuildCondition();
 }
@@ -3112,8 +3235,9 @@ function leaveTraining(restore = true) {
 // its spot rather than leaving it mid-bench.
 function parkRobot() {
   if (!root) return;
-  root.position.set(0, 0, 0);
-  root.rotation.y = 0;
+  const h = homeFor(activeBot);
+  root.position.set(h.pos.x, 0, h.pos.z);
+  root.rotation.y = h.yaw;
   setLegs(0, 0);
   applyArm(POSE.rest.sh, POSE.rest.el);
   applyJaw(JAW_CLOSED);
@@ -3260,43 +3384,97 @@ function finishRun(msg) {
 // When the only thing between the robot and a match is an empty nest, it does
 // not give up: it shrinks and dozes until a bird delivers something that fits,
 // then springs back up and carries on with the rounds it had left.
-let waitingRun = false;
 const WAIT_SCALE = 0.45;
+const waiters = new Set();        // robots dozing over an empty nest
+// A walk animated on one robot's own body rather than the bound globals, so it
+// stays correct even after another robot has taken the floor.
+function glideRoot(bot, to, dur = 0.6) {
+  const r = bot.root, p0 = r.position.clone();
+  return {
+    dur,
+    update(t) {
+      const e = ease(t);
+      r.position.x = lerp(p0.x, to.x, e);
+      r.position.z = lerp(p0.z, to.z, e);
+      r.position.y = 0.03 * Math.abs(Math.sin(Math.PI * 3 * t));
+    },
+    end() { r.position.set(to.x, 0, to.z); },
+  };
+}
+// The body scales, not the node: walking targets are world places, and a
+// scaled node would bend them.
+function setBotScale(bot, v) { bot.root.scale.setScalar(v); }
 function enterWaiting() {
-  waitingRun = true;
+  const bot = activeBot;
+  bot.waiting = true;
+  bot.rounds = runCount;          // it resumes with the rounds it had left
+  waiters.add(bot);
   mode = 'world'; busy = false;
   highlight(-1);
-  const node = activeBot.node;
-  enqueueNext({
+  enqueueNext(glideRoot(bot, homeFor(bot).pos, 0.5), {
     dur: 0.5,
-    update(t) { node.scale.setScalar(lerp(1, WAIT_SCALE, ease(t))); },
-    end() { node.scale.setScalar(WAIT_SCALE); },
+    update(t) { setBotScale(bot, lerp(1, WAIT_SCALE, ease(t))); },
+    end() { setBotScale(bot, WAIT_SCALE); },
   });
   say('The nest is empty — the robot shrinks and waits for a bird to deliver something.');
   refreshUI();
 }
-function cancelWaiting() {
-  if (!waitingRun) return;
-  waitingRun = false;
-  activeBot?.node.scale.setScalar(1);
+function cancelWaiting(bot = activeBot) {
+  if (!bot?.waiting) return;
+  bot.waiting = false;
+  waiters.delete(bot);
+  setBotScale(bot, 1);
 }
+// A delivery may have satisfied any robot keeping a vigil, not just the one
+// being worked with. Whoever it is takes the floor to run its round.
 function checkWaiting() {
-  if (!waitingRun || !activeBot) return;
-  const given = specOf(stations.stand.occupant);
-  if (!given) return;
-  const members = [activeBot, ...activeBot.team];
-  if (!members.some(m => matchState(m.condition, given) === 'yes')) return;
-  waitingRun = false;
-  const node = activeBot.node;
+  if (!waiters.size || busy || mode !== 'world') return;
+  for (const bot of waiters) {
+    if (!bot.node.parent) { waiters.delete(bot); continue; }
+    const given = specOf(bot.stand?.occupant);
+    if (!given) continue;
+    const members = [bot, ...bot.team];
+    if (!members.some(m => matchState(m.condition, given) === 'yes')) continue;
+    wakeWaiter(bot);
+    return;
+  }
+}
+function wakeWaiter(bot) {
+  bot.waiting = false;
+  waiters.delete(bot);
+  if (bot !== activeBot) {        // it takes the floor, wherever it is standing
+    syncBot();
+    bindBot(bot);
+    renderProgram(); rebuildCondition();
+  }
+  runCount = bot.rounds;
   mode = 'replay'; busy = true;
   enqueue({
     dur: 0.4,
-    update(t) { node.scale.setScalar(lerp(WAIT_SCALE, 1, ease(t))); },
-    end() { node.scale.setScalar(1); },
+    update(t) { setBotScale(bot, lerp(WAIT_SCALE, 1, ease(t))); },
+    end() { setBotScale(bot, 1); },
   });
   enqueue(doNow(nextIteration));
-  say('A delivery! The robot springs back to work.');
+  say(`A delivery! ${bot.name ? `“${bot.name}”` : 'The robot'} springs back to work.`);
   refreshUI();
+}
+// Step out of the middle without breaking the vigil: the robot, its desk and
+// whatever it was given all move together.
+function stepAside(bot) {
+  const slot = freeAsideSlot();
+  const old = bot.stand ?? defaultStand;
+  const st = makeStandStation(slot.dx, slot.dz);
+  bot.stand = st;
+  bot.home = { pos: new THREE.Vector3(slot.dx, 0, slot.dz), yaw: 0 };
+  const given = old.occupant;
+  if (given) {
+    const from = given.getWorldPosition(new THREE.Vector3());
+    old.occupant = null;
+    putOnStation(st, given);
+    enqueue(settleInto(given, from, 0.6));
+  }
+  dropStand(old);                 // the middle desk itself stays; extras go
+  enqueue(glideRoot(bot, bot.home.pos, 0.7));
 }
 
 // ---------------------------------------------------------------- UI
@@ -3355,7 +3533,8 @@ function refreshUI() {
   const training = mode === 'training';
   $('badge').textContent = mode === 'replay' ? 'repeating'
     : training ? 'inside the thought'
-    : waitingRun ? 'waiting on a nest' : 'your workshop';
+    : activeBot?.waiting ? 'waiting on a nest'
+    : waiters.size ? `${waiters.size} waiting on a nest` : 'your workshop';
   $('badge').className = 'badge' + (training ? ' training' : '');
   $('exitBtn').style.display = training ? '' : 'none';
   $('runBtn').style.display = training ? 'none' : '';
@@ -3763,17 +3942,10 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     }
   }
 
-  // The robot's own stand sits exactly where its claw reaches.
-  {
-    const point = reachLocal.clone();
-    const st = { id: 'stand', kind: 'stand', label: 'its stand', point,
-                 topY: point.y - CUBE / 2, occupant: null, cubes: [] };
-    const obj = makeMiniDesk(Math.max(0.15, st.topY), 0.52, 0.44, 0xcabc98);
-    obj.position.set(point.x, 0, point.z);
-    setPick(obj, { kind: 'station', id: 'stand' });
-    scene.add(obj);
-    stations.stand = st;
-  }
+  // The desk in the middle, where the claw reaches: whichever robot is being
+  // worked with stands behind it.
+  defaultStand = makeStandStation(0, 0);
+  stations.stand = defaultStand;
 
   // One scratch desk to begin with; more grow beside it as they are needed.
   ensureScratchStation(0);

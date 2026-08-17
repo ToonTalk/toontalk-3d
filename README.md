@@ -111,7 +111,15 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   appears on its chest screen and in its tooltips. Export downloads it as a
   `.robot.json` file under its typed name; Import adds it to the library and
   wakes it in one step; Load wakes a robot automatically if none is at the
-  bench. **Save world / Load world / Export world** do the same for the whole
+  bench, and never at the cost of the robot already there: loading brings in
+  *another* robot. One that was working or has stopped shrinks onto the table
+  with its training intact; one keeping a vigil over a nest stays on its feet,
+  steps back and to the side with its own desk — and whatever it was given —
+  and goes on waiting. Several robots can stand behind the bench that way;
+  clicking one brings it into focus, clicking the focused one picks it up. A
+  waiting robot takes the floor by itself the moment its bird delivers
+  something that fits. **Save world / Load world / Export world** do the same
+  for the whole
   workshop — bench, stands, nests with their piles, birds with their pairings,
   and every robot's training — to this browser or to a `.world.json` file that
   Import recognises.
