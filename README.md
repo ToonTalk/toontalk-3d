@@ -9,78 +9,67 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 
 ## What works today
 
-`nano-toontalk.html` — a small but complete programming-by-demonstration loop:
+`nano-toontalk.html` — a programming-by-demonstration workshop:
 
-- **Numbers and boxes.** Numbers come off an infinite stack. Boxes have holes;
-  a hole holds a number *or another box*, so structures nest. Type a digit on a
-  held box to give it that many holes (up to 8) — the holes shrink rather than
-  the box growing off its pillar.
-- **Exact arithmetic.** Numbers are BigInt fractions in lowest terms. Type
-  digits to set a value, `-` to negate it — adding a negative *is* subtraction,
-  so there is no separate subtract operation — and `* / ^` to set what a number
-  *does* when dropped on another; each operation colours the block and shows a
-  badge.
-- **Undo.** Ctrl+Z or the Undo button unwinds moves, typing, joins, vacuums
-  and condition erasures — including recorded steps while training a robot.
-  Mode boundaries (entering or leaving a lesson, running) clear the history.
-- **Sharing robots.** Save names a robot in the browser; Export downloads it as
-  a `.robot.json` file and Import adds one to the library. Load wakes a robot
-  automatically if none is at the bench. Hovering a trained mini shows its
-  whole program.
-  Division gives a real fraction, not a float. Numbers too long to fit render
-  the ToonTalk way — full size at both ends, tapering to an ellipsis in the
-  middle — so the most and least significant digits both stay readable at any
-  length. Numerators and denominators are laid out independently.
-- **A robot library.** Name a trained robot and save it; it persists in
-  `localStorage` and reloads with its condition and actions intact.
-- **A robot that walks the bench** and picks things up with a two-jaw claw.
-- **A stack of miniature robots.** Set a mini on the table and drop something on
-  it: it grows to full size, steps behind the bench, and takes what you gave it.
-  Click a full-size robot to shrink it back into your hand — it keeps all its
-  training. Drop one trained robot on another to form a **team**: given
-  something, the first member whose condition matches takes the pass, so a team
-  of "on a 5, double it" and "on a 10, add 3" turns a 5 into 13 and stops.
-- **You move things; the robots don't.** In the workshop you pick things up
-  and put them down anywhere on the bench — what you carry follows the pointer.
-  A robot only ever acts inside its thought bubble, or when repeating what it
-  learned.
-- **A robot's actions name its own containers, never places in your world.**
-  Every step is an address like *hole 1 of what it was given* or *hole 2 of
-  spot 1* — the given thing, a scratch spot, or a copier surface, then hole
-  indices. A trained robot therefore generalises to anything of the right shape
-  for free, and can even pick up the whole thing it was given and hand back
-  something built around it. Your bench is off limits to it.
-- **A private work area.** Inside its thought bubble the robot has scratch spots
-  and the copier to work with. That is safe where naming your bench would not
-  be: the area belongs to the robot and starts empty on every run, so it cannot
-  collide with your world or carry state between runs. Everything left there is
-  vacuumed when the robot is done, and whatever it was given goes back on the
-  table — changed, if the robot changed it.
-- **Training starts by giving.** Hand something to an untrained robot and it
-  goes into its thought bubble to learn on it; from then on you direct the
-  robot and everything it does is recorded. Leaving the bubble rewinds the
-  world — the daydream was never real. Giving a *trained* robot something is
-  just handing it work to run on.
-- **A condition.** The robot records the exact thing it was trained on and will
-  only run when given something that matches. It is shown as a thought floating
-  above the pad.
-  Refuse a run and the offending parts glow red in the bubble.
-- **Dusty the vacuum** erases parts of that condition into wildcards (`?`),
-  which is what turns a one-off into something general — and he removes things
-  too: wake him and click anything to vacuum it away. During training the robot
-  learns that as a step, which is how robots discard.
-- **Scales.** From their own stack; each has two pans that behave like box
-  holes, and the beam tips toward the larger number. Unlike the original's,
-  they stand alone rather than living in a three-hole box.
-- **A copier** with two surfaces: originals go on the upper platform and are
-  scanned there, copies are delivered to the lower tray. Copies are independent
-  deep copies — boxes come back with their contents duplicated, not shared.
-  Robots use it exactly the way you do: holding something, a click on the
-  machine walks the robot over to set it on the platform; empty-clawed, it takes
-  the copy from the tray, then the original back off the platform.
-- **Running.** The robot repeats its trained actions on whatever it is given,
-  and *keeps* repeating while its condition still holds — so a loop is just a
-  condition that stays true.
+### The things
+
+- **Numbers** come off an infinite stack as 1s. They are exact BigInt fractions
+  in lowest terms: type digits to set a value, `-` to negate — adding a
+  negative *is* subtraction, so there is no separate subtract operation — and
+  `* / ^` to set what a number *does* when dropped on another. Each operation
+  colours the block and shows a badge. Division gives a real fraction, never a
+  float. Numbers too long to fit render the ToonTalk way: full size at both
+  ends, tapering to an ellipsis in the middle.
+- **Boxes** have holes; a hole holds a number, a box, a scale, a bird or a
+  nest, so structures nest. Type a digit on a held box to give it that many
+  holes (up to 8). Dropping a box on another **joins** them — on the left half
+  its holes go in front, on the right half behind.
+- **Scales**, each with two pans that behave exactly like box holes; the beam
+  tips toward the larger number. Unlike the original's, they stand alone
+  rather than living in a three-hole box.
+- **Nests with eggs.** Set a nest down and its egg hatches into a bird. Give
+  the bird anything and she flies it home to her nest, where deliveries pile
+  up; the pile travels with the nest. Clicking a pile item takes it, clicking
+  the nest takes the nest.
+- **A copier** with two surfaces: originals are scanned on the upper platform,
+  independent deep copies are delivered to the lower tray. Clicking a surface
+  with an empty hand takes from that surface.
+- **Dusty the vacuum**, under the bench. Wake him and click things to remove
+  them, or click parts of a robot's thought to erase them.
+
+### The robots
+
+- **A stack of miniature robots.** Set a mini on the table and drop something
+  on it: it grows to full size, steps behind the bench, and takes what you
+  gave it — training if untrained, ready to Run if trained. Click the
+  full-size robot to shrink it back into your hand with its training intact.
+  Hovering a trained mini shows its condition and whole program.
+- **You move things; robots don't.** In the workshop everything you carry
+  follows the pointer. A robot only acts inside its thought bubble, or when
+  repeating what it learned — and it does things the same way you do,
+  including using the copier and directing Dusty.
+- **Steps name the robot's own containers, never places in your world.** Every
+  action is an address like *hole 1 of what it was given* or *spot 2* — so a
+  trained robot generalises to anything of the right shape for free. Its
+  scratch spots and the copier are private and swept clean every run.
+- **Training is a daydream.** Everything the robot does while learning is
+  recorded, and leaving the bubble rewinds the world; the robot keeps only the
+  lesson, and what it was given stays on its stand, ready to Run.
+- **The condition** — the exact thing it was trained on — floats in a thought
+  bubble over its head, and refused runs pulse the mismatching parts red until
+  something changes. Dusty erases progressively: a number becomes *any
+  number*, a box *any box with N holes*, a scale *any scale*, and a second
+  erase makes any of them *anything* (its own ?-cloud shape).
+- **Running repeats while some condition still matches**, up to the Rounds
+  limit — a loop is just a condition that stays true. **Teams**: drop one
+  trained robot on another, and each pass is taken by the first member that
+  recognises what is on the stand.
+- **Saving and sharing.** Save names a robot in this browser; Export downloads
+  it as a `.robot.json` file; Import adds one to the library; Load wakes a
+  robot automatically if none is at the bench.
+
+Undo (Ctrl+Z or the button) unwinds moves, typing, joins, vacuums, erasures —
+including recorded steps mid-lesson. Mode boundaries clear the history.
 
 `robot-demo.html` — the earlier standalone pick-up-and-put-down demo.
 
@@ -113,13 +102,14 @@ worth keeping back into the script.
 
 ## Known limits
 
-- The robot no longer walks: its stand sits exactly where its claw reaches.
-- The robot's scratch area is three fixed spots rather than free placement.
-- When a robot uses the copier the object flies between claw and platform: the
-  upper surface is above the claw's working height and there is no arm IK.
-- `^` takes integer exponents only. Results are unbounded BigInts; the only
-  limit is a guard that refuses a power whose size is estimated past 20000
-  digits, so a runaway loop cannot lock the browser mid-calculation.
-- The condition matches structure, values and operations, with wildcards — but
-  you cannot yet express "any box" or constrain a number's range.
-- One robot. No teams, no birds, no nests.
+- Birds and nests are objects, not yet communication: robots cannot be given
+  them or wait on them, so there is no inter-robot dataflow yet.
+- Nothing reads a scale's tilt — it shows a comparison but cannot yet be
+  branched on.
+- The condition cannot constrain a number's range, only match exactly or
+  wildcard.
+- `^` takes integer exponents only, and results are refused past an estimated
+  20000 digits so a runaway loop cannot lock the browser.
+- The robot's scratch area is three fixed spots rather than free placement,
+  and there is no arm IK — transfers to the copier's raised platform animate
+  the object, not the arm.
