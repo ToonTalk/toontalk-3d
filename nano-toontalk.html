@@ -460,27 +460,40 @@ const roots = () => Object.values(stations)
 // The robot's whole world is one object: whatever it was given. `path` is a
 // chain of hole indices into that, and [] means the thing itself. Nothing a
 // robot does is ever expressed as a place.
+// A step addresses things as {c, path}: one of the robot's own containers,
+// then a chain of hole indices into whatever sits there. Every container is
+// private to the robot, so an address can never name the user's world.
+const CONTAINER_STATION = { given: 'stand', s0: 's0', s1: 's1', s2: 's2', in: 'copyIn', out: 'copyOut' };
+const CONTAINER_TEXT = { given: 'what it was given', s0: 'spot 1', s1: 'spot 2', s2: 'spot 3',
+                         in: 'the copier platform', out: 'the copy tray' };
+const stationOf = (c) => stations[CONTAINER_STATION[c]];
+const containerOfStation = (id) =>
+  Object.keys(CONTAINER_STATION).find(c => CONTAINER_STATION[c] === id) ?? null;
 const myThing = () => stations.stand?.occupant ?? null;
-function thingAt(path) {
-  let node = myThing();
-  for (const i of path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
+function thingAt(at) {
+  let node = stationOf(at.c)?.occupant ?? null;
+  for (const i of at.path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
   return node;
 }
-function holeAt(path) {
-  if (!path.length) return null;
-  return holesOf(thingAt(path.slice(0, -1)))?.[path[path.length - 1]] ?? null;
+function holeAt(at) {
+  if (!at.path.length) return null;
+  return holesOf(thingAt({ c: at.c, path: at.path.slice(0, -1) }))?.[at.path[at.path.length - 1]] ?? null;
 }
-// Where a thing sits inside the robot's own object, or null if it is elsewhere.
-function pathOf(thing) {
-  const walk = (node, path) => {
-    if (!node) return null;
-    if (node === thing) return path;
-    const hs = holesOf(node);
-    if (!hs) return null;
-    for (const h of hs) { const r = walk(h.thing, path.concat(h.index)); if (r) return r; }
-    return null;
-  };
-  return walk(myThing(), []);
+// Where a thing sits among the robot's containers, or null if it is elsewhere.
+function addrOf(thing) {
+  for (const c of Object.keys(CONTAINER_STATION)) {
+    const walk = (node, path) => {
+      if (!node) return null;
+      if (node === thing) return path;
+      const hs = holesOf(node);
+      if (!hs) return null;
+      for (const h of hs) { const r = walk(h.thing, path.concat(h.index)); if (r) return r; }
+      return null;
+    };
+    const r = walk(stationOf(c)?.occupant, []);
+    if (r) return { c, path: r };
+  }
+  return null;
 }
 function holeContaining(thing) {
   let found = null;
@@ -753,22 +766,6 @@ const HOME = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
 function standForPoint(p) {
   return { pos: new THREE.Vector3(p.x, 0, p.z - reachR), yaw: -reachBeta };
 }
-// Float a thing between the claw and a surface. The copier's platform is above
-// the claw's working height, so rather than solve for an arm pose that reaches
-// it, the object itself makes the trip.
-function flyTo(thing, to, dur = 0.5) {
-  let from = null;
-  return {
-    dur,
-    start() { scene.attach(thing); from = thing.position.clone(); },
-    update(t) {
-      const e = ease(t);
-      thing.position.lerpVectors(from, to, e);
-      thing.position.y += 0.16 * Math.sin(Math.PI * e);   // small arc
-    },
-    end() { thing.position.copy(to); },
-  };
-}
 
 // ---------------------------------------------------------------- state
 let held = null, mode = 'world', program = [], busy = false;
@@ -901,12 +898,20 @@ function actionNew(kind) {
   enqueue(doNow(refreshUI));
 }
 
-// Take what is at `path` inside the robot's own object.
-function actionTake(path) {
+// Where the robot stands to work on a container. The copier's two surfaces
+// share one stance; the stand is worked from home.
+const walkTargetFor = (c) =>
+  c === 'given' ? HOME
+  : (c === 'in' || c === 'out') ? () => standForPoint(stations.copyOut.point)
+  : () => standForPoint(stationOf(c).point);
+
+// Take whatever the address names, into the claw.
+function actionTake(at) {
+  enqueue(walkTo(walkTargetFor(at.c)));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.7));
   enqueue(doNow(() => {
-    const obj = thingAt(path);
-    if (!obj) return abort(`The robot expected something in ${holeName(path)} and found nothing.`);
+    const obj = thingAt(at);
+    if (!obj) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
     detach(obj);
     held = obj;
     setPick(held, { kind: 'thing', thing: held });
@@ -919,27 +924,30 @@ function actionTake(path) {
   enqueue(doNow(refreshUI));
 }
 
-// Put what the robot holds at `path`; [] means onto the given thing itself,
-// which for two numbers is how they combine.
-function actionPut(path) {
+// Put what the robot holds at the address. A hole takes it (or combines);
+// a bare container places it (or combines with what sits there); placing on
+// the copier platform sets the machine going.
+function actionPut(at) {
+  enqueue(walkTo(walkTargetFor(at.c)));
   enqueue(armTo(POSE.reach, JAW_CLOSED, 0.6));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.35));
   enqueue(doNow(() => {
     const dropped = held; held = null;
     if (!dropped) return;
     const from = dropped.getWorldPosition(new THREE.Vector3());
-    const hole = holeAt(path);
-    if (!path.length) {
-      const target = myThing();
-      if (!target) return abort('The robot has nothing to work on.');
-      combine({ occupant: target }, dropped, false, from);
-    } else if (!hole) {
-      return abort(`The robot expected ${holeName(path)} and there is no such hole.`);
-    } else if (hole.thing) {
-      combine(hole, dropped, true, from);
+    if (at.path.length) {
+      const hole = holeAt(at);
+      if (!hole) return abort(`The robot expected ${holeName(at)} and there is no such hole.`);
+      if (hole.thing) combine(hole, dropped, true, from);
+      else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from)); }
     } else {
-      putInHole(hole, dropped);
-      enqueueNext(settleInto(dropped, from));
+      const st = stationOf(at.c);
+      if (st.occupant) combine(st, dropped, false, from);
+      else {
+        putOnStation(st, dropped);
+        enqueueNext(settleInto(dropped, from));
+        if (at.c === 'in') runDuplicate();
+      }
     }
     refreshUI();
   }));
@@ -990,93 +998,17 @@ function runDuplicate() {
   });
 }
 
-// Put down on / take from one of the robot's own scratch spots.
-function actionPutScratch(i) {
-  const st = stations['s' + i];
-  enqueue(walkTo(() => standForPoint(st.point)));
-  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.6));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.35));
-  enqueue(doNow(() => {
-    const t = held; held = null;
-    if (!t) return;
-    const from = t.getWorldPosition(new THREE.Vector3());
-    putOnStation(st, t);
-    enqueueNext(settleInto(t, from));
-    refreshUI();
-  }));
-  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.6));
-}
-function actionTakeScratch(i) {
-  const st = stations['s' + i];
-  enqueue(walkTo(() => standForPoint(st.point)));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
-  enqueue(doNow(() => {
-    const obj = st.occupant;
-    if (!obj) return abort(`The robot expected something on ${st.label} and found nothing.`);
-    st.occupant = null;
-    held = obj;
-    setPick(held, { kind: 'thing', thing: held });
-    noteHeld();
-    grip.attach(held);
-    enqueueNext(graspSettle(held));
-  }));
-  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.35));
-  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.55));
-  enqueue(doNow(refreshUI));
-}
-
-// Carry what it is holding to the copier and set it on the platform; the
-// machine then delivers a copy to the tray.
-function actionPutCopier() {
-  const inSt = stations.copyIn;
-  enqueue(walkTo(() => standForPoint(stations.copyOut.point)));
-  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.55));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.3));
-  let carried = null;
-  enqueue(doNow(() => {
-    carried = held; held = null;
-    if (!carried) return;
-    const to = new THREE.Vector3(inSt.point.x, inSt.topY + carried.userData.rest, inSt.point.z);
-    enqueueNext(flyTo(carried, to, 0.55), doNow(() => {
-      putOnStation(inSt, carried);
-      runDuplicate();
-      refreshUI();
-    }));
-  }));
-  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.6));
-}
-function actionTakeCopy() {
-  const outSt = stations.copyOut;
-  enqueue(walkTo(() => standForPoint(outSt.point)));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.55));
-  enqueue(doNow(() => {
-    const obj = outSt.occupant;
-    if (!obj) return abort('The robot expected a copy in the tray and found none.');
-    outSt.occupant = null;
-    const to = grip.getWorldPosition(new THREE.Vector3());
-    enqueueNext(flyTo(obj, to, 0.45), doNow(() => {
-      grip.attach(obj);
-      held = obj;
-      setPick(held, { kind: 'thing', thing: held });
-      noteHeld();
-      enqueueNext(graspSettle(obj));
-      refreshUI();
-    }));
-  }));
-  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.55));
-}
-
-// The robot's own way of duplicating: box-relative, so it names a hole rather
-// than a machine. The original stays put and the copy arrives in the claw --
-// exactly what ToonTalk's magic wand does.
-function actionCopy(path) {
+// The robot's wand-style duplicating: it names an address, not a machine. The
+// original stays put and the copy arrives in the claw.
+function actionCopy(at) {
+  enqueue(walkTo(walkTargetFor(at.c)));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
   let copy = null, src = null;
   enqueue({
     dur: 0.5,
     start() {
-      src = thingAt(path);
-      if (!src) return abort(`The robot expected something in ${holeName(path)} and found nothing.`);
+      src = thingAt(at);
+      if (!src) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
       copy = buildThing(specOf(src));
       scene.add(copy);
       const p = src.getWorldPosition(new THREE.Vector3());
@@ -1156,24 +1088,23 @@ function settleInto(thing, fromWorld, dur = 0.22) {
 // Where Bammer will eventually fly in with his hammer. Only numbers combine.
 function combine(slot, incoming, isHole, fromWorld) {
   const target = isHole ? slot.thing : slot.occupant;
+  // The old fallback parked refused things on a free pillar; pillars are gone,
+  // so a refused thing lands on the bench instead of being lost.
+  const refuse = (msg) => {
+    putOnBench(incoming, { x: (BENCH.x0 + BENCH.x1) / 2, z: (BENCH.z0 + BENCH.z1) / 2 });
+    say(msg);
+  };
   if (target.userData.kind !== 'number' || incoming.userData.kind !== 'number') {
-    // nothing sensible to do -- park it back on the nearest free pillar
-    const free = Object.values(stations).find(s => s.kind === 'pillar' && !s.occupant);
-    if (free) putOnStation(free, incoming); else scene.remove(incoming);
-    say('Only numbers combine — boxes need a hole of their own.');
-    return;
+    return refuse('Only numbers combine — boxes need a hole of their own.');
   }
   // The arriving number's own operation is what gets applied -- that is what
   // typing "*" on a number before dropping it means.
   const op = incoming.userData.op;
   const result = applyOp(target.userData.value, op, incoming.userData.value);
   if (!result) {
-    const free = Object.values(stations).find(s => s.kind === 'pillar' && !s.occupant);
-    if (free) putOnStation(free, incoming); else scene.remove(incoming);
-    say(op === '/' && incoming.userData.value.n === 0n
+    return refuse(op === '/' && incoming.userData.value.n === 0n
       ? 'Nothing can be divided by zero.'
       : `That ${op} makes a number too big to hold.`);
-    return;
   }
   scene.attach(incoming);
   const dest = target.getWorldPosition(new THREE.Vector3());
@@ -1315,48 +1246,37 @@ function directRobot(target) {
   const st = target.kind === 'station' ? stations[target.id] : null;
   if (st?.kind === 'stack') {
     if (held) return say('It is already holding something.');
+    if (st.id === 'minis') return say('It cannot make robots.');
     return go({ type: st.id === 'boxes' ? 'newBox' : 'newNumber' });
   }
-  // The copier arms a copy: the robot then names a hole, not the machine, so
-  // the step stays box-relative.
-  if (st?.kind === 'scratch') {
-    if (held) return go({ type: 'putScratch', i: st.slot });
-    if (!st.occupant) return say('That spot is empty.');
-    return go({ type: 'takeScratch', i: st.slot });
-  }
-  if (st?.kind === 'copyIn') {
-    if (!held) return say('Give it something to copy first.');
-    if (st.occupant) return say('There is already something on the platform.');
-    if (stations.copyOut.occupant) return say('The tray still has a copy in it.');
-    return go({ type: 'putCopier' });
-  }
-  if (st?.kind === 'copyOut') {
-    if (held) return say('Put what it is holding on the platform above.');
-    if (st.occupant) return go({ type: 'takeCopy' });
-    // empty tray with an empty claw arms the wand-style copy instead
-    copyArmed = !copyArmed;
-    say(copyArmed ? 'Copier armed — click what the robot should copy.' : 'Copier stood down.');
-    return refreshUI();
+  const c = st ? containerOfStation(st.id) : null;
+  if (c) {
+    if (held) {
+      if (c === 'in' && st.occupant) return say('There is already something on the platform.');
+      if (c === 'in' && stations.copyOut.occupant) return say('The tray still has a copy in it.');
+      if (st.occupant?.userData.kind === 'box') return say('Click one of its holes.');
+      return go({ type: 'put', at: { c, path: [] } });
+    }
+    if (!st.occupant) {
+      if (c === 'out') {
+        // empty tray with an empty claw arms the wand-style copy
+        copyArmed = !copyArmed;
+        say(copyArmed ? 'Copier armed — click what the robot should copy.' : 'Copier stood down.');
+        return refreshUI();
+      }
+      return say('Nothing there.');
+    }
+    if (copyArmed) { copyArmed = false; return go({ type: 'copy', at: { c, path: [] } }); }
+    return go({ type: 'take', at: { c, path: [] } });
   }
   if (target.kind === 'thing' || target.kind === 'hole') {
-    const path = target.kind === 'hole'
-      ? (pathOf(target.box) ?? null)?.concat(target.index)
-      : pathOf(target.thing);
-    if (path) {
-      if (held) return go({ type: 'put', path });
-      if (copyArmed) { copyArmed = false; return go({ type: 'copy', path }); }
-      if (!path.length) {
-        return say('That is the thing it was given — drop something on it, or reach into its holes.');
-      }
-      return go({ type: 'take', path });
-    }
-    // Not in its box, but it may be sitting on one of the robot's own spots --
-    // clicking the thing should work the same as clicking the spot under it.
-    if (target.kind === 'thing') {
-      const host = Object.values(stations).find(s => s.occupant === target.thing);
-      if (host) return directRobot({ kind: 'station', id: host.id });
-    }
-    return say('The robot can only touch what it was given and its own work area.');
+    const at = target.kind === 'hole'
+      ? (() => { const a = addrOf(target.box); return a && { c: a.c, path: a.path.concat(target.index) }; })()
+      : addrOf(target.thing);
+    if (!at) return say('The robot can only touch what it was given and its own work area.');
+    if (held) return go({ type: 'put', at });
+    if (copyArmed) { copyArmed = false; return go({ type: 'copy', at }); }
+    return go({ type: 'take', at });
   }
   say('The robot can only touch what it was given, or make a new number or box.');
 }
@@ -1489,13 +1409,9 @@ function go(step) {
 function runStep(step) {
   if (step.type === 'newNumber') actionNew('number');
   else if (step.type === 'newBox') actionNew('box');
-  else if (step.type === 'take') actionTake(step.path);
-  else if (step.type === 'copy') actionCopy(step.path);
-  else if (step.type === 'putScratch') actionPutScratch(step.i);
-  else if (step.type === 'takeScratch') actionTakeScratch(step.i);
-  else if (step.type === 'putCopier') actionPutCopier();
-  else if (step.type === 'takeCopy') actionTakeCopy();
-  else if (step.type === 'put') actionPut(step.path);
+  else if (step.type === 'take') actionTake(step.at);
+  else if (step.type === 'copy') actionCopy(step.at);
+  else if (step.type === 'put') actionPut(step.at);
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); } });
   } else if (step.type === 'setValue') {
@@ -1654,7 +1570,17 @@ function condIn(o) {
   return { kind: 'box', holes: o.holes.map(condIn) };
 }
 const stepOut = (s) => s.type === 'setValue' ? { ...s, value: ratOut(s.value) } : s;
-const stepIn = (s) => s.type === 'setValue' ? { ...s, value: ratIn(s.value) } : s;
+const stepIn = (s) => {
+  if (s.type === 'setValue') return { ...s, value: ratIn(s.value) };
+  // migrate saves that predate {c, path} addresses
+  if (s.type === 'putScratch') return { type: 'put', at: { c: 's' + s.i, path: [] } };
+  if (s.type === 'takeScratch') return { type: 'take', at: { c: 's' + s.i, path: [] } };
+  if (s.type === 'putCopier') return { type: 'put', at: { c: 'in', path: [] } };
+  if (s.type === 'takeCopy') return { type: 'take', at: { c: 'out', path: [] } };
+  if ((s.type === 'take' || s.type === 'put' || s.type === 'copy') && !s.at)
+    return { ...s, at: { c: 'given', path: s.path || [] } };
+  return s;
+};
 
 function loadLibrary() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
@@ -1841,19 +1767,23 @@ let hintTimer = null;
 function say(msg) { $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, 2800); }
 function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i)); }
 // Steps only ever name holes of the robot's own object, never places.
-const holeName = (path) => path.length ? `hole ${path.map(i => i + 1).join('.')}` : 'what it was given';
+const holeName = (at) => at.path.length
+  ? `hole ${at.path.map(i => i + 1).join('.')} of ${CONTAINER_TEXT[at.c]}`
+  : CONTAINER_TEXT[at.c];
 function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
-       : s.type === 'take' ? `take what is in ${holeName(s.path)}`
-       : s.type === 'copy' ? (s.path.length ? `copy what is in ${holeName(s.path)}`
-                                            : 'make a copy of what it was given')
-       : s.type === 'putScratch' ? `set it down on spot ${s.i + 1}`
-       : s.type === 'takeScratch' ? `pick up spot ${s.i + 1}`
-       : s.type === 'putCopier' ? 'put it on the copier'
-       : s.type === 'takeCopy' ? 'take the copy'
-       : s.type === 'put' ? (s.path.length ? `put it in ${holeName(s.path)}`
-                                           : 'drop it on what it was given')
+       : s.type === 'take' ? (s.at.path.length ? `take what is in ${holeName(s.at)}`
+           : s.at.c === 'out' ? 'take the copy'
+           : s.at.c === 'in' ? 'take back the original'
+           : s.at.c === 'given' ? 'pick up what it was given'
+           : `pick up ${CONTAINER_TEXT[s.at.c]}`)
+       : s.type === 'copy' ? (s.at.path.length ? `copy what is in ${holeName(s.at)}`
+           : `make a copy of ${CONTAINER_TEXT[s.at.c]}`)
+       : s.type === 'put' ? (s.at.path.length ? `put it in ${holeName(s.at)}`
+           : s.at.c === 'in' ? 'put it on the copier'
+           : s.at.c === 'given' ? 'drop it on what it was given'
+           : `set it down on ${CONTAINER_TEXT[s.at.c]}`)
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
@@ -2177,7 +2107,8 @@ window.__nano = {
   scratch() { return SCRATCH_X.map((_, i) => stations['s' + i].occupant); },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
   heldPos() { return held ? held.getWorldPosition(new THREE.Vector3()).toArray().map(n => +n.toFixed(2)) : null; },
-  mine(path = []) { return thingAt(path); },
+  mine(path = []) { return thingAt({ c: 'given', path }); },
+  at(c, path = []) { return thingAt({ c, path }); },
   bench(i = 0) { return benchThings[i]; },
   type(v, op) { if (held) { held.setValue(rat(v), op); refreshUI(); } },
   setOp(op) { if (held) { held.setOp(op); refreshUI(); } },
