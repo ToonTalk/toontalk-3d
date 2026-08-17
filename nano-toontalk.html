@@ -199,7 +199,7 @@ function frameScene() {
   if (userMoved) return;
   // wide enough for Dusty's mat at one end, tall enough for the thought bubble
   // riding above the robot's head
-  const centre = new THREE.Vector3(-0.2, 1.10, 0.8), halfW = 3.6, halfH = 1.78;
+  const centre = new THREE.Vector3(-0.45, 1.10, 0.8), halfW = 3.35, halfH = 1.78;
   const vFov = camera.fov * DEG;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
   const d = Math.max(halfH / Math.tan(vFov / 2), halfW / Math.tan(hFov / 2)) + 1.15;
@@ -612,6 +612,8 @@ function matches(cond, spec) {
   if (cond === null || cond === undefined) return spec == null;
   if (cond.kind === 'wild') return spec != null;
   if (!spec) return false;
+  if (cond.kind === 'wildBox') return spec.kind === 'box' && spec.holes.length === cond.n;
+  if (cond.kind === 'wildScale') return spec.kind === 'scale';
   if (cond.kind === 'number') {
     return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op;
   }
@@ -624,19 +626,27 @@ function matches(cond, spec) {
 function condText(c) {
   if (!c) return 'an empty hole';
   if (c.kind === 'wild') return 'anything';
+  if (c.kind === 'wildBox') return `any box with ${c.n} hole${c.n > 1 ? 's' : ''}`;
+  if (c.kind === 'wildScale') return 'any scale';
   if (c.kind === 'number') {
     return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
   }
   if (c.kind === 'scale') return `a scale weighing ${c.holes.map(condText).join(' against ')}`;
   return `a box of ${c.holes.map(condText).join(' and ')}`;
 }
+// Erasing keeps the type the first time -- an erased box still means "a box
+// like this one", contents ignored -- and only a second erase means "anything".
 function eraseAt(cond, path) {
-  if (!path.length) return WILD;
+  if (!path.length) {
+    if (cond?.kind === 'box') return { kind: 'wildBox', n: cond.holes.length };
+    if (cond?.kind === 'scale') return { kind: 'wildScale' };
+    return WILD;
+  }
   const [i, ...rest] = path;
-  if (cond?.kind !== 'box') return cond;
+  if (cond?.kind !== 'box' && cond?.kind !== 'scale') return cond;
   const holes = cond.holes.slice();
   holes[i] = eraseAt(holes[i], rest);
-  return { kind: 'box', holes };
+  return { kind: cond.kind, holes };
 }
 
 // Unhook a thing from wherever it currently lives.
@@ -1210,6 +1220,35 @@ function settleInto(thing, fromWorld, dur = 0.22) {
   };
 }
 
+// The joined box replaces the target wherever it sits -- bench, station or
+// hole -- and the dropped box's holes are appended after the target's.
+function joinBoxes(target, incoming, refuse) {
+  const nA = target.userData.holes.length, nB = incoming.userData.holes.length;
+  if (nA + nB > MAX_HOLES) {
+    return refuse(`Joined, that would be ${nA + nB} holes — boxes top out at ${MAX_HOLES}.`);
+  }
+  const nb = makeBox(nA + nB);
+  const move = (srcHoles, offset) => srcHoles.forEach((h, i) => {
+    const t = h.thing;
+    if (t) { h.thing = null; putInHole(nb.userData.holes[offset + i], t); }
+  });
+  move(target.userData.holes, 0);
+  move(incoming.userData.holes, nA);
+  const hole = holeContaining(target);
+  const st = Object.values(stations).find(s => s.occupant === target);
+  const bi = benchThings.indexOf(target);
+  const at = { x: target.position.x, z: target.position.z };
+  detach(target);
+  target.removeFromParent();
+  incoming.removeFromParent();
+  if (hole) putInHole(hole, nb);
+  else if (st) putOnStation(st, nb);
+  else if (bi >= 0) putOnBench(nb, at);
+  else scene.add(nb);
+  flash(nb.getWorldPosition(new THREE.Vector3()));
+  refreshUI();
+}
+
 // Where Bammer will eventually fly in with his hammer. Only numbers combine.
 function combine(slot, incoming, isHole, fromWorld) {
   const target = isHole ? slot.thing : slot.occupant;
@@ -1219,8 +1258,13 @@ function combine(slot, incoming, isHole, fromWorld) {
     putOnBench(incoming, { x: (BENCH.x0 + BENCH.x1) / 2, z: (BENCH.z0 + BENCH.z1) / 2 });
     say(msg);
   };
+  // Boxes join: dropping one box on another concatenates their holes, contents
+  // and all, exactly as in ToonTalk.
+  if (target.userData.kind === 'box' && incoming.userData.kind === 'box') {
+    return joinBoxes(target, incoming, refuse);
+  }
   if (target.userData.kind !== 'number' || incoming.userData.kind !== 'number') {
-    return refuse('Only numbers combine — boxes need a hole of their own.');
+    return refuse('Only numbers combine — a box joins a box, a number adds to a number.');
   }
   // The arriving number's own operation is what gets applied -- that is what
   // typing "*" on a number before dropping it means.
@@ -1556,6 +1600,7 @@ function giveToRobot() {
   const stand = stations.stand;
   if (!activeBot) return say('No robot is at the bench.');
   if (stand.occupant) return say('It already has something — take that first.');
+  clearFlags();      // a new given thing makes the old mismatch marks stale
   const thing = held; held = null;
   putOnStation(stand, thing);
   const from = thing.getWorldPosition(new THREE.Vector3());
@@ -1700,6 +1745,15 @@ function buildCondNode(cond, path, marks) {
   let g;
   if (!cond) g = new THREE.Group();                       // an empty hole
   else if (cond.kind === 'wild') { g = makeNumber(rat(0)); g.setLabel('?'); }
+  else if (cond.kind === 'wildBox' || cond.kind === 'wildScale') {
+    // an erased container: its own shape, with ? standing in every hole
+    g = cond.kind === 'wildScale' ? makeScale() : makeBox(cond.n);
+    g.userData.holes.forEach(h => {
+      const q = makeNumber(rat(0));
+      q.setLabel('?');
+      putInHole(h, q);
+    });
+  }
   else if (cond.kind === 'number') g = makeNumber(cond.value, cond.op);
   else {
     g = cond.kind === 'scale' ? makeScale() : makeBox(cond.holes.length);
@@ -1713,6 +1767,7 @@ function buildCondNode(cond, path, marks) {
   return g;
 }
 function rebuildCondition() {
+  clearFlags();      // the marks live on nodes about to be destroyed
   if (condDisplay) { scene.remove(condDisplay); condDisplay = null; }
   if (!condition) { refreshUI(); return; }
   const marks = [];
@@ -1778,7 +1833,7 @@ function flagMismatch(paths) {
       o.material.toneMapped = false;
     });
   }
-  flagTime = flagged.length ? 3.0 : 0;
+  flagTime = 0;
 }
 function condNodeAt(path) {
   let found = null;
@@ -1868,15 +1923,16 @@ const ratIn = (o) => o ? { n: BigInt(o.n), d: BigInt(o.d) } : null;
 
 function condOut(c) {
   if (!c) return null;
-  if (c.kind === 'wild') return { kind: 'wild' };
+  if (c.kind === 'wild' || c.kind === 'wildBox' || c.kind === 'wildScale') return { ...c };
   if (c.kind === 'number') return { kind: 'number', value: ratOut(c.value), op: c.op };
-  return { kind: 'box', holes: c.holes.map(condOut) };
+  return { kind: c.kind, holes: c.holes.map(condOut) };
 }
 function condIn(o) {
   if (!o) return null;
   if (o.kind === 'wild') return WILD;
+  if (o.kind === 'wildBox' || o.kind === 'wildScale') return { ...o };
   if (o.kind === 'number') return { kind: 'number', value: ratIn(o.value), op: o.op };
-  return { kind: 'box', holes: o.holes.map(condIn) };
+  return { kind: o.kind, holes: o.holes.map(condIn) };
 }
 const stepOut = (s) => s.type === 'setValue' ? { ...s, value: ratOut(s.value) } : s;
 const stepIn = (s) => {
@@ -2492,10 +2548,11 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
         m.toneMapped = false;
       }
     });
-    // Dusty and the copier both live beyond the thinking pad now
-    dustyHome = new THREE.Vector3(STATION_DEFS[STATION_DEFS.length - 1].x + 0.72, 0, ROW_Z - 0.25);
+    // Dusty lives under the bench, near the front edge so he stays visible
+    // and clickable between the legs.
+    dustyHome = new THREE.Vector3(1.02, 0, ROW_Z + 0.36);
     dusty.position.copy(dustyHome);
-    dusty.rotation.y = -0.5;
+    dusty.rotation.y = -0.35;
     setPick(dusty, { kind: 'dusty' });
     scene.add(dusty);
     const mat = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32).rotateX(-Math.PI / 2),
@@ -2519,11 +2576,13 @@ renderer.setAnimationLoop((now) => {
   }
   if (condDisplay) {
     condDisplay.position.lerp(condAnchor(), Math.min(1, dt * 7));
-    if (flagTime > 0) {
-      flagTime -= dt;
-      const pulse = 0.7 + 0.9 * Math.abs(Math.sin(flagTime * 7));
+    // the red mismatch marks pulse until something actually changes -- fading
+    // them on a timer left the user with a message about parts they could no
+    // longer see
+    if (flagged.length) {
+      flagTime += dt;
+      const pulse = 0.7 + 0.9 * Math.abs(Math.sin(flagTime * 5));
       for (const f of flagged) f.m.emissiveIntensity = pulse;
-      if (flagTime <= 0) clearFlags();
     }
   }
   // scales tip toward the larger number, pans staying level
