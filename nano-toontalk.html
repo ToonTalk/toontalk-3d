@@ -128,10 +128,8 @@
     title="End the lesson. The daydream rewinds; the robot keeps only what it learned.">Leave thought bubble</button>
   <button id="runBtn" class="go"
     title="The robot repeats its training on whatever it was given, and keeps going while its condition still matches.">Run what it learned</button>
-  <button id="againBtn"
-    title="Re-open the thought bubble and record a fresh lesson, replacing the old one.">Train again</button>
   <button id="dustyBtn"
-    title="Dusty vacuums parts of a robot's thought into wildcards, so more things match.">Dusty: asleep</button>
+    title="Dusty vacuums things away, and vacuums parts of a robot's thought into wildcards so more things match.">Dusty: asleep</button>
   <span class="sep"></span>
   <label for="speed" title="How fast robots move. Instant skips the animation entirely.">Speed</label>
   <select id="speed">
@@ -201,7 +199,7 @@ function frameScene() {
   if (userMoved) return;
   // wide enough for Dusty's mat at one end, tall enough for the thought bubble
   // riding above the robot's head
-  const centre = new THREE.Vector3(0, 1.10, 0.8), halfW = 3.3, halfH = 1.78;
+  const centre = new THREE.Vector3(-0.2, 1.10, 0.8), halfW = 3.6, halfH = 1.78;
   const vFov = camera.fov * DEG;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
   const d = Math.max(halfH / Math.tan(vFov / 2), halfW / Math.tan(hFov / 2)) + 1.15;
@@ -474,7 +472,59 @@ function makeBox(n = HOLES) {
 const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / thing.userData.width;
 
 // ---------------------------------------------------------------- tree helpers
-function holesOf(t) { return t?.userData.kind === 'box' ? t.userData.holes : null; }
+function holesOf(t) {
+  return (t?.userData.kind === 'box' || t?.userData.kind === 'scale') ? t.userData.holes : null;
+}
+
+// A scale: two pans that behave exactly like box holes, plus a beam that tips
+// toward the larger number. Unlike the original's, it stands on its own and
+// takes its two things directly.
+const SCALE_TILT = 0.22;
+const allScales = [];
+function makeScale() {
+  const g = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({ color: 0x62656e, roughness: 0.3, metalness: 0.85 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.6, metalness: 0.3 });
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.095, 0.03, 24), dark);
+  foot.position.y = 0.015; foot.castShadow = true; foot.receiveShadow = true;
+  g.add(foot);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.024, 0.17, 16), steel);
+  post.position.y = 0.115; post.castShadow = true;
+  g.add(post);
+  const pivot = new THREE.Group();
+  pivot.position.y = 0.20;
+  g.add(pivot);
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.018, 0.03), steel);
+  beam.castShadow = true;
+  pivot.add(beam);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.027, 16, 12), dark);
+  pivot.add(knob);
+  const holes = [], pans = [];
+  [-1, 1].forEach((s, i) => {
+    const hang = new THREE.Group();          // counter-rotated so pans stay level
+    hang.position.set(0.20 * s, 0, 0);
+    pivot.add(hang);
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.075, 8), steel);
+    wire.position.y = -0.038;
+    hang.add(wire);
+    const pan = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.075, 0.016, 24), dark);
+    pan.position.y = -0.08;
+    pan.castShadow = true; pan.receiveShadow = true;
+    hang.add(pan);
+    const anchor = new THREE.Object3D();
+    anchor.position.y = -0.072;
+    hang.add(anchor);
+    setPick(pan, { kind: 'hole', box: g, index: i });
+    holes.push({ index: i, anchor, thing: null, pocket: pan, w: 0.14 });
+    pans.push(hang);
+  });
+  Object.assign(g.userData, { id: nextId++, kind: 'scale', holes, width: 0.52, rest: 0 });
+  g.__pivot = pivot;
+  g.__pans = pans;
+  allScales.push(g);
+  setPick(g, { kind: 'thing', thing: g });
+  return g;
+}
 
 // Everything the user can touch, as roots of object trees.
 const roots = () => Object.values(stations)
@@ -535,14 +585,15 @@ function holeContaining(thing) {
 // on against what it is later given.
 function specOf(thing) {
   if (!thing) return null;
-  return thing.userData.kind === 'number'
+  const kind = thing.userData.kind;
+  return kind === 'number'
     ? { kind: 'number', value: thing.userData.value, op: thing.userData.op }
-    : { kind: 'box', holes: thing.userData.holes.map(h => specOf(h.thing)) };
+    : { kind, holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
 }
 function buildThing(spec) {
   if (!spec) return null;
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
-  const b = makeBox(spec.holes.length);
+  const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   return b;
 }
@@ -564,8 +615,8 @@ function matches(cond, spec) {
   if (cond.kind === 'number') {
     return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op;
   }
-  if (cond.kind === 'box') {
-    return spec.kind === 'box' && spec.holes.length === cond.holes.length
+  if (cond.kind === 'box' || cond.kind === 'scale') {
+    return spec.kind === cond.kind && spec.holes.length === cond.holes.length
       && cond.holes.every((c, i) => matches(c, spec.holes[i]));
   }
   return false;
@@ -576,6 +627,7 @@ function condText(c) {
   if (c.kind === 'number') {
     return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
   }
+  if (c.kind === 'scale') return `a scale weighing ${c.holes.map(condText).join(' against ')}`;
   return `a box of ${c.holes.map(condText).join(' and ')}`;
 }
 function eraseAt(cond, path) {
@@ -637,6 +689,7 @@ const ROW_Z = 1.35;
 // pushed forward of the robot's stand so the two do not visually collide
 const BENCH = { x0: -0.95, x1: 1.45, z0: ROW_Z - 0.28, z1: ROW_Z + 0.60 };
 const STATION_DEFS = [
+  { id: 'scales',  label: 'the scale stack',  kind: 'stack',  x: -3.15 },
   { id: 'minis',   label: 'the robot stack',  kind: 'stack',  x: -2.55 },
   { id: 'numbers', label: 'the number stack', kind: 'stack',  x: -1.92 },
   { id: 'boxes',   label: 'the box stack',    kind: 'stack',  x: -1.32 },
@@ -723,6 +776,7 @@ function refillStack(st, animate = false) {
   while (st.cubes.length < st.stackN) {
     const t = st.id === 'numbers' ? makeNumber(rat(1))
             : st.id === 'minis' ? makeMiniRobot()
+            : st.id === 'scales' ? makeScale()
             : makeBox();
     scene.add(t);
     setPick(t, { kind: 'station', id: st.id });
@@ -950,7 +1004,7 @@ function actionNew(kind) {
   enqueue({
     dur: 0.4,
     start() {
-      made = kind === 'box' ? makeBox() : makeNumber(rat(1));
+      made = kind === 'box' ? makeBox() : kind === 'scale' ? makeScale() : makeNumber(rat(1));
       scene.add(made);
       const p = grip.getWorldPosition(new THREE.Vector3());
       made.position.copy(p);
@@ -1254,7 +1308,7 @@ function handleClick(target) {
 
   if (target.kind === 'dusty') {
     dustyActive = !dustyActive;
-    say(dustyActive ? 'Dusty is awake — click part of the robot’s thought to erase it.'
+    say(dustyActive ? 'Dusty is awake — click things to vacuum them away, or parts of the robot’s thought to erase them.'
                     : 'Dusty settles down.');
     return refreshUI();
   }
@@ -1269,6 +1323,29 @@ function handleClick(target) {
   if (target.kind === 'hole') {
     const occupant = target.box.userData.holes[target.index].thing;
     if (occupant) return handleClick({ kind: 'thing', thing: occupant });
+  }
+
+  // While Dusty is awake, pointing him at things removes them. In training the
+  // robot learns it as a step; in the workshop it just happens.
+  if (dustyActive && !held) {
+    const victim = target.kind === 'thing' ? target.thing
+      : target.kind === 'botThing' && target.bot !== activeBot ? target.bot.node
+      : target.kind === 'station' && stations[target.id].kind !== 'stack'
+          && stations[target.id].occupant ? stations[target.id].occupant
+      : null;
+    if (victim) {
+      if (mode === 'training') {
+        if (victim.userData.kind === 'robot') return say('Dusty leaves robots alone during a lesson.');
+        const at = addrOf(victim);
+        if (!at) return say('While training, Dusty can only vacuum the robot’s own things.');
+        return go({ type: 'vacuum', at });
+      }
+      if (victim.userData.kind === 'robot' && victim.__bot.program.length) {
+        say('A trained robot, gone for good.');
+      }
+      dustySuck(() => victim);
+      return;
+    }
   }
 
   return mode === 'training' ? directRobot(target) : userClick(target);
@@ -1344,7 +1421,7 @@ function directRobot(target) {
   if (st?.kind === 'stack') {
     if (held) return say('It is already holding something.');
     if (st.id === 'minis') return say('It cannot make robots.');
-    return go({ type: st.id === 'boxes' ? 'newBox' : 'newNumber' });
+    return go({ type: st.id === 'boxes' ? 'newBox' : st.id === 'scales' ? 'newScale' : 'newNumber' });
   }
   const c = st ? containerOfStation(st.id) : null;
   // The robot uses the copier exactly the way the user does: holding something,
@@ -1588,9 +1665,11 @@ function go(step) {
 function runStep(step) {
   if (step.type === 'newNumber') actionNew('number');
   else if (step.type === 'newBox') actionNew('box');
+  else if (step.type === 'newScale') actionNew('scale');
   else if (step.type === 'take') actionTake(step.at);
   else if (step.type === 'copy') actionCopy(step.at);
   else if (step.type === 'put') actionPut(step.at);
+  else if (step.type === 'vacuum') actionVacuum(step.at);
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); } });
   } else if (step.type === 'setValue') {
@@ -1623,7 +1702,7 @@ function buildCondNode(cond, path, marks) {
   else if (cond.kind === 'wild') { g = makeNumber(rat(0)); g.setLabel('?'); }
   else if (cond.kind === 'number') g = makeNumber(cond.value, cond.op);
   else {
-    g = makeBox(cond.holes.length);
+    g = cond.kind === 'scale' ? makeScale() : makeBox(cond.holes.length);
     cond.holes.forEach((h, i) => {
       const child = buildCondNode(h, path.concat(i), marks);
       if (h) putInHole(g.userData.holes[i], child);
@@ -1727,6 +1806,57 @@ function dustyErase(path) {
     dur: 0.45,
     update(t) { dusty.position.lerpVectors(dest, dustyHome, ease(t)); },
     end() { dusty.position.copy(dustyHome); refreshUI(); },
+  });
+}
+
+// Dusty removes things too: fly to the victim, suck it into the nozzle, fly
+// home. `getVictim` resolves at flight time so replays find the current thing.
+function dustySuck(getVictim) {
+  if (!dusty) return;
+  busy = true;
+  let victim = null, dest = null, from0 = null, scale0 = 1;
+  enqueue({
+    dur: 0.45,
+    start() {
+      victim = getVictim();
+      if (!victim) { busy = false; return; }
+      dest = victim.getWorldPosition(new THREE.Vector3());
+      dest.y = 0; dest.z += 0.36;
+    },
+    update(t) { if (victim) dusty.position.lerpVectors(dustyHome, dest, ease(t)); },
+  });
+  enqueue({
+    dur: 0.5,
+    start() {
+      if (!victim) return;
+      flash(victim.getWorldPosition(new THREE.Vector3()));
+      detach(victim);
+      scene.attach(victim);
+      from0 = victim.position.clone();
+      scale0 = victim.scale.x;
+    },
+    update(t) {
+      if (!victim) return;
+      const e = ease(t);
+      const nozzle = dusty.position.clone().add(new THREE.Vector3(0, 0.1, -0.28));
+      victim.position.lerpVectors(from0, nozzle, e);
+      victim.scale.setScalar(scale0 * (1 - 0.97 * e));
+      dusty.position.z = dest.z - 0.04 * Math.sin(Math.PI * t * 4);
+    },
+    end() { if (victim) victim.removeFromParent(); refreshUI(); },
+  });
+  enqueue({
+    dur: 0.45,
+    update(t) { if (dest) dusty.position.lerpVectors(dest, dustyHome, ease(t)); },
+    end() { dusty.position.copy(dustyHome); refreshUI(); },
+  });
+}
+// The trainable form: vacuum whatever the address names.
+function actionVacuum(at) {
+  dustySuck(() => {
+    const v = thingAt(at);
+    if (!v) abort(`Dusty found nothing in ${holeName(at)}.`);
+    return v;
   });
 }
 
@@ -1980,6 +2110,8 @@ const holeName = (at) => at.path.length
 function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
+       : s.type === 'newScale' ? 'take a new scale'
+       : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
        : s.type === 'take' ? (s.at.path.length ? `take what is in ${holeName(s.at)}`
            : s.at.c === 'out' ? 'take the copy'
            : s.at.c === 'in' ? 'take back the original'
@@ -2012,16 +2144,14 @@ function refreshUI() {
   $('badge').className = 'badge' + (training ? ' training' : '');
   $('exitBtn').style.display = training ? '' : 'none';
   $('runBtn').style.display = training ? 'none' : '';
-  $('againBtn').style.display = training ? 'none' : '';
   const running = mode === 'replay';
   $('runBtn').textContent = running ? 'Stop' : 'Run what it learned';
   $('runBtn').disabled = !running && !program.length;
-  $('againBtn').disabled = running || busy || !stations.stand.occupant;
   $('resetBtn').disabled = running;
   $('clearBtn').disabled = running;
   $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
   $('dustyBtn').classList.toggle('think', dustyActive);
-  $('dustyBtn').disabled = running || busy || !condition || !dusty;
+  $('dustyBtn').disabled = running || busy || !dusty;
 
   const showHeld = !!held && mode !== 'replay';
   $('held').classList.toggle('on', showHeld);
@@ -2066,7 +2196,6 @@ $('rounds').onchange = (e) => {
   maxIter = Math.max(1, Math.min(10000, Math.floor(+e.target.value || 100)));
   e.target.value = maxIter;
 };
-$('againBtn').onclick = () => { if (!busy) enterTraining(); };
 $('resetBtn').onclick = () => {
   if (mode === 'training') leaveTraining(false);      // discard, don't rewind
   resetWorld(); say('Scene reset.');
@@ -2112,6 +2241,13 @@ addEventListener('keydown', (e) => {
 function tipFor(t) {
   if (!t || mode === 'replay') return null;
   const training = mode === 'training';
+  if (dustyActive && !held && (t.kind === 'thing'
+      || (t.kind === 'botThing' && t.bot !== activeBot))) {
+    return t.kind === 'botThing'
+      ? 'Dusty will vacuum this robot away — training and all, gone for good.'
+      : training ? 'Dusty vacuums it — the robot learns this as a step.'
+                 : 'Dusty will vacuum this away.';
+  }
   if (t.kind === 'station') {
     const st = stations[t.id];
     if (st.kind === 'stack') {
@@ -2120,6 +2256,9 @@ function tipFor(t) {
       if (t.id === 'numbers') return training
         ? 'Click to have the robot take a fresh number.'
         : 'The number stack — click to take a 1, then type digits to change it.';
+      if (t.id === 'scales') return training
+        ? 'Click to have the robot take a fresh scale.'
+        : 'The scale stack — a scale tips toward the larger of the two numbers on its pans.';
       return training ? 'Click to have the robot take a fresh box.'
         : 'The box stack — click to take a box; type a digit to change its holes.';
     }
@@ -2174,6 +2313,10 @@ function tipFor(t) {
     if (ud.kind === 'box') {
       return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — holes hold numbers or boxes.`
         + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
+    }
+    if (ud.kind === 'scale') {
+      return 'A scale — put a number on each pan and it tips toward the larger.'
+        + (held ? ' Click a pan to load it.' : ' Click to pick it up.');
     }
     return null;
   }
@@ -2247,8 +2390,9 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     const point = new THREE.Vector3(def.x, reachLocal.y, ROW_Z);
     const st = { ...def, point, topY: point.y - CUBE / 2, occupant: null, cubes: [] };
     if (def.kind === 'stack') {
-      st.stackN = def.id === 'minis' ? 3 : 4;
-      st.pitch = def.id === 'numbers' ? 0.25 : def.id === 'minis' ? 0.52 : 0.15;
+      st.stackN = (def.id === 'minis' || def.id === 'scales') ? 3 : 4;
+      st.pitch = def.id === 'numbers' ? 0.25 : def.id === 'minis' ? 0.52
+               : def.id === 'scales' ? 0.30 : 0.15;
       st.plinth = Math.max(0.02, st.topY - (st.stackN - 1) * st.pitch);
       const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.27, st.plinth, 36),
         new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7 }));
@@ -2382,6 +2526,20 @@ renderer.setAnimationLoop((now) => {
       if (flagTime <= 0) clearFlags();
     }
   }
+  // scales tip toward the larger number, pans staying level
+  for (let i = allScales.length - 1; i >= 0; i--) {
+    const sc = allScales[i];
+    if (!sc.parent) { allScales.splice(i, 1); continue; }
+    const [a, b] = sc.userData.holes.map(h => h.thing);
+    let targetTilt = 0;
+    if (a?.userData.kind === 'number' && b?.userData.kind === 'number') {
+      const d = a.userData.value.n * b.userData.value.d - b.userData.value.n * a.userData.value.d;
+      targetTilt = d > 0n ? SCALE_TILT : d < 0n ? -SCALE_TILT : 0;
+    }
+    const piv = sc.__pivot;
+    piv.rotation.z += (targetTilt - piv.rotation.z) * Math.min(1, dt * 5);
+    sc.__pans.forEach(p => { p.rotation.z = -piv.rotation.z; });
+  }
   bubbleNow += (bubbleTarget - bubbleNow) * Math.min(1, dt * 4);
   bubbleMat.opacity = BUBBLE_OPACITY * bubbleNow;
   bubble.visible = bubbleNow > 0.01;
@@ -2432,7 +2590,6 @@ window.__nano = {
   speed(s) { speed = s === 'inf' ? Infinity : s; document.getElementById('speed').value = s; },
   rounds(n) { maxIter = n; document.getElementById('rounds').value = n; },
   exit() { leaveTraining(); },
-  again() { enterTraining(); },
   run() { runProgram(); },
   dusty(on = true) { dustyActive = on; refreshUI(); },
   erase(path) { dustyErase(path); },
@@ -2448,7 +2605,8 @@ window.__nano = {
     const d = (t) => !t ? null
       : t.userData.kind === 'number'
         ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
-      : { box: t.userData.holes.map(h => d(h.thing)) };
+      : t.userData.kind === 'robot' ? 'robot'
+      : { [t.userData.kind]: t.userData.holes.map(h => d(h.thing)) };
     return { stand: d(stations.stand.occupant), bench: benchThings.map(d),
              copyIn: d(stations.copyIn.occupant), copyOut: d(stations.copyOut.occupant) };
   },

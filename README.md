@@ -57,7 +57,12 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   above the pad.
   Refuse a run and the offending parts glow red in the bubble.
 - **Dusty the vacuum** erases parts of that condition into wildcards (`?`),
-  which is what turns a one-off into something general.
+  which is what turns a one-off into something general — and he removes things
+  too: wake him and click anything to vacuum it away. During training the robot
+  learns that as a step, which is how robots discard.
+- **Scales.** From their own stack; each has two pans that behave like box
+  holes, and the beam tips toward the larger number. Unlike the original's,
+  they stand alone rather than living in a three-hole box.
 - **A copier** with two surfaces: originals go on the upper platform and are
   scanned there, copies are delivered to the lower tray. Copies are independent
   deep copies — boxes come back with their contents duplicated, not shared.
