@@ -1254,12 +1254,13 @@ function actionPut(at, side) {
     const dropped = held; held = null;
     if (!dropped) return;
     const from = dropped.getWorldPosition(new THREE.Vector3());
+    const fromQ = dropped.getWorldQuaternion(new THREE.Quaternion());
     if (at.path.length) {
       const hole = holeAt(at);
       if (!hole) return abort(`The robot expected ${holeName(at)} and there is no such hole.`);
       if (hole.thing?.userData.kind === 'bird') { held = dropped; return birdDeliver(hole.thing); }
       if (hole.thing) combine(hole, dropped, true, from, side);
-      else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from)); }
+      else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.3, fromQ)); }
     } else {
       const st = stationOf(at.c);
       if (st.occupant?.userData.kind === 'bird') { held = dropped; return birdDeliver(st.occupant); }
@@ -1267,7 +1268,7 @@ function actionPut(at, side) {
       else {
         putOnStation(st, dropped);
         // the platform sits above the claw, so let the rise be seen
-        enqueueNext(settleInto(dropped, from, at.c === 'in' ? 0.55 : 0.22));
+        enqueueNext(settleInto(dropped, from, at.c === 'in' ? 0.55 : 0.3, fromQ));
         if (at.c === 'in') runDuplicate();
       }
     }
@@ -1397,13 +1398,24 @@ function graspSettle(thing, dur = 0.2) {
     end() { thing.position.copy(to); thing.scale.setScalar(1); },
   };
 }
-function settleInto(thing, fromWorld, dur = 0.22) {
+function settleInto(thing, fromWorld, dur = 0.22, fromQuatWorld = null) {
   const to = thing.position.clone();
   const from = thing.parent.worldToLocal(fromWorld.clone());
+  const toQ = thing.quaternion.clone();
+  let fromQ = null;
+  if (fromQuatWorld) {
+    const pq = new THREE.Quaternion();
+    thing.parent.getWorldQuaternion(pq);
+    fromQ = pq.invert().multiply(fromQuatWorld);
+  }
   return {
     dur,
-    update(t) { thing.position.lerpVectors(from, to, ease(t)); },
-    end() { thing.position.copy(to); },
+    update(t) {
+      const e = ease(t);
+      thing.position.lerpVectors(from, to, e);
+      if (fromQ) thing.quaternion.slerpQuaternions(fromQ, toQ, e);
+    },
+    end() { thing.position.copy(to); thing.quaternion.copy(toQ); },
   };
 }
 
@@ -1444,7 +1456,9 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   // The old fallback parked refused things on a free pillar; pillars are gone,
   // so a refused thing lands on the bench instead of being lost.
   const refuse = (msg) => {
-    putOnBench(incoming, { x: (BENCH.x0 + BENCH.x1) / 2, z: (BENCH.z0 + BENCH.z1) / 2 });
+    const from = incoming.getWorldPosition(new THREE.Vector3());
+    putOnBench(incoming, benchSpot());
+    enqueueNext(settleInto(incoming, from, 0.3));
     say(msg);
   };
   // Boxes join: dropping one box on another concatenates their holes, contents
@@ -1797,8 +1811,9 @@ function userPutInHole(hole) {
   pushUndo();
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
+  const fromQ = dropped.getWorldQuaternion(new THREE.Quaternion());
   if (hole.thing) combine(hole, dropped, true, from);
-  else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from)); }
+  else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.22, fromQ)); }
   refreshUI();
 }
 function userDropOn(target, point) {
@@ -1926,8 +1941,10 @@ function clearScratch() {
 function returnGivenToTable() {
   const t = stations.stand.occupant;
   if (!t) return;
+  const from = t.getWorldPosition(new THREE.Vector3());
   stations.stand.occupant = null;
-  putOnBench(t, { x: (BENCH.x0 + BENCH.x1) / 2, z: (BENCH.z0 + BENCH.z1) / 2 });
+  putOnBench(t, benchSpot());
+  enqueueNext(settleInto(t, from, 0.35));
 }
 
 // --- directing the robot (training and replay) -----------------------------
@@ -2470,12 +2487,22 @@ function nextIteration() {
 }
 // A run must never end with something stuck in the claw: it would sit there
 // invisible to the next run and make the pad look empty.
+// A gently spread series of bench spots, so repeated automatic placements do
+// not stack invisibly on one point.
+function benchSpot() {
+  const i = benchThings.length;
+  return { x: (BENCH.x0 + BENCH.x1) / 2 + ((i % 5) - 2) * 0.22,
+           z: (BENCH.z0 + BENCH.z1) / 2 + (((i * 7) % 3) - 1) * 0.16 };
+}
 function stowHeld() {
   if (!held) return;
   const t = held; held = null;
+  const from = t.getWorldPosition(new THREE.Vector3());
+  const fromQ = t.getWorldQuaternion(new THREE.Quaternion());
   const stand = stations.stand;
   if (!stand.occupant) putOnStation(stand, t);
-  else putOnBench(t, { x: BENCH.x0 + 0.3, z: (BENCH.z0 + BENCH.z1) / 2 });
+  else putOnBench(t, benchSpot());
+  enqueueNext(settleInto(t, from, 0.3, fromQ));
 }
 function finishRun(msg) {
   highlight(-1);
@@ -2561,10 +2588,12 @@ function refreshUI() {
       : kind === 'scale' ? 'a scale'
       : kind === 'nest' ? (held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
       : kind === 'bird' ? 'a bird'
-      : `a box of ${held.userData.holes.length}`;
+      : `a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
     $('heldTip').textContent = kind === 'number' ? 'digits set it, − negates, * / ^ set what it does'
       : kind === 'robot' ? 'put it on the table, or on another robot'
-      : kind === 'box' ? 'type a digit to change its holes'
+      : kind === 'box' ? (held.userData.holes.length <= 9
+          ? 'type a digit to change its holes'
+          : 'drop it on a box to join, or a hole to nest')
       : 'put it down on the bench';
   }
   if (hintTimer) return;
@@ -2602,10 +2631,7 @@ $('exportBtn').onclick = () => {
   say(`Exported “${name}”.`);
 };
 $('importBtn').onclick = () => $('importFile').click();
-$('importFile').onchange = async (ev) => {
-  const file = ev.target.files[0];
-  ev.target.value = '';
-  if (!file) return;
+async function importRobotFile(file) {
   try {
     const rec = JSON.parse(await file.text());
     if (!Array.isArray(rec.program) || !('condition' in rec)) throw new Error('not a robot file');
@@ -2614,11 +2640,23 @@ $('importFile').onchange = async (ev) => {
     lib[name] = { program: rec.program, condition: rec.condition };
     saveLibrary(lib);
     refreshLibrary(name);
-    say(`Imported “${name}” — pick it in the list and Load.`);
+    sayAttn(`Imported “${name}” — it is selected in the list; press Load.`);
   } catch (e) {
-    say('Could not import that file: ' + e.message);
+    sayAttn('Could not import that file: ' + e.message);
   }
+}
+$('importFile').onchange = (ev) => {
+  const file = ev.target.files[0];
+  ev.target.value = '';
+  if (file) importRobotFile(file);
 };
+// dropping a .robot.json anywhere on the page imports it too
+addEventListener('dragover', (e) => e.preventDefault());
+addEventListener('drop', (e) => {
+  e.preventDefault();
+  const f = [...(e.dataTransfer?.files || [])].find(f2 => /\.json$/i.test(f2.name));
+  if (f) importRobotFile(f);
+});
 $('loadBtn').onclick = () => loadRobot($('robotList').value);
 $('delBtn').onclick = () => deleteRobot($('robotList').value);
 $('speed').onchange = (e) => {
