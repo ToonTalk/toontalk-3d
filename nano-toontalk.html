@@ -437,12 +437,12 @@ function makeNumber(value, op = '+') {
 }
 
 function makeBox(n = HOLES) {
-  n = Math.max(1, Math.min(MAX_HOLES, n | 0));
+  // No upper limit -- boxes are arrays, and joining must work at any size.
+  // Holes shrink to a floor as the count grows; past that the box widens.
+  n = Math.max(1, n | 0);
   const g = new THREE.Group();
-  // Holes shrink rather than the box growing without limit, so an 8-hole box
-  // still fits its pillar.
   const wall = 0.032;
-  const holeW = Math.min(HOLE_W, (BOX_MAX_W - (n + 1) * wall) / n);
+  const holeW = Math.max(0.12, Math.min(HOLE_W, (BOX_MAX_W - (n + 1) * wall) / n));
   const W = n * holeW + (n + 1) * wall;
   const D = holeW + 0.07, H = 0.11;
   const woodMat = new THREE.MeshStandardMaterial({ color: 0xe2cfa6, roughness: 0.62 });
@@ -1411,9 +1411,6 @@ function settleInto(thing, fromWorld, dur = 0.22) {
 // hole -- and the dropped box's holes are appended after the target's.
 function joinBoxes(target, incoming, refuse, side) {
   const nA = target.userData.holes.length, nB = incoming.userData.holes.length;
-  if (nA + nB > MAX_HOLES) {
-    return refuse(`Joined, that would be ${nA + nB} holes — boxes top out at ${MAX_HOLES}.`);
-  }
   const nb = makeBox(nA + nB);
   const move = (srcHoles, offset) => srcHoles.forEach((h, i) => {
     const t = h.thing;
