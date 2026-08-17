@@ -778,7 +778,6 @@ let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0;
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
-let copyArmed = false;     // next thing the robot is pointed at gets copied
 let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
 const MAX_ITER = 100;      // a robot whose condition never fails would loop forever
@@ -1271,19 +1270,26 @@ function userClick(target) {
   }
   if (target.kind === 'station') {
     const st = stations[target.id];
+    // both surfaces of the copier count as "the copier": holding something
+    // puts it on the platform; an empty hand takes the copy, then the original
+    const isCopier = st.kind === 'copyIn' || st.kind === 'copyOut';
     if (!held) {
       if (st.kind === 'stack') return userTakeFromStack(st);
+      if (isCopier) {
+        if (stations.copyOut.occupant) return userTake(stations.copyOut.occupant);
+        if (stations.copyIn.occupant) return userTake(stations.copyIn.occupant);
+        return say('Nothing there to pick up.');
+      }
       if (st.occupant) return userTake(st.occupant);
       return say('Nothing there to pick up.');
     }
     if (st.kind === 'stack') return say('Stacks only give things out.');
     if (holdingBot) return say('Little robots go on the table, or on another robot.');
-    if (st.kind === 'copyIn') {
-      if (st.occupant) return say('Take the original off the platform first.');
+    if (isCopier) {
+      if (stations.copyIn.occupant) return say('Take the original off the platform first.');
       if (stations.copyOut.occupant) return say('Take the copy out of the tray first.');
       return userUseCopier();
     }
-    if (st.kind === 'copyOut') return say('Copies come out here — put originals on the platform above.');
     return say('Hand it to the robot instead.');
   }
   if (target.kind === 'bench') {
@@ -1313,23 +1319,25 @@ function directRobot(target) {
     return go({ type: st.id === 'boxes' ? 'newBox' : 'newNumber' });
   }
   const c = st ? containerOfStation(st.id) : null;
+  // The robot uses the copier exactly the way the user does: holding something,
+  // it walks over and sets it on the platform; empty-clawed, it takes the copy
+  // from the tray, or failing that the original back off the platform.
+  if (c === 'in' || c === 'out') {
+    if (held) {
+      if (stations.copyIn.occupant) return say('Take the original off the platform first.');
+      if (stations.copyOut.occupant) return say('The tray still has a copy in it.');
+      return go({ type: 'put', at: { c: 'in', path: [] } });
+    }
+    if (stations.copyOut.occupant) return go({ type: 'take', at: { c: 'out', path: [] } });
+    if (stations.copyIn.occupant) return go({ type: 'take', at: { c: 'in', path: [] } });
+    return say('The copier is empty.');
+  }
   if (c) {
     if (held) {
-      if (c === 'in' && st.occupant) return say('There is already something on the platform.');
-      if (c === 'in' && stations.copyOut.occupant) return say('The tray still has a copy in it.');
       if (st.occupant?.userData.kind === 'box') return say('Click one of its holes.');
       return go({ type: 'put', at: { c, path: [] } });
     }
-    if (!st.occupant) {
-      if (c === 'out') {
-        // empty tray with an empty claw arms the wand-style copy
-        copyArmed = !copyArmed;
-        say(copyArmed ? 'Copier armed — click what the robot should copy.' : 'Copier stood down.');
-        return refreshUI();
-      }
-      return say('Nothing there.');
-    }
-    if (copyArmed) { copyArmed = false; return go({ type: 'copy', at: { c, path: [] } }); }
+    if (!st.occupant) return say('Nothing there.');
     return go({ type: 'take', at: { c, path: [] } });
   }
   if (target.kind === 'thing' || target.kind === 'hole') {
@@ -1338,7 +1346,6 @@ function directRobot(target) {
       : addrOf(target.thing);
     if (!at) return say('The robot can only touch what it was given and its own work area.');
     if (held) return go({ type: 'put', at });
-    if (copyArmed) { copyArmed = false; return go({ type: 'copy', at }); }
     return go({ type: 'take', at });
   }
   say('The robot can only touch what it was given, or make a new number or box.');
@@ -1980,9 +1987,8 @@ function refreshUI() {
   const holdingBot = held?.userData.kind === 'robot';
   $('hint').textContent =
     mode === 'replay' ? 'Watching it repeat what it learned…' :
-    training ? (held ? 'Tell it which hole to put that in — it can only touch its own things.'
-                     : copyArmed ? 'Copier armed — click what the robot should copy.'
-                     : 'Direct it on its own things, click a stack for a new one, or the copier to copy. Every move is remembered.') :
+    training ? (held ? 'Tell it where to put that — its own things, or the copier.'
+                     : 'Direct it on its own things, a stack for a new one, or the copier. Every move is remembered.') :
     holdingBot ? 'Set the little robot on the table, or drop it on another robot to team up.' :
     held ? (activeBot ? (program.length ? 'Click the robot to give it this to work on, or the bench to put it down.'
                                         : 'Click the robot to give it this — that is how training starts.')
@@ -2270,7 +2276,6 @@ window.__nano = {
   clickThing(t) { handleClick({ kind: 'thing', thing: t }); },
   clickHole(box, index) { handleClick({ kind: 'hole', box, index }); },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
-  arm() { copyArmed = true; refreshUI(); },
   scratch() { return SCRATCH_X.map((_, i) => stations['s' + i].occupant); },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
   heldPos() { return held ? held.getWorldPosition(new THREE.Vector3()).toArray().map(n => +n.toFixed(2)) : null; },

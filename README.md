@@ -61,8 +61,9 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **A copier** with two surfaces: originals go on the upper platform and are
   scanned there, copies are delivered to the lower tray. Copies are independent
   deep copies — boxes come back with their contents duplicated, not shared.
-  A robot copies too, but names a hole rather than the machine: arm the copier,
-  then point it at what to copy.
+  Robots use it exactly the way you do: holding something, a click on the
+  machine walks the robot over to set it on the platform; empty-clawed, it takes
+  the copy from the tray, then the original back off the platform.
 - **Running.** The robot repeats its trained actions on whatever it is given,
   and *keeps* repeating while its condition still holds — so a loop is just a
   condition that stays true.
