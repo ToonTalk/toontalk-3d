@@ -27,6 +27,11 @@
   #title h1 .badge.training { background: rgba(127,212,255,.2); color: var(--think); }
   #title p { margin: 0; font-size: 12px; color: var(--dim); }
   #hint { margin-top: 8px !important; color: var(--accent) !important; }
+  #title.attn { animation: attn 0.65s ease 3; }
+  @keyframes attn {
+    0%, 100% { background: var(--panel); }
+    50% { background: rgba(127, 212, 255, 0.28); }
+  }
 
   #prog { top: 14px; right: 14px; width: 232px; max-height: 60vh; overflow: auto; }
   #prog h2 { margin: 0 0 4px; font-size: 11px; letter-spacing: .09em;
@@ -63,7 +68,10 @@
   button.think { background: var(--think); border-color: var(--think); color: #06212e; font-weight: 650; }
   button.go { background: var(--go); border-color: var(--go); color: #06301e; font-weight: 650; }
   .sep { width: 1px; height: 20px; background: var(--edge); margin: 0 2px; }
-  label[for=speed] { font-size: 12px; color: var(--dim); }
+  label[for=speed], label[for=rounds] { font-size: 12px; color: var(--dim); }
+  #rounds { width: 64px; font: inherit; font-size: 12.5px; color: var(--ink);
+            background: rgba(255,255,255,.07); border: 1px solid var(--edge);
+            border-radius: 8px; padding: 5px 7px; }
   select { font: inherit; font-size: 12.5px; color: var(--ink);
            background: rgba(255,255,255,.07); border: 1px solid var(--edge);
            border-radius: 8px; padding: 5px 7px; }
@@ -124,6 +132,8 @@
     <option value="8">8×</option>
     <option value="inf">Instant</option>
   </select>
+  <label for="rounds">Rounds</label>
+  <input id="rounds" type="number" min="1" max="10000" value="100" title="How many times a running robot may repeat before stopping">
   <span class="sep"></span>
   <button id="resetBtn">Reset</button>
   <button id="clearBtn">Forget training</button>
@@ -780,7 +790,7 @@ let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
 let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
-const MAX_ITER = 100;      // a robot whose condition never fails would loop forever
+let maxIter = 100;         // user-settable: a robot whose condition never fails would loop forever
 let worldReady = false;    // scene built; there may or may not be a robot yet
 
 // --- the robot population ---------------------------------------------------
@@ -1300,6 +1310,11 @@ function userClick(target) {
     if (!held) return userTake(target.thing);
     if (target.thing === held) return;
     if (holdingBot) return say('Robots only team up with other robots.');
+    // clicking whatever sits on the copier while holding means "use the copier",
+    // not "combine with the thing that happens to be lying there"
+    if (target.thing === stations.copyIn.occupant || target.thing === stations.copyOut.occupant) {
+      return userClick({ kind: 'station', id: 'copyIn' });
+    }
     return userDropOn(target.thing);
   }
   if (target.kind === 'hole') {
@@ -1345,6 +1360,10 @@ function directRobot(target) {
       ? (() => { const a = addrOf(target.box); return a && { c: a.c, path: a.path.concat(target.index) }; })()
       : addrOf(target.thing);
     if (!at) return say('The robot can only touch what it was given and its own work area.');
+    // a click on whatever sits on the copier means "use the machine" here too
+    if (held && (at.c === 'in' || at.c === 'out') && !at.path.length) {
+      return directRobot({ kind: 'station', id: 'copyIn' });
+    }
     if (held) return go({ type: 'put', at });
     return go({ type: 'take', at });
   }
@@ -1367,7 +1386,15 @@ function moveHand(ev) {
   const ndc = new THREE.Vector2((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   const hit = ray.ray.intersectPlane(handPlane, new THREE.Vector3());
-  if (hit) { handNode.position.copy(hit); handNode.updateMatrixWorld(); }
+  if (hit) {
+    // Clamp to the working area: with the pointer low on the screen the ray
+    // meets this plane right next to the camera, which made the carried thing
+    // balloon to fill the view.
+    hit.x = Math.min(3.2, Math.max(-3.2, hit.x));
+    hit.z = Math.min(2.4, Math.max(-0.6, hit.z));
+    handNode.position.copy(hit);
+    handNode.updateMatrixWorld();
+  }
 }
 function takeIntoHand(obj) {
   // start from where the thing actually is, so it rises into the hand instead
@@ -1386,6 +1413,7 @@ function takeIntoHand(obj) {
   obj.quaternion.identity();
   obj.scale.setScalar(obj.userData.kind === 'robot' ? MINI : 1);
   enqueueNext(settleInto(obj, fromWorld, 0.24));
+  refreshUI();      // the "holding" readout must track every pickup
 }
 function noteHeld() {
   valueAtPickup = held?.userData.value ?? null;
@@ -1813,10 +1841,12 @@ function leaveTraining(restore = true) {
   bubbleTarget = 0;
   clearScratch();
   if (restore && preTraining) restoreWorld(preTraining);
-  returnGivenToTable();     // whatever it was given goes back on the table
+  // The given thing stays on the robot's stand, rewound: it is set up to Run
+  // immediately. (A finished RUN is different -- the result goes to the table.)
   preTraining = null;
   parkRobot();
   renderProgram(); refreshUI();
+  if (stations.stand.occupant) say('It keeps what it was given — press Run to watch it work.');
 }
 // Outside its thought bubble the robot just stands there, so send it back to
 // its spot rather than leaving it mid-bench.
@@ -1855,9 +1885,9 @@ function runProgram() {
   const members = [activeBot, ...activeBot.team];
   if (!members.some(m => matches(m.condition, specOf(given)))) {
     flagMismatch(mismatchPaths(condition, specOf(given)));
-    return say(members.length > 1
+    return sayAttn(members.length > 1
       ? 'No robot on the team recognises what it was given.'
-      : `It only runs when given ${condText(condition)} — see the red parts.`);
+      : `It only runs when given ${condText(condition)} — the red parts don’t match. Wake Dusty and click a red part to vacuum it away, so anything fits there.`);
   }
   clearFlags();
   // No world reset, but the robot's own area always starts empty so a replay
@@ -1880,12 +1910,13 @@ function nextIteration() {
   const member = members.find(m => matches(m.condition, given));
   if (!member) {
     if (members.length === 1) flagMismatch(mismatchPaths(condition, given));
-    return finishRun(runCount
-      ? `Ran ${runCount}× — stopped, nothing recognises the result.`
-      : 'Nothing recognises what it was given.');
+    finishRun();
+    return sayAttn(runCount
+      ? `Ran ${runCount}× — stopped: the red parts of its thought no longer match. Dusty can vacuum them away.`
+      : 'Nothing recognises what it was given — Dusty can vacuum the red parts of its thought.');
   }
-  if (runCount >= MAX_ITER) {
-    return finishRun(`Stopped after ${MAX_ITER} rounds — that is the safety cap, not its condition.`);
+  if (runCount >= maxIter) {
+    return finishRun(`Stopped after ${maxIter} rounds — the “Rounds” limit, not its condition.`);
   }
   runCount++;
   renderProgram(member.program);         // show the program actually running
@@ -1919,7 +1950,15 @@ function finishRun(msg) {
 // ---------------------------------------------------------------- UI
 const $ = (id) => document.getElementById(id);
 let hintTimer = null;
-function say(msg) { $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, 2800); }
+function say(msg, hold = 2800) { $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, hold); }
+// For messages worth looking up for: flash the message card a few times.
+function sayAttn(msg) {
+  say(msg, 7000);
+  const t = $('title');
+  t.classList.remove('attn');
+  void t.offsetWidth;              // restart the animation
+  t.classList.add('attn');
+}
 function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i)); }
 // Steps only ever name holes of the robot's own object, never places.
 const holeName = (at) => at.path.length
@@ -2009,6 +2048,10 @@ $('loadBtn').onclick = () => loadRobot($('robotList').value);
 $('delBtn').onclick = () => deleteRobot($('robotList').value);
 $('speed').onchange = (e) => {
   speed = e.target.value === 'inf' ? Infinity : +e.target.value;
+};
+$('rounds').onchange = (e) => {
+  maxIter = Math.max(1, Math.min(10000, Math.floor(+e.target.value || 100)));
+  e.target.value = maxIter;
 };
 $('againBtn').onclick = () => { if (!busy) enterTraining(); };
 $('resetBtn').onclick = () => {
@@ -2285,6 +2328,7 @@ window.__nano = {
   type(v, op) { if (held) { held.setValue(rat(v), op); refreshUI(); } },
   setOp(op) { if (held) { held.setOp(op); refreshUI(); } },
   speed(s) { speed = s === 'inf' ? Infinity : s; document.getElementById('speed').value = s; },
+  rounds(n) { maxIter = n; document.getElementById('rounds').value = n; },
   exit() { leaveTraining(); },
   again() { enterTraining(); },
   run() { runProgram(); },
