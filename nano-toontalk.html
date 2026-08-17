@@ -1055,12 +1055,29 @@ function flash(pos) {
 function resolve(ev) {
   const ndc = new THREE.Vector2((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
+  // things created earlier in this same tick still have stale world matrices,
+  // and the raycaster works off those
+  scene.updateMatrixWorld();
   for (const h of ray.intersectObjects(pickables, true)) {
+    // What you are carrying rides under the pointer (or sits in the claw), so
+    // it would otherwise intercept every click meant for what is behind it.
+    if (held && isDescendantOf(h.object, held)) continue;
     let o = h.object;
     while (o && !o.__pick) o = o.parent;
-    if (o) return o.__pick;
+    if (!o) continue;
+    // the thought bubble floats over the bench; don't let it eat clicks unless
+    // Dusty is actually awake to act on it
+    if (o.__pick.kind === 'cond' && !dustyActive) continue;
+    // handing things over only means anything in the workshop -- inside the
+    // bubble the robot is working, and its body must not block clicks past it
+    if (o.__pick.kind === 'robot' && mode !== 'world') continue;
+    return o.__pick;
   }
   return null;
+}
+function isDescendantOf(node, ancestor) {
+  for (let p = node; p; p = p.parent) if (p === ancestor) return true;
+  return false;
 }
 const ray = new THREE.Raycaster();
 
@@ -1135,6 +1152,10 @@ function moveHand(ev) {
 }
 function takeIntoHand(obj) {
   held = obj;
+  // Stack items are tagged as the stack so the whole column is clickable; once
+  // one is taken it has to become a thing in its own right, or clicking it
+  // later just dispenses another from the stack.
+  setPick(obj, { kind: 'thing', thing: obj });
   noteHeld();
   handNode.add(obj);
   obj.position.set(0, 0, 0);
