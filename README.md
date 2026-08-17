@@ -23,18 +23,26 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   more digits appear. The other faces of the block show other forms of the
   same value: the top repeats it, the back gives English words or a mixed
   fraction, one side scientific notation, the other digit-grouped or exact
-  decimal form (only the visible digits are ever computed).
+  decimal form. Only the visible digits are ever computed, and a repeating
+  decimal that fits gets a bar over its repetend; one that doesn't ends in an
+  ellipsis.
 - **Boxes** have holes; a hole holds a number, a box, a scale, a bird or a
   nest, so structures nest. Type a digit on a held box to give it that many
-  holes (up to 8). Dropping a box on another **joins** them — on the left half
-  its holes go in front, on the right half behind.
+  holes; shrinking splits it like an array, and the excess holes fall away as
+  a box of their own — onto the bench when you do it, onto a free work spot
+  when a robot does. Dropping a box on another **joins** them — on the left
+  half its holes go in front, on the right half behind. Typing letters on a
+  held box, bird or nest writes a name on a little plaque stuck to it.
 - **Scales**, each with two pans that behave exactly like box holes; the beam
   tips toward the larger number. Unlike the original's, they stand alone
   rather than living in a three-hole box.
 - **Nests with eggs.** Set a nest down and its egg hatches into a bird. Give
   the bird anything and she flies it home to her nest, where deliveries pile
-  up; the pile travels with the nest. Clicking a pile item takes it, clicking
-  the nest takes the nest.
+  up; the pile travels with the nest. A new delivery goes *underneath* — the
+  bird lifts the pile aside, tucks it in at the bottom, and stacks the pile
+  back — so the top of a pile is always the oldest delivery, and it is the
+  only one that can be taken. Nobody can move the pile as a whole; the nest
+  and everything on it move together.
 - **A copier** with two surfaces: originals are scanned on the upper platform,
   independent deep copies are delivered to the lower tray. Clicking a surface
   with an empty hand takes from that surface.
@@ -73,9 +81,13 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   the robot walking to the same stack you would use, and it drops things at
   the exact hole they belong in, not the middle of the box.
 - **Saving and sharing.** Save names a robot in this browser — the name
-  appears on its chest screen. Export downloads it as a `.robot.json` file
-  under its typed name; Import adds it to the library and wakes it in one
-  step; Load wakes a robot automatically if none is at the bench.
+  appears on its chest screen and in its tooltips. Export downloads it as a
+  `.robot.json` file under its typed name; Import adds it to the library and
+  wakes it in one step; Load wakes a robot automatically if none is at the
+  bench. **Save world / Load world / Export world** do the same for the whole
+  workshop — bench, stands, nests with their piles, birds with their pairings,
+  and every robot's training — to this browser or to a `.world.json` file that
+  Import recognises.
 
 Undo (Ctrl+Z or the button) unwinds moves, typing, joins, vacuums, erasures —
 including recorded steps mid-lesson. Mode boundaries clear the history.

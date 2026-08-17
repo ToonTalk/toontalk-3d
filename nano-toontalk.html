@@ -117,8 +117,11 @@
     <div class="row"><select id="robotList" title="Robots saved in this browser."></select>
       <button id="loadBtn" title="Load this saved training into the robot at the bench (waking one if needed).">Load</button><button id="delBtn" title="Delete this saved robot.">×</button></div>
     <div class="row"><button id="exportBtn" title="Download the selected robot as a file, to share or move to another computer.">Export file</button>
-      <button id="importBtn" title="Add a robot file to this browser's library.">Import file</button>
+      <button id="importBtn" title="Add a robot or world file — a world file replaces the whole workshop.">Import file</button>
       <input id="importFile" type="file" accept=".json,application/json" style="display:none"></div>
+    <div class="row"><button id="saveWorldBtn" title="Save the whole workshop — bench, stands, robots and all — in this browser.">Save world</button>
+      <button id="loadWorldBtn" title="Bring back the workshop saved in this browser.">Load world</button>
+      <button id="exportWorldBtn" title="Download the whole workshop as a file.">Export world</button></div>
   </div>
 </div>
 
@@ -427,43 +430,100 @@ function sciText(v) {
   const K = 20n;
   const q = (n * 10n ** K / v.d).toString();
   const e = q.length - 1 - Number(K);
-  return `${neg ? '-' : ''}${q[0]}.${q.slice(1, 5)}×10^${e}`;
+  const exact = (n * 10n ** K) % v.d === 0n && [...q.slice(5)].every(ch => ch === '0');
+  return `${neg ? '-' : ''}${q[0]}.${q.slice(1, 5)}${exact ? '' : '…'}×10^${e}`;
 }
-// exact decimal expansion: only the visible prefix is ever computed
-function decimalText(v, digits = 12) {
+// exact decimal expansion, cycle-aware: only the visible digits are computed,
+// and a remainder seen twice means the digits between them repeat forever
+function decimalExpand(v, digits) {
   const neg = v.n < 0n, n = neg ? -v.n : v.n;
-  let out = (neg ? '-' : '') + (n / v.d).toString();
+  const int = (neg ? '-' : '') + (n / v.d).toString();
   let rem = n % v.d;
-  if (rem === 0n) return out;
-  out += '.';
+  if (rem === 0n) return { int, pre: '', rep: '', done: true };
+  const seen = new Map();
+  let out = '';
   for (let i = 0; i < digits && rem !== 0n; i++) {
+    if (seen.has(rem)) {
+      const k = seen.get(rem);
+      return { int, pre: out.slice(0, k), rep: out.slice(k), done: true };
+    }
+    seen.set(rem, out.length);
     rem *= 10n;
     out += (rem / v.d).toString();
     rem %= v.d;
   }
-  return rem === 0n ? out : out + '…';
+  return { int, pre: out, rep: '', done: rem === 0n };
+}
+// The decimal face: a repeating part that fits gets a bar drawn over it; an
+// expansion that outruns the face ends in an ellipsis instead.
+function drawDecimal(c, v, lod) {
+  const d = decimalExpand(v, 26 * lod);
+  if (d.done && !d.rep) {
+    return drawWrapped(c, d.pre ? `${d.int}.${d.pre}` : d.int, 128, 140, 192, 160);
+  }
+  if (d.rep) {
+    const whole = `${d.int}.${d.pre}${d.rep}`;
+    let px = 64;
+    c.font = `bold ${px}px Georgia, serif`;
+    while (px > 15 && c.measureText(whole).width > 188) {
+      px = Math.floor(px * 0.88);
+      c.font = `bold ${px}px Georgia, serif`;
+    }
+    if (c.measureText(whole).width <= 188) {
+      const w = c.measureText(whole).width, x0 = 128 - w / 2;
+      const preW = c.measureText(`${d.int}.${d.pre}`).width;
+      c.fillText(whole, 128, 148);
+      const y = 148 - px * 0.62;
+      c.lineWidth = Math.max(2.5, px * 0.08);
+      c.strokeStyle = c.fillStyle;
+      c.beginPath(); c.moveTo(x0 + preW, y); c.lineTo(x0 + w, y); c.stroke();
+      return;
+    }
+  }
+  // a little lower and narrower than the other faces, to clear the op badge
+  drawWrapped(c, `${d.int}.${d.pre}${d.rep}…`, 132, 152, 178, 136);
+}
+// Wrap on spaces where there are any -- and on characters where there are not,
+// which is the usual case here: a long run of digits is a single "word" that
+// would otherwise run straight off the face.
+function wrapLines(c, text, maxW) {
+  const lines = [];
+  let line = '';
+  for (const w of String(text).split(' ')) {
+    if (c.measureText(w).width > maxW) {
+      if (line) { lines.push(line); line = ''; }
+      let chunk = '';
+      for (const ch of w) {
+        if (chunk && c.measureText(chunk + ch).width > maxW) { lines.push(chunk); chunk = ch; }
+        else chunk += ch;
+      }
+      line = chunk;
+      continue;
+    }
+    const t = line ? line + ' ' + w : w;
+    if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; }
+    else line = t;
+  }
+  if (line) lines.push(line);
+  return lines;
 }
 function drawWrapped(c, text, cx, cy, maxW, maxH) {
-  const words = String(text).split(' ');
-  for (let px = 64; px >= 13; px = Math.floor(px * 0.88)) {
+  for (let px = 64; px >= 9; px = Math.floor(px * 0.88)) {
     c.font = `bold ${px}px Georgia, serif`;
-    const lines = [];
-    let line = '';
-    for (const w of words) {
-      const t = line ? line + ' ' + w : w;
-      if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; }
-      else line = t;
-    }
-    lines.push(line);
+    const lines = wrapLines(c, text, maxW);
     const lh = px * 1.12;
-    if (lines.length * lh <= maxH && Math.max(...lines.map(l => c.measureText(l).width)) <= maxW) {
+    if (lines.length * lh <= maxH) {
       const y0 = cy - (lines.length - 1) * lh / 2;
       lines.forEach((l, i) => c.fillText(l, cx, y0 + i * lh));
       return;
     }
   }
-  c.font = 'bold 13px Georgia, serif';
-  c.fillText(String(text).slice(0, 60), cx, cy);
+  // still too much to show: cut it to what fits and say so with an ellipsis
+  c.font = 'bold 9px Georgia, serif';
+  const lines = wrapLines(c, text, maxW).slice(0, Math.max(1, Math.floor(maxH / 10.1)));
+  if (lines.length) lines[lines.length - 1] = lines[lines.length - 1].replace(/.$/, '…');
+  const y0 = cy - (lines.length - 1) * 10.1 / 2;
+  lines.forEach((l, i) => c.fillText(l, cx, y0 + i * 10.1));
 }
 
 const allNumbers = [];
@@ -549,8 +609,9 @@ function makeNumber(value, op = '+') {
     }
     paint(fBack, (c) => drawWrapped(c, v.d === 1n ? englishText(v) : mixedText(v), 128, 140, 192, 168));
     paint(fSci, (c) => drawWrapped(c, sciText(v), 128, 140, 192, 150));
-    paint(fAlt, (c) => drawWrapped(c,
-      v.d === 1n ? groupText(v.n) : decimalText(v, 12 * lod), 128, 140, 192, 160));
+    paint(fAlt, (c) => v.d === 1n
+      ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
+      : drawDecimal(c, v, lod));
   }
 
   g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; draw(); };
@@ -561,6 +622,39 @@ function makeNumber(value, op = '+') {
   allNumbers.push(g);
   setPick(g, { kind: 'thing', thing: g });
   return g;
+}
+
+// A little wooden name-plaque stuck on the thing itself. Typing letters while
+// holding a bird, nest or box writes one.
+function setThingLabel(thing, text) {
+  thing.userData.label = text || null;
+  if (thing.__labelNode) { thing.__labelNode.removeFromParent(); thing.__labelNode = null; }
+  if (!text) return;
+  const c = document.createElement('canvas');
+  c.width = 320; c.height = 80;
+  const g2 = c.getContext('2d');
+  g2.fillStyle = '#f6eed9'; g2.fillRect(0, 0, 320, 80);
+  g2.strokeStyle = '#8a6a3b'; g2.lineWidth = 6; g2.strokeRect(3, 3, 314, 74);
+  g2.fillStyle = '#3b2f1d';
+  g2.textAlign = 'center'; g2.textBaseline = 'middle';
+  let px = 46;
+  g2.font = `bold ${px}px Georgia, serif`;
+  while (px > 12 && g2.measureText(text).width > 296) {
+    px = Math.floor(px * 0.88);
+    g2.font = `bold ${px}px Georgia, serif`;
+  }
+  g2.fillText(text, 160, 42);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const kind = thing.userData.kind;
+  const w = kind === 'box' ? Math.min(0.44, thing.userData.width * 0.85) : 0.3;
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
+  if (kind === 'box') plate.position.set(0, 0, (thing.userData.holeW + 0.07) / 2 + 0.004);
+  else if (kind === 'bird') plate.position.set(0, 0.33, 0.03);
+  else plate.position.set(0, 0.27, 0.06);   // nests and anything else
+  thing.add(plate);
+  thing.__labelNode = plate;
 }
 
 function makeBox(n = HOLES) {
@@ -674,15 +768,22 @@ function makeBird(nest) {
   return g;
 }
 // Deliveries are children of the nest, so the whole pile travels with it.
-function restackNest(nest) {
+function nestSlots(pile) {
   let y = 0.1;
-  for (const t of nest.userData.pile) {
+  return pile.map(t => {
     const half = t.userData.rest || 0.12;
     y += half;
-    t.position.set(0, y, 0);
-    t.quaternion.identity();
+    const p = y;
     y += half + 0.012;
-  }
+    return p;
+  });
+}
+function restackNest(nest) {
+  const ys = nestSlots(nest.userData.pile);
+  nest.userData.pile.forEach((t, i) => {
+    t.position.set(0, ys[i], 0);
+    t.quaternion.identity();
+  });
 }
 // The bird carries the gift home, drops it on the pile, and flies back to
 // wherever she was -- a box hole, a spot, or the bench.
@@ -715,12 +816,40 @@ function birdDeliver(bird) {
     },
   }, doNow(() => {
     bird.remove(thing);
-    nest.add(thing);
-    thing.scale.setScalar(1);
-    nest.userData.pile.push(thing);
-    restackNest(nest);
-    flash(npos());
-    refreshUI();
+    // Newer deliveries go UNDERNEATH: the bird sets the pile aside, tucks the
+    // new thing in at the bottom, and stacks the pile back on top -- so the
+    // top of a nest's pile is always the oldest delivery.
+    const pile = nest.userData.pile;
+    const old = pile.slice();
+    const p0 = old.map(t2 => t2.position.clone());
+    const steps = [];
+    if (old.length) steps.push({
+      dur: 0.4,
+      update(t) { old.forEach((it, i) => { it.position.x = lerp(p0[i].x, 0.58, ease(t)); }); },
+      end() { old.forEach(it => { it.position.x = 0.58; }); },
+    });
+    steps.push(doNow(() => {
+      nest.add(thing);
+      thing.quaternion.identity();
+      thing.scale.setScalar(1);
+      pile.unshift(thing);
+      thing.position.set(0, nestSlots(pile)[0], 0);
+      flash(npos());
+    }));
+    if (old.length) steps.push({
+      dur: 0.4,
+      update(t) {
+        const ys = nestSlots(nest.userData.pile);
+        const e = ease(t);
+        old.forEach((it, i) => {
+          it.position.x = lerp(0.58, 0, e);
+          it.position.y = lerp(p0[i].y, ys[i + 1], e);
+        });
+      },
+      end() { restackNest(nest); },
+    });
+    steps.push(doNow(refreshUI));
+    enqueueNext(...steps);
   }), {
     dur: 0.8,
     update(t) {
@@ -852,7 +981,8 @@ function specOf(thing) {
   // birds, nests and robots inside boxes go by reference: their identity (a
   // bird's pairing, a robot's training) has no data form
   if (kind === 'nest' || kind === 'bird' || kind === 'robot') return { kind: 'ref', node: thing };
-  return { kind, holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
+  return { kind, label: thing.userData.label ?? undefined,
+           holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
 }
 function buildThing(spec) {
   if (!spec) return null;
@@ -860,6 +990,7 @@ function buildThing(spec) {
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
   const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
+  if (spec.label) setThingLabel(b, spec.label);
   return b;
 }
 // Does this thing contain anything alive -- a bird, nest or robot -- anywhere?
@@ -1324,7 +1455,6 @@ function actionNew(kind) {
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
   enqueue(doNow(() => {
     const made = st.cubes.pop();
-    refillStack(st, true);
     held = made;
     setPick(made, { kind: 'thing', thing: made });
     noteHeld();
@@ -1333,6 +1463,8 @@ function actionNew(kind) {
   }));
   enqueue(armTo(POSE.reach, JAW_CLOSED, 0.35));
   enqueue(armTo(POSE.carry, JAW_CLOSED, 0.5));
+  // only once the top one is visibly carried away does the stack rise again
+  enqueue(doNow(() => refillStack(st, true)));
   enqueue(doNow(refreshUI));
 }
 
@@ -1494,20 +1626,37 @@ function actionCopy(at) {
 }
 
 // Typing a number on a held box gives it that many holes. Rebuilt rather than
-// reshaped, since hole width depends on the count.
+// reshaped, since hole width depends on the count. Shrinking splits the box
+// like an array: the excess holes fall away as a box of their own -- onto the
+// bench when you do it, onto a free work spot when the robot does.
 function resizeHeldBox(n) {
   n = Math.max(1, Math.min(MAX_HOLES, n));
   const old = held;
   const oldHoles = old.userData.holes;
   if (n === oldHoles.length) return;
-  for (let i = n; i < oldHoles.length; i++) {
-    if (oldHoles[i].thing) return say(`Hole ${i + 1} still has something in it.`);
+  if (n < oldHoles.length) {
+    const spot = mode === 'world' ? null
+      : ['s0', 's1', 's2'].map(id => stations[id]).find(s2 => !s2.occupant);
+    if (mode !== 'world' && !spot) {
+      return mode === 'replay'
+        ? abort('Its work spots are all full — nowhere to put the split-off holes.')
+        : say('Its work spots are all full — nowhere to put the split-off holes.');
+    }
+    const rest = makeBox(oldHoles.length - n);
+    for (let i = n; i < oldHoles.length; i++) {
+      const t = oldHoles[i].thing;
+      if (t) { oldHoles[i].thing = null; putInHole(rest.userData.holes[i - n], t); }
+    }
+    const from = old.getWorldPosition(new THREE.Vector3());
+    if (spot) putOnStation(spot, rest); else putOnBench(rest, benchSpot());
+    enqueueNext(settleInto(rest, from, 0.45));
   }
   const nb = makeBox(n);
   for (let i = 0; i < Math.min(n, oldHoles.length); i++) {
     const t = oldHoles[i].thing;
     if (t) { oldHoles[i].thing = null; putInHole(nb.userData.holes[i], t); }
   }
+  if (old.userData.label) setThingLabel(nb, old.userData.label);
   const parent = old.parent;
   nb.position.copy(old.position);
   nb.quaternion.copy(old.quaternion);
@@ -1783,6 +1932,8 @@ function userClick(target) {
       if (stations.copyOut.occupant) return say('Take the copy out of the tray first.');
       return userUseCopier();
     }
+    // the stand belongs to the robot: dropping something there IS giving it
+    if (st.kind === 'stand' && activeBot) return giveToRobot();
     return say('Hand it to the robot instead.');
   }
   if (target.kind === 'bench') {
@@ -1792,7 +1943,14 @@ function userClick(target) {
   if (target.kind === 'thing') {
     if (!target.thing) return;
     const kind = target.thing.userData.kind;
-    if (!held) return userTake(target.thing);   // pile items resolve directly
+    if (!held) {
+      // only the top of a nest's pile -- the oldest delivery -- can be taken
+      const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
+      if (pn && pn.userData.pile[pn.userData.pile.length - 1] !== target.thing) {
+        return say('Only the thing on top of the pile can be taken.');
+      }
+      return userTake(target.thing);
+    }
     if (target.thing === held) return;
     if (holdingBot) return say('Robots only team up with other robots.');
     if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
@@ -2395,26 +2553,33 @@ function saveLibrary(lib) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(lib)); }
   catch (e) { say('Could not save: ' + e.message); }
 }
+// The screen mesh's UVs don't survive the trip through Blender, so the name
+// goes on a little plate floating just in front of the screen instead.
 function paintBotName(bot) {
   const mesh = bot.node.getObjectByName('chest_screen');
-  if (!mesh || !bot.name) return;
+  if (!mesh) return;
+  if (bot.plate) { bot.plate.removeFromParent(); bot.plate = null; }
+  if (!bot.name) return;
   const c = document.createElement('canvas');
-  c.width = 256; c.height = 160;
+  c.width = 320; c.height = 160;
   const g2 = c.getContext('2d');
-  g2.fillStyle = '#04252e'; g2.fillRect(0, 0, 256, 160);
+  g2.fillStyle = '#04252e'; g2.fillRect(0, 0, 320, 160);
   g2.fillStyle = '#7fe9ff';
   g2.textAlign = 'center'; g2.textBaseline = 'middle';
-  g2.font = `bold ${fitFont(g2, bot.name, 232, 72)}px "Segoe UI", sans-serif`;
-  g2.fillText(bot.name, 128, 80);
+  let px = 72;
+  g2.font = `bold ${px}px "Segoe UI", sans-serif`;
+  while (px > 16 && g2.measureText(bot.name).width > 292) {
+    px = Math.floor(px * 0.88);
+    g2.font = `bold ${px}px "Segoe UI", sans-serif`;
+  }
+  g2.fillText(bot.name, 160, 84);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const m = mesh.material.clone();       // the template's screen is shared
-  m.map = tex;
-  m.emissive = new THREE.Color(0xffffff);
-  m.emissiveMap = tex;
-  m.emissiveIntensity = 1.5;
-  m.toneMapped = false;
-  mesh.material = m;
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.17),
+    new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+  plate.position.z = 0.03;
+  mesh.add(plate);
+  bot.plate = plate;
 }
 function saveRobot(name) {
   if (!name) return say('Give the robot a name first.');
@@ -2465,6 +2630,120 @@ function refreshLibrary(select) {
   $('loadBtn').disabled = !names.length;
   $('delBtn').disabled = !names.length;
   $('exportBtn').disabled = !names.length;
+}
+
+// --- saving the whole world -------------------------------------------------
+// Unlike a daydream snapshot, this serialises EVERYTHING as data -- robots with
+// their training, nests with their piles, birds with their pairings -- so a
+// world survives a reload or travels as a file.
+const WORLD_KEY = 'nano-toontalk.world';
+function botOut(bot) {
+  return { kind: 'robot', name: bot.name ?? null, program: bot.program.map(stepOut),
+           condition: condOut(bot.condition), team: bot.team.map(botOut) };
+}
+function thingOut(t) {
+  if (!t) return null;
+  const ud = t.userData;
+  if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
+  if (ud.kind === 'robot') return botOut(t.__bot);
+  if (ud.kind === 'nest') return { kind: 'nest', id: ud.id, hasEgg: !!ud.hasEgg,
+    label: ud.label ?? undefined, pile: ud.pile.map(thingOut) };
+  if (ud.kind === 'bird') return { kind: 'bird', nestId: t.__nest?.userData.id ?? null,
+    label: ud.label ?? undefined };
+  return { kind: ud.kind, label: ud.label ?? undefined,
+           holes: ud.holes.map(h => thingOut(h.thing)) };
+}
+function worldOut() {
+  syncBot();
+  const sts = {};
+  for (const s2 of Object.values(stations)) if (s2.kind !== 'stack') sts[s2.id] = thingOut(s2.occupant);
+  return {
+    kind: 'world', v: 1,
+    bench: benchThings.map(t => ({ thing: thingOut(t),
+      x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })),
+    stations: sts,
+    active: activeBot ? botOut(activeBot) : null,
+  };
+}
+function botIn(o) {
+  const node = makeMiniRobot();
+  const bot = node.__bot;
+  bot.name = o.name || null;
+  bot.program = (o.program || []).map(stepIn);
+  bot.condition = condIn(o.condition);
+  bot.team = (o.team || []).map(m => botIn(m).__bot);
+  if (bot.name) paintBotName(bot);
+  return node;
+}
+function thingIn(o, nests, birds) {
+  if (!o) return null;
+  let t = null;
+  if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
+  else if (o.kind === 'robot') t = botIn(o);
+  else if (o.kind === 'nest') {
+    t = makeNest();
+    if (!o.hasEgg) { t.__egg.removeFromParent(); t.userData.hasEgg = false; }
+    (o.pile || []).forEach(p => {
+      const item = thingIn(p, nests, birds);
+      if (item) { t.add(item); t.userData.pile.push(item); }
+    });
+    restackNest(t);
+    if (o.id != null) nests.set(o.id, t);
+  } else if (o.kind === 'bird') {
+    t = makeBird(null);
+    birds.push({ node: t, nestId: o.nestId });
+  } else {
+    t = o.kind === 'scale' ? makeScale() : makeBox(o.holes.length);
+    o.holes.forEach((h, i) => {
+      const child = thingIn(h, nests, birds);
+      if (child) putInHole(t.userData.holes[i], child);
+    });
+  }
+  if (o.label) setThingLabel(t, o.label);
+  return t;
+}
+function clearWorld() {
+  queue.length = 0; current = null; busy = false; pendingAfter = null;
+  clearUndo();
+  if (mode === 'training') { mode = 'world'; bubbleTarget = 0; preTraining = null; }
+  if (held) { held.removeFromParent(); held = null; }
+  benchThings.slice().forEach(t => t.removeFromParent());
+  benchThings.length = 0;
+  hatching.length = 0;
+  for (const s2 of Object.values(stations)) {
+    if (s2.kind === 'stack') continue;
+    if (s2.occupant) { s2.occupant.removeFromParent(); s2.occupant = null; }
+  }
+  if (activeBot) {
+    activeBot.node.removeFromParent();
+    activeBot = null; robot = null; root = null;
+  }
+  program = []; condition = null;
+  renderProgram(); rebuildCondition();
+}
+function worldIn(data) {
+  clearWorld();
+  const nests = new Map(), birds = [];
+  (data.bench || []).forEach(b => {
+    const t = thingIn(b.thing, nests, birds);
+    if (t) putOnBench(t, { x: b.x, z: b.z });
+  });
+  for (const [id, o] of Object.entries(data.stations || {})) {
+    const s2 = stations[id];
+    if (!s2 || s2.kind === 'stack' || !o) continue;
+    const t = thingIn(o, nests, birds);
+    if (t) putOnStation(s2, t);
+  }
+  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+  benchThings.forEach(t => {
+    if (t.userData.kind === 'nest' && t.userData.hasEgg) hatching.push({ nest: t, t: 0 });
+  });
+  if (data.active) {
+    const node = botIn(data.active);
+    putOnBench(node, { x: 0.9, z: 1.5 });
+    activateBot(node.__bot);
+  }
+  refreshUI();
 }
 
 function snapshotWorld() {
@@ -2744,16 +3023,19 @@ function refreshUI() {
     const kind = held.userData.kind;
     $('heldVal').textContent = kind === 'number'
       ? ratShort(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
-      : kind === 'robot' ? (held.__bot.program.length ? 'a trained robot' : 'a robot')
+      : kind === 'robot' ? (held.__bot.name ? `“${held.__bot.name}” the robot`
+          : held.__bot.program.length ? 'a trained robot' : 'a robot')
       : kind === 'scale' ? 'a scale'
-      : kind === 'nest' ? (held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
-      : kind === 'bird' ? 'a bird'
-      : `a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
+      : kind === 'nest' ? (held.userData.label ? `the nest “${held.userData.label}”`
+          : held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
+      : kind === 'bird' ? (held.userData.label ? `the bird “${held.userData.label}”` : 'a bird')
+      : `${held.userData.label ? `“${held.userData.label}” — ` : ''}a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
     $('heldTip').textContent = kind === 'number' ? 'digits set it, − negates, * / ^ set what it does'
       : kind === 'robot' ? 'put it on the table, or on another robot'
       : kind === 'box' ? (held.userData.holes.length <= 9
-          ? 'type a digit to change its holes'
-          : 'drop it on a box to join, or a hole to nest')
+          ? 'a digit sets its holes; letters name it'
+          : 'letters name it; drop it on a box to join')
+      : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
       : 'put it down on the bench';
   }
   if (hintTimer) return;
@@ -2797,7 +3079,12 @@ $('importBtn').onclick = () => $('importFile').click();
 async function importRobotFile(file) {
   try {
     const rec = JSON.parse(await file.text());
-    if (!Array.isArray(rec.program) || !('condition' in rec)) throw new Error('not a robot file');
+    if (rec.kind === 'world') {
+      if (busy || mode === 'replay') return say('Wait for the robot to finish first.');
+      worldIn(rec);
+      return say('Workshop loaded from the file.');
+    }
+    if (!Array.isArray(rec.program) || !('condition' in rec)) throw new Error('not a robot or world file');
     const name = rec.name || file.name.replace(/\.robot\.json$|\.json$/i, '');
     const lib = loadLibrary();
     lib[name] = { program: rec.program, condition: rec.condition };
@@ -2822,6 +3109,30 @@ addEventListener('drop', (e) => {
 });
 $('loadBtn').onclick = () => loadRobot($('robotList').value);
 $('delBtn').onclick = () => deleteRobot($('robotList').value);
+$('saveWorldBtn').onclick = () => {
+  if (busy || mode !== 'world') return say('Leave the thought bubble first.');
+  if (held) stowHeld();
+  try { localStorage.setItem(WORLD_KEY, JSON.stringify(worldOut())); say('Workshop saved in this browser.'); }
+  catch (e) { say('Could not save: ' + e.message); }
+};
+$('loadWorldBtn').onclick = () => {
+  if (busy || mode === 'replay') return say('Wait for the robot to finish first.');
+  const s2 = localStorage.getItem(WORLD_KEY);
+  if (!s2) return say('No workshop saved yet.');
+  try { worldIn(JSON.parse(s2)); say('Workshop restored.'); }
+  catch (e) { sayAttn('Could not load the saved workshop: ' + e.message); }
+};
+$('exportWorldBtn').onclick = () => {
+  if (busy || mode !== 'world') return say('Leave the thought bubble first.');
+  if (held) stowHeld();
+  const blob = new Blob([JSON.stringify(worldOut(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'workshop.world.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  say('Exported the whole workshop.');
+};
 $('speed').onchange = (e) => {
   speed = e.target.value === 'inf' ? Infinity : +e.target.value;
 };
@@ -2843,14 +3154,25 @@ addEventListener('keydown', (e) => {
   }
   if (!held || busy || mode === 'replay') return;
   if (held.userData.kind === 'robot') return;
+  const labelKey = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+  const editLabel = () => {
+    if (e.key === 'Backspace') {
+      if (held.userData.label) { pushUndo(); setThingLabel(held, held.userData.label.slice(0, -1)); }
+      e.preventDefault(); refreshUI(); return;
+    }
+    if (labelKey) { pushUndo(); setThingLabel(held, (held.userData.label || '') + e.key); refreshUI(); }
+  };
   if (held.userData.kind === 'box') {
     if (/^[1-9]$/.test(e.key)) {
       pushUndo();
       resizeHeldBox(+e.key);
       say(`A box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}.`);
+      return;
     }
+    if (!/^[0-9]$/.test(e.key)) editLabel();   // digits mean holes; letters name it
     return;
   }
+  if (held.userData.kind === 'bird' || held.userData.kind === 'nest') { editLabel(); return; }
   if (held.userData.kind !== 'number') return;
   const v = held.userData.value;
   if (/^[0-9]$/.test(e.key)) {
@@ -2915,7 +3237,10 @@ function tipFor(t) {
         : stations.copyIn.occupant ? 'The copier — click to take the original back.'
         : 'The copier — put something on it and an exact copy drops into the tray.';
     }
-    if (st.kind === 'stand') return 'The robot’s stand — whatever it is given sits here while it works.';
+    if (st.kind === 'stand') {
+      return held && activeBot ? 'The robot’s stand — click to give that to the robot.'
+        : 'The robot’s stand — whatever it is given sits here while it works.';
+    }
     if (st.kind === 'scratch') return `${st.label[0].toUpperCase()}${st.label.slice(1)} — the robot’s own work spot, swept clean when it finishes.`;
     return null;
   }
@@ -2934,10 +3259,11 @@ function tipFor(t) {
   if (t.kind === 'botThing') {
     const bot = t.bot, trained = bot.program.length;
     const teamNote = bot.team.length ? ` It leads a team of ${bot.team.length + 1}.` : '';
+    const who = bot.name ? `“${bot.name}”` : 'The robot';
     if (bot === activeBot) {
       return held
         ? (trained ? 'Click to give it that to work on.' : 'Click to give it that — that starts its training.')
-        : `The robot at the bench${trained ? ` (${trained} steps trained).` : ' — untrained.'} Click to shrink it into your hand.${teamNote}`;
+        : `${who} at the bench${trained ? ` (${trained} steps trained).` : ' — untrained.'} Click to shrink it into your hand.${teamNote}`;
     }
     if (held?.userData.kind === 'robot') {
       return 'Drop to form a team — each pass, the first member that recognises the thing runs.';
@@ -2947,7 +3273,7 @@ function tipFor(t) {
     if (trained) {
       const lines = bot.program.slice(0, 8).map((st2, i) => `${i + 1}. ${describe(st2)}`);
       if (bot.program.length > 8) lines.push(`… and ${bot.program.length - 8} more`);
-      return `Runs on ${condText(bot.condition)}:\n${lines.join('\n')}${teamNote ? '\n' + teamNote.trim() : ''}\nClick to pick it up.`;
+      return `${bot.name ? `“${bot.name}” — runs` : 'Runs'} on ${condText(bot.condition)}:\n${lines.join('\n')}${teamNote ? '\n' + teamNote.trim() : ''}\nClick to pick it up.`;
     }
     return 'A little robot, untrained — click to pick it up.';
   }
@@ -2974,7 +3300,7 @@ function tipFor(t) {
     }
     if (ud.kind === 'nest') {
       if (ud.hasEgg) return 'A nest with an egg — set it on the table and watch.';
-      if (ud.pile.length) return `A nest with ${ud.pile.length} deliver${ud.pile.length > 1 ? 'ies' : 'y'} — click to take the top one.`;
+      if (ud.pile.length) return `A nest with ${ud.pile.length} deliver${ud.pile.length > 1 ? 'ies' : 'y'} — the top is the oldest; click to take it.`;
       return 'An empty nest — its bird delivers here.';
     }
     if (ud.kind === 'bird') {
@@ -3251,6 +3577,7 @@ renderer.setAnimationLoop((now) => {
 // dev hook -- lets the whole thing be driven headlessly (see serve.js /capture)
 window.__nano = {
   THREE, scene, camera, renderer, stations,
+  worldOut, worldIn, setThingLabel,
   get ready() { return worldReady; },
   get state() { return { mode, busy, program, queued: queue.length,
     held: held ? (held.userData.kind === 'number'
