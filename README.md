@@ -19,7 +19,11 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   `* / ^` to set what a number *does* when dropped on another. Each operation
   colours the block and shows a badge. Division gives a real fraction, never a
   float. Numbers too long to fit render the ToonTalk way: full size at both
-  ends, tapering to an ellipsis in the middle.
+  ends, tapering to an ellipsis in the middle — and walking up close makes
+  more digits appear. The other faces of the block show other forms of the
+  same value: the top repeats it, the back gives English words or a mixed
+  fraction, one side scientific notation, the other digit-grouped or exact
+  decimal form (only the visible digits are ever computed).
 - **Boxes** have holes; a hole holds a number, a box, a scale, a bird or a
   nest, so structures nest. Type a digit on a held box to give it that many
   holes (up to 8). Dropping a box on another **joins** them — on the left half
@@ -58,15 +62,20 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **The condition** — the exact thing it was trained on — floats in a thought
   bubble over its head, and refused runs pulse the mismatching parts red until
   something changes. Dusty erases progressively: a number becomes *any
-  number*, a box *any box with N holes*, a scale *any scale*, and a second
-  erase makes any of them *anything* (its own ?-cloud shape).
+  number*, a box *any box — any number of holes*, a scale *any scale*, and a
+  second erase makes any of them *anything* (its own ?-cloud shape). What sits
+  in a hole can be erased to *anything* on its own.
 - **Running repeats while some condition still matches**, up to the Rounds
   limit — a loop is just a condition that stays true. **Teams**: drop one
   trained robot on another, and each pass is taken by the first member that
   recognises what is on the stand.
-- **Saving and sharing.** Save names a robot in this browser; Export downloads
-  it as a `.robot.json` file; Import adds one to the library; Load wakes a
-  robot automatically if none is at the bench.
+- **Robots fetch like you do.** A step that needs a fresh number or box sends
+  the robot walking to the same stack you would use, and it drops things at
+  the exact hole they belong in, not the middle of the box.
+- **Saving and sharing.** Save names a robot in this browser — the name
+  appears on its chest screen. Export downloads it as a `.robot.json` file
+  under its typed name; Import adds it to the library and wakes it in one
+  step; Load wakes a robot automatically if none is at the bench.
 
 Undo (Ctrl+Z or the button) unwinds moves, typing, joins, vacuums, erasures —
 including recorded steps mid-lesson. Mode boundaries clear the history.

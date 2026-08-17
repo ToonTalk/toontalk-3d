@@ -336,9 +336,11 @@ function fitFont(c, text, maxW, startPx) {
 // keeps the most *and* least significant ends readable at any length.
 const FULL_DIGITS = 2;                    // full-size digits at each end
 const TAPER = [0.70, 0.45, 0.26];         // shrinking run inwards from those
-function drawNum(c, s, cx, cyMid, maxW, maxH) {
+function drawNum(c, s, cx, cyMid, maxW, maxH, lod = 1) {
+  const FULL = lod > 1 ? 4 : FULL_DIGITS;
+  const TAP = lod > 1 ? [0.8, 0.66, 0.54, 0.43, 0.34] : TAPER;
   const cap = Math.min(176, Math.floor(maxH * 0.98));
-  const shown = 2 * (FULL_DIGITS + TAPER.length);
+  const shown = 2 * (FULL + TAP.length);
   if (s.length <= shown) {
     const uni = fitFont(c, s, maxW, cap);
     c.font = `bold ${uni}px Georgia, serif`;
@@ -347,7 +349,7 @@ function drawNum(c, s, cx, cyMid, maxW, maxH) {
     return c.measureText(s).width;
   }
   // sizes as multiples of the full size, left half then mirrored right half
-  const half = [...Array(FULL_DIGITS).fill(1), ...TAPER];
+  const half = [...Array(FULL).fill(1), ...TAP];
   const weights = [...half, ...half.slice().reverse()];
   c.font = 'bold 100px Georgia, serif';
   const unit = c.measureText('8').width / 100;          // advance per px of size
@@ -376,62 +378,187 @@ function drawNum(c, s, cx, cyMid, maxW, maxH) {
   return total;
 }
 
+// --- other ways of writing the same number ----------------------------------
+const SMALL_WORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten',
+  'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const TENS_WORDS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+const SCALE_WORDS = ['','thousand','million','billion','trillion','quadrillion','quintillion',
+  'sextillion','septillion','octillion','nonillion','decillion'];
+function english999(n) {
+  let out = '';
+  if (n >= 100) { out += SMALL_WORDS[Math.floor(n / 100)] + ' hundred'; n %= 100; if (n) out += ' '; }
+  if (n >= 20) { out += TENS_WORDS[Math.floor(n / 10)]; if (n % 10) out += '-' + SMALL_WORDS[n % 10]; }
+  else if (n > 0 || out === '') out += SMALL_WORDS[n];
+  return out;
+}
+function englishInt(n) {                 // BigInt >= 0; null past the names we know
+  if (n === 0n) return 'zero';
+  const groups = [];
+  while (n > 0n) { groups.push(Number(n % 1000n)); n /= 1000n; }
+  if (groups.length > SCALE_WORDS.length) return null;
+  const parts = [];
+  for (let i = groups.length - 1; i >= 0; i--) {
+    if (!groups[i]) continue;
+    parts.push(english999(groups[i]) + (SCALE_WORDS[i] ? ' ' + SCALE_WORDS[i] : ''));
+  }
+  return parts.join(' ');
+}
+function englishText(v) {
+  const neg = v.n < 0n, n = neg ? -v.n : v.n;
+  if (v.d === 1n) {
+    const w = englishInt(n);
+    return w ? (neg ? 'negative ' : '') + w : sciText(v);
+  }
+  const a = englishInt(n), b = englishInt(v.d);
+  return a && b ? `${neg ? 'negative ' : ''}${a} over ${b}` : sciText(v);
+}
+function mixedText(v) {
+  const neg = v.n < 0n, n = neg ? -v.n : v.n;
+  const q = n / v.d, r = n % v.d;
+  return (neg ? '-' : '') + (q === 0n ? `${r}/${v.d}` : `${q} ${r}/${v.d}`);
+}
+function groupText(n) {
+  const neg = n < 0n, t = (neg ? -n : n).toString();
+  return (neg ? '-' : '') + t.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function sciText(v) {
+  if (v.n === 0n) return '0';
+  const neg = v.n < 0n, n = neg ? -v.n : v.n;
+  const K = 20n;
+  const q = (n * 10n ** K / v.d).toString();
+  const e = q.length - 1 - Number(K);
+  return `${neg ? '-' : ''}${q[0]}.${q.slice(1, 5)}×10^${e}`;
+}
+// exact decimal expansion: only the visible prefix is ever computed
+function decimalText(v, digits = 12) {
+  const neg = v.n < 0n, n = neg ? -v.n : v.n;
+  let out = (neg ? '-' : '') + (n / v.d).toString();
+  let rem = n % v.d;
+  if (rem === 0n) return out;
+  out += '.';
+  for (let i = 0; i < digits && rem !== 0n; i++) {
+    rem *= 10n;
+    out += (rem / v.d).toString();
+    rem %= v.d;
+  }
+  return rem === 0n ? out : out + '…';
+}
+function drawWrapped(c, text, cx, cy, maxW, maxH) {
+  const words = String(text).split(' ');
+  for (let px = 64; px >= 13; px = Math.floor(px * 0.88)) {
+    c.font = `bold ${px}px Georgia, serif`;
+    const lines = [];
+    let line = '';
+    for (const w of words) {
+      const t = line ? line + ' ' + w : w;
+      if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; }
+      else line = t;
+    }
+    lines.push(line);
+    const lh = px * 1.12;
+    if (lines.length * lh <= maxH && Math.max(...lines.map(l => c.measureText(l).width)) <= maxW) {
+      const y0 = cy - (lines.length - 1) * lh / 2;
+      lines.forEach((l, i) => c.fillText(l, cx, y0 + i * lh));
+      return;
+    }
+  }
+  c.font = 'bold 13px Georgia, serif';
+  c.fillText(String(text).slice(0, 60), cx, cy);
+}
+
+const allNumbers = [];
 function makeNumber(value, op = '+') {
   const g = new THREE.Group();
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 256;
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const mkFace = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 256;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+    return { canvas, tex, mat: new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45 }) };
+  };
+  // front and top show the value; the other faces show the same number written
+  // other ways
+  const fMain = mkFace(), fBack = mkFace(), fSci = mkFace(), fAlt = mkFace();
 
   const shellMat = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 });
   const shell = new THREE.Mesh(cubeGeo, shellMat);
   shell.castShadow = true; shell.receiveShadow = true;
   g.add(shell);
-  const faceMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45 });
   const p = CUBE / 2 + 0.0015;
-  for (const [px, pz, ry] of [[0, p, 0], [0, -p, Math.PI], [p, 0, Math.PI / 2], [-p, 0, -Math.PI / 2]]) {
-    const q = new THREE.Mesh(faceGeo, faceMat);
-    q.position.set(px, 0, pz); q.rotation.y = ry;
+  const addFace = (mat, px, py, pz, rx, ry) => {
+    const q = new THREE.Mesh(faceGeo, mat);
+    q.position.set(px, py, pz);
+    q.rotation.set(rx, ry, 0);
     g.add(q);
-  }
+  };
+  addFace(fMain.mat, 0, 0, p, 0, 0);                  // front: the value
+  addFace(fMain.mat, 0, p, 0, -Math.PI / 2, 0);       // top: the value again
+  addFace(fBack.mat, 0, 0, -p, 0, Math.PI);           // back: words / mixed
+  addFace(fSci.mat, -p, 0, 0, 0, -Math.PI / 2);       // left: scientific
+  addFace(fAlt.mat, p, 0, 0, 0, Math.PI / 2);         // right: grouped / decimal
   Object.assign(g.userData, { id: nextId++, kind: 'number', op, width: CUBE, rest: CUBE / 2 });
+  g.__lod = 1;
 
-  function draw() {
+  const paint = (face, fn) => {
+    const lod = g.__lod, size = 256 * lod;
+    if (face.canvas.width !== size) face.canvas.width = face.canvas.height = size;
+    const c = face.canvas.getContext('2d');
+    c.setTransform(lod, 0, 0, lod, 0, 0);
     const st = OP_STYLE[g.userData.op] || OP_STYLE['+'];
-    shellMat.color.setHex(st.shell);
-    const c = canvas.getContext('2d');
     c.fillStyle = st.face; c.fillRect(0, 0, 256, 256);
     c.strokeStyle = st.edge; c.lineWidth = 12; c.strokeRect(16, 16, 224, 224);
     c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillStyle = st.ink;
-
-    const label = g.userData.label;
-    const v = g.userData.value;
-    if (label != null) {
-      c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
-      c.fillText(label, 128, 140);
-    } else if (v && v.d === 1n) {
-      drawNum(c, String(v.n), 128, 142, 190, 168);
-    } else if (v) {
-      const wn = drawNum(c, String(v.n), 128, 96, 182, 76);
-      const wd = drawNum(c, String(v.d), 128, 190, 182, 76);
-      c.strokeStyle = st.ink; c.lineWidth = 9;
-      const w = Math.max(wn, wd) / 2 + 12;
-      c.beginPath(); c.moveTo(128 - w, 143); c.lineTo(128 + w, 143); c.stroke();
-    }
-    // badge showing what this number does when dropped on another
+    fn(c, st);
     c.beginPath(); c.arc(54, 54, 30, 0, Math.PI * 2);
     c.fillStyle = st.ink; c.fill();
     c.fillStyle = st.face;
     c.font = 'bold 42px Georgia, serif';
     c.fillText(st.glyph, 54, 57);
-    tex.needsUpdate = true;
+    face.tex.needsUpdate = true;
+  };
+
+  function draw() {
+    const st0 = OP_STYLE[g.userData.op] || OP_STYLE['+'];
+    shellMat.color.setHex(st0.shell);
+    const label = g.userData.label;
+    const v = g.userData.value;
+    const lod = g.__lod;
+    paint(fMain, (c, st) => {
+      if (label != null) {
+        c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
+        c.fillText(label, 128, 140);
+      } else if (v && v.d === 1n) {
+        drawNum(c, String(v.n), 128, 142, 190, 168, lod);
+      } else if (v) {
+        const wn = drawNum(c, String(v.n), 128, 96, 182, 76, lod);
+        const wd = drawNum(c, String(v.d), 128, 190, 182, 76, lod);
+        c.strokeStyle = st.ink; c.lineWidth = 9;
+        const w = Math.max(wn, wd) / 2 + 12;
+        c.beginPath(); c.moveTo(128 - w, 143); c.lineTo(128 + w, 143); c.stroke();
+      }
+    });
+    if (label != null || !v) {
+      [fBack, fSci, fAlt].forEach(f => paint(f, (c) => {
+        if (label != null) {
+          c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
+          c.fillText(label, 128, 140);
+        }
+      }));
+      return;
+    }
+    paint(fBack, (c) => drawWrapped(c, v.d === 1n ? englishText(v) : mixedText(v), 128, 140, 192, 168));
+    paint(fSci, (c) => drawWrapped(c, sciText(v), 128, 140, 192, 150));
+    paint(fAlt, (c) => drawWrapped(c,
+      v.d === 1n ? groupText(v.n) : decimalText(v, 12 * lod), 128, 140, 192, 160));
   }
 
   g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; draw(); };
   g.setOp = (o) => { g.userData.op = o; draw(); };
   g.setLabel = (t) => { g.userData.label = t; draw(); };
+  g.__redraw = draw;
   g.setValue(value);
+  allNumbers.push(g);
   setPick(g, { kind: 'thing', thing: g });
   return g;
 }
@@ -782,7 +909,7 @@ function matches(cond, spec) {
   }
   if (cond.kind === 'anyBird' || cond.kind === 'anyNest') return false;
   if (cond.kind === 'wildNumber') return spec.kind === 'number';
-  if (cond.kind === 'wildBox') return spec.kind === 'box' && spec.holes.length === cond.n;
+  if (cond.kind === 'anyBox') return spec.kind === 'box';
   if (cond.kind === 'wildScale') return spec.kind === 'scale';
   if (cond.kind === 'number') {
     return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op;
@@ -799,7 +926,7 @@ function condText(c) {
   if (c.kind === 'anyBird') return 'a bird';
   if (c.kind === 'anyNest') return 'a nest';
   if (c.kind === 'wildNumber') return 'any number';
-  if (c.kind === 'wildBox') return `any box with ${c.n} hole${c.n > 1 ? 's' : ''}`;
+  if (c.kind === 'anyBox') return 'any box — any number of holes';
   if (c.kind === 'wildScale') return 'any scale';
   if (c.kind === 'number') {
     return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
@@ -812,7 +939,7 @@ function condText(c) {
 function eraseAt(cond, path) {
   if (!path.length) {
     if (cond?.kind === 'number') return { kind: 'wildNumber' };
-    if (cond?.kind === 'box') return { kind: 'wildBox', n: cond.holes.length };
+    if (cond?.kind === 'box') return { kind: 'anyBox' };
     if (cond?.kind === 'scale') return { kind: 'wildScale' };
     return WILD;    // a second erase of any wild kind means truly anything
   }
@@ -1050,6 +1177,8 @@ let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
 let maxIter = 100;         // user-settable: a robot whose condition never fails would loop forever
 let worldReady = false;    // scene built; there may or may not be a robot yet
+let lodClock = 0;
+const _lodV = new THREE.Vector3();
 
 // --- the robot population ---------------------------------------------------
 // Robots come off a stack as miniatures. One at a time works at the bench,
@@ -1188,28 +1317,21 @@ function abort(msg) {
 // The robot stands at its own stand and never walks: everything it can do is
 // reaching into the thing it was given, or conjuring a new number or box.
 
-// A brand new number or box appears in the claw.
+// The robot walks to the stack and takes the top one, the same way you do.
 function actionNew(kind) {
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.5));
-  let made = null;
-  enqueue({
-    dur: 0.4,
-    start() {
-      made = kind === 'box' ? makeBox() : kind === 'scale' ? makeScale() : makeNumber(rat(1));
-      scene.add(made);
-      const p = grip.getWorldPosition(new THREE.Vector3());
-      made.position.copy(p);
-      made.scale.setScalar(0.01);
-      flash(p);
-    },
-    update(t) { made.scale.setScalar(0.01 + 0.99 * ease(t)); },
-  });
+  const st = stations[kind === 'box' ? 'boxes' : kind === 'scale' ? 'scales' : 'numbers'];
+  enqueue(walkTo(() => standForPoint(st.point)));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
   enqueue(doNow(() => {
-    grip.attach(made);
+    const made = st.cubes.pop();
+    refillStack(st, true);
     held = made;
+    setPick(made, { kind: 'thing', thing: made });
     noteHeld();
+    grip.attach(made);
     enqueueNext(graspSettle(made));
   }));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.35));
   enqueue(armTo(POSE.carry, JAW_CLOSED, 0.5));
   enqueue(doNow(refreshUI));
 }
@@ -1221,10 +1343,24 @@ const walkTargetFor = (c) =>
   : (c === 'in' || c === 'out') ? () => standForPoint(stations.copyOut.point)
   : () => standForPoint(stationOf(c).point);
 
+// Where to stand so the claw lands on the addressed hole itself, not the
+// centre of whatever contains it.
+const walkTargetForAt = (at) => () => {
+  if (at.path.length) {
+    const hole = holeAt(at);
+    if (hole) {
+      const hp = hole.anchor.getWorldPosition(new THREE.Vector3());
+      return standForPoint(hp);
+    }
+  }
+  const t = walkTargetFor(at.c);
+  return typeof t === 'function' ? t() : t;
+};
+
 // Take whatever the address names, into the claw.
 function actionTake(at) {
   const reach = at.c === 'in' ? POSE.reachHigh : POSE.reach;
-  enqueue(walkTo(walkTargetFor(at.c)));
+  enqueue(walkTo(walkTargetForAt(at)));
   enqueue(armTo(reach, JAW_OPEN, 0.7));
   enqueue(doNow(() => {
     const obj = thingAt(at);
@@ -1247,7 +1383,7 @@ function actionTake(at) {
 // the copier platform sets the machine going.
 function actionPut(at, side) {
   const reach = at.c === 'in' ? POSE.reachHigh : POSE.reach;
-  enqueue(walkTo(walkTargetFor(at.c)));
+  enqueue(walkTo(walkTargetForAt(at)));
   enqueue(armTo(reach, JAW_CLOSED, 0.6));
   enqueue(armTo(reach, JAW_OPEN, 0.35));
   enqueue(doNow(() => {
@@ -1459,7 +1595,7 @@ function combine(slot, incoming, isHole, fromWorld, side) {
     const from = incoming.getWorldPosition(new THREE.Vector3());
     putOnBench(incoming, benchSpot());
     enqueueNext(settleInto(incoming, from, 0.3));
-    say(msg);
+    sayAttn(msg);
   };
   // Boxes join: dropping one box on another concatenates their holes, contents
   // and all, exactly as in ToonTalk.
@@ -1571,6 +1707,7 @@ function handleClick(target) {
   // A thing sits down inside its pocket, so a click meant for it can land on
   // the pocket instead. An occupied hole always means the thing in it.
   if (target.kind === 'hole') {
+    if (!target.box) return;
     const occupant = target.box.userData.holes[target.index].thing;
     if (occupant) return handleClick({ kind: 'thing', thing: occupant });
   }
@@ -2040,9 +2177,9 @@ function buildCondNode(cond, path, marks) {
     g.__egg.removeFromParent();
     g.userData.hasEgg = false;
   }
-  else if (cond.kind === 'wildBox' || cond.kind === 'wildScale') {
+  else if (cond.kind === 'anyBox' || cond.kind === 'wildScale') {
     // an erased container: its own blank shape with one floating ?
-    g = cond.kind === 'wildScale' ? makeScale() : makeBox(cond.n);
+    g = cond.kind === 'wildScale' ? makeScale() : makeBox(2);
     const q = ghostQuestion(0.22);
     q.position.set(0, cond.kind === 'wildScale' ? 0.34 : 0.2, 0.1);
     g.add(q);
@@ -2258,6 +2395,27 @@ function saveLibrary(lib) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(lib)); }
   catch (e) { say('Could not save: ' + e.message); }
 }
+function paintBotName(bot) {
+  const mesh = bot.node.getObjectByName('chest_screen');
+  if (!mesh || !bot.name) return;
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 160;
+  const g2 = c.getContext('2d');
+  g2.fillStyle = '#04252e'; g2.fillRect(0, 0, 256, 160);
+  g2.fillStyle = '#7fe9ff';
+  g2.textAlign = 'center'; g2.textBaseline = 'middle';
+  g2.font = `bold ${fitFont(g2, bot.name, 232, 72)}px "Segoe UI", sans-serif`;
+  g2.fillText(bot.name, 128, 80);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const m = mesh.material.clone();       // the template's screen is shared
+  m.map = tex;
+  m.emissive = new THREE.Color(0xffffff);
+  m.emissiveMap = tex;
+  m.emissiveIntensity = 1.5;
+  m.toneMapped = false;
+  mesh.material = m;
+}
 function saveRobot(name) {
   if (!name) return say('Give the robot a name first.');
   if (!program.length) return say('Train it before saving it.');
@@ -2265,6 +2423,7 @@ function saveRobot(name) {
   lib[name] = { program: program.map(stepOut), condition: condOut(condition) };
   saveLibrary(lib);
   refreshLibrary(name);
+  if (activeBot) { activeBot.name = name; paintBotName(activeBot); }
   say(`Saved “${name}”.`);
 }
 function applyLoaded(rec, name) {
@@ -2272,6 +2431,7 @@ function applyLoaded(rec, name) {
   program = rec.program.map(stepIn);
   condition = condIn(rec.condition);
   syncBot();
+  if (activeBot) { activeBot.name = name; paintBotName(activeBot); }
   rebuildCondition(); renderProgram(); refreshUI();
   say(`Loaded “${name}” — give it ${condText(condition)} and run it.`);
 }
@@ -2619,7 +2779,10 @@ $('runBtn').onclick = () => {
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
 $('saveBtn').onclick = () => saveRobot($('robotName').value.trim());
 $('exportBtn').onclick = () => {
-  const name = $('robotList').value;
+  // a typed name means "this robot": save it first, then export that
+  const typed = $('robotName').value.trim();
+  let name = $('robotList').value;
+  if (typed && program.length) { saveRobot(typed); name = typed; }
   const rec = loadLibrary()[name];
   if (!rec) return say('Nothing selected to export.');
   const blob = new Blob([JSON.stringify({ name, ...rec }, null, 2)], { type: 'application/json' });
@@ -2640,7 +2803,7 @@ async function importRobotFile(file) {
     lib[name] = { program: rec.program, condition: rec.condition };
     saveLibrary(lib);
     refreshLibrary(name);
-    sayAttn(`Imported “${name}” — it is selected in the list; press Load.`);
+    loadRobot(name);          // importing means: I want this robot here
   } catch (e) {
     sayAttn('Could not import that file: ' + e.message);
   }
@@ -2791,10 +2954,15 @@ function tipFor(t) {
   if (t.kind === 'thing') {
     const ud = t.thing.userData;
     if (ud.kind === 'number') {
+      if (held?.userData.kind === 'number') {
+        const o = held.userData.op, hv = ratShort(held.userData.value), tv = ratShort(ud.value);
+        return 'Drop to ' + (o === '+' ? `add ${hv} to ${tv}` : o === '-' ? `subtract ${hv} from ${tv}`
+          : o === '*' ? `multiply ${tv} by ${hv}` : o === '/' ? `divide ${tv} by ${hv}`
+          : `raise ${tv} to the power ${hv}`) + '.';
+      }
       const OPW = { '+': 'adds itself to', '-': 'subtracts itself from', '*': 'multiplies',
                     '/': 'divides', '^': 'raises the power of' };
-      return `${ratShort(ud.value)} — dropped on a number, it ${OPW[ud.op]} it.`
-        + (held ? '' : ' Click to pick it up; then type digits or + − * / ^.');
+      return `${ratShort(ud.value)} — dropped on a number, it ${OPW[ud.op]} it. Click to pick it up; then type digits or + − * / ^.`;
     }
     if (ud.kind === 'box') {
       return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — holes hold numbers or boxes.`
@@ -3022,6 +3190,18 @@ renderer.setAnimationLoop((now) => {
       flagTime += dt;
       const pulse = 0.7 + 0.9 * Math.abs(Math.sin(flagTime * 5));
       for (const f of flagged) f.m.emissiveIntensity = pulse;
+    }
+  }
+  // numbers near the camera redraw with more digits and a finer canvas
+  lodClock += dt;
+  if (lodClock > 0.5) {
+    lodClock = 0;
+    for (let i = allNumbers.length - 1; i >= 0; i--) {
+      const nmb = allNumbers[i];
+      if (!nmb.parent) { allNumbers.splice(i, 1); continue; }
+      const dist = camera.position.distanceTo(nmb.getWorldPosition(_lodV));
+      const tier = dist < 3.6 ? 2 : 1;
+      if (tier !== nmb.__lod) { nmb.__lod = tier; nmb.__redraw(); }
     }
   }
   // eggs hatch a moment after their nest is set down
