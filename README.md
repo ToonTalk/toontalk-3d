@@ -29,11 +29,17 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   and put them down anywhere on the bench — what you carry follows the pointer.
   The robot stands idle and only ever acts inside its thought bubble, or when
   repeating what it learned.
-- **A robot's actions name holes, never places.** Everything it can do is
-  relative to the thing it was given: *take what is in hole 1*, *put it in hole
-  2*, *take a new number*, *make it 10*. There are no pillars and no addresses,
-  so a trained robot generalises to any box of the right shape for free. The
-  bench exists only for you; the robot cannot reach it.
+- **A robot's actions name holes, never places in your world.** Everything it
+  does is relative to the thing it was given: *take what is in hole 1*, *put it
+  in hole 2*, *take a new number*, *make it 10*. A trained robot therefore
+  generalises to anything of the right shape for free. Your bench is off limits
+  to it.
+- **A private work area.** Inside its thought bubble the robot has scratch spots
+  and the copier to work with. That is safe where naming your bench would not
+  be: the area belongs to the robot and starts empty on every run, so it cannot
+  collide with your world or carry state between runs. Everything left there is
+  vacuumed when the robot is done, and whatever it was given goes back on the
+  table — changed, if the robot changed it.
 - **Training starts by giving.** Hand something to an untrained robot and it
   goes into its thought bubble to learn on it; from then on you direct the
   robot and everything it does is recorded. Leaving the bubble rewinds the
@@ -86,8 +92,9 @@ worth keeping back into the script.
 ## Known limits
 
 - The robot no longer walks: its stand sits exactly where its claw reaches.
-- A robot holds one thing at a time and has nowhere to set it down; every
-  manipulation has to route through a hole of its own box.
+- The robot's scratch area is three fixed spots rather than free placement.
+- When a robot uses the copier the object flies between claw and platform: the
+  upper surface is above the claw's working height and there is no arm IK.
 - `^` takes integer exponents only. Results are unbounded BigInts; the only
   limit is a guard that refuses a power whose size is estimated past 20000
   digits, so a runaway loop cannot lock the browser mid-calculation.

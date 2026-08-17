@@ -606,6 +606,10 @@ const STATION_DEFS = [
   { id: 'copier',  label: 'the copier',       kind: 'copier', x:  1.98 },
 ];
 const benchThings = [];      // free-standing things the user has put down
+// The robot's own scratch spots, inside its thought bubble. Referring to these
+// is safe in a way that pillars never were: the area is private to the robot
+// and empty at the start of every run, so it cannot collide with the world.
+const SCRATCH_X = [-1.45, -0.85, -0.25];
 let BENCH_TOP = 0.84;        // set from the robot's working height once loaded
 const stations = {};
 const pickables = [];
@@ -744,9 +748,27 @@ function setLegs(phase, amount) {
   root.position.y = 0.022 * Math.abs(Math.sin(phase * 2)) * amount;
 }
 
-// The robot no longer walks: its stand sits exactly where its claw reaches, and
-// everything it can act on is on that stand or conjured into its hand.
 const HOME = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
+// Where the robot must stand for its claw to land on a given point.
+function standForPoint(p) {
+  return { pos: new THREE.Vector3(p.x, 0, p.z - reachR), yaw: -reachBeta };
+}
+// Float a thing between the claw and a surface. The copier's platform is above
+// the claw's working height, so rather than solve for an arm pose that reaches
+// it, the object itself makes the trip.
+function flyTo(thing, to, dur = 0.5) {
+  let from = null;
+  return {
+    dur,
+    start() { scene.attach(thing); from = thing.position.clone(); },
+    update(t) {
+      const e = ease(t);
+      thing.position.lerpVectors(from, to, e);
+      thing.position.y += 0.16 * Math.sin(Math.PI * e);   // small arc
+    },
+    end() { thing.position.copy(to); },
+  };
+}
 
 // ---------------------------------------------------------------- state
 let held = null, mode = 'world', program = [], busy = false;
@@ -939,8 +961,9 @@ const scanStep = (st) => ({
 function runDuplicate() {
   const inSt = stations.copyIn, outSt = stations.copyOut;
   let copy = null, from = null;
-  enqueue(scanStep(inSt));
-  enqueue({
+  // enqueueNext: when a robot triggers this mid-action, the duplicate has to be
+  // made before the following step (typically "take the copy") runs.
+  enqueueNext(scanStep(inSt), {
     dur: 0.45,
     start() {
       copy = buildThing(specOf(inSt.occupant));
@@ -955,8 +978,7 @@ function runDuplicate() {
       copy.scale.setScalar(s);
       copy.position.y = inSt.point.y + inSt.occupant.userData.rest + copy.userData.rest * s;
     },
-  });
-  enqueue({
+  }, {
     dur: 0.5,
     update(t) {
       const e = ease(t);
@@ -966,6 +988,82 @@ function runDuplicate() {
     },
     end() { putOnStation(outSt, copy); refreshUI(); },
   });
+}
+
+// Put down on / take from one of the robot's own scratch spots.
+function actionPutScratch(i) {
+  const st = stations['s' + i];
+  enqueue(walkTo(() => standForPoint(st.point)));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.6));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.35));
+  enqueue(doNow(() => {
+    const t = held; held = null;
+    if (!t) return;
+    const from = t.getWorldPosition(new THREE.Vector3());
+    putOnStation(st, t);
+    enqueueNext(settleInto(t, from));
+    refreshUI();
+  }));
+  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.6));
+}
+function actionTakeScratch(i) {
+  const st = stations['s' + i];
+  enqueue(walkTo(() => standForPoint(st.point)));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
+  enqueue(doNow(() => {
+    const obj = st.occupant;
+    if (!obj) return abort(`The robot expected something on ${st.label} and found nothing.`);
+    st.occupant = null;
+    held = obj;
+    setPick(held, { kind: 'thing', thing: held });
+    noteHeld();
+    grip.attach(held);
+    enqueueNext(graspSettle(held));
+  }));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.35));
+  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.55));
+  enqueue(doNow(refreshUI));
+}
+
+// Carry what it is holding to the copier and set it on the platform; the
+// machine then delivers a copy to the tray.
+function actionPutCopier() {
+  const inSt = stations.copyIn;
+  enqueue(walkTo(() => standForPoint(stations.copyOut.point)));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.55));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.3));
+  let carried = null;
+  enqueue(doNow(() => {
+    carried = held; held = null;
+    if (!carried) return;
+    const to = new THREE.Vector3(inSt.point.x, inSt.topY + carried.userData.rest, inSt.point.z);
+    enqueueNext(flyTo(carried, to, 0.55), doNow(() => {
+      putOnStation(inSt, carried);
+      runDuplicate();
+      refreshUI();
+    }));
+  }));
+  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.6));
+}
+function actionTakeCopy() {
+  const outSt = stations.copyOut;
+  enqueue(walkTo(() => standForPoint(outSt.point)));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.55));
+  enqueue(doNow(() => {
+    const obj = outSt.occupant;
+    if (!obj) return abort('The robot expected a copy in the tray and found none.');
+    outSt.occupant = null;
+    const to = grip.getWorldPosition(new THREE.Vector3());
+    enqueueNext(flyTo(obj, to, 0.45), doNow(() => {
+      grip.attach(obj);
+      held = obj;
+      setPick(held, { kind: 'thing', thing: held });
+      noteHeld();
+      enqueueNext(graspSettle(obj));
+      refreshUI();
+    }));
+  }));
+  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.55));
 }
 
 // The robot's own way of duplicating: box-relative, so it names a hole rather
@@ -1221,8 +1319,21 @@ function directRobot(target) {
   }
   // The copier arms a copy: the robot then names a hole, not the machine, so
   // the step stays box-relative.
-  if (st?.kind === 'copyIn' || st?.kind === 'copyOut') {
-    if (held) return say('It can only copy with an empty claw.');
+  if (st?.kind === 'scratch') {
+    if (held) return go({ type: 'putScratch', i: st.slot });
+    if (!st.occupant) return say('That spot is empty.');
+    return go({ type: 'takeScratch', i: st.slot });
+  }
+  if (st?.kind === 'copyIn') {
+    if (!held) return say('Give it something to copy first.');
+    if (st.occupant) return say('There is already something on the platform.');
+    if (stations.copyOut.occupant) return say('The tray still has a copy in it.');
+    return go({ type: 'putCopier' });
+  }
+  if (st?.kind === 'copyOut') {
+    if (held) return say('Put what it is holding on the platform above.');
+    if (st.occupant) return go({ type: 'takeCopy' });
+    // empty tray with an empty claw arms the wand-style copy instead
     copyArmed = !copyArmed;
     say(copyArmed ? 'Copier armed — click what the robot should copy.' : 'Copier stood down.');
     return refreshUI();
@@ -1329,6 +1440,21 @@ function giveToRobot() {
   else { refreshUI(); say('It has something to work on — press Run.'); }
 }
 
+// Everything in the robot's private area is temporary: it is swept away when
+// the robot is done, and whatever it was given goes back on the table.
+function clearScratch() {
+  for (const st of Object.values(stations)) {
+    if (st.kind !== 'scratch' && st.kind !== 'copyIn' && st.kind !== 'copyOut') continue;
+    if (st.occupant) { st.occupant.removeFromParent(); st.occupant = null; }
+  }
+}
+function returnGivenToTable() {
+  const t = stations.stand.occupant;
+  if (!t) return;
+  stations.stand.occupant = null;
+  putOnBench(t, { x: (BENCH.x0 + BENCH.x1) / 2, z: (BENCH.z0 + BENCH.z1) / 2 });
+}
+
 // --- directing the robot (training and replay) -----------------------------
 // Every step is relative to the thing the robot was given. Nothing here can
 // name a place, which is exactly what makes a trained robot general.
@@ -1352,6 +1478,10 @@ function runStep(step) {
   else if (step.type === 'newBox') actionNew('box');
   else if (step.type === 'take') actionTake(step.path);
   else if (step.type === 'copy') actionCopy(step.path);
+  else if (step.type === 'putScratch') actionPutScratch(step.i);
+  else if (step.type === 'takeScratch') actionTakeScratch(step.i);
+  else if (step.type === 'putCopier') actionPutCopier();
+  else if (step.type === 'takeCopy') actionTakeCopy();
   else if (step.type === 'put') actionPut(step.path);
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); } });
@@ -1585,6 +1715,7 @@ function enterTraining() {
   if (!given) return;
   condition = specOf(given);         // exact at first; Dusty loosens it
   rebuildCondition();
+  clearScratch();
   preTraining = snapshotWorld();     // the daydream must not disturb the world
   mode = 'training';
   program = [];
@@ -1597,7 +1728,9 @@ function enterTraining() {
 function leaveTraining(restore = true) {
   mode = 'world';
   bubbleTarget = 0;
+  clearScratch();
   if (restore && preTraining) restoreWorld(preTraining);
+  returnGivenToTable();     // whatever it was given goes back on the table
   preTraining = null;
   parkRobot();
   renderProgram(); refreshUI();
@@ -1638,7 +1771,9 @@ function runProgram() {
     return say(`It only runs when given ${condText(condition)} — see the red parts.`);
   }
   clearFlags();
-  // No world reset: the robot acts for real, on whatever it has been given.
+  // No world reset, but the robot's own area always starts empty so a replay
+  // cannot depend on leftovers from a previous run.
+  clearScratch();
   mode = 'replay'; busy = true; runCount = 0;
   nextIteration();
   refreshUI();
@@ -1680,6 +1815,8 @@ function finishRun(msg) {
   highlight(-1);
   mode = 'world';
   stowHeld();
+  clearScratch();
+  returnGivenToTable();     // the result goes back on the table, possibly changed
   parkRobot();
   if (msg) say(msg);
   refreshUI();
@@ -1697,6 +1834,10 @@ function describe(s) {
        : s.type === 'newBox' ? 'take a new box'
        : s.type === 'take' ? `take what is in ${holeName(s.path)}`
        : s.type === 'copy' ? `copy what is in ${holeName(s.path)}`
+       : s.type === 'putScratch' ? `set it down on spot ${s.i + 1}`
+       : s.type === 'takeScratch' ? `pick up spot ${s.i + 1}`
+       : s.type === 'putCopier' ? 'put it on the copier'
+       : s.type === 'takeCopy' ? 'take the copy'
        : s.type === 'put' ? (s.path.length ? `put it in ${holeName(s.path)}` : 'drop it on its own thing')
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
@@ -1877,8 +2018,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     }
   }
 
-  // The robot's own stand sits exactly where its claw reaches, so it can work
-  // without ever moving.
+  // The robot's own stand sits exactly where its claw reaches.
   {
     const point = reachLocal.clone();
     const st = { id: 'stand', kind: 'stand', label: 'its stand', point,
@@ -1889,6 +2029,26 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     scene.add(obj);
     stations.stand = st;
   }
+
+  // Its scratch spots, on the same row so it can walk between them.
+  SCRATCH_X.forEach((x, i) => {
+    const point = new THREE.Vector3(x, reachLocal.y, reachLocal.z);
+    const st = { id: 's' + i, kind: 'scratch', slot: i, label: `spot ${i + 1}`,
+                 point, topY: point.y - CUBE / 2, occupant: null, cubes: [] };
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, st.topY, 28),
+      new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.75 }));
+    pad.position.set(x, st.topY / 2, point.z);
+    pad.castShadow = true; pad.receiveShadow = true;
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.175, 0.02, 28),
+      new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: 0.3,
+        emissive: 0x2c6f8c, emissiveIntensity: 1.1, toneMapped: false }));
+    ring.position.set(x, st.topY, point.z);
+    const g = new THREE.Group();
+    g.add(pad, ring);
+    setPick(g, { kind: 'station', id: st.id });
+    scene.add(g);
+    stations[st.id] = st;
+  });
 
   // The bench: a plain surface for the user. The robot never refers to it,
   // which is the whole point -- a trained action can only name a hole.
@@ -1997,6 +2157,7 @@ window.__nano = {
   clickHole(box, index) { handleClick({ kind: 'hole', box, index }); },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
   arm() { copyArmed = true; refreshUI(); },
+  scratch() { return SCRATCH_X.map((_, i) => stations['s' + i].occupant); },
   mine(path = []) { return thingAt(path); },
   bench(i = 0) { return benchThings[i]; },
   type(v, op) { if (held) { held.setValue(rat(v), op); refreshUI(); } },
