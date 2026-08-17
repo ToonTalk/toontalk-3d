@@ -844,6 +844,39 @@ function restackNest(nest) {
     t.quaternion.identity();
   });
 }
+// Clone deliveries run outside the step queue so a whole flock can fly at
+// once; each clone drops its copy and then leaves the world for good.
+const flights = [];
+function deliverCopy(nest2, gift) {
+  gift.scale.setScalar(1);
+  gift.quaternion.identity();
+  nest2.add(gift);
+  nest2.userData.pile.unshift(gift);
+  restackNest(nest2);
+  flash(nest2.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0)));
+  refreshUI();
+  checkWaiting();
+}
+function spawnCloneDelivery(bird, thing, nest2, from) {
+  const clone = makeBird(bird.__nest);
+  if (bird.userData.label) setThingLabel(clone, bird.userData.label);
+  delete clone.__pick;                   // a passing clone is not clickable
+  scene.add(clone);
+  clone.position.copy(from);
+  const gift = copyThing(thing);
+  if (!gift) { clone.removeFromParent(); return; }
+  clone.add(gift);
+  gift.position.set(0, -0.02, 0.16);
+  gift.scale.setScalar(0.5);
+  if (speed === Infinity) {
+    clone.remove(gift);
+    deliverCopy(nest2, gift);
+    clone.removeFromParent();
+    return;
+  }
+  flights.push({ clone, gift, nest: nest2, from, t: 0, phase: 0 });
+}
+
 // The bird carries the gift home, drops it on the pile, and flies back to
 // wherever she was -- a box hole, a spot, or the bench.
 function birdDeliver(bird) {
@@ -852,6 +885,13 @@ function birdDeliver(bird) {
   clearUndo();                // deliveries change a pile no snapshot describes
   busy = true;
   const thing = held; held = null;
+  // copied nests: the bird copies herself and the gift, one clone per copy.
+  // Only she returns; the clones deliver and fly away, never to be seen again.
+  const others = (nest.__group ?? [nest]).filter(n2 => n2.parent && n2 !== nest);
+  if (others.length && !hasRobot(thing)) {
+    const from0 = bird.getWorldPosition(new THREE.Vector3());
+    for (const n2 of others) spawnCloneDelivery(bird, thing, n2, from0);
+  }
   const wasAt = bird.getWorldPosition(new THREE.Vector3());
   const originHole = holeContaining(bird);
   const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
@@ -894,6 +934,7 @@ function birdDeliver(bird) {
       pile.unshift(thing);
       thing.position.set(0, nestSlots(pile)[0], 0);
       flash(npos());
+      checkWaiting();
     }));
     if (old.length) steps.push({
       dur: 0.4,
@@ -997,9 +1038,10 @@ const myThing = () => stations.stand?.occupant ?? null;
 function thingAt(at) {
   let node = stationOf(at.c)?.occupant ?? null;
   for (const i of at.path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
-  // `nest: true` addresses the top of the pile on the nest found there
+  // `nest: true` addresses the top of the pile on the nest found there; if a
+  // bare thing sits where the nest was expected, that thing itself is taken
   if (at.nest) {
-    if (node?.userData.kind !== 'nest') return null;
+    if (node?.userData.kind !== 'nest') return node;
     const pile = node.userData.pile;
     return pile.length ? pile[pile.length - 1] : null;
   }
@@ -1061,6 +1103,38 @@ function buildThing(spec) {
   if (spec.label) setThingLabel(b, spec.label);
   return b;
 }
+// A true copy for the copier and the wand step. Unlike buildThing, identities
+// entangle the way ToonTalk's do: a copied bird serves the same nest, and a
+// copied nest joins the original's delivery group, so one bird feeds them all.
+function copyThing(t) {
+  if (!t) return null;
+  const ud = t.userData;
+  if (ud.kind === 'robot') return null;              // the gates refuse robots
+  let c;
+  if (ud.kind === 'number') c = makeNumber(ud.value, ud.op);
+  else if (ud.kind === 'bird') c = makeBird(t.__nest);
+  else if (ud.kind === 'nest') {
+    c = makeNest();
+    c.__egg.removeFromParent();
+    c.userData.hasEgg = false;
+    const g = (t.__group ??= [t]);
+    g.push(c);
+    c.__group = g;
+    ud.pile.forEach(p => {
+      const pc = copyThing(p);
+      if (pc) { c.add(pc); c.userData.pile.push(pc); }
+    });
+    restackNest(c);
+  } else {
+    c = ud.kind === 'scale' ? makeScale() : makeBox(ud.holes.length);
+    ud.holes.forEach((h, i) => {
+      const hc = copyThing(h.thing);
+      if (hc) putInHole(c.userData.holes[i], hc);
+    });
+  }
+  if (ud.label) setThingLabel(c, ud.label);
+  return c;
+}
 // Does this thing contain anything alive -- a bird, nest or robot -- anywhere?
 function hasLive(thing) {
   if (!thing) return false;
@@ -1078,7 +1152,12 @@ function condFromSpec(sp) {
   if (!sp) return null;
   if (sp.kind === 'ref') {
     const k = sp.node.userData.kind;
-    return k === 'bird' ? { kind: 'anyBird' } : k === 'nest' ? { kind: 'anyNest' } : WILD;
+    if (k === 'nest') {
+      const pile = sp.node.userData.pile;
+      // a covered nest reads as its top item, exactly as matching treats it
+      return pile.length ? condFromSpec(specOf(pile[pile.length - 1])) : { kind: 'anyNest' };
+    }
+    return k === 'bird' ? { kind: 'anyBird' } : WILD;
   }
   if (sp.kind === 'box' || sp.kind === 'scale') {
     return { kind: sp.kind, holes: sp.holes.map(condFromSpec) };
@@ -1096,29 +1175,45 @@ function shapeOf(spec) {
 // one-off into something general.
 const WILD = { kind: 'wild' };
 
-function matches(cond, spec) {
-  if (cond === null || cond === undefined) return spec == null;
-  if (cond.kind === 'wild') return spec != null;
-  if (!spec) return false;
+// Three-way matching: 'yes', 'no', or 'wait'. Nests are windows, not walls:
+// a covered nest counts as its top item, and an empty nest is not a mismatch
+// but a reason to wait -- a bird could still deliver the missing piece.
+function matchState(cond, spec) {
+  if (cond === null || cond === undefined) return spec == null ? 'yes' : 'no';
+  if (cond.kind === 'wild') return spec != null ? 'yes' : 'no';
+  if (!spec) return 'no';
   if (spec.kind === 'ref') {
     const k = spec.node.userData.kind;
-    if (cond.kind === 'anyBird') return k === 'bird';
-    if (cond.kind === 'anyNest') return k === 'nest';
-    return false;                        // 'wild' already matched above
+    if (k === 'nest') {
+      if (cond.kind === 'anyNest') return 'yes';
+      const pile = spec.node.userData.pile;
+      if (pile.length) return matchState(cond, specOf(pile[pile.length - 1]));
+      return 'wait';
+    }
+    if (cond.kind === 'anyBird') return k === 'bird' ? 'yes' : 'no';
+    return 'no';                        // 'wild' already matched above
   }
-  if (cond.kind === 'anyBird' || cond.kind === 'anyNest') return false;
-  if (cond.kind === 'wildNumber') return spec.kind === 'number';
-  if (cond.kind === 'anyBox') return spec.kind === 'box';
-  if (cond.kind === 'wildScale') return spec.kind === 'scale';
+  if (cond.kind === 'anyBird' || cond.kind === 'anyNest') return 'no';
+  if (cond.kind === 'wildNumber') return spec.kind === 'number' ? 'yes' : 'no';
+  if (cond.kind === 'anyBox') return spec.kind === 'box' ? 'yes' : 'no';
+  if (cond.kind === 'wildScale') return spec.kind === 'scale' ? 'yes' : 'no';
   if (cond.kind === 'number') {
-    return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op;
+    return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op
+      ? 'yes' : 'no';
   }
   if (cond.kind === 'box' || cond.kind === 'scale') {
-    return spec.kind === cond.kind && spec.holes.length === cond.holes.length
-      && cond.holes.every((c, i) => matches(c, spec.holes[i]));
+    if (spec.kind !== cond.kind || spec.holes.length !== cond.holes.length) return 'no';
+    let r = 'yes';
+    for (let i = 0; i < cond.holes.length; i++) {
+      const m = matchState(cond.holes[i], spec.holes[i]);
+      if (m === 'no') return 'no';
+      if (m === 'wait') r = 'wait';
+    }
+    return r;
   }
-  return false;
+  return 'no';
 }
+function matches(cond, spec) { return matchState(cond, spec) === 'yes'; }
 function condText(c) {
   if (!c) return 'an empty hole';
   if (c.kind === 'wild') return 'anything';
@@ -1437,6 +1532,7 @@ let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0;
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
+let dustyT = 0, dustyBase = null;   // idle wobble while he is awake
 let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
 let maxIter = 100;         // user-settable: a robot whose condition never fails would loop forever
@@ -1698,7 +1794,7 @@ function runDuplicate() {
   enqueueNext(scanStep(inSt), {
     dur: 0.45,
     start() {
-      copy = buildThing(specOf(inSt.occupant));
+      copy = copyThing(inSt.occupant);
       scene.add(copy);
       from = inSt.occupant.getWorldPosition(new THREE.Vector3());
       copy.position.copy(from);
@@ -1733,7 +1829,7 @@ function actionCopy(at) {
     start() {
       src = thingAt(at);
       if (!src) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
-      copy = buildThing(specOf(src));
+      copy = copyThing(src);
       scene.add(copy);
       const p = src.getWorldPosition(new THREE.Vector3());
       copy.position.copy(p);
@@ -1956,9 +2052,14 @@ function resolve(ev) {
     let o = h.object;
     while (o && !o.__pick) o = o.parent;
     if (!o) continue;
-    // the thought bubble floats over the bench; don't let it eat clicks unless
-    // Dusty is actually awake to act on it
-    if (o.__pick.kind === 'cond' && !dustyActive) continue;
+    // the thought bubble floats over the bench; it takes clicks when Dusty is
+    // awake to erase, or when an empty hand can take a copy of the memory.
+    // The outer bubble shell never intercepts Dusty, so the ghost parts stay
+    // individually erasable.
+    if (o.__pick.kind === 'cond') {
+      if (dustyActive) { if (o.__pick.outer) continue; }
+      else if (!(mode === 'world' && !held && activeBot?.trainedOn)) continue;
+    }
     // handing things over only means anything in the workshop -- inside the
     // bubble the robot is working, and its body must not block clicks past it
     if (o.__pick.kind === 'botThing' && mode !== 'world') continue;
@@ -2075,7 +2176,7 @@ function userClick(target) {
     if (st.kind === 'stack') return say('Stacks only give things out.');
     if (holdingBot) return say('Little robots go on the table, or on another robot.');
     if (isCopier) {
-      if (hasLive(held)) return say('The copier can’t copy birds, nests or robots.');
+      if (hasRobot(held)) return say('The copier can’t copy robots.');
       if (stations.copyIn.occupant) return say('Take the original off the platform first.');
       if (stations.copyOut.occupant) return say('Take the copy out of the tray first.');
       return userUseCopier();
@@ -2350,6 +2451,7 @@ function activateBot(bot, after) {
 function miniaturizeActive() {
   if (!activeBot || busy || mode !== 'world') return;
   const bot = activeBot;
+  cancelWaiting();
   clearUndo();
   syncBot();
   returnGivenToTable();
@@ -2533,11 +2635,15 @@ function rebuildCondition() {
   condDisplay.add(inner);
   const halo = new THREE.Mesh(new THREE.SphereGeometry(0.34, 28, 20), bubbleMat.clone());
   halo.material.opacity = 0.16;
+  // the whole bubble is a click target for taking a copy of the memory --
+  // no need to hit a tiny ghost part
+  setPick(halo, { kind: 'cond', path: [], outer: true });
   condDisplay.add(halo);
   // tail straight down toward the head it belongs to
   for (const [dy, r] of [[-0.40, 0.058], [-0.55, 0.036], [-0.66, 0.022]]) {
     const b = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), halo.material);
     b.position.set(0, dy, 0);
+    setPick(b, { kind: 'cond', path: [], outer: true });
     condDisplay.add(b);
   }
   condDisplay.position.copy(condAnchor());
@@ -2801,6 +2907,7 @@ function refreshLibrary(select) {
 // their training, nests with their piles, birds with their pairings -- so a
 // world survives a reload or travels as a file.
 const WORLD_KEY = 'nano-toontalk.world';
+let nestGroupPending = null;   // collected while a world file is being rebuilt
 function botOut(bot) {
   return { kind: 'robot', name: bot.name ?? null, program: bot.program.map(stepOut),
            condition: condOut(bot.condition), trainedOn: bot.trainedOn ?? null,
@@ -2811,8 +2918,13 @@ function thingOut(t) {
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
   if (ud.kind === 'robot') return botOut(t.__bot);
-  if (ud.kind === 'nest') return { kind: 'nest', id: ud.id, hasEgg: !!ud.hasEgg,
-    label: ud.label ?? undefined, pile: ud.pile.map(thingOut) };
+  if (ud.kind === 'nest') {
+    const grp = t.__group?.filter(n2 => n2.parent);
+    return { kind: 'nest', id: ud.id, hasEgg: !!ud.hasEgg,
+      label: ud.label ?? undefined,
+      group: grp && grp.length > 1 ? grp.map(n2 => n2.userData.id) : undefined,
+      pile: ud.pile.map(thingOut) };
+  }
   if (ud.kind === 'bird') return { kind: 'bird', nestId: t.__nest?.userData.id ?? null,
     label: ud.label ?? undefined };
   return { kind: ud.kind, label: ud.label ?? undefined,
@@ -2855,6 +2967,7 @@ function thingIn(o, nests, birds) {
     });
     restackNest(t);
     if (o.id != null) nests.set(o.id, t);
+    if (nestGroupPending && o.group) nestGroupPending.push({ node: t, ids: o.group });
   } else if (o.kind === 'bird') {
     t = makeBird(null);
     birds.push({ node: t, nestId: o.nestId });
@@ -2885,11 +2998,13 @@ function clearWorld() {
     activeBot = null; robot = null; root = null;
   }
   collapseScratch();
+  waitingRun = false;
   program = []; condition = null;
   renderProgram(); rebuildCondition();
 }
 function worldIn(data) {
   clearWorld();
+  nestGroupPending = [];
   const nests = new Map(), birds = [];
   (data.bench || []).forEach(b => {
     const t = thingIn(b.thing, nests, birds);
@@ -2902,6 +3017,16 @@ function worldIn(data) {
     if (t) putOnStation(s2, t);
   }
   birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+  // reunite copied-nest delivery groups
+  const groupMap = new Map();
+  for (const rec of nestGroupPending) {
+    const key = rec.ids.slice().sort((a, b) => a - b).join(',');
+    if (!groupMap.has(key)) groupMap.set(key, []);
+    const arr = groupMap.get(key);
+    arr.push(rec.node);
+    rec.node.__group = arr;
+  }
+  nestGroupPending = null;
   benchThings.forEach(t => {
     if (t.userData.kind === 'nest' && t.userData.hasEgg) hatching.push({ nest: t, t: 0 });
   });
@@ -3043,13 +3168,15 @@ function resetWorld() {
 }
 
 function runProgram() {
+  cancelWaiting();
   if (!activeBot) return say('No robot is at the bench.');
   if (!program.length) return say('The robot has not been trained yet.');
   const given = stations.stand.occupant;
   if (!given) return say('Give it something to work on first.');
   syncBot();
   const members = [activeBot, ...activeBot.team];
-  if (!members.some(m => matches(m.condition, specOf(given)))) {
+  const states0 = members.map(m => matchState(m.condition, specOf(given)));
+  if (!states0.includes('yes') && !states0.includes('wait')) {
     flagMismatch(mismatchPaths(condition, specOf(given)));
     return sayAttn(members.length > 1
       ? 'No robot on the team recognises what it was given.'
@@ -3074,8 +3201,10 @@ function nextIteration() {
   stowHeld();
   const given = specOf(stations.stand.occupant);
   const members = [activeBot, ...activeBot.team];
-  const member = members.find(m => matches(m.condition, given));
+  const states = members.map(m => matchState(m.condition, given));
+  const member = members[states.indexOf('yes')];
   if (!member) {
+    if (states.includes('wait')) return enterWaiting();
     if (members.length === 1) flagMismatch(mismatchPaths(condition, given));
     finishRun();
     return sayAttn(runCount
@@ -3121,6 +3250,49 @@ function finishRun(msg) {
   parkRobot();
   renderProgram();          // back to the lead robot's own list
   if (msg) say(msg);
+  refreshUI();
+}
+
+// --- waiting on a nest ------------------------------------------------------
+// When the only thing between the robot and a match is an empty nest, it does
+// not give up: it shrinks and dozes until a bird delivers something that fits,
+// then springs back up and carries on with the rounds it had left.
+let waitingRun = false;
+const WAIT_SCALE = 0.45;
+function enterWaiting() {
+  waitingRun = true;
+  mode = 'world'; busy = false;
+  highlight(-1);
+  const node = activeBot.node;
+  enqueueNext({
+    dur: 0.5,
+    update(t) { node.scale.setScalar(lerp(1, WAIT_SCALE, ease(t))); },
+    end() { node.scale.setScalar(WAIT_SCALE); },
+  });
+  say('The nest is empty — the robot shrinks and waits for a bird to deliver something.');
+  refreshUI();
+}
+function cancelWaiting() {
+  if (!waitingRun) return;
+  waitingRun = false;
+  activeBot?.node.scale.setScalar(1);
+}
+function checkWaiting() {
+  if (!waitingRun || !activeBot) return;
+  const given = specOf(stations.stand.occupant);
+  if (!given) return;
+  const members = [activeBot, ...activeBot.team];
+  if (!members.some(m => matchState(m.condition, given) === 'yes')) return;
+  waitingRun = false;
+  const node = activeBot.node;
+  mode = 'replay'; busy = true;
+  enqueue({
+    dur: 0.4,
+    update(t) { node.scale.setScalar(lerp(WAIT_SCALE, 1, ease(t))); },
+    end() { node.scale.setScalar(1); },
+  });
+  enqueue(doNow(nextIteration));
+  say('A delivery! The robot springs back to work.');
   refreshUI();
 }
 
@@ -3178,7 +3350,9 @@ function renderProgram(list = program) {
 }
 function refreshUI() {
   const training = mode === 'training';
-  $('badge').textContent = mode === 'replay' ? 'repeating' : training ? 'inside the thought' : 'your workshop';
+  $('badge').textContent = mode === 'replay' ? 'repeating'
+    : training ? 'inside the thought'
+    : waitingRun ? 'waiting on a nest' : 'your workshop';
   $('badge').className = 'badge' + (training ? ' training' : '');
   $('exitBtn').style.display = training ? '' : 'none';
   $('runBtn').style.display = training ? 'none' : '';
@@ -3709,6 +3883,32 @@ renderer.setAnimationLoop((now) => {
       say('The egg hatched — give the bird something and she takes it home.');
     }
   }
+  // clone birds ferrying copies to copied nests, then leaving for good
+  for (let i = flights.length - 1; i >= 0; i--) {
+    const f = flights[i];
+    f.t += dt;
+    if (f.phase === 0) {
+      if (!f.nest.parent) { f.clone.removeFromParent(); flights.splice(i, 1); continue; }
+      const e = ease(Math.min(1, f.t / 0.9));
+      const np = f.nest.getWorldPosition(_lodV);
+      f.clone.position.set(lerp(f.from.x, np.x, e),
+        lerp(f.from.y, np.y + 0.3, e) + 0.45 * Math.sin(Math.PI * e),
+        lerp(f.from.z, np.z, e));
+      if (f.t >= 0.9) {
+        f.clone.remove(f.gift);
+        deliverCopy(f.nest, f.gift);
+        f.phase = 1; f.t = 0;
+      }
+    } else {
+      const e = Math.min(1, f.t / 0.9);
+      f.clone.position.y += dt * (1.2 + 2.4 * e);
+      f.clone.position.x += dt * 0.5;
+      f.clone.traverse(o => {
+        if (o.isMesh && o.material) { o.material.transparent = true; o.material.opacity = 1 - e; }
+      });
+      if (e >= 1) { f.clone.removeFromParent(); flights.splice(i, 1); }
+    }
+  }
   // scales tip toward the larger number, pans staying level
   for (let i = allScales.length - 1; i >= 0; i--) {
     const sc = allScales[i];
@@ -3722,6 +3922,21 @@ renderer.setAnimationLoop((now) => {
     const piv = sc.__pivot;
     piv.rotation.z += (targetTilt - piv.rotation.z) * Math.min(1, dt * 5);
     sc.__pans.forEach(p => { p.rotation.z = -piv.rotation.z; });
+  }
+  // Dusty visibly awake: he sways and breathes until he is put back to sleep
+  if (dusty) {
+    if (dustyActive) {
+      dustyBase ??= { y: dusty.rotation.y, s: dusty.scale.x };
+      dustyT += dt;
+      dusty.rotation.z = Math.sin(dustyT * 5) * 0.09;
+      dusty.rotation.y = dustyBase.y + Math.sin(dustyT * 3.3) * 0.28;
+      dusty.scale.setScalar(dustyBase.s * (1 + 0.035 * Math.sin(dustyT * 7)));
+    } else if (dustyBase) {
+      dusty.rotation.z = 0;
+      dusty.rotation.y = dustyBase.y;
+      dusty.scale.setScalar(dustyBase.s);
+      dustyBase = null; dustyT = 0;
+    }
   }
   bubbleNow += (bubbleTarget - bubbleNow) * Math.min(1, dt * 4);
   bubbleMat.opacity = BUBBLE_OPACITY * bubbleNow;

@@ -48,11 +48,24 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   pile top during training, a robot learns *take the top of the pile on that
   nest*, one delivery at a time. Naming a nest while its egg is still in it
   names the bird that hatches as well.
+- **Nests are windows, not walls.** A robot trained on a covered nest gets a
+  condition on the *top item*, so it matches either that thing there or a
+  nest with that thing on top. And when the nest is empty at run time, the
+  robot doesn't fail — it shrinks and dozes until a bird delivers something
+  that fits, then springs back up and carries on. That is the receiving half
+  of dataflow: a robot on an empty nest is a process blocked on a channel.
+- **Copying birds and nests.** The copier now takes anything but robots. A
+  copied bird serves the same nest as the original. A copied nest joins the
+  original's delivery group: give any of their birds something and she copies
+  herself on the spot, one clone per nest, every nest receiving its own copy
+  at once — only the real bird flies home again; the clones deliver, rise,
+  and fade away for good. Broadcast, in other words.
 - **A copier** with two surfaces: originals are scanned on the upper platform,
   independent deep copies are delivered to the lower tray. Clicking a surface
   with an empty hand takes from that surface.
 - **Dusty the vacuum**, under the bench. Wake him and click things to remove
-  them, or click parts of a robot's thought to erase them.
+  them, or click parts of a robot's thought to erase them. He sways and
+  fidgets the whole time he is awake, so there is never any doubt.
 
 ### The robots
 
@@ -135,9 +148,9 @@ worth keeping back into the script.
 
 ## Known limits
 
-- A robot can take from a nest's pile but not *wait* on an empty one — an
-  empty pile stops the run rather than suspending it, so there is no
-  blocking inter-robot dataflow yet.
+- Waiting robots resume only on deliveries; nothing else re-checks their
+  condition, so filling the nest by hand does not wake one (give the thing
+  to the bird instead).
 - Nothing reads a scale's tilt — it shows a comparison but cannot yet be
   branched on.
 - The condition cannot constrain a number's range, only match exactly or
