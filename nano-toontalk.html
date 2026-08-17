@@ -431,7 +431,8 @@ function sciText(v) {
   const q = (n * 10n ** K / v.d).toString();
   const e = q.length - 1 - Number(K);
   const exact = (n * 10n ** K) % v.d === 0n && [...q.slice(5)].every(ch => ch === '0');
-  return `${neg ? '-' : ''}${q[0]}.${q.slice(1, 5)}${exact ? '' : '…'}×10^${e}`;
+  const frac = exact ? (q.slice(1, 5).replace(/0+$/, '') || '0') : q.slice(1, 5);
+  return `${neg ? '-' : ''}${q[0]}.${frac}${exact ? '' : '…'}×10^${e}`;
 }
 // exact decimal expansion, cycle-aware: only the visible digits are computed,
 // and a remainder seen twice means the digits between them repeat forever
@@ -482,6 +483,64 @@ function drawDecimal(c, v, lod) {
   }
   // a little lower and narrower than the other faces, to clear the op badge
   drawWrapped(c, `${d.int}.${d.pre}${d.rep}…`, 132, 152, 178, 136);
+}
+// The scientific face: the mantissa's repeating part gets the same bar as the
+// decimal face when there is room, and an honest ellipsis when there is not.
+function drawSci(c, v, lod) {
+  if (v.n === 0n) { c.font = 'bold 56px Georgia, serif'; return c.fillText('0', 128, 142); }
+  const neg = v.n < 0n;
+  const dd = decimalExpand({ n: neg ? -v.n : v.n, d: v.d }, 40 * lod);
+  let first, after, rep = '', e;
+  if (dd.int !== '0') {
+    first = dd.int[0];
+    after = dd.int.slice(1) + dd.pre;
+    rep = dd.rep;
+    e = dd.int.length - 1;
+  } else {
+    let z = 0;
+    while (z < dd.pre.length && dd.pre[z] === '0') z++;
+    if (z < dd.pre.length) {
+      first = dd.pre[z]; after = dd.pre.slice(z + 1); rep = dd.rep; e = -(z + 1);
+    } else if (dd.rep) {
+      // the cycle starts before the first significant digit: rotate it
+      let j = 0;
+      while (dd.rep[j] === '0') j++;
+      first = dd.rep[j];
+      after = '';
+      rep = dd.rep.slice(j + 1) + dd.rep.slice(0, j + 1);
+      e = -(dd.pre.length + j + 1);
+    } else {
+      return drawWrapped(c, sciText(v), 128, 142, 186, 150);
+    }
+  }
+  const sign = neg ? '-' : '';
+  if (!rep && dd.done) { after = after.replace(/0+$/, '') || '0'; }
+  const dots = !rep && !dd.done;
+  const tail = `×10^${e}`;
+  for (let px = 44; px >= 14; px = Math.floor(px * 0.9)) {
+    c.font = `bold ${px}px Georgia, serif`;
+    const whole = `${sign}${first}.${after}${rep}${dots ? '…' : ''}${tail}`;
+    if (c.measureText(whole).width <= 186) {
+      const w = c.measureText(whole).width, x0 = 128 - w / 2;
+      c.fillText(whole, 128, 142);
+      if (rep) {
+        const preW = c.measureText(`${sign}${first}.${after}`).width;
+        const repW = c.measureText(rep).width;
+        const y = 142 - px * 0.62;
+        c.lineWidth = Math.max(2, px * 0.08);
+        c.strokeStyle = c.fillStyle;
+        c.beginPath(); c.moveTo(x0 + preW, y); c.lineTo(x0 + preW + repW, y); c.stroke();
+      }
+      return;
+    }
+  }
+  // even at the smallest size the bar cannot fit: truncate and say so
+  let digits = after + rep;
+  c.font = 'bold 20px Georgia, serif';
+  while (digits.length && c.measureText(`${sign}${first}.${digits}…${tail}`).width > 186) {
+    digits = digits.slice(0, -1);
+  }
+  c.fillText(`${sign}${first}.${digits}…${tail}`, 128, 142);
 }
 // Wrap on spaces where there are any -- and on characters where there are not,
 // which is the usual case here: a long run of digits is a single "word" that
@@ -608,7 +667,7 @@ function makeNumber(value, op = '+') {
       return;
     }
     paint(fBack, (c) => drawWrapped(c, v.d === 1n ? englishText(v) : mixedText(v), 128, 140, 192, 168));
-    paint(fSci, (c) => drawWrapped(c, sciText(v), 128, 140, 192, 150));
+    paint(fSci, (c) => drawSci(c, v, lod));
     paint(fAlt, (c) => v.d === 1n
       ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
       : drawDecimal(c, v, lod));
@@ -927,12 +986,13 @@ const roots = () => Object.values(stations)
 // A step addresses things as {c, path}: one of the robot's own containers,
 // then a chain of hole indices into whatever sits there. Every container is
 // private to the robot, so an address can never name the user's world.
-const CONTAINER_STATION = { given: 'stand', s0: 's0', s1: 's1', s2: 's2', in: 'copyIn', out: 'copyOut' };
-const CONTAINER_TEXT = { given: 'what it was given', s0: 'spot 1', s1: 'spot 2', s2: 'spot 3',
-                         in: 'the copier platform', out: 'the copy tray' };
-const stationOf = (c) => stations[CONTAINER_STATION[c]];
-const containerOfStation = (id) =>
-  Object.keys(CONTAINER_STATION).find(c => CONTAINER_STATION[c] === id) ?? null;
+const CONTAINER_STATION = { given: 'stand', in: 'copyIn', out: 'copyOut' };
+const containerText = (c) => /^s\d+$/.test(c) ? `spot ${+c.slice(1) + 1}`
+  : ({ given: 'what it was given', in: 'the copier platform', out: 'the copy tray' })[c];
+const stationOf = (c) => /^s\d+$/.test(c) ? ensureScratchStation(+c.slice(1))
+  : stations[CONTAINER_STATION[c]];
+const containerOfStation = (id) => /^s\d+$/.test(id) ? id
+  : Object.keys(CONTAINER_STATION).find(c => CONTAINER_STATION[c] === id) ?? null;
 const myThing = () => stations.stand?.occupant ?? null;
 function thingAt(at) {
   let node = stationOf(at.c)?.occupant ?? null;
@@ -945,7 +1005,9 @@ function holeAt(at) {
 }
 // Where a thing sits among the robot's containers, or null if it is elsewhere.
 function addrOf(thing) {
-  for (const c of Object.keys(CONTAINER_STATION)) {
+  const cs = ['given', 'in', 'out',
+    ...Object.keys(stations).filter(id => /^s\d+$/.test(id))];
+  for (const c of cs) {
     const walk = (node, path) => {
       if (!node) return null;
       if (node === thing) return path;
@@ -1113,6 +1175,7 @@ function putOnStation(st, thing) {
   thing.quaternion.identity();
   thing.position.set(st.point.x, st.topY + thing.userData.rest, st.point.z);
   st.occupant = thing;
+  if (st.kind === 'scratch') growScratchIfFull();
 }
 function putInHole(hole, thing) {
   hole.anchor.add(thing);
@@ -1143,10 +1206,10 @@ const STATION_DEFS = [
   { id: 'copier',  label: 'the copier',       kind: 'copier', x:  1.98 },
 ];
 const benchThings = [];      // free-standing things the user has put down
-// The robot's own scratch spots, inside its thought bubble. Referring to these
-// is safe in a way that pillars never were: the area is private to the robot
-// and empty at the start of every run, so it cannot collide with the world.
-const SCRATCH_X = [-1.45, -0.85, -0.25];
+// The robot's scratch area grows on demand: one little side-table to begin
+// with, and a fresh one rises beside it whenever the last free one is taken --
+// unlimited private storage without standing clutter.
+const scratchObjs = [];      // the little desks, by slot
 let BENCH_TOP = 0.84;        // set from the robot's working height once loaded
 const stations = {};
 const pickables = [];
@@ -1166,6 +1229,70 @@ function makePillar(height, special) {
   top.position.y = height; top.castShadow = true; top.receiveShadow = true;
   g.add(body, top);
   return g;
+}
+
+// A small four-legged table: the robot's furniture, unmistakably different
+// from the dark pedestals of the stacks and copier.
+function makeMiniDesk(topY, w, d, topColor) {
+  const g = new THREE.Group();
+  const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.035, d),
+    new THREE.MeshStandardMaterial({ color: topColor, roughness: 0.55 }));
+  top.position.y = topY - 0.0175;
+  top.castShadow = true; top.receiveShadow = true;
+  g.add(top);
+  const legMat = new THREE.MeshStandardMaterial({ color: 0x33383f, roughness: 0.6, metalness: 0.4 });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.028, topY - 0.035, 12), legMat);
+    leg.position.set(sx * (w / 2 - 0.05), (topY - 0.035) / 2, sz * (d / 2 - 0.05));
+    leg.castShadow = true;
+    g.add(leg);
+  }
+  return g;
+}
+function scratchPoint(i) {
+  return new THREE.Vector3(
+    -0.45 - (i % 3) * 0.5,
+    reachLocal.y,
+    reachLocal.z - Math.floor(i / 3) * 0.62);
+}
+function ensureScratchStation(i, animate = false) {
+  const id = 's' + i;
+  if (stations[id]) return stations[id];
+  if (!reachLocal) return null;
+  for (let k = scratchObjs.length; k <= i; k++) {
+    const point = scratchPoint(k);
+    const st = { id: 's' + k, kind: 'scratch', slot: k, label: `spot ${k + 1}`,
+                 point, topY: point.y - CUBE / 2, occupant: null, cubes: [] };
+    const obj = makeMiniDesk(st.topY, 0.4, 0.34, 0x8a744d);
+    obj.position.set(point.x, 0, point.z);
+    setPick(obj, { kind: 'station', id: st.id });
+    scene.add(obj);
+    stations[st.id] = st;
+    scratchObjs[k] = obj;
+    if (animate) {
+      obj.scale.setScalar(0.01);
+      enqueueNext({
+        dur: 0.4,
+        update(t) { obj.scale.setScalar(Math.max(0.01, ease(t))); },
+        end() { obj.scale.setScalar(1); },
+      });
+    }
+  }
+  return stations[id];
+}
+// A fresh spot rises whenever the last free one is taken...
+function growScratchIfFull() {
+  const spots = Object.values(stations).filter(s2 => s2.kind === 'scratch');
+  if (spots.length && spots.every(s2 => s2.occupant)) ensureScratchStation(spots.length, true);
+}
+// ...and the extras sink away again when the robot's area is swept.
+function collapseScratch() {
+  for (let i = scratchObjs.length - 1; i >= 1; i--) {
+    if (stations['s' + i]?.occupant) break;
+    scratchObjs[i].removeFromParent();
+    scratchObjs.length = i;
+    delete stations['s' + i];
+  }
 }
 
 // The duplicating machine: a platform between two posts, with a scan bar that
@@ -1634,21 +1761,22 @@ function resizeHeldBox(n) {
   const old = held;
   const oldHoles = old.userData.holes;
   if (n === oldHoles.length) return;
-  if (n < oldHoles.length) {
-    const spot = mode === 'world' ? null
-      : ['s0', 's1', 's2'].map(id => stations[id]).find(s2 => !s2.occupant);
-    if (mode !== 'world' && !spot) {
-      return mode === 'replay'
-        ? abort('Its work spots are all full — nowhere to put the split-off holes.')
-        : say('Its work spots are all full — nowhere to put the split-off holes.');
-    }
+  // Occupied excess holes fall away as a box of their own; excess holes that
+  // are all empty simply vanish, so a robot trimming a fresh box does not
+  // litter its work area with empty husks.
+  if (n < oldHoles.length && oldHoles.slice(n).some(h => h.thing)) {
     const rest = makeBox(oldHoles.length - n);
     for (let i = n; i < oldHoles.length; i++) {
       const t = oldHoles[i].thing;
       if (t) { oldHoles[i].thing = null; putInHole(rest.userData.holes[i - n], t); }
     }
     const from = old.getWorldPosition(new THREE.Vector3());
-    if (spot) putOnStation(spot, rest); else putOnBench(rest, benchSpot());
+    if (mode === 'world') putOnBench(rest, benchSpot());
+    else {
+      const spot = Object.values(stations).find(s2 => s2.kind === 'scratch' && !s2.occupant)
+        ?? ensureScratchStation(scratchObjs.length, true);
+      putOnStation(spot, rest);
+    }
     enqueueNext(settleInto(rest, from, 0.45));
   }
   const nb = makeBox(n);
@@ -1848,7 +1976,21 @@ function handleClick(target) {
     return refreshUI();
   }
   if (target.kind === 'cond') {
-    if (!dustyActive) return say('Wake Dusty up first, then click to erase.');
+    if (!dustyActive) {
+      // reaching into the bubble empty-handed takes out a copy of the very
+      // thing the robot was first shown
+      if (mode === 'world' && !held && activeBot?.trainedOn) {
+        const copy = thingIn(activeBot.trainedOn, new Map(), []);
+        scene.add(copy);
+        copy.position.copy(condDisplay
+          ? condDisplay.getWorldPosition(new THREE.Vector3())
+          : new THREE.Vector3(0, 2.1, 0.4));
+        userTake(copy);
+        say('A copy of what the robot was first shown.');
+        return;
+      }
+      return say('Wake Dusty up first, then click to erase.');
+    }
     dustyErase(target.path);
     return;
   }
@@ -2232,6 +2374,7 @@ function clearScratch() {
     if (st.kind !== 'scratch' && st.kind !== 'copyIn' && st.kind !== 'copyOut') continue;
     if (st.occupant) { st.occupant.removeFromParent(); st.occupant = null; }
   }
+  collapseScratch();
 }
 function returnGivenToTable() {
   const t = stations.stand.occupant;
@@ -2585,7 +2728,8 @@ function saveRobot(name) {
   if (!name) return say('Give the robot a name first.');
   if (!program.length) return say('Train it before saving it.');
   const lib = loadLibrary();
-  lib[name] = { program: program.map(stepOut), condition: condOut(condition) };
+  lib[name] = { program: program.map(stepOut), condition: condOut(condition),
+                trainedOn: activeBot?.trainedOn ?? null };
   saveLibrary(lib);
   refreshLibrary(name);
   if (activeBot) { activeBot.name = name; paintBotName(activeBot); }
@@ -2595,6 +2739,7 @@ function applyLoaded(rec, name) {
   clearUndo();
   program = rec.program.map(stepIn);
   condition = condIn(rec.condition);
+  if (activeBot) activeBot.trainedOn = rec.trainedOn ?? null;
   syncBot();
   if (activeBot) { activeBot.name = name; paintBotName(activeBot); }
   rebuildCondition(); renderProgram(); refreshUI();
@@ -2639,7 +2784,8 @@ function refreshLibrary(select) {
 const WORLD_KEY = 'nano-toontalk.world';
 function botOut(bot) {
   return { kind: 'robot', name: bot.name ?? null, program: bot.program.map(stepOut),
-           condition: condOut(bot.condition), team: bot.team.map(botOut) };
+           condition: condOut(bot.condition), trainedOn: bot.trainedOn ?? null,
+           team: bot.team.map(botOut) };
 }
 function thingOut(t) {
   if (!t) return null;
@@ -2671,6 +2817,7 @@ function botIn(o) {
   bot.name = o.name || null;
   bot.program = (o.program || []).map(stepIn);
   bot.condition = condIn(o.condition);
+  bot.trainedOn = o.trainedOn ?? null;
   bot.team = (o.team || []).map(m => botIn(m).__bot);
   if (bot.name) paintBotName(bot);
   return node;
@@ -2718,6 +2865,7 @@ function clearWorld() {
     activeBot.node.removeFromParent();
     activeBot = null; robot = null; root = null;
   }
+  collapseScratch();
   program = []; condition = null;
   renderProgram(); rebuildCondition();
 }
@@ -2729,7 +2877,7 @@ function worldIn(data) {
     if (t) putOnBench(t, { x: b.x, z: b.z });
   });
   for (const [id, o] of Object.entries(data.stations || {})) {
-    const s2 = stations[id];
+    const s2 = stations[id] ?? (/^s\d+$/.test(id) ? ensureScratchStation(+id.slice(1)) : null);
     if (!s2 || s2.kind === 'stack' || !o) continue;
     const t = thingIn(o, nests, birds);
     if (t) putOnStation(s2, t);
@@ -2785,6 +2933,8 @@ function enterTraining() {
   const given = stations.stand.occupant;
   if (!given) return;
   condition = condFromSpec(specOf(given));   // exact at first; Dusty loosens it
+  // remember the very thing it was shown -- a copy can be taken from the bubble
+  if (activeBot) activeBot.trainedOn = hasLive(given) ? null : thingOut(given);
   clearUndo();
   clearScratch();
   preTraining = snapshotWorld();     // the daydream must not disturb the world
@@ -2970,8 +3120,8 @@ function sayAttn(msg) {
 function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i)); }
 // Steps only ever name holes of the robot's own object, never places.
 const holeName = (at) => at.path.length
-  ? `hole ${at.path.map(i => i + 1).join('.')} of ${CONTAINER_TEXT[at.c]}`
-  : CONTAINER_TEXT[at.c];
+  ? `hole ${at.path.map(i => i + 1).join('.')} of ${containerText(at.c)}`
+  : containerText(at.c);
 function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
@@ -2981,13 +3131,13 @@ function describe(s) {
            : s.at.c === 'out' ? 'take the copy'
            : s.at.c === 'in' ? 'take back the original'
            : s.at.c === 'given' ? 'pick up what it was given'
-           : `pick up ${CONTAINER_TEXT[s.at.c]}`)
+           : `pick up ${containerText(s.at.c)}`)
        : s.type === 'copy' ? (s.at.path.length ? `copy what is in ${holeName(s.at)}`
-           : `make a copy of ${CONTAINER_TEXT[s.at.c]}`)
+           : `make a copy of ${containerText(s.at.c)}`)
        : s.type === 'put' ? (s.at.path.length ? `put it in ${holeName(s.at)}`
            : s.at.c === 'in' ? 'put it on the copier'
            : s.at.c === 'given' ? 'drop it on what it was given'
-           : `set it down on ${CONTAINER_TEXT[s.at.c]}`)
+           : `set it down on ${containerText(s.at.c)}`)
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
@@ -3087,7 +3237,8 @@ async function importRobotFile(file) {
     if (!Array.isArray(rec.program) || !('condition' in rec)) throw new Error('not a robot or world file');
     const name = rec.name || file.name.replace(/\.robot\.json$|\.json$/i, '');
     const lib = loadLibrary();
-    lib[name] = { program: rec.program, condition: rec.condition };
+    lib[name] = { program: rec.program, condition: rec.condition,
+                  trainedOn: rec.trainedOn ?? null };
     saveLibrary(lib);
     refreshLibrary(name);
     loadRobot(name);          // importing means: I want this robot here
@@ -3254,7 +3405,11 @@ function tipFor(t) {
       : 'Dusty the vacuum — click to wake him, then click parts of a robot’s thought to erase them.';
   }
   if (t.kind === 'cond') {
-    return 'The robot’s thought: the shape it must be given before it will run. Red parts didn’t match; Dusty can vacuum any part into an anything.';
+    return 'The robot’s thought: the shape it must be given before it will run. '
+      + (mode === 'world' && !held && activeBot?.trainedOn
+          ? 'Click to take a copy of the very thing it was first shown. '
+          : 'Red parts didn’t match. ')
+      + 'Dusty can vacuum any part into an anything.';
   }
   if (t.kind === 'botThing') {
     const bot = t.bot, trained = bot.program.length;
@@ -3413,32 +3568,15 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     const point = reachLocal.clone();
     const st = { id: 'stand', kind: 'stand', label: 'its stand', point,
                  topY: point.y - CUBE / 2, occupant: null, cubes: [] };
-    const obj = makePillar(Math.max(0.15, st.topY), true);
+    const obj = makeMiniDesk(Math.max(0.15, st.topY), 0.52, 0.44, 0xcabc98);
     obj.position.set(point.x, 0, point.z);
     setPick(obj, { kind: 'station', id: 'stand' });
     scene.add(obj);
     stations.stand = st;
   }
 
-  // Its scratch spots, on the same row so it can walk between them.
-  SCRATCH_X.forEach((x, i) => {
-    const point = new THREE.Vector3(x, reachLocal.y, reachLocal.z);
-    const st = { id: 's' + i, kind: 'scratch', slot: i, label: `spot ${i + 1}`,
-                 point, topY: point.y - CUBE / 2, occupant: null, cubes: [] };
-    const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, st.topY, 28),
-      new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.75 }));
-    pad.position.set(x, st.topY / 2, point.z);
-    pad.castShadow = true; pad.receiveShadow = true;
-    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.175, 0.02, 28),
-      new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: 0.3,
-        emissive: 0x2c6f8c, emissiveIntensity: 1.1, toneMapped: false }));
-    ring.position.set(x, st.topY, point.z);
-    const g = new THREE.Group();
-    g.add(pad, ring);
-    setPick(g, { kind: 'station', id: st.id });
-    scene.add(g);
-    stations[st.id] = st;
-  });
+  // One scratch desk to begin with; more grow beside it as they are needed.
+  ensureScratchStation(0);
 
   // The bench: a plain surface for the user. The robot never refers to it,
   // which is the whole point -- a trained action can only name a hole.
@@ -3600,7 +3738,7 @@ window.__nano = {
   clickThing(t) { handleClick({ kind: 'thing', thing: t }); },
   clickHole(box, index) { handleClick({ kind: 'hole', box, index }); },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
-  scratch() { return SCRATCH_X.map((_, i) => stations['s' + i].occupant); },
+  scratch() { return Object.values(stations).filter(s2 => s2.kind === 'scratch').map(s2 => s2.occupant); },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
   heldPos() { return held ? held.getWorldPosition(new THREE.Vector3()).toArray().map(n => +n.toFixed(2)) : null; },
   mine(path = []) { return thingAt({ c: 'given', path }); },
@@ -3615,6 +3753,7 @@ window.__nano = {
   run() { runProgram(); },
   dusty(on = true) { dustyActive = on; refreshUI(); },
   erase(path) { dustyErase(path); },
+  clickCond(path = []) { handleClick({ kind: 'cond', path }); },
   get flagged() { return flagged.length; },
   save(name) { saveRobot(name); },
   load(name) { loadRobot(name); },

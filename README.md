@@ -25,7 +25,9 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   fraction, one side scientific notation, the other digit-grouped or exact
   decimal form. Only the visible digits are ever computed, and a repeating
   decimal that fits gets a bar over its repetend; one that doesn't ends in an
-  ellipsis.
+  ellipsis. Scientific notation gets the same treatment — a bar when the
+  mantissa's cycle fits, an honest ellipsis when it is cut short, and no fake
+  trailing zeros.
 - **Boxes** have holes; a hole holds a number, a box, a scale, a bird or a
   nest, so structures nest. Type a digit on a held box to give it that many
   holes; shrinking splits it like an array, and the excess holes fall away as
@@ -66,7 +68,14 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   scratch spots and the copier are private and swept clean every run.
 - **Training is a daydream.** Everything the robot does while learning is
   recorded, and leaving the bubble rewinds the world; the robot keeps only the
-  lesson, and what it was given stays on its stand, ready to Run.
+  lesson, and what it was given stays on its stand, ready to Run. The robot
+  also remembers the very thing it was first shown: click its thought bubble
+  with an empty hand and a copy of the original falls out, whatever the
+  condition has since been erased to.
+- **The robot's furniture grows with the job.** Its stand is a small desk, and
+  its scratch area starts as a single side-table; whenever the last free one
+  is filled a new one rises beside it, and the extras sink away when its area
+  is swept — unlimited temporary storage, no standing clutter.
 - **The condition** — the exact thing it was trained on — floats in a thought
   bubble over its head, and refused runs pulse the mismatching parts red until
   something changes. Dusty erases progressively: a number becomes *any
@@ -131,6 +140,6 @@ worth keeping back into the script.
   wildcard.
 - `^` takes integer exponents only, and results are refused past an estimated
   20000 digits so a runaway loop cannot lock the browser.
-- The robot's scratch area is three fixed spots rather than free placement,
-  and there is no arm IK — transfers to the copier's raised platform animate
-  the object, not the arm.
+- The robot's scratch area is a row of discrete spots rather than free
+  placement, and there is no arm IK — transfers to the copier's raised
+  platform animate the object, not the arm.
