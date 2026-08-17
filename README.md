@@ -25,15 +25,22 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **A robot library.** Name a trained robot and save it; it persists in
   `localStorage` and reloads with its condition and actions intact.
 - **A robot that walks the bench** and picks things up with a two-jaw claw.
-- **You move things; the robot doesn't.** In the workshop you pick things up
+- **A stack of miniature robots.** Set a mini on the table and drop something on
+  it: it grows to full size, steps behind the bench, and takes what you gave it.
+  Click a full-size robot to shrink it back into your hand — it keeps all its
+  training. Drop one trained robot on another to form a **team**: given
+  something, the first member whose condition matches takes the pass, so a team
+  of "on a 5, double it" and "on a 10, add 3" turns a 5 into 13 and stops.
+- **You move things; the robots don't.** In the workshop you pick things up
   and put them down anywhere on the bench — what you carry follows the pointer.
-  The robot stands idle and only ever acts inside its thought bubble, or when
-  repeating what it learned.
-- **A robot's actions name holes, never places in your world.** Everything it
-  does is relative to the thing it was given: *take what is in hole 1*, *put it
-  in hole 2*, *take a new number*, *make it 10*. A trained robot therefore
-  generalises to anything of the right shape for free. Your bench is off limits
-  to it.
+  A robot only ever acts inside its thought bubble, or when repeating what it
+  learned.
+- **A robot's actions name its own containers, never places in your world.**
+  Every step is an address like *hole 1 of what it was given* or *hole 2 of
+  spot 1* — the given thing, a scratch spot, or a copier surface, then hole
+  indices. A trained robot therefore generalises to anything of the right shape
+  for free, and can even pick up the whole thing it was given and hand back
+  something built around it. Your bench is off limits to it.
 - **A private work area.** Inside its thought bubble the robot has scratch spots
   and the copier to work with. That is safe where naming your bench would not
   be: the area belongs to the robot and starts empty on every run, so it cannot
