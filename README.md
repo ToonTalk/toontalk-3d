@@ -26,9 +26,14 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   `localStorage` and reloads with its condition and actions intact.
 - **A robot that walks the bench** and picks things up with a two-jaw claw.
 - **You move things; the robot doesn't.** In the workshop you pick things up
-  and put them down yourself — what you carry follows the pointer. The robot
-  stands idle and only ever acts inside its thought bubble, or when repeating
-  what it learned.
+  and put them down anywhere on the bench — what you carry follows the pointer.
+  The robot stands idle and only ever acts inside its thought bubble, or when
+  repeating what it learned.
+- **A robot's actions name holes, never places.** Everything it can do is
+  relative to the thing it was given: *take what is in hole 1*, *put it in hole
+  2*, *take a new number*, *make it 10*. There are no pillars and no addresses,
+  so a trained robot generalises to any box of the right shape for free. The
+  bench exists only for you; the robot cannot reach it.
 - **Training starts by giving.** Hand something to an untrained robot and it
   goes into its thought bubble to learn on it; from then on you direct the
   robot and everything it does is recorded. Leaving the bubble rewinds the
@@ -77,7 +82,9 @@ worth keeping back into the script.
 
 ## Known limits
 
-- The robot pivots and walks, but has no path-finding; stations are a fixed row.
+- The robot no longer walks: its stand sits exactly where its claw reaches.
+- A robot cannot be trained to use the copier — duplicating is a bench tool for
+  you only, since "copy that" has no box-relative spelling yet.
 - `^` takes integer exponents only. Results are unbounded BigInts; the only
   limit is a guard that refuses a power whose size is estimated past 20000
   digits, so a runaway loop cannot lock the browser mid-calculation.

@@ -453,37 +453,43 @@ const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / thing.userData.
 // ---------------------------------------------------------------- tree helpers
 function holesOf(t) { return t?.userData.kind === 'box' ? t.userData.holes : null; }
 
-// Address of a thing as {station, path} where path is a chain of hole indices.
-function findLoc(thing) {
-  for (const st of Object.values(stations)) {
-    const found = search(st.occupant, []);
-    if (found) return { station: st.id, path: found };
-  }
-  return null;
-  function search(node, path) {
+// Everything the user can touch, as roots of object trees.
+const roots = () => [stations.stand?.occupant, stations.copier?.occupant, ...benchThings].filter(Boolean);
+
+// The robot's whole world is one object: whatever it was given. `path` is a
+// chain of hole indices into that, and [] means the thing itself. Nothing a
+// robot does is ever expressed as a place.
+const myThing = () => stations.stand?.occupant ?? null;
+function thingAt(path) {
+  let node = myThing();
+  for (const i of path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
+  return node;
+}
+function holeAt(path) {
+  if (!path.length) return null;
+  return holesOf(thingAt(path.slice(0, -1)))?.[path[path.length - 1]] ?? null;
+}
+// Where a thing sits inside the robot's own object, or null if it is elsewhere.
+function pathOf(thing) {
+  const walk = (node, path) => {
     if (!node) return null;
     if (node === thing) return path;
     const hs = holesOf(node);
     if (!hs) return null;
-    for (const h of hs) {
-      const r = search(h.thing, path.concat(h.index));
-      if (r) return r;
-    }
+    for (const h of hs) { const r = walk(h.thing, path.concat(h.index)); if (r) return r; }
     return null;
-  }
+  };
+  return walk(myThing(), []);
 }
-function thingAt(stationId, path) {
-  let node = stations[stationId].occupant;
-  for (const i of path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
-  return node;
-}
-// The container a path addresses: either the station surface or a specific hole.
-function slotAt(stationId, path) {
-  const st = stations[stationId];
-  if (!path.length) return { station: st };
-  const parent = thingAt(stationId, path.slice(0, -1));
-  const hs = holesOf(parent);
-  return hs ? { hole: hs[path[path.length - 1]] } : null;
+function holeContaining(thing) {
+  let found = null;
+  const walk = (node) => {
+    const hs = holesOf(node);
+    if (!hs || found) return;
+    for (const h of hs) { if (h.thing === thing) { found = h; return; } walk(h.thing); }
+  };
+  roots().forEach(walk);
+  return found;
 }
 
 // --- things as plain data -------------------------------------------------
@@ -544,12 +550,26 @@ function eraseAt(cond, path) {
   return { kind: 'box', holes };
 }
 
+// Unhook a thing from wherever it currently lives.
 function detach(thing) {
-  const loc = findLoc(thing);
-  if (!loc) return;
-  const slot = slotAt(loc.station, loc.path);
-  if (slot?.hole) slot.hole.thing = null;
-  else stations[loc.station].occupant = null;
+  const i = benchThings.indexOf(thing);
+  if (i >= 0) { benchThings.splice(i, 1); return; }
+  for (const st of Object.values(stations)) if (st.occupant === thing) { st.occupant = null; return; }
+  const hole = holeContaining(thing);
+  if (hole) hole.thing = null;
+}
+// The bench takes things anywhere on its surface -- it is a work surface, not
+// an address.
+function putOnBench(thing, at) {
+  scene.add(thing);
+  thing.scale.setScalar(1);
+  thing.quaternion.identity();
+  const half = thing.userData.width / 2 + 0.05;
+  thing.position.set(
+    Math.min(BENCH.x1 - half, Math.max(BENCH.x0 + half, at.x)),
+    BENCH_TOP + thing.userData.rest,
+    Math.min(BENCH.z1 - 0.16, Math.max(BENCH.z0 + 0.16, at.z)));
+  if (!benchThings.includes(thing)) benchThings.push(thing);
 }
 
 function putOnStation(st, thing) {
@@ -573,16 +593,19 @@ function putInHole(hole, thing) {
 // A straight bench rather than an arc: on an arc the stations sit at different
 // depths and overlap in projection, and the robot keeps turning away. In a row
 // it walks left-right and always faces the viewer.
-const ROW_Z = 1.35, ROW_STEP = 0.64;
+// No pillars any more. A robot's actions are expressed only against the thing
+// it was given, so there is nothing for named places to address; the bench is
+// just a surface for the user to work on, and the robot never touches it.
+const ROW_Z = 1.35;
+// pushed forward of the robot's stand so the two do not visually collide
+const BENCH = { x0: -0.95, x1: 1.45, z0: ROW_Z - 0.28, z1: ROW_Z + 0.60 };
 const STATION_DEFS = [
-  { id: 'numbers', label: 'the number stack',      kind: 'stack' },
-  { id: 'boxes',   label: 'the box stack',         kind: 'stack' },
-  { id: 'p1',      label: 'pillar 1',              kind: 'pillar' },
-  { id: 'p2',      label: 'pillar 2',              kind: 'pillar' },
-  { id: 'p3',      label: 'pillar 3',              kind: 'pillar' },
-  { id: 'given',   label: 'the robot’s stand',     kind: 'given' },
-  { id: 'copier',  label: 'the copier',            kind: 'copier' },
-].map((d, i, all) => ({ ...d, x: (i - (all.length - 1) / 2) * ROW_STEP }));
+  { id: 'numbers', label: 'the number stack', kind: 'stack',  x: -1.92 },
+  { id: 'boxes',   label: 'the box stack',    kind: 'stack',  x: -1.32 },
+  { id: 'copier',  label: 'the copier',       kind: 'copier', x:  1.98 },
+];
+const benchThings = [];      // free-standing things the user has put down
+let BENCH_TOP = 0.84;        // set from the robot's working height once loaded
 const stations = {};
 const pickables = [];
 
@@ -707,25 +730,8 @@ function setLegs(phase, amount) {
   root.position.y = 0.022 * Math.abs(Math.sin(phase * 2)) * amount;
 }
 
-// Where the robot must stand, and which way to face, to have its claw land on a
-// station: same bearing as the station, one arm's reach short of it.
-function standForPoint(p) {
-  return { pos: new THREE.Vector3(p.x, 0, p.z - reachR), yaw: -reachBeta };
-}
-// Where the claw should actually go. A hole sits off to one side of its box, so
-// aiming at the station centre made things visibly land in the wrong place and
-// then jump.
-function targetPoint(stationId, path) {
-  const st = stations[stationId];
-  if (!path.length) return st.point.clone();
-  const hole = slotAt(stationId, path)?.hole;
-  if (!hole) return st.point.clone();
-  scene.updateMatrixWorld(true);
-  const p = hole.anchor.getWorldPosition(new THREE.Vector3());
-  p.y = st.point.y;                       // the claw always works at its own height
-  return p;
-}
-const standForSlot = (stationId, path) => () => standForPoint(targetPoint(stationId, path));
+// The robot no longer walks: its stand sits exactly where its claw reaches, and
+// everything it can act on is on that stand or conjured into its hand.
 const HOME = { pos: new THREE.Vector3(0, 0, 0), yaw: 0 };
 
 // ---------------------------------------------------------------- state
@@ -829,66 +835,78 @@ function abort(msg) {
 }
 
 // ---------------------------------------------------------------- actions
-function actionPick(stationId, path) {
-  const st = stations[stationId];
-  enqueue(walkTo(standForSlot(stationId, path)));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.8));
+// The robot stands at its own stand and never walks: everything it can do is
+// reaching into the thing it was given, or conjuring a new number or box.
+
+// A brand new number or box appears in the claw.
+function actionNew(kind) {
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.5));
+  let made = null;
+  enqueue({
+    dur: 0.4,
+    start() {
+      made = kind === 'box' ? makeBox() : makeNumber(rat(1));
+      scene.add(made);
+      const p = grip.getWorldPosition(new THREE.Vector3());
+      made.position.copy(p);
+      made.scale.setScalar(0.01);
+      flash(p);
+    },
+    update(t) { made.scale.setScalar(0.01 + 0.99 * ease(t)); },
+  });
   enqueue(doNow(() => {
-    let obj;
-    if (st.kind === 'stack' && !path.length) { obj = st.cubes.pop(); }
-    else { obj = thingAt(stationId, path); detach(obj); }
-    if (!obj) {
-      // Replaying into a world that no longer matches: stop rather than limp on.
-      return abort(`The robot expected something at ${labelFor(stationId, path)} and found nothing.`);
-    }
-    held = obj;
-    if (held) {
-      setPick(held, { kind: 'thing', thing: held });
-      valueAtPickup = held.userData.value ?? null;
-      opAtPickup = held.userData.op ?? '+';
-      holesAtPickup = held.userData.holes?.length ?? 0;
-      grip.attach(held);          // keeps its world spot; graspSettle draws it in
-      enqueueNext(graspSettle(held));
-    }
+    grip.attach(made);
+    held = made;
+    noteHeld();
+    enqueueNext(graspSettle(made));
   }));
-  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.4));
-  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.75));
-  // Restock only once the top item is clearly clear of the column, so the rise
-  // reads as the stack replacing what was taken.
-  if (st.kind === 'stack') enqueue(doNow(() => refillStack(st, true)));
-  // No walk back to centre: in the row layout the robot faces the viewer
-  // wherever it stands, so returning home only added a pointless there-and-back
-  // between two actions at the same station.
+  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.5));
   enqueue(doNow(refreshUI));
 }
 
-function actionPlace(stationId, path) {
-  const st = stations[stationId];
-  enqueue(walkTo(standForSlot(stationId, path)));
-  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.75));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.4));
-  const copying = st.kind === 'copier' && !path.length;
-  let copy = null;
+// Take what is at `path` inside the robot's own object.
+function actionTake(path) {
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.7));
+  enqueue(doNow(() => {
+    const obj = thingAt(path);
+    if (!obj) return abort(`The robot expected something in ${holeName(path)} and found nothing.`);
+    detach(obj);
+    held = obj;
+    setPick(held, { kind: 'thing', thing: held });
+    noteHeld();
+    grip.attach(held);
+    enqueueNext(graspSettle(held));
+  }));
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.35));
+  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.6));
+  enqueue(doNow(refreshUI));
+}
+
+// Put what the robot holds at `path`; [] means onto the given thing itself,
+// which for two numbers is how they combine.
+function actionPut(path) {
+  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.6));
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.35));
   enqueue(doNow(() => {
     const dropped = held; held = null;
+    if (!dropped) return;
     const from = dropped.getWorldPosition(new THREE.Vector3());
-    const slot = slotAt(stationId, path);
-    if (slot?.hole && slot.hole.thing) combine(slot.hole, dropped, true, from);
-    else if (!path.length && st.occupant) combine(st, dropped, false, from);
-    else {
-      if (slot?.hole) putInHole(slot.hole, dropped); else putOnStation(st, dropped);
-      enqueueNext(settleInto(dropped, from));    // drop it in rather than teleport
+    const hole = holeAt(path);
+    if (!path.length) {
+      const target = myThing();
+      if (!target) return abort('The robot has nothing to work on.');
+      combine({ occupant: target }, dropped, false, from);
+    } else if (!hole) {
+      return abort(`The robot expected ${holeName(path)} and there is no such hole.`);
+    } else if (hole.thing) {
+      combine(hole, dropped, true, from);
+    } else {
+      putInHole(hole, dropped);
+      enqueueNext(settleInto(dropped, from));
     }
     refreshUI();
   }));
-
-  if (copying) {
-    // scan down over the original, materialise the copy above it, hand it over
-    runCopier(st, false);
-    enqueue(armTo(POSE.carry, JAW_CLOSED, 0.6));
-  } else {
-    enqueue(armTo(POSE.rest, JAW_CLOSED, 0.85));
-  }
+  enqueue(armTo(POSE.rest, JAW_CLOSED, 0.7));
 }
 
 // Scan, grow a copy on top of the original, then hand it over -- to the user's
@@ -1071,7 +1089,7 @@ function resolve(ev) {
     // handing things over only means anything in the workshop -- inside the
     // bubble the robot is working, and its body must not block clicks past it
     if (o.__pick.kind === 'robot' && mode !== 'world') continue;
-    return o.__pick;
+    return o.__pick.kind === 'bench' ? { ...o.__pick, point: h.point } : o.__pick;
   }
   return null;
 }
@@ -1096,43 +1114,68 @@ function handleClick(target) {
     return;
   }
 
+  // A thing sits down inside its pocket, so a click meant for it can land on
+  // the pocket instead. An occupied hole always means the thing in it.
+  if (target.kind === 'hole') {
+    const occupant = target.box.userData.holes[target.index].thing;
+    if (occupant) return handleClick({ kind: 'thing', thing: occupant });
+  }
+
+  return mode === 'training' ? directRobot(target) : userClick(target);
+}
+
+// In the workshop the user does everything themselves.
+function userClick(target) {
   if (target.kind === 'robot') {
     if (!held) return say('Give it a number or a box to work on.');
     return giveToRobot();
   }
-
   if (target.kind === 'station') {
     const st = stations[target.id];
-    if (held) {
-      if (st.kind === 'stack') return say('Stacks only give things out.');
-      if (st.kind === 'given' && mode === 'world') return say('Hand it to the robot instead.');
-      if (st.kind === 'copier' && st.occupant) return say('The copier is full — take that off first.');
-      if (st.occupant && st.occupant.userData.kind === 'box') return say('Click one of its holes.');
-      go({ type: 'place', station: st.id, path: [] });
-    } else {
-      if (st.kind === 'stack') go({ type: 'pick', station: st.id, path: [] });
-      else if (st.occupant) go({ type: 'pick', station: st.id, path: [] });
-      else say('Nothing there to pick up.');
+    if (!held) {
+      if (st.kind === 'stack') return userTakeFromStack(st);
+      if (st.occupant) return userTake(st.occupant);
+      return say('Nothing there to pick up.');
     }
-    return;
+    if (st.kind === 'stack') return say('Stacks only give things out.');
+    if (st.kind === 'copier') {
+      if (st.occupant) return say('The copier is full — take that off first.');
+      return userUseCopier(st);
+    }
+    return say('Hand it to the robot instead.');
+  }
+  if (target.kind === 'bench') {
+    if (!held) return;
+    return userPutOnBench(target.point);
   }
   if (target.kind === 'thing') {
-    const loc = findLoc(target.thing);
-    if (!loc) return;
-    if (held) go({ type: 'place', station: loc.station, path: loc.path });   // combine onto it
-    else go({ type: 'pick', station: loc.station, path: loc.path });
-    return;
+    if (!held) return userTake(target.thing);
+    if (target.thing === held) return;
+    return userDropOn(target.thing);
   }
   if (target.kind === 'hole') {
-    // A thing sits down inside its pocket, so a click meant for it can land on
-    // the pocket instead. An occupied hole always means the thing in it.
-    const occupant = target.box.userData.holes[target.index].thing;
-    if (occupant) return handleClick({ kind: 'thing', thing: occupant });
     if (!held) return say('That hole is empty.');
-    const loc = findLoc(target.box);
-    if (!loc) return;
-    go({ type: 'place', station: loc.station, path: loc.path.concat(target.index) });
+    return userPutInHole(target.box.userData.holes[target.index]);
   }
+}
+
+// Inside the thought bubble the user directs the robot -- and a robot can only
+// speak about the thing it was given, so anything else is off limits.
+function directRobot(target) {
+  if (target.kind === 'station' && stations[target.id]?.kind === 'stack') {
+    if (held) return say('It is already holding something.');
+    return go({ type: stations[target.id].id === 'boxes' ? 'newBox' : 'newNumber' });
+  }
+  if (target.kind === 'thing' || target.kind === 'hole') {
+    const path = target.kind === 'hole'
+      ? (pathOf(target.box) ?? null)?.concat(target.index)
+      : pathOf(target.thing);
+    if (!path) return say('The robot can only touch what it was given.');
+    if (held) return go({ type: 'put', path });
+    if (!path.length) return say('That is the thing it was given.');
+    return go({ type: 'take', path });
+  }
+  say('The robot can only touch what it was given, or make a new number or box.');
 }
 
 // --- the user's own hand ---------------------------------------------------
@@ -1168,34 +1211,49 @@ function noteHeld() {
   holesAtPickup = held?.userData.holes?.length ?? 0;
 }
 
-// The user acting directly: no walking, no claw, it just happens.
-function applyNow(step) {
-  const st = stations[step.station];
-  if (step.type === 'pick') {
-    let obj;
-    if (st.kind === 'stack' && !step.path.length) { obj = st.cubes.pop(); refillStack(st, true); }
-    else { obj = thingAt(step.station, step.path); detach(obj); }
-    if (!obj) return say('Nothing there to pick up.');
-    takeIntoHand(obj);
-  } else {
-    const dropped = held; held = null;
-    const from = dropped.getWorldPosition(new THREE.Vector3());
-    const slot = slotAt(step.station, step.path);
-    if (slot?.hole && slot.hole.thing) combine(slot.hole, dropped, true, from);
-    else if (!step.path.length && st.occupant) combine(st, dropped, false, from);
-    else {
-      if (slot?.hole) putInHole(slot.hole, dropped); else putOnStation(st, dropped);
-      enqueueNext(settleInto(dropped, from));
-      if (st.kind === 'copier') runCopier(st, true);
-    }
-  }
+// --- the user acting directly (no robot involved) --------------------------
+function userTakeFromStack(st) {
+  const obj = st.cubes.pop();
+  refillStack(st, true);
+  if (obj) takeIntoHand(obj);
+}
+function userTake(thing) {
+  detach(thing);
+  takeIntoHand(thing);
+}
+function userPutInHole(hole) {
+  const dropped = held; held = null;
+  const from = dropped.getWorldPosition(new THREE.Vector3());
+  if (hole.thing) combine(hole, dropped, true, from);
+  else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from)); }
+  refreshUI();
+}
+function userDropOn(target) {
+  const dropped = held; held = null;
+  const from = dropped.getWorldPosition(new THREE.Vector3());
+  combine({ occupant: target }, dropped, false, from);
+  refreshUI();
+}
+function userPutOnBench(at) {
+  const dropped = held; held = null;
+  const from = dropped.getWorldPosition(new THREE.Vector3());
+  putOnBench(dropped, at);
+  enqueueNext(settleInto(dropped, from));
+  refreshUI();
+}
+function userUseCopier(st) {
+  const dropped = held; held = null;
+  const from = dropped.getWorldPosition(new THREE.Vector3());
+  putOnStation(st, dropped);
+  enqueueNext(settleInto(dropped, from));
+  runCopier(st, true);
   refreshUI();
 }
 
 // Hand whatever is being carried to the robot. An untrained robot takes this as
 // its lesson; a trained one takes it as the thing to work on.
 function giveToRobot() {
-  const stand = stations.given;
+  const stand = stations.stand;
   if (stand.occupant) return say('It already has something — take that first.');
   const thing = held; held = null;
   putOnStation(stand, thing);
@@ -1205,22 +1263,39 @@ function giveToRobot() {
   else { refreshUI(); say('It has something to work on — press Run.'); }
 }
 
-// Perform a step and, while training, remember it.
+// --- directing the robot (training and replay) -----------------------------
+// Every step is relative to the thing the robot was given. Nothing here can
+// name a place, which is exactly what makes a trained robot general.
 function go(step) {
-  if (mode === 'world') { applyNow(step); return; }
   busy = true;
-  if (step.type === 'place' && held && held.userData.kind === 'number') {
+  // typing is recorded as its own step, just before whatever it applies to
+  if (step.type === 'put' && held && held.userData.kind === 'number') {
     const v = held.userData.value, o = held.userData.op;
     if (!ratEq(v, valueAtPickup) || o !== opAtPickup) record({ type: 'setValue', value: v, op: o });
   }
-  if (step.type === 'place' && held && held.userData.kind === 'box') {
+  if (step.type === 'put' && held && held.userData.kind === 'box') {
     const n = held.userData.holes.length;
     if (n !== holesAtPickup) record({ type: 'setHoles', n });
   }
   record(step);
-  if (step.type === 'pick') actionPick(step.station, step.path);
-  else actionPlace(step.station, step.path);
+  runStep(step);
   refreshUI();
+}
+function runStep(step) {
+  if (step.type === 'newNumber') actionNew('number');
+  else if (step.type === 'newBox') actionNew('box');
+  else if (step.type === 'take') actionTake(step.path);
+  else if (step.type === 'put') actionPut(step.path);
+  else if (step.type === 'setHoles') {
+    enqueue({ dur: 0.3, start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); } });
+  } else if (step.type === 'setValue') {
+    enqueue({
+      dur: 0.4,
+      start() { if (held) { held.setValue(step.value, step.op); flash(held.getWorldPosition(new THREE.Vector3())); } },
+      update(t) { if (held) held.scale.setScalar(1 + 0.26 * Math.sin(Math.PI * t)); },
+      end() { if (held) held.scale.setScalar(1); refreshUI(); },
+    });
+  }
 }
 function record(step) {
   if (mode !== 'training') return;
@@ -1416,17 +1491,22 @@ function refreshLibrary(select) {
 }
 
 function snapshotWorld() {
-  return Object.fromEntries(Object.values(stations)
+  const snap = Object.fromEntries(Object.values(stations)
     .filter(s => s.kind !== 'stack')
     .map(s => [s.id, specOf(s.occupant)]));
+  snap.bench = benchThings.map(t => ({ spec: specOf(t), at: { x: t.position.x, z: t.position.z } }));
+  return snap;
 }
 function restoreWorld(snap) {
   queue.length = 0; current = null; busy = false; pendingAfter = null;
   // removeFromParent, not scene.remove: while held its parent is the claw
   if (held) { held.removeFromParent(); held = null; }
+  benchThings.forEach(t => t.removeFromParent());
+  benchThings.length = 0;
+  (snap.bench || []).forEach(b => putOnBench(buildThing(b.spec), b.at));
   for (const st of Object.values(stations)) {
     if (st.kind === 'stack') continue;
-    if (st.occupant) { scene.remove(st.occupant); st.occupant = null; }
+    if (st.occupant) { st.occupant.removeFromParent(); st.occupant = null; }
     if (snap[st.id]) putOnStation(st, buildThing(snap[st.id]));
   }
   root.position.set(0, 0, 0); root.rotation.y = 0; setLegs(0, 0);
@@ -1434,7 +1514,7 @@ function restoreWorld(snap) {
 }
 
 function enterTraining() {
-  const given = stations.given.occupant;
+  const given = stations.stand.occupant;
   if (!given) return;
   condition = specOf(given);         // exact at first; Dusty loosens it
   rebuildCondition();
@@ -1467,9 +1547,11 @@ function parkRobot() {
 }
 
 function resetWorld() {
+  benchThings.forEach(t => t.removeFromParent());
+  benchThings.length = 0;
   for (const st of Object.values(stations)) {
-    if (st.occupant) { scene.remove(st.occupant); st.occupant = null; }
-    if (st.kind === 'stack') { st.cubes.forEach(c => scene.remove(c)); st.cubes = []; refillStack(st); }
+    if (st.occupant) { st.occupant.removeFromParent(); st.occupant = null; }
+    if (st.kind === 'stack') { st.cubes.forEach(c => c.removeFromParent()); st.cubes = []; refillStack(st); }
   }
   // removeFromParent, not scene.remove: while held its parent is the claw
   if (held) { held.removeFromParent(); held = null; }
@@ -1482,7 +1564,7 @@ function resetWorld() {
 
 function runProgram() {
   if (!program.length) return say('The robot has not been trained yet.');
-  const given = stations.given.occupant;
+  const given = stations.stand.occupant;
   if (!given) return say('Put something on the blue pillar for it to work on.');
   if (!matches(condition, specOf(given))) {
     flagMismatch(mismatchPaths(condition, specOf(given)));
@@ -1501,7 +1583,7 @@ function nextIteration() {
   // A pass never ends with something still in the claw: put it down first, so
   // the condition is judged against a settled world.
   stowHeld();
-  const given = specOf(stations.given.occupant);
+  const given = specOf(stations.stand.occupant);
   if (!matches(condition, given)) {
     // same red highlight you get from pressing Run on something that doesn't fit
     flagMismatch(mismatchPaths(condition, given));
@@ -1514,22 +1596,7 @@ function nextIteration() {
   runCount++;
   program.forEach((step, i) => {
     enqueue(doNow(() => highlight(i)));
-    if (step.type === 'pick') actionPick(step.station, step.path);
-    else if (step.type === 'place') actionPlace(step.station, step.path);
-    else if (step.type === 'setHoles') {
-      enqueue({
-        dur: 0.3,
-        start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); },
-      });
-    }
-    else if (step.type === 'setValue') {
-      enqueue({
-        dur: 0.4,
-        start() { if (held) { held.setValue(step.value, step.op); flash(held.getWorldPosition(new THREE.Vector3())); } },
-        update(t) { if (held) held.scale.setScalar(1 + 0.26 * Math.sin(Math.PI * t)); },
-        end() { if (held) held.scale.setScalar(1); refreshUI(); },
-      });
-    }
+    runStep(step);
   });
   enqueue(pause(0.25), doNow(nextIteration));
 }
@@ -1537,12 +1604,10 @@ function nextIteration() {
 // invisible to the next run and make the pad look empty.
 function stowHeld() {
   if (!held) return;
-  const pad = stations.given;
-  const dest = !pad.occupant ? pad
-    : Object.values(stations).find(s => s.kind === 'pillar' && !s.occupant);
-  if (!dest) return;
   const t = held; held = null;
-  putOnStation(dest, t);
+  const stand = stations.stand;
+  if (!stand.occupant) putOnStation(stand, t);
+  else putOnBench(t, { x: BENCH.x0 + 0.3, z: (BENCH.z0 + BENCH.z1) / 2 });
 }
 function finishRun(msg) {
   highlight(-1);
@@ -1558,15 +1623,13 @@ const $ = (id) => document.getElementById(id);
 let hintTimer = null;
 function say(msg) { $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, 2800); }
 function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i)); }
-// 'train' is deliberately described as "what it was given" -- at run time it
-// resolves to whatever is on the pad then, which is the whole point.
-function labelFor(stationId, path) {
-  return stations[stationId].label
-    + (path.length ? ` · hole ${path.map(i => i + 1).join('.')}` : '');
-}
+// Steps only ever name holes of the robot's own object, never places.
+const holeName = (path) => path.length ? `hole ${path.map(i => i + 1).join('.')}` : 'what it was given';
 function describe(s) {
-  return s.type === 'pick' ? `pick up from ${labelFor(s.station, s.path)}`
-       : s.type === 'place' ? `put it on ${labelFor(s.station, s.path)}`
+  return s.type === 'newNumber' ? 'take a new number'
+       : s.type === 'newBox' ? 'take a new box'
+       : s.type === 'take' ? `take what is in ${holeName(s.path)}`
+       : s.type === 'put' ? (s.path.length ? `put it in ${holeName(s.path)}` : 'drop it on its own thing')
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
@@ -1590,7 +1653,7 @@ function refreshUI() {
   const running = mode === 'replay';
   $('runBtn').textContent = running ? 'Stop' : 'Run what it learned';
   $('runBtn').disabled = !running && !program.length;
-  $('againBtn').disabled = running || busy || !stations.given.occupant;
+  $('againBtn').disabled = running || busy || !stations.stand.occupant;
   $('resetBtn').disabled = running;
   $('clearBtn').disabled = running;
   $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
@@ -1610,12 +1673,12 @@ function refreshUI() {
   if (hintTimer) return;
   $('hint').textContent =
     mode === 'replay' ? 'Watching it repeat what it learned…' :
-    training ? (held ? 'Tell it where to put that — a pillar, or a hole in a box.'
-                     : 'Every move it makes is being remembered. Leave when done.') :
-    held ? (program.length ? 'Click the robot to give it this to work on.'
+    training ? (held ? 'Tell it which hole to put that in — it can only touch what it was given.'
+                     : 'Direct it on its own box, or click a stack for a new number. Every move is remembered.') :
+    held ? (program.length ? 'Click the robot to give it this to work on, or the bench to put it down.'
                            : 'Click the robot to give it this — that is how training starts.') :
     program.length ? 'Give the robot something, then run what it learned.' :
-    'Click a stack to take a number or a box.';
+    'Click a stack to take a number or a box, and build on the bench.';
 }
 
 $('exitBtn').onclick = () => { if (!busy) leaveTraining(); };
@@ -1711,6 +1774,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   reachLocal = grip.getWorldPosition(new THREE.Vector3());
   reachR = Math.hypot(reachLocal.x, reachLocal.z);
   reachBeta = Math.atan2(reachLocal.x, reachLocal.z);
+  BENCH_TOP = reachLocal.y - CUBE / 2;
 
   for (const def of STATION_DEFS) {
     const point = new THREE.Vector3(def.x, reachLocal.y, ROW_Z);
@@ -1737,6 +1801,40 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
       stations[def.id] = st;
     }
   }
+
+  // The robot's own stand sits exactly where its claw reaches, so it can work
+  // without ever moving.
+  {
+    const point = reachLocal.clone();
+    const st = { id: 'stand', kind: 'stand', label: 'its stand', point,
+                 topY: point.y - CUBE / 2, occupant: null, cubes: [] };
+    const obj = makePillar(Math.max(0.15, st.topY), true);
+    obj.position.set(point.x, 0, point.z);
+    setPick(obj, { kind: 'station', id: 'stand' });
+    scene.add(obj);
+    stations.stand = st;
+  }
+
+  // The bench: a plain surface for the user. The robot never refers to it,
+  // which is the whole point -- a trained action can only name a hole.
+  {
+    const w = BENCH.x1 - BENCH.x0, d = BENCH.z1 - BENCH.z0;
+    const cx = (BENCH.x0 + BENCH.x1) / 2, cz = (BENCH.z0 + BENCH.z1) / 2;
+    const topMat = new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.72 });
+    const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.07, d), topMat);
+    top.position.set(cx, BENCH_TOP - 0.035, cz);
+    top.castShadow = true; top.receiveShadow = true;
+    setPick(top, { kind: 'bench' });
+    scene.add(top);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x33383f, roughness: 0.6, metalness: 0.4 });
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, BENCH_TOP - 0.07, 16), legMat);
+      leg.position.set(cx + sx * (w / 2 - 0.1), (BENCH_TOP - 0.07) / 2, cz + sz * (d / 2 - 0.1));
+      leg.castShadow = true;
+      scene.add(leg);
+    }
+  }
+
   // things become pickable as they are created; simplest is to test everything
   pickables.length = 0;
   pickables.push(scene);
@@ -1819,10 +1917,12 @@ window.__nano = {
   draw() { renderer.render(scene, camera); },
   pick(station, path = []) { handleClick({ kind: 'station', id: station }); if (path.length) throw new Error('use pickAt'); },
   click(station) { handleClick({ kind: 'station', id: station }); },
-  clickHole(station, index) { handleClick({ kind: 'hole', box: stations[station].occupant, index }); },
-  clickHoleAt(station, path, index) { handleClick({ kind: 'hole', box: thingAt(station, path), index }); },
-  clickThing(station, path = []) { handleClick({ kind: 'thing', thing: thingAt(station, path) }); },
   giveRobot() { handleClick({ kind: 'robot' }); },
+  clickThing(t) { handleClick({ kind: 'thing', thing: t }); },
+  clickHole(box, index) { handleClick({ kind: 'hole', box, index }); },
+  clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
+  mine(path = []) { return thingAt(path); },
+  bench(i = 0) { return benchThings[i]; },
   type(v, op) { if (held) { held.setValue(rat(v), op); refreshUI(); } },
   setOp(op) { if (held) { held.setOp(op); refreshUI(); } },
   speed(s) { speed = s === 'inf' ? Infinity : s; document.getElementById('speed').value = s; },
@@ -1840,11 +1940,12 @@ window.__nano = {
   get condText() { return condText(condition); },
   get hint() { return document.getElementById('hint').textContent; },
   dump() {
-    const describeThing = (t) => !t ? null
+    const d = (t) => !t ? null
       : t.userData.kind === 'number'
         ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
-      : { box: t.userData.holes.map(h => describeThing(h.thing)) };
-    return Object.fromEntries(Object.values(stations).map(s => [s.id, describeThing(s.occupant)]));
+      : { box: t.userData.holes.map(h => d(h.thing)) };
+    return { stand: d(stations.stand.occupant), copier: d(stations.copier.occupant),
+             bench: benchThings.map(d) };
   },
 };
 </script>
