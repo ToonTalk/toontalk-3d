@@ -454,7 +454,8 @@ const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / thing.userData.
 function holesOf(t) { return t?.userData.kind === 'box' ? t.userData.holes : null; }
 
 // Everything the user can touch, as roots of object trees.
-const roots = () => [stations.stand?.occupant, stations.copier?.occupant, ...benchThings].filter(Boolean);
+const roots = () => Object.values(stations)
+  .map(s => s.occupant).concat(benchThings).filter(Boolean);
 
 // The robot's whole world is one object: whatever it was given. `path` is a
 // chain of hole indices into that, and [] means the thing itself. Nothing a
@@ -628,33 +629,46 @@ function makePillar(height, special) {
 
 // The duplicating machine: a platform between two posts, with a scan bar that
 // sweeps whatever is put on it.
+// Two surfaces: the original goes on the upper platform and is scanned there,
+// the duplicate is delivered to the lower tray. Both stay reachable, so nothing
+// has to be cleared before the machine will work again.
+const COPY_LIFT = 0.52;                       // upper platform above the tray
 function makeCopier(height, st) {
   const g = new THREE.Group();
   const dark = new THREE.MeshStandardMaterial({ color: 0x242a34, roughness: 0.65, metalness: 0.25 });
+  const cream = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.45 });
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.19, height, 32), dark);
   base.position.y = height / 2; base.castShadow = true; base.receiveShadow = true;
   g.add(base);
-  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.185, 0.04, 32),
-    new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.45 }));
-  plate.position.y = height; plate.castShadow = true; plate.receiveShadow = true;
-  g.add(plate);
+
+  const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.185, 0.04, 32), cream);
+  tray.position.y = height; tray.castShadow = true; tray.receiveShadow = true;
+  setPick(tray, { kind: 'station', id: 'copyOut' });
+  g.add(tray);
+
   for (const s of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), dark);
-    post.position.set(0.215 * s, height + 0.25, 0);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, COPY_LIFT + 0.42, 0.05), dark);
+    post.position.set(0.215 * s, height + (COPY_LIFT + 0.42) / 2, 0);
     post.castShadow = true;
     g.add(post);
   }
+  const platform = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.04, 0.34), cream);
+  platform.position.y = height + COPY_LIFT;
+  platform.castShadow = true; platform.receiveShadow = true;
+  setPick(platform, { kind: 'station', id: 'copyIn' });
+  g.add(platform);
+
   const cap = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.05, 0.07), dark);
-  cap.position.set(0, height + 0.5, 0);
+  cap.position.set(0, height + COPY_LIFT + 0.42, 0);
   g.add(cap);
   const bar = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.028, 0.10),
     new THREE.MeshStandardMaterial({ color: 0x0b3d4d, roughness: 0.2,
       emissive: 0x2fd3ff, emissiveIntensity: 2.6, toneMapped: false }));
-  bar.position.set(0, height + 0.46, 0);
+  bar.position.set(0, height + COPY_LIFT + 0.36, 0);
   g.add(bar);
   st.scanBar = bar;
-  st.scanTop = height + 0.46;
-  st.scanBottom = height + 0.07;
+  st.scanTop = height + COPY_LIFT + 0.36;
+  st.scanBottom = height + COPY_LIFT + 0.06;
   return g;
 }
 
@@ -740,6 +754,7 @@ let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0;
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
+let copyArmed = false;     // next thing the robot is pointed at gets copied
 let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
 const MAX_ITER = 100;      // a robot whose condition never fails would loop forever
@@ -909,49 +924,84 @@ function actionPut(path) {
   enqueue(armTo(POSE.rest, JAW_CLOSED, 0.7));
 }
 
-// Scan, grow a copy on top of the original, then hand it over -- to the user's
-// hand when they worked the machine themselves, to the claw when the robot did.
-function runCopier(st, toHand) {
-  let copy = null;
+const scanStep = (st) => ({
+  dur: 0.7,
+  update(t) {
+    const e = Math.sin(Math.PI * t);
+    st.scanBar.position.y = lerp(st.scanTop, st.scanBottom, e);
+    st.scanBar.material.emissiveIntensity = 2.6 + 3.4 * e;
+  },
+  end() { st.scanBar.position.y = st.scanTop; st.scanBar.material.emissiveIntensity = 2.6; },
+});
+
+// Scan whatever is on the upper platform and lower a duplicate into the tray.
+// The original never moves, so the machine is ready again immediately.
+function runDuplicate() {
+  const inSt = stations.copyIn, outSt = stations.copyOut;
+  let copy = null, from = null;
+  enqueue(scanStep(inSt));
   enqueue({
-    dur: 0.7,
-    update(t) {
-      const e = Math.sin(Math.PI * t);
-      st.scanBar.position.y = lerp(st.scanTop, st.scanBottom, e);
-      st.scanBar.material.emissiveIntensity = 2.6 + 3.4 * e;
+    dur: 0.45,
+    start() {
+      copy = buildThing(specOf(inSt.occupant));
+      scene.add(copy);
+      from = inSt.occupant.getWorldPosition(new THREE.Vector3());
+      copy.position.copy(from);
+      copy.scale.setScalar(0.01);
+      flash(from);
     },
-    end() { st.scanBar.position.y = st.scanTop; st.scanBar.material.emissiveIntensity = 2.6; },
+    update(t) {
+      const s = 0.01 + 0.99 * ease(t);
+      copy.scale.setScalar(s);
+      copy.position.y = inSt.point.y + inSt.occupant.userData.rest + copy.userData.rest * s;
+    },
   });
   enqueue({
     dur: 0.5,
+    update(t) {
+      const e = ease(t);
+      copy.position.y = lerp(inSt.point.y + 0.3, outSt.topY + copy.userData.rest, e);
+      copy.position.x = lerp(from.x, outSt.point.x, e);
+      copy.position.z = lerp(from.z, outSt.point.z, e);
+    },
+    end() { putOnStation(outSt, copy); refreshUI(); },
+  });
+}
+
+// The robot's own way of duplicating: box-relative, so it names a hole rather
+// than a machine. The original stays put and the copy arrives in the claw --
+// exactly what ToonTalk's magic wand does.
+function actionCopy(path) {
+  enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
+  let copy = null, src = null;
+  enqueue({
+    dur: 0.5,
     start() {
-      copy = buildThing(specOf(st.occupant));
+      src = thingAt(path);
+      if (!src) return abort(`The robot expected something in ${holeName(path)} and found nothing.`);
+      copy = buildThing(specOf(src));
       scene.add(copy);
-      const p = st.occupant.getWorldPosition(new THREE.Vector3());
+      const p = src.getWorldPosition(new THREE.Vector3());
       copy.position.copy(p);
       copy.scale.setScalar(0.01);
       flash(p);
     },
     update(t) {
-      // grow sitting on top of the original rather than inside it
-      const s = 0.01 + 0.99 * ease(t);
-      copy.scale.setScalar(s);
-      copy.position.y = st.point.y + st.occupant.userData.rest + copy.userData.rest * s;
+      if (!copy) return;
+      const e = ease(t);
+      copy.scale.setScalar(0.01 + 0.99 * e);
+      copy.position.y = src.getWorldPosition(new THREE.Vector3()).y + 0.34 * e;
     },
   });
   enqueue(doNow(() => {
-    if (toHand) takeIntoHand(copy);
-    else {
-      grip.attach(copy);
-      held = copy;
-      noteHeld();
-      enqueueNext(graspSettle(copy));
-    }
-    // the original stays on the machine and the copy leaves -- say so, or it
-    // looks like nothing happened
-    if (mode !== 'replay') say('Copied — the original stays, you take the copy.');
-    refreshUI();
+    if (!copy) return;
+    grip.attach(copy);
+    held = copy;
+    noteHeld();
+    enqueueNext(graspSettle(copy));
   }));
+  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.5));
+  enqueue(doNow(refreshUI));
 }
 
 // Typing a number on a held box gives it that many holes. Rebuilt rather than
@@ -1138,10 +1188,12 @@ function userClick(target) {
       return say('Nothing there to pick up.');
     }
     if (st.kind === 'stack') return say('Stacks only give things out.');
-    if (st.kind === 'copier') {
-      if (st.occupant) return say('The copier is full — take that off first.');
-      return userUseCopier(st);
+    if (st.kind === 'copyIn') {
+      if (st.occupant) return say('Take the original off the platform first.');
+      if (stations.copyOut.occupant) return say('Take the copy out of the tray first.');
+      return userUseCopier();
     }
+    if (st.kind === 'copyOut') return say('Copies come out here — put originals on the platform above.');
     return say('Hand it to the robot instead.');
   }
   if (target.kind === 'bench') {
@@ -1162,9 +1214,18 @@ function userClick(target) {
 // Inside the thought bubble the user directs the robot -- and a robot can only
 // speak about the thing it was given, so anything else is off limits.
 function directRobot(target) {
-  if (target.kind === 'station' && stations[target.id]?.kind === 'stack') {
+  const st = target.kind === 'station' ? stations[target.id] : null;
+  if (st?.kind === 'stack') {
     if (held) return say('It is already holding something.');
-    return go({ type: stations[target.id].id === 'boxes' ? 'newBox' : 'newNumber' });
+    return go({ type: st.id === 'boxes' ? 'newBox' : 'newNumber' });
+  }
+  // The copier arms a copy: the robot then names a hole, not the machine, so
+  // the step stays box-relative.
+  if (st?.kind === 'copyIn' || st?.kind === 'copyOut') {
+    if (held) return say('It can only copy with an empty claw.');
+    copyArmed = !copyArmed;
+    say(copyArmed ? 'Copier armed — click what the robot should copy.' : 'Copier stood down.');
+    return refreshUI();
   }
   if (target.kind === 'thing' || target.kind === 'hole') {
     const path = target.kind === 'hole'
@@ -1172,6 +1233,11 @@ function directRobot(target) {
       : pathOf(target.thing);
     if (!path) return say('The robot can only touch what it was given.');
     if (held) return go({ type: 'put', path });
+    if (copyArmed) {
+      if (!path.length) return say('It cannot copy the whole thing it was given.');
+      copyArmed = false;
+      return go({ type: 'copy', path });
+    }
     if (!path.length) return say('That is the thing it was given.');
     return go({ type: 'take', path });
   }
@@ -1241,12 +1307,12 @@ function userPutOnBench(at) {
   enqueueNext(settleInto(dropped, from));
   refreshUI();
 }
-function userUseCopier(st) {
+function userUseCopier() {
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
-  putOnStation(st, dropped);
+  putOnStation(stations.copyIn, dropped);
   enqueueNext(settleInto(dropped, from));
-  runCopier(st, true);
+  runDuplicate();
   refreshUI();
 }
 
@@ -1285,6 +1351,7 @@ function runStep(step) {
   if (step.type === 'newNumber') actionNew('number');
   else if (step.type === 'newBox') actionNew('box');
   else if (step.type === 'take') actionTake(step.path);
+  else if (step.type === 'copy') actionCopy(step.path);
   else if (step.type === 'put') actionPut(step.path);
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); } });
@@ -1629,6 +1696,7 @@ function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
        : s.type === 'take' ? `take what is in ${holeName(s.path)}`
+       : s.type === 'copy' ? `copy what is in ${holeName(s.path)}`
        : s.type === 'put' ? (s.path.length ? `put it in ${holeName(s.path)}` : 'drop it on its own thing')
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
@@ -1674,7 +1742,8 @@ function refreshUI() {
   $('hint').textContent =
     mode === 'replay' ? 'Watching it repeat what it learned…' :
     training ? (held ? 'Tell it which hole to put that in — it can only touch what it was given.'
-                     : 'Direct it on its own box, or click a stack for a new number. Every move is remembered.') :
+                     : copyArmed ? 'Copier armed — click what the robot should copy.'
+                     : 'Direct it on its own box, click a stack for a new one, or the copier to copy. Every move is remembered.') :
     held ? (program.length ? 'Click the robot to give it this to work on, or the bench to put it down.'
                            : 'Click the robot to give it this — that is how training starts.') :
     program.length ? 'Give the robot something, then run what it learned.' :
@@ -1794,11 +1863,17 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
       st.cubes.forEach(c => pickables.push(c));
     } else {
       const h = Math.max(0.15, st.topY);
-      const obj = def.kind === 'copier' ? makeCopier(h, st) : makePillar(h, def.kind === 'given');
+      const obj = makeCopier(h, st);
       obj.position.set(point.x, 0, point.z);
-      setPick(obj, { kind: 'station', id: def.id });
-      scene.add(obj); pickables.push(obj);
-      stations[def.id] = st;
+      setPick(obj, { kind: 'station', id: 'copyOut' });
+      scene.add(obj);
+      // one machine, two slots: the upper platform takes the original, the
+      // lower tray delivers the copy
+      stations.copyOut = { ...st, id: 'copyOut', kind: 'copyOut', label: 'the copier tray' };
+      stations.copyIn = { id: 'copyIn', kind: 'copyIn', label: 'the copier platform',
+        point: new THREE.Vector3(point.x, point.y + COPY_LIFT, point.z),
+        topY: st.topY + COPY_LIFT, occupant: null, cubes: [],
+        scanBar: st.scanBar, scanTop: st.scanTop, scanBottom: st.scanBottom };
     }
   }
 
@@ -1921,6 +1996,7 @@ window.__nano = {
   clickThing(t) { handleClick({ kind: 'thing', thing: t }); },
   clickHole(box, index) { handleClick({ kind: 'hole', box, index }); },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
+  arm() { copyArmed = true; refreshUI(); },
   mine(path = []) { return thingAt(path); },
   bench(i = 0) { return benchThings[i]; },
   type(v, op) { if (held) { held.setValue(rat(v), op); refreshUI(); } },
@@ -1944,8 +2020,8 @@ window.__nano = {
       : t.userData.kind === 'number'
         ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
       : { box: t.userData.holes.map(h => d(h.thing)) };
-    return { stand: d(stations.stand.occupant), copier: d(stations.copier.occupant),
-             bench: benchThings.map(d) };
+    return { stand: d(stations.stand.occupant), bench: benchThings.map(d),
+             copyIn: d(stations.copyIn.occupant), copyOut: d(stations.copyOut.occupant) };
   },
 };
 </script>

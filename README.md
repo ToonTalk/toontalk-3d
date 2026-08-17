@@ -45,8 +45,11 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   Refuse a run and the offending parts glow red in the bubble.
 - **Dusty the vacuum** erases parts of that condition into wildcards (`?`),
   which is what turns a one-off into something general.
-- **A copier.** Put anything on it and it produces an independent deep copy —
-  boxes come back with their contents duplicated, not shared.
+- **A copier** with two surfaces: originals go on the upper platform and are
+  scanned there, copies are delivered to the lower tray. Copies are independent
+  deep copies — boxes come back with their contents duplicated, not shared.
+  A robot copies too, but names a hole rather than the machine: arm the copier,
+  then point it at what to copy.
 - **Running.** The robot repeats its trained actions on whatever it is given,
   and *keeps* repeating while its condition still holds — so a loop is just a
   condition that stays true.
@@ -83,8 +86,8 @@ worth keeping back into the script.
 ## Known limits
 
 - The robot no longer walks: its stand sits exactly where its claw reaches.
-- A robot cannot be trained to use the copier — duplicating is a bench tool for
-  you only, since "copy that" has no box-relative spelling yet.
+- A robot holds one thing at a time and has nowhere to set it down; every
+  manipulation has to route through a hole of its own box.
 - `^` takes integer exponents only. Results are unbounded BigInts; the only
   limit is a guard that refuses a power whose size is estimated past 20000
   digits, so a runaway loop cannot lock the browser mid-calculation.
