@@ -23,6 +23,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **Undo.** Ctrl+Z or the Undo button unwinds moves, typing, joins, vacuums
   and condition erasures — including recorded steps while training a robot.
   Mode boundaries (entering or leaving a lesson, running) clear the history.
+- **Sharing robots.** Save names a robot in the browser; Export downloads it as
+  a `.robot.json` file and Import adds one to the library. Load wakes a robot
+  automatically if none is at the bench. Hovering a trained mini shows its
+  whole program.
   Division gives a real fraction, not a float. Numbers too long to fit render
   the ToonTalk way — full size at both ends, tapering to an ellipsis in the
   middle — so the most and least significant digits both stay readable at any

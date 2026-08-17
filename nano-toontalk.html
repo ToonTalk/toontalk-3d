@@ -90,7 +90,8 @@
   #loading.gone { opacity: 0; pointer-events: none; }
 
   #tip { position: fixed; z-index: 20; pointer-events: none; display: none;
-         max-width: 240px; padding: 6px 9px; font-size: 12px; line-height: 1.4;
+         max-width: 260px; padding: 6px 9px; font-size: 12px; line-height: 1.4;
+         white-space: pre-line;
          color: var(--ink); background: rgba(10, 13, 19, 0.92);
          border: 1px solid var(--edge); border-radius: 8px; }
 </style>
@@ -114,7 +115,10 @@
         title="A name to save the active robot's training under.">
       <button id="saveBtn" title="Save the active robot's program and condition in this browser.">Save</button></div>
     <div class="row"><select id="robotList" title="Robots saved in this browser."></select>
-      <button id="loadBtn" title="Load this saved training into the robot at the bench.">Load</button><button id="delBtn" title="Delete this saved robot.">×</button></div>
+      <button id="loadBtn" title="Load this saved training into the robot at the bench (waking one if needed).">Load</button><button id="delBtn" title="Delete this saved robot.">×</button></div>
+    <div class="row"><button id="exportBtn" title="Download the selected robot as a file, to share or move to another computer.">Export file</button>
+      <button id="importBtn" title="Add a robot file to this browser's library.">Import file</button>
+      <input id="importFile" type="file" accept=".json,application/json" style="display:none"></div>
   </div>
 </div>
 
@@ -145,8 +149,6 @@
   <span class="sep"></span>
   <button id="undoBtn"
     title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
-  <button id="resetBtn"
-    title="Clear the table and stations. Robots and their training survive.">Reset</button>
 </div>
 
 <div id="loading">Loading…</div>
@@ -544,13 +546,14 @@ function makeBird(nest) {
   setPick(g, { kind: 'thing', thing: g });
   return g;
 }
+// Deliveries are children of the nest, so the whole pile travels with it.
 function restackNest(nest) {
-  const np = nest.getWorldPosition(new THREE.Vector3());
-  let y = np.y + 0.1;
+  let y = 0.1;
   for (const t of nest.userData.pile) {
     const half = t.userData.rest || 0.12;
     y += half;
-    t.position.set(np.x, y, np.z);
+    t.position.set(0, y, 0);
+    t.quaternion.identity();
     y += half + 0.012;
   }
 }
@@ -580,7 +583,7 @@ function birdDeliver(bird) {
   });
   enqueue(doNow(() => {
     bird.remove(thing);
-    scene.add(thing);
+    nest.add(thing);
     thing.scale.setScalar(1);
     nest.userData.pile.push(thing);
     restackNest(nest);
@@ -709,16 +712,26 @@ function holeContaining(thing) {
 function specOf(thing) {
   if (!thing) return null;
   const kind = thing.userData.kind;
-  return kind === 'number'
-    ? { kind: 'number', value: thing.userData.value, op: thing.userData.op }
-    : { kind, holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
+  if (kind === 'number') return { kind: 'number', value: thing.userData.value, op: thing.userData.op };
+  // birds, nests and robots inside boxes go by reference: their identity (a
+  // bird's pairing, a robot's training) has no data form
+  if (kind === 'nest' || kind === 'bird' || kind === 'robot') return { kind: 'ref', node: thing };
+  return { kind, holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
 }
 function buildThing(spec) {
   if (!spec) return null;
+  if (spec.kind === 'ref') return spec.node;
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
   const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   return b;
+}
+// Does this thing contain anything alive -- a bird, nest or robot -- anywhere?
+function hasLive(thing) {
+  if (!thing) return false;
+  const k = thing.userData.kind;
+  if (k === 'nest' || k === 'bird' || k === 'robot') return true;
+  return !!holesOf(thing)?.some(h => hasLive(h.thing));
 }
 // Structure without values: what the robot's condition actually matches on.
 function shapeOf(spec) {
@@ -735,6 +748,7 @@ function matches(cond, spec) {
   if (cond === null || cond === undefined) return spec == null;
   if (cond.kind === 'wild') return spec != null;
   if (!spec) return false;
+  if (spec.kind === 'ref') return cond.kind === 'wild';
   if (cond.kind === 'wildNumber') return spec.kind === 'number';
   if (cond.kind === 'wildBox') return spec.kind === 'box' && spec.holes.length === cond.n;
   if (cond.kind === 'wildScale') return spec.kind === 'scale';
@@ -1184,7 +1198,8 @@ function actionTake(at) {
     setPick(held, { kind: 'thing', thing: held });
     noteHeld();
     grip.attach(held);
-    enqueueNext(graspSettle(held));
+    // fetching from the raised platform is a long reach -- let it be seen
+    enqueueNext(graspSettle(held, at.c === 'in' ? 0.5 : 0.2));
   }));
   enqueue(armTo(POSE.reach, JAW_CLOSED, 0.35));
   enqueue(armTo(POSE.carry, JAW_CLOSED, 0.6));
@@ -1212,7 +1227,8 @@ function actionPut(at, side) {
       if (st.occupant) combine(st, dropped, false, from, side);
       else {
         putOnStation(st, dropped);
-        enqueueNext(settleInto(dropped, from));
+        // the platform sits above the claw, so let the rise be seen
+        enqueueNext(settleInto(dropped, from, at.c === 'in' ? 0.55 : 0.22));
         if (at.c === 'in') runDuplicate();
       }
     }
@@ -1543,9 +1559,7 @@ function userClick(target) {
       return formTeam(bot, held.__bot);
     }
     if (held) {
-      if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
-        return say('The robot doesn’t understand birds yet.');
-      }
+      if (hasLive(held)) return say('The robot doesn’t understand birds or nests yet.');
       if (bot === activeBot) return giveToRobot();
       if (activeBot) return say('Another robot is already at the bench — click it first to send it away.');
       return activateBot(bot);
@@ -1561,8 +1575,11 @@ function userClick(target) {
     if (!held) {
       if (st.kind === 'stack') return userTakeFromStack(st);
       if (isCopier) {
-        if (stations.copyOut.occupant) return userTake(stations.copyOut.occupant);
-        if (stations.copyIn.occupant) return userTake(stations.copyIn.occupant);
+        // take from the surface actually clicked, falling back to the other
+        const first = st.kind === 'copyIn' ? stations.copyIn : stations.copyOut;
+        const other = st.kind === 'copyIn' ? stations.copyOut : stations.copyIn;
+        if (first.occupant) return userTake(first.occupant);
+        if (other.occupant) return userTake(other.occupant);
         return say('Nothing there to pick up.');
       }
       if (st.occupant) return userTake(st.occupant);
@@ -1571,9 +1588,7 @@ function userClick(target) {
     if (st.kind === 'stack') return say('Stacks only give things out.');
     if (holdingBot) return say('Little robots go on the table, or on another robot.');
     if (isCopier) {
-      if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
-        return say('The copier can’t copy birds or nests.');
-      }
+      if (hasLive(held)) return say('The copier can’t copy birds, nests or robots.');
       if (stations.copyIn.occupant) return say('Take the original off the platform first.');
       if (stations.copyOut.occupant) return say('Take the copy out of the tray first.');
       return userUseCopier();
@@ -1586,13 +1601,7 @@ function userClick(target) {
   }
   if (target.kind === 'thing') {
     const kind = target.thing.userData.kind;
-    if (!held) {
-      // a nest with deliveries gives up its top one before itself
-      if (kind === 'nest' && target.thing.userData.pile.length) {
-        return userTake(target.thing.userData.pile[target.thing.userData.pile.length - 1]);
-      }
-      return userTake(target.thing);
-    }
+    if (!held) return userTake(target.thing);   // pile items resolve directly
     if (target.thing === held) return;
     if (holdingBot) return say('Robots only team up with other robots.');
     if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
@@ -1617,9 +1626,6 @@ function userClick(target) {
   if (target.kind === 'hole') {
     if (!held) return say('That hole is empty.');
     if (holdingBot) return say('Robots don’t fit in holes.');
-    if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
-      return say('Birds and nests don’t fit in holes yet.');
-    }
     return userPutInHole(target.box.userData.holes[target.index]);
   }
 }
@@ -1643,9 +1649,10 @@ function directRobot(target) {
       if (stations.copyOut.occupant) return say('The tray still has a copy in it.');
       return go({ type: 'put', at: { c: 'in', path: [] } });
     }
-    if (stations.copyOut.occupant) return go({ type: 'take', at: { c: 'out', path: [] } });
-    if (stations.copyIn.occupant) return go({ type: 'take', at: { c: 'in', path: [] } });
-    return say('The copier is empty.');
+    // take from the surface actually clicked, falling back to the other
+    const prefer = stationOf(c).occupant ? c : (c === 'in' ? 'out' : 'in');
+    if (!stationOf(prefer).occupant) return say('The copier is empty.');
+    return go({ type: 'take', at: { c: prefer, path: [] } });
   }
   if (c) {
     if (held) {
@@ -1800,7 +1807,7 @@ function giveToRobot() {
 
 // A mini robot grows to full size, walks behind the bench, and takes what the
 // user is dropping on it.
-function activateBot(bot) {
+function activateBot(bot, after) {
   clearUndo();
   busy = true;
   detach(bot.node);
@@ -1821,7 +1828,8 @@ function activateBot(bot) {
     parkRobot();
     renderProgram(); rebuildCondition();
     busy = false;
-    giveToRobot();               // consumes what the user is carrying
+    if (held && held.userData.kind !== 'robot') giveToRobot();
+    if (after) after();
     refreshUI();
   }));
 }
@@ -2195,17 +2203,26 @@ function saveRobot(name) {
   refreshLibrary(name);
   say(`Saved “${name}”.`);
 }
-function loadRobot(name) {
-  const rec = loadLibrary()[name];
-  if (!rec) return say('No robot by that name.');
-  if (mode === 'training') leaveTraining();
-  if (!activeBot) return say('Wake a robot first — drop something on a mini — then load into it.');
+function applyLoaded(rec, name) {
   clearUndo();
   program = rec.program.map(stepIn);
   condition = condIn(rec.condition);
   syncBot();
   rebuildCondition(); renderProgram(); refreshUI();
   say(`Loaded “${name}” — give it ${condText(condition)} and run it.`);
+}
+function loadRobot(name) {
+  const rec = loadLibrary()[name];
+  if (!rec) return say('No robot by that name.');
+  if (mode === 'training') leaveTraining();
+  if (activeBot) return applyLoaded(rec, name);
+  // no robot at the bench: wake one -- a bench mini if there is one, else a
+  // fresh one straight off the stack
+  const miniNode = benchThings.find(t => t.userData.kind === 'robot')
+    ?? stations.minis.cubes.pop();
+  if (!miniNode) return say('No robot to load into.');
+  refillStack(stations.minis, true);
+  activateBot(miniNode.__bot, () => applyLoaded(rec, name));
 }
 function deleteRobot(name) {
   const lib = loadLibrary();
@@ -2223,6 +2240,7 @@ function refreshLibrary(select) {
     : '<option value="">(none saved)</option>';
   $('loadBtn').disabled = !names.length;
   $('delBtn').disabled = !names.length;
+  $('exportBtn').disabled = !names.length;
 }
 
 function snapshotWorld() {
@@ -2474,7 +2492,6 @@ function refreshUI() {
   $('runBtn').textContent = running ? 'Stop' : 'Run what it learned';
   $('runBtn').disabled = !running && !program.length;
   $('undoBtn').disabled = running || busy || !undoStack.length || undoStack[undoStack.length - 1].mode !== mode;
-  $('resetBtn').disabled = running;
   $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
   $('dustyBtn').classList.toggle('think', dustyActive);
   $('dustyBtn').disabled = running || busy || !dusty;
@@ -2517,6 +2534,36 @@ $('runBtn').onclick = () => {
 };
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
 $('saveBtn').onclick = () => saveRobot($('robotName').value.trim());
+$('exportBtn').onclick = () => {
+  const name = $('robotList').value;
+  const rec = loadLibrary()[name];
+  if (!rec) return say('Nothing selected to export.');
+  const blob = new Blob([JSON.stringify({ name, ...rec }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name.replace(/[^\w-]+/g, '_') + '.robot.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  say(`Exported “${name}”.`);
+};
+$('importBtn').onclick = () => $('importFile').click();
+$('importFile').onchange = async (ev) => {
+  const file = ev.target.files[0];
+  ev.target.value = '';
+  if (!file) return;
+  try {
+    const rec = JSON.parse(await file.text());
+    if (!Array.isArray(rec.program) || !('condition' in rec)) throw new Error('not a robot file');
+    const name = rec.name || file.name.replace(/\.robot\.json$|\.json$/i, '');
+    const lib = loadLibrary();
+    lib[name] = { program: rec.program, condition: rec.condition };
+    saveLibrary(lib);
+    refreshLibrary(name);
+    say(`Imported “${name}” — pick it in the list and Load.`);
+  } catch (e) {
+    say('Could not import that file: ' + e.message);
+  }
+};
 $('loadBtn').onclick = () => loadRobot($('robotList').value);
 $('delBtn').onclick = () => deleteRobot($('robotList').value);
 $('speed').onchange = (e) => {
@@ -2527,11 +2574,7 @@ $('rounds').onchange = (e) => {
   e.target.value = maxIter;
 };
 $('undoBtn').onclick = () => { if (!busy && mode !== 'replay') undo(); };
-$('resetBtn').onclick = () => {
-  clearUndo();
-  if (mode === 'training') leaveTraining(false);      // discard, don't rewind
-  resetWorld(); say('Scene reset.');
-};
+
 
 
 let bubbleTarget = 0, bubbleNow = 0;
@@ -2645,9 +2688,12 @@ function tipFor(t) {
     }
     if (held) return activeBot ? 'Another robot is already at the bench.'
       : 'Drop that on it: it wakes, grows, and takes it — training if it is untrained.';
-    return trained
-      ? `A trained robot (${trained} steps).${teamNote} Click to pick it up.`
-      : 'A little robot, untrained — click to pick it up.';
+    if (trained) {
+      const lines = bot.program.slice(0, 8).map((st2, i) => `${i + 1}. ${describe(st2)}`);
+      if (bot.program.length > 8) lines.push(`… and ${bot.program.length - 8} more`);
+      return `Runs on ${condText(bot.condition)}:\n${lines.join('\n')}${teamNote ? '\n' + teamNote.trim() : ''}\nClick to pick it up.`;
+    }
+    return 'A little robot, untrained — click to pick it up.';
   }
   if (t.kind === 'thing') {
     const ud = t.thing.userData;
@@ -2964,6 +3010,7 @@ window.__nano = {
   setOp(op) { if (held) { held.setOp(op); refreshUI(); } },
   speed(s) { speed = s === 'inf' ? Infinity : s; document.getElementById('speed').value = s; },
   rounds(n) { maxIter = n; document.getElementById('rounds').value = n; },
+  reset() { clearUndo(); if (mode === 'training') leaveTraining(false); resetWorld(); },
   exit() { leaveTraining(); },
   run() { runProgram(); },
   dusty(on = true) { dustyActive = on; refreshUI(); },
