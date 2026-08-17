@@ -88,6 +88,11 @@
              background: #12151b; z-index: 10; color: var(--dim); font-size: 13px;
              transition: opacity .4s ease; }
   #loading.gone { opacity: 0; pointer-events: none; }
+
+  #tip { position: fixed; z-index: 20; pointer-events: none; display: none;
+         max-width: 240px; padding: 6px 9px; font-size: 12px; line-height: 1.4;
+         color: var(--ink); background: rgba(10, 13, 19, 0.92);
+         border: 1px solid var(--edge); border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -101,29 +106,34 @@
 </div>
 
 <div id="prog" class="card">
-  <h2>Trained actions</h2>
-  <p id="trainedOn"></p>
+  <h2 title="What the active robot learned, step by step. Steps only ever name the robot's own things, never places on your bench.">Trained actions</h2>
+  <p id="trainedOn" title="The robot's condition: what it must be given before it will run. Dusty can vacuum parts of it away."></p>
   <ul id="steps"><li class="empty">not trained yet</li></ul>
   <div id="library">
-    <div class="row"><input id="robotName" placeholder="name this robot" maxlength="28">
-      <button id="saveBtn">Save</button></div>
-    <div class="row"><select id="robotList"></select>
-      <button id="loadBtn">Load</button><button id="delBtn" title="Delete">×</button></div>
+    <div class="row"><input id="robotName" placeholder="name this robot" maxlength="28"
+        title="A name to save the active robot's training under.">
+      <button id="saveBtn" title="Save the active robot's program and condition in this browser.">Save</button></div>
+    <div class="row"><select id="robotList" title="Robots saved in this browser."></select>
+      <button id="loadBtn" title="Load this saved training into the robot at the bench.">Load</button><button id="delBtn" title="Delete this saved robot.">×</button></div>
   </div>
 </div>
 
 <div id="held" class="card">
-  <span class="k">holding</span><span class="v" id="heldVal">–</span>
+  <span class="k" title="What your invisible hand is carrying. It follows your pointer.">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
 </div>
 
 <div id="bar" class="card">
-  <button id="exitBtn" class="think" style="display:none">Leave thought bubble</button>
-  <button id="runBtn" class="go">Run what it learned</button>
-  <button id="againBtn">Train again</button>
-  <button id="dustyBtn">Dusty: asleep</button>
+  <button id="exitBtn" class="think" style="display:none"
+    title="End the lesson. The daydream rewinds; the robot keeps only what it learned.">Leave thought bubble</button>
+  <button id="runBtn" class="go"
+    title="The robot repeats its training on whatever it was given, and keeps going while its condition still matches.">Run what it learned</button>
+  <button id="againBtn"
+    title="Re-open the thought bubble and record a fresh lesson, replacing the old one.">Train again</button>
+  <button id="dustyBtn"
+    title="Dusty vacuums parts of a robot's thought into wildcards, so more things match.">Dusty: asleep</button>
   <span class="sep"></span>
-  <label for="speed">Speed</label>
+  <label for="speed" title="How fast robots move. Instant skips the animation entirely.">Speed</label>
   <select id="speed">
     <option value="0.5">½×</option>
     <option value="1" selected>1×</option>
@@ -135,11 +145,14 @@
   <label for="rounds">Rounds</label>
   <input id="rounds" type="number" min="1" max="10000" value="100" title="How many times a running robot may repeat before stopping">
   <span class="sep"></span>
-  <button id="resetBtn">Reset</button>
-  <button id="clearBtn">Forget training</button>
+  <button id="resetBtn"
+    title="Clear the table and stations. Robots and their training survive.">Reset</button>
+  <button id="clearBtn"
+    title="Erase the active robot's program, condition and team.">Forget training</button>
 </div>
 
 <div id="loading">Loading…</div>
+<div id="tip"></div>
 
 <script type="importmap">
 { "imports": {
@@ -2094,12 +2107,101 @@ addEventListener('keydown', (e) => {
     refreshUI();
   }
 });
+// --- scene tooltips ---------------------------------------------------------
+// What a click would mean, phrased for the current mode and what is being held.
+function tipFor(t) {
+  if (!t || mode === 'replay') return null;
+  const training = mode === 'training';
+  if (t.kind === 'station') {
+    const st = stations[t.id];
+    if (st.kind === 'stack') {
+      if (t.id === 'minis') return training ? null
+        : 'The robot stack — take a little robot and set it on the table.';
+      if (t.id === 'numbers') return training
+        ? 'Click to have the robot take a fresh number.'
+        : 'The number stack — click to take a 1, then type digits to change it.';
+      return training ? 'Click to have the robot take a fresh box.'
+        : 'The box stack — click to take a box; type a digit to change its holes.';
+    }
+    if (st.kind === 'copyIn' || st.kind === 'copyOut') {
+      const who = training ? 'the robot' : 'you';
+      return held ? `The copier — click to have ${who} set that on the platform; a copy drops into the tray.`
+        : stations.copyOut.occupant ? 'The copier — click to take the copy from the tray.'
+        : stations.copyIn.occupant ? 'The copier — click to take the original back.'
+        : 'The copier — put something on it and an exact copy drops into the tray.';
+    }
+    if (st.kind === 'stand') return 'The robot’s stand — whatever it is given sits here while it works.';
+    if (st.kind === 'scratch') return `${st.label[0].toUpperCase()}${st.label.slice(1)} — the robot’s own work spot, swept clean when it finishes.`;
+    return null;
+  }
+  if (t.kind === 'bench') {
+    return held ? 'Your workbench — click to put that down.'
+                : 'Your workbench — build here. Robots cannot reach it.';
+  }
+  if (t.kind === 'dusty') {
+    return dustyActive
+      ? 'Dusty is awake — click a part of the robot’s thought to vacuum it away.'
+      : 'Dusty the vacuum — click to wake him, then click parts of a robot’s thought to erase them.';
+  }
+  if (t.kind === 'cond') {
+    return 'The robot’s thought: the shape it must be given before it will run. Red parts didn’t match; Dusty can vacuum any part into an anything.';
+  }
+  if (t.kind === 'botThing') {
+    const bot = t.bot, trained = bot.program.length;
+    const teamNote = bot.team.length ? ` It leads a team of ${bot.team.length + 1}.` : '';
+    if (bot === activeBot) {
+      return held
+        ? (trained ? 'Click to give it that to work on.' : 'Click to give it that — that starts its training.')
+        : `The robot at the bench${trained ? ` (${trained} steps trained).` : ' — untrained.'} Click to shrink it into your hand.${teamNote}`;
+    }
+    if (held?.userData.kind === 'robot') {
+      return 'Drop to form a team — each pass, the first member that recognises the thing runs.';
+    }
+    if (held) return activeBot ? 'Another robot is already at the bench.'
+      : 'Drop that on it: it wakes, grows, and takes it — training if it is untrained.';
+    return trained
+      ? `A trained robot (${trained} steps).${teamNote} Click to pick it up.`
+      : 'A little robot, untrained — click to pick it up.';
+  }
+  if (t.kind === 'thing') {
+    const ud = t.thing.userData;
+    if (ud.kind === 'number') {
+      const OPW = { '+': 'adds itself to', '-': 'subtracts itself from', '*': 'multiplies',
+                    '/': 'divides', '^': 'raises the power of' };
+      return `${ratShort(ud.value)} — dropped on a number, it ${OPW[ud.op]} it.`
+        + (held ? '' : ' Click to pick it up; then type digits or + − * / ^.');
+    }
+    if (ud.kind === 'box') {
+      return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — holes hold numbers or boxes.`
+        + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
+    }
+    return null;
+  }
+  if (t.kind === 'hole') {
+    return `Hole ${t.index + 1} — empty.` + (held ? ' Click to put that in.' : '');
+  }
+  return null;
+}
+
+const tipEl = document.getElementById('tip');
 renderer.domElement.addEventListener('pointermove', (ev) => {
   // track always, not only while carrying: otherwise picking something up
   // teleports it to wherever the hand was last left
   if (mode === 'world') moveHand(ev);
-  renderer.domElement.style.cursor = (!busy && mode !== 'replay' && resolve(ev)) ? 'pointer' : '';
+  const target = (!busy && mode !== 'replay') ? resolve(ev) : null;
+  renderer.domElement.style.cursor = target ? 'pointer' : '';
+  const tip = tipFor(target);
+  if (tip) {
+    tipEl.textContent = tip;
+    tipEl.style.display = 'block';
+    const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    tipEl.style.left = Math.min(innerWidth - w - 8, ev.clientX + 14) + 'px';
+    tipEl.style.top = Math.min(innerHeight - h - 8, ev.clientY + 18) + 'px';
+  } else {
+    tipEl.style.display = 'none';
+  }
 });
+renderer.domElement.addEventListener('pointerleave', () => { tipEl.style.display = 'none'; });
 renderer.domElement.addEventListener('click', (ev) => handleClick(resolve(ev)));
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
