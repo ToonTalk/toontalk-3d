@@ -1342,15 +1342,21 @@ function directRobot(target) {
     const path = target.kind === 'hole'
       ? (pathOf(target.box) ?? null)?.concat(target.index)
       : pathOf(target.thing);
-    if (!path) return say('The robot can only touch what it was given.');
-    if (held) return go({ type: 'put', path });
-    if (copyArmed) {
-      if (!path.length) return say('It cannot copy the whole thing it was given.');
-      copyArmed = false;
-      return go({ type: 'copy', path });
+    if (path) {
+      if (held) return go({ type: 'put', path });
+      if (copyArmed) { copyArmed = false; return go({ type: 'copy', path }); }
+      if (!path.length) {
+        return say('That is the thing it was given — drop something on it, or reach into its holes.');
+      }
+      return go({ type: 'take', path });
     }
-    if (!path.length) return say('That is the thing it was given.');
-    return go({ type: 'take', path });
+    // Not in its box, but it may be sitting on one of the robot's own spots --
+    // clicking the thing should work the same as clicking the spot under it.
+    if (target.kind === 'thing') {
+      const host = Object.values(stations).find(s => s.occupant === target.thing);
+      if (host) return directRobot({ kind: 'station', id: host.id });
+    }
+    return say('The robot can only touch what it was given and its own work area.');
   }
   say('The robot can only touch what it was given, or make a new number or box.');
 }
@@ -1364,13 +1370,19 @@ scene.add(handNode);
 const handPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function moveHand(ev) {
   if (!reachLocal) return;
-  handPlane.constant = -(reachLocal.y + 0.34);
+  // Only just above working height: the higher this plane, the further the
+  // carried thing drifts from whatever you clicked, since the camera looks in
+  // at an angle.
+  handPlane.constant = -(reachLocal.y + 0.15);
   const ndc = new THREE.Vector2((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   const hit = ray.ray.intersectPlane(handPlane, new THREE.Vector3());
-  if (hit) handNode.position.copy(hit);
+  if (hit) { handNode.position.copy(hit); handNode.updateMatrixWorld(); }
 }
 function takeIntoHand(obj) {
+  // start from where the thing actually is, so it rises into the hand instead
+  // of jumping there
+  const fromWorld = obj.getWorldPosition(new THREE.Vector3());
   held = obj;
   // Stack items are tagged as the stack so the whole column is clickable; once
   // one is taken it has to become a thing in its own right, or clicking it
@@ -1381,6 +1393,7 @@ function takeIntoHand(obj) {
   obj.position.set(0, 0, 0);
   obj.quaternion.identity();
   obj.scale.setScalar(1);
+  enqueueNext(settleInto(obj, fromWorld, 0.24));
 }
 function noteHeld() {
   valueAtPickup = held?.userData.value ?? null;
@@ -1833,12 +1846,14 @@ function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
        : s.type === 'take' ? `take what is in ${holeName(s.path)}`
-       : s.type === 'copy' ? `copy what is in ${holeName(s.path)}`
+       : s.type === 'copy' ? (s.path.length ? `copy what is in ${holeName(s.path)}`
+                                            : 'make a copy of what it was given')
        : s.type === 'putScratch' ? `set it down on spot ${s.i + 1}`
        : s.type === 'takeScratch' ? `pick up spot ${s.i + 1}`
        : s.type === 'putCopier' ? 'put it on the copier'
        : s.type === 'takeCopy' ? 'take the copy'
-       : s.type === 'put' ? (s.path.length ? `put it in ${holeName(s.path)}` : 'drop it on its own thing')
+       : s.type === 'put' ? (s.path.length ? `put it in ${holeName(s.path)}`
+                                           : 'drop it on what it was given')
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
@@ -1942,7 +1957,9 @@ addEventListener('keydown', (e) => {
   }
 });
 renderer.domElement.addEventListener('pointermove', (ev) => {
-  if (held && mode === 'world') moveHand(ev);
+  // track always, not only while carrying: otherwise picking something up
+  // teleports it to wherever the hand was last left
+  if (mode === 'world') moveHand(ev);
   renderer.domElement.style.cursor = (!busy && mode !== 'replay' && resolve(ev)) ? 'pointer' : '';
 });
 renderer.domElement.addEventListener('click', (ev) => handleClick(resolve(ev)));
@@ -2158,6 +2175,8 @@ window.__nano = {
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
   arm() { copyArmed = true; refreshUI(); },
   scratch() { return SCRATCH_X.map((_, i) => stations['s' + i].occupant); },
+  handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
+  heldPos() { return held ? held.getWorldPosition(new THREE.Vector3()).toArray().map(n => +n.toFixed(2)) : null; },
   mine(path = []) { return thingAt(path); },
   bench(i = 0) { return benchThings[i]; },
   type(v, op) { if (held) { held.setValue(rat(v), op); refreshUI(); } },
