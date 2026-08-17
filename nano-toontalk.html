@@ -143,6 +143,8 @@
   <label for="rounds">Rounds</label>
   <input id="rounds" type="number" min="1" max="10000" value="100" title="How many times a running robot may repeat before stopping">
   <span class="sep"></span>
+  <button id="undoBtn"
+    title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
   <button id="resetBtn"
     title="Clear the table and stations. Robots and their training survive.">Reset</button>
   <button id="clearBtn"
@@ -1387,6 +1389,7 @@ function handleClick(target) {
       if (victim.userData.kind === 'robot' && victim.__bot.program.length) {
         say('A trained robot, gone for good.');
       }
+      pushUndo();
       dustySuck(() => victim);
       return;
     }
@@ -1557,15 +1560,18 @@ function noteHeld() {
 
 // --- the user acting directly (no robot involved) --------------------------
 function userTakeFromStack(st) {
+  pushUndo();
   const obj = st.cubes.pop();
   refillStack(st, true);
   if (obj) takeIntoHand(obj);
 }
 function userTake(thing) {
+  pushUndo();
   detach(thing);
   takeIntoHand(thing);
 }
 function userPutInHole(hole) {
+  pushUndo();
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
   if (hole.thing) combine(hole, dropped, true, from);
@@ -1573,12 +1579,14 @@ function userPutInHole(hole) {
   refreshUI();
 }
 function userDropOn(target) {
+  pushUndo();
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
   combine({ occupant: target }, dropped, false, from);
   refreshUI();
 }
 function userPutOnBench(at) {
+  pushUndo();
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
   putOnBench(dropped, at);
@@ -1586,6 +1594,7 @@ function userPutOnBench(at) {
   refreshUI();
 }
 function userUseCopier() {
+  pushUndo();
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
   putOnStation(stations.copyIn, dropped);
@@ -1612,6 +1621,7 @@ function giveToRobot() {
 // A mini robot grows to full size, walks behind the bench, and takes what the
 // user is dropping on it.
 function activateBot(bot) {
+  clearUndo();
   busy = true;
   detach(bot.node);
   scene.attach(bot.node);
@@ -1640,6 +1650,7 @@ function activateBot(bot) {
 function miniaturizeActive() {
   if (!activeBot || busy || mode !== 'world') return;
   const bot = activeBot;
+  clearUndo();
   syncBot();
   returnGivenToTable();
   clearScratch();
@@ -1662,6 +1673,7 @@ function miniaturizeActive() {
 // Dropping one trained robot on another forms a team: the one underneath leads,
 // the dropped one waits behind for something it recognises.
 function formTeam(leader, follower) {
+  clearUndo();
   if (!follower.program.length) return say('Train that robot before adding it to a team.');
   if (!leader.program.length) return say('The robot underneath has no training to lead with.');
   held = null;
@@ -1693,6 +1705,7 @@ function returnGivenToTable() {
 // Every step is relative to the thing the robot was given. Nothing here can
 // name a place, which is exactly what makes a trained robot general.
 function go(step) {
+  pushUndo();
   busy = true;
   // typing is recorded as its own step, just before whatever it applies to
   if (step.type === 'put' && held && held.userData.kind === 'number') {
@@ -1847,6 +1860,7 @@ function condNodeAt(path) {
 function dustyErase(path) {
   const node = condNodeAt(path);
   if (!node || !dusty) return;
+  pushUndo();
   busy = true;
   const dest = node.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, -0.12, 0.34));
   const from = dusty.position.clone();
@@ -1969,6 +1983,7 @@ function loadRobot(name) {
   if (!rec) return say('No robot by that name.');
   if (mode === 'training') leaveTraining();
   if (!activeBot) return say('Wake a robot first — drop something on a mini — then load into it.');
+  clearUndo();
   program = rec.program.map(stepIn);
   condition = condIn(rec.condition);
   syncBot();
@@ -2023,6 +2038,7 @@ function enterTraining() {
   const given = stations.stand.occupant;
   if (!given) return;
   condition = specOf(given);         // exact at first; Dusty loosens it
+  clearUndo();
   clearScratch();
   preTraining = snapshotWorld();     // the daydream must not disturb the world
   mode = 'training';
@@ -2036,6 +2052,7 @@ function enterTraining() {
 // Leaving the bubble rewinds the world: what happened in the daydream was never
 // real. The robot keeps only the actions it learned.
 function leaveTraining(restore = true) {
+  clearUndo();
   mode = 'world';
   bubbleTarget = 0;
   clearScratch();
@@ -2056,6 +2073,39 @@ function parkRobot() {
   setLegs(0, 0);
   applyArm(POSE.rest.sh, POSE.rest.el);
   applyJaw(JAW_CLOSED);
+}
+
+// --- undo -------------------------------------------------------------------
+// Snapshot-based, scoped to the current mode: object moves, typing, joins,
+// vacuums and condition erasures undo; mode boundaries (training, running,
+// robot changes) clear the stack, since a snapshot from the other side of one
+// would restore an inconsistent world.
+const undoStack = [];
+function pushUndo() {
+  if (undoStack.length >= 40) undoStack.shift();
+  undoStack.push({
+    mode,
+    world: snapshotWorld(),
+    heldBot: held?.userData.kind === 'robot' ? held : null,
+    heldSpec: held && held.userData.kind !== 'robot' ? specOf(held) : null,
+    program: program.slice(),
+    condition,
+  });
+  refreshUI();
+}
+function clearUndo() { undoStack.length = 0; }
+function undo() {
+  const e = undoStack[undoStack.length - 1];
+  if (!e || e.mode !== mode) return say('Nothing to undo here.');
+  undoStack.pop();
+  restoreWorld(e.world);
+  program = e.program;
+  condition = e.condition;
+  syncBot();
+  if (e.heldBot) takeIntoHand(e.heldBot);
+  else if (e.heldSpec) takeIntoHand(buildThing(e.heldSpec));
+  renderProgram(); rebuildCondition(); refreshUI();
+  say('Undone.');
 }
 
 function resetWorld() {
@@ -2089,6 +2139,7 @@ function runProgram() {
       : `It only runs when given ${condText(condition)} — the red parts don’t match. Wake Dusty and click a red part to vacuum it away, so anything fits there.`);
   }
   clearFlags();
+  clearUndo();
   // No world reset, but the robot's own area always starts empty so a replay
   // cannot depend on leftovers from a previous run.
   clearScratch();
@@ -2203,6 +2254,7 @@ function refreshUI() {
   const running = mode === 'replay';
   $('runBtn').textContent = running ? 'Stop' : 'Run what it learned';
   $('runBtn').disabled = !running && !program.length;
+  $('undoBtn').disabled = running || busy || !undoStack.length || undoStack[undoStack.length - 1].mode !== mode;
   $('resetBtn').disabled = running;
   $('clearBtn').disabled = running;
   $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
@@ -2217,7 +2269,7 @@ function refreshUI() {
       ? ratShort(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
       : kind === 'robot' ? (held.__bot.program.length ? 'a trained robot' : 'a robot')
       : `a box of ${held.userData.holes.length}`;
-    $('heldTip').textContent = kind === 'number' ? 'type digits, or + − * / ^ to set what it does'
+    $('heldTip').textContent = kind === 'number' ? 'digits set it, − negates, * / ^ set what it does'
       : kind === 'robot' ? 'put it on the table, or on another robot'
       : 'type a digit to change its holes';
   }
@@ -2252,11 +2304,14 @@ $('rounds').onchange = (e) => {
   maxIter = Math.max(1, Math.min(10000, Math.floor(+e.target.value || 100)));
   e.target.value = maxIter;
 };
+$('undoBtn').onclick = () => { if (!busy && mode !== 'replay') undo(); };
 $('resetBtn').onclick = () => {
+  clearUndo();
   if (mode === 'training') leaveTraining(false);      // discard, don't rewind
   resetWorld(); say('Scene reset.');
 };
 $('clearBtn').onclick = () => {
+  clearUndo();
   program = []; condition = null; dustyActive = false;
   if (activeBot) activeBot.team = [];
   syncBot();
@@ -2267,28 +2322,47 @@ $('clearBtn').onclick = () => {
 let bubbleTarget = 0, bubbleNow = 0;
 
 addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    if (!busy && mode !== 'replay') undo();
+    return;
+  }
   if (!held || busy || mode === 'replay') return;
   if (held.userData.kind === 'robot') return;
   if (held.userData.kind === 'box') {
     if (/^[1-9]$/.test(e.key)) {
+      pushUndo();
       resizeHeldBox(+e.key);
       say(`A box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}.`);
     }
     return;
   }
+  if (held.userData.kind !== 'number') return;
   const v = held.userData.value;
   if (/^[0-9]$/.test(e.key)) {
-    // typing digits builds a whole number; it replaces a fraction outright
-    const base = v.d === 1n ? v.n : 0n;
-    held.setValue(rat(base * 10n + BigInt(e.key)));
+    // typing digits builds a whole number, keeping its sign; it replaces a
+    // fraction outright
+    pushUndo();
+    const sign = v.n < 0n ? -1n : 1n;
+    const mag = v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;
+    held.setValue(rat(sign * (mag * 10n + BigInt(e.key))));
     refreshUI();
   } else if (e.key === 'Backspace') {
+    pushUndo();
     held.setValue(v.d === 1n ? rat(v.n / 10n) : rat(0));
     refreshUI(); e.preventDefault();
-  } else if (OPS.includes(e.key) || e.key === 'x' || e.key === 'X') {
+  } else if (e.key === '-') {
+    // minus makes the number negative -- and adding a negative IS subtraction,
+    // so there is no separate subtract operation to type any more
+    pushUndo();
+    held.setValue(rat(-v.n, v.d));
+    say(v.n > 0n ? 'Negative now — dropping it on a number subtracts.' : 'Positive again.');
+    refreshUI();
+  } else if (['+', '*', '/', '^'].includes(e.key) || e.key === 'x' || e.key === 'X') {
+    pushUndo();
     const op = (e.key === 'x' || e.key === 'X') ? '*' : e.key;
     held.setOp(op);
-    say(`This number will ${ {'+':'add','-':'subtract','*':'multiply by','/':'divide by','^':'raise to the power of'}[op] } when you drop it on another.`);
+    say(`This number will ${ {'+':'add','*':'multiply by','/':'divide by','^':'raise to the power of'}[op] } when you drop it on another.`);
     refreshUI();
   }
 });
@@ -2314,7 +2388,7 @@ function tipFor(t) {
         : 'The number stack — click to take a 1, then type digits to change it.';
       if (t.id === 'scales') return training
         ? 'Click to have the robot take a fresh scale.'
-        : 'The scale stack — a scale tips toward the larger of the two numbers on its pans.';
+        : 'The scale stack — a scale tips toward the larger of the numbers in its two holes.';
       return training ? 'Click to have the robot take a fresh box.'
         : 'The box stack — click to take a box; type a digit to change its holes.';
     }
@@ -2371,8 +2445,8 @@ function tipFor(t) {
         + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     if (ud.kind === 'scale') {
-      return 'A scale — put a number on each pan and it tips toward the larger.'
-        + (held ? ' Click a pan to load it.' : ' Click to pick it up.');
+      return 'A scale — put a number in each of its two holes and it tips toward the larger.'
+        + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     return null;
   }

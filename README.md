@@ -16,8 +16,13 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   held box to give it that many holes (up to 8) — the holes shrink rather than
   the box growing off its pillar.
 - **Exact arithmetic.** Numbers are BigInt fractions in lowest terms. Type
-  digits to set a value and `+ - * / ^` to set what a number *does* when
-  dropped on another; each operation colours the block and shows a badge.
+  digits to set a value, `-` to negate it — adding a negative *is* subtraction,
+  so there is no separate subtract operation — and `* / ^` to set what a number
+  *does* when dropped on another; each operation colours the block and shows a
+  badge.
+- **Undo.** Ctrl+Z or the Undo button unwinds moves, typing, joins, vacuums
+  and condition erasures — including recorded steps while training a robot.
+  Mode boundaries (entering or leaving a lesson, running) clear the history.
   Division gives a real fraction, not a float. Numbers too long to fit render
   the ToonTalk way — full size at both ends, tapering to an ellipsis in the
   middle — so the most and least significant digits both stay readable at any
