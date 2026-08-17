@@ -1179,7 +1179,10 @@ const WILD = { kind: 'wild' };
 // a covered nest counts as its top item, and an empty nest is not a mismatch
 // but a reason to wait -- a bird could still deliver the missing piece.
 function matchState(cond, spec) {
-  if (cond === null || cond === undefined) return spec == null ? 'yes' : 'no';
+  // An empty hole in the thought is a hole the robot never looked in, so
+  // anything -- or nothing -- may sit there. The hole must still exist: it is
+  // the shape that is being matched, not the contents.
+  if (cond === null || cond === undefined) return 'yes';
   if (cond.kind === 'wild') return spec != null ? 'yes' : 'no';
   if (!spec) return 'no';
   if (spec.kind === 'ref') {
@@ -1215,7 +1218,7 @@ function matchState(cond, spec) {
 }
 function matches(cond, spec) { return matchState(cond, spec) === 'yes'; }
 function condText(c) {
-  if (!c) return 'an empty hole';
+  if (!c) return 'anything or nothing';
   if (c.kind === 'wild') return 'anything';
   if (c.kind === 'anyBird') return 'a bird';
   if (c.kind === 'anyNest') return 'a nest';

@@ -97,7 +97,9 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   something changes. Dusty erases progressively: a number becomes *any
   number*, a box *any box — any number of holes*, a scale *any scale*, and a
   second erase makes any of them *anything* (its own ?-cloud shape). What sits
-  in a hole can be erased to *anything* on its own.
+  in a hole can be erased to *anything* on its own. A hole the robot was never
+  shown anything in stays empty in the thought, and an empty hole matches
+  anything *or* nothing — only the shape around it has to line up.
 - **Running repeats while some condition still matches**, up to the Rounds
   limit — a loop is just a condition that stays true. **Teams**: drop one
   trained robot on another, and each pass is taken by the first member that
