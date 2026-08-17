@@ -997,6 +997,12 @@ const myThing = () => stations.stand?.occupant ?? null;
 function thingAt(at) {
   let node = stationOf(at.c)?.occupant ?? null;
   for (const i of at.path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
+  // `nest: true` addresses the top of the pile on the nest found there
+  if (at.nest) {
+    if (node?.userData.kind !== 'nest') return null;
+    const pile = node.userData.pile;
+    return pile.length ? pile[pile.length - 1] : null;
+  }
   return node;
 }
 function holeAt(at) {
@@ -2154,6 +2160,19 @@ function directRobot(target) {
     return go({ type: 'take', at: { c, path: [] } });
   }
   if (target.kind === 'thing' || target.kind === 'hole') {
+    // the top of a pile on a nest: the robot takes deliveries one at a time,
+    // exactly as the user does
+    if (!held && target.kind === 'thing') {
+      const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
+      if (pn) {
+        if (pn.userData.pile[pn.userData.pile.length - 1] !== target.thing) {
+          return say('Only the thing on top of the pile can be taken.');
+        }
+        const a = addrOf(pn);
+        if (!a) return say('The robot can only touch what it was given and its own work area.');
+        return go({ type: 'take', at: { c: a.c, path: a.path, nest: true } });
+      }
+    }
     const at = target.kind === 'hole'
       ? (() => { const a = addrOf(target.box); return a && { c: a.c, path: a.path.concat(target.index) }; })()
       : addrOf(target.thing);
@@ -3119,15 +3138,19 @@ function sayAttn(msg) {
 }
 function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i)); }
 // Steps only ever name holes of the robot's own object, never places.
-const holeName = (at) => at.path.length
-  ? `hole ${at.path.map(i => i + 1).join('.')} of ${containerText(at.c)}`
-  : containerText(at.c);
+const holeName = (at) => {
+  const base = at.path.length
+    ? `hole ${at.path.map(i => i + 1).join('.')} of ${containerText(at.c)}`
+    : containerText(at.c);
+  return at.nest ? `the pile on ${base}` : base;
+};
 function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
        : s.type === 'newScale' ? 'take a new scale'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
-       : s.type === 'take' ? (s.at.path.length ? `take what is in ${holeName(s.at)}`
+       : s.type === 'take' ? (s.at.nest ? `take the top of ${holeName(s.at)}`
+           : s.at.path.length ? `take what is in ${holeName(s.at)}`
            : s.at.c === 'out' ? 'take the copy'
            : s.at.c === 'in' ? 'take back the original'
            : s.at.c === 'given' ? 'pick up what it was given'
@@ -3679,6 +3702,8 @@ renderer.setAnimationLoop((now) => {
       h.nest.userData.hasEgg = false;
       h.nest.__egg.removeFromParent();
       const bird = makeBird(h.nest);
+      // a name written on the nest before hatching belongs to the pair
+      if (h.nest.userData.label) setThingLabel(bird, h.nest.userData.label);
       putOnBench(bird, { x: h.nest.position.x + 0.4, z: h.nest.position.z });
       flash(bird.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.15, 0)));
       say('The egg hatched — give the bird something and she takes it home.');

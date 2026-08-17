@@ -44,7 +44,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   bird lifts the pile aside, tucks it in at the bottom, and stacks the pile
   back — so the top of a pile is always the oldest delivery, and it is the
   only one that can be taken. Nobody can move the pile as a whole; the nest
-  and everything on it move together.
+  and everything on it move together. Robots take from piles too: shown a
+  pile top during training, a robot learns *take the top of the pile on that
+  nest*, one delivery at a time. Naming a nest while its egg is still in it
+  names the bird that hatches as well.
 - **A copier** with two surfaces: originals are scanned on the upper platform,
   independent deep copies are delivered to the lower tray. Clicking a surface
   with an empty hand takes from that surface.
@@ -132,8 +135,9 @@ worth keeping back into the script.
 
 ## Known limits
 
-- Birds and nests are objects, not yet communication: robots cannot be given
-  them or wait on them, so there is no inter-robot dataflow yet.
+- A robot can take from a nest's pile but not *wait* on an empty one — an
+  empty pile stops the run rather than suspending it, so there is no
+  blocking inter-robot dataflow yet.
 - Nothing reads a scale's tilt — it shows a comparison but cannot yet be
   branched on.
 - The condition cannot constrain a number's range, only match exactly or
