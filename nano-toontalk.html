@@ -557,7 +557,8 @@ function restackNest(nest) {
     y += half + 0.012;
   }
 }
-// The bird carries the gift home, drops it on the pile, and flies back.
+// The bird carries the gift home, drops it on the pile, and flies back to
+// wherever she was -- a box hole, a spot, or the bench.
 function birdDeliver(bird) {
   const nest = bird.__nest;
   if (!nest || !nest.parent) return say('Her nest is gone — she has nowhere to take it.');
@@ -565,6 +566,8 @@ function birdDeliver(bird) {
   busy = true;
   const thing = held; held = null;
   const wasAt = bird.getWorldPosition(new THREE.Vector3());
+  const originHole = holeContaining(bird);
+  const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
   detach(bird);
   scene.attach(bird);
   bird.add(thing);
@@ -572,7 +575,10 @@ function birdDeliver(bird) {
   thing.quaternion.identity();
   thing.scale.setScalar(0.5);
   const npos = () => nest.getWorldPosition(new THREE.Vector3());
-  enqueue({
+  // enqueueNext, not enqueue: during a replay the next condition check is
+  // already queued, and it must not judge the world while the bird is in
+  // flight with her hole empty
+  enqueueNext({
     dur: 0.9,
     update(t) {
       const e = ease(t), np = npos();
@@ -580,8 +586,7 @@ function birdDeliver(bird) {
         lerp(wasAt.y, np.y + 0.3, e) + 0.45 * Math.sin(Math.PI * e),
         lerp(wasAt.z, np.z, e));
     },
-  });
-  enqueue(doNow(() => {
+  }, doNow(() => {
     bird.remove(thing);
     nest.add(thing);
     thing.scale.setScalar(1);
@@ -589,8 +594,7 @@ function birdDeliver(bird) {
     restackNest(nest);
     flash(npos());
     refreshUI();
-  }));
-  enqueue({
+  }), {
     dur: 0.8,
     update(t) {
       const e = ease(t), np = npos();
@@ -598,7 +602,12 @@ function birdDeliver(bird) {
         lerp(np.y + 0.3, wasAt.y, e) + 0.45 * Math.sin(Math.PI * e),
         lerp(np.z, wasAt.z, e));
     },
-    end() { putOnBench(bird, { x: wasAt.x, z: wasAt.z }); refreshUI(); },
+    end() {
+      if (originHole && !originHole.thing) putInHole(originHole, bird);
+      else if (originSt && !originSt.occupant) putOnStation(originSt, bird);
+      else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
+      refreshUI();
+    },
   });
 }
 
@@ -733,6 +742,23 @@ function hasLive(thing) {
   if (k === 'nest' || k === 'bird' || k === 'robot') return true;
   return !!holesOf(thing)?.some(h => hasLive(h.thing));
 }
+function hasRobot(thing) {
+  if (!thing) return false;
+  if (thing.userData.kind === 'robot') return true;
+  return !!holesOf(thing)?.some(h => hasRobot(h.thing));
+}
+// A condition never stores a live reference: a given bird means "a bird".
+function condFromSpec(sp) {
+  if (!sp) return null;
+  if (sp.kind === 'ref') {
+    const k = sp.node.userData.kind;
+    return k === 'bird' ? { kind: 'anyBird' } : k === 'nest' ? { kind: 'anyNest' } : WILD;
+  }
+  if (sp.kind === 'box' || sp.kind === 'scale') {
+    return { kind: sp.kind, holes: sp.holes.map(condFromSpec) };
+  }
+  return sp;
+}
 // Structure without values: what the robot's condition actually matches on.
 function shapeOf(spec) {
   if (!spec) return '_';
@@ -748,7 +774,13 @@ function matches(cond, spec) {
   if (cond === null || cond === undefined) return spec == null;
   if (cond.kind === 'wild') return spec != null;
   if (!spec) return false;
-  if (spec.kind === 'ref') return cond.kind === 'wild';
+  if (spec.kind === 'ref') {
+    const k = spec.node.userData.kind;
+    if (cond.kind === 'anyBird') return k === 'bird';
+    if (cond.kind === 'anyNest') return k === 'nest';
+    return false;                        // 'wild' already matched above
+  }
+  if (cond.kind === 'anyBird' || cond.kind === 'anyNest') return false;
   if (cond.kind === 'wildNumber') return spec.kind === 'number';
   if (cond.kind === 'wildBox') return spec.kind === 'box' && spec.holes.length === cond.n;
   if (cond.kind === 'wildScale') return spec.kind === 'scale';
@@ -764,6 +796,8 @@ function matches(cond, spec) {
 function condText(c) {
   if (!c) return 'an empty hole';
   if (c.kind === 'wild') return 'anything';
+  if (c.kind === 'anyBird') return 'a bird';
+  if (c.kind === 'anyNest') return 'a nest';
   if (c.kind === 'wildNumber') return 'any number';
   if (c.kind === 'wildBox') return `any box with ${c.n} hole${c.n > 1 ? 's' : ''}`;
   if (c.kind === 'wildScale') return 'any scale';
@@ -964,9 +998,10 @@ function refillStack(st, animate = false) {
 
 // ---------------------------------------------------------------- robot
 const POSE = {
-  rest:  { sh: 0,         el: 0 },
-  reach: { sh: -38 * DEG, el:  33 * DEG },
-  carry: { sh:  -8 * DEG, el: -30 * DEG },
+  rest:      { sh: 0,         el: 0 },
+  reach:     { sh: -38 * DEG, el:  33 * DEG },
+  reachHigh: { sh: -82 * DEG, el:  55 * DEG },   // up toward the copier platform
+  carry:     { sh:  -8 * DEG, el: -30 * DEG },
 };
 const JAW_CLOSED = 0.103, JAW_OPEN = 0.200;
 const WALK_SPEED = 1.25, STRIDE = 0.55;
@@ -1188,8 +1223,9 @@ const walkTargetFor = (c) =>
 
 // Take whatever the address names, into the claw.
 function actionTake(at) {
+  const reach = at.c === 'in' ? POSE.reachHigh : POSE.reach;
   enqueue(walkTo(walkTargetFor(at.c)));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.7));
+  enqueue(armTo(reach, JAW_OPEN, 0.7));
   enqueue(doNow(() => {
     const obj = thingAt(at);
     if (!obj) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
@@ -1201,7 +1237,7 @@ function actionTake(at) {
     // fetching from the raised platform is a long reach -- let it be seen
     enqueueNext(graspSettle(held, at.c === 'in' ? 0.5 : 0.2));
   }));
-  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.35));
+  enqueue(armTo(reach, JAW_CLOSED, 0.35));
   enqueue(armTo(POSE.carry, JAW_CLOSED, 0.6));
   enqueue(doNow(refreshUI));
 }
@@ -1210,9 +1246,10 @@ function actionTake(at) {
 // a bare container places it (or combines with what sits there); placing on
 // the copier platform sets the machine going.
 function actionPut(at, side) {
+  const reach = at.c === 'in' ? POSE.reachHigh : POSE.reach;
   enqueue(walkTo(walkTargetFor(at.c)));
-  enqueue(armTo(POSE.reach, JAW_CLOSED, 0.6));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.35));
+  enqueue(armTo(reach, JAW_CLOSED, 0.6));
+  enqueue(armTo(reach, JAW_OPEN, 0.35));
   enqueue(doNow(() => {
     const dropped = held; held = null;
     if (!dropped) return;
@@ -1220,10 +1257,12 @@ function actionPut(at, side) {
     if (at.path.length) {
       const hole = holeAt(at);
       if (!hole) return abort(`The robot expected ${holeName(at)} and there is no such hole.`);
+      if (hole.thing?.userData.kind === 'bird') { held = dropped; return birdDeliver(hole.thing); }
       if (hole.thing) combine(hole, dropped, true, from, side);
       else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from)); }
     } else {
       const st = stationOf(at.c);
+      if (st.occupant?.userData.kind === 'bird') { held = dropped; return birdDeliver(st.occupant); }
       if (st.occupant) combine(st, dropped, false, from, side);
       else {
         putOnStation(st, dropped);
@@ -1413,6 +1452,9 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   };
   // Boxes join: dropping one box on another concatenates their holes, contents
   // and all, exactly as in ToonTalk.
+  if (target.userData.kind === 'bird' || target.userData.kind === 'nest') {
+    return refuse('Give things to the bird herself — she delivers to her nest.');
+  }
   if (target.userData.kind === 'box' && incoming.userData.kind === 'box') {
     return joinBoxes(target, incoming, refuse, side);
   }
@@ -1559,7 +1601,7 @@ function userClick(target) {
       return formTeam(bot, held.__bot);
     }
     if (held) {
-      if (hasLive(held)) return say('The robot doesn’t understand birds or nests yet.');
+      if (hasRobot(held)) return say('Robots don’t work on robots.');
       if (bot === activeBot) return giveToRobot();
       if (activeBot) return say('Another robot is already at the bench — click it first to send it away.');
       return activateBot(bot);
@@ -1600,6 +1642,7 @@ function userClick(target) {
     return userPutOnBench(target.point);
   }
   if (target.kind === 'thing') {
+    if (!target.thing) return;
     const kind = target.thing.userData.kind;
     if (!held) return userTake(target.thing);   // pile items resolve directly
     if (target.thing === held) return;
@@ -1825,6 +1868,7 @@ function activateBot(bot, after) {
   });
   enqueue(doNow(() => {
     bindBot(bot);
+    setPick(bot.node, { kind: 'botThing', bot });   // stack minis carry the stack's tag
     parkRobot();
     renderProgram(); rebuildCondition();
     busy = false;
@@ -1976,6 +2020,12 @@ function buildCondNode(cond, path, marks) {
   if (!cond) g = new THREE.Group();                       // an empty hole
   else if (cond.kind === 'wild') g = makeAnything();
   else if (cond.kind === 'wildNumber') { g = makeNumber(rat(0)); g.setLabel('?'); }
+  else if (cond.kind === 'anyBird') g = makeBird(null);
+  else if (cond.kind === 'anyNest') {
+    g = makeNest();
+    g.__egg.removeFromParent();
+    g.userData.hasEgg = false;
+  }
   else if (cond.kind === 'wildBox' || cond.kind === 'wildScale') {
     // an erased container: its own blank shape with one floating ?
     g = cond.kind === 'wildScale' ? makeScale() : makeBox(cond.n);
@@ -2162,14 +2212,14 @@ const ratIn = (o) => o ? { n: BigInt(o.n), d: BigInt(o.d) } : null;
 
 function condOut(c) {
   if (!c) return null;
-  if (c.kind.startsWith('wild')) return { ...c };
+  if (/^(wild|any)/.test(c.kind)) return { ...c };
   if (c.kind === 'number') return { kind: 'number', value: ratOut(c.value), op: c.op };
   return { kind: c.kind, holes: c.holes.map(condOut) };
 }
 function condIn(o) {
   if (!o) return null;
   if (o.kind === 'wild') return WILD;
-  if (o.kind.startsWith('wild')) return { ...o };
+  if (/^(wild|any)/.test(o.kind)) return { ...o };
   if (o.kind === 'number') return { kind: 'number', value: ratIn(o.value), op: o.op };
   return { kind: o.kind, holes: o.holes.map(condIn) };
 }
@@ -2253,6 +2303,8 @@ function snapshotWorld() {
     ['robot', 'nest', 'bird'].includes(t.userData.kind)
     ? { bot: t, at: { x: t.position.x, z: t.position.z } }
     : { spec: specOf(t), at: { x: t.position.x, z: t.position.z } });
+  snap.piles = allNests.filter(n => n.parent)
+    .map(n => ({ nest: n, items: n.userData.pile.map(specOf) }));
   return snap;
 }
 function restoreWorld(snap) {
@@ -2262,6 +2314,12 @@ function restoreWorld(snap) {
   benchThings.forEach(t => t.removeFromParent());
   benchThings.length = 0;
   (snap.bench || []).forEach(b => putOnBench(b.bot ?? buildThing(b.spec), b.at));
+  (snap.piles || []).forEach(p => {
+    p.nest.userData.pile.forEach(t => t.removeFromParent());
+    p.nest.userData.pile = p.items.map(buildThing).filter(Boolean);
+    p.nest.userData.pile.forEach(t => p.nest.add(t));
+    restackNest(p.nest);
+  });
   for (const st of Object.values(stations)) {
     if (st.kind === 'stack') continue;
     if (st.occupant) { st.occupant.removeFromParent(); st.occupant = null; }
@@ -2273,7 +2331,7 @@ function restoreWorld(snap) {
 function enterTraining() {
   const given = stations.stand.occupant;
   if (!given) return;
-  condition = specOf(given);         // exact at first; Dusty loosens it
+  condition = condFromSpec(specOf(given));   // exact at first; Dusty loosens it
   clearUndo();
   clearScratch();
   preTraining = snapshotWorld();     // the daydream must not disturb the world
