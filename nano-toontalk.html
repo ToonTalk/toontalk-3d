@@ -854,10 +854,14 @@ function makeNotebook(rec = null) {
   return g;
 }
 function buildFromRec(rec) {
+  // save and restore: this can run in the middle of worldIn, which is
+  // collecting nest groups into the same variable
+  const savedPending = nestGroupPending;
   nestGroupPending = null;
   const nests = new Map(), birds = [];
   const t = thingIn(rec, nests, birds);
   birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+  nestGroupPending = savedPending;
   return t;
 }
 function renderNotebook(nb) {
@@ -963,6 +967,281 @@ function notebookDrop(nb, incoming, side, refuse) {
   let i = ud.pages.findIndex(r => !r);
   if (i < 0) i = ud.pages.length;
   file(i);
+}
+
+// --- rooms ------------------------------------------------------------------
+// A room is a whole workshop in a box: its world lives as data (the same form
+// as a world file). Drop a robot in and it stands ready behind the desk; drop
+// a thing on it and it lands on that desk, and the robot inside gets to work
+// the moment the outer world goes quiet. Walk through the door to swap views.
+let nextRoomId = 1;
+const emptyWorldRec = () => ({ kind: 'world', v: 1, bench: [], stations: {}, active: null });
+function makeRoom(data = null) {
+  const g = new THREE.Group();
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xd8cfae, roughness: 0.8, transparent: true });
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x8a2f1d, roughness: 0.7, transparent: true });
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.42),
+    new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.75 }));
+  floor.position.y = 0.015;
+  floor.castShadow = true; floor.receiveShadow = true;
+  g.add(floor);
+  const wall = (w, x, z, ry = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.24, 0.02), wallMat);
+    m.position.set(x, 0.15, z);
+    m.rotation.y = ry;
+    m.castShadow = true;
+    g.add(m);
+  };
+  wall(0.5, 0, -0.2);
+  wall(0.42, -0.25, 0, Math.PI / 2);
+  wall(0.42, 0.25, 0, Math.PI / 2);
+  wall(0.17, -0.165, 0.2);              // front, split around the doorway
+  wall(0.17, 0.165, 0.2);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.015),
+    new THREE.MeshStandardMaterial({ color: 0x27313e, roughness: 0.5,
+      emissive: 0x18404e, emissiveIntensity: 0.7 }));
+  door.position.set(0, 0.13, 0.2);
+  setPick(door, { kind: 'roomDoor', room: g });
+  g.add(door);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.17, 4), roofMat);
+  roof.position.y = 0.355;
+  roof.rotation.y = Math.PI / 4;
+  roof.castShadow = true;
+  setPick(roof, { kind: 'roomRoof', room: g });
+  g.add(roof);
+  const id = data?.id ?? nextRoomId++;
+  nextRoomId = Math.max(nextRoomId, id + 1);
+  g.userData = { kind: 'room', rest: 0, world: data?.world ?? null,
+                 opaque: data?.opaque ?? true, id,
+                 dirty: !!data?.dirty };
+  g.__contents = [];
+  g.setOpaque = (on) => {
+    g.userData.opaque = on;
+    wallMat.opacity = on ? 1 : 0.22;
+    roofMat.opacity = on ? 1 : 0.15;
+    renderRoomContents(g);
+  };
+  setPick(g, { kind: 'thing', thing: g });
+  g.setOpaque(g.userData.opaque);
+  return g;
+}
+// Through glass walls the room's contents show as tiny stand-ins.
+function renderRoomContents(room) {
+  room.__contents.forEach(n => n.removeFromParent());
+  room.__contents = [];
+  const ud = room.userData;
+  if (ud.opaque || !ud.world) return;
+  const items = [];
+  if (ud.world.active) items.push({ rec: ud.world.active, x: 0, z: -0.12 });
+  if (ud.world.stations?.stand) items.push({ rec: ud.world.stations.stand, x: 0, z: 0.0 });
+  (ud.world.bench || []).slice(0, 4).forEach((b, i) => {
+    items.push({ rec: b.thing, x: -0.15 + (i % 3) * 0.15, z: 0.11 });
+  });
+  for (const it of items) {
+    const t = buildFromRec(it.rec);
+    if (!t) continue;
+    const box = new THREE.Box3().setFromObject(t);
+    const size = new THREE.Vector3(); box.getSize(size);
+    t.scale.setScalar(Math.min(0.5, 0.085 / Math.max(size.x, size.y, size.z, 0.001)));
+    t.position.set(it.x, 0.032, it.z);
+    t.traverse(o => { delete o.__pick; });
+    delete t.__pick;
+    room.add(t);
+    room.__contents.push(t);
+  }
+}
+// Dropping into a room files into its world record.
+function roomDrop(room, dropped, refuse) {
+  const ud = room.userData;
+  const rec = (ud.world ??= emptyWorldRec());
+  pushUndo();
+  if (dropped.userData.kind === 'robot') {
+    if (dropped.__bot === activeBot) return refuse('Shrink it into your hand first.');
+    if (!rec.active) {
+      rec.active = botOut(dropped.__bot);
+      dropped.removeFromParent();
+      say('The robot steps inside, ready behind the desk.');
+    } else {
+      rec.bench.push({ thing: thingOut(dropped), x: 0.6, z: 1.5 });
+      dropped.removeFromParent();
+      say('Another robot joins the room, waiting on the table.');
+    }
+  } else if (!rec.stations.stand) {
+    rec.stations.stand = thingOut(dropped);
+    dropped.removeFromParent();
+    ud.dirty = true;
+    say(rec.active ? 'Set on the desk inside — the robot gets to work.'
+                   : 'Set on the desk inside.');
+  } else {
+    rec.bench.push({ thing: thingOut(dropped),
+      x: 0.2 + ((rec.bench.length % 4) * 0.3), z: 1.6 });
+    dropped.removeFromParent();
+    say('Set on the table inside.');
+  }
+  renderRoomContents(room);
+  refreshUI();
+}
+// The room's robot works while nobody is looking: the outer world is bottled,
+// the room's world takes the stage at Instant speed, runs dry, and the two
+// swap back -- all inside a single frame, so nothing visibly flickers.
+let roomWorkBusy = false;
+function drainQueue(guard = 400) {
+  for (let g = 0; g < guard && (busy || queue.length || current); g++) fastForward();
+}
+function runRoomWork(room) {
+  if (roomWorkBusy) return;
+  const ud = room.userData;
+  if (!ud.world?.active || !ud.world.stations?.stand) { ud.dirty = false; return; }
+  roomWorkBusy = true;
+  const roomId = ud.id;
+  const spd = speed;
+  speed = Infinity;
+  try {
+    const outer = worldOut();
+    worldIn(ud.world);
+    drainQueue(60);
+    if (activeBot && program.length && stations.stand.occupant) {
+      runProgram();
+      drainQueue();
+    }
+    const inner = worldOut();
+    worldIn(outer);
+    drainQueue(60);
+    let node = null;
+    scene.traverse(o => { if (o.userData?.kind === 'room' && o.userData.id === roomId) node = o; });
+    if (node) {
+      node.userData.world = inner;
+      node.userData.dirty = false;
+      renderRoomContents(node);
+    }
+  } finally {
+    speed = spd;
+    roomWorkBusy = false;
+  }
+  refreshUI();
+}
+function processDirtyRooms() {
+  if (roomWorkBusy || busy || held || mode !== 'world' || queue.length) return;
+  if (waiters.size || allStands.length > 1) return;   // worldOut can't bottle those yet
+  const room = benchThings.find(t => t.userData.kind === 'room' && t.userData.dirty);
+  if (room) runRoomWork(room);
+}
+// Walking through the door: the room swells to become the world, and the
+// world you left shrinks onto its table as a little room of its own.
+function enterRoom(room) {
+  if (held) return say('Empty your hand to step through the door.');
+  if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
+  if (waiters.size || allStands.length > 1) {
+    return say('Robots are still waiting out here — pick them up before leaving.');
+  }
+  const innerRec = room.userData.world ?? emptyWorldRec();
+  const opaque = room.userData.opaque;
+  detach(room);
+  const from = room.position.clone();
+  scene.attach(room);
+  const outerRec = worldOut();
+  busy = true;
+  const camT = camera.position.clone().lerp(new THREE.Vector3(from.x, from.y + 0.2, from.z), 0.35);
+  enqueue({
+    dur: 0.8,
+    update(t) {
+      const e = ease(t);
+      room.scale.setScalar(1 + e * 16);
+      room.position.lerpVectors(from, camT, e);
+    },
+  });
+  enqueue(doNow(() => {
+    room.removeFromParent();
+    worldIn(innerRec);
+    if (opaque) {
+      // an opaque room has been running at Instant all along: arrive to find
+      // the work done
+      const spd = speed;
+      speed = Infinity;
+      drainQueue(60);
+      if (activeBot && program.length && stations.stand.occupant) { runProgram(); drainQueue(); }
+      speed = spd;
+    }
+    const back = makeRoom({ world: outerRec, opaque: true });
+    putOnBench(back, benchSpot());
+    back.scale.setScalar(0.01);
+    enqueueNext({
+      dur: 0.5,
+      update(t) { back.scale.setScalar(Math.max(0.01, ease(t))); },
+      end() { back.scale.setScalar(1); },
+    });
+    if (!opaque && activeBot && program.length && stations.stand.occupant) {
+      // a glass room runs at the speed you watch it at
+      enqueue(doNow(() => runProgram()));
+    }
+    say('You step inside — the room you came from sits on the table.');
+    refreshUI();
+  }));
+}
+// birds can fly INTO rooms: if her nest was filed away, she finds it
+function findNestRec(rec, id) {
+  const scan = (r) => {
+    if (!r) return null;
+    if (r.kind === 'nest' && r.id === id) return r;
+    for (const h of r.holes || []) { const f = scan(h); if (f) return f; }
+    for (const p of r.pages || []) { const f = scan(p); if (f) return f; }
+    for (const p of r.pile || []) { const f = scan(p); if (f) return f; }
+    if (r.kind === 'room' && r.world) { const f = findNestRec(r.world, id); if (f) return f; }
+    return null;
+  };
+  for (const b of rec.bench || []) { const f = scan(b.thing); if (f) return f; }
+  for (const o of Object.values(rec.stations || {})) { const f = scan(o); if (f) return f; }
+  if (rec.active?.trainedOn) { const f = scan(rec.active.trainedOn); if (f) return f; }
+  return null;
+}
+function birdIntoRoom(bird, thing) {
+  const id = bird.__nest?.userData.id;
+  if (id == null) return false;
+  let room = null, nestRec = null;
+  for (const t of benchThings) {
+    if (t.userData.kind !== 'room' || !t.userData.world) continue;
+    const f = findNestRec(t.userData.world, id);
+    if (f) { room = t; nestRec = f; break; }
+  }
+  if (!room) return false;
+  clearUndo();
+  busy = true;
+  const wasAt = bird.getWorldPosition(new THREE.Vector3());
+  detach(bird);
+  scene.attach(bird);
+  bird.position.copy(wasAt);
+  const dest = room.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.25, 0));
+  enqueue({
+    dur: 0.9,
+    update(t) {
+      const e = ease(t);
+      bird.position.lerpVectors(wasAt, dest, e);
+      bird.position.y += 0.5 * Math.sin(Math.PI * e);
+      bird.scale.setScalar(1 - 0.7 * e);
+    },
+  });
+  enqueue(doNow(() => {
+    nestRec.pile.unshift(thingOut(thing));
+    thing.removeFromParent();
+    room.userData.dirty = true;
+    renderRoomContents(room);
+    flash(dest);
+  }));
+  enqueue({
+    dur: 0.9,
+    update(t) {
+      const e = ease(t);
+      bird.position.lerpVectors(dest, wasAt, e);
+      bird.position.y += 0.5 * Math.sin(Math.PI * e);
+      bird.scale.setScalar(0.3 + 0.7 * e);
+    },
+    end() {
+      bird.scale.setScalar(1);
+      putOnBench(bird, { x: wasAt.x, z: wasAt.z });
+      refreshUI();
+    },
+  });
+  return true;
 }
 function makeNest() {
   const g = new THREE.Group();
@@ -1081,7 +1360,14 @@ function spawnCloneDelivery(bird, thing, nest2, from) {
 // wherever she was -- a box hole, a spot, or the bench.
 function birdDeliver(bird) {
   const nest = bird.__nest;
-  if (!nest || !nest.parent) return say('Her nest is gone — she has nowhere to take it.');
+  if (!nest || !nest.parent) {
+    // her nest may have been filed inside a room: she flies in through a
+    // window, delivers, and comes back out
+    const thing = held; held = null;
+    if (thing && birdIntoRoom(bird, thing)) return;
+    if (thing) takeIntoHand(thing);
+    return say('Her nest is gone — she has nowhere to take it.');
+  }
   clearUndo();                // deliveries change a pile no snapshot describes
   busy = true;
   const thing = held; held = null;
@@ -1292,7 +1578,7 @@ function specOf(thing) {
   // birds, nests and robots inside boxes go by reference: their identity (a
   // bird's pairing, a robot's training) has no data form
   if (kind === 'nest' || kind === 'bird' || kind === 'robot'
-      || kind === 'notebook') return { kind: 'ref', node: thing };
+      || kind === 'notebook' || kind === 'room') return { kind: 'ref', node: thing };
   return { kind, label: thing.userData.label ?? undefined,
            holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
 }
@@ -1318,6 +1604,10 @@ function copyThing(t) {
   else if (ud.kind === 'text') c = makeText(ud.text);
   else if (ud.kind === 'notebook') {
     c = makeNotebook({ pages: JSON.parse(JSON.stringify(ud.pages)), page: ud.page });
+  }
+  else if (ud.kind === 'room') {
+    c = makeRoom({ world: ud.world ? JSON.parse(JSON.stringify(ud.world)) : null,
+                   opaque: ud.opaque, dirty: ud.dirty });
   }
   else if (ud.kind === 'bird') c = makeBird(t.__nest);
   else if (ud.kind === 'nest') {
@@ -1517,6 +1807,7 @@ const ROW_Z = 1.35;
 // pushed forward of the robot's stand so the two do not visually collide
 const BENCH = { x0: -0.95, x1: 1.45, z0: ROW_Z - 0.28, z1: ROW_Z + 0.60 };
 const STATION_DEFS = [
+  { id: 'rooms',   label: 'the room stack',   kind: 'stack',  x: -5.05 },
   { id: 'texts',   label: 'the text stack',   kind: 'stack',  x: -4.35 },
   { id: 'nests',   label: 'the nest stack',   kind: 'stack',  x: -3.75 },
   { id: 'scales',  label: 'the scale stack',  kind: 'stack',  x: -3.15 },
@@ -1672,6 +1963,7 @@ function refillStack(st, animate = false) {
             : st.id === 'minis' ? makeMiniRobot()
             : st.id === 'scales' ? makeScale()
             : st.id === 'texts' ? makeText('')
+            : st.id === 'rooms' ? makeRoom()
             : st.id === 'nests' ? makeNest()
             : makeBox();
     scene.add(t);
@@ -1866,6 +2158,7 @@ function afterQueue() {
   // a delivery that arrived while something else was running can be acted on
   // now that the floor is free
   checkWaiting();
+  processDirtyRooms();
   refreshUI();
 }
 
@@ -2402,6 +2695,17 @@ const ray = new THREE.Raycaster();
 function handleClick(target) {
   if (!target || busy || mode === 'replay') return;
 
+  if (target.kind === 'roomRoof') {
+    const room = target.room;
+    room.setOpaque(!room.userData.opaque);
+    say(room.userData.opaque
+      ? 'The walls turn solid — inside, everything runs in an instant.'
+      : 'The walls turn to glass — you can watch what the room holds.');
+    return refreshUI();
+  }
+  if (target.kind === 'roomDoor') {
+    return enterRoom(target.room);
+  }
   if (target.kind === 'growToggle') {
     resizeMode = !resizeMode;
     if (!resizeMode && grabbedCorner !== null) releaseCorner();
@@ -2521,6 +2825,16 @@ function handleClick(target) {
 // In the workshop the user does everything themselves.
 function userClick(target) {
   const holdingBot = held?.userData.kind === 'robot';
+  // rooms take drops of anything, robots included
+  if (target.kind === 'thing' && target.thing.userData.kind === 'room' && held) {
+    const room = target.thing;
+    const dropped = held; held = null;
+    return roomDrop(room, dropped, (msg) => {
+      putOnBench(dropped, benchSpot());
+      held = null;
+      sayAttn(msg);
+    });
+  }
   if (target.kind === 'botThing') {
     const bot = target.bot;
     if (holdingBot) {
@@ -2632,6 +2946,7 @@ function directRobot(target) {
   if (st?.kind === 'stack') {
     if (held) return say('It is already holding something.');
     if (st.id === 'minis') return say('It cannot make robots.');
+    if (st.id === 'rooms') return say('Rooms are yours to place, not the robot’s.');
     return go({ type: st.id === 'boxes' ? 'newBox' : st.id === 'scales' ? 'newScale'
               : st.id === 'texts' ? 'newText' : 'newNumber' });
   }
@@ -3417,6 +3732,8 @@ function thingOut(t) {
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
   if (ud.kind === 'text') return { kind: 'text', text: ud.text };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
+  if (ud.kind === 'room') return { kind: 'room', world: ud.world, opaque: ud.opaque,
+                                   dirty: ud.dirty, id: ud.id };
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
     const grp = t.__group?.filter(n2 => n2.parent);
@@ -3459,6 +3776,7 @@ function thingIn(o, nests, birds) {
   if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
   else if (o.kind === 'text') t = makeText(o.text);
   else if (o.kind === 'notebook') t = makeNotebook(o);
+  else if (o.kind === 'room') t = makeRoom(o);
   else if (o.kind === 'robot') t = botIn(o);
   else if (o.kind === 'nest') {
     t = makeNest();
@@ -3661,7 +3979,7 @@ function undo() {
 function resetWorld() {
   // robots, nests and birds on the bench survive a reset -- they carry state a
   // rebuild could not restore
-  const bots = benchThings.filter(t => ['robot', 'nest', 'bird', 'notebook'].includes(t.userData.kind));
+  const bots = benchThings.filter(t => ['robot', 'nest', 'bird', 'notebook', 'room'].includes(t.userData.kind));
   benchThings.forEach(t => t.removeFromParent());
   benchThings.length = 0;
   bots.forEach(b => putOnBench(b, { x: b.position.x, z: b.position.z }));
@@ -3950,6 +4268,8 @@ function refreshUI() {
       : kind === 'text' ? (held.userData.text
           ? `a pad: “${held.userData.text.length > 24 ? held.userData.text.slice(0, 24) + '…' : held.userData.text}”`
           : 'a blank text pad')
+      : kind === 'room' ? (held.userData.world ? 'a room with things inside' : 'an empty room')
+      : kind === 'notebook' ? 'a notebook'
       : kind === 'scale' ? 'a scale'
       : kind === 'nest' ? (held.userData.label ? `the nest “${held.userData.label}”`
           : held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
@@ -3960,6 +4280,8 @@ function refreshUI() {
       : kind === 'box' ? (held.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
           : 'letters name it; drop it on a box to join')
+      : kind === 'room' ? 'set it down; drop a robot in, then things for it to work on'
+      : kind === 'notebook' ? 'set it down and drop things on its pages'
       : kind === 'text' ? 'type to write on it; drop it on a pad’s left or right edge to join'
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
       : 'put it down on the bench';
@@ -4676,6 +4998,10 @@ renderer.setAnimationLoop((now) => {
       dustyBase = null; dustyT = 0;
     }
   }
+  // rooms with pending work run the moment the outer world goes quiet
+  if (worldReady && !busy && !held && !queue.length && !current && mode === 'world') {
+    processDirtyRooms();
+  }
   if (ruby) {
     if (rubyActive) {
       rubyBase ??= { y: ruby.rotation.y, s: ruby.scale.x };
@@ -4763,6 +5089,7 @@ window.__nano = {
       : t.userData.kind === 'robot' ? 'robot'
       : t.userData.kind === 'text' ? { text: t.userData.text }
       : t.userData.kind === 'notebook' ? { notebook: t.userData.pages.length }
+      : t.userData.kind === 'room' ? { room: { has: !!t.userData.world, dirty: !!t.userData.dirty } }
       : t.userData.kind === 'bird' ? 'bird'
       : t.userData.kind === 'nest' ? { nest: t.userData.pile.map(d) }
       : { [t.userData.kind]: t.userData.holes.map(h => d(h.thing)) };

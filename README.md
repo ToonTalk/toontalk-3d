@@ -82,6 +82,19 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   click one to carry that corner, move the pointer to stretch or shrink the
   top (legs follow), click again to set it. Anything left overboard by a
   shrink slides back on, and the shape is remembered in this browser.
+- **Rooms** come off their own stack: little houses that each hold a whole
+  workshop as data — worlds in a box, nestable without limit. Drop a robot
+  through the roofline and it stands ready behind the desk inside; drop
+  anything else and it lands on that desk, and the room's robot does the work
+  the moment the outer world goes quiet (bottled up and run at Instant speed
+  between frames, invisibly). Click the roof to toggle the walls between
+  solid and glass — glass shows tiny stand-ins of what the room holds. Birds
+  whose nests were filed into a room fly in, deliver, and come back out.
+  Click the glowing door to step inside: the room swells to become the world,
+  and the world you left shrinks onto the new room's table as a little room
+  of its own — walk back out through its door. An opaque room's pending work
+  is done by the time you arrive; a glass room runs before your eyes at your
+  speed setting.
 - **Dusty the vacuum and Ruby the eraser**, under the bench. Dusty *removes*:
   things from the world, entries from notebook pages, parts of a thought
   outright (leaving an empty hole that matches anything or nothing). Ruby
