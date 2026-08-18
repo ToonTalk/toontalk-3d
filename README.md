@@ -28,6 +28,13 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   ellipsis. Scientific notation gets the same treatment — a bar when the
   mantissa's cycle fits, an honest ellipsis when it is cut short, and no fake
   trailing zeros.
+- **Text pads** come off their own stack blank. Type on a held pad to write;
+  dropping one pad on another concatenates them, and the side of the drop
+  decides the order — "Talk" on the right edge of "Toon" reads "ToonTalk",
+  on the left "TalkToon". A whole number dropped on a written pad shifts its
+  first or last letter along the alphabet; dropped on a blank pad it writes
+  itself out as digits. In a robot's thought a pad matches its exact text
+  until Dusty erases it to *any text*.
 - **Boxes** have holes; a hole holds a number, a box, a scale, a bird or a
   nest, so structures nest. Type a digit on a held box to give it that many
   holes; shrinking splits it like an array, and the excess holes fall away as
