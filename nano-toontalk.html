@@ -963,7 +963,7 @@ function buildFromRec(rec) {
   nestGroupPending = null;
   const nests = new Map(), birds = [];
   const t = thingIn(rec, nests, birds);
-  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; b.node.__nestId = b.nestId ?? null; });
   nestGroupPending = savedPending;
   return t;
 }
@@ -1277,6 +1277,30 @@ function runRoomWork(room) {
       if (cont) node.__nextStep = performance.now() + 1100 / Math.max(0.25, spd);
       renderRoomContents(node);
     }
+    // the outbox: birds inside delivered to nests out here -- fly each letter
+    // from the room to its nest now that both worlds are in place
+    for (const m of roomOutbox.splice(0)) {
+      const nest2 = allNests.find(n2 => n2.parent && n2.userData.id === m.nestId);
+      const gift = buildFromRec(m.rec);
+      if (!gift) continue;
+      if (!nest2) { putOnBench(gift, benchSpot()); continue; }
+      const from = (node ?? nest2).getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0));
+      const courier = makeBird(nest2);
+      delete courier.__pick;
+      scene.add(courier);
+      courier.position.copy(from);
+      courier.add(gift);
+      gift.position.set(0, -0.02, 0.16);
+      gift.scale.setScalar(0.5);
+      sfx('chirp');
+      if (spd === Infinity) {
+        courier.remove(gift);
+        deliverCopy(nest2, gift);
+        courier.removeFromParent();
+      } else {
+        flights.push({ clone: courier, gift, nest: nest2, from, t: 0, phase: 0 });
+      }
+    }
   } finally {
     speed = spd;
     maxIter = mi;
@@ -1361,7 +1385,7 @@ function findNestRec(rec, id) {
   return null;
 }
 function birdIntoRoom(bird, thing) {
-  const id = bird.__nest?.userData.id;
+  const id = bird.__nest?.userData.id ?? bird.__nestId;
   if (id == null) return false;
   let room = null, nestRec = null;
   for (const t of benchThings) {
@@ -1493,6 +1517,7 @@ function restackNest(nest) {
 // Clone deliveries run outside the step queue so a whole flock can fly at
 // once; each clone drops its copy and then leaves the world for good.
 const flights = [];
+const roomOutbox = [];   // deliveries addressed outside a room's bottled run
 function deliverCopy(nest2, gift) {
   gift.scale.setScalar(1);
   gift.quaternion.identity();
@@ -1533,6 +1558,13 @@ function birdDeliver(bird) {
     // window, delivers, and comes back out
     const thing = held; held = null;
     if (thing && birdIntoRoom(bird, thing)) return;
+    if (thing && roomWorkBusy) {
+      // a bird INSIDE a bottled room, delivering out: the letter waits in the
+      // outbox until the worlds swap back, then flies to the nest for real
+      roomOutbox.push({ nestId: bird.__nest?.userData.id ?? bird.__nestId ?? null, rec: thingOut(thing) });
+      thing.removeFromParent();
+      return;
+    }
     if (thing) takeIntoHand(thing);
     return say('Her nest is gone — she has nowhere to take it.');
   }
@@ -1995,6 +2027,12 @@ function putInHole(hole, thing) {
   const s = fitScale(thing, hole);
   thing.scale.setScalar(s);
   thing.position.y = thing.userData.rest * s;
+  // a flat pad would sink out of sight below the hole's rim: it leans back
+  // like a card in a holder instead
+  if (thing.userData.kind === 'text') {
+    thing.rotation.x = -1.05;
+    thing.position.y += 0.075;
+  }
   hole.thing = thing;
 }
 
@@ -3255,6 +3293,14 @@ function userClick(target) {
   }
   if (target.kind === 'bench') {
     if (!held) return;
+    // a thin pad's edge is a needle target: a bench click NEXT to a pad while
+    // holding a pad means the pad, side and all
+    if (held.userData.kind === 'text' && target.point) {
+      const p = target.point;
+      const near = benchThings.find(t2 => t2 !== held && t2.userData.kind === 'text'
+        && Math.abs(p.x - t2.position.x) < 0.3 && Math.abs(p.z - t2.position.z) < 0.24);
+      if (near) return userDropOn(near, p);
+    }
     return userPutOnBench(target.point);
   }
   if (target.kind === 'thing') {
@@ -3391,10 +3437,14 @@ function moveHand(ev) {
     // Clamp to the working area: with the pointer low on the screen the ray
     // meets this plane right next to the camera, which made the carried thing
     // balloon to fill the view.
-    // a grabbed corner may range wider than a carried thing
+    // a grabbed corner may range wider than a carried thing; a grown table
+    // widens the carrying range with it
     const wide = grabbedCorner !== null;
-    hit.x = Math.min(wide ? 4.2 : 3.2, Math.max(-3.2, hit.x));
-    hit.z = Math.min(wide ? 3.4 : 2.4, Math.max(-0.6, hit.z));
+    const xMax = wide ? 4.2 : Math.max(3.2, BENCH.x1 + 0.3);
+    const xMin = wide ? -3.2 : Math.min(-3.2, BENCH.x0 - 0.3);
+    const zMax = wide ? 3.4 : Math.max(2.4, BENCH.z1 + 0.25);
+    hit.x = Math.min(xMax, Math.max(xMin, hit.x));
+    hit.z = Math.min(zMax, Math.max(-0.6, hit.z));
     handNode.position.copy(hit);
     handNode.updateMatrixWorld();
     if (wide) dragCorner(hit);
@@ -4274,7 +4324,11 @@ function thingInRaw(o, nests, birds) {
       if (item) { t.add(item); t.userData.pile.push(item); }
     });
     restackNest(t);
-    if (o.id != null) nests.set(o.id, t);
+    if (o.id != null) {
+      nests.set(o.id, t);
+      t.userData.id = o.id;              // identity survives the rebuild
+      nextId = Math.max(nextId, o.id + 1);
+    }
     if (nestGroupPending && o.group) nestGroupPending.push({ node: t, ids: o.group });
   } else if (o.kind === 'bird') {
     t = makeBird(null);
@@ -4342,7 +4396,7 @@ function worldIn(data) {
     const t = thingIn(o, nests, birds);
     if (t) putOnStation(s2, t);
   }
-  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; b.node.__nestId = b.nestId ?? null; });
   // reunite copied-nest delivery groups
   const groupMap = new Map();
   for (const rec of nestGroupPending) {
@@ -4874,7 +4928,7 @@ async function importRobotFile(file) {
       nestGroupPending = [];
       const nests = new Map(), birds = [];
       const t = thingIn(rec.thing, nests, birds);
-      birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+      birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; b.node.__nestId = b.nestId ?? null; });
       const groupMap = new Map();
       for (const r2 of nestGroupPending) {
         const gkey = r2.ids.slice().sort((a, b) => a - b).join(',');
@@ -5152,7 +5206,8 @@ function tipFor(t) {
     return null;
   }
   if (t.kind === 'hole') {
-    return `Hole ${t.index + 1} — empty.` + (held ? ' Click to put that in.' : '');
+    const pan = t.box?.userData.kind === 'scale';
+    return `${pan ? 'Pan' : 'Hole'} ${t.index + 1} — empty.` + (held ? ' Click to put that in.' : '');
   }
   return null;
 }
