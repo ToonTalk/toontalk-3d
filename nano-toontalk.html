@@ -890,15 +890,16 @@ function renderNotebook(nb) {
     if (!rec) continue;
     const t = buildFromRec(rec);
     if (!t) continue;
-    // robots lie on their backs on the page, like a picture in a catalogue
-    if (rec.kind === 'robot') t.rotation.x = -Math.PI / 2;
+    // robots and scales lie on their backs on the page, like a catalogue
+    if (rec.kind === 'robot' || rec.kind === 'scale') t.rotation.x = -Math.PI / 2;
     t.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(t);
     const size = new THREE.Vector3(); box.getSize(size);
-    const sc = Math.min(0.9, 0.30 / Math.max(size.x, 0.001),
-                             0.42 / Math.max(size.z, 0.001),
-                             0.26 / Math.max(size.y, 0.001));
-    t.scale.setScalar(sc);
+    // multiply, never overwrite: robots carry their mini scale already
+    const sc = Math.min(1, 0.28 / Math.max(size.x, 0.001),
+                           0.38 / Math.max(size.z, 0.001),
+                           0.20 / Math.max(size.y, 0.001));
+    t.scale.multiplyScalar(sc);
     t.position.set((half ? 1 : -1) * 0.21,
       0.047 - box.min.y * sc, 0.02);
     t.traverse(o => { delete o.__pick; });
@@ -1087,7 +1088,7 @@ function renderRoomContents(room) {
     if (!t) continue;
     const box = new THREE.Box3().setFromObject(t);
     const size = new THREE.Vector3(); box.getSize(size);
-    t.scale.setScalar(Math.min(0.5, 0.085 / Math.max(size.x, size.y, size.z, 0.001)));
+    t.scale.multiplyScalar(Math.min(1, 0.085 / Math.max(size.x, size.y, size.z, 0.001)));
     t.position.set(it.x, 0.032, it.z);
     t.traverse(o => { delete o.__pick; });
     delete t.__pick;
@@ -2238,6 +2239,14 @@ function tick(dt) {
   if (t >= 1) { current.end && current.end(); current = null; }
 }
 let pendingAfter = null;
+let autoRunArmed = false;   // set when an erasure may have fixed the mismatch
+function maybeAutoRun() {
+  if (mode !== 'world' || busy || held || !activeBot?.program.length) return;
+  const given = stations.stand.occupant;
+  if (!given) return;
+  const members = [activeBot, ...activeBot.team];
+  if (members.some(m => matchState(m.condition, specOf(given)) === 'yes')) runProgram();
+}
 function afterQueue() {
   const f = pendingAfter; pendingAfter = null;
   if (f) f();
@@ -2245,6 +2254,7 @@ function afterQueue() {
   // now that the floor is free
   checkWaiting();
   processDirtyRooms();
+  if (autoRunArmed) { autoRunArmed = false; maybeAutoRun(); }
   refreshUI();
 }
 
@@ -2723,6 +2733,15 @@ function combine(slot, incoming, isHole, fromWorld, side) {
                                 : target.userData.text + incoming.userData.text;
     return mergeOnto(incoming, fromWorld, target, () => target.setText(merged));
   }
+  if (target.userData.kind === 'number' && target.userData.erased
+      && incoming.userData.kind === 'text') {
+    const v = parseTextNumber(incoming.userData.text);
+    if (!v) return refuse('That pad does not read as a number.');
+    return mergeOnto(incoming, fromWorld, target, () => {
+      unErase(target);
+      target.setValue(v);
+    });
+  }
   if (target.userData.kind === 'text' && incoming.userData.kind === 'number') {
     const v = incoming.userData.value;
     // a number restores an erased pad, writing its digits on it
@@ -2840,6 +2859,21 @@ const ray = new THREE.Raycaster();
 function handleClick(target) {
   if (!target || busy || mode === 'replay') return;
 
+  if (target.kind === 'roomRoof' || target.kind === 'roomDoor') {
+    const room = target.room;
+    // a room still on its stack is stock -- any click just takes one
+    if (stations.rooms?.cubes.includes(room)) {
+      return handleClick({ kind: 'station', id: 'rooms' });
+    }
+    // with a full hand, roof and door take the drop like the body does
+    if (held && mode === 'world') {
+      const dropped = held; held = null;
+      return roomDrop(room, dropped, (msg) => {
+        putOnBench(dropped, benchSpot());
+        sayAttn(msg);
+      });
+    }
+  }
   if (target.kind === 'roomRoof') {
     const room = target.room;
     room.setOpaque(!room.userData.opaque);
@@ -3649,6 +3683,7 @@ function removeCondAt(path) {
       rebuildCondition();
       busy = false;
       say('Gone — that hole now takes anything, or nothing.');
+      autoRunArmed = true;
       refreshUI();
     },
   });
@@ -3670,7 +3705,11 @@ function dustyErase(path) {
     dur: 0.5,
     start() { flash(node.getWorldPosition(new THREE.Vector3())); },
     update(t) { tool.position.z = dest.z - 0.05 * Math.sin(Math.PI * t * 3); },
-    end() { condition = eraseAt(condition, path); syncBot(); rebuildCondition(); },
+    end() {
+      condition = eraseAt(condition, path);
+      syncBot(); rebuildCondition();
+      autoRunArmed = true;    // the loosened thought may fit the given now
+    },
   });
   enqueue({
     dur: 0.45,
@@ -3693,10 +3732,21 @@ function applyErasedLook(thing) {
       });
     }
   });
-  const q = ghostQuestion(0.2);
-  q.position.y = (thing.userData.rest || 0.1) + 0.18;
-  thing.add(q);
-  thing.__eraseQ = q;
+  // no floating ? out in the world -- the ghosting alone says "erased";
+  // question marks belong to thought bubbles
+}
+function parseTextNumber(txt) {
+  const t = (txt || '').trim();
+  let m = t.match(/^-?\d+$/);
+  if (m) return rat(BigInt(t));
+  m = t.match(/^(-?\d+)\/(\d+)$/);
+  if (m && BigInt(m[2]) !== 0n) return rat(BigInt(m[1]), BigInt(m[2]));
+  m = t.match(/^(-?)(\d+)\.(\d+)$/);
+  if (m) {
+    const n = BigInt(m[2] + m[3]) * (m[1] ? -1n : 1n);
+    return rat(n, 10n ** BigInt(m[3].length));
+  }
+  return null;
 }
 function unErase(thing) {
   thing.userData.erased = false;
@@ -4334,7 +4384,9 @@ function finishRun(msg) {
   mode = 'world';
   stowHeld();
   clearScratch();
-  returnGivenToTable();     // the result goes back on the table, possibly changed
+  // the given STAYS on the desk -- as in ToonTalk, a robot that stops just
+  // stops; loosen a red part or raise Rounds and it can go again. It returns
+  // to the table only when the robot itself leaves the bench.
   parkRobot();
   renderProgram();          // back to the lead robot's own list
   if (msg) say(msg);
