@@ -3546,7 +3546,9 @@ function takeIntoHand(obj) {
     const c0 = new THREE.Vector3();
     bb.getCenter(c0);
     handNode.worldToLocal(c0);
-    obj.position.y -= c0.y;
+    // clamp: a nest with a tall pile would otherwise push its box right
+    // under the table
+    obj.position.y -= Math.max(-0.35, Math.min(0.35, c0.y));
   }
   enqueueNext(settleInto(obj, fromWorld, 0.24));
   refreshUI();      // the "holding" readout must track every pickup
@@ -5383,9 +5385,11 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     const point = new THREE.Vector3(def.x, reachLocal.y, def.z);
     const st = { ...def, point, topY: point.y - CUBE / 2, occupant: null, cubes: [] };
     if (def.kind === 'stack') {
-      st.stackN = (def.id === 'minis' || def.id === 'scales' || def.id === 'nests') ? 3 : 4;
+      st.stackN = (def.id === 'minis' || def.id === 'scales' || def.id === 'nests'
+                   || def.id === 'rooms') ? 3 : 4;
       st.pitch = def.id === 'numbers' ? 0.25 : def.id === 'minis' ? 0.52
-               : def.id === 'scales' ? 0.30 : def.id === 'nests' ? 0.24 : 0.15;
+               : def.id === 'scales' ? 0.30 : def.id === 'nests' ? 0.24
+               : def.id === 'rooms' ? 0.5 : 0.15;
       st.plinth = Math.max(0.02, st.topY - (st.stackN - 1) * st.pitch);
       const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.27, st.plinth, 36),
         new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7 }));
