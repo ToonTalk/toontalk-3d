@@ -267,6 +267,92 @@ let nextId = 1;
 
 function setPick(obj, data) { obj.__pick = data; }
 
+// --- procedural sound --------------------------------------------------------
+// Every effect is synthesised on the spot from oscillators and filtered noise:
+// no audio files, and the character matches the hand-drawn textures.
+let AC = null, sndGain = null, sndVol = 0.5, sndMuted = false;
+const sndLast = {};
+try {
+  const p = JSON.parse(localStorage.getItem('nano-toontalk.sound') || 'null');
+  if (p) { sndVol = p.v; sndMuted = !!p.muted; }
+} catch {}
+function audio() {
+  if (!AC) {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      sndGain = AC.createGain();
+      sndGain.gain.value = sndMuted ? 0 : sndVol;
+      sndGain.connect(AC.destination);
+    } catch { return null; }
+  }
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function setVolume(v, muted) {
+  sndVol = v; sndMuted = muted;
+  try { localStorage.setItem('nano-toontalk.sound', JSON.stringify({ v, muted })); } catch {}
+  if (sndGain) sndGain.gain.value = muted ? 0 : v;
+}
+function tone(freq, dur, { type = 'sine', at = 0, slide = 0, gain = 0.25 } = {}) {
+  const ac = audio(); if (!ac) return;
+  const t0 = ac.currentTime + at;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(sndGain);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function noiseFx(dur, { at = 0, from = 800, to = 300, q = 1.2, gain = 0.3 } = {}) {
+  const ac = audio(); if (!ac) return;
+  const t0 = ac.currentTime + at;
+  const len = Math.max(1, Math.floor(ac.sampleRate * dur));
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = ac.createBufferSource();
+  src.buffer = buf;
+  const f = ac.createBiquadFilter();
+  f.type = 'bandpass'; f.Q.value = q;
+  f.frequency.setValueAtTime(from, t0);
+  f.frequency.exponentialRampToValueAtTime(Math.max(40, to), t0 + dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f); f.connect(g); g.connect(sndGain);
+  src.start(t0); src.stop(t0 + dur + 0.02);
+}
+function sfx(name) {
+  if (sndMuted) return;
+  const now = performance.now();
+  // coalesce: at Instant speed a run would machine-gun otherwise
+  const gap = speed === Infinity ? 160 : 50;
+  if (sndLast[name] && now - sndLast[name] < gap) return;
+  sndLast[name] = now;
+  try {
+    switch (name) {
+      case 'pick':    tone(520, 0.09, { type: 'triangle', slide: 260, gain: 0.16 }); break;
+      case 'drop':    tone(165, 0.12, { slide: -60, gain: 0.26 }); noiseFx(0.05, { from: 500, to: 200, gain: 0.1 }); break;
+      case 'combine': tone(392, 0.1, { type: 'triangle', gain: 0.2 }); tone(587, 0.16, { type: 'triangle', at: 0.07, gain: 0.2 }); break;
+      case 'refuse':  tone(150, 0.22, { type: 'square', slide: -40, gain: 0.1 }); break;
+      case 'chirp':   tone(1900, 0.07, { slide: 700, gain: 0.1 }); tone(2300, 0.08, { at: 0.09, slide: -500, gain: 0.1 }); break;
+      case 'hatch':   noiseFx(0.08, { from: 2500, to: 1200, gain: 0.18 }); tone(1800, 0.09, { at: 0.1, slide: 800, gain: 0.1 }); break;
+      case 'vacuum':  noiseFx(0.5, { from: 300, to: 1400, q: 2, gain: 0.28 }); break;
+      case 'erase':   tone(900, 0.07, { slide: 500, gain: 0.09 }); tone(1200, 0.07, { at: 0.09, slide: -600, gain: 0.09 }); break;
+      case 'flip':    noiseFx(0.16, { from: 1800, to: 700, q: 0.8, gain: 0.18 }); break;
+      case 'whoosh':  noiseFx(0.7, { from: 300, to: 2400, q: 1, gain: 0.32 }); tone(220, 0.7, { slide: -140, gain: 0.07 }); break;
+      case 'grow':    tone(300, 0.3, { type: 'triangle', slide: 420, gain: 0.13 }); break;
+      case 'type':    tone(2400, 0.03, { type: 'square', gain: 0.045 }); break;
+      case 'chime':   tone(880, 0.3, { gain: 0.13 }); tone(1320, 0.34, { at: 0.03, gain: 0.09 }); break;
+      case 'alert':   tone(740, 0.12, { type: 'square', gain: 0.09 }); tone(560, 0.16, { at: 0.13, type: 'square', gain: 0.09 }); break;
+    }
+  } catch {}
+}
+
 // --- exact rational arithmetic --------------------------------------------
 // Division has to produce something honest, so numbers are BigInt fractions
 // kept in lowest terms rather than floats.
@@ -839,7 +925,8 @@ const NB_KEY = 'nano-toontalk.notebook';
 function makeNotebook(rec = null) {
   const g = new THREE.Group();
   const cover = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.035, 0.56),
-    new THREE.MeshStandardMaterial({ color: 0x7a1f16, roughness: 0.6 }));
+    new THREE.MeshStandardMaterial({ roughness: 0.55,
+      map: (leatherTex ??= leatherTexture()) }));
   cover.position.y = 0.0175;
   cover.castShadow = true; cover.receiveShadow = true;
   g.add(cover);
@@ -932,6 +1019,7 @@ function notebookFlip(nb, dir) {
   if (to < 0) to = last;
   if (to > last) to = 0;
   if (to === ud.page) return say('This is the only spread.');
+  sfx('flip');
   const flap = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.008, 0.52),
     new THREE.MeshStandardMaterial({ color: 0xf7f1df, roughness: 0.9 }));
   flap.position.set(dir > 0 ? 0.21 : -0.21, 0.05, 0);
@@ -1005,7 +1093,8 @@ let nextRoomId = 1;
 const emptyWorldRec = () => ({ kind: 'world', v: 1, bench: [], stations: {}, active: null });
 function makeRoom(data = null) {
   const g = new THREE.Group();
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0xd8cfae, roughness: 0.8, transparent: true });
+  const wallMat = new THREE.MeshStandardMaterial({ roughness: 0.85, transparent: true,
+    map: (stuccoTex ??= stuccoTexture()) });
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x8a2f1d, roughness: 0.7, transparent: true });
   const floor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.42),
     new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.75 }));
@@ -1210,6 +1299,7 @@ function enterRoom(room) {
   scene.attach(room);
   const outerRec = worldOut();
   busy = true;
+  sfx('whoosh');
   const camT = camera.position.clone().lerp(new THREE.Vector3(from.x, from.y + 0.2, from.z), 0.35);
   enqueue({
     dur: 0.8,
@@ -1314,7 +1404,8 @@ function birdIntoRoom(bird, thing) {
 }
 function makeNest() {
   const g = new THREE.Group();
-  const straw = new THREE.MeshStandardMaterial({ color: 0x8a6a3b, roughness: 0.9 });
+  const straw = new THREE.MeshStandardMaterial({ roughness: 0.95,
+    map: (strawTex ??= strawTexture()) });
   const rim = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.045, 12, 24), straw);
   rim.rotation.x = Math.PI / 2;
   rim.position.y = 0.075;
@@ -1401,6 +1492,7 @@ function deliverCopy(nest2, gift) {
   nest2.add(gift);
   nest2.userData.pile.unshift(gift);
   restackNest(nest2);
+  sfx('chime');
   flash(nest2.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0)));
   refreshUI();
   checkWaiting();
@@ -1439,6 +1531,7 @@ function birdDeliver(bird) {
   }
   clearUndo();                // deliveries change a pile no snapshot describes
   busy = true;
+  sfx('chirp');
   const thing = held; held = null;
   // copied nests: the bird copies herself and the gift, one clone per copy.
   // Only she returns; the clones deliver and fly away, never to be seen again.
@@ -1488,6 +1581,7 @@ function birdDeliver(bird) {
       thing.scale.setScalar(1);
       pile.unshift(thing);
       thing.position.set(0, nestSlots(pile)[0], 0);
+      sfx('chime');
       flash(npos());
       checkWaiting();
     }));
@@ -1529,8 +1623,13 @@ const SCALE_TILT = 0.22;
 const allScales = [];
 function makeScale() {
   const g = new THREE.Group();
-  const steel = new THREE.MeshStandardMaterial({ color: 0x62656e, roughness: 0.3, metalness: 0.85 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.6, metalness: 0.3 });
+  // two metals, as a good instrument deserves: brushed steel for the frame,
+  // warm brass for the pans and trimmings
+  const steel = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.9,
+    map: (steelTex ??= metalTexture('#7d828c', '255,255,255')) });
+  const dark = new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.8,
+    color: 0xc89448,
+    map: (brassTex ??= metalTexture('#9a5f1e', '60,35,10')) });
   const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.095, 0.03, 24), dark);
   foot.position.y = 0.015; foot.castShadow = true; foot.receiveShadow = true;
   g.add(foot);
@@ -1945,7 +2044,8 @@ function makePillar(height, special) {
 function makeMiniDesk(topY, w, d, topColor) {
   const g = new THREE.Group();
   const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.035, d),
-    new THREE.MeshStandardMaterial({ color: topColor, roughness: 0.55 }));
+    new THREE.MeshStandardMaterial({ color: topColor, roughness: 0.55,
+      map: (woodTex ??= woodTexture()) }));
   top.position.y = topY - 0.0175;
   top.castShadow = true; top.receiveShadow = true;
   g.add(top);
@@ -1979,6 +2079,7 @@ function ensureScratchStation(i, animate = false) {
     stations[st.id] = st;
     scratchObjs[k] = obj;
     if (animate) {
+      sfx('grow');
       obj.scale.setScalar(0.01);
       enqueueNext({
         dur: 0.4,
@@ -2314,6 +2415,7 @@ function advanceWorldClocks(dt) {
       hatching.splice(i, 1);
       h.nest.userData.hasEgg = false;
       h.nest.__egg.removeFromParent();
+      sfx('hatch');
       const bird = makeBird(h.nest);
       // a name written on the nest before hatching belongs to the pair
       if (h.nest.userData.label) setThingLabel(bird, h.nest.userData.label);
@@ -2718,6 +2820,7 @@ function mergeOnto(incoming, fromWorld, target, apply) {
     },
     end() {
       incoming.removeFromParent();
+      sfx('combine');
       apply();
       flash(dest);
       refreshUI();
@@ -2729,6 +2832,7 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   // The old fallback parked refused things on a free pillar; pillars are gone,
   // so a refused thing lands on the bench instead of being lost.
   const refuse = (msg) => {
+    sfx('refuse');
     const from = incoming.getWorldPosition(new THREE.Vector3());
     putOnBench(incoming, benchSpot());
     enqueueNext(settleInto(incoming, from, 0.3));
@@ -2804,6 +2908,7 @@ function combine(slot, incoming, isHole, fromWorld, side) {
       ? 'Nothing can be divided by zero.'
       : `That ${op} makes a number too big to hold.`);
   }
+  sfx('combine');
   scene.attach(incoming);
   const dest = target.getWorldPosition(new THREE.Vector3());
   const base = isHole ? fitScale(target, slot) : 1;
@@ -3296,6 +3401,7 @@ function takeIntoHand(obj) {
   setPick(obj, obj.userData.kind === 'robot'
     ? { kind: 'botThing', bot: obj.__bot }
     : { kind: 'thing', thing: obj });
+  sfx('pick');
   noteHeld();
   handNode.add(obj);
   obj.position.set(0, 0, 0);
@@ -3328,7 +3434,7 @@ function userPutInHole(hole) {
   const from = dropped.getWorldPosition(new THREE.Vector3());
   const fromQ = dropped.getWorldQuaternion(new THREE.Quaternion());
   if (hole.thing) combine(hole, dropped, true, from);
-  else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.22, fromQ)); }
+  else { sfx('drop'); putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.22, fromQ)); }
   refreshUI();
 }
 function userDropOn(target, point) {
@@ -3343,6 +3449,7 @@ function userPutOnBench(at) {
   pushUndo();
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
+  sfx('drop');
   putOnBench(dropped, at);
   enqueueNext(settleInto(dropped, from));
   if (dropped.userData.kind === 'nest' && dropped.userData.hasEgg) {
@@ -3368,6 +3475,7 @@ function giveToRobot() {
   if (stand.occupant) return say('It already has something — take that first.');
   clearFlags();      // a new given thing makes the old mismatch marks stale
   const thing = held; held = null;
+  sfx('drop');
   putOnStation(stand, thing);
   const from = thing.getWorldPosition(new THREE.Vector3());
   enqueueNext(settleInto(thing, from));
@@ -3728,7 +3836,7 @@ function dustyErase(path) {
   enqueue({ dur: 0.45, update(t) { tool.position.lerpVectors(from, dest, ease(t)); } });
   enqueue({
     dur: 0.5,
-    start() { flash(node.getWorldPosition(new THREE.Vector3())); },
+    start() { sfx('erase'); flash(node.getWorldPosition(new THREE.Vector3())); },
     update(t) { tool.position.z = dest.z - 0.05 * Math.sin(Math.PI * t * 3); },
     end() {
       condition = eraseAt(condition, path);
@@ -3799,6 +3907,7 @@ function eraseThingInPlace(thing) {
     update(t) { ruby.rotation.z = Math.sin(t * Math.PI * 4) * 0.4; },
     end() {
       ruby.rotation.z = 0;
+      sfx('erase');
       thing.userData.erased = true;
       applyErasedLook(thing);
       flash(thing.getWorldPosition(new THREE.Vector3()));
@@ -3817,6 +3926,7 @@ function eraseThingInPlace(thing) {
 function dustySuck(getVictim) {
   if (!dusty) return;
   busy = true;
+  sfx('vacuum');
   let victim = null, dest = null, from0 = null, scale0 = 1;
   enqueue({
     dur: 0.45,
@@ -4521,6 +4631,7 @@ let hintTimer = null;
 function say(msg, hold = 2800) { $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, hold); }
 // For messages worth looking up for: flash the message card a few times.
 function sayAttn(msg) {
+  sfx('alert');
   say(msg, 7000);
   const t = $('title');
   t.classList.remove('attn');
@@ -4801,7 +4912,7 @@ addEventListener('keydown', (e) => {
   if (held.userData.kind === 'text') {
     if (e.key === 'Backspace') { pushUndo(); held.setText(held.userData.text.slice(0, -1)); e.preventDefault(); }
     else if (e.key === 'Enter') { pushUndo(); held.setText(held.userData.text + '\n'); }
-    else if (labelKey) { pushUndo(); held.setText(held.userData.text + e.key); }
+    else if (labelKey) { pushUndo(); held.setText(held.userData.text + e.key); sfx('type'); }
     refreshUI();
     return;
   }
@@ -4825,6 +4936,7 @@ addEventListener('keydown', (e) => {
     const sign = v.n < 0n ? -1n : 1n;
     const mag = v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;
     held.setValue(rat(sign * (mag * 10n + BigInt(e.key))));
+    sfx('type');
     refreshUI();
   } else if (e.key === 'Backspace') {
     pushUndo();
@@ -5107,6 +5219,22 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     gb.title = 'Reshape the workbench \u2014 reveals corner handles; click one to carry it, click again to set the corner down.';
     gb.onclick = () => handleClick({ kind: 'growToggle' });
     document.getElementById('dustyBtn').after(gb);
+    const sb = document.createElement('button');
+    sb.id = 'sndBtn';
+    sb.title = 'Mute or unmute the sound effects.';
+    const sv = document.createElement('input');
+    sv.id = 'sndVol'; sv.type = 'range';
+    sv.min = '0'; sv.max = '1'; sv.step = '0.05';
+    sv.title = 'Sound volume.';
+    sv.style.width = '64px'; sv.style.verticalAlign = 'middle';
+    const refreshSnd = () => {
+      sb.textContent = sndMuted ? '\u{1F507}' : '\u{1F50A}';
+      sv.value = String(sndVol);
+    };
+    sb.onclick = () => { setVolume(sndVol, !sndMuted); refreshSnd(); if (!sndMuted) sfx('combine'); };
+    sv.oninput = () => { setVolume(+sv.value, +sv.value === 0); refreshSnd(); sfx('combine'); };
+    gb.after(sb); sb.after(sv);
+    refreshSnd();
   }
 
   // things become pickable as they are created; simplest is to test everything
@@ -5207,7 +5335,51 @@ let resizeMode = false, grabbedCorner = null;
 // corners: 0 = (x0,z0)  1 = (x1,z0)  2 = (x0,z1)  3 = (x1,z1)
 const cornerOf = (i) => new THREE.Vector3(i % 2 ? BENCH.x1 : BENCH.x0, BENCH_TOP,
                                           i < 2 ? BENCH.z0 : BENCH.z1);
-let woodTex = null;
+let woodTex = null, steelTex = null, brassTex = null, strawTex = null,
+    leatherTex = null, stuccoTex = null;
+// small canvas painters, one per material family
+function speckTexture(w, base, marks, n, mk) {
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = w;
+  const c = cv.getContext('2d');
+  c.fillStyle = base; c.fillRect(0, 0, w, w);
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) mk(c, rnd, w, marks);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+function metalTexture(base, streak) {
+  return speckTexture(128, base, streak, 90, (c, rnd, w, sk) => {
+    c.strokeStyle = `rgba(${sk},${(0.05 + rnd() * 0.12).toFixed(2)})`;
+    c.lineWidth = 0.5 + rnd();
+    const y = rnd() * w;
+    c.beginPath(); c.moveTo(0, y); c.lineTo(w, y + (rnd() - 0.5) * 3); c.stroke();
+  });
+}
+function strawTexture() {
+  return speckTexture(128, '#8a6a3b', null, 240, (c, rnd, w) => {
+    c.strokeStyle = rnd() > 0.5 ? 'rgba(201,162,90,0.5)' : 'rgba(90,64,30,0.4)';
+    c.lineWidth = 0.8 + rnd() * 1.2;
+    const x = rnd() * w, y = rnd() * w, a = rnd() * Math.PI;
+    const l = 6 + rnd() * 14;
+    c.beginPath(); c.moveTo(x, y);
+    c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke();
+  });
+}
+function leatherTexture() {
+  return speckTexture(128, '#7a1f16', null, 500, (c, rnd, w) => {
+    c.fillStyle = rnd() > 0.5 ? 'rgba(0,0,0,0.12)' : 'rgba(255,190,170,0.07)';
+    c.fillRect(rnd() * w, rnd() * w, 1 + rnd() * 2, 1 + rnd() * 2);
+  });
+}
+function stuccoTexture() {
+  return speckTexture(128, '#d8cfae', null, 420, (c, rnd, w) => {
+    c.fillStyle = rnd() > 0.5 ? 'rgba(120,110,80,0.10)' : 'rgba(255,255,255,0.25)';
+    c.fillRect(rnd() * w, rnd() * w, 1 + rnd() * 2.5, 1 + rnd() * 2.5);
+  });
+}
 function woodTexture() {
   const cv = document.createElement('canvas');
   cv.width = 256; cv.height = 256;
