@@ -963,7 +963,13 @@ function buildFromRec(rec) {
   nestGroupPending = null;
   const nests = new Map(), birds = [];
   const t = thingIn(rec, nests, birds);
-  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; b.node.__nestId = b.nestId ?? null; });
+  birds.forEach(b => {
+  b.node.__nest = nests.get(b.nestId) ?? null;
+  b.node.__nestId = b.nestId ?? null;
+  if (!b.node.userData.nestGuid && b.node.__nest) {
+    b.node.userData.nestGuid = b.node.__nest.userData.guid;
+  }
+});
   nestGroupPending = savedPending;
   return t;
 }
@@ -1294,10 +1300,9 @@ function runRoomWork(room) {
     // the outbox: birds inside delivered to nests out here -- fly each letter
     // from the room to its nest now that both worlds are in place
     for (const m of roomOutbox.splice(0)) {
-      // never the stack's stock, never an egg nest, never a display copy
-      const nest2 = m.nestId == null ? null
-        : allNests.find(n2 => n2.parent && n2.userData.id === m.nestId
-            && !n2.userData.hasEgg && !stations.nests?.cubes.includes(n2));
+      // guids collide with nothing: stock and egg nests have their own, and
+      // display stand-ins are never registered
+      const nest2 = findNestByGuid(m.nestId);
       if (!nest2) {
         // the nest may be filed inside another room
         let dest = null;
@@ -1406,7 +1411,7 @@ function enterRoom(room) {
 function findNestRec(rec, id) {
   const scan = (r) => {
     if (!r) return null;
-    if (r.kind === 'nest' && r.id === id) return r;
+    if (r.kind === 'nest' && (r.guid === id || r.id === id)) return r;
     for (const h of r.holes || []) { const f = scan(h); if (f) return f; }
     for (const p of r.pages || []) { const f = scan(p); if (f) return f; }
     for (const p of r.pile || []) { const f = scan(p); if (f) return f; }
@@ -1419,7 +1424,7 @@ function findNestRec(rec, id) {
   return null;
 }
 function birdIntoRoom(bird, thing) {
-  const id = bird.__nest?.userData.id ?? bird.__nestId;
+  const id = bird.userData.nestGuid ?? bird.__nest?.userData.guid;
   if (id == null) return false;
   let room = null, nestRec = null;
   for (const t of benchThings) {
@@ -1486,7 +1491,8 @@ function makeNest() {
   egg.position.y = 0.13;
   egg.castShadow = true;
   g.add(egg);
-  Object.assign(g.userData, { id: nextId++, kind: 'nest', width: 0.38, rest: 0, hasEgg: true, pile: [] });
+  Object.assign(g.userData, { id: nextId++, guid: crypto.randomUUID(),
+    kind: 'nest', width: 0.38, rest: 0, hasEgg: true, pile: [] });
   g.__egg = egg;
   allNests.push(g);
   setPick(g, { kind: 'thing', thing: g });
@@ -1525,7 +1531,8 @@ function makeBird(nest) {
     wing.castShadow = true;
     g.add(wing);
   }
-  Object.assign(g.userData, { id: nextId++, kind: 'bird', width: 0.3, rest: 0 });
+  Object.assign(g.userData, { id: nextId++, kind: 'bird', width: 0.3, rest: 0,
+    nestGuid: nest?.userData.guid ?? null });
   g.__nest = nest;
   setPick(g, { kind: 'thing', thing: g });
   return g;
@@ -1585,8 +1592,17 @@ function spawnCloneDelivery(bird, thing, nest2, from) {
 
 // The bird carries the gift home, drops it on the pile, and flies back to
 // wherever she was -- a box hole, a spot, or the bench.
+// The guid is the pairing: it survives any rebuild, and copies of a nest
+// share it, so one bird feeds them all. The node reference is only a cache.
+function findNestByGuid(guid) {
+  return guid ? allNests.find(n2 => n2.parent && n2.userData.guid === guid) ?? null : null;
+}
+function allNestsByGuid(guid) {
+  return guid ? allNests.filter(n2 => n2.parent && n2.userData.guid === guid) : [];
+}
 function birdDeliver(bird) {
-  const nest = bird.__nest;
+  let nest = bird.__nest;
+  if (!nest || !nest.parent) nest = bird.__nest = findNestByGuid(bird.userData.nestGuid);
   if (!nest || !nest.parent) {
     // her nest may have been filed inside a room: she flies in through a
     // window, delivers, and comes back out
@@ -1595,7 +1611,7 @@ function birdDeliver(bird) {
     if (thing && roomWorkBusy) {
       // a bird INSIDE a bottled room, delivering out: the letter waits in the
       // outbox until the worlds swap back, then flies to the nest for real
-      roomOutbox.push({ nestId: bird.__nest?.userData.id ?? bird.__nestId ?? null, rec: thingOut(thing) });
+      roomOutbox.push({ nestId: bird.userData.nestGuid ?? null, rec: thingOut(thing) });
       thing.removeFromParent();
       return;
     }
@@ -1608,7 +1624,7 @@ function birdDeliver(bird) {
   const thing = held; held = null;
   // copied nests: the bird copies herself and the gift, one clone per copy.
   // Only she returns; the clones deliver and fly away, never to be seen again.
-  const others = (nest.__group ?? [nest]).filter(n2 => n2.parent && n2 !== nest);
+  const others = allNestsByGuid(bird.userData.nestGuid).filter(n2 => n2 !== nest);
   if (others.length && !hasRobot(thing)) {
     const from0 = bird.getWorldPosition(new THREE.Vector3());
     for (const n2 of others) spawnCloneDelivery(bird, thing, n2, from0);
@@ -1869,9 +1885,13 @@ function copyThingRaw(t) {
     c = makeRoom({ world: ud.world ? JSON.parse(JSON.stringify(ud.world)) : null,
                    opaque: ud.opaque, dirty: ud.dirty });
   }
-  else if (ud.kind === 'bird') c = makeBird(t.__nest);
+  else if (ud.kind === 'bird') {
+    c = makeBird(t.__nest);
+    c.userData.nestGuid = ud.nestGuid ?? c.userData.nestGuid;
+  }
   else if (ud.kind === 'nest') {
     c = makeNest();
+    c.userData.guid = ud.guid;         // sharing the guid IS joining the flock
     c.__egg.removeFromParent();
     c.userData.hasEgg = false;
     const g = (t.__group ??= [t]);
@@ -4324,14 +4344,12 @@ function thingOutRaw(t) {
                                    dirty: ud.dirty, id: ud.id };
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
-    const grp = t.__group?.filter(n2 => n2.parent);
-    return { kind: 'nest', id: ud.id, hasEgg: !!ud.hasEgg,
+    return { kind: 'nest', id: ud.id, guid: ud.guid, hasEgg: !!ud.hasEgg,
       label: ud.label ?? undefined,
-      group: grp && grp.length > 1 ? grp.map(n2 => n2.userData.id) : undefined,
       pile: ud.pile.map(thingOut) };
   }
   if (ud.kind === 'bird') return { kind: 'bird', nestId: t.__nest?.userData.id ?? null,
-    label: ud.label ?? undefined };
+    nestGuid: ud.nestGuid ?? null, label: ud.label ?? undefined };
   return { kind: ud.kind, label: ud.label ?? undefined,
            holes: ud.holes.map(h => thingOut(h.thing)) };
 }
@@ -4384,9 +4402,11 @@ function thingInRaw(o, nests, birds) {
       t.userData.id = o.id;              // identity survives the rebuild
       nextId = Math.max(nextId, o.id + 1);
     }
+    if (o.guid) t.userData.guid = o.guid;
     if (nestGroupPending && o.group) nestGroupPending.push({ node: t, ids: o.group });
   } else if (o.kind === 'bird') {
     t = makeBird(null);
+    t.userData.nestGuid = o.nestGuid ?? null;
     birds.push({ node: t, nestId: o.nestId });
   } else {
     t = o.kind === 'scale' ? makeScale() : makeBox(o.holes.length);
@@ -4451,7 +4471,13 @@ function worldIn(data) {
     const t = thingIn(o, nests, birds);
     if (t) putOnStation(s2, t);
   }
-  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; b.node.__nestId = b.nestId ?? null; });
+  birds.forEach(b => {
+  b.node.__nest = nests.get(b.nestId) ?? null;
+  b.node.__nestId = b.nestId ?? null;
+  if (!b.node.userData.nestGuid && b.node.__nest) {
+    b.node.userData.nestGuid = b.node.__nest.userData.guid;
+  }
+});
   // reunite copied-nest delivery groups
   const groupMap = new Map();
   for (const rec of nestGroupPending) {
@@ -4983,7 +5009,13 @@ async function importRobotFile(file) {
       nestGroupPending = [];
       const nests = new Map(), birds = [];
       const t = thingIn(rec.thing, nests, birds);
-      birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; b.node.__nestId = b.nestId ?? null; });
+      birds.forEach(b => {
+  b.node.__nest = nests.get(b.nestId) ?? null;
+  b.node.__nestId = b.nestId ?? null;
+  if (!b.node.userData.nestGuid && b.node.__nest) {
+    b.node.userData.nestGuid = b.node.__nest.userData.guid;
+  }
+});
       const groupMap = new Map();
       for (const r2 of nestGroupPending) {
         const gkey = r2.ids.slice().sort((a, b) => a - b).join(',');
