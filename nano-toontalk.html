@@ -107,6 +107,8 @@
 </div>
 
 <div id="prog" class="card">
+  <button id="progMin" title="Tuck this panel away."
+    style="float:right;padding:0 8px;line-height:1.3;">–</button>
   <h2 title="What the active robot learned, step by step. Steps only ever name the robot's own things, never places on your bench.">Trained actions</h2>
   <p id="trainedOn" title="The robot's condition: what it must be given before it will run. Dusty can vacuum parts of it away."></p>
   <ul id="steps"><li class="empty">not trained yet</li></ul>
@@ -888,11 +890,17 @@ function renderNotebook(nb) {
     if (!rec) continue;
     const t = buildFromRec(rec);
     if (!t) continue;
+    // robots lie on their backs on the page, like a picture in a catalogue
+    if (rec.kind === 'robot') t.rotation.x = -Math.PI / 2;
+    t.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(t);
     const size = new THREE.Vector3(); box.getSize(size);
-    const sc = Math.min(0.9, 0.3 / Math.max(size.x, size.y, size.z, 0.001));
+    const sc = Math.min(0.9, 0.30 / Math.max(size.x, 0.001),
+                             0.42 / Math.max(size.z, 0.001),
+                             0.26 / Math.max(size.y, 0.001));
     t.scale.setScalar(sc);
-    t.position.set((half ? 1 : -1) * 0.21, 0.047, 0.02);
+    t.position.set((half ? 1 : -1) * 0.21,
+      0.047 - box.min.y * sc, 0.02);
     t.traverse(o => { delete o.__pick; });
     setPick(t, { kind: 'nbItem', nb, slot: ud.page + half });
     nb.add(t);
@@ -1044,7 +1052,30 @@ function renderRoomContents(room) {
   room.__contents.forEach(n => n.removeFromParent());
   room.__contents = [];
   const ud = room.userData;
-  if (ud.opaque || !ud.world) return;
+  if (ud.opaque) return;
+  // the standing furniture every room conceptually has: table, desk, and the
+  // arc of stacks behind -- a schematic miniature, not the live originals
+  const F = 0.085;   // world-to-room miniature factor
+  const mini = new THREE.Group();
+  const tbl = new THREE.Mesh(new THREE.BoxGeometry(3.4 * F, 0.02, 1.3 * F),
+    new THREE.MeshStandardMaterial({ color: 0xc9b990, roughness: 0.7 }));
+  tbl.position.set(0, 0.052, 1.7 * F);
+  mini.add(tbl);
+  const dsk = new THREE.Mesh(new THREE.BoxGeometry(0.52 * F, 0.015, 0.44 * F),
+    new THREE.MeshStandardMaterial({ color: 0xcabc98, roughness: 0.6 }));
+  dsk.position.set(0.03, 0.045, 0.35 * F);
+  mini.add(dsk);
+  for (let k = 0; k < 8; k++) {
+    const th = (-78 + k * (156 / 7)) * Math.PI / 180;
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * F, 0.27 * F, 0.05, 10),
+      new THREE.MeshStandardMaterial({ color: k === 7 ? 0x9fd8ff : 0x3a414d, roughness: 0.7 }));
+    p.position.set(2.45 * F * Math.sin(th), 0.04, (0.55 - 2.45 * Math.cos(th)) * F);
+    mini.add(p);
+  }
+  mini.traverse(o => { delete o.__pick; });
+  room.add(mini);
+  room.__contents.push(mini);
+  if (!ud.world) return;
   const items = [];
   if (ud.world.active) items.push({ rec: ud.world.active, x: 0, z: -0.12 });
   if (ud.world.stations?.stand) items.push({ rec: ud.world.stations.stand, x: 0, z: 0.0 });
@@ -2694,6 +2725,13 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   }
   if (target.userData.kind === 'text' && incoming.userData.kind === 'number') {
     const v = incoming.userData.value;
+    // a number restores an erased pad, writing its digits on it
+    if (target.userData.erased) {
+      return mergeOnto(incoming, fromWorld, target, () => {
+        unErase(target);
+        target.setText(ratText(v));
+      });
+    }
     // a number on a blank pad writes itself out as text
     if (target.userData.text === '') {
       return mergeOnto(incoming, fromWorld, target, () => target.setText(ratText(v)));
@@ -3275,7 +3313,13 @@ function giveToRobot() {
   const from = thing.getWorldPosition(new THREE.Vector3());
   enqueueNext(settleInto(thing, from));
   if (!program.length) enterTraining();
-  else { refreshUI(); say('It has something to work on — press Run.'); }
+  else {
+    refreshUI();
+    // a trained robot does not wait to be told: once it has taken its place
+    // and the thing is on its desk, it gets to work
+    say('It has something to work on.');
+    enqueue(pause(0.3), doNow(() => { if (mode === 'world' && !busy) runProgram(); }));
+  }
 }
 
 // A mini robot grows to full size, walks behind the bench, and takes what the
@@ -3652,6 +3696,19 @@ function applyErasedLook(thing) {
   const q = ghostQuestion(0.2);
   q.position.y = (thing.userData.rest || 0.1) + 0.18;
   thing.add(q);
+  thing.__eraseQ = q;
+}
+function unErase(thing) {
+  thing.userData.erased = false;
+  thing.__eraseQ?.removeFromParent();
+  thing.__eraseQ = null;
+  thing.traverse(o => {
+    if (o.isMesh && o.material) {
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+        if (m.opacity <= 0.46) { m.opacity = 1; m.transparent = false; }
+      });
+    }
+  });
 }
 function eraseThingInPlace(thing) {
   const k = thing.userData.kind;
@@ -4511,6 +4568,13 @@ $('runBtn').onclick = () => {
   else runProgram();
 };
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
+$('progMin').onclick = () => {
+  const min = !$('prog').classList.toggle('min');
+  for (const el of $('prog').children) {
+    if (el.id !== 'progMin') el.style.display = min ? '' : 'none';
+  }
+  $('progMin').textContent = min ? '–' : '+';
+};
 $('saveBtn').onclick = () => saveRobot($('robotName').value.trim());
 $('exportBtn').onclick = () => {
   // a typed name means "this robot": save it first, then export that
