@@ -9,7 +9,8 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 
 ## What works today
 
-`nano-toontalk.html` — a programming-by-demonstration workshop:
+`toontalk-3d.html` — **ToonTalk 3D**, a programming-by-demonstration workshop
+(`nano-toontalk.html` remains as a redirect):
 
 ### The things
 
@@ -199,7 +200,7 @@ Needs any static server; the repo assumes port 8311.
 node serve.js 8311
 ```
 
-Then open <http://localhost:8311/nano-toontalk.html>. The **?** button in the
+Then open <http://localhost:8311/toontalk-3d.html>. The **?** button in the
 toolbar opens `manual.html` — a guided handbook whose illustrations are live
 embedded workshops (the app itself in an iframe with a small canned scene), so
 every example can actually be tried.
