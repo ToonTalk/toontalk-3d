@@ -813,6 +813,157 @@ function makeText(str) {
   setPick(g, { kind: 'thing', thing: g });
   return g;
 }
+
+// --- the notebook -----------------------------------------------------------
+// A two-page spread. Pages hold things as data; what stands on a page is a
+// display copy, and picking it up hands you a fresh copy -- only Dusty can
+// remove an entry. The first notebook on the table is the MAIN notebook, and
+// every change to it is persisted in this browser.
+const NB_KEY = 'nano-toontalk.notebook';
+function makeNotebook(rec = null) {
+  const g = new THREE.Group();
+  const cover = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.035, 0.56),
+    new THREE.MeshStandardMaterial({ color: 0x7a1f16, roughness: 0.6 }));
+  cover.position.y = 0.0175;
+  cover.castShadow = true; cover.receiveShadow = true;
+  g.add(cover);
+  const pageMat = new THREE.MeshStandardMaterial({ color: 0xf7f1df, roughness: 0.9 });
+  for (const sx of [-1, 1]) {
+    const page = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.012, 0.52), pageMat);
+    page.position.set(sx * 0.21, 0.041, 0);
+    page.receiveShadow = true;
+    g.add(page);
+  }
+  const spine = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.055, 0.52),
+    new THREE.MeshStandardMaterial({ color: 0x4a120c, roughness: 0.6 }));
+  spine.position.y = 0.03;
+  g.add(spine);
+  for (const [sx, dir] of [[-1, -2], [1, 2]]) {
+    const tab = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.02, 3),
+      new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.4 }));
+    tab.position.set(sx * 0.36, 0.055, 0.22);
+    tab.rotation.y = sx > 0 ? Math.PI : 0;
+    setPick(tab, { kind: 'nbFlip', nb: g, dir });
+    g.add(tab);
+  }
+  g.userData = { kind: 'notebook', rest: 0.03, main: false,
+                 pages: rec?.pages ? rec.pages.slice() : [],
+                 page: rec?.page || 0 };
+  setPick(g, { kind: 'thing', thing: g });
+  renderNotebook(g);
+  return g;
+}
+function buildFromRec(rec) {
+  nestGroupPending = null;
+  const nests = new Map(), birds = [];
+  const t = thingIn(rec, nests, birds);
+  birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+  return t;
+}
+function renderNotebook(nb) {
+  (nb.__slotNodes || []).forEach(n => n.removeFromParent());
+  nb.__slotNodes = [];
+  const ud = nb.userData;
+  ud.page = Math.max(0, ud.page - (ud.page % 2));
+  for (const half of [0, 1]) {
+    const rec = ud.pages[ud.page + half] ?? null;
+    if (!rec) continue;
+    const t = buildFromRec(rec);
+    if (!t) continue;
+    const box = new THREE.Box3().setFromObject(t);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const sc = Math.min(0.9, 0.3 / Math.max(size.x, size.y, size.z, 0.001));
+    t.scale.setScalar(sc);
+    t.position.set((half ? 1 : -1) * 0.21, 0.047, 0.02);
+    t.traverse(o => { delete o.__pick; });
+    setPick(t, { kind: 'nbItem', nb, slot: ud.page + half });
+    nb.add(t);
+    nb.__slotNodes.push(t);
+  }
+}
+function saveNotebook(nb) {
+  if (!nb.userData.main) return;
+  try {
+    localStorage.setItem(NB_KEY, JSON.stringify({ pages: nb.userData.pages, page: nb.userData.page }));
+  } catch {}
+}
+// what a page's entry "says", for text-pad navigation
+function recWords(r) {
+  if (!r) return '';
+  return [r.text, r.label, r.name, r.kind === 'notebook' ? 'notebook' : '',
+    ...(r.holes || []).map(recWords), ...(r.pile || []).map(recWords),
+    ...(r.pages || []).map(recWords)].filter(Boolean).join(' ');
+}
+function notebookFlip(nb, dir) {
+  const ud = nb.userData;
+  const last = Math.max(0, Math.ceil((ud.pages.length + 1) / 2) * 2 - 2);
+  let to = ud.page + dir;
+  if (to < 0) to = last;
+  if (to > last) to = 0;
+  if (to === ud.page) return say('This is the only spread.');
+  const flap = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.008, 0.52),
+    new THREE.MeshStandardMaterial({ color: 0xf7f1df, roughness: 0.9 }));
+  flap.position.set(dir > 0 ? 0.21 : -0.21, 0.05, 0);
+  nb.add(flap);
+  enqueueNext({
+    dur: 0.3,
+    update(t) {
+      const a = Math.PI * ease(t);
+      flap.position.x = Math.cos(a) * 0.21 * (dir > 0 ? 1 : -1);
+      flap.position.y = 0.05 + Math.sin(a) * 0.12;
+    },
+    end() {
+      flap.removeFromParent();
+      ud.page = to;
+      renderNotebook(nb);
+      saveNotebook(nb);
+      say(`Pages ${to + 1}–${to + 2}.`);
+      refreshUI();
+    },
+  });
+}
+// Filing and navigating share the drop: a blank half files; on a full page a
+// written pad searches and a whole number jumps to that page.
+function notebookDrop(nb, incoming, side, refuse) {
+  const ud = nb.userData;
+  const slot = ud.page + (side === 'L' ? 0 : 1);
+  const file = (i) => {
+    pushUndo();
+    const rec = thingOut(incoming);
+    incoming.removeFromParent();
+    ud.pages[i] = rec;
+    ud.page = i - (i % 2);
+    renderNotebook(nb);
+    saveNotebook(nb);
+    say(`Filed on page ${i + 1}.`);
+    refreshUI();
+  };
+  if (!ud.pages[slot]) return file(slot);
+  const k = incoming.userData.kind;
+  const navigate = (i, backInHand) => {
+    ud.page = i - (i % 2);
+    renderNotebook(nb);
+    saveNotebook(nb);
+    if (backInHand && mode === 'world') takeIntoHand(incoming);
+    else { putOnBench(incoming, benchSpot()); }
+    say(`Opened to page ${i + 1}.`);
+    refreshUI();
+  };
+  if (k === 'text' && incoming.userData.text && mode === 'world') {
+    const q = incoming.userData.text.toLowerCase();
+    const i = ud.pages.findIndex(r => recWords(r).toLowerCase().includes(q));
+    if (i < 0) return refuse(`No page mentions “${incoming.userData.text}”.`);
+    return navigate(i, true);
+  }
+  if (k === 'number' && incoming.userData.value.d === 1n && mode === 'world') {
+    const n = Number(incoming.userData.value.n);
+    if (n >= 1 && n <= ud.pages.length) return navigate(n - 1, true);
+    return refuse(`No page ${n}.`);
+  }
+  let i = ud.pages.findIndex(r => !r);
+  if (i < 0) i = ud.pages.length;
+  file(i);
+}
 function makeNest() {
   const g = new THREE.Group();
   const straw = new THREE.MeshStandardMaterial({ color: 0x8a6a3b, roughness: 0.9 });
@@ -1140,7 +1291,8 @@ function specOf(thing) {
   if (kind === 'text') return { kind: 'text', text: thing.userData.text };
   // birds, nests and robots inside boxes go by reference: their identity (a
   // bird's pairing, a robot's training) has no data form
-  if (kind === 'nest' || kind === 'bird' || kind === 'robot') return { kind: 'ref', node: thing };
+  if (kind === 'nest' || kind === 'bird' || kind === 'robot'
+      || kind === 'notebook') return { kind: 'ref', node: thing };
   return { kind, label: thing.userData.label ?? undefined,
            holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
 }
@@ -1164,6 +1316,9 @@ function copyThing(t) {
   let c;
   if (ud.kind === 'number') c = makeNumber(ud.value, ud.op);
   else if (ud.kind === 'text') c = makeText(ud.text);
+  else if (ud.kind === 'notebook') {
+    c = makeNotebook({ pages: JSON.parse(JSON.stringify(ud.pages)), page: ud.page });
+  }
   else if (ud.kind === 'bird') c = makeBird(t.__nest);
   else if (ud.kind === 'nest') {
     c = makeNest();
@@ -1629,6 +1784,8 @@ let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
 let defaultStand = null;          // the middle desk, shared by whoever stands there
 let dustyT = 0, dustyBase = null;   // idle wobble while he is awake
+let ruby = null, rubyActive = false, rubyHome = null;
+let rubyT = 0, rubyBase = null;
 let runCount = 0;
 let speed = 1;             // Infinity == run everything inside a single frame
 let maxIter = 100;         // user-settable: a robot whose condition never fails would loop forever
@@ -2116,6 +2273,12 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   };
   // Boxes join: dropping one box on another concatenates their holes, contents
   // and all, exactly as in ToonTalk.
+  if (target.userData.kind === 'notebook') {
+    return notebookDrop(target, incoming, side, refuse);
+  }
+  if (incoming.userData.kind === 'notebook') {
+    return refuse('Set the notebook down and drop things ON it instead.');
+  }
   if (target.userData.kind === 'bird' || target.userData.kind === 'nest') {
     return refuse('Give things to the bird herself — she delivers to her nest.');
   }
@@ -2220,7 +2383,7 @@ function resolve(ev) {
     // The outer bubble shell never intercepts Dusty, so the ghost parts stay
     // individually erasable.
     if (o.__pick.kind === 'cond') {
-      if (dustyActive) { if (o.__pick.outer) continue; }
+      if (dustyActive || rubyActive) { if (o.__pick.outer) continue; }
       else if (!(mode === 'world' && !held && activeBot?.trainedOn)) continue;
     }
     // handing things over only means anything in the workshop -- inside the
@@ -2241,12 +2404,48 @@ function handleClick(target) {
 
   if (target.kind === 'dusty') {
     dustyActive = !dustyActive;
-    say(dustyActive ? 'Dusty is awake — click things to vacuum them away, or parts of the robot’s thought to erase them.'
+    if (dustyActive) rubyActive = false;
+    say(dustyActive ? 'Dusty is awake — click things to vacuum them away, or parts of the robot’s thought to remove them.'
                     : 'Dusty settles down.');
     return refreshUI();
   }
+  if (target.kind === 'ruby') {
+    rubyActive = !rubyActive;
+    if (rubyActive) dustyActive = false;
+    say(rubyActive ? 'Ruby is awake — click parts of the robot’s thought to erase them, one step more general each time.'
+                   : 'Ruby settles down.');
+    return refreshUI();
+  }
+  if (target.kind === 'nbFlip') {
+    if (held) return say('Empty your hand to flip pages.');
+    return notebookFlip(target.nb, target.dir);
+  }
+  if (target.kind === 'nbItem') {
+    const nb = target.nb, slot = target.slot;
+    if (dustyActive && !held) {
+      pushUndo();
+      nb.userData.pages[slot] = null;
+      renderNotebook(nb);
+      saveNotebook(nb);
+      say('Dusty removed that page’s entry.');
+      return refreshUI();
+    }
+    if (held) return say('Your hand is full.');
+    pushUndo();
+    const t = buildFromRec(nb.userData.pages[slot]);
+    if (!t) return;
+    scene.add(t);
+    t.position.copy(nb.getWorldPosition(new THREE.Vector3())).y += 0.4;
+    userTake(t);
+    say('A copy from the notebook — the page keeps its own.');
+    return refreshUI();
+  }
   if (target.kind === 'cond') {
-    if (!dustyActive) {
+    // Ruby erases (each click one step more general); Dusty removes outright,
+    // leaving an empty hole that matches anything or nothing.
+    if (rubyActive) { dustyErase(target.path); return; }
+    if (dustyActive) { removeCondAt(target.path); return; }
+    {
       // reaching into the bubble empty-handed takes out a copy of the very
       // thing the robot was first shown
       if (mode === 'world' && !held && activeBot?.trainedOn) {
@@ -2259,10 +2458,8 @@ function handleClick(target) {
         say('A copy of what the robot was first shown.');
         return;
       }
-      return say('Wake Dusty up first, then click to erase.');
+      return say('Wake Ruby to erase parts of the thought, or Dusty to remove them.');
     }
-    dustyErase(target.path);
-    return;
   }
 
   // A thing sits down inside its pocket, so a click meant for it can land on
@@ -2282,6 +2479,12 @@ function handleClick(target) {
           && stations[target.id].occupant ? stations[target.id].occupant
       : null;
     if (victim) {
+      if (victim.userData.kind === 'notebook') {
+        const ud = victim.userData;
+        if (ud.pages[ud.page] || ud.pages[ud.page + 1]) {
+          return say('A notebook only goes when it is open at two blank pages.');
+        }
+      }
       if (mode === 'training') {
         if (victim.userData.kind === 'robot') return say('Dusty leaves robots alone during a lesson.');
         const at = addrOf(victim);
@@ -2896,6 +3099,38 @@ function condNodeAt(path) {
   return found;
 }
 
+// Dusty on a thought part removes it outright: the hole is left empty, and
+// an empty hole matches anything or nothing.
+function removeAt(cond, path) {
+  const [i, ...rest] = path;
+  if (cond?.kind !== 'box' && cond?.kind !== 'scale') return cond;
+  const holes = cond.holes.slice();
+  holes[i] = rest.length ? removeAt(holes[i], rest) : null;
+  return { kind: cond.kind, holes };
+}
+function removeCondAt(path) {
+  if (!path.length) {
+    return say('Dusty removes what is IN the thought — Ruby can erase the whole thing instead.');
+  }
+  const node = condNodeAt(path);
+  if (!node) return;
+  pushUndo();
+  busy = true;
+  const s0 = node.scale.x;
+  enqueue({
+    dur: 0.35,
+    update(t) { node.scale.setScalar(s0 * (1 - ease(t))); },
+    end() {
+      condition = removeAt(condition, path);
+      syncBot();
+      rebuildCondition();
+      busy = false;
+      say('Gone — that hole now takes anything, or nothing.');
+      refreshUI();
+    },
+  });
+}
+
 // --- Dusty ----------------------------------------------------------------
 function dustyErase(path) {
   const node = condNodeAt(path);
@@ -3163,6 +3398,7 @@ function thingOut(t) {
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
   if (ud.kind === 'text') return { kind: 'text', text: ud.text };
+  if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
     const grp = t.__group?.filter(n2 => n2.parent);
@@ -3204,6 +3440,7 @@ function thingIn(o, nests, birds) {
   let t = null;
   if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
   else if (o.kind === 'text') t = makeText(o.text);
+  else if (o.kind === 'notebook') t = makeNotebook(o);
   else if (o.kind === 'robot') t = botIn(o);
   else if (o.kind === 'nest') {
     t = makeNest();
@@ -3406,7 +3643,7 @@ function undo() {
 function resetWorld() {
   // robots, nests and birds on the bench survive a reset -- they carry state a
   // rebuild could not restore
-  const bots = benchThings.filter(t => ['robot', 'nest', 'bird'].includes(t.userData.kind));
+  const bots = benchThings.filter(t => ['robot', 'nest', 'bird', 'notebook'].includes(t.userData.kind));
   benchThings.forEach(t => t.removeFromParent());
   benchThings.length = 0;
   bots.forEach(b => putOnBench(b, { x: b.position.x, z: b.position.z }));
@@ -3673,6 +3910,11 @@ function refreshUI() {
   $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
   $('dustyBtn').classList.toggle('think', dustyActive);
   $('dustyBtn').disabled = running || busy || !dusty;
+  if ($('rubyBtn')) {
+    $('rubyBtn').textContent = rubyActive ? 'Ruby: awake' : 'Ruby: asleep';
+    $('rubyBtn').classList.toggle('think', rubyActive);
+    $('rubyBtn').disabled = running || busy;
+  }
 
   const showHeld = !!held && mode !== 'replay';
   $('held').classList.toggle('on', showHeld);
@@ -4158,6 +4400,16 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   pickables.length = 0;
   pickables.push(scene);
 
+  // the main notebook: restored from this browser, or fresh with a blank
+  // notebook filed on its first page
+  {
+    let nbRec = null;
+    try { nbRec = JSON.parse(localStorage.getItem(NB_KEY) || 'null'); } catch {}
+    const mainNb = makeNotebook(nbRec ?? { pages: [{ kind: 'notebook', pages: [], page: 0 }], page: 0 });
+    mainNb.userData.main = true;
+    putOnBench(mainNb, { x: 0.95, z: BENCH.z0 + 0.28 });
+  }
+
   worldReady = true;
   frameScene();
   refreshLibrary();
@@ -4188,6 +4440,45 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     mat.receiveShadow = true;
     setPick(mat, { kind: 'dusty' });
     scene.add(mat);
+
+    // Ruby the eraser lives beside him: a pink block with eyes.
+    ruby = new THREE.Group();
+    const pink = new THREE.MeshStandardMaterial({ color: 0xe0708a, roughness: 0.55 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.26, 0.14), pink);
+    body.position.y = 0.15;
+    body.rotation.y = 0.3;
+    body.castShadow = true; body.receiveShadow = true;
+    ruby.add(body);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.07, 0.15),
+      new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: 0.35 }));
+    cap.position.y = 0.30;
+    cap.rotation.y = 0.3;
+    ruby.add(cap);
+    for (const sx of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.026, 12, 10),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 }));
+      eye.position.set(sx * 0.05 + 0.02, 0.2, 0.075);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0x141821 }));
+      pupil.position.set(sx * 0.05 + 0.02, 0.2, 0.098);
+      ruby.add(eye, pupil);
+    }
+    rubyHome = new THREE.Vector3(dustyHome.x - 0.55, 0, dustyHome.z + 0.05);
+    ruby.position.copy(rubyHome);
+    setPick(ruby, { kind: 'ruby' });
+    scene.add(ruby);
+    const rmat = new THREE.Mesh(new THREE.CircleGeometry(0.2, 28).rotateX(-Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.8 }));
+    rmat.position.set(rubyHome.x, 0.004, rubyHome.z);
+    rmat.receiveShadow = true;
+    setPick(rmat, { kind: 'ruby' });
+    scene.add(rmat);
+
+    const rb = document.createElement('button');
+    rb.id = 'rubyBtn';
+    rb.title = 'Ruby the eraser — wake her, then click parts of a robot\u2019s thought to erase them one step more general.';
+    rb.onclick = () => handleClick({ kind: 'ruby' });
+    document.getElementById('dustyBtn').after(rb);
     refreshUI();
   });
 });
@@ -4297,6 +4588,20 @@ renderer.setAnimationLoop((now) => {
       dustyBase = null; dustyT = 0;
     }
   }
+  if (ruby) {
+    if (rubyActive) {
+      rubyBase ??= { y: ruby.rotation.y, s: ruby.scale.x };
+      rubyT += dt;
+      ruby.rotation.z = Math.sin(rubyT * 6) * 0.14;
+      ruby.rotation.y = rubyBase.y + Math.sin(rubyT * 2.8) * 0.3;
+      ruby.scale.setScalar(rubyBase.s * (1 + 0.04 * Math.sin(rubyT * 8)));
+    } else if (rubyBase) {
+      ruby.rotation.z = 0;
+      ruby.rotation.y = rubyBase.y;
+      ruby.scale.setScalar(rubyBase.s);
+      rubyBase = null; rubyT = 0;
+    }
+  }
   bubbleNow += (bubbleTarget - bubbleNow) * Math.min(1, dt * 4);
   bubbleMat.opacity = BUBBLE_OPACITY * bubbleNow;
   bubble.visible = bubbleNow > 0.01;
@@ -4350,9 +4655,11 @@ window.__nano = {
   reset() { clearUndo(); if (mode === 'training') leaveTraining(false); resetWorld(); },
   exit() { leaveTraining(); },
   run() { runProgram(); },
-  dusty(on = true) { dustyActive = on; refreshUI(); },
+  dusty(on = true) { dustyActive = on; if (on) rubyActive = false; refreshUI(); },
+  rubyOn(on = true) { rubyActive = on; if (on) dustyActive = false; refreshUI(); },
   erase(path) { dustyErase(path); },
   clickCond(path = []) { handleClick({ kind: 'cond', path }); },
+  clickRaw(target) { handleClick(target); },
   get flagged() { return flagged.length; },
   save(name) { saveRobot(name); },
   load(name) { loadRobot(name); },
@@ -4367,6 +4674,7 @@ window.__nano = {
         ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
       : t.userData.kind === 'robot' ? 'robot'
       : t.userData.kind === 'text' ? { text: t.userData.text }
+      : t.userData.kind === 'notebook' ? { notebook: t.userData.pages.length }
       : t.userData.kind === 'bird' ? 'bird'
       : t.userData.kind === 'nest' ? { nest: t.userData.pile.map(d) }
       : { [t.userData.kind]: t.userData.holes.map(h => d(h.thing)) };
