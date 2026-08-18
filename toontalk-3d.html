@@ -1392,7 +1392,8 @@ function runRoomWork(room) {
   // them and scramble the pile's order
   for (const f of flights.splice(0)) {
     const n2 = findNestByGuid(f.nestGuid) ?? (f.nest.parent ? f.nest : null);
-    if (f.phase === 0 && n2) { f.clone.remove(f.gift); deliverCopy(n2, f.gift); }
+    // cosmetic couriers carry no gift -- their delivery already happened
+    if (f.phase === 0 && n2 && f.gift) { f.clone.remove(f.gift); deliverCopy(n2, f.gift); }
     f.clone.removeFromParent();
   }
   let more = false;
@@ -1402,7 +1403,7 @@ function runRoomWork(room) {
     drainQueue(60);
     // opaque rooms work in chunks of 40 rounds per bottle, so frames (and
     // chimney smoke) get through between chunks and nothing stalls for long
-    const chunk = stepped ? 1 : Math.min(mi, 40);
+    const chunk = stepped ? 1 : Math.max(1, Math.min(40, mi - (ud.stepRounds || 0)));
     maxIter = chunk;
     if (activeBot && program.length && stations.stand.occupant) {
       runProgram();
@@ -2748,10 +2749,21 @@ function advanceWorldClocks(dt) {
     setWings(b, b.__spread, flying ? Math.sin(flapT * 18) * 0.4 : 0);
   }
   // dirty rooms run at the next quiet moment, wherever the ticks come from
-  if (!busy && !held && !queue.length && !current && mode === 'world') processDirtyRooms();
+  if (!busy && !held && !queue.length && !current && mode === 'world') {
+    try { processDirtyRooms(); }
+    catch (err) {
+      console.error('room work failed:', err);
+      // stop retrying the room that just blew up
+      const bad = benchThings.find(t2 => t2.userData.kind === 'room' && t2.userData.dirty);
+      if (bad) bad.userData.dirty = false;
+      roomWorkBusy = false;
+    }
+  }
   for (let i = hatching.length - 1; i >= 0; i--) {
     const h = hatching[i];
-    if (h.nest.parent !== scene || !h.nest.userData.hasEgg) { hatching.splice(i, 1); continue; }
+    let hr = h.nest;
+    while (hr.parent) hr = hr.parent;
+    if (hr !== scene || !h.nest.userData.hasEgg) { hatching.splice(i, 1); continue; }
     h.t += dt;
     h.nest.__egg.rotation.z = Math.sin(h.t * 16) * 0.14 * Math.min(1, h.t);
     if (h.t > 1.5) {
@@ -2762,7 +2774,8 @@ function advanceWorldClocks(dt) {
       const bird = makeBird(h.nest);
       // a name written on the nest before hatching belongs to the pair
       if (h.nest.userData.label) setThingLabel(bird, h.nest.userData.label);
-      putOnBench(bird, { x: h.nest.position.x + 0.4, z: h.nest.position.z });
+      const wp = h.nest.getWorldPosition(new THREE.Vector3());
+      putOnBench(bird, { x: wp.x + 0.4, z: wp.z });
       flash(bird.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.15, 0)));
       say('The egg hatched — give the bird something and she takes it home.');
     }
@@ -3858,7 +3871,15 @@ function userPutInHole(hole) {
   const from = dropped.getWorldPosition(new THREE.Vector3());
   const fromQ = dropped.getWorldQuaternion(new THREE.Quaternion());
   if (hole.thing) combine(hole, dropped, true, from);
-  else { sfx('drop'); putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.22, fromQ)); }
+  else {
+    sfx('drop');
+    putInHole(hole, dropped);
+    enqueueNext(settleInto(dropped, from, 0.22, fromQ));
+    // an egg hatches wherever its nest comes to rest, holes included
+    if (dropped.userData.kind === 'nest' && dropped.userData.hasEgg) {
+      hatching.push({ nest: dropped, t: 0 });
+    }
+  }
   refreshUI();
 }
 function userDropOn(target, point) {
@@ -5929,8 +5950,8 @@ function metalTexture(base, streak) {
   });
 }
 function strawTexture() {
-  return speckTexture(128, '#8a6a3b', null, 240, (c, rnd, w) => {
-    c.strokeStyle = rnd() > 0.5 ? 'rgba(201,162,90,0.5)' : 'rgba(90,64,30,0.4)';
+  return speckTexture(128, '#6e4a22', null, 300, (c, rnd, w) => {
+    c.strokeStyle = rnd() > 0.5 ? 'rgba(214,164,74,0.65)' : 'rgba(58,38,16,0.5)';
     c.lineWidth = 0.8 + rnd() * 1.2;
     const x = rnd() * w, y = rnd() * w, a = rnd() * Math.PI;
     const l = 6 + rnd() * 14;
