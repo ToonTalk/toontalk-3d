@@ -70,9 +70,20 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **A copier** with two surfaces: originals are scanned on the upper platform,
   independent deep copies are delivered to the lower tray. Clicking a surface
   with an empty hand takes from that surface.
-- **Dusty the vacuum**, under the bench. Wake him and click things to remove
-  them, or click parts of a robot's thought to erase them. He sways and
-  fidgets the whole time he is awake, so there is never any doubt.
+- **The notebook**, open on the table as a two-page spread. Drop anything on
+  a blank half to file it; clicking a page's entry hands you a fresh copy
+  while the page keeps its own. On a full page, a written text pad opens the
+  first page whose contents mention its text and a whole number jumps to that
+  page; corner tabs flip the spread. Dusty removes an entry, and a notebook
+  itself only goes when open at two blank pages. The main notebook persists
+  in this browser and starts with a blank notebook filed on page 1 — copy it
+  out to make more.
+- **Dusty the vacuum and Ruby the eraser**, under the bench. Dusty *removes*:
+  things from the world, entries from notebook pages, parts of a thought
+  outright (leaving an empty hole that matches anything or nothing). Ruby
+  *erases*: each click makes a part of a thought one step more general — 7,
+  then *any number*, then *anything*. Waking one settles the other, and
+  whoever is awake sways and fidgets so there is never any doubt.
 
 ### The robots
 
