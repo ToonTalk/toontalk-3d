@@ -748,6 +748,16 @@ function makeNumber(value, op = '+') {
         c.beginPath(); c.moveTo(128 - w, 143); c.lineTo(128 + w, 143); c.stroke();
       }
     });
+    // the three secondary faces are expensive; a thousand pile members must
+    // not each paint four canvases on every rebuild. They are painted lazily,
+    // a few per LOD sweep, once the number is close enough to read them.
+    if (g.__facesLive) paintSecondary();
+    else g.__facesStale = true;
+  }
+  function paintSecondary() {
+    const label = g.userData.label;
+    const v = g.userData.value;
+    const lod = g.__lod;
     if (label != null || !v) {
       [fBack, fSci, fAlt].forEach(f => paint(f, (c) => {
         if (label != null) {
@@ -763,6 +773,7 @@ function makeNumber(value, op = '+') {
       ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
       : drawDecimal(c, v, lod));
   }
+  g.__paintSecondary = () => { paintSecondary(); g.__facesStale = false; };
 
   g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; draw(); };
   g.setOp = (o) => { g.userData.op = o; draw(); };
@@ -1196,6 +1207,11 @@ function makeRoom(data = null) {
   roof.castShadow = true;
   setPick(roof, { kind: 'roomRoof', room: g });
   g.add(roof);
+  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.13, 0.055),
+    new THREE.MeshStandardMaterial({ color: 0x8a5a4a, roughness: 0.8 }));
+  chimney.position.set(0.13, 0.42, -0.1);
+  setPick(chimney, { kind: 'roomRoof', room: g });
+  g.add(chimney);
   const id = data?.id ?? nextRoomId++;
   nextRoomId = Math.max(nextRoomId, id + 1);
   g.userData = { kind: 'room', rest: 0, width: 0.5, world: data?.world ?? null,
@@ -1315,7 +1331,7 @@ let roomWorkBusy = false;
 function drainQueue(guard = 400) {
   const t0 = performance.now();
   for (let g = 0; g < guard && (busy || queue.length || current); g++) {
-    fastForward();
+    fastForward(100000, Infinity);   // bottled runs complete in one go
     if (performance.now() - t0 > 4000) {
       console.warn('drainQueue: 4s budget spent, abandoning', queue.length, 'queued steps');
       queue.length = 0; current = null; busy = false; pendingAfter = null;
@@ -1525,6 +1541,7 @@ function birdIntoRoom(bird, thing) {
   const wasAt = bird.getWorldPosition(new THREE.Vector3());
   detach(bird);
   scene.attach(bird);
+  bird.__flying = true;
   bird.position.copy(wasAt);
   const dest = room.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.25, 0));
   enqueue({
@@ -1552,6 +1569,7 @@ function birdIntoRoom(bird, thing) {
       bird.scale.setScalar(0.3 + 0.7 * e);
     },
     end() {
+      bird.__flying = false;
       bird.scale.setScalar(1);
       putOnBench(bird, { x: wasAt.x, z: wasAt.z });
       refreshUI();
@@ -1763,6 +1781,7 @@ function birdDeliver(bird) {
   const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
   detach(bird);
   scene.attach(bird);
+  bird.__flying = true;
   bird.add(thing);
   thing.position.set(0, -0.02, 0.16);
   thing.quaternion.identity();
@@ -1826,6 +1845,7 @@ function birdDeliver(bird) {
         lerp(np.z, wasAt.z, e));
     },
     end() {
+      bird.__flying = false;
       if (originHole && !originHole.thing) putInHole(originHole, bird);
       else if (originSt && !originSt.occupant) putOnStation(originSt, bird);
       else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
@@ -2632,9 +2652,12 @@ function afterQueue() {
 // Instant speed: snap each step straight to its finished state instead of
 // simulating every frame of it. Stepping through the animation at a big dt
 // still cost seconds of blocking for a 20-round loop.
-function fastForward(maxSteps = 100000) {
+function fastForward(maxSteps = 100000, sliceMs = 14) {
+  const t0 = performance.now();
   let n = 0;
   while ((current || queue.length) && n++ < maxSteps) {
+    // yield to the frame so a 10000-round run scrolls by instead of hanging
+    if ((n & 63) === 0 && performance.now() - t0 > sliceMs) break;
     if (!current) {
       current = queue.shift();
       if (!current) break;
@@ -2650,17 +2673,35 @@ function fastForward(maxSteps = 100000) {
 // Time-based world effects that must not depend on the screen being visible:
 // egg hatching and clone-bird flights. Called from tick() and, at Instant
 // speed, straight from the frame loop.
+let puffGeo = null;
 function advanceWorldClocks(dt) {
+  // a working room's chimney smokes
+  for (const t of benchThings) {
+    if (t.userData?.kind !== 'room') continue;
+    t.__puffT = (t.__puffT || 0) - dt;
+    if (t.userData.dirty && t.__puffT <= 0) {
+      t.__puffT = 0.45;
+      const puff = new THREE.Mesh(puffGeo ??= new THREE.SphereGeometry(0.032, 8, 6),
+        new THREE.MeshBasicMaterial({ color: 0xd8d8d8, transparent: true, opacity: 0.5 }));
+      puff.position.set(0.13, 0.52, -0.1);
+      t.add(puff);
+      (t.__puffs ??= []).push({ m: puff, t: 0 });
+    }
+    for (let i = (t.__puffs?.length ?? 0) - 1; i >= 0; i--) {
+      const p = t.__puffs[i];
+      p.t += dt;
+      p.m.position.y += dt * 0.3;
+      p.m.scale.setScalar(1 + p.t * 2.2);
+      p.m.material.opacity = 0.5 * Math.max(0, 1 - p.t / 1.4);
+      if (p.t > 1.4) { p.m.removeFromParent(); t.__puffs.splice(i, 1); }
+    }
+  }
   // a bird between places flies with wings out, flapping
   flapT += dt;
   for (let i = allBirds.length - 1; i >= 0; i--) {
     const b = allBirds[i];
     if (!b.parent) { allBirds.splice(i, 1); continue; }
-    const flying = (b.parent === scene
-        && !benchThings.includes(b)
-        && !Object.values(stations).some(s2 => s2.occupant === b)
-        && !allStands.some(s2 => s2.occupant === b))
-      || flights.some(f => f.clone === b);
+    const flying = b.__flying || flights.some(f => f.clone === b);
     const target = flying ? 1 : 0;
     b.__spread = (b.__spread ?? 0) + (target - (b.__spread ?? 0)) * Math.min(1, dt * 8);
     setWings(b, b.__spread, flying ? Math.sin(flapT * 18) * 0.4 : 0);
@@ -5937,12 +5978,18 @@ renderer.setAnimationLoop((now) => {
   lodClock += dt;
   if (lodClock > 0.5) {
     lodClock = 0;
+    let lazyBudget = 30;
     for (let i = allNumbers.length - 1; i >= 0; i--) {
       const nmb = allNumbers[i];
       if (!nmb.parent) { allNumbers.splice(i, 1); continue; }
       const dist = camera.position.distanceTo(nmb.getWorldPosition(_lodV));
       const tier = dist < 3.6 ? 2 : 1;
-      if (tier !== nmb.__lod) { nmb.__lod = tier; nmb.__redraw(); }
+      if (tier !== nmb.__lod) { nmb.__lod = tier; nmb.__facesLive = true; nmb.__redraw(); }
+      else if (nmb.__facesStale && nmb.visible && dist < 9 && lazyBudget > 0) {
+        lazyBudget--;
+        nmb.__facesLive = true;
+        nmb.__paintSecondary();
+      }
     }
   }
   // scales tip toward the larger number, pans staying level
