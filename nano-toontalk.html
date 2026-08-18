@@ -1179,10 +1179,17 @@ function renderRoomContents(room) {
   for (const it of items) {
     const t = buildFromRec(it.rec);
     if (!t) continue;
+    t.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(t);
     const size = new THREE.Vector3(); box.getSize(size);
-    t.scale.multiplyScalar(Math.min(1, 0.085 / Math.max(size.x, size.y, size.z, 0.001)));
+    const maxDim = Math.max(size.x, size.y, size.z);
+    // a degenerate measurement must never leave a stand-in at full size
+    t.scale.multiplyScalar(maxDim > 0.001 && isFinite(maxDim)
+      ? Math.min(1, 0.085 / maxDim) : 0.08);
     t.position.set(it.x, 0.032, it.z);
+    if (it.rec === ud.world.active && t.__bot?.program.length) {
+      addMiniBubble(t, t.__bot.condition);
+    }
     t.traverse(o => { delete o.__pick; });
     delete t.__pick;
     room.add(t);
@@ -1968,6 +1975,9 @@ function putOnBench(thing, at) {
     BENCH_TOP + thing.userData.rest,
     Math.min(BENCH.z1 - 0.16, Math.max(BENCH.z0 + 0.16, at.z)));
   if (!benchThings.includes(thing)) benchThings.push(thing);
+  if (thing.userData.kind === 'robot') {
+    addMiniBubble(thing, thing.__bot?.program.length ? thing.__bot.condition : null);
+  }
 }
 
 function putOnStation(st, thing) {
@@ -3407,6 +3417,16 @@ function takeIntoHand(obj) {
   obj.position.set(0, 0, 0);
   obj.quaternion.identity();
   obj.scale.setScalar(obj.userData.kind === 'robot' ? MINI : 1);
+  // centre on the hand by bounding box: birds, nests, scales and rooms have
+  // their origin at the base and otherwise ride high above the pointer
+  obj.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(obj);
+  if (isFinite(bb.min.y) && isFinite(bb.max.y)) {
+    const c0 = new THREE.Vector3();
+    bb.getCenter(c0);
+    handNode.worldToLocal(c0);
+    obj.position.y -= c0.y;
+  }
   enqueueNext(settleInto(obj, fromWorld, 0.24));
   refreshUI();      // the "holding" readout must track every pickup
 }
@@ -3494,6 +3514,7 @@ function giveToRobot() {
 function activateBot(bot, after) {
   clearUndo();
   busy = true;
+  addMiniBubble(bot.node, null);   // the full-size bubble takes over
   detach(bot.node);
   scene.attach(bot.node);
   bot.home = HOME;                       // it takes the middle
@@ -3707,6 +3728,27 @@ function buildCondNode(cond, path, marks) {
   }
   marks.push([g, path]);
   return g;
+}
+// A trained robot on the table (or standing in a room) carries a small
+// thought bubble of its own, so its condition is visible at a glance.
+function addMiniBubble(node, cond) {
+  if (node.__miniBubble) { node.__miniBubble.removeFromParent(); node.__miniBubble = null; }
+  if (!cond) return;
+  const g = new THREE.Group();
+  const inner = buildCondNode(cond, [], []);
+  ghostify(inner);
+  inner.traverse(o => { delete o.__pick; });
+  inner.scale.setScalar(0.5);
+  inner.position.y = 0.02;
+  g.add(inner);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 14), bubbleMat.clone());
+  halo.material.opacity = 0.14;
+  g.add(halo);
+  g.position.y = 1.95;
+  g.scale.setScalar(1.6);
+  g.traverse(o => { delete o.__pick; });
+  node.add(g);
+  node.__miniBubble = g;
 }
 function rebuildCondition() {
   clearFlags();      // the marks live on nodes about to be destroyed
@@ -4272,6 +4314,18 @@ function clearWorld() {
   }
   stations.stand = defaultStand;
   program = []; condition = null;
+  // sweep strays: anything scene-level that no registry owns (a bird caught
+  // mid-flight when the worlds swapped, for instance) must not leak through
+  const keep = new Set();
+  for (const s2 of Object.values(stations)) {
+    (s2.cubes || []).forEach(c => keep.add(c));
+    if (s2.occupant) keep.add(s2.occupant);
+  }
+  for (const s2 of allStands) if (s2.occupant) keep.add(s2.occupant);
+  const THING_KINDS = ['number', 'box', 'text', 'scale', 'nest', 'bird', 'robot', 'room', 'notebook'];
+  for (const ch of [...scene.children]) {
+    if (THING_KINDS.includes(ch.userData?.kind) && !keep.has(ch)) ch.removeFromParent();
+  }
   renderProgram(); rebuildCondition();
 }
 function worldIn(data) {
@@ -4317,7 +4371,11 @@ function snapshotWorld() {
   // robots on the bench are kept by reference -- they carry training that a
   // spec could not describe, and nothing in a daydream can touch them
   snap.bench = benchThings.map(t =>
-    ['robot', 'nest', 'bird'].includes(t.userData.kind)
+    t.userData.kind === 'room'
+    ? { bot: t, at: { x: t.position.x, z: t.position.z },
+        roomWorld: JSON.stringify(t.userData.world ?? null),
+        roomDirty: !!t.userData.dirty }
+    : ['robot', 'nest', 'bird'].includes(t.userData.kind)
     ? { bot: t, at: { x: t.position.x, z: t.position.z } }
     : { spec: specOf(t), at: { x: t.position.x, z: t.position.z } });
   snap.piles = allNests.filter(n => n.parent)
@@ -4330,7 +4388,16 @@ function restoreWorld(snap) {
   if (held) { held.removeFromParent(); held = null; }
   benchThings.forEach(t => t.removeFromParent());
   benchThings.length = 0;
-  (snap.bench || []).forEach(b => putOnBench(b.bot ?? buildThing(b.spec), b.at));
+  (snap.bench || []).forEach(b => {
+    const t = b.bot ?? buildThing(b.spec);
+    putOnBench(t, b.at);
+    // a room's inner world is data the by-ref restore would otherwise miss
+    if (b.roomWorld !== undefined) {
+      t.userData.world = JSON.parse(b.roomWorld);
+      t.userData.dirty = b.roomDirty;
+      renderRoomContents(t);
+    }
+  });
   (snap.piles || []).forEach(p => {
     p.nest.userData.pile.forEach(t => t.removeFromParent());
     p.nest.userData.pile = p.items.map(buildThing).filter(Boolean);
