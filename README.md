@@ -142,6 +142,20 @@ designs, generated from Blender Python scripts rather than modelled by hand.
 - **Robots fetch like you do.** A step that needs a fresh number or box sends
   the robot walking to the same stack you would use, and it drops things at
   the exact hole they belong in, not the middle of the box.
+- **Saving and sharing.** Three buttons: **Save held thing** writes whatever
+  is in your hand to a `.thing.json` file — any thing, trained robots
+  included; **Save world** writes the entire workshop to a `.world.json`
+  file; **Import file** opens either (drag-drop onto the app works too) — a
+  thing lands in your hand, a world replaces the workshop. Robots are named
+  by typing while holding them (the name shows on their chest); rooms are
+  named the same way, the name appearing on their three doorless walls.
+  Loading a robot never costs the one already at the bench: it shrinks onto
+  the table, or steps aside with its desk if it is waiting on a nest, and
+  several robots can stand behind the bench — click one for focus, click the
+  focused one to pick it up.
+- **Robots fetch like you do.** A step that needs a fresh number or box sends
+  the robot walking to the same stack you would use, and it drops things at
+  the exact hole they belong in, not the middle of the box.
 - **Saving and sharing.** Save names a robot in this browser — the name
   appears on its chest screen and in its tooltips. Export downloads it as a
   `.robot.json` file under its typed name; Import adds it to the library and

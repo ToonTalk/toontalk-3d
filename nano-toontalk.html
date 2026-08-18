@@ -113,18 +113,10 @@
   <p id="trainedOn" title="The robot's condition: what it must be given before it will run. Dusty can vacuum parts of it away."></p>
   <ul id="steps"><li class="empty">not trained yet</li></ul>
   <div id="library">
-    <div class="row"><input id="robotName" placeholder="name this robot" maxlength="28"
-        title="A name to save the active robot's training under.">
-      <button id="saveBtn" title="Save the active robot's program and condition in this browser.">Save</button></div>
-    <div class="row"><select id="robotList" title="Robots saved in this browser."></select>
-      <button id="loadBtn" title="Load this saved training into the robot at the bench (waking one if needed).">Load</button><button id="delBtn" title="Delete this saved robot.">×</button></div>
-    <div class="row"><button id="exportHeldBtn" title="Download whatever you are holding as a file — any thing: a box, a number, a robot, a nest.">Save held thing</button></div>
-    <div class="row"><button id="exportBtn" title="Download the selected robot as a file, to share or move to another computer.">Export file</button>
-      <button id="importBtn" title="Add a thing, robot or world file — a world file replaces the whole workshop.">Import file</button>
+    <div class="row"><button id="exportHeldBtn" title="Save whatever you are holding to a file — any thing: a box, a number, a robot, a nest.">Save held thing</button>
+      <button id="exportWorldBtn" title="Save the whole workshop to a file.">Save world</button></div>
+    <div class="row"><button id="importBtn" title="Open a saved file — a thing lands in your hand; a world replaces the workshop.">Import file</button>
       <input id="importFile" type="file" accept=".json,application/json" style="display:none"></div>
-    <div class="row"><button id="saveWorldBtn" title="Save the whole workshop — bench, stands, robots and all — in this browser.">Save world</button>
-      <button id="loadWorldBtn" title="Bring back the workshop saved in this browser.">Load world</button>
-      <button id="exportWorldBtn" title="Download the whole workshop as a file.">Export world</button></div>
   </div>
 </div>
 
@@ -709,7 +701,17 @@ function makeNumber(value, op = '+') {
 
   const paint = (face, fn) => {
     const lod = g.__lod, size = 256 * lod;
-    if (face.canvas.width !== size) face.canvas.width = face.canvas.height = size;
+    if (face.canvas.width !== size) {
+      face.canvas.width = face.canvas.height = size;
+      // a resized canvas needs a fresh GL texture: updating in place trips
+      // glCopySubTextureCHROMIUM against the old allocation
+      face.tex.dispose();
+      face.tex = new THREE.CanvasTexture(face.canvas);
+      face.tex.colorSpace = THREE.SRGBColorSpace;
+      face.tex.anisotropy = 8;
+      face.mat.map = face.tex;
+      face.mat.needsUpdate = true;
+    }
     const c = face.canvas.getContext('2d');
     c.setTransform(lod, 0, 0, lod, 0, 0);
     const st = OP_STYLE[g.userData.op] || OP_STYLE['+'];
@@ -776,6 +778,7 @@ function makeNumber(value, op = '+') {
 // holding a bird, nest or box writes one.
 function setThingLabel(thing, text) {
   thing.userData.label = text || null;
+  if (thing.userData.kind === 'room') return paintRoomLabel(thing);
   if (thing.__labelNode) { thing.__labelNode.removeFromParent(); thing.__labelNode = null; }
   if (!text) return;
   const c = document.createElement('canvas');
@@ -1103,6 +1106,40 @@ function notebookDrop(nb, incoming, side, refuse) {
 // the moment the outer world goes quiet. Walk through the door to swap views.
 let nextRoomId = 1;
 const emptyWorldRec = () => ({ kind: 'world', v: 1, bench: [], stations: {}, active: null });
+// A room's name goes on its three doorless walls -- never over the door.
+function paintRoomLabel(room) {
+  (room.__labelPlates || []).forEach(p => p.removeFromParent());
+  room.__labelPlates = [];
+  const text = room.userData.label;
+  if (!text) return;
+  const cv = document.createElement('canvas');
+  cv.width = 320; cv.height = 80;
+  const c = cv.getContext('2d');
+  c.clearRect(0, 0, 320, 80);
+  c.fillStyle = '#5a4632';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  let px = 44;
+  c.font = `bold ${px}px Georgia, serif`;
+  while (px > 12 && c.measureText(text).width > 300) {
+    px = Math.floor(px * 0.88);
+    c.font = `bold ${px}px Georgia, serif`;
+  }
+  c.fillText(text, 160, 42);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+  for (const sp of [
+    { p: [0, 0.15, -0.215], ry: Math.PI },
+    { p: [-0.265, 0.15, 0], ry: -Math.PI / 2 },
+    { p: [0.265, 0.15, 0], ry: Math.PI / 2 },
+  ]) {
+    const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.085), mat);
+    plate.position.set(...sp.p);
+    plate.rotation.y = sp.ry;
+    room.add(plate);
+    room.__labelPlates.push(plate);
+  }
+}
 function makeRoom(data = null) {
   const g = new THREE.Group();
   const wallMat = new THREE.MeshStandardMaterial({ roughness: 0.85, transparent: true,
@@ -1125,10 +1162,23 @@ function makeRoom(data = null) {
   wall(0.42, 0.25, 0, Math.PI / 2);
   wall(0.17, -0.165, 0.2);              // front, split around the doorway
   wall(0.17, 0.165, 0.2);
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.2, 0.015),
-    new THREE.MeshStandardMaterial({ color: 0x27313e, roughness: 0.5,
-      emissive: 0x18404e, emissiveIntensity: 0.7 }));
-  door.position.set(0, 0.13, 0.2);
+  // an actual door: cream frame, wooden leaf, brass knob
+  const door = new THREE.Group();
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.175, 0.215, 0.018),
+    new THREE.MeshStandardMaterial({ color: 0xf0e6cf, roughness: 0.6 }));
+  frame.position.y = 0.107;
+  door.add(frame);
+  const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.19, 0.024),
+    new THREE.MeshStandardMaterial({ color: 0x8a5a2c, roughness: 0.55,
+      map: (woodTex ??= woodTexture()) }));
+  leaf.position.y = 0.098;
+  door.add(leaf);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.013, 10, 8),
+    new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.3, metalness: 0.8 }));
+  knob.position.set(0.048, 0.098, 0.02);
+  door.add(knob);
+  door.position.set(0, 0.018, 0.2);
+  door.traverse(o => setPick(o, { kind: 'roomDoor', room: g }));
   setPick(door, { kind: 'roomDoor', room: g });
   g.add(door);
   const roof = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.17, 4), roofMat);
@@ -1150,6 +1200,7 @@ function makeRoom(data = null) {
     renderRoomContents(g);
   };
   setPick(g, { kind: 'thing', thing: g });
+  if (data?.label) { g.userData.label = data.label; paintRoomLabel(g); }
   g.setOpaque(g.userData.opaque);
   return g;
 }
@@ -1337,7 +1388,8 @@ function runRoomWork(room) {
         deliverCopy(nest2, gift);
         courier.removeFromParent();
       } else {
-        flights.push({ clone: courier, gift, nest: nest2, from, t: 0, phase: 0 });
+        flights.push({ clone: courier, gift, nest: nest2,
+          nestGuid: nest2.userData.guid, from, t: 0, phase: 0 });
       }
     }
   } finally {
@@ -1614,7 +1666,7 @@ function spawnCloneDelivery(bird, thing, nest2, from) {
     clone.removeFromParent();
     return;
   }
-  flights.push({ clone, gift, nest: nest2, from, t: 0, phase: 0 });
+  flights.push({ clone, gift, nest: nest2, nestGuid: nest2.userData.guid, from, t: 0, phase: 0 });
 }
 
 // The bird carries the gift home, drops it on the pile, and flies back to
@@ -2561,7 +2613,12 @@ function advanceWorldClocks(dt) {
     const f = flights[i];
     f.t += dt;
     if (f.phase === 0) {
-      if (!f.nest.parent) { f.clone.removeFromParent(); flights.splice(i, 1); continue; }
+      if (!f.nest.parent) {
+        // the nest node may have been rebuilt mid-flight: the guid finds it
+        const again = findNestByGuid(f.nestGuid);
+        if (!again) { f.clone.removeFromParent(); flights.splice(i, 1); continue; }
+        f.nest = again;
+      }
       const e = ease(Math.min(1, f.t / 0.9));
       const np = f.nest.getWorldPosition(_lodV);
       f.clone.position.set(lerp(f.from.x, np.x, e),
@@ -3397,7 +3454,7 @@ function userClick(target) {
     if (held.userData.kind === 'text' && target.point) {
       const p = target.point;
       const near = benchThings.find(t2 => t2 !== held && t2.userData.kind === 'text'
-        && Math.abs(p.x - t2.position.x) < 0.3 && Math.abs(p.z - t2.position.z) < 0.24);
+        && Math.abs(p.x - t2.position.x) < 0.45 && Math.abs(p.z - t2.position.z) < 0.36);
       if (near) return userDropOn(near, p);
     }
     return userPutOnBench(target.point);
@@ -3900,7 +3957,11 @@ function addMiniBubble(node, cond) {
   g.position.y = 1.95;
   g.scale.setScalar(1.6);
   g.traverse(o => { delete o.__pick; });
-  if (node.__bot?.trainedOn) setPick(halo, { kind: 'miniCond', bot: node.__bot });
+  if (node.__bot?.trainedOn) {
+    // every part of the bubble, box included, means "take a copy"
+    g.traverse(o => setPick(o, { kind: 'miniCond', bot: node.__bot }));
+    setPick(g, { kind: 'miniCond', bot: node.__bot });
+  }
   node.add(g);
   node.__miniBubble = g;
 }
@@ -4337,6 +4398,7 @@ function deleteRobot(name) {
   say(`Deleted “${name}”.`);
 }
 function refreshLibrary(select) {
+  if (!document.getElementById('robotList')) return;
   const names = Object.keys(loadLibrary()).sort();
   const sel = $('robotList');
   sel.innerHTML = names.length
@@ -4370,7 +4432,7 @@ function thingOutRaw(t) {
   if (ud.kind === 'text') return { kind: 'text', text: ud.text };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: ud.world, opaque: ud.opaque,
-                                   dirty: ud.dirty, id: ud.id };
+                                   dirty: ud.dirty, id: ud.id, label: ud.label ?? undefined };
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
     return { kind: 'nest', id: ud.id, guid: ud.guid, hasEgg: !!ud.hasEgg,
@@ -4480,6 +4542,7 @@ function clearWorld() {
     if (s2.occupant) keep.add(s2.occupant);
   }
   for (const s2 of allStands) if (s2.occupant) keep.add(s2.occupant);
+  for (const f of flights) { keep.add(f.clone); keep.add(f.gift); }
   const THING_KINDS = ['number', 'box', 'text', 'scale', 'nest', 'bird', 'robot', 'room', 'notebook'];
   for (const ch of [...scene.children]) {
     if (THING_KINDS.includes(ch.userData?.kind) && !keep.has(ch)) ch.removeFromParent();
@@ -4996,22 +5059,6 @@ $('progMin').onclick = () => {
   }
   $('progMin').textContent = min ? '–' : '+';
 };
-$('saveBtn').onclick = () => saveRobot($('robotName').value.trim());
-$('exportBtn').onclick = () => {
-  // a typed name means "this robot": save it first, then export that
-  const typed = $('robotName').value.trim();
-  let name = $('robotList').value;
-  if (typed && program.length) { saveRobot(typed); name = typed; }
-  const rec = loadLibrary()[name];
-  if (!rec) return say('Nothing selected to export.');
-  const blob = new Blob([JSON.stringify({ name, ...rec }, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name.replace(/[^\w-]+/g, '_') + '.robot.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  say(`Exported “${name}”.`);
-};
 $('exportHeldBtn').onclick = () => {
   if (!held) return say('Pick something up first — this saves what you are holding.');
   if (held.userData.kind === 'robot' && held.__bot === activeBot) syncBot();
@@ -5071,12 +5118,13 @@ async function importRobotFile(file) {
     }
     if (!Array.isArray(rec.program) || !('condition' in rec)) throw new Error('not a robot or world file');
     const name = rec.name || file.name.replace(/\.robot\.json$|\.json$/i, '');
-    const lib = loadLibrary();
-    lib[name] = { program: rec.program, condition: rec.condition,
-                  trainedOn: rec.trainedOn ?? null };
-    saveLibrary(lib);
-    refreshLibrary(name);
-    loadRobot(name);          // importing means: I want this robot here
+    const node = botIn({ kind: 'robot', name, program: rec.program,
+      condition: rec.condition, trainedOn: rec.trainedOn ?? null, team: rec.team || [] });
+    if (held) { const h = held; held = null; putOnBench(h, benchSpot()); }
+    scene.add(node);
+    node.position.set(0, BENCH_TOP + 0.6, 1.6);
+    userTake(node);
+    say(`Here is “${name}” — set it on the table.`);
   } catch (e) {
     sayAttn('Could not import that file: ' + e.message);
   }
@@ -5093,21 +5141,6 @@ addEventListener('drop', (e) => {
   const f = [...(e.dataTransfer?.files || [])].find(f2 => /\.json$/i.test(f2.name));
   if (f) importRobotFile(f);
 });
-$('loadBtn').onclick = () => loadRobot($('robotList').value);
-$('delBtn').onclick = () => deleteRobot($('robotList').value);
-$('saveWorldBtn').onclick = () => {
-  if (busy || mode !== 'world') return say('Leave the thought bubble first.');
-  if (held) stowHeld();
-  try { localStorage.setItem(WORLD_KEY, JSON.stringify(worldOut())); say('Workshop saved in this browser.'); }
-  catch (e) { say('Could not save: ' + e.message); }
-};
-$('loadWorldBtn').onclick = () => {
-  if (busy || mode === 'replay') return say('Wait for the robot to finish first.');
-  const s2 = localStorage.getItem(WORLD_KEY);
-  if (!s2) return say('No workshop saved yet.');
-  try { worldIn(JSON.parse(s2)); say('Workshop restored.'); }
-  catch (e) { sayAttn('Could not load the saved workshop: ' + e.message); }
-};
 $('exportWorldBtn').onclick = () => {
   if (busy || mode !== 'world') return say('Leave the thought bubble first.');
   if (held) stowHeld();
@@ -5117,7 +5150,7 @@ $('exportWorldBtn').onclick = () => {
   a.download = 'workshop.world.json';
   a.click();
   URL.revokeObjectURL(a.href);
-  say('Exported the whole workshop.');
+  say('Saved the whole workshop to a file.');
 };
 $('speed').onchange = (e) => {
   speed = e.target.value === 'inf' ? Infinity : +e.target.value;
@@ -5139,8 +5172,20 @@ addEventListener('keydown', (e) => {
     return;
   }
   if (!held || busy || mode === 'replay') return;
-  if (held.userData.kind === 'robot') return;
   const labelKey = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+  if (held.userData.kind === 'robot') {
+    // typing names the robot in your hand; the name shows on its chest
+    const bot = held.__bot;
+    if (e.key === 'Backspace') bot.name = (bot.name || '').slice(0, -1);
+    else if (labelKey) bot.name = (bot.name || '') + e.key;
+    else return;
+    if (!bot.name) bot.name = null;
+    paintBotName(bot);
+    sfx('type');
+    e.preventDefault();
+    refreshUI();
+    return;
+  }
   const editLabel = () => {
     if (e.key === 'Backspace') {
       if (held.userData.label) { pushUndo(); setThingLabel(held, held.userData.label.slice(0, -1)); }
@@ -5165,7 +5210,8 @@ addEventListener('keydown', (e) => {
     if (!/^[0-9]$/.test(e.key)) editLabel();   // digits mean holes; letters name it
     return;
   }
-  if (held.userData.kind === 'bird' || held.userData.kind === 'nest') { editLabel(); return; }
+  if (held.userData.kind === 'bird' || held.userData.kind === 'nest'
+      || held.userData.kind === 'room') { editLabel(); return; }
   if (held.userData.kind !== 'number') return;
   const v = held.userData.value;
   if (/^[0-9]$/.test(e.key)) {
@@ -5208,6 +5254,10 @@ function tipFor(t) {
       : training ? 'Dusty vacuums it — the robot learns this as a step.'
                  : 'Dusty will vacuum this away.';
   }
+  if (t.kind === 'thing' && held?.userData.kind === 'text'
+      && t.thing?.userData.kind === 'text') {
+    return 'Drop to join the pads — left edge reads first, right edge last.';
+  }
   if (t.kind === 'station') {
     const st = stations[t.id];
     if (st.kind === 'stack') {
@@ -5244,6 +5294,11 @@ function tipFor(t) {
     return null;
   }
   if (t.kind === 'bench') {
+    if (held?.userData.kind === 'text' && t.point) {
+      const near = benchThings.find(t2 => t2 !== held && t2.userData.kind === 'text'
+        && Math.abs(t.point.x - t2.position.x) < 0.45 && Math.abs(t.point.z - t2.position.z) < 0.36);
+      if (near) return 'Drop to join the pads — this side decides the order.';
+    }
     return held ? 'Your workbench — click to put that down.'
                 : 'Your workbench — build here. Robots cannot reach it.';
   }
