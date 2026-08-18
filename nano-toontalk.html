@@ -2179,6 +2179,7 @@ function enqueue(...steps) { queue.push(...steps); }
 // must happen *now*, not after the retract-and-walk-home already in the queue.
 function enqueueNext(...steps) { queue.unshift(...steps); }
 function tick(dt) {
+  advanceWorldClocks(dt);
   if (!current) {
     current = queue.shift(); tCur = 0;
     if (!current) { if (busy) { busy = false; afterQueue(); } return; }
@@ -2216,6 +2217,55 @@ function fastForward(maxSteps = 100000) {
     current = null;
   }
   if (busy && !current && !queue.length) { busy = false; afterQueue(); }
+}
+
+// Time-based world effects that must not depend on the screen being visible:
+// egg hatching and clone-bird flights. Called from tick() and, at Instant
+// speed, straight from the frame loop.
+function advanceWorldClocks(dt) {
+  for (let i = hatching.length - 1; i >= 0; i--) {
+    const h = hatching[i];
+    if (h.nest.parent !== scene || !h.nest.userData.hasEgg) { hatching.splice(i, 1); continue; }
+    h.t += dt;
+    h.nest.__egg.rotation.z = Math.sin(h.t * 16) * 0.14 * Math.min(1, h.t);
+    if (h.t > 1.5) {
+      hatching.splice(i, 1);
+      h.nest.userData.hasEgg = false;
+      h.nest.__egg.removeFromParent();
+      const bird = makeBird(h.nest);
+      // a name written on the nest before hatching belongs to the pair
+      if (h.nest.userData.label) setThingLabel(bird, h.nest.userData.label);
+      putOnBench(bird, { x: h.nest.position.x + 0.4, z: h.nest.position.z });
+      flash(bird.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.15, 0)));
+      say('The egg hatched — give the bird something and she takes it home.');
+    }
+  }
+  // clone birds ferrying copies to copied nests, then leaving for good
+  for (let i = flights.length - 1; i >= 0; i--) {
+    const f = flights[i];
+    f.t += dt;
+    if (f.phase === 0) {
+      if (!f.nest.parent) { f.clone.removeFromParent(); flights.splice(i, 1); continue; }
+      const e = ease(Math.min(1, f.t / 0.9));
+      const np = f.nest.getWorldPosition(_lodV);
+      f.clone.position.set(lerp(f.from.x, np.x, e),
+        lerp(f.from.y, np.y + 0.3, e) + 0.45 * Math.sin(Math.PI * e),
+        lerp(f.from.z, np.z, e));
+      if (f.t >= 0.9) {
+        f.clone.remove(f.gift);
+        deliverCopy(f.nest, f.gift);
+        f.phase = 1; f.t = 0;
+      }
+    } else {
+      const e = Math.min(1, f.t / 0.9);
+      f.clone.position.y += dt * (1.2 + 2.4 * e);
+      f.clone.position.x += dt * 0.5;
+      f.clone.traverse(o => {
+        if (o.isMesh && o.material) { o.material.transparent = true; o.material.opacity = 1 - e; }
+      });
+      if (e >= 1) { f.clone.removeFromParent(); flights.splice(i, 1); }
+    }
+  }
 }
 
 // `target` may be a function, resolved when the step starts -- stand positions
@@ -2604,6 +2654,9 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   };
   // Boxes join: dropping one box on another concatenates their holes, contents
   // and all, exactly as in ToonTalk.
+  if (target.userData.kind === 'room') {
+    return roomDrop(target, incoming, refuse);
+  }
   if (target.userData.kind === 'notebook') {
     return notebookDrop(target, incoming, side, refuse);
   }
@@ -2786,8 +2839,31 @@ function handleClick(target) {
     }
     if (held) return say('Your hand is full.');
     pushUndo();
-    const t = buildFromRec(nb.userData.pages[slot]);
+    let t = buildFromRec(nb.userData.pages[slot]);
     if (!t) return;
+    // a lone nest comes out with a fresh egg (it hatches when set down); a
+    // lone bird conjures herself a fresh nest beside the notebook
+    if (t.userData.kind === 'nest' && !t.userData.hasEgg && !t.userData.pile.length) {
+      const fresh = makeNest();
+      if (t.userData.label) setThingLabel(fresh, t.userData.label);
+      t = fresh;
+    }
+    if (t.userData.kind === 'bird' && !t.__nest) {
+      const nest2 = makeNest();
+      nest2.__egg.removeFromParent();
+      nest2.userData.hasEgg = false;
+      if (t.userData.label) setThingLabel(nest2, t.userData.label);
+      const at = nb.getWorldPosition(new THREE.Vector3());
+      putOnBench(nest2, { x: at.x - 0.6, z: at.z });
+      nest2.scale.setScalar(0.01);
+      enqueueNext({
+        dur: 0.5,
+        update(tt) { nest2.scale.setScalar(Math.max(0.01, ease(tt))); },
+        end() { nest2.scale.setScalar(1); },
+      });
+      t.__nest = nest2;
+      say('Her new nest grows beside the notebook.');
+    }
     scene.add(t);
     t.position.copy(nb.getWorldPosition(new THREE.Vector3())).y += 0.4;
     userTake(t);
@@ -2868,15 +2944,15 @@ function handleClick(target) {
 // In the workshop the user does everything themselves.
 function userClick(target) {
   const holdingBot = held?.userData.kind === 'robot';
-  // rooms take drops of anything, robots included
-  if (target.kind === 'thing' && target.thing.userData.kind === 'room' && held) {
-    const room = target.thing;
+  // rooms and notebooks take drops of anything, robots included
+  if (target.kind === 'thing' && held
+      && (target.thing.userData.kind === 'room' || target.thing.userData.kind === 'notebook')) {
+    const it = target.thing;
     const dropped = held; held = null;
-    return roomDrop(room, dropped, (msg) => {
-      putOnBench(dropped, benchSpot());
-      held = null;
-      sayAttn(msg);
-    });
+    const refuse = (msg) => { putOnBench(dropped, benchSpot()); sayAttn(msg); };
+    if (it.userData.kind === 'room') return roomDrop(it, dropped, refuse);
+    const side = target.point ? sideOf(it, target.point) : 'R';
+    return notebookDrop(it, dropped, side, refuse);
   }
   if (target.kind === 'botThing') {
     const bot = target.bot;
@@ -2885,7 +2961,9 @@ function userClick(target) {
       return formTeam(bot, held.__bot);
     }
     if (held) {
-      if (hasRobot(held)) return say('Robots don’t work on robots.');
+      // a bare robot forms teams instead; robots INSIDE boxes may be given,
+      // so robots can carry robots into rooms
+      if (held.userData.kind === 'robot') return say('Robots don’t work on robots.');
       if (bot === activeBot) return giveToRobot();
       if (activeBot) return say('Another robot is already at the bench — click it first to send it away.');
       return activateBot(bot);
@@ -4630,6 +4708,8 @@ function tipFor(t) {
       if (t.id === 'numbers') return training
         ? 'Click to have the robot take a fresh number.'
         : 'The number stack — click to take a 1, then type digits to change it.';
+      if (t.id === 'rooms') return training ? null
+        : 'The room stack — each holds a whole workshop. Drop a robot in, then things for it to work on; click its door to step inside.';
       if (t.id === 'texts') return training
         ? 'Click to have the robot take a fresh text pad.'
         : 'The text stack — take a blank pad and type on it.';
@@ -4663,6 +4743,17 @@ function tipFor(t) {
     return dustyActive
       ? 'Dusty is awake — click a part of the robot’s thought to vacuum it away.'
       : 'Dusty the vacuum — click to wake him, then click parts of a robot’s thought to erase them.';
+  }
+  if (t.kind === 'roomDoor') {
+    return 'The door — click to step inside: the room becomes the world around you, and this one shrinks onto its table.';
+  }
+  if (t.kind === 'roomRoof') {
+    return 'The roof — click to switch the walls between solid (the room works instantly, unseen) and glass (you can watch).';
+  }
+  if (t.kind === 'ruby') {
+    return rubyActive
+      ? 'Ruby is awake — click things or thought parts to erase them one step more general.'
+      : 'Ruby the eraser — click to wake her; she erases things in place and loosens robot thoughts.';
   }
   if (t.kind === 'cond') {
     return 'The robot’s thought: the shape it must be given before it will run. '
@@ -4944,6 +5035,9 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     rb.title = 'Ruby the eraser — wake her, then click parts of a robot\u2019s thought to erase them one step more general.';
     rb.onclick = () => handleClick({ kind: 'ruby' });
     document.getElementById('dustyBtn').after(rb);
+    // the characters themselves are the switches now; the buttons only clutter
+    rb.style.display = 'none';
+    document.getElementById('dustyBtn').style.display = 'none';
     refreshUI();
   });
 });
@@ -5046,7 +5140,7 @@ renderer.setAnimationLoop((now) => {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
   if (worldReady) {
-    if (speed === Infinity) fastForward();
+    if (speed === Infinity) { fastForward(); advanceWorldClocks(dt); }
     else tick(dt * speed);
   }
   if (condDisplay) {
@@ -5070,50 +5164,6 @@ renderer.setAnimationLoop((now) => {
       const dist = camera.position.distanceTo(nmb.getWorldPosition(_lodV));
       const tier = dist < 3.6 ? 2 : 1;
       if (tier !== nmb.__lod) { nmb.__lod = tier; nmb.__redraw(); }
-    }
-  }
-  // eggs hatch a moment after their nest is set down
-  for (let i = hatching.length - 1; i >= 0; i--) {
-    const h = hatching[i];
-    if (h.nest.parent !== scene || !h.nest.userData.hasEgg) { hatching.splice(i, 1); continue; }
-    h.t += dt;
-    h.nest.__egg.rotation.z = Math.sin(h.t * 16) * 0.14 * Math.min(1, h.t);
-    if (h.t > 1.5) {
-      hatching.splice(i, 1);
-      h.nest.userData.hasEgg = false;
-      h.nest.__egg.removeFromParent();
-      const bird = makeBird(h.nest);
-      // a name written on the nest before hatching belongs to the pair
-      if (h.nest.userData.label) setThingLabel(bird, h.nest.userData.label);
-      putOnBench(bird, { x: h.nest.position.x + 0.4, z: h.nest.position.z });
-      flash(bird.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.15, 0)));
-      say('The egg hatched — give the bird something and she takes it home.');
-    }
-  }
-  // clone birds ferrying copies to copied nests, then leaving for good
-  for (let i = flights.length - 1; i >= 0; i--) {
-    const f = flights[i];
-    f.t += dt;
-    if (f.phase === 0) {
-      if (!f.nest.parent) { f.clone.removeFromParent(); flights.splice(i, 1); continue; }
-      const e = ease(Math.min(1, f.t / 0.9));
-      const np = f.nest.getWorldPosition(_lodV);
-      f.clone.position.set(lerp(f.from.x, np.x, e),
-        lerp(f.from.y, np.y + 0.3, e) + 0.45 * Math.sin(Math.PI * e),
-        lerp(f.from.z, np.z, e));
-      if (f.t >= 0.9) {
-        f.clone.remove(f.gift);
-        deliverCopy(f.nest, f.gift);
-        f.phase = 1; f.t = 0;
-      }
-    } else {
-      const e = Math.min(1, f.t / 0.9);
-      f.clone.position.y += dt * (1.2 + 2.4 * e);
-      f.clone.position.x += dt * 0.5;
-      f.clone.traverse(o => {
-        if (o.isMesh && o.material) { o.material.transparent = true; o.material.opacity = 1 - e; }
-      });
-      if (e >= 1) { f.clone.removeFromParent(); flights.splice(i, 1); }
     }
   }
   // scales tip toward the larger number, pans staying level
@@ -5221,6 +5271,7 @@ window.__nano = {
   erase(path) { dustyErase(path); },
   clickCond(path = []) { handleClick({ kind: 'cond', path }); },
   clickRaw(target) { handleClick(target); },
+  get hatchN() { return hatching.length; },
   get flagged() { return flagged.length; },
   save(name) { saveRobot(name); },
   load(name) { loadRobot(name); },
