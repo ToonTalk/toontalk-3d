@@ -667,8 +667,14 @@ function drawWrapped(c, text, cx, cy, maxW, maxH) {
 }
 
 const allNumbers = [];
-function makeNumber(value, op = '+') {
+function makeNumber(value, op = '+', lite = false) {
   const g = new THREE.Group();
+  // `lite` skips all meshes and canvases: the hidden middle of a tall pile
+  // only needs its data. __materialize() builds the visuals on demand.
+  let built = false;
+  let fMain, fBack, fSci, fAlt, shellMat;
+  const build = () => {
+  built = true;
   const mkFace = () => {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 256;
@@ -678,9 +684,9 @@ function makeNumber(value, op = '+') {
   };
   // front and top show the value; the other faces show the same number written
   // other ways
-  const fMain = mkFace(), fBack = mkFace(), fSci = mkFace(), fAlt = mkFace();
+  fMain = mkFace(); fBack = mkFace(); fSci = mkFace(); fAlt = mkFace();
 
-  const shellMat = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 });
+  shellMat = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 });
   const shell = new THREE.Mesh(cubeGeo, shellMat);
   shell.castShadow = true; shell.receiveShadow = true;
   g.add(shell);
@@ -696,6 +702,7 @@ function makeNumber(value, op = '+') {
   addFace(fBack.mat, 0, 0, -p, 0, Math.PI);           // back: words / mixed
   addFace(fSci.mat, -p, 0, 0, 0, -Math.PI / 2);       // left: scientific
   addFace(fAlt.mat, p, 0, 0, 0, Math.PI / 2);         // right: grouped / decimal
+  };
   Object.assign(g.userData, { id: nextId++, kind: 'number', op, width: CUBE, rest: CUBE / 2 });
   g.__lod = 1;
 
@@ -729,6 +736,7 @@ function makeNumber(value, op = '+') {
   };
 
   function draw() {
+    if (!built) return;
     const st0 = OP_STYLE[g.userData.op] || OP_STYLE['+'];
     shellMat.color.setHex(st0.shell);
     const label = g.userData.label;
@@ -773,12 +781,14 @@ function makeNumber(value, op = '+') {
       ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
       : drawDecimal(c, v, lod));
   }
-  g.__paintSecondary = () => { paintSecondary(); g.__facesStale = false; };
+  g.__paintSecondary = () => { if (!built) return; paintSecondary(); g.__facesStale = false; };
 
   g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; draw(); };
   g.setOp = (o) => { g.userData.op = o; draw(); };
   g.setLabel = (t) => { g.userData.label = t; draw(); };
   g.__redraw = draw;
+  g.__materialize = () => { if (!built) { build(); draw(); } };
+  if (!lite) g.__materialize();
   g.setValue(value);
   allNumbers.push(g);
   setPick(g, { kind: 'thing', thing: g });
@@ -1671,6 +1681,7 @@ function restackNest(nest) {
   pile.forEach((t) => { t.visible = false; });
   shown.forEach((t, i) => {
     t.visible = true;
+    t.__materialize?.();
     t.position.set(0, ys[i] + (elide && i >= BOTTOM ? GAP : 0), 0);
     t.quaternion.identity();
   });
@@ -2680,9 +2691,9 @@ function advanceWorldClocks(dt) {
     if (t.userData?.kind !== 'room') continue;
     t.__puffT = (t.__puffT || 0) - dt;
     if (t.userData.dirty && t.__puffT <= 0) {
-      t.__puffT = 0.45;
-      const puff = new THREE.Mesh(puffGeo ??= new THREE.SphereGeometry(0.032, 8, 6),
-        new THREE.MeshBasicMaterial({ color: 0xd8d8d8, transparent: true, opacity: 0.5 }));
+      t.__puffT = 0.32;
+      const puff = new THREE.Mesh(puffGeo ??= new THREE.SphereGeometry(0.05, 8, 6),
+        new THREE.MeshBasicMaterial({ color: 0xe8e8e8, transparent: true, opacity: 0.7 }));
       puff.position.set(0.13, 0.52, -0.1);
       t.add(puff);
       (t.__puffs ??= []).push({ m: puff, t: 0 });
@@ -3338,11 +3349,14 @@ function handleClick(target) {
   }
   if (target.kind === 'roomRoof') {
     const room = target.room;
-    // a stopped-at-the-limit robot picks its work back up
+    // a stopped-at-the-limit robot picks its work back up; the walls only
+    // change on the NEXT click, so glass rooms restart without going solid
     if (!room.userData.dirty && room.userData.world?.active
         && room.userData.world?.stations?.stand) {
       room.userData.stepRounds = 0;
       room.userData.dirty = true;
+      say('The robot inside picks its work back up — click again to change the walls.');
+      return refreshUI();
     }
     room.setOpaque(!room.userData.opaque);
     say(room.userData.opaque
@@ -4642,8 +4656,13 @@ function thingInRaw(o, nests, birds) {
   else if (o.kind === 'nest') {
     t = makeNest();
     if (!o.hasEgg) { t.__egg.removeFromParent(); t.userData.hasEgg = false; }
-    (o.pile || []).forEach(p => {
-      const item = thingIn(p, nests, birds);
+    const pl = o.pile || [];
+    pl.forEach((p, pi) => {
+      // the elided middle of a tall pile rebuilds as data-only shells
+      const hidden = pl.length > 10 && pi >= 4 && pi < pl.length - 4;
+      const item = (hidden && p?.kind === 'number')
+        ? makeNumber(ratIn(p.value), p.op, true)
+        : thingIn(p, nests, birds);
       if (item) { t.add(item); t.userData.pile.push(item); }
     });
     restackNest(t);
@@ -5726,6 +5745,12 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     sv.oninput = () => { setVolume(+sv.value, +sv.value === 0); refreshSnd(); sfx('combine'); };
     gb.after(sb); sb.after(sv);
     refreshSnd();
+    const hb = document.createElement('button');
+    hb.id = 'helpBtn';
+    hb.textContent = '?';
+    hb.title = 'Open the manual — a guided tour with live workshops to try things in.';
+    hb.onclick = () => window.open('manual.html', '_blank');
+    sv.after(hb);
   }
 
   // things become pickable as they are created; simplest is to test everything
@@ -5733,8 +5758,8 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   pickables.push(scene);
 
   // the main notebook: restored from this browser, or fresh with a blank
-  // notebook filed on its first page
-  {
+  // notebook filed on its first page (not in the manual's little demo worlds)
+  if (!new URLSearchParams(location.search).get('demo')) {
     let nbRec = null;
     try { nbRec = JSON.parse(localStorage.getItem(NB_KEY) || 'null'); } catch {}
     const mainNb = makeNotebook(nbRec ?? { pages: [{ kind: 'notebook', pages: [], page: 0 }], page: 0 });
@@ -5743,6 +5768,8 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   }
 
   worldReady = true;
+  const demo = new URLSearchParams(location.search).get('demo');
+  if (demo) setupDemo(demo);
   frameScene();
   refreshLibrary();
   renderProgram(); refreshUI();
@@ -5952,6 +5979,44 @@ function releaseCorner() {
   try { localStorage.setItem(TABLE_KEY, JSON.stringify(BENCH)); } catch {}
   say('The table keeps this shape.');
   refreshUI();
+}
+
+// Small canned worlds for the manual's live illustrations.
+function setupDemo(name) {
+  document.getElementById('prog').style.display = 'none';
+  const key = (k) => {};
+  if (name === 'bird') {
+    const n = makeNest();
+    putOnBench(n, { x: -0.4, z: 1.7 });
+    hatching.push({ nest: n, t: 0 });
+    putOnBench(makeNumber(rat(3)), { x: 0.5, z: 1.6 });
+    putOnBench(makeNumber(rat(7)), { x: 0.9, z: 1.9 });
+  } else if (name === 'robot') {
+    const mini = stations.minis.cubes.pop();
+    refillStack(stations.minis);
+    if (mini) putOnBench(mini, { x: 0.9, z: 1.6 });
+    putOnBench(makeNumber(rat(5)), { x: -0.3, z: 1.7 });
+  } else if (name === 'pads') {
+    const a = makeText('Toon'), b = makeText('Talk');
+    putOnBench(a, { x: -0.35, z: 1.7 });
+    putOnBench(b, { x: 0.35, z: 1.7 });
+    putOnBench(makeNumber(rat(2)), { x: 0.9, z: 2.0 });
+  } else if (name === 'room') {
+    putOnBench(makeRoom(), { x: -0.6, z: 1.9 });
+    const mini = stations.minis.cubes.pop();
+    refillStack(stations.minis);
+    if (mini) putOnBench(mini, { x: 0.5, z: 1.6 });
+    putOnBench(makeNumber(rat(4)), { x: 1.0, z: 1.9 });
+  } else if (name === 'box') {
+    const bx = makeBox(2);
+    putOnBench(bx, { x: 0, z: 1.7 });
+    putOnBench(makeNumber(rat(8)), { x: 0.7, z: 1.9 });
+    putOnBench(makeNumber(rat(9)), { x: -0.7, z: 1.9 });
+  }
+  camera.position.set(0.1, 2.3, 4.1);
+  orbit.target.set(0, 0.85, 1.4);
+  orbit.update();
+  userMoved = true;    // demos keep their close framing
 }
 
 // ---------------------------------------------------------------- loop

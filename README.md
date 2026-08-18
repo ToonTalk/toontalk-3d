@@ -199,7 +199,10 @@ Needs any static server; the repo assumes port 8311.
 node serve.js 8311
 ```
 
-Then open <http://localhost:8311/nano-toontalk.html>.
+Then open <http://localhost:8311/nano-toontalk.html>. The **?** button in the
+toolbar opens `manual.html` — a guided handbook whose illustrations are live
+embedded workshops (the app itself in an iframe with a small canned scene), so
+every example can actually be tried.
 
 `serve.js` also accepts `POST /capture`, which the pages use to write rendered
 frames to `captures/` — that is how the 3D work gets reviewed without a human

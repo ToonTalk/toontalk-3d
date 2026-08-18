@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nano-ToonTalk — the manual</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b8241a'/%3E%3Ctext x='16' y='23' font-size='18' text-anchor='middle' fill='%23fff' font-family='Georgia'%3E%3F%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --ink: #1c2230; --paper: #f7f1df; --card: #ffffff;
+    --red: #b8241a; --accent: #14957c; --soft: #6b6455;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 17px/1.55 Georgia, 'Times New Roman', serif;
+  }
+  header {
+    background: var(--red); color: #fff; padding: 34px 20px 26px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 6px; font-size: 34px; letter-spacing: 0.5px; }
+  header p { margin: 0 auto; max-width: 640px; opacity: 0.92; }
+  nav {
+    position: sticky; top: 0; background: #fffdf6; border-bottom: 2px solid #e3d9bd;
+    padding: 8px 12px; text-align: center; z-index: 5; font-size: 15px;
+  }
+  nav a { color: var(--red); text-decoration: none; margin: 0 10px; white-space: nowrap; }
+  nav a:hover { text-decoration: underline; }
+  main { max-width: 780px; margin: 0 auto; padding: 10px 18px 80px; }
+  h2 {
+    color: var(--red); font-size: 26px; margin: 46px 0 8px;
+    border-bottom: 2px solid #e3d9bd; padding-bottom: 4px;
+  }
+  h3 { font-size: 20px; margin: 26px 0 6px; }
+  p { margin: 10px 0; }
+  kbd {
+    background: #efe7cf; border: 1px solid #cfc3a0; border-bottom-width: 3px;
+    border-radius: 5px; padding: 0 6px; font: 14px ui-monospace, monospace;
+  }
+  .try {
+    background: var(--card); border: 2px solid #e3d9bd; border-radius: 12px;
+    margin: 18px 0 26px; overflow: hidden;
+  }
+  .try .cap {
+    padding: 9px 14px; font-size: 15px; color: var(--soft);
+    border-bottom: 1px solid #eee4c8; background: #fffdf6;
+  }
+  .try .cap b { color: var(--accent); }
+  .try iframe { display: block; width: 100%; height: 430px; border: 0; }
+  .tip {
+    background: #eef7f3; border-left: 4px solid var(--accent);
+    padding: 8px 14px; border-radius: 0 8px 8px 0; margin: 14px 0;
+  }
+  footer { text-align: center; color: var(--soft); padding: 30px 0 50px; font-size: 14px; }
+  a { color: var(--red); }
+</style>
+</head>
+<body>
+<header>
+  <h1>nano-ToonTalk</h1>
+  <p>A workshop where you teach little robots by <em>showing</em> them what to do —
+     and everything, even a whole workshop, is a thing you can pick up.</p>
+</header>
+<nav>
+  <a href="#basics">Basics</a>
+  <a href="#numbers">Numbers</a>
+  <a href="#pads">Text pads</a>
+  <a href="#boxes">Boxes</a>
+  <a href="#birds">Birds &amp; nests</a>
+  <a href="#robots">Robots</a>
+  <a href="#tools">Dusty &amp; Ruby</a>
+  <a href="#rooms">Rooms</a>
+  <a href="#notebook">Notebook &amp; files</a>
+</nav>
+<main>
+
+<h2 id="basics">The basics</h2>
+<p>You do everything with single clicks: <b>click a thing to pick it up</b>, and
+it follows your pointer; <b>click where you want it</b> to set it down. Drag with
+the mouse button held to orbit the camera; scroll to zoom. The row of dark
+pedestals in a semicircle behind the robot's work area are <b>stacks</b> — endless
+supplies of numbers, text pads, boxes, scales, nests, rooms and little robots.
+Click a stack to take the top one.</p>
+<p>The wooden table in front is <b>your workbench</b>. Robots can never reach it —
+that is the point: what you build there is yours until you hand it over.</p>
+<div class="tip">Everything in the manual's little windows below is the real
+workshop — click things, carry them, try it.</div>
+
+<h2 id="numbers">Numbers</h2>
+<p>Numbers come off their stack as <b>1</b>s. While holding one, type digits to
+set its value, <kbd>-</kbd> to make it negative, and <kbd>*</kbd> <kbd>/</kbd>
+<kbd>^</kbd> to choose what it <em>does</em> when dropped on another number
+(adding is the default — and adding a negative <em>is</em> subtraction).
+Dropping a number on a number combines them: the arriving one applies its
+operation. Division gives exact fractions, never rounded decimals.</p>
+<p>A number block shows its value on the front and top; walk the camera close
+and the other faces show the same value in English words, scientific notation,
+and decimal form — with a bar over a repeating part when it fits.</p>
+
+<h2 id="pads">Text pads</h2>
+<p>Text pads are paper for words. Type on a held pad to write (<kbd>Enter</kbd>
+for a new line, <kbd>Ctrl</kbd>+<kbd>V</kbd> pastes). Drop one pad on
+<em>the left edge</em> of another and it reads first; on <em>the right edge</em>
+and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
+A whole number dropped on a written pad shifts its first or last letter along
+the alphabet; on a blank pad, the number writes itself out as digits.</p>
+<div class="try">
+  <div class="cap"><b>Try it:</b> pick up "Talk" and drop it on the right edge
+  of "Toon". Then try the 2 on a pad's left edge.</div>
+  <iframe loading="lazy" src="nano-toontalk.html?demo=pads"></iframe>
+</div>
+
+<h2 id="boxes">Boxes and scales</h2>
+<p>Boxes have holes, and holes hold anything — numbers, pads, nests, other
+boxes, even little robots (they lie down). Type a digit while holding a box to
+give it that many holes. Boxes are arrays: <b>drop a box on a box to join
+them</b> — left half to put its holes in front, right half behind — and
+shrinking a box splits the extra holes off as a box of their own.</p>
+<p>Scales have two pans that work exactly like holes; the beam tips toward the
+larger number, so a robot's eye can compare.</p>
+<div class="try">
+  <div class="cap"><b>Try it:</b> put the 8 and 9 in the holes. Hold the box and
+  type <kbd>4</kbd>. Take a second box from the stack and join them.</div>
+  <iframe loading="lazy" src="nano-toontalk.html?demo=box"></iframe>
+</div>
+
+<h2 id="birds">Birds and nests</h2>
+<p>Take a nest from its stack and set it down: the egg hatches into a bird —
+they are a pair for life. <b>Give the bird anything</b> and she flies it home
+to her nest, tucking new deliveries <em>under</em> the pile so the top is
+always the oldest. Click the top of a pile to take one delivery; grab the
+tower lower down and you pick up the whole nest, deliveries and all.</p>
+<p>Copy a bird on the copier and both birds serve the same nest. Copy a
+<em>nest</em> and you have a broadcast: give any of their birds something and
+every copy of the nest receives its own copy at once.</p>
+<div class="try">
+  <div class="cap"><b>Try it:</b> wait for the egg to hatch, then drop the 3 on
+  the bird and watch the delivery. Give her the 7 next — it goes under.</div>
+  <iframe loading="lazy" src="nano-toontalk.html?demo=bird"></iframe>
+</div>
+
+<h2 id="robots">Robots</h2>
+<p>Take a mini robot from its stack, set it on the table, and <b>drop something
+on it</b>: it grows, steps behind the bench, and its thought bubble opens —
+you are now teaching it. Everything you make it do (take things, drop them,
+fetch from stacks, use the copier) is remembered as steps about <em>its own
+things</em> — "hole 1 of what it was given", never places in your world. Leave
+the bubble and the daydream rewinds; the robot keeps the lesson.</p>
+<p>Its thought bubble shows the <b>condition</b>: the shape it must be given
+before it will run. Give a trained robot something that fits and it gets to
+work at once, repeating while the condition still matches, up to the Rounds
+limit. Drop one trained robot on another to form a team.</p>
+<p>Click the bubble of a robot (big or mini) to take out a copy of the very
+thing it was first shown. Type while holding a robot to name it — the name
+appears on its chest. To save a robot, hold it and press
+<b>Save held thing</b>.</p>
+<div class="try">
+  <div class="cap"><b>Try it:</b> drop the 5 on the mini robot. In the thought
+  bubble, click the number stack, then click a work spot; leave the bubble and
+  it will run. Then erase its thought with Ruby and give it anything.</div>
+  <iframe loading="lazy" src="nano-toontalk.html?demo=robot"></iframe>
+</div>
+
+<h2 id="tools">Dusty and Ruby</h2>
+<p>Two helpers live in front of the table. <b>Dusty the vacuum removes</b>:
+click him to wake him, then click things to vacuum them away, entries off
+notebook pages, or parts of a robot's thought (leaving an empty hole, which
+matches anything or nothing). <b>Ruby the eraser generalises</b>: wake her and
+click a part of a thought — a 7 becomes <em>any number</em>, then
+<em>anything</em>. She also erases real things in place: an erased number
+stands for any number, which is how you build a robot's expectations by hand.
+Waking one settles the other, and whoever is awake fidgets.</p>
+
+<h2 id="rooms">Rooms</h2>
+<p>Rooms are little houses that each hold <b>an entire workshop</b>. Drop a
+robot on a room and it steps inside, ready behind the desk. Drop anything else
+on the room and it lands on that desk — and the robot inside gets to work the
+moment your world goes quiet. The chimney smokes while there is work going on.</p>
+<p>Click the <b>roof</b> to switch between solid walls (the room works
+instantly, unseen) and glass (you watch it work, round by round, at your speed
+setting). If its robot stops at the Rounds limit, click the roof to set it
+going again. Wake Dusty and click a working room to interrupt it. Click the
+<b>door</b> to step inside: the room becomes the world around you, and the
+world you left shrinks onto the table as a little room of its own — walk back
+out through its door. Birds fly in and out of rooms to reach their nests, so
+a machine in a box can feed a nest on your table.</p>
+<div class="try">
+  <div class="cap"><b>Try it:</b> drop the mini robot on the room, then the 4.
+  Click the roof to make the walls glass. Click the door to step inside.</div>
+  <iframe loading="lazy" src="nano-toontalk.html?demo=room"></iframe>
+</div>
+
+<h2 id="notebook">The notebook, saving and sharing</h2>
+<p>The notebook on your table is a two-page spread. Drop anything on a blank
+page to file it; click a filed entry to take out a <em>copy</em> (the page
+keeps its own). Drop a written text pad on a full page to open the first page
+mentioning that text; a whole number jumps to that page number. Only Dusty can
+remove an entry, and a notebook itself only goes when open at two blank pages.
+The first page holds a blank notebook — copy it out to make more. The main
+notebook remembers everything between visits.</p>
+<p><b>Save held thing</b> writes whatever is in your hand to a file — a box, a
+trained robot, a room with a whole workshop inside. <b>Save world</b> writes
+everything. <b>Import file</b> (or dropping a file onto the app) brings either
+back: things land in your hand, worlds replace the workshop.</p>
+
+<footer>
+  nano-ToonTalk is an open experiment in rebuilding
+  <a href="https://en.wikipedia.org/wiki/ToonTalk">ToonTalk</a>'s ideas with
+  real-time 3D — <a href="https://github.com/ToonTalk/toontalk-3d">source on
+  GitHub</a>.
+</footer>
+</main>
+</body>
+</html>
