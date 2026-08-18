@@ -855,7 +855,15 @@ function holesOf(t) {
 // bird. Give the bird anything and she flies it home to her nest, where
 // deliveries pile up until somebody takes them.
 const allNests = [];
+const allBirds = [];
 const hatching = [];
+let flapT = 0;
+function setWings(bird, spread, flap) {
+  if (!bird.__wings) return;
+  for (const w of bird.__wings) {
+    w.pivot.rotation.z = -w.sgn * (spread * 1.15 + flap);
+  }
+}
 // A text pad: a flat tablet of paper with writing on its top face. Typing
 // writes on a held pad; drops concatenate (see combine).
 function makeText(str) {
@@ -863,6 +871,7 @@ function makeText(str) {
   const cv = document.createElement('canvas');
   cv.width = 512; cv.height = 384;
   const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;   // full-strength ink and emoji
   tex.anisotropy = 4;
   const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 });
   const side = new THREE.MeshStandardMaterial({ color: 0xf5eeda, roughness: 0.85 });
@@ -1585,12 +1594,17 @@ function makeBird(nest) {
       new THREE.MeshBasicMaterial({ color: 0x14171d }));
     eye.position.set(0.028 * sgn, 0.216, 0.09);
     g.add(eye);
+    const pivot = new THREE.Group();
+    pivot.position.set(0.05 * sgn, 0.11, -0.01);
     const wing = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 8), coral);
     wing.scale.set(0.35, 0.55, 1);
-    wing.position.set(0.088 * sgn, 0.1, -0.01);
+    wing.position.set(0.038 * sgn, -0.01, 0);
     wing.castShadow = true;
-    g.add(wing);
+    pivot.add(wing);
+    g.add(pivot);
+    (g.__wings ??= []).push({ pivot, sgn });
   }
+  allBirds.push(g);
   Object.assign(g.userData, { id: nextId++, kind: 'bird', width: 0.3, rest: 0,
     nestGuid: nest?.userData.guid ?? null });
   g.__nest = nest;
@@ -2175,6 +2189,12 @@ function putInHole(hole, thing) {
   const s = fitScale(thing, hole);
   thing.scale.setScalar(s);
   thing.position.y = thing.userData.rest * s;
+  if (thing.userData.kind === 'robot') {
+    // a mini lies on its back in a hole, properly small
+    thing.scale.setScalar(0.165);
+    thing.rotation.x = -Math.PI / 2;
+    thing.position.y = 0.055;
+  }
   // a flat pad would sink out of sight below the hole's rim: it leans back
   // like a card in a holder instead
   if (thing.userData.kind === 'text') {
@@ -2603,6 +2623,20 @@ function fastForward(maxSteps = 100000) {
 // egg hatching and clone-bird flights. Called from tick() and, at Instant
 // speed, straight from the frame loop.
 function advanceWorldClocks(dt) {
+  // a bird between places flies with wings out, flapping
+  flapT += dt;
+  for (let i = allBirds.length - 1; i >= 0; i--) {
+    const b = allBirds[i];
+    if (!b.parent) { allBirds.splice(i, 1); continue; }
+    const flying = (b.parent === scene
+        && !benchThings.includes(b)
+        && !Object.values(stations).some(s2 => s2.occupant === b)
+        && !allStands.some(s2 => s2.occupant === b))
+      || flights.some(f => f.clone === b);
+    const target = flying ? 1 : 0;
+    b.__spread = (b.__spread ?? 0) + (target - (b.__spread ?? 0)) * Math.min(1, dt * 8);
+    setWings(b, b.__spread, flying ? Math.sin(flapT * 18) * 0.4 : 0);
+  }
   // dirty rooms run at the next quiet moment, wherever the ticks come from
   if (!busy && !held && !queue.length && !current && mode === 'world') processDirtyRooms();
   for (let i = hatching.length - 1; i >= 0; i--) {
@@ -3200,7 +3234,23 @@ function isDescendantOf(node, ancestor) {
 const ray = new THREE.Raycaster();
 
 function handleClick(target) {
-  if (!target || busy || mode === 'replay') return;
+  if (!target) return;
+  // the helpers can always be woken or settled, even while a robot runs
+  if (target.kind === 'dusty' || target.kind === 'ruby') {
+    if (target.kind === 'dusty') {
+      dustyActive = !dustyActive;
+      if (dustyActive) rubyActive = false;
+      say(dustyActive ? 'Dusty is awake — click things to vacuum them away, or parts of the robot’s thought to remove them.'
+                      : 'Dusty settles down.');
+    } else {
+      rubyActive = !rubyActive;
+      if (rubyActive) dustyActive = false;
+      say(rubyActive ? 'Ruby is awake — click parts of the robot’s thought to erase them, one step more general each time.'
+                     : 'Ruby settles down.');
+    }
+    return refreshUI();
+  }
+  if (busy || mode === 'replay') return;
 
   if (target.kind === 'roomRoof' || target.kind === 'roomDoor') {
     const room = target.room;
@@ -3246,20 +3296,6 @@ function handleClick(target) {
   if (grabbedCorner !== null) { releaseCorner(); return; }
   if (target.kind === 'benchHandle') return;   // handled by drag, below
 
-  if (target.kind === 'dusty') {
-    dustyActive = !dustyActive;
-    if (dustyActive) rubyActive = false;
-    say(dustyActive ? 'Dusty is awake — click things to vacuum them away, or parts of the robot’s thought to remove them.'
-                    : 'Dusty settles down.');
-    return refreshUI();
-  }
-  if (target.kind === 'ruby') {
-    rubyActive = !rubyActive;
-    if (rubyActive) dustyActive = false;
-    say(rubyActive ? 'Ruby is awake — click parts of the robot’s thought to erase them, one step more general each time.'
-                   : 'Ruby settles down.');
-    return refreshUI();
-  }
   if (target.kind === 'nbFlip') {
     if (held) return say('Empty your hand to flip pages.');
     return notebookFlip(target.nb, target.dir);
@@ -4157,7 +4193,17 @@ function dustyErase(path) {
 // for training a robot's expectations by hand.
 const ERASE_NAME = { number: 'any number', text: 'any text', box: 'any box', scale: 'any scale' };
 function applyErasedLook(thing) {
+  // live occupants (birds, nests, robots, rooms) keep their own look: the
+  // erasure is about the container's shape, and they are restored by
+  // reference on undo
+  const skip = new Set();
   thing.traverse(o => {
+    if (o !== thing && ['bird', 'nest', 'robot', 'room'].includes(o.userData?.kind)) {
+      o.traverse(o2 => skip.add(o2));
+    }
+  });
+  thing.traverse(o => {
+    if (skip.has(o)) return;
     if (o.isMesh && o.material) {
       o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
       (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
