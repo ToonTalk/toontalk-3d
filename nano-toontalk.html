@@ -116,8 +116,9 @@
       <button id="saveBtn" title="Save the active robot's program and condition in this browser.">Save</button></div>
     <div class="row"><select id="robotList" title="Robots saved in this browser."></select>
       <button id="loadBtn" title="Load this saved training into the robot at the bench (waking one if needed).">Load</button><button id="delBtn" title="Delete this saved robot.">×</button></div>
+    <div class="row"><button id="exportHeldBtn" title="Download whatever you are holding as a file — any thing: a box, a number, a robot, a nest.">Save held thing</button></div>
     <div class="row"><button id="exportBtn" title="Download the selected robot as a file, to share or move to another computer.">Export file</button>
-      <button id="importBtn" title="Add a robot or world file — a world file replaces the whole workshop.">Import file</button>
+      <button id="importBtn" title="Add a thing, robot or world file — a world file replaces the whole workshop.">Import file</button>
       <input id="importFile" type="file" accept=".json,application/json" style="display:none"></div>
     <div class="row"><button id="saveWorldBtn" title="Save the whole workshop — bench, stands, robots and all — in this browser.">Save world</button>
       <button id="loadWorldBtn" title="Bring back the workshop saved in this browser.">Load world</button>
@@ -3604,6 +3605,20 @@ $('exportBtn').onclick = () => {
   URL.revokeObjectURL(a.href);
   say(`Exported “${name}”.`);
 };
+$('exportHeldBtn').onclick = () => {
+  if (!held) return say('Pick something up first — this saves what you are holding.');
+  if (held.userData.kind === 'robot' && held.__bot === activeBot) syncBot();
+  const rec = { kind: 'thing', thing: thingOut(held) };
+  const base = (held.userData.label
+    || (held.userData.kind === 'robot' ? held.__bot?.name : null)
+    || held.userData.kind).replace(/[^\w-]+/g, '_').slice(0, 40);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(rec)], { type: 'application/json' }));
+  a.download = `${base}.thing.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  say(`Saved what you are holding as “${base}.thing.json”.`);
+};
 $('importBtn').onclick = () => $('importFile').click();
 async function importRobotFile(file) {
   try {
@@ -3612,6 +3627,34 @@ async function importRobotFile(file) {
       if (busy || mode === 'replay') return say('Wait for the robot to finish first.');
       worldIn(rec);
       return say('Workshop loaded from the file.');
+    }
+    if (rec.kind === 'thing') {
+      if (busy || mode !== 'world') return say('Leave the thought bubble first.');
+      nestGroupPending = [];
+      const nests = new Map(), birds = [];
+      const t = thingIn(rec.thing, nests, birds);
+      birds.forEach(b => { b.node.__nest = nests.get(b.nestId) ?? null; });
+      const groupMap = new Map();
+      for (const r2 of nestGroupPending) {
+        const gkey = r2.ids.slice().sort((a, b) => a - b).join(',');
+        if (!groupMap.has(gkey)) groupMap.set(gkey, []);
+        const arr = groupMap.get(gkey);
+        arr.push(r2.node);
+        r2.node.__group = arr;
+      }
+      nestGroupPending = null;
+      if (!t) throw new Error('the file holds no thing');
+      // a full hand puts what it held on the table first, so you SEE the swap
+      if (held) {
+        const h = held; held = null;
+        const from = h.getWorldPosition(new THREE.Vector3());
+        putOnBench(h, benchSpot());
+        enqueueNext(settleInto(h, from, 0.3));
+      }
+      scene.add(t);
+      t.position.set((BENCH.x0 + BENCH.x1) / 2, BENCH_TOP + 0.6, (BENCH.z0 + BENCH.z1) / 2);
+      userTake(t);
+      return say('Here it is — in your hand.');
     }
     if (!Array.isArray(rec.program) || !('condition' in rec)) throw new Error('not a robot or world file');
     const name = rec.name || file.name.replace(/\.robot\.json$|\.json$/i, '');

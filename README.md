@@ -118,7 +118,12 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   and goes on waiting. Several robots can stand behind the bench that way;
   clicking one brings it into focus, clicking the focused one picks it up. A
   waiting robot takes the floor by itself the moment its bird delivers
-  something that fits. **Save world / Load world / Export world** do the same
+  something that fits. **Save held thing** downloads *whatever you are
+  holding* — a box, a number, a nest and its pile, a trained robot — as a
+  `.thing.json` file; importing one (Import button or drag-drop onto the app)
+  puts it straight into your hand, and a full hand sets what it held on the
+  table first so the swap is visible. **Save world / Load world / Export
+  world** do the same
   for the whole
   workshop — bench, stands, nests with their piles, birds with their pairings,
   and every robot's training — to this browser or to a `.world.json` file that
