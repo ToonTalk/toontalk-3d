@@ -2402,6 +2402,21 @@ const ray = new THREE.Raycaster();
 function handleClick(target) {
   if (!target || busy || mode === 'replay') return;
 
+  if (target.kind === 'growToggle') {
+    resizeMode = !resizeMode;
+    if (!resizeMode && grabbedCorner !== null) releaseCorner();
+    showHandles(resizeMode);
+    say(resizeMode ? 'Corner handles are out — click one to carry it, click again to set the corner.'
+                   : 'The table keeps this shape.');
+    return refreshUI();
+  }
+  if (grabbedCorner !== null) { releaseCorner(); return; }
+  if (target.kind === 'benchHandle') {
+    if (held) return say('Empty your hand first.');
+    grabbedCorner = target.corner;
+    return say('Move the pointer to stretch the table — click to set the corner.');
+  }
+
   if (target.kind === 'dusty') {
     dustyActive = !dustyActive;
     if (dustyActive) rubyActive = false;
@@ -2704,10 +2719,13 @@ function moveHand(ev) {
     // Clamp to the working area: with the pointer low on the screen the ray
     // meets this plane right next to the camera, which made the carried thing
     // balloon to fill the view.
-    hit.x = Math.min(3.2, Math.max(-3.2, hit.x));
-    hit.z = Math.min(2.4, Math.max(-0.6, hit.z));
+    // a grabbed corner may range wider than a carried thing
+    const wide = grabbedCorner !== null;
+    hit.x = Math.min(wide ? 4.2 : 3.2, Math.max(-3.2, hit.x));
+    hit.z = Math.min(wide ? 3.4 : 2.4, Math.max(-0.6, hit.z));
     handNode.position.copy(hit);
     handNode.updateMatrixWorld();
+    if (wide) dragCorner(hit);
   }
 }
 function takeIntoHand(obj) {
@@ -3910,6 +3928,11 @@ function refreshUI() {
   $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
   $('dustyBtn').classList.toggle('think', dustyActive);
   $('dustyBtn').disabled = running || busy || !dusty;
+  if ($('growBtn')) {
+    $('growBtn').textContent = resizeMode ? 'Table: reshaping' : 'Reshape table';
+    $('growBtn').classList.toggle('think', resizeMode);
+    $('growBtn').disabled = running || busy;
+  }
   if ($('rubyBtn')) {
     $('rubyBtn').textContent = rubyActive ? 'Ruby: awake' : 'Ruby: asleep';
     $('rubyBtn').classList.toggle('think', rubyActive);
@@ -4376,24 +4399,22 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   // One scratch desk to begin with; more grow beside it as they are needed.
   ensureScratchStation(0);
 
-  // The bench: a plain surface for the user. The robot never refers to it,
-  // which is the whole point -- a trained action can only name a hole.
+  // The bench: a plain surface for the user, rebuilt whenever its corners
+  // move. The robot never refers to it -- a trained action can only name a
+  // hole -- which is exactly why the user is free to reshape it.
+  try {
+    const saved = JSON.parse(localStorage.getItem(TABLE_KEY) || 'null');
+    if (saved) Object.assign(BENCH, saved);
+  } catch {}
+  buildBench();
+
+  // a button to reveal the corner handles
   {
-    const w = BENCH.x1 - BENCH.x0, d = BENCH.z1 - BENCH.z0;
-    const cx = (BENCH.x0 + BENCH.x1) / 2, cz = (BENCH.z0 + BENCH.z1) / 2;
-    const topMat = new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.72 });
-    const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.07, d), topMat);
-    top.position.set(cx, BENCH_TOP - 0.035, cz);
-    top.castShadow = true; top.receiveShadow = true;
-    setPick(top, { kind: 'bench' });
-    scene.add(top);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x33383f, roughness: 0.6, metalness: 0.4 });
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, BENCH_TOP - 0.07, 16), legMat);
-      leg.position.set(cx + sx * (w / 2 - 0.1), (BENCH_TOP - 0.07) / 2, cz + sz * (d / 2 - 0.1));
-      leg.castShadow = true;
-      scene.add(leg);
-    }
+    const gb = document.createElement('button');
+    gb.id = 'growBtn';
+    gb.title = 'Reshape the workbench \u2014 reveals corner handles; click one to carry it, click again to set the corner down.';
+    gb.onclick = () => handleClick({ kind: 'growToggle' });
+    document.getElementById('dustyBtn').after(gb);
   }
 
   // things become pickable as they are created; simplest is to test everything
@@ -4482,6 +4503,73 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     refreshUI();
   });
 });
+
+// --- the growable bench ------------------------------------------------------
+const TABLE_KEY = 'nano-toontalk.table';
+const benchParts = [];
+const benchHandles = [];
+let resizeMode = false, grabbedCorner = null;
+// corners: 0 = (x0,z0)  1 = (x1,z0)  2 = (x0,z1)  3 = (x1,z1)
+const cornerOf = (i) => new THREE.Vector3(i % 2 ? BENCH.x1 : BENCH.x0, BENCH_TOP,
+                                          i < 2 ? BENCH.z0 : BENCH.z1);
+function buildBench() {
+  benchParts.forEach(p => p.removeFromParent());
+  benchParts.length = 0;
+  const w = BENCH.x1 - BENCH.x0, d = BENCH.z1 - BENCH.z0;
+  const cx = (BENCH.x0 + BENCH.x1) / 2, cz = (BENCH.z0 + BENCH.z1) / 2;
+  const topMat = new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.72 });
+  const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.07, d), topMat);
+  top.position.set(cx, BENCH_TOP - 0.035, cz);
+  top.castShadow = true; top.receiveShadow = true;
+  setPick(top, { kind: 'bench' });
+  scene.add(top);
+  benchParts.push(top);
+  const legMat = new THREE.MeshStandardMaterial({ color: 0x33383f, roughness: 0.6, metalness: 0.4 });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, BENCH_TOP - 0.07, 16), legMat);
+    leg.position.set(cx + sx * (w / 2 - 0.1), (BENCH_TOP - 0.07) / 2, cz + sz * (d / 2 - 0.1));
+    leg.castShadow = true;
+    scene.add(leg);
+    benchParts.push(leg);
+  }
+  benchHandles.forEach((h, i) => h.position.copy(cornerOf(i)));
+}
+function showHandles(on) {
+  if (on && !benchHandles.length) {
+    for (let i = 0; i < 4; i++) {
+      const h = new THREE.Mesh(new THREE.SphereGeometry(0.07, 18, 14),
+        new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: 0.3,
+          emissive: 0x2c6f8c, emissiveIntensity: 1.2, toneMapped: false }));
+      h.position.copy(cornerOf(i));
+      setPick(h, { kind: 'benchHandle', corner: i });
+      scene.add(h);
+      benchHandles.push(h);
+    }
+  }
+  benchHandles.forEach(h => { h.visible = on; });
+}
+function dragCorner(hit) {
+  const i = grabbedCorner;
+  const MIN = 0.8;
+  // each corner owns one x edge and one z edge; clamps keep the table sane
+  // and out of the robot's row of stacks
+  if (i % 2) BENCH.x1 = Math.min(4.2, Math.max(BENCH.x0 + MIN, hit.x));
+  else BENCH.x0 = Math.max(-3.0, Math.min(BENCH.x1 - MIN, hit.x));
+  if (i < 2) BENCH.z0 = Math.max(ROW_Z - 0.28, Math.min(BENCH.z1 - MIN, hit.z));
+  else BENCH.z1 = Math.min(3.4, Math.max(BENCH.z0 + MIN, hit.z));
+  buildBench();
+}
+function releaseCorner() {
+  grabbedCorner = null;
+  // anything the shrink left overboard slides back onto the top
+  for (const t of benchThings) {
+    t.position.x = Math.min(BENCH.x1 - 0.12, Math.max(BENCH.x0 + 0.12, t.position.x));
+    t.position.z = Math.min(BENCH.z1 - 0.12, Math.max(BENCH.z0 + 0.12, t.position.z));
+  }
+  try { localStorage.setItem(TABLE_KEY, JSON.stringify(BENCH)); } catch {}
+  say('The table keeps this shape.');
+  refreshUI();
+}
 
 // ---------------------------------------------------------------- loop
 let last = performance.now();

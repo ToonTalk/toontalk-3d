@@ -78,6 +78,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   itself only goes when open at two blank pages. The main notebook persists
   in this browser and starts with a blank notebook filed on page 1 — copy it
   out to make more.
+- **The workbench reshapes.** "Reshape table" reveals glowing corner handles:
+  click one to carry that corner, move the pointer to stretch or shrink the
+  top (legs follow), click again to set it. Anything left overboard by a
+  shrink slides back on, and the shape is remembered in this browser.
 - **Dusty the vacuum and Ruby the eraser**, under the bench. Dusty *removes*:
   things from the world, entries from notebook pages, parts of a thought
   outright (leaving an empty hole that matches anything or nothing). Ruby
