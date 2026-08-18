@@ -752,7 +752,7 @@ function makeBox(n = HOLES) {
 }
 
 // Contents scale to the hole they sit in, which now varies with hole count.
-const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / thing.userData.width;
+const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / (thing.userData.width || 0.3);
 
 // ---------------------------------------------------------------- tree helpers
 function holesOf(t) {
@@ -779,33 +779,47 @@ function makeText(str) {
     [side, side, mat, side, side, side]);
   pad.castShadow = true; pad.receiveShadow = true;
   g.add(pad);
-  g.userData = { kind: 'text', text: '', rest: 0.0225 };
+  g.userData = { kind: 'text', text: '', rest: 0.0225, width: 0.34 };
   g.setText = (t) => {
     g.userData.text = t;
     const c = cv.getContext('2d');
+    // paper: cream base flecked with faint fibres
     c.fillStyle = '#f7f1df'; c.fillRect(0, 0, 512, 384);
-    c.strokeStyle = '#b9ad8e'; c.lineWidth = 4; c.strokeRect(10, 10, 492, 364);
-    c.fillStyle = '#1c2a52'; c.textAlign = 'left'; c.textBaseline = 'top';
-    const lines = [];
-    for (const para of (t || '').split('\n')) {
-      let line = '';
-      c.font = '400 44px Georgia, serif';
-      for (const w of para.split(' ')) {
-        const cand = line ? line + ' ' + w : w;
-        if (c.measureText(cand).width > 452 && line) { lines.push(line); line = w; }
-        else line = cand;
-      }
-      lines.push(line);
+    let seed = 9;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 340; i++) {
+      c.fillStyle = rnd() > 0.5 ? 'rgba(180,166,130,0.16)' : 'rgba(255,255,255,0.5)';
+      c.fillRect(rnd() * 512, rnd() * 384, 1 + rnd() * 2.4, 0.8 + rnd() * 1.4);
     }
-    const fs = lines.length > 7 ? Math.max(16, Math.floor(44 * 7 / lines.length)) : 44;
-    c.font = `400 ${fs}px Georgia, serif`;
-    lines.slice(0, Math.floor(340 / (fs * 1.2))).forEach((ln, i) => {
-      c.fillText(ln, 30, 26 + i * fs * 1.2, 452);
-    });
+    c.strokeStyle = '#c9bd9c'; c.lineWidth = 3; c.strokeRect(8, 8, 496, 368);
+    c.textAlign = 'center'; c.textBaseline = 'middle';
     if (!t) {
       c.fillStyle = '#c9bd9c';
-      c.font = 'italic 32px Georgia, serif';
-      c.fillText('(blank)', 30, 26);
+      c.font = 'italic 40px Georgia, serif';
+      c.fillText('(blank)', 256, 192);
+    } else {
+      // the largest type at which the wrapped text still fits the pad
+      c.fillStyle = '#1c2a52';
+      const fit = (px) => {
+        c.font = `400 ${px}px Georgia, serif`;
+        const lines = [];
+        for (const para of t.split('\n')) {
+          let line = '';
+          for (const w of para.split(' ')) {
+            const cand = line ? line + ' ' + w : w;
+            if (c.measureText(cand).width > 460 && line) { lines.push(line); line = w; }
+            else line = cand;
+          }
+          lines.push(line);
+        }
+        return { lines, h: lines.length * px * 1.18,
+                 wide: Math.max(...lines.map(l => c.measureText(l).width)) };
+      };
+      let px = 210, r = fit(px);
+      while (px > 16 && (r.h > 344 || r.wide > 460)) { px = Math.floor(px * 0.9); r = fit(px); }
+      c.font = `400 ${px}px Georgia, serif`;
+      const y0 = 192 - r.h / 2 + px * 0.62;
+      r.lines.forEach((ln, i) => c.fillText(ln, 256, y0 + i * px * 1.18, 470));
     }
     tex.needsUpdate = true;
   };
@@ -846,7 +860,7 @@ function makeNotebook(rec = null) {
     setPick(tab, { kind: 'nbFlip', nb: g, dir });
     g.add(tab);
   }
-  g.userData = { kind: 'notebook', rest: 0.03, main: false,
+  g.userData = { kind: 'notebook', rest: 0.03, main: false, width: 0.86,
                  pages: rec?.pages ? rec.pages.slice() : [],
                  page: rec?.page || 0 };
   setPick(g, { kind: 'thing', thing: g });
@@ -1011,7 +1025,7 @@ function makeRoom(data = null) {
   g.add(roof);
   const id = data?.id ?? nextRoomId++;
   nextRoomId = Math.max(nextRoomId, id + 1);
-  g.userData = { kind: 'room', rest: 0, world: data?.world ?? null,
+  g.userData = { kind: 'room', rest: 0, width: 0.5, world: data?.world ?? null,
                  opaque: data?.opaque ?? true, id,
                  dirty: !!data?.dirty };
   g.__contents = [];
@@ -1573,6 +1587,11 @@ function holeContaining(thing) {
 function specOf(thing) {
   if (!thing) return null;
   const kind = thing.userData.kind;
+  // an erased thing IS its wildcard: it stands for any of its kind
+  if (thing.userData.erased) {
+    return { kind: { number: 'wildNumber', text: 'wildText', box: 'anyBox', scale: 'wildScale' }[kind] ?? 'wild',
+             n: thing.userData.holes?.length };
+  }
   if (kind === 'number') return { kind: 'number', value: thing.userData.value, op: thing.userData.op };
   if (kind === 'text') return { kind: 'text', text: thing.userData.text };
   // birds, nests and robots inside boxes go by reference: their identity (a
@@ -1585,6 +1604,15 @@ function specOf(thing) {
 function buildThing(spec) {
   if (!spec) return null;
   if (spec.kind === 'ref') return spec.node;
+  if (/^(wild|any)/.test(spec.kind)) {
+    const t = spec.kind === 'wildText' ? makeText('')
+      : spec.kind === 'anyBox' ? makeBox(spec.n ?? 2)
+      : spec.kind === 'wildScale' ? makeScale()
+      : makeNumber(rat(0));
+    t.userData.erased = true;
+    applyErasedLook(t);
+    return t;
+  }
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
   if (spec.kind === 'text') return makeText(spec.text);
   const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
@@ -1596,6 +1624,11 @@ function buildThing(spec) {
 // entangle the way ToonTalk's do: a copied bird serves the same nest, and a
 // copied nest joins the original's delivery group, so one bird feeds them all.
 function copyThing(t) {
+  const c = copyThingRaw(t);
+  if (c && t?.userData?.erased) { c.userData.erased = true; applyErasedLook(c); }
+  return c;
+}
+function copyThingRaw(t) {
   if (!t) return null;
   const ud = t.userData;
   if (ud.kind === 'robot') return null;              // the gates refuse robots
@@ -1682,6 +1715,11 @@ function matchState(cond, spec) {
   if (cond === null || cond === undefined) return 'yes';
   if (cond.kind === 'wild') return spec != null ? 'yes' : 'no';
   if (!spec) return 'no';
+  // an erased thing on the given side matches an equally-loose thought
+  if (spec.kind === 'wildNumber' || spec.kind === 'wildText'
+      || spec.kind === 'anyBox' || spec.kind === 'wildScale') {
+    return cond.kind === spec.kind ? 'yes' : 'no';
+  }
   if (spec.kind === 'ref') {
     const k = spec.node.userData.kind;
     if (k === 'nest') {
@@ -1770,7 +1808,7 @@ function putOnBench(thing, at) {
   scene.add(thing);
   thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : 1);
   thing.quaternion.identity();
-  const half = thing.userData.width / 2 + 0.05;
+  const half = (thing.userData.width || 0.3) / 2 + 0.05;
   thing.position.set(
     Math.min(BENCH.x1 - half, Math.max(BENCH.x0 + half, at.x)),
     BENCH_TOP + thing.userData.rest,
@@ -2708,6 +2746,7 @@ function handleClick(target) {
   }
   if (target.kind === 'growToggle') {
     resizeMode = !resizeMode;
+    orbit.enabled = !resizeMode;      // dragging a handle must not spin the camera
     if (!resizeMode && grabbedCorner !== null) releaseCorner();
     showHandles(resizeMode);
     say(resizeMode ? 'Corner handles are out — click one to carry it, click again to set the corner.'
@@ -2715,11 +2754,7 @@ function handleClick(target) {
     return refreshUI();
   }
   if (grabbedCorner !== null) { releaseCorner(); return; }
-  if (target.kind === 'benchHandle') {
-    if (held) return say('Empty your hand first.');
-    grabbedCorner = target.corner;
-    return say('Move the pointer to stretch the table — click to set the corner.');
-  }
+  if (target.kind === 'benchHandle') return;   // handled by drag, below
 
   if (target.kind === 'dusty') {
     dustyActive = !dustyActive;
@@ -2789,6 +2824,14 @@ function handleClick(target) {
     if (occupant) return handleClick({ kind: 'thing', thing: occupant });
   }
 
+  // Ruby erases real things in place
+  if (rubyActive && !held) {
+    const victim = target.kind === 'thing' ? target.thing
+      : target.kind === 'station' && stations[target.id]?.kind !== 'stack'
+          && stations[target.id]?.occupant ? stations[target.id].occupant
+      : null;
+    if (victim) return eraseThingInPlace(victim);
+  }
   // While Dusty is awake, pointing him at things removes them. In training the
   // robot learns it as a step; in the workshop it just happens.
   if (dustyActive && !held) {
@@ -2880,7 +2923,7 @@ function userClick(target) {
       return say('Nothing there to pick up.');
     }
     if (st.kind === 'stack') return say('Stacks only give things out.');
-    if (holdingBot) return say('Little robots go on the table, or on another robot.');
+    if (holdingBot && st.kind !== 'stand') return say('Little robots go on the table, or on another robot.');
     if (isCopier) {
       if (hasRobot(held)) return say('The copier can’t copy robots.');
       if (stations.copyIn.occupant) return say('Take the original off the platform first.');
@@ -2891,6 +2934,14 @@ function userClick(target) {
     if (st.kind === 'stand') {
       if (st !== stations.stand) {
         return say('That desk belongs to a robot standing aside — click the robot first.');
+      }
+      // a mini set back on the desk wakes up -- the takeback for an
+      // accidental shrink
+      if (holdingBot && !activeBot) {
+        const b = held.__bot, node = held;
+        held = null;
+        putOnBench(node, benchSpot());
+        return activateBot(b);
       }
       if (activeBot) return giveToRobot();
     }
@@ -3191,8 +3242,9 @@ function miniaturizeActive() {
   });
   enqueue(doNow(() => {
     takeIntoHand(bot.node);
-    say(bot.program.length ? 'Put the little robot down, or drop it on another robot to team up.'
-                           : 'Put the little robot down on the table.');
+    say(bot.program.length
+      ? 'Put it down, drop it on another robot to team up — or back on the desk to wake it again.'
+      : 'Put it down on the table — or back on the desk to wake it again.');
     refreshUI();
   }));
 }
@@ -3467,22 +3519,70 @@ function removeCondAt(path) {
 // --- Dusty ----------------------------------------------------------------
 function dustyErase(path) {
   const node = condNodeAt(path);
-  if (!node || !dusty) return;
+  // Ruby does the erasing now, so SHE flies -- Dusty only when he removes
+  const tool = rubyActive && ruby ? ruby : dusty;
+  const home = rubyActive && ruby ? rubyHome : dustyHome;
+  if (!node || !tool) return;
   pushUndo();
   busy = true;
   const dest = node.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, -0.12, 0.34));
-  const from = dusty.position.clone();
-  enqueue({ dur: 0.45, update(t) { dusty.position.lerpVectors(from, dest, ease(t)); } });
+  const from = tool.position.clone();
+  enqueue({ dur: 0.45, update(t) { tool.position.lerpVectors(from, dest, ease(t)); } });
   enqueue({
     dur: 0.5,
     start() { flash(node.getWorldPosition(new THREE.Vector3())); },
-    update(t) { dusty.position.z = dest.z - 0.05 * Math.sin(Math.PI * t * 3); },
+    update(t) { tool.position.z = dest.z - 0.05 * Math.sin(Math.PI * t * 3); },
     end() { condition = eraseAt(condition, path); syncBot(); rebuildCondition(); },
   });
   enqueue({
     dur: 0.45,
-    update(t) { dusty.position.lerpVectors(dest, dustyHome, ease(t)); },
-    end() { dusty.position.copy(dustyHome); refreshUI(); },
+    update(t) { tool.position.lerpVectors(dest, home, ease(t)); },
+    end() { tool.position.copy(home); refreshUI(); },
+  });
+}
+
+// Ruby also erases real things where they stand: the thing keeps its shape
+// but forgets its particulars, so it stands for "any" of its kind -- handy
+// for training a robot's expectations by hand.
+const ERASE_NAME = { number: 'any number', text: 'any text', box: 'any box', scale: 'any scale' };
+function applyErasedLook(thing) {
+  thing.traverse(o => {
+    if (o.isMesh && o.material) {
+      o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+        m.transparent = true;
+        m.opacity = Math.min(m.opacity, 0.45);
+      });
+    }
+  });
+  const q = ghostQuestion(0.2);
+  q.position.y = (thing.userData.rest || 0.1) + 0.18;
+  thing.add(q);
+}
+function eraseThingInPlace(thing) {
+  const k = thing.userData.kind;
+  if (!ERASE_NAME[k]) return say('Ruby only erases numbers, text pads, boxes and scales.');
+  if (thing.userData.erased) return say('Already erased — Dusty can remove it, or Undo brings it back.');
+  pushUndo();
+  busy = true;
+  const dest = thing.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0.28, 0.08, 0.24));
+  const from = ruby.position.clone();
+  enqueue({ dur: 0.4, update(t) { ruby.position.lerpVectors(from, dest, ease(t)); } });
+  enqueue({
+    dur: 0.4,
+    update(t) { ruby.rotation.z = Math.sin(t * Math.PI * 4) * 0.4; },
+    end() {
+      ruby.rotation.z = 0;
+      thing.userData.erased = true;
+      applyErasedLook(thing);
+      flash(thing.getWorldPosition(new THREE.Vector3()));
+      say(`Erased — it stands for ${ERASE_NAME[thing.userData.kind]} now.`);
+    },
+  });
+  enqueue({
+    dur: 0.4,
+    update(t) { ruby.position.lerpVectors(dest, rubyHome, ease(t)); },
+    end() { ruby.position.copy(rubyHome); busy = false; refreshUI(); },
   });
 }
 
@@ -3727,6 +3827,11 @@ function botOut(bot) {
            team: bot.team.map(botOut) };
 }
 function thingOut(t) {
+  const r = thingOutRaw(t);
+  if (r && t?.userData?.erased) r.erased = true;
+  return r;
+}
+function thingOutRaw(t) {
   if (!t) return null;
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
@@ -3771,6 +3876,11 @@ function botIn(o) {
   return node;
 }
 function thingIn(o, nests, birds) {
+  const t = thingInRaw(o, nests, birds);
+  if (t && o?.erased) { t.userData.erased = true; applyErasedLook(t); }
+  return t;
+}
+function thingInRaw(o, nests, birds) {
   if (!o) return null;
   let t = null;
   if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
@@ -4620,6 +4730,18 @@ function tipFor(t) {
   return null;
 }
 
+// corner handles are dragged, not click-carried -- with the camera pinned
+renderer.domElement.addEventListener('pointerdown', (ev) => {
+  if (!resizeMode || grabbedCorner !== null || held) return;
+  const t = resolve(ev);
+  if (t?.kind === 'benchHandle') {
+    grabbedCorner = t.corner;
+    say('Drag to stretch the table — let go to set it.');
+  }
+});
+addEventListener('pointerup', () => {
+  if (grabbedCorner !== null) releaseCorner();
+});
 const tipEl = document.getElementById('tip');
 renderer.domElement.addEventListener('pointermove', (ev) => {
   // track always, not only while carrying: otherwise picking something up
@@ -4834,12 +4956,37 @@ let resizeMode = false, grabbedCorner = null;
 // corners: 0 = (x0,z0)  1 = (x1,z0)  2 = (x0,z1)  3 = (x1,z1)
 const cornerOf = (i) => new THREE.Vector3(i % 2 ? BENCH.x1 : BENCH.x0, BENCH_TOP,
                                           i < 2 ? BENCH.z0 : BENCH.z1);
+let woodTex = null;
+function woodTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 256;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#6b5636'; c.fillRect(0, 0, 256, 256);
+  let seed = 5;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 70; i++) {
+    c.strokeStyle = `rgba(${40 + rnd() * 44 | 0},${30 + rnd() * 26 | 0},16,${0.10 + rnd() * 0.22})`;
+    c.lineWidth = 0.6 + rnd() * 2.6;
+    c.beginPath();
+    const y = rnd() * 256;
+    c.moveTo(0, y);
+    for (let x = 0; x <= 256; x += 32) {
+      c.lineTo(x, y + Math.sin(x * 0.04 + i * 2.1) * 3 + rnd() * 2);
+    }
+    c.stroke();
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
 function buildBench() {
   benchParts.forEach(p => p.removeFromParent());
   benchParts.length = 0;
   const w = BENCH.x1 - BENCH.x0, d = BENCH.z1 - BENCH.z0;
   const cx = (BENCH.x0 + BENCH.x1) / 2, cz = (BENCH.z0 + BENCH.z1) / 2;
-  const topMat = new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.72 });
+  woodTex ??= woodTexture();
+  woodTex.repeat.set(Math.max(1, w / 1.3), Math.max(1, d / 1.3));
+  const topMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.72 });
   const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.07, d), topMat);
   top.position.set(cx, BENCH_TOP - 0.035, cz);
   top.castShadow = true; top.receiveShadow = true;
