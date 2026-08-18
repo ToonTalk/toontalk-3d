@@ -1319,6 +1319,13 @@ function runRoomWork(room) {
   // in a single hidden burst
   const stepped = !ud.opaque && spd !== Infinity;
   speed = Infinity;
+  // couriers still in the air deliver first, so a burst can never overtake
+  // them and scramble the pile's order
+  for (const f of flights.splice(0)) {
+    const n2 = findNestByGuid(f.nestGuid) ?? (f.nest.parent ? f.nest : null);
+    if (f.phase === 0 && n2) { f.clone.remove(f.gift); deliverCopy(n2, f.gift); }
+    f.clone.removeFromParent();
+  }
   let more = false;
   try {
     const outer = worldOut();
@@ -1389,7 +1396,8 @@ function runRoomWork(room) {
         courier.removeFromParent();
       } else {
         flights.push({ clone: courier, gift, nest: nest2,
-          nestGuid: nest2.userData.guid, from, t: 0, phase: 0 });
+          nestGuid: nest2.userData.guid, from, home: from.clone(),
+          courier: true, t: 0, phase: 0 });
       }
     }
   } finally {
@@ -2013,7 +2021,9 @@ function condFromSpec(sp) {
       // a covered nest reads as its top item, exactly as matching treats it
       return pile.length ? condFromSpec(specOf(pile[pile.length - 1])) : { kind: 'anyNest' };
     }
-    return k === 'bird' ? { kind: 'anyBird' } : WILD;
+    return k === 'bird' ? { kind: 'anyBird' }
+      : k === 'robot' ? { kind: 'anyRobot' }
+      : k === 'room' ? { kind: 'anyRoom' } : WILD;
   }
   if (sp.kind === 'box' || sp.kind === 'scale') {
     return { kind: sp.kind, holes: sp.holes.map(condFromSpec) };
@@ -2055,9 +2065,12 @@ function matchState(cond, spec) {
       return 'wait';
     }
     if (cond.kind === 'anyBird') return k === 'bird' ? 'yes' : 'no';
+    if (cond.kind === 'anyRobot') return k === 'robot' ? 'yes' : 'no';
+    if (cond.kind === 'anyRoom') return k === 'room' ? 'yes' : 'no';
     return 'no';                        // 'wild' already matched above
   }
-  if (cond.kind === 'anyBird' || cond.kind === 'anyNest') return 'no';
+  if (cond.kind === 'anyBird' || cond.kind === 'anyNest'
+      || cond.kind === 'anyRobot' || cond.kind === 'anyRoom') return 'no';
   if (cond.kind === 'wildNumber') return spec.kind === 'number' ? 'yes' : 'no';
   if (cond.kind === 'anyBox') return spec.kind === 'box' ? 'yes' : 'no';
   if (cond.kind === 'wildScale') return spec.kind === 'scale' ? 'yes' : 'no';
@@ -2087,6 +2100,8 @@ function condText(c) {
   if (c.kind === 'wild') return 'anything';
   if (c.kind === 'anyBird') return 'a bird';
   if (c.kind === 'anyNest') return 'a nest';
+  if (c.kind === 'anyRobot') return 'a robot';
+  if (c.kind === 'anyRoom') return 'a room';
   if (c.kind === 'wildNumber') return 'any number';
   if (c.kind === 'text') return `the text “${c.text}”`;
   if (c.kind === 'wildText') return 'any text';
@@ -2628,7 +2643,15 @@ function advanceWorldClocks(dt) {
         f.clone.remove(f.gift);
         deliverCopy(f.nest, f.gift);
         f.phase = 1; f.t = 0;
+        f.from2 = f.clone.position.clone();
       }
+    } else if (f.courier) {
+      // a courier flies home into its room rather than away for good
+      const e = Math.min(1, f.t / 0.9);
+      f.clone.position.lerpVectors(f.from2, f.home, ease(e));
+      f.clone.position.y += 0.4 * Math.sin(Math.PI * e);
+      f.clone.scale.setScalar(Math.max(0.05, 1 - 0.9 * ease(e)));
+      if (e >= 1) { f.clone.removeFromParent(); flights.splice(i, 1); }
     } else {
       const e = Math.min(1, f.t / 0.9);
       f.clone.position.y += dt * (1.2 + 2.4 * e);
@@ -2699,7 +2722,8 @@ function abort(msg) {
 // The robot walks to the stack and takes the top one, the same way you do.
 function actionNew(kind) {
   const st = stations[kind === 'box' ? 'boxes' : kind === 'scale' ? 'scales'
-                    : kind === 'text' ? 'texts' : 'numbers'];
+                    : kind === 'text' ? 'texts' : kind === 'nest' ? 'nests'
+                    : 'numbers'];
   enqueue(walkTo(() => standForPoint(st.point)));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
   enqueue(doNow(() => {
@@ -3160,7 +3184,7 @@ function resolve(ev) {
     // individually erasable.
     if (o.__pick.kind === 'cond') {
       if (dustyActive || rubyActive) { if (o.__pick.outer) continue; }
-      else if (!(mode === 'world' && !held && activeBot?.trainedOn)) continue;
+      else if (held || !activeBot?.trainedOn) continue;
     }
     // handing things over only means anything in the workshop -- inside the
     // bubble the robot is working, and its body must not block clicks past it
@@ -3195,6 +3219,12 @@ function handleClick(target) {
   }
   if (target.kind === 'roomRoof') {
     const room = target.room;
+    // a stopped-at-the-limit robot picks its work back up
+    if (!room.userData.dirty && room.userData.world?.active
+        && room.userData.world?.stations?.stand) {
+      room.userData.stepRounds = 0;
+      room.userData.dirty = true;
+    }
     room.setOpaque(!room.userData.opaque);
     say(room.userData.opaque
       ? 'The walls turn solid — inside, everything runs in an instant.'
@@ -3296,7 +3326,7 @@ function handleClick(target) {
     {
       // reaching into the bubble empty-handed takes out a copy of the very
       // thing the robot was first shown
-      if (mode === 'world' && !held && activeBot?.trainedOn) {
+      if (!held && activeBot?.trainedOn) {
         const copy = thingIn(activeBot.trainedOn, new Map(), []);
         scene.add(copy);
         copy.position.copy(condDisplay
@@ -3507,7 +3537,8 @@ function directRobot(target) {
     if (st.id === 'minis') return say('It cannot make robots.');
     if (st.id === 'rooms') return say('Rooms are yours to place, not the robot’s.');
     return go({ type: st.id === 'boxes' ? 'newBox' : st.id === 'scales' ? 'newScale'
-              : st.id === 'texts' ? 'newText' : 'newNumber' });
+              : st.id === 'texts' ? 'newText' : st.id === 'nests' ? 'newNest'
+              : 'newNumber' });
   }
   const c = st ? containerOfStation(st.id) : null;
   // The robot uses the copier exactly the way the user does: holding something,
@@ -3843,6 +3874,7 @@ function runStep(step) {
   else if (step.type === 'newBox') actionNew('box');
   else if (step.type === 'newScale') actionNew('scale');
   else if (step.type === 'newText') actionNew('text');
+  else if (step.type === 'newNest') actionNew('nest');
   else if (step.type === 'take') actionTake(step.at);
   else if (step.type === 'copy') actionCopy(step.at);
   else if (step.type === 'put') actionPut(step.at, step.side);
@@ -3919,6 +3951,18 @@ function buildCondNode(cond, path, marks) {
     g = makeNest();
     g.__egg.removeFromParent();
     g.userData.hasEgg = false;
+  }
+  else if (cond.kind === 'anyRobot') {
+    g = makeMiniRobot();
+    const q = ghostQuestion(0.22);
+    q.position.y = 0.48;
+    g.add(q);
+  }
+  else if (cond.kind === 'anyRoom') {
+    g = makeRoom();
+    const q = ghostQuestion(0.22);
+    q.position.y = 0.56;
+    g.add(q);
   }
   else if (cond.kind === 'anyBox' || cond.kind === 'wildScale') {
     // an erased container: its own blank shape with one floating ?
@@ -4643,8 +4687,10 @@ function enterTraining() {
   const given = stations.stand.occupant;
   if (!given) return;
   condition = condFromSpec(specOf(given));   // exact at first; Dusty loosens it
-  // remember the very thing it was shown -- a copy can be taken from the bubble
-  if (activeBot) activeBot.trainedOn = hasLive(given) ? null : thingOut(given);
+  // remember the very thing it was shown -- a copy can be taken from the
+  // bubble. Live things serialise faithfully now (guid pairing), so even a
+  // box holding a bird or a robot is remembered.
+  if (activeBot) activeBot.trainedOn = thingOut(given);
   clearUndo();
   clearScratch();
   preTraining = snapshotWorld();     // the daydream must not disturb the world
@@ -4945,6 +4991,7 @@ function describe(s) {
        : s.type === 'newBox' ? 'take a new box'
        : s.type === 'newScale' ? 'take a new scale'
        : s.type === 'newText' ? 'take a new text pad'
+       : s.type === 'newNest' ? 'take a new nest'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
        : s.type === 'take' ? (s.at.nest ? `take the top of ${holeName(s.at)}`
            : s.at.path.length ? `take what is in ${holeName(s.at)}`
@@ -5173,9 +5220,26 @@ addEventListener('keydown', (e) => {
   }
   if (!held || busy || mode === 'replay') return;
   const labelKey = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+  // Ctrl/Cmd+C copies the text being edited, Ctrl/Cmd+V pastes onto its end
+  const clip = (get, set) => {
+    if (!(e.ctrlKey || e.metaKey)) return false;
+    const k2 = e.key.toLowerCase();
+    if (k2 === 'c') {
+      try { navigator.clipboard.writeText(get() || ''); say('Copied.'); } catch {}
+      e.preventDefault(); return true;
+    }
+    if (k2 === 'v') {
+      navigator.clipboard.readText().then(txt => {
+        if (txt) { pushUndo(); set((get() || '') + txt.replace(/\r/g, '')); refreshUI(); }
+      }).catch(() => {});
+      e.preventDefault(); return true;
+    }
+    return false;
+  };
   if (held.userData.kind === 'robot') {
     // typing names the robot in your hand; the name shows on its chest
     const bot = held.__bot;
+    if (clip(() => bot.name, t2 => { bot.name = t2 || null; paintBotName(bot); })) return;
     if (e.key === 'Backspace') bot.name = (bot.name || '').slice(0, -1);
     else if (labelKey) bot.name = (bot.name || '') + e.key;
     else return;
@@ -5187,6 +5251,7 @@ addEventListener('keydown', (e) => {
     return;
   }
   const editLabel = () => {
+    if (clip(() => held.userData.label, t2 => setThingLabel(held, t2))) return;
     if (e.key === 'Backspace') {
       if (held.userData.label) { pushUndo(); setThingLabel(held, held.userData.label.slice(0, -1)); }
       e.preventDefault(); refreshUI(); return;
@@ -5194,6 +5259,7 @@ addEventListener('keydown', (e) => {
     if (labelKey) { pushUndo(); setThingLabel(held, (held.userData.label || '') + e.key); refreshUI(); }
   };
   if (held.userData.kind === 'text') {
+    if (clip(() => held.userData.text, t2 => held.setText(t2))) return;
     if (e.key === 'Backspace') { pushUndo(); held.setText(held.userData.text.slice(0, -1)); e.preventDefault(); }
     else if (e.key === 'Enter') { pushUndo(); held.setText(held.userData.text + '\n'); }
     else if (labelKey) { pushUndo(); held.setText(held.userData.text + e.key); sfx('type'); }
@@ -5271,7 +5337,8 @@ function tipFor(t) {
       if (t.id === 'texts') return training
         ? 'Click to have the robot take a fresh text pad.'
         : 'The text stack — take a blank pad and type on it.';
-      if (t.id === 'nests') return training ? null
+      if (t.id === 'nests') return training
+        ? 'Click to have the robot take a fresh nest.'
         : 'The nest stack — each nest holds an egg. Set one on the table and watch.';
       if (t.id === 'scales') return training
         ? 'Click to have the robot take a fresh scale.'
@@ -5310,11 +5377,15 @@ function tipFor(t) {
   if (t.kind === 'miniCond') {
     return 'Its little thought — click to take a copy of the very thing it was first shown.';
   }
+  if (held && (t.kind === 'roomDoor' || t.kind === 'roomRoof'
+      || (t.kind === 'thing' && t.thing?.userData.kind === 'room'))) {
+    return 'Drop to send that inside — it lands on the desk, and the room’s robot gets to work.';
+  }
   if (t.kind === 'roomDoor') {
     return 'The door — click to step inside: the room becomes the world around you, and this one shrinks onto its table.';
   }
   if (t.kind === 'roomRoof') {
-    return 'The roof — click to switch the walls between solid (the room works instantly, unseen) and glass (you can watch).';
+    return 'The roof — click to switch between solid walls (works instantly, unseen) and glass (you can watch). A robot stopped at the Rounds limit also picks its work back up.';
   }
   if (t.kind === 'ruby') {
     return rubyActive
@@ -5323,7 +5394,7 @@ function tipFor(t) {
   }
   if (t.kind === 'cond') {
     return 'The robot’s thought: the shape it must be given before it will run. '
-      + (mode === 'world' && !held && activeBot?.trainedOn
+      + (!held && activeBot?.trainedOn
           ? 'Click to take a copy of the very thing it was first shown. '
           : 'Red parts didn’t match. ')
       + 'Dusty can vacuum any part into an anything.';
