@@ -169,6 +169,14 @@ including recorded steps mid-lesson. Mode boundaries clear the history.
 
 `robot-demo.html` — the earlier standalone pick-up-and-put-down demo.
 
+Every sound effect is synthesised on the spot from oscillators and filtered
+noise — picks pop, drops thunk, combining rings, birds chirp, Dusty slurps,
+Ruby squeaks, rooms whoosh — with a speaker button to mute and a slider for
+volume. Textures are hand-painted canvases in code: wood-grain table and
+desks, paper pads, straw nests, two-metal scales (brushed steel and brass),
+leather notebook, stucco room walls. No image or audio files anywhere: the
+whole app is still one HTML file.
+
 ## Running it
 
 Needs any static server; the repo assumes port 8311.
