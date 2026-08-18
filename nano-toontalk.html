@@ -1557,14 +1557,11 @@ function restackNest(nest) {
   const elide = pile.length > 10;
   const shown = elide ? pile.slice(0, BOTTOM).concat(pile.slice(-TOP)) : pile;
   const ys = nestSlots(shown);
-  let gapY = 0;
+  const GAP = 0.16;
   pile.forEach((t) => { t.visible = false; });
   shown.forEach((t, i) => {
     t.visible = true;
-    let y = ys[i];
-    if (elide && i >= BOTTOM) y += 0.16;      // leave room for the plate
-    if (elide && i === BOTTOM) gapY = ys[i] - 0.02;
-    t.position.set(0, y, 0);
+    t.position.set(0, ys[i] + (elide && i >= BOTTOM ? GAP : 0), 0);
     t.quaternion.identity();
   });
   if (elide) {
@@ -1579,7 +1576,8 @@ function restackNest(nest) {
     c.fillText(`⋯ ${pile.length - BOTTOM - TOP} more ⋯`, 128, 34);
     const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.075),
       new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), toneMapped: false }));
-    plate.position.set(0, gapY + 0.1, 0.14);
+    // exactly midway between the two neighbours it separates
+    plate.position.set(0, (ys[BOTTOM - 1] + ys[BOTTOM] + GAP) / 2, 0.14);
     nest.add(plate);
     nest.__elide = plate;
   }
@@ -3311,18 +3309,6 @@ function handleClick(target) {
 // In the workshop the user does everything themselves.
 function userClick(target) {
   const holdingBot = held?.userData.kind === 'robot';
-  if (held?.userData.kind === 'pile') {
-    if (target.kind === 'thing' && target.thing.userData.kind === 'nest') {
-      pushUndo();
-      return dropPile(target.thing);
-    }
-    if (target.kind === 'thing') {
-      const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
-      if (pn) { pushUndo(); return dropPile(pn); }
-    }
-    if (target.kind === 'bench') { pushUndo(); return dropPile(null); }
-    return say('The pile goes on a nest — or on the table to spread it out.');
-  }
   // rooms and notebooks take drops of anything, robots included
   if (target.kind === 'thing' && held
       && (target.thing.userData.kind === 'room' || target.thing.userData.kind === 'notebook')) {
@@ -3420,11 +3406,11 @@ function userClick(target) {
     if (!target.thing) return;
     const kind = target.thing.userData.kind;
     if (!held) {
-      // the top of a pile comes off alone; grabbing anywhere lower picks the
-      // whole tower up as one
+      // the top of a pile comes off alone; grabbing the tower anywhere lower
+      // lifts the nest itself, deliveries and all
       const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
       if (pn && pn.userData.pile[pn.userData.pile.length - 1] !== target.thing) {
-        return takePile(pn);
+        return userTake(pn);
       }
       return userTake(target.thing);
     }
@@ -3495,12 +3481,11 @@ function directRobot(target) {
     if (!held && target.kind === 'thing') {
       const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
       if (pn) {
-        if (pn.userData.pile[pn.userData.pile.length - 1] !== target.thing) {
-          return say('Only the thing on top of the pile can be taken.');
-        }
         const a = addrOf(pn);
         if (!a) return say('The robot can only touch what it was given and its own work area.');
-        return go({ type: 'take', at: { c: a.c, path: a.path, nest: true } });
+        // the top delivery alone, or -- grabbing lower -- the nest itself
+        const top = pn.userData.pile[pn.userData.pile.length - 1] === target.thing;
+        return go({ type: 'take', at: { c: a.c, path: a.path, nest: top } });
       }
     }
     const at = target.kind === 'hole'
@@ -3607,50 +3592,6 @@ function userTakeFromStack(st) {
   const obj = st.cubes.pop();
   refillStack(st, true);
   if (obj) takeIntoHand(obj);
-}
-// The whole pile comes off a nest as one carried tower. It can be set on
-// another nest (the deliveries transfer) or spread out on the bench.
-function takePile(nest) {
-  pushUndo();
-  sfx('pick');
-  const items = nest.userData.pile.splice(0);
-  restackNest(nest);
-  const g = new THREE.Group();
-  g.userData = { kind: 'pile', rest: 0, width: 0.3 };
-  g.__items = items;
-  const ys = nestSlots(items);
-  items.forEach((t, i) => {
-    t.visible = true;
-    g.add(t);
-    t.position.set(0, ys[i] - 0.1, 0);
-    t.quaternion.identity();
-    t.scale.setScalar(1);
-  });
-  setPick(g, { kind: 'thing', thing: g });
-  takeIntoHand(g);
-  say(`The whole pile — ${items.length} deliveries. Set it on a nest, or on the table to spread it out.`);
-}
-function dropPile(target) {
-  const g = held; held = null;
-  const items = g.__items;
-  if (target?.userData?.kind === 'nest') {
-    items.forEach(t => { target.add(t); });
-    target.userData.pile.push(...items);
-    restackNest(target);
-    g.removeFromParent();
-    sfx('drop');
-    say('The pile settles onto the nest.');
-  } else {
-    // spread across the bench, oldest nearest
-    items.forEach((t, i) => {
-      putOnBench(t, { x: BENCH.x0 + 0.25 + (i % 6) * 0.35,
-                      z: BENCH.z0 + 0.25 + Math.floor(i / 6) * 0.35 });
-    });
-    g.removeFromParent();
-    sfx('drop');
-    say('The pile spreads out on the table.');
-  }
-  refreshUI();
 }
 function userTake(thing) {
   pushUndo();
@@ -4690,8 +4631,8 @@ function pushUndo() {
   undoStack.push({
     mode,
     world: snapshotWorld(),
-    heldBot: held && ['robot', 'nest', 'bird', 'pile'].includes(held.userData.kind) ? held : null,
-    heldSpec: held && !['robot', 'nest', 'bird', 'pile'].includes(held.userData.kind) ? specOf(held) : null,
+    heldBot: held && ['robot', 'nest', 'bird'].includes(held.userData.kind) ? held : null,
+    heldSpec: held && !['robot', 'nest', 'bird'].includes(held.userData.kind) ? specOf(held) : null,
     program: program.slice(),
     condition,
   });
@@ -5007,11 +4948,12 @@ function refreshUI() {
       : kind === 'text' ? (held.userData.text
           ? `a pad: “${held.userData.text.length > 24 ? held.userData.text.slice(0, 24) + '…' : held.userData.text}”`
           : 'a blank text pad')
-      : kind === 'pile' ? `a pile of ${held.__items.length} deliveries`
       : kind === 'room' ? (held.userData.world ? 'a room with things inside' : 'an empty room')
       : kind === 'notebook' ? 'a notebook'
       : kind === 'scale' ? 'a scale'
-      : kind === 'nest' ? (held.userData.label ? `the nest “${held.userData.label}”`
+      : kind === 'nest' ? (held.userData.pile.length
+          ? `a nest with ${held.userData.pile.length} deliver${held.userData.pile.length > 1 ? 'ies' : 'y'}`
+          : held.userData.label ? `the nest “${held.userData.label}”`
           : held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
       : kind === 'bird' ? (held.userData.label ? `the bird “${held.userData.label}”` : 'a bird')
       : `${held.userData.label ? `“${held.userData.label}” — ` : ''}a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
@@ -5020,7 +4962,6 @@ function refreshUI() {
       : kind === 'box' ? (held.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
           : 'letters name it; drop it on a box to join')
-      : kind === 'pile' ? 'set it on a nest — or on the table to spread it out'
       : kind === 'room' ? 'set it down; drop a robot in, then things for it to work on'
       : kind === 'notebook' ? 'set it down and drop things on its pages'
       : kind === 'text' ? 'type to write on it; drop it on a pad’s left or right edge to join'
@@ -5073,7 +5014,6 @@ $('exportBtn').onclick = () => {
 };
 $('exportHeldBtn').onclick = () => {
   if (!held) return say('Pick something up first — this saves what you are holding.');
-  if (held.userData.kind === 'pile') return say('Set the pile down first — it is not a single thing.');
   if (held.userData.kind === 'robot' && held.__bot === activeBot) syncBot();
   const rec = { kind: 'thing', thing: thingOut(held) };
   const base = (held.userData.label
