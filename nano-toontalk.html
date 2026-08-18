@@ -993,7 +993,13 @@ function renderNotebook(nb) {
     t.position.set((half ? 1 : -1) * 0.21 - ctr.x * sc,
       0.047 - box.min.y * sc,
       0.02 - ctr.z * sc);
-    t.traverse(o => { delete o.__pick; });
+    t.traverse(o => {
+      delete o.__pick;
+      if (o.userData?.kind === 'nest') {
+        const ix = allNests.indexOf(o);
+        if (ix >= 0) allNests.splice(ix, 1);   // displays are not real nests
+      }
+    });
     setPick(t, { kind: 'nbItem', nb, slot: ud.page + half });
     nb.add(t);
     nb.__slotNodes.push(t);
@@ -1190,7 +1196,13 @@ function renderRoomContents(room) {
     if (it.rec === ud.world.active && t.__bot?.program.length) {
       addMiniBubble(t, t.__bot.condition);
     }
-    t.traverse(o => { delete o.__pick; });
+    t.traverse(o => {
+      delete o.__pick;
+      if (o.userData?.kind === 'nest') {
+        const ix = allNests.indexOf(o);
+        if (ix >= 0) allNests.splice(ix, 1);   // displays are not real nests
+      }
+    });
     delete t.__pick;
     room.add(t);
     room.__contents.push(t);
@@ -1207,6 +1219,8 @@ function roomDrop(room, dropped, refuse) {
       rec.active = botOut(dropped.__bot);
       dropped.removeFromParent();
       say('The robot steps inside, ready behind the desk.');
+      // something may already be waiting on the desk for it
+      if (rec.stations?.stand) { ud.dirty = true; ud.stepRounds = 0; }
     } else {
       rec.bench.push({ thing: thingOut(dropped), x: 0.6, z: 1.5 });
       dropped.removeFromParent();
@@ -1280,7 +1294,27 @@ function runRoomWork(room) {
     // the outbox: birds inside delivered to nests out here -- fly each letter
     // from the room to its nest now that both worlds are in place
     for (const m of roomOutbox.splice(0)) {
-      const nest2 = allNests.find(n2 => n2.parent && n2.userData.id === m.nestId);
+      // never the stack's stock, never an egg nest, never a display copy
+      const nest2 = m.nestId == null ? null
+        : allNests.find(n2 => n2.parent && n2.userData.id === m.nestId
+            && !n2.userData.hasEgg && !stations.nests?.cubes.includes(n2));
+      if (!nest2) {
+        // the nest may be filed inside another room
+        let dest = null;
+        if (m.nestId != null) {
+          for (const t2 of benchThings) {
+            if (t2.userData.kind !== 'room' || !t2.userData.world) continue;
+            const f = findNestRec(t2.userData.world, m.nestId);
+            if (f) { dest = { room: t2, rec: f }; break; }
+          }
+        }
+        if (dest) {
+          dest.rec.pile.unshift(m.rec);
+          dest.room.userData.dirty = true;
+          renderRoomContents(dest.room);
+          continue;
+        }
+      }
       const gift = buildFromRec(m.rec);
       if (!gift) continue;
       if (!nest2) { putOnBench(gift, benchSpot()); continue; }
@@ -2032,6 +2066,9 @@ function putInHole(hole, thing) {
   if (thing.userData.kind === 'text') {
     thing.rotation.x = -1.05;
     thing.position.y += 0.075;
+  } else if (['box', 'scale', 'notebook', 'room'].includes(thing.userData.kind)) {
+    // containers perch on the rim rather than sinking below it
+    thing.position.y += 0.05;
   }
   hole.thing = thing;
 }
@@ -3136,6 +3173,17 @@ function handleClick(target) {
     say('A copy from the notebook — the page keeps its own.');
     return refreshUI();
   }
+  if (target.kind === 'miniCond') {
+    const bot = target.bot;
+    if (held) return say('Empty your hand first.');
+    if (!bot.trainedOn) return say('It does not remember what it was first shown.');
+    const copy = thingIn(bot.trainedOn, new Map(), []);
+    scene.add(copy);
+    copy.position.copy(bot.node.getWorldPosition(new THREE.Vector3())).y += 0.5;
+    userTake(copy);
+    say('A copy of what it was first shown.');
+    return;
+  }
   if (target.kind === 'cond') {
     // Ruby erases (each click one step more general); Dusty removes outright,
     // leaving an empty hole that matches anything or nothing.
@@ -3183,6 +3231,10 @@ function handleClick(target) {
           && stations[target.id].occupant ? stations[target.id].occupant
       : null;
     if (victim) {
+      if (victim.userData.kind === 'room' && victim.userData.dirty) {
+        victim.userData.dirty = false;
+        return say('Dusty interrupts the room — its robot stops mid-task. Drop something on it to set it going again.');
+      }
       if (victim.userData.kind === 'notebook') {
         const ud = victim.userData;
         if (ud.pages[ud.page] || ud.pages[ud.page + 1]) {
@@ -3337,7 +3389,6 @@ function userClick(target) {
   }
   if (target.kind === 'hole') {
     if (!held) return say('That hole is empty.');
-    if (holdingBot) return say('Robots don’t fit in holes.');
     return userPutInHole(target.box.userData.holes[target.index]);
   }
 }
@@ -3497,6 +3548,9 @@ function userTake(thing) {
   pushUndo();
   detach(thing);
   takeIntoHand(thing);
+  if (thing.userData.kind === 'room' && thing.userData.dirty) {
+    say('The room pauses while it is in your hand.');
+  }
 }
 function userPutInHole(hole) {
   pushUndo();
@@ -3797,6 +3851,7 @@ function addMiniBubble(node, cond) {
   g.position.y = 1.95;
   g.scale.setScalar(1.6);
   g.traverse(o => { delete o.__pick; });
+  if (node.__bot?.trainedOn) setPick(halo, { kind: 'miniCond', bot: node.__bot });
   node.add(g);
   node.__miniBubble = g;
 }
@@ -5134,6 +5189,9 @@ function tipFor(t) {
       ? 'Dusty is awake — click a part of the robot’s thought to vacuum it away.'
       : 'Dusty the vacuum — click to wake him, then click parts of a robot’s thought to erase them.';
   }
+  if (t.kind === 'miniCond') {
+    return 'Its little thought — click to take a copy of the very thing it was first shown.';
+  }
   if (t.kind === 'roomDoor') {
     return 'The door — click to step inside: the room becomes the world around you, and this one shrinks onto its table.';
   }
@@ -5207,7 +5265,12 @@ function tipFor(t) {
   }
   if (t.kind === 'hole') {
     const pan = t.box?.userData.kind === 'scale';
-    return `${pan ? 'Pan' : 'Hole'} ${t.index + 1} — empty.` + (held ? ' Click to put that in.' : '');
+    const occ = t.box?.userData.holes?.[t.index]?.thing;
+    const what = !occ ? 'empty'
+      : occ.userData.kind === 'number' ? `holds ${ratText(occ.userData.value)}`
+      : `holds a ${occ.userData.label || occ.userData.kind}`;
+    return `${pan ? 'Pan' : 'Hole'} ${t.index + 1} — ${what}.`
+      + (held && !occ ? ' Click to put that in.' : '');
   }
   return null;
 }
