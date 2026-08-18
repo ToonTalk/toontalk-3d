@@ -900,8 +900,12 @@ function renderNotebook(nb) {
                            0.38 / Math.max(size.z, 0.001),
                            0.20 / Math.max(size.y, 0.001));
     t.scale.multiplyScalar(sc);
-    t.position.set((half ? 1 : -1) * 0.21,
-      0.047 - box.min.y * sc, 0.02);
+    // centre the display by its bounding box, so long things lie ON the page
+    // rather than poking off its edge
+    const ctr = new THREE.Vector3(); box.getCenter(ctr);
+    t.position.set((half ? 1 : -1) * 0.21 - ctr.x * sc,
+      0.047 - box.min.y * sc,
+      0.02 - ctr.z * sc);
     t.traverse(o => { delete o.__pick; });
     setPick(t, { kind: 'nbItem', nb, slot: ud.page + half });
     nb.add(t);
@@ -1116,6 +1120,7 @@ function roomDrop(room, dropped, refuse) {
     rec.stations.stand = thingOut(dropped);
     dropped.removeFromParent();
     ud.dirty = true;
+    ud.stepRounds = 0;
     say(rec.active ? 'Set on the desk inside — the robot gets to work.'
                    : 'Set on the desk inside.');
   } else {
@@ -1141,14 +1146,25 @@ function runRoomWork(room) {
   roomWorkBusy = true;
   const roomId = ud.id;
   const spd = speed;
+  const mi = maxIter;
+  // a glass room works round by round, at a pace set by the speed control,
+  // so you can watch its miniature contents change; an opaque one runs dry
+  // in a single hidden burst
+  const stepped = !ud.opaque && spd !== Infinity;
   speed = Infinity;
+  let more = false;
   try {
     const outer = worldOut();
     worldIn(ud.world);
     drainQueue(60);
+    if (stepped) maxIter = 1;
     if (activeBot && program.length && stations.stand.occupant) {
       runProgram();
       drainQueue();
+    }
+    if (activeBot?.program.length && stations.stand.occupant) {
+      const members = [activeBot, ...activeBot.team];
+      more = members.some(m => matchState(m.condition, specOf(stations.stand.occupant)) === 'yes');
     }
     const inner = worldOut();
     worldIn(outer);
@@ -1157,11 +1173,17 @@ function runRoomWork(room) {
     scene.traverse(o => { if (o.userData?.kind === 'room' && o.userData.id === roomId) node = o; });
     if (node) {
       node.userData.world = inner;
-      node.userData.dirty = false;
+      // the Rounds limit is honoured across bottle-runs: a room's robot works
+      // on one gift for at most that many rounds in total
+      node.userData.stepRounds = (ud.stepRounds || 0) + (stepped ? 1 : mi);
+      const cont = more && node.userData.stepRounds < mi;
+      node.userData.dirty = cont;
+      if (cont) node.__nextStep = performance.now() + 1100 / Math.max(0.25, spd);
       renderRoomContents(node);
     }
   } finally {
     speed = spd;
+    maxIter = mi;
     roomWorkBusy = false;
   }
   refreshUI();
@@ -1169,7 +1191,8 @@ function runRoomWork(room) {
 function processDirtyRooms() {
   if (roomWorkBusy || busy || held || mode !== 'world' || queue.length) return;
   if (waiters.size || allStands.length > 1) return;   // worldOut can't bottle those yet
-  const room = benchThings.find(t => t.userData.kind === 'room' && t.userData.dirty);
+  const room = benchThings.find(t => t.userData.kind === 'room' && t.userData.dirty
+    && (!t.__nextStep || performance.now() >= t.__nextStep));
   if (room) runRoomWork(room);
 }
 // Walking through the door: the room swells to become the world, and the
@@ -2280,6 +2303,8 @@ function fastForward(maxSteps = 100000) {
 // egg hatching and clone-bird flights. Called from tick() and, at Instant
 // speed, straight from the frame loop.
 function advanceWorldClocks(dt) {
+  // dirty rooms run at the next quiet moment, wherever the ticks come from
+  if (!busy && !held && !queue.length && !current && mode === 'world') processDirtyRooms();
   for (let i = hatching.length - 1; i >= 0; i--) {
     const h = hatching[i];
     if (h.nest.parent !== scene || !h.nest.userData.hasEgg) { hatching.splice(i, 1); continue; }
