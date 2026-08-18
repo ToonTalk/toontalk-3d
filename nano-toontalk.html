@@ -765,6 +765,54 @@ function holesOf(t) {
 // deliveries pile up until somebody takes them.
 const allNests = [];
 const hatching = [];
+// A text pad: a flat tablet of paper with writing on its top face. Typing
+// writes on a held pad; drops concatenate (see combine).
+function makeText(str) {
+  const g = new THREE.Group();
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 384;
+  const tex = new THREE.CanvasTexture(cv);
+  tex.anisotropy = 4;
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 });
+  const side = new THREE.MeshStandardMaterial({ color: 0xf5eeda, roughness: 0.85 });
+  const pad = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.045, 0.26),
+    [side, side, mat, side, side, side]);
+  pad.castShadow = true; pad.receiveShadow = true;
+  g.add(pad);
+  g.userData = { kind: 'text', text: '', rest: 0.0225 };
+  g.setText = (t) => {
+    g.userData.text = t;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#f7f1df'; c.fillRect(0, 0, 512, 384);
+    c.strokeStyle = '#b9ad8e'; c.lineWidth = 4; c.strokeRect(10, 10, 492, 364);
+    c.fillStyle = '#1c2a52'; c.textAlign = 'left'; c.textBaseline = 'top';
+    const lines = [];
+    for (const para of (t || '').split('\n')) {
+      let line = '';
+      c.font = '400 44px Georgia, serif';
+      for (const w of para.split(' ')) {
+        const cand = line ? line + ' ' + w : w;
+        if (c.measureText(cand).width > 452 && line) { lines.push(line); line = w; }
+        else line = cand;
+      }
+      lines.push(line);
+    }
+    const fs = lines.length > 7 ? Math.max(16, Math.floor(44 * 7 / lines.length)) : 44;
+    c.font = `400 ${fs}px Georgia, serif`;
+    lines.slice(0, Math.floor(340 / (fs * 1.2))).forEach((ln, i) => {
+      c.fillText(ln, 30, 26 + i * fs * 1.2, 452);
+    });
+    if (!t) {
+      c.fillStyle = '#c9bd9c';
+      c.font = 'italic 32px Georgia, serif';
+      c.fillText('(blank)', 30, 26);
+    }
+    tex.needsUpdate = true;
+  };
+  g.setText(str || '');
+  setPick(g, { kind: 'thing', thing: g });
+  return g;
+}
 function makeNest() {
   const g = new THREE.Group();
   const straw = new THREE.MeshStandardMaterial({ color: 0x8a6a3b, roughness: 0.9 });
@@ -1089,6 +1137,7 @@ function specOf(thing) {
   if (!thing) return null;
   const kind = thing.userData.kind;
   if (kind === 'number') return { kind: 'number', value: thing.userData.value, op: thing.userData.op };
+  if (kind === 'text') return { kind: 'text', text: thing.userData.text };
   // birds, nests and robots inside boxes go by reference: their identity (a
   // bird's pairing, a robot's training) has no data form
   if (kind === 'nest' || kind === 'bird' || kind === 'robot') return { kind: 'ref', node: thing };
@@ -1099,6 +1148,7 @@ function buildThing(spec) {
   if (!spec) return null;
   if (spec.kind === 'ref') return spec.node;
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
+  if (spec.kind === 'text') return makeText(spec.text);
   const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   if (spec.label) setThingLabel(b, spec.label);
@@ -1113,6 +1163,7 @@ function copyThing(t) {
   if (ud.kind === 'robot') return null;              // the gates refuse robots
   let c;
   if (ud.kind === 'number') c = makeNumber(ud.value, ud.op);
+  else if (ud.kind === 'text') c = makeText(ud.text);
   else if (ud.kind === 'bird') c = makeBird(t.__nest);
   else if (ud.kind === 'nest') {
     c = makeNest();
@@ -1201,6 +1252,10 @@ function matchState(cond, spec) {
   if (cond.kind === 'wildNumber') return spec.kind === 'number' ? 'yes' : 'no';
   if (cond.kind === 'anyBox') return spec.kind === 'box' ? 'yes' : 'no';
   if (cond.kind === 'wildScale') return spec.kind === 'scale' ? 'yes' : 'no';
+  if (cond.kind === 'wildText') return spec.kind === 'text' ? 'yes' : 'no';
+  if (cond.kind === 'text') {
+    return spec.kind === 'text' && spec.text === cond.text ? 'yes' : 'no';
+  }
   if (cond.kind === 'number') {
     return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op
       ? 'yes' : 'no';
@@ -1224,6 +1279,8 @@ function condText(c) {
   if (c.kind === 'anyBird') return 'a bird';
   if (c.kind === 'anyNest') return 'a nest';
   if (c.kind === 'wildNumber') return 'any number';
+  if (c.kind === 'text') return `the text “${c.text}”`;
+  if (c.kind === 'wildText') return 'any text';
   if (c.kind === 'anyBox') return 'any box — any number of holes';
   if (c.kind === 'wildScale') return 'any scale';
   if (c.kind === 'number') {
@@ -1237,6 +1294,7 @@ function condText(c) {
 function eraseAt(cond, path) {
   if (!path.length) {
     if (cond?.kind === 'number') return { kind: 'wildNumber' };
+    if (cond?.kind === 'text') return { kind: 'wildText' };
     if (cond?.kind === 'box') return { kind: 'anyBox' };
     if (cond?.kind === 'scale') return { kind: 'wildScale' };
     return WILD;    // a second erase of any wild kind means truly anything
@@ -1304,6 +1362,7 @@ const ROW_Z = 1.35;
 // pushed forward of the robot's stand so the two do not visually collide
 const BENCH = { x0: -0.95, x1: 1.45, z0: ROW_Z - 0.28, z1: ROW_Z + 0.60 };
 const STATION_DEFS = [
+  { id: 'texts',   label: 'the text stack',   kind: 'stack',  x: -4.35 },
   { id: 'nests',   label: 'the nest stack',   kind: 'stack',  x: -3.75 },
   { id: 'scales',  label: 'the scale stack',  kind: 'stack',  x: -3.15 },
   { id: 'minis',   label: 'the robot stack',  kind: 'stack',  x: -2.55 },
@@ -1457,6 +1516,7 @@ function refillStack(st, animate = false) {
     const t = st.id === 'numbers' ? makeNumber(rat(1))
             : st.id === 'minis' ? makeMiniRobot()
             : st.id === 'scales' ? makeScale()
+            : st.id === 'texts' ? makeText('')
             : st.id === 'nests' ? makeNest()
             : makeBox();
     scene.add(t);
@@ -1727,7 +1787,8 @@ function abort(msg) {
 
 // The robot walks to the stack and takes the top one, the same way you do.
 function actionNew(kind) {
-  const st = stations[kind === 'box' ? 'boxes' : kind === 'scale' ? 'scales' : 'numbers'];
+  const st = stations[kind === 'box' ? 'boxes' : kind === 'scale' ? 'scales'
+                    : kind === 'text' ? 'texts' : 'numbers'];
   enqueue(walkTo(() => standForPoint(st.point)));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
   enqueue(doNow(() => {
@@ -2014,6 +2075,35 @@ function sideOf(target, point) {
   if (!point) return 'R';
   return target.worldToLocal(point.clone()).x < 0 ? 'L' : 'R';
 }
+// The perch-then-sink merge that numbers use, shared by text drops: the
+// arriving thing rests on the target for a beat, then sinks in and applies.
+function mergeOnto(incoming, fromWorld, target, apply) {
+  scene.attach(incoming);
+  const dest = target.getWorldPosition(new THREE.Vector3());
+  const iScale = new THREE.Vector3();
+  incoming.getWorldScale(iScale);
+  const perch = dest.clone();
+  perch.y += 0.16;
+  const start = fromWorld ? fromWorld.clone() : incoming.position.clone();
+  enqueueNext({
+    dur: 0.22,
+    start() { incoming.position.copy(start); },
+    update(t) { incoming.position.lerpVectors(start, perch, ease(t)); },
+  }, pause(0.2), {
+    dur: 0.35,
+    update(t) {
+      const e = ease(t);
+      incoming.position.lerpVectors(perch, dest, e);
+      incoming.scale.setScalar(iScale.y * (1 - 0.85 * e));
+    },
+    end() {
+      incoming.removeFromParent();
+      apply();
+      flash(dest);
+      refreshUI();
+    },
+  });
+}
 function combine(slot, incoming, isHole, fromWorld, side) {
   const target = isHole ? slot.thing : slot.occupant;
   // The old fallback parked refused things on a free pillar; pillars are gone,
@@ -2031,6 +2121,31 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   }
   if (target.userData.kind === 'box' && incoming.userData.kind === 'box') {
     return joinBoxes(target, incoming, refuse, side);
+  }
+  // Text pads concatenate; the side of the drop decides the order, exactly as
+  // dropping "Talk" on the right of "Toon" makes "ToonTalk" in the original.
+  if (target.userData.kind === 'text' && incoming.userData.kind === 'text') {
+    const merged = side === 'L' ? incoming.userData.text + target.userData.text
+                                : target.userData.text + incoming.userData.text;
+    return mergeOnto(incoming, fromWorld, target, () => target.setText(merged));
+  }
+  if (target.userData.kind === 'text' && incoming.userData.kind === 'number') {
+    const v = incoming.userData.value;
+    // a number on a blank pad writes itself out as text
+    if (target.userData.text === '') {
+      return mergeOnto(incoming, fromWorld, target, () => target.setText(ratText(v)));
+    }
+    if (v.d !== 1n) return refuse('Only a whole number can shift letters.');
+    // ...on a written pad it shifts the first or last letter along the alphabet
+    return mergeOnto(incoming, fromWorld, target, () => {
+      const txt = target.userData.text;
+      const i = side === 'L' ? 0 : txt.length - 1;
+      const code = ((BigInt(txt.charCodeAt(i)) + v.n) % 65536n + 65536n) % 65536n;
+      target.setText(txt.slice(0, i) + String.fromCharCode(Number(code)) + txt.slice(i + 1));
+    });
+  }
+  if (target.userData.kind === 'text' || incoming.userData.kind === 'text') {
+    return refuse('Text combines with text — or take a number to shift a letter or fill a blank pad.');
   }
   if (target.userData.kind !== 'number' || incoming.userData.kind !== 'number') {
     return refuse('Only numbers combine — a box joins a box, a number adds to a number.');
@@ -2299,7 +2414,8 @@ function directRobot(target) {
   if (st?.kind === 'stack') {
     if (held) return say('It is already holding something.');
     if (st.id === 'minis') return say('It cannot make robots.');
-    return go({ type: st.id === 'boxes' ? 'newBox' : st.id === 'scales' ? 'newScale' : 'newNumber' });
+    return go({ type: st.id === 'boxes' ? 'newBox' : st.id === 'scales' ? 'newScale'
+              : st.id === 'texts' ? 'newText' : 'newNumber' });
   }
   const c = st ? containerOfStation(st.id) : null;
   // The robot uses the copier exactly the way the user does: holding something,
@@ -2602,6 +2718,7 @@ function runStep(step) {
   if (step.type === 'newNumber') actionNew('number');
   else if (step.type === 'newBox') actionNew('box');
   else if (step.type === 'newScale') actionNew('scale');
+  else if (step.type === 'newText') actionNew('text');
   else if (step.type === 'take') actionTake(step.at);
   else if (step.type === 'copy') actionCopy(step.at);
   else if (step.type === 'put') actionPut(step.at, step.side);
@@ -2666,6 +2783,13 @@ function buildCondNode(cond, path, marks) {
   if (!cond) g = new THREE.Group();                       // an empty hole
   else if (cond.kind === 'wild') g = makeAnything();
   else if (cond.kind === 'wildNumber') { g = makeNumber(rat(0)); g.setLabel('?'); }
+  else if (cond.kind === 'text') g = makeText(cond.text);
+  else if (cond.kind === 'wildText') {
+    g = makeText('');
+    const q = ghostQuestion(0.16);
+    q.position.y = 0.14;
+    g.add(q);
+  }
   else if (cond.kind === 'anyBird') g = makeBird(null);
   else if (cond.kind === 'anyNest') {
     g = makeNest();
@@ -3038,6 +3162,7 @@ function thingOut(t) {
   if (!t) return null;
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
+  if (ud.kind === 'text') return { kind: 'text', text: ud.text };
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
     const grp = t.__group?.filter(n2 => n2.parent);
@@ -3078,6 +3203,7 @@ function thingIn(o, nests, birds) {
   if (!o) return null;
   let t = null;
   if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
+  else if (o.kind === 'text') t = makeText(o.text);
   else if (o.kind === 'robot') t = botIn(o);
   else if (o.kind === 'nest') {
     t = makeNest();
@@ -3502,6 +3628,7 @@ function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
        : s.type === 'newScale' ? 'take a new scale'
+       : s.type === 'newText' ? 'take a new text pad'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
        : s.type === 'take' ? (s.at.nest ? `take the top of ${holeName(s.at)}`
            : s.at.path.length ? `take what is in ${holeName(s.at)}`
@@ -3555,6 +3682,9 @@ function refreshUI() {
       ? ratShort(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
       : kind === 'robot' ? (held.__bot.name ? `“${held.__bot.name}” the robot`
           : held.__bot.program.length ? 'a trained robot' : 'a robot')
+      : kind === 'text' ? (held.userData.text
+          ? `a pad: “${held.userData.text.length > 24 ? held.userData.text.slice(0, 24) + '…' : held.userData.text}”`
+          : 'a blank text pad')
       : kind === 'scale' ? 'a scale'
       : kind === 'nest' ? (held.userData.label ? `the nest “${held.userData.label}”`
           : held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
@@ -3565,6 +3695,7 @@ function refreshUI() {
       : kind === 'box' ? (held.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
           : 'letters name it; drop it on a box to join')
+      : kind === 'text' ? 'type to write on it; drop it on a pad’s left or right edge to join'
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
       : 'put it down on the bench';
   }
@@ -3735,6 +3866,13 @@ addEventListener('keydown', (e) => {
     }
     if (labelKey) { pushUndo(); setThingLabel(held, (held.userData.label || '') + e.key); refreshUI(); }
   };
+  if (held.userData.kind === 'text') {
+    if (e.key === 'Backspace') { pushUndo(); held.setText(held.userData.text.slice(0, -1)); e.preventDefault(); }
+    else if (e.key === 'Enter') { pushUndo(); held.setText(held.userData.text + '\n'); }
+    else if (labelKey) { pushUndo(); held.setText(held.userData.text + e.key); }
+    refreshUI();
+    return;
+  }
   if (held.userData.kind === 'box') {
     if (/^[1-9]$/.test(e.key)) {
       pushUndo();
@@ -3795,6 +3933,9 @@ function tipFor(t) {
       if (t.id === 'numbers') return training
         ? 'Click to have the robot take a fresh number.'
         : 'The number stack — click to take a 1, then type digits to change it.';
+      if (t.id === 'texts') return training
+        ? 'Click to have the robot take a fresh text pad.'
+        : 'The text stack — take a blank pad and type on it.';
       if (t.id === 'nests') return training ? null
         : 'The nest stack — each nest holds an egg. Set one on the table and watch.';
       if (t.id === 'scales') return training
@@ -4225,6 +4366,7 @@ window.__nano = {
       : t.userData.kind === 'number'
         ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
       : t.userData.kind === 'robot' ? 'robot'
+      : t.userData.kind === 'text' ? { text: t.userData.text }
       : t.userData.kind === 'bird' ? 'bird'
       : t.userData.kind === 'nest' ? { nest: t.userData.pile.map(d) }
       : { [t.userData.kind]: t.userData.holes.map(h => d(h.thing)) };
