@@ -1313,13 +1313,23 @@ function roomDrop(room, dropped, refuse) {
 // swap back -- all inside a single frame, so nothing visibly flickers.
 let roomWorkBusy = false;
 function drainQueue(guard = 400) {
-  for (let g = 0; g < guard && (busy || queue.length || current); g++) fastForward();
+  const t0 = performance.now();
+  for (let g = 0; g < guard && (busy || queue.length || current); g++) {
+    fastForward();
+    if (performance.now() - t0 > 4000) {
+      console.warn('drainQueue: 4s budget spent, abandoning', queue.length, 'queued steps');
+      queue.length = 0; current = null; busy = false; pendingAfter = null;
+      break;
+    }
+  }
 }
 function runRoomWork(room) {
   if (roomWorkBusy) return;
   const ud = room.userData;
   if (!ud.world?.active || !ud.world.stations?.stand) { ud.dirty = false; return; }
   roomWorkBusy = true;
+  window.__rrw = (window.__rrw || 0) + 1;
+  const __t0 = performance.now();
   const roomId = ud.id;
   const spd = speed;
   const mi = maxIter;
@@ -1413,6 +1423,14 @@ function runRoomWork(room) {
     speed = spd;
     maxIter = mi;
     roomWorkBusy = false;
+    const __ms = performance.now() - __t0;
+    if (__ms > 500) console.warn('runRoomWork took', Math.round(__ms), 'ms');
+    if (__ms > 6000) {
+      // a room this heavy must not be retried every idle tick
+      const n2 = benchThings.find(t => t.userData.kind === 'room' && t.userData.id === roomId);
+      if (n2) n2.userData.dirty = false;
+      sayAttn('The room’s work was taking too long — it has been paused. Click its roof to try again.');
+    }
   }
   refreshUI();
 }
@@ -1639,18 +1657,28 @@ function restackNest(nest) {
     t.quaternion.identity();
   });
   if (elide) {
-    const cv = document.createElement('canvas');
-    cv.width = 256; cv.height = 64;
-    const c = cv.getContext('2d');
-    c.fillStyle = '#141821'; c.fillRect(0, 0, 256, 64);
-    c.strokeStyle = '#9fd8ff'; c.lineWidth = 3; c.strokeRect(4, 4, 248, 56);
-    c.fillStyle = '#9fd8ff';
-    c.font = '600 30px Georgia, serif';
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText(`⋯ ${pile.length - BOTTOM - TOP} more ⋯`, 128, 34);
+    // one cached canvas per nest: a 100-round run must not mint a fresh GL
+    // texture for every delivery
+    let ec = nest.__elideCv;
+    if (!ec) {
+      ec = nest.__elideCv = document.createElement('canvas');
+      ec.width = 256; ec.height = 64;
+      nest.__elideTex = new THREE.CanvasTexture(ec);
+    }
+    const n = pile.length - BOTTOM - TOP;
+    if (nest.__elideN !== n) {
+      nest.__elideN = n;
+      const c = ec.getContext('2d');
+      c.fillStyle = '#141821'; c.fillRect(0, 0, 256, 64);
+      c.strokeStyle = '#9fd8ff'; c.lineWidth = 3; c.strokeRect(4, 4, 248, 56);
+      c.fillStyle = '#9fd8ff';
+      c.font = '600 30px Georgia, serif';
+      c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(`⋯ ${n} more ⋯`, 128, 34);
+      nest.__elideTex.needsUpdate = true;
+    }
     const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.075),
-      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), toneMapped: false }));
-    // exactly midway between the two neighbours it separates
+      new THREE.MeshBasicMaterial({ map: nest.__elideTex, toneMapped: false }));
     plate.position.set(0, (ys[BOTTOM - 1] + ys[BOTTOM] + GAP) / 2, 0.14);
     nest.add(plate);
     nest.__elide = plate;
