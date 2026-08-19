@@ -1535,18 +1535,22 @@ function runRoomWork(room, depth = 0, miOverride = null) {
       runProgram();
       drainQueue();
     }
-    if (activeBot?.program.length && stations.stand.occupant) {
-      const members = [activeBot, ...activeBot.team];
-      more = members.some(m => matchState(m.condition, specOf(stations.stand.occupant)) === 'yes');
-    }
     // rooms inside this room work too -- recursion is bottles all the way down
-    if (depth < ROOM_DEPTH_MAX && !waiters.size && allStands.length <= 1) {
+    // a dozing robot in here is usually waiting on one of these very houses
+    if (depth < ROOM_DEPTH_MAX && allStands.length <= 1) {
       for (let g = 0; g < 50; g++) {
         if (performance.now() - roomWorkT0 > ROOM_WORK_SLICE) break;
         const r2 = findDirtyRoom(true);
         if (!r2) break;
         runRoomWork(r2, depth + 1, mi);
       }
+    }
+    // Whether there is more to do is judged AFTER the houses inside have run:
+    // a robot dozing over its nests is finished only until its children
+    // answer, and they answer during that recursion.
+    if (activeBot?.program.length && stations.stand.occupant) {
+      const members = [activeBot, ...activeBot.team];
+      more = members.some(m => matchState(m.condition, specOf(stations.stand.occupant)) === 'yes');
     }
     const inner = worldOut();
     worldIn(outer);
@@ -1616,6 +1620,16 @@ function runRoomWork(room, depth = 0, miOverride = null) {
     speed = spd;
     maxIter = mi;
     if (depth === 0) roomWorkBusy = false;
+    // The swap back rebuilt every robot, losing who was dozing over a nest.
+    // Ask again once the whole bottle is unwound (deeper levels are re-asked
+    // by their own bottle, and running one mid-flight would bottle a robot
+    // with half its program still queued).
+    if (depth === 0 && !busy && mode === 'world'
+        && activeBot && program.length && stations.stand.occupant) {
+      const given = specOf(stations.stand.occupant);
+      const states = [activeBot, ...activeBot.team].map(m => matchState(m.condition, given));
+      if (states.includes('yes') || states.includes('wait')) runProgram();
+    }
     const __ms = performance.now() - __t0;
     if (__ms > 500) console.warn('runRoomWork took', Math.round(__ms), 'ms');
     if (__ms > 6000) {
@@ -1650,7 +1664,9 @@ function findDirtyRoom(ignoreCooldown = false) {
 }
 function processDirtyRooms() {
   if (roomWorkBusy || busy || held || mode !== 'world' || queue.length) return;
-  if (waiters.size || allStands.length > 1) return;   // worldOut can't bottle those yet
+  // A dozing robot must NOT stop the houses: it is usually waiting on an
+  // answer from one of them. Its vigil is re-derived after the swap back.
+  if (allStands.length > 1) return;                   // worldOut can't bottle those yet
   const room = findDirtyRoom();
   if (room) runRoomWork(room);
 }
@@ -3007,6 +3023,31 @@ function advanceWiggle(dt) {
   wiggle.node.rotation.y = wiggle.ry + Math.sin(wiggle.t * 15) * 0.10;
   wiggle.node.scale.setScalar(wiggle.s * (1 + 0.035 * Math.abs(Math.sin(wiggle.t * 15))));
 }
+// An egg becomes a bird. A bird hatched among a robot's own things lands on
+// its work spot, where the robot can reach her; anywhere else she goes on the
+// table beside her nest.
+function hatchNow(nest) {
+  if (!nest.userData.hasEgg) return null;
+  nest.userData.hasEgg = false;
+  nest.__egg.removeFromParent();
+  sfx('hatch');
+  const bird = makeBird(nest);
+  // a name written on the nest before hatching belongs to the pair
+  if (nest.userData.label) setThingLabel(bird, nest.userData.label);
+  const spot = addrOf(nest)
+    ? (Object.values(stations).find(s2 => s2.kind === 'scratch' && !s2.occupant)
+       ?? ensureScratchStation(scratchObjs.length, true))
+    : null;
+  if (spot) putOnStation(spot, bird);
+  else {
+    const wp = nest.getWorldPosition(new THREE.Vector3());
+    putOnBench(bird, { x: wp.x + 0.4, z: wp.z });
+    say('The egg hatched — give the bird something and she takes it home.');
+  }
+  flash(bird.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.15, 0)));
+  refreshUI();
+  return bird;
+}
 let puffGeo = null;
 // Smoke and bustle mean somebody inside is working -- a room merely holding
 // unopened mail sits quiet.
@@ -3067,6 +3108,10 @@ function advanceWorldClocks(dt) {
     b.__spread = (b.__spread ?? 0) + (target - (b.__spread ?? 0)) * Math.min(1, dt * 8);
     setWings(b, b.__spread, flying ? Math.sin(flapT * 18) * 0.4 : 0);
   }
+  // A run whose robot vanished under it (a world swapped away mid-replay)
+  // would leave the world stuck in 'replay' with nothing to run, and no house
+  // would ever work again. Nothing is happening, so call it settled.
+  if (mode === 'replay' && !activeBot && !busy && !queue.length && !current) mode = 'world';
   // dirty rooms run at the next quiet moment, wherever the ticks come from
   if (!busy && !held && !queue.length && !current && mode === 'world') {
     try { processDirtyRooms(); }
@@ -3085,19 +3130,7 @@ function advanceWorldClocks(dt) {
     if (hr !== scene || !h.nest.userData.hasEgg) { hatching.splice(i, 1); continue; }
     h.t += dt;
     h.nest.__egg.rotation.z = Math.sin(h.t * 16) * 0.14 * Math.min(1, h.t);
-    if (h.t > 1.5) {
-      hatching.splice(i, 1);
-      h.nest.userData.hasEgg = false;
-      h.nest.__egg.removeFromParent();
-      sfx('hatch');
-      const bird = makeBird(h.nest);
-      // a name written on the nest before hatching belongs to the pair
-      if (h.nest.userData.label) setThingLabel(bird, h.nest.userData.label);
-      const wp = h.nest.getWorldPosition(new THREE.Vector3());
-      putOnBench(bird, { x: wp.x + 0.4, z: wp.z });
-      flash(bird.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.15, 0)));
-      say('The egg hatched — give the bird something and she takes it home.');
-    }
+    if (h.t > 1.5) { hatching.splice(i, 1); hatchNow(h.nest); }
   }
   // clone birds ferrying copies to copied nests, then leaving for good
   for (let i = flights.length - 1; i >= 0; i--) {
@@ -3293,6 +3326,9 @@ function actionPut(at, side) {
         if (at.c === 'in') runDuplicate();
       }
     }
+    // A robot does not stand about waiting for an egg: a nest it sets down
+    // hatches there and then, and the bird lands on a free work spot.
+    if (dropped.userData.kind === 'nest' && dropped.userData.hasEgg) hatchNow(dropped);
     refreshUI();
   }));
   enqueue(armTo(POSE.rest, JAW_CLOSED, 0.7));

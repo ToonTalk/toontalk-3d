@@ -66,6 +66,29 @@ bare) and the total reads **21**.
 Regenerate with `python make_fibonacci.py` (edit `N` for other inputs;
 keep the room-nesting depth n−2 within the engine's cap of 12).
 
+## fibonacci-recursive.world.json
+
+The same function written the way the definition reads, with answers coming
+back rather than leaves being counted:
+
+> to fib n: n is 1 → answer 1; n is 2 → answer 1;
+> otherwise → ask fib(n−1) and fib(n−2), then answer their sum.
+
+"Answer" means *give the number to the bird you were handed*. The work box is
+`[n, bird, spare team, nestA, nestB, houseA, houseB]`. The recursive robot
+makes a fresh nest for each child — the egg hatches on its work spot, and that
+bird travels with the child — builds a house for each, and then simply
+**dozes**: a robot facing a bare nest waits, so no waiting machinery is
+needed. When both nests hold a number, the adder robot takes them, drops one
+on the other, and answers.
+
+This is the more faithful program, but it is the slower one: every house's
+turn re-bottles the whole tree, so `fib(6)` takes a second or two and larger
+inputs can stall. Until the engine/view split (see `DIVERGENCE.md`) the
+leaf-counting version above is the one to reach for.
+
+Regenerate with `python make_fibonacci_recursive.py`.
+
 ## bank-account.world.json
 
 A message-passing bank account. The account is a box `[balance,
