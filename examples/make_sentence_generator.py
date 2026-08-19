@@ -66,12 +66,22 @@ gbox = {'kind': 'box', 'holes': [
 
 world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': {'kind': 'nest', 'id': NEST_ID, 'guid': NEST_GUID,
-               'hasEgg': False, 'pile': []}, 'x': 1.35, 'z': 2.05},
+               'hasEgg': False, 'pile': []}, 'x': 1.15, 'z': 1.70},
     {'thing': {'kind': 'room', 'label': 'Scriptorium', 'opaque': False,
                'dirty': False,
                'world': {'kind': 'world', 'v': 1, 'bench': [],
                          'stations': {'stand': gbox}, 'active': scribe}},
-     'x': -0.4, 'z': 1.7},
+     'x': -0.45, 'z': 1.60},
+    {'thing': txt('THE SENTENCE FACTORY\n\nTwenty robots inside this\n'
+                  'house share one box. A die\npicks each word, a pad joins\n'
+                  'it on, and a bird carries\nthe finished sentence out\n'
+                  'to the nest.'),
+     'x': -1.10, 'z': 2.15},
+    {'thing': txt('TO RUN IT\n\nPull the lever on the right\nwall. Sentences pile up on\n'
+                  'the nest — the top one is\nthe oldest. Five rounds make\n'
+                  'one sentence, so set Rounds\nto 50 for ten of them.\n\n'
+                  'Click the roof for solid\nwalls; click the door to\nstep inside and watch.'),
+     'x': -0.15, 'z': 2.15},
 ], 'stations': {}, 'active': None}
 
 out = os.path.join(os.path.dirname(__file__), 'sentence-generator.world.json')

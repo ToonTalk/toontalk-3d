@@ -45,15 +45,28 @@ account = {'kind': 'box', 'holes': [
 
 request = lambda amount: {'kind': 'box', 'holes': [num(amount), reply_bird()]}
 
+txt = lambda t: {'kind': 'text', 'text': t}
+
 world = {'kind': 'world', 'v': 1, 'bench': [
-    {'thing': account, 'x': 0.0, 'z': 1.65},
-    {'thing': teller, 'x': -0.85, 'z': 1.35},
+    {'thing': account, 'x': -0.05, 'z': 1.50},
+    {'thing': teller, 'x': -1.15, 'z': 1.30},
     {'thing': {'kind': 'bird', 'nestId': REQ_ID, 'nestGuid': REQ_GUID,
-               'label': 'requests'}, 'x': 0.7, 'z': 1.95},
+               'label': 'requests'}, 'x': 0.70, 'z': 1.55},
     {'thing': {'kind': 'nest', 'id': REP_ID, 'guid': REP_GUID, 'hasEgg': False,
-               'pile': [], 'label': 'statements'}, 'x': 1.4, 'z': 2.05},
-    {'thing': request(50), 'x': -1.35, 'z': 2.1},
-    {'thing': request(-30), 'x': -1.75, 'z': 2.1},
+               'pile': [], 'label': 'statements'}, 'x': 1.25, 'z': 1.80},
+    {'thing': request(50), 'x': -1.15, 'z': 2.15},
+    {'thing': request(-30), 'x': -0.55, 'z': 2.15},
+    {'thing': txt('THE BANK ACCOUNT\n\nThe box holds the balance\n'
+                  'and a nest for requests.\nA request is a box: an\n'
+                  'amount and a bird to reply\nto. Negative means\ntake money out.'),
+     'x': 0.35, 'z': 2.15},
+    {'thing': txt('TO RUN IT\n\n1. Give the [100, nest] box\n   to the Teller. He dozes:\n'
+                  '   the nest is empty.\n'
+                  '2. Drop a request on the\n   bird marked "requests".\n'
+                  '3. He wakes, banks it, and\n   sends the new balance to\n'
+                  '   the statements nest.\n\n'
+                  'Copy a request on Mimi for\nmore of them.'),
+     'x': 1.15, 'z': 2.15},
 ], 'stations': {}, 'active': None}
 
 out = os.path.join(os.path.dirname(__file__), 'bank-account.world.json')

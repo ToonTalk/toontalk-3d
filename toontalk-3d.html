@@ -2480,15 +2480,40 @@ function detach(thing) {
 }
 // The bench takes things anywhere on its surface -- it is a work surface, not
 // an address.
+// A free spot near the one asked for. A saved world laid out on a wider
+// table -- or two things aimed at the same place -- would otherwise stack
+// invisibly, one thing hiding inside another.
+function clearBenchSpot(thing, x, z) {
+  if (benchThings.length > 80) return { x, z };      // a crowded table: leave it
+  const half = (thing.userData.width || 0.3) / 2;
+  const clash = (X, Z) => benchThings.some(o => {
+    if (o === thing || !o.parent) return false;
+    const oh = (o.userData.width || 0.3) / 2;
+    return Math.abs(o.position.x - X) < (half + oh) * 0.8 && Math.abs(o.position.z - Z) < 0.17;
+  });
+  if (!clash(x, z)) return { x, z };
+  const cx = (BENCH.x0 + BENCH.x1) / 2;
+  for (let step = 1; step <= 20; step++) {
+    const away = x < cx ? -1 : 1;                    // slide toward the near edge
+    for (const [dx, dz] of [[step * 0.16 * away, 0], [-step * 0.16 * away, 0],
+                            [0, step * 0.19], [0, -step * 0.19],
+                            [step * 0.16 * away, step * 0.19]]) {
+      const X = Math.min(BENCH.x1 - half - 0.05, Math.max(BENCH.x0 + half + 0.05, x + dx));
+      const Z = Math.min(BENCH.z1 - 0.16, Math.max(BENCH.z0 + 0.16, z + dz));
+      if (!clash(X, Z)) return { x: X, z: Z };
+    }
+  }
+  return { x, z };
+}
 function putOnBench(thing, at) {
   scene.add(thing);
   thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : 1);
   thing.quaternion.identity();
   const half = (thing.userData.width || 0.3) / 2 + 0.05;
-  thing.position.set(
+  const spot = clearBenchSpot(thing,
     Math.min(BENCH.x1 - half, Math.max(BENCH.x0 + half, at.x)),
-    BENCH_TOP + thing.userData.rest,
     Math.min(BENCH.z1 - 0.16, Math.max(BENCH.z0 + 0.16, at.z)));
+  thing.position.set(spot.x, BENCH_TOP + thing.userData.rest, spot.z);
   if (!benchThings.includes(thing)) benchThings.push(thing);
   if (thing.userData.kind === 'robot') {
     addMiniBubble(thing, thing.__bot?.program.length ? thing.__bot.condition : null);
@@ -4166,12 +4191,15 @@ function directRobot(target) {
 const handNode = new THREE.Object3D();
 scene.add(handNode);
 const handPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-function moveHand(ev) {
+function moveHand(ev, hoverY = null) {
   if (!reachLocal) return;
   // Only just above working height: the higher this plane, the further the
   // carried thing drifts from whatever you clicked, since the camera looks in
-  // at an angle.
-  handPlane.constant = -(reachLocal.y + 0.15);
+  // at an angle. But a tall pile would swallow whatever you took off it, so
+  // the hand rides up to meet whatever the pointer is actually over.
+  const base = reachLocal.y + 0.15;
+  handPlane.constant = -Math.min(base + 2.4,
+    Math.max(base, hoverY == null ? base : hoverY + 0.07));
   const ndc = new THREE.Vector2((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   const hit = ray.ray.intersectPlane(handPlane, new THREE.Vector3());
@@ -4495,9 +4523,15 @@ function makeAnything() {
 
 function ghostify(root) {
   root.traverse(o => {
-    if (!o.isMesh) return;
+    if (!o.isMesh || !o.material) return;
     o.castShadow = false; o.receiveShadow = false;
-    if (o.material) { o.material.transparent = true; o.material.opacity = 0.78; }
+    // clone first: clones share materials with the model they came from, so
+    // ghosting a robot in a thought bubble would ghost every robot there is
+    o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+      m.transparent = true;
+      m.opacity = 0.78;
+    });
   });
 }
 function buildCondNode(cond, path, marks) {
@@ -6136,10 +6170,12 @@ addEventListener('pointerup', () => {
 });
 const tipEl = document.getElementById('tip');
 renderer.domElement.addEventListener('pointermove', (ev) => {
+  // what is under the pointer decides how high the hand rides, so resolve
+  // first; resolve never looks at the hand (it skips whatever is held)
+  const target = (!busy && mode !== 'replay') ? resolve(ev) : null;
   // track always, not only while carrying: otherwise picking something up
   // teleports it to wherever the hand was last left
-  if (mode === 'world') moveHand(ev);
-  const target = (!busy && mode !== 'replay') ? resolve(ev) : null;
+  if (mode === 'world') moveHand(ev, target?.point?.y ?? null);
   renderer.domElement.style.cursor = target ? 'pointer' : '';
   const tip = tipFor(target);
   if (tip) {

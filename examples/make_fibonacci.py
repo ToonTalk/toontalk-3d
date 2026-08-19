@@ -97,11 +97,26 @@ sum_box = {'kind': 'box', 'holes': [
     {'kind': 'nest', 'id': NEST_ID, 'guid': NEST_GUID, 'hasEgg': False, 'pile': []},
 ]}
 
+txt = lambda t: {'kind': 'text', 'text': t}
+
 world = {'kind': 'world', 'v': 1, 'bench': [
-    {'thing': sum_box, 'x': 1.25, 'z': 2.05},
-    {'thing': work_box, 'x': 0.0, 'z': 1.7},
-    {'thing': fib_team, 'x': -0.85, 'z': 1.35},
-    {'thing': summer, 'x': 0.75, 'z': 1.3},
+    {'thing': work_box, 'x': -0.15, 'z': 1.50},
+    {'thing': sum_box, 'x': 1.10, 'z': 1.60},
+    {'thing': fib_team, 'x': -1.15, 'z': 1.35},
+    {'thing': summer, 'x': 0.60, 'z': 1.30},
+    {'thing': txt('FIBONACCI\n\nThe robot marked Fib copies\n'
+                  'ITSELF: it takes one off the\nnumber, copies its own box\n'
+                  'through Mimi twice, builds\ntwo houses, and puts a copy\n'
+                  'of itself in each. Robots\nthat reach 1 or 2 mail a\n'
+                  'single 1 to the nest.'),
+     'x': -1.05, 'z': 2.15},
+    {'thing': txt('TO RUN IT\n\n1. Give the five-hole box to\n   the Fib robot.\n'
+                  '2. Watch the houses appear\n   and smoke. fib(8) makes\n'
+                  '   forty of them, six deep.\n'
+                  '3. When the smoke stops, the\n   nest holds 21 ones.\n'
+                  '4. Give the [0, nest] box to\n   the Sum robot: it adds\n'
+                  '   them up to 21.'),
+     'x': -0.05, 'z': 2.15},
 ], 'stations': {}, 'active': None}
 
 out = os.path.join(os.path.dirname(__file__), 'fibonacci.world.json')

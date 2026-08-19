@@ -1,7 +1,9 @@
 # Examples
 
 Saved worlds. Load one with the **Import file** button (or drag the file onto
-the page).
+the page). Each world lays two text pads on the table — what the program is,
+and how to run it — so the instructions arrive with the program. They are
+ordinary pads: vacuum them away with Dusty once you know the drill.
 
 ## sentence-generator.world.json
 
