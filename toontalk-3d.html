@@ -914,7 +914,7 @@ function setThingLabel(thing, text) {
     // flat on the table in front, like a museum label: standing up it poked
     // out from behind whatever had been delivered, and read as wings
     plate.rotation.x = -Math.PI / 2;
-    plate.position.set(0, 0.012, 0.30);
+    plate.position.set(0, 0.012, 0.42);
   }
   else plate.position.set(0, 0.27, 0.06);
   thing.add(plate);
@@ -1264,6 +1264,11 @@ function stashCtx(ctx) {
   ctx.waiters = [...waiters];
   ctx.hatching = hatching.slice();
   ctx.asides = allStands.filter(st => st !== defaultStand);
+  // the bubble hangs in its own world: leaving one behind in the scene left
+  // an orphan thought floating over the table with no robot under it
+  ctx.condDisplay = condDisplay;
+  if (condDisplay) condDisplay.removeFromParent();
+  condDisplay = null;
   ctx.queue = queue.splice(0);
   ctx.current = current; current = null;
   ctx.busy = busy; busy = false;
@@ -1295,6 +1300,8 @@ function loadCtx(ctx) {
     program = []; condition = null;
     stations.stand = defaultStand;
   }
+  condDisplay = ctx.condDisplay ?? null;
+  if (condDisplay) WROOT.add(condDisplay);
   queue.length = 0;
   queue.push(...(ctx.queue ?? []));
   current = ctx.current ?? null;
@@ -1593,6 +1600,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
   const spd = speed;
   const mi = miOverride ?? maxIter;
   const stepped = !room.userData.opaque && spd !== Infinity;
+  if (depth === 0) { runOuterSpeed = spd; crossFlights = 0; }
   let cont = false;
   try {
     pushWorld(room);
@@ -1926,6 +1934,17 @@ function spawnCloneDelivery(bird, thing, nest2, from) {
 // wherever she was -- a box hole, a spot, or the bench.
 // The guid is the pairing: it survives any rebuild, and copies of a nest
 // share it, so one bird feeds them all. The node reference is only a cache.
+// Which world a thing belongs to: the root it hangs under.
+function worldRootOf(node) {
+  for (let p = node; p; p = p.parent) if (p.name === 'worldRoot') return p;
+  return null;
+}
+const roomOf = (node) => {
+  for (let p = node; p; p = p.parent) if (p.userData?.kind === 'room') return p;
+  return null;
+};
+let runOuterSpeed = 1;      // the speed the WATCHER set, while a house runs
+let crossFlights = 0;       // staggers letters leaving one house together
 // Part of the current world means the scene root is an ancestor -- a bare
 // parent check lies for things sitting inside detached containers.
 function inScene(o) {
@@ -1955,6 +1974,31 @@ function birdDeliver(bird) {
     if (thing && worldStack.length) { putOnBench(thing, benchSpot()); return; }
     if (thing) takeIntoHand(thing);
     return say('Her nest is gone — she has nowhere to take it.');
+  }
+  // A bird carrying mail out of the house she lives in: the house runs in an
+  // instant, but the flight across your table is worth seeing, so it is handed
+  // to a courier who flies it for real in the world that will watch her.
+  const nestRoot = worldRootOf(nest);
+  if (held && nestRoot === topCtx.root && worldRootOf(bird) !== nestRoot
+      && runOuterSpeed !== Infinity) {
+    const gift = held; held = null;
+    const house = roomOf(bird);
+    const from = (house ?? bird).getWorldPosition(new THREE.Vector3());
+    if (house) from.y += 0.22;
+    const courier = makeBird(nest);
+    delete courier.__pick;
+    nestRoot.add(courier);
+    courier.position.copy(from);
+    courier.add(gift);
+    gift.position.set(0, -0.02, 0.16);
+    gift.quaternion.identity();
+    gift.scale.setScalar(0.5);
+    courier.__flying = true;
+    sfx('chirp');
+    flights.push({ clone: courier, gift, nest, nestGuid: nest.userData.guid,
+                   from: from.clone(), t: -0.22 * crossFlights++, phase: 0 });
+    refreshUI();
+    return;
   }
   clearUndo();                // deliveries change a pile no snapshot describes
   busy = true;
@@ -4762,7 +4806,7 @@ function addMiniBubble(node, cond) {
 }
 function rebuildCondition() {
   clearFlags();      // the marks live on nodes about to be destroyed
-  if (condDisplay) { scene.remove(condDisplay); condDisplay = null; }
+  if (condDisplay) { condDisplay.removeFromParent(); condDisplay = null; }
   if (!condition) { refreshUI(); return; }
   const marks = [];
   const inner = buildCondNode(condition, [], marks);
@@ -4781,6 +4825,7 @@ function rebuildCondition() {
   // no need to hit a tiny ghost part
   setPick(halo, { kind: 'cond', path: [], outer: true });
   condDisplay.add(halo);
+  condDisplay.__ownRoot = WROOT;
   // tail straight down toward the head it belongs to
   for (const [dy, r] of [[-0.40, 0.058], [-0.55, 0.036], [-0.66, 0.022]]) {
     const b = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), halo.material);
@@ -4789,7 +4834,7 @@ function rebuildCondition() {
     condDisplay.add(b);
   }
   condDisplay.position.copy(condAnchor());
-  scene.add(condDisplay);
+  WROOT.add(condDisplay);
   refreshUI();
 }
 // The condition belongs to the robot, so it rides above its head.
@@ -5680,7 +5725,18 @@ function enterWaiting() {
     update(t) { setBotScale(bot, lerp(1, WAIT_SCALE, ease(t))); },
     end() { setBotScale(bot, WAIT_SCALE); },
   });
-  say('The nest is empty — the robot shrinks and waits for a bird to deliver something.');
+  {
+    let where = null;
+    const scan = (node, p) => {
+      if (!node || where) return;
+      if (node.userData.kind === 'nest' && !node.userData.pile.length) { where = p; return; }
+      holesOf(node)?.forEach((h, i) => scan(h.thing, p.concat(i)));
+    };
+    scan(bot.stand?.occupant, []);
+    say(where && where.length
+      ? `Nothing on the nest in ${holeName({ c: 'given', path: where })} yet — the robot shrinks and waits for a bird to bring something.`
+      : 'The nest is empty — the robot shrinks and waits for a bird to deliver something.');
+  }
   refreshUI();
 }
 function cancelWaiting(bot = activeBot) {
@@ -6485,6 +6541,10 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   // The desk in the middle, where the claw reaches: whichever robot is being
   // worked with stands behind it.
   defaultStand = makeStandStation(0, 0);
+  // the middle desk is shared by every world, like the stacks and the copier,
+  // so it must live in the scene rather than in whichever world made it --
+  // otherwise a robot inside a house works at an invisible desk
+  scene.add(defaultStand.obj);
   stations.stand = defaultStand;
 
   // One scratch desk to begin with; more grow beside it as they are needed.

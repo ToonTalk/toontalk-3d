@@ -99,6 +99,11 @@ sum_box = {'kind': 'box', 'holes': [
 
 txt = lambda t: {'kind': 'text', 'text': t}
 
+# what it hands out leaves its own copy out of the box: a robot that carried
+# itself inside its own memory would be a circle with no end
+fib_team['trainedOn'] = dict(work_box,
+    holes=[h if i != 2 else None for i, h in enumerate(work_box['holes'])])
+
 world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': work_box, 'x': -0.15, 'z': 1.50},
     {'thing': sum_box, 'x': 1.10, 'z': 1.60},

@@ -64,6 +64,8 @@ gbox = {'kind': 'box', 'holes': [
     txt('the'), txt('.'),
 ]}
 
+scribe['trainedOn'] = gbox     # reaching into its thought hands you one
+
 world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': {'kind': 'nest', 'id': NEST_ID, 'guid': NEST_GUID,
                'hasEgg': False, 'pile': []}, 'x': 1.15, 'z': 1.70},

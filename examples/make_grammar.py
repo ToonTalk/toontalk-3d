@@ -132,6 +132,8 @@ work = box(
     box(num(1)),                      # what to start over with
 )
 
+scribe['trainedOn'] = work     # reaching into its thought hands you one
+
 grammar_house = {'kind': 'world', 'v': 1, 'bench': [],
                  'stations': {'stand': work}, 'active': scribe}
 

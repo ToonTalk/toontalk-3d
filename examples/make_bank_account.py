@@ -84,13 +84,15 @@ sorry = {'kind': 'robot', 'name': 'sorry',
 
 ok = verdict_ok('Teller', 'L')
 teller = dict(ok, team=[verdict_ok('ok too', '='), sorry, weigh])
-
 account = {'kind': 'box', 'holes': [
     num(START),
     {'kind': 'nest', 'id': REQ_ID, 'guid': REQ_GUID, 'hasEgg': False, 'pile': []},
     None, None,
     txt('not enough money'),
 ]}
+
+# reaching into the Teller's thought hands you the box he was first shown
+teller['trainedOn'] = account
 
 reply_bird = lambda: {'kind': 'bird', 'nestId': REP_ID, 'nestGuid': REP_GUID}
 request = lambda amount: {'kind': 'box', 'holes': [num(amount), reply_bird()]}

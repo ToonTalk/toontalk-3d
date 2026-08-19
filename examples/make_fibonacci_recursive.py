@@ -95,6 +95,11 @@ work_box = {'kind': 'box', 'holes': [
     None, None, None, None,
 ]}
 
+# what it hands out leaves its own copy out of the box: a robot that carried
+# itself inside its own memory would be a circle with no end
+fib['trainedOn'] = dict(work_box,
+    holes=[h if i != 2 else None for i, h in enumerate(work_box['holes'])])
+
 world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': work_box, 'x': -0.20, 'z': 1.50},
     {'thing': {'kind': 'nest', 'id': NEST_ID, 'guid': NEST_GUID,
