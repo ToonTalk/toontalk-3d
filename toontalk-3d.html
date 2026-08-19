@@ -1238,6 +1238,120 @@ function notebookDrop(nb, incoming, side, refuse) {
 // the moment the outer world goes quiet. Walk through the door to swap views.
 let nextRoomId = 1;
 const emptyWorldRec = () => ({ kind: 'world', v: 1, bench: [], stations: {}, active: null });
+
+// --- live world contexts -----------------------------------------------------
+// A room's world is not a bottled document any more: it is live nodes hanging
+// inside the room at miniature scale, with its own bench list, occupants,
+// robots and animation queue. Running it means pointing the one interpreter
+// at it for a moment -- no serialisation, no rebuilding, no stale references.
+const MINI_WORLD = 0.075;
+function stashCtx(ctx) {
+  ctx.bench = benchThings.slice();
+  ctx.occ = {};
+  for (const [id, st] of Object.entries(stations)) {
+    if (st.kind === 'scratch' || st.kind === 'copyIn' || st.kind === 'copyOut') {
+      ctx.occ[id] = st.occupant ?? null;
+    }
+  }
+  ctx.standOcc = defaultStand.occupant ?? null;
+  ctx.activeBot = activeBot;
+  ctx.waiters = [...waiters];
+  ctx.hatching = hatching.slice();
+  ctx.asides = allStands.filter(st => st !== defaultStand);
+  ctx.queue = queue.splice(0);
+  ctx.current = current; current = null;
+  ctx.busy = busy; busy = false;
+  ctx.pendingAfter = pendingAfter; pendingAfter = null;
+  ctx.mode = mode; mode = 'world';
+  ctx.runCount = runCount; runCount = 0;
+}
+function loadCtx(ctx) {
+  benchThings.length = 0;
+  benchThings.push(...(ctx.bench ?? []));
+  hatching.length = 0;
+  hatching.push(...(ctx.hatching ?? []));
+  waiters.clear();
+  (ctx.waiters ?? []).forEach(b => waiters.add(b));
+  allStands.length = 0;
+  allStands.push(defaultStand, ...(ctx.asides ?? []));
+  for (const st of Object.values(stations)) {
+    if (st.kind === 'scratch' || st.kind === 'copyIn' || st.kind === 'copyOut') st.occupant = null;
+  }
+  for (const [id, occ] of Object.entries(ctx.occ ?? {})) {
+    const st = stations[id] ?? (/^s\d+$/.test(id) ? ensureScratchStation(+id.slice(1)) : null);
+    if (st) st.occupant = occ;
+  }
+  defaultStand.occupant = ctx.standOcc ?? null;
+  activeBot = ctx.activeBot ?? null;
+  if (activeBot) bindBot(activeBot);
+  else {
+    robot = null; root = null;
+    program = []; condition = null;
+    stations.stand = defaultStand;
+  }
+  queue.length = 0;
+  queue.push(...(ctx.queue ?? []));
+  current = ctx.current ?? null;
+  busy = ctx.busy ?? false;
+  pendingAfter = ctx.pendingAfter ?? null;
+  mode = ctx.mode ?? 'world';
+  runCount = ctx.runCount ?? 0;
+}
+function pushWorld(room) {
+  stashCtx(curCtx);
+  worldStack.push(curCtx);
+  curCtx = room.__ctx;
+  WROOT = curCtx.root;
+  loadCtx(curCtx);
+}
+function popWorld() {
+  stashCtx(curCtx);
+  curCtx = worldStack.pop();
+  WROOT = curCtx.root;
+  loadCtx(curCtx);
+}
+// Build a room's live world from its saved record, once. From then on the
+// record is gone: the world hangs inside the room, mounted at toy scale.
+function hydrateRoom(room) {
+  if (room.__ctx) return room.__ctx;
+  const rec = room.userData.world;
+  room.userData.world = null;
+  room.__ctx = newWorldCtx();
+  const savedPending = nestGroupPending;   // hydration can run mid-load
+  nestGroupPending = null;
+  pushWorld(room);
+  const spd = speed;
+  try {
+    speed = Infinity;
+    if (rec) { worldIn(rec); drainQueue(60); }
+  } finally {
+    speed = spd;
+    popWorld();
+    nestGroupPending = savedPending;
+  }
+  mountRoomWorld(room);
+  return room.__ctx;
+}
+function mountRoomWorld(room) {
+  const r = room.__ctx.root;
+  r.scale.setScalar(MINI_WORLD);
+  r.position.set(0, 0.034, -0.02);
+  room.add(r);
+}
+// Serialise a live world back into a record -- only when actually saving.
+function ctxToRec(room) {
+  if (!room.__ctx) return room.userData.world ?? null;
+  pushWorld(room);
+  let rec = null;
+  try { rec = worldOut(); } finally { popWorld(); }
+  return rec;
+}
+// Does this room hold a robot with work at its desk (live or still a record)?
+function roomHasWorker(room) {
+  if (room.__ctx) return !!(room.__ctx.activeBot?.program.length && room.__ctx.standOcc);
+  const w = room.userData.world;
+  return !!(w?.active && w?.stations?.stand);
+}
 // A room's name goes on its three doorless walls -- never over the door.
 function paintRoomLabel(room) {
   (room.__labelPlates || []).forEach(p => p.removeFromParent());
@@ -1362,9 +1476,11 @@ function makeRoom(data = null) {
   setPick(g, { kind: 'thing', thing: g });
   if (data?.label) { g.userData.label = data.label; paintRoomLabel(g); }
   g.setOpaque(g.userData.opaque);
+  if (g.userData.world) hydrateRoom(g);
   return g;
 }
-// Through glass walls the room's contents show as tiny stand-ins.
+// Through glass walls the room shows its little furniture; the world itself
+// hangs inside live, at toy scale.
 function renderRoomContents(room) {
   room.__contents.forEach(n => n.removeFromParent());
   room.__contents = [];
@@ -1392,71 +1508,39 @@ function renderRoomContents(room) {
   mini.traverse(o => { delete o.__pick; });
   room.add(mini);
   room.__contents.push(mini);
-  if (!ud.world) return;
-  const items = [];
-  if (ud.world.active) items.push({ rec: ud.world.active, x: 0, z: -0.12 });
-  if (ud.world.stations?.stand) items.push({ rec: ud.world.stations.stand, x: 0, z: 0.0 });
-  (ud.world.bench || []).slice(0, 4).forEach((b, i) => {
-    items.push({ rec: b.thing, x: -0.15 + (i % 3) * 0.15, z: 0.11 });
-  });
-  for (const it of items) {
-    const t = buildFromRec(it.rec);
-    if (!t) continue;
-    t.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(t);
-    const size = new THREE.Vector3(); box.getSize(size);
-    const maxDim = Math.max(size.x, size.y, size.z);
-    // a degenerate measurement must never leave a stand-in at full size
-    t.scale.multiplyScalar(maxDim > 0.001 && isFinite(maxDim)
-      ? Math.min(1, 0.085 / maxDim) : 0.08);
-    t.position.set(it.x, 0.032, it.z);
-    if (it.rec === ud.world.active && t.__bot?.program.length) {
-      addMiniBubble(t, t.__bot.condition);
-    }
-    t.traverse(o => {
-      delete o.__pick;
-      if (o.userData?.kind === 'nest') {
-        const ix = allNests.indexOf(o);
-        if (ix >= 0) allNests.splice(ix, 1);   // displays are not real nests
-      }
-    });
-    delete t.__pick;
-    room.add(t);
-    room.__contents.push(t);
-  }
 }
-// Dropping into a room files into its world record.
 function roomDrop(room, dropped, refuse) {
-  const ud = room.userData;
-  const rec = (ud.world ??= emptyWorldRec());
   pushUndo();
-  if (dropped.userData.kind === 'robot') {
-    if (dropped.__bot === activeBot) return refuse('Shrink it into your hand first.');
-    if (!rec.active) {
-      rec.active = botOut(dropped.__bot);
-      dropped.removeFromParent();
-      say('The robot steps inside, ready behind the desk.');
-      // something may already be waiting on the desk for it
-      if (rec.stations?.stand) { ud.dirty = true; ud.stepRounds = 0; }
-    } else {
-      rec.bench.push({ thing: thingOut(dropped), x: 0.6, z: 1.5 });
-      dropped.removeFromParent();
-      say('Another robot joins the room, waiting on the table.');
-    }
-  } else if (!rec.stations.stand) {
-    rec.stations.stand = thingOut(dropped);
-    dropped.removeFromParent();
-    ud.dirty = true;
-    ud.stepRounds = 0;
-    say(rec.active ? 'Set on the desk inside — the robot gets to work.'
-                   : 'Set on the desk inside.');
-  } else {
-    rec.bench.push({ thing: thingOut(dropped),
-      x: 0.2 + ((rec.bench.length % 4) * 0.3), z: 1.6 });
-    dropped.removeFromParent();
-    say('Set on the table inside.');
+  if (dropped.userData.kind === 'robot' && dropped.__bot === activeBot) {
+    return refuse('Shrink it into your hand first.');
   }
-  renderRoomContents(room);
+  hydrateRoom(room);
+  detach(dropped);
+  dropped.removeFromParent();
+  const spd = speed;
+  pushWorld(room);
+  try {
+    speed = Infinity;
+    if (dropped.userData.kind === 'robot' && !activeBot) {
+      putOnBench(dropped, benchSpot());
+      activateBot(dropped.__bot);
+      drainQueue(60);
+      if (stations.stand.occupant) { room.userData.dirty = true; room.userData.stepRounds = 0; }
+    } else if (dropped.userData.kind !== 'robot' && !stations.stand.occupant) {
+      putOnStation(stations.stand, dropped);
+      if (dropped.userData.kind === 'nest' && dropped.userData.hasEgg) hatchNow(dropped);
+      room.userData.dirty = true;
+      room.userData.stepRounds = 0;
+    } else {
+      putOnBench(dropped, benchSpot());
+      if (dropped.userData.kind === 'nest' && dropped.userData.hasEgg) hatchNow(dropped);
+    }
+    drainQueue(60);
+  } finally { popWorld(); speed = spd; }
+  say(dropped.userData.kind === 'robot'
+    ? (roomHasWorker(room) ? 'The robot steps inside, ready behind the desk.'
+                           : 'Another robot joins the room, waiting on the table.')
+    : 'Set down inside the room.');
   refreshUI();
 }
 // The room's robot works while nobody is looking: the outer world is bottled,
@@ -1476,18 +1560,6 @@ function drainQueue(guard = 400) {
     }
   }
 }
-// Does this saved record hold a dirty room anywhere -- desk, bench, holes?
-function recHasDirtyRoom(o) {
-  if (!o) return false;
-  if (o.kind === 'world') {
-    return (o.bench || []).some(b => recHasDirtyRoom(b.thing))
-      || Object.values(o.stations || {}).some(recHasDirtyRoom);
-  }
-  if (o.kind === 'room') return !!o.dirty || recHasDirtyRoom(o.world);
-  if (o.holes) return o.holes.some(recHasDirtyRoom);
-  if (o.pile) return o.pile.some(recHasDirtyRoom);
-  return false;
-}
 const ROOM_DEPTH_MAX = 12;
 // One idle tick spends at most this much wall-clock on room work, however
 // deep the recursion; whatever is still dirty resumes on the next tick.
@@ -1498,148 +1570,72 @@ function runRoomWork(room, depth = 0, miOverride = null) {
   if (depth === 0) roomWorkT0 = performance.now();
   if (depth > ROOM_DEPTH_MAX) return;
   if (depth > 0 && performance.now() - roomWorkT0 > ROOM_WORK_SLICE) return;
-  const ud = room.userData;
-  // a room still counts as working when only a room INSIDE it has work left
-  if (!ud.world?.active || !ud.world.stations?.stand) {
-    if (!recHasDirtyRoom(ud.world)) { ud.dirty = false; return; }
-  }
+  hydrateRoom(room);
   if (depth === 0) roomWorkBusy = true;
   window.__rrw = (window.__rrw || 0) + 1;
   const __t0 = performance.now();
-  const roomId = ud.id;
   const spd = speed;
   const mi = miOverride ?? maxIter;
-  // a glass room works round by round, at a pace set by the speed control,
-  // so you can watch its miniature contents change; an opaque one runs dry
-  // in a single hidden burst
-  const stepped = !ud.opaque && spd !== Infinity;
-  speed = Infinity;
-  // couriers still in the air deliver first, so a burst can never overtake
-  // them and scramble the pile's order
-  for (const f of flights.splice(0)) {
-    const n2 = findNestByGuid(f.nestGuid) ?? (inScene(f.nest) ? f.nest : null);
-    // cosmetic couriers carry no gift -- their delivery already happened
-    if (f.phase === 0 && n2 && f.gift) { f.clone.remove(f.gift); deliverCopy(n2, f.gift); }
-    f.clone.removeFromParent();
-  }
-  let more = false;
+  const stepped = !room.userData.opaque && spd !== Infinity;
+  let cont = false;
   try {
-    const outer = worldOut();
-    worldIn(ud.world);
-    drainQueue(60);
-    // opaque rooms work in chunks of 40 rounds per bottle, so frames (and
-    // chimney smoke) get through between chunks and nothing stalls for long
-    const chunk = stepped ? 1 : Math.max(1, Math.min(40, mi - (ud.stepRounds || 0)));
-    maxIter = chunk;
-    if (activeBot && program.length && stations.stand.occupant) {
-      runProgram();
+    pushWorld(room);
+    try {
+      speed = Infinity;
+      drainQueue(60);
+      const chunk = stepped ? 1 : Math.max(1, Math.min(40, mi - (room.userData.stepRounds || 0)));
+      maxIter = chunk;
+      if (activeBot && program.length && stations.stand.occupant && !activeBot.waiting) {
+        runProgram();
+        drainQueue();
+      }
+      checkWaiting();                     // a delivery may have woken a dozing robot
       drainQueue();
-    }
-    // rooms inside this room work too -- recursion is bottles all the way down
-    // a dozing robot in here is usually waiting on one of these very houses
-    if (depth < ROOM_DEPTH_MAX && allStands.length <= 1) {
-      for (let g = 0; g < 50; g++) {
-        if (performance.now() - roomWorkT0 > ROOM_WORK_SLICE) break;
-        const r2 = findDirtyRoom(true);
-        if (!r2) break;
-        runRoomWork(r2, depth + 1, mi);
-      }
-    }
-    // Whether there is more to do is judged AFTER the houses inside have run:
-    // a robot dozing over its nests is finished only until its children
-    // answer, and they answer during that recursion.
-    if (activeBot?.program.length && stations.stand.occupant) {
-      const members = [activeBot, ...activeBot.team];
-      more = members.some(m => matchState(m.condition, specOf(stations.stand.occupant)) === 'yes');
-    }
-    const inner = worldOut();
-    worldIn(outer);
-    drainQueue(60);
-    let node = null;
-    scene.traverse(o => { if (o.userData?.kind === 'room' && o.userData.id === roomId) node = o; });
-    if (node) {
-      node.userData.world = inner;
-      // the Rounds limit is honoured across bottle-runs: a room's robot works
-      // on one gift for at most that many rounds in total
-      node.userData.stepRounds = (ud.stepRounds || 0) + chunk;
-      const cont = (more && node.userData.stepRounds < mi) || recHasDirtyRoom(inner);
-      node.userData.dirty = cont;
-      if (cont) node.__nextStep = performance.now() + (stepped ? 1100 / Math.max(0.25, spd) : 80);
-      renderRoomContents(node);
-    }
-    // the outbox: birds inside delivered to nests out here -- fly each letter
-    // from the room to its nest now that both worlds are in place
-    let courierShow = 0;
-    for (const m of roomOutbox.splice(0)) {
-      // guids collide with nothing: stock and egg nests have their own, and
-      // display stand-ins are never registered
-      const nest2 = findNestByGuid(m.nestId);
-      if (!nest2) {
-        // the nest may be filed inside another room
-        let dest = null;
-        if (m.nestId != null) {
-          for (const t2 of benchThings) {
-            if (t2.userData.kind !== 'room' || !t2.userData.world) continue;
-            const f = findNestRec(t2.userData.world, m.nestId);
-            if (f) { dest = { room: t2, rec: f }; break; }
-          }
-        }
-        if (dest) {
-          dest.rec.pile.unshift(m.rec);
-          dest.room.userData.dirty = true;
-          renderRoomContents(dest.room);
-          continue;
+      // houses inside this house work too, live all the way down
+      if (depth < ROOM_DEPTH_MAX) {
+        for (let g = 0; g < 50; g++) {
+          if (performance.now() - roomWorkT0 > ROOM_WORK_SLICE) break;
+          const r2 = findDirtyRoom(true);
+          if (!r2) break;
+          runRoomWork(r2, depth + 1, mi);
         }
       }
-      if (!nest2 && depth > 0) {
-        // the nest is further out: the letter rides up with the next bottle
-        roomOutbox.push(m);
-        continue;
+      // whether there is more to do is judged AFTER the inner houses ran:
+      // their answers may be exactly what the dozing robot was waiting for
+      let more = false;
+      if (activeBot?.program.length && stations.stand.occupant) {
+        const given = specOf(stations.stand.occupant);
+        more = [activeBot, ...activeBot.team].some(m => matchState(m.condition, given) === 'yes');
       }
-      const gift = buildFromRec(m.rec);
-      if (!gift) continue;
-      if (!nest2) { putOnBench(gift, benchSpot()); continue; }
-      // the pile takes each delivery NOW, in outbox order -- a thousand
-      // couriers on their own clocks used to arrive scrambled
-      deliverCopy(nest2, gift);
-      if (spd !== Infinity && courierShow < 5) {
-        // a few birds fly the route for show, staggered
-        const from = (node ?? nest2).getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0));
-        const courier = makeBird(nest2);
-        delete courier.__pick;
-        WROOT.add(courier);
-        courier.position.copy(from);
-        if (courierShow === 0) sfx('chirp');
-        flights.push({ clone: courier, nest: nest2,
-          nestGuid: nest2.userData.guid, from, home: from.clone(),
-          courier: true, cosmetic: true, t: -0.3 * courierShow, phase: 0 });
-        courierShow++;
+      for (const b of waiters) {
+        if (more) break;
+        const g2 = specOf(b.stand?.occupant);
+        if (g2 && [b, ...b.team].some(m => matchState(m.condition, g2) === 'yes')) more = true;
       }
+      room.userData.stepRounds = (room.userData.stepRounds || 0) + chunk;
+      cont = (more && room.userData.stepRounds < mi) || !!findDirtyRoom(true);
+    } finally {
+      popWorld();
     }
   } finally {
     speed = spd;
     maxIter = mi;
     if (depth === 0) roomWorkBusy = false;
-    // The swap back rebuilt every robot, losing who was dozing over a nest.
-    // Ask again once the whole bottle is unwound (deeper levels are re-asked
-    // by their own bottle, and running one mid-flight would bottle a robot
-    // with half its program still queued).
-    if (depth === 0 && !busy && mode === 'world'
-        && activeBot && program.length && stations.stand.occupant) {
-      const given = specOf(stations.stand.occupant);
-      const states = [activeBot, ...activeBot.team].map(m => matchState(m.condition, given));
-      if (states.includes('yes') || states.includes('wait')) runProgram();
-    }
     const __ms = performance.now() - __t0;
     if (__ms > 500) console.warn('runRoomWork took', Math.round(__ms), 'ms');
-    if (__ms > 6000) {
-      // a room this heavy must not be retried every idle tick
-      const n2 = benchThings.find(t => t.userData.kind === 'room' && t.userData.id === roomId);
-      if (n2) n2.userData.dirty = false;
-      sayAttn('The room’s work was taking too long — it has been paused. Click its roof to try again.');
+    if (depth === 0 && __ms > 6000) {
+      cont = false;
+      sayAttn('The room\u2019s work was taking too long \u2014 it has been paused. Pull its lever to try again.');
     }
   }
-  refreshUI();
+  room.userData.dirty = cont;
+  if (cont) room.__nextStep = performance.now() + (stepped ? 1100 / Math.max(0.25, spd) : 80);
+  if (depth === 0) {
+    refreshUI();
+    // the swap back rebuilt nothing, but a robot HERE may have been dozing
+    // over one of this room's answers
+    if (!busy && mode === 'world') checkWaiting();
+  }
 }
 // A dirty room may sit on the bench itself or in a hole of something there --
 // a robot stows the rooms it builds in its given box.
@@ -1670,45 +1666,56 @@ function processDirtyRooms() {
   const room = findDirtyRoom();
   if (room) runRoomWork(room);
 }
-// Walking through the door: the room swells to become the world, and the
-// world you left shrinks onto its table as a little room of its own.
+// Walking through the door: the room's live world takes the stage at full
+// size, and the world you leave shrinks into a little room of its own.
 function enterRoom(room) {
   if (held) return say('Empty your hand to step through the door.');
   if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
-  if (waiters.size || allStands.length > 1) {
-    return say('Robots are still waiting out here — pick them up before leaving.');
-  }
-  const innerRec = room.userData.world ?? emptyWorldRec();
-  const opaque = room.userData.opaque;
-  const wasRunning = !!room.userData.dirty;   // the lever was up as you walked in
-  detach(room);
-  const from = room.position.clone();
-  scene.attach(room);
-  const outerRec = worldOut();
+  const wasRunning = !!room.userData.dirty;
+  hydrateRoom(room);
+  clearUndo();
   busy = true;
   sfx('whoosh');
+  detach(room);
+  WROOT.attach(room);
+  const from = room.position.clone();
   const camT = camera.position.clone().lerp(new THREE.Vector3(from.x, from.y + 0.2, from.z), 0.35);
   enqueue({
     dur: 0.8,
     update(t) {
       const e = ease(t);
-      room.scale.setScalar(1 + e * 16);
+      room.scale.setScalar(1 + e * 12);
       room.position.lerpVectors(from, camT, e);
     },
   });
   enqueue(doNow(() => {
+    busy = false;
+    current = null;                       // this very step must not be re-run
+    const innerCtx = room.__ctx;
+    const oldShell = { label: room.userData.label ?? null, opaque: room.userData.opaque };
+    innerCtx.root.removeFromParent();
     room.removeFromParent();
-    worldIn(innerRec);
-    if (opaque && wasRunning) {
-      // an opaque room has been running at Instant all along: arrive to find
-      // the work done
-      const spd = speed;
-      speed = Infinity;
-      drainQueue(60);
-      if (activeBot && program.length && stations.stand.occupant) { runProgram(); drainQueue(); }
-      speed = spd;
-    }
-    const back = makeRoom({ world: outerRec, opaque: true });
+    // the world being left, stashed into a fresh shell
+    stashCtx(curCtx);
+    const outerCtx = curCtx;
+    const back = makeRoom({});
+    back.__ctx = outerCtx;
+    back.userData.dirty =
+      !!(outerCtx.activeBot?.program.length && outerCtx.standOcc)
+      || (outerCtx.bench ?? []).some(t2 => t2.userData.kind === 'room' && t2.userData.dirty);
+    back.userData.stepRounds = 0;
+    scene.remove(outerCtx.root);
+    mountRoomWorld(back);
+    if (outerCtx.shell?.label) { back.userData.label = outerCtx.shell.label; paintRoomLabel(back); }
+    if (outerCtx.shell) back.setOpaque(outerCtx.shell.opaque);
+    // the entered world takes the stage
+    innerCtx.shell = oldShell;
+    curCtx = innerCtx;
+    WROOT = innerCtx.root;
+    innerCtx.root.scale.setScalar(1);
+    innerCtx.root.position.set(0, 0, 0);
+    scene.add(innerCtx.root);
+    loadCtx(innerCtx);
     putOnBench(back, benchSpot());
     back.scale.setScalar(0.01);
     enqueueNext({
@@ -1716,90 +1723,13 @@ function enterRoom(room) {
       update(t) { back.scale.setScalar(Math.max(0.01, ease(t))); },
       end() { back.scale.setScalar(1); },
     });
-    if (!opaque && wasRunning) {
-      // the robot was working when you opened the door: it carries on the
-      // moment it has grown to full size behind its desk
-      enqueue(doNow(() => {
-        if (activeBot && program.length && stations.stand.occupant) runProgram();
-      }));
+    if (wasRunning && activeBot && program.length && stations.stand.occupant) {
+      enqueue(doNow(() => runProgram()));
     }
-    say(wasRunning ? 'You step inside — the robot gets straight back to work.'
-                   : 'You step inside — the room you came from sits on the table.');
+    say(wasRunning ? 'You step inside \u2014 the robot gets straight back to work.'
+                   : 'You step inside \u2014 the room you came from sits on the table.');
     refreshUI();
   }));
-}
-// birds can fly INTO rooms: if her nest was filed away, she finds it
-function findNestRec(rec, id) {
-  const scan = (r) => {
-    if (!r) return null;
-    if (r.kind === 'nest' && (r.guid === id || r.id === id)) return r;
-    for (const h of r.holes || []) { const f = scan(h); if (f) return f; }
-    for (const p of r.pages || []) { const f = scan(p); if (f) return f; }
-    for (const p of r.pile || []) { const f = scan(p); if (f) return f; }
-    if (r.kind === 'room' && r.world) { const f = findNestRec(r.world, id); if (f) return f; }
-    return null;
-  };
-  for (const b of rec.bench || []) { const f = scan(b.thing); if (f) return f; }
-  for (const o of Object.values(rec.stations || {})) { const f = scan(o); if (f) return f; }
-  if (rec.active?.trainedOn) { const f = scan(rec.active.trainedOn); if (f) return f; }
-  return null;
-}
-function birdIntoRoom(bird, thing) {
-  const id = bird.userData.nestGuid ?? bird.__nest?.userData.guid;
-  if (id == null) return false;
-  let room = null, nestRec = null;
-  for (const t of benchThings) {
-    if (t.userData.kind !== 'room' || !t.userData.world) continue;
-    const f = findNestRec(t.userData.world, id);
-    if (f) { room = t; nestRec = f; break; }
-  }
-  if (!room) return false;
-  clearUndo();
-  busy = true;
-  const wasAt = bird.getWorldPosition(new THREE.Vector3());
-  const originHole = holeContaining(bird);
-  const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
-  detach(bird);
-  WROOT.attach(bird);
-  bird.__flying = true;
-  bird.position.copy(wasAt);
-  const dest = room.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.25, 0));
-  enqueue({
-    dur: 0.9,
-    update(t) {
-      const e = ease(t);
-      bird.position.lerpVectors(wasAt, dest, e);
-      bird.position.y += 0.5 * Math.sin(Math.PI * e);
-      bird.scale.setScalar(1 - 0.7 * e);
-    },
-  });
-  enqueue(doNow(() => {
-    nestRec.pile.unshift(thingOut(thing));
-    thing.removeFromParent();
-    room.userData.dirty = true;
-    renderRoomContents(room);
-    flash(dest);
-  }));
-  enqueue({
-    dur: 0.9,
-    update(t) {
-      const e = ease(t);
-      bird.position.lerpVectors(dest, wasAt, e);
-      bird.position.y += 0.5 * Math.sin(Math.PI * e);
-      bird.scale.setScalar(0.3 + 0.7 * e);
-    },
-    end() {
-      bird.__flying = false;
-      bird.scale.setScalar(1);
-      // home is wherever she was -- a box hole, a desk, or the bench;
-      // benching her would strand the hole empty and swallow later letters
-      if (originHole && !originHole.thing) putInHole(originHole, bird);
-      else if (originSt && !originSt.occupant) putOnStation(originSt, bird);
-      else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
-      refreshUI();
-    },
-  });
-  return true;
 }
 function makeNest() {
   const g = new THREE.Group();
@@ -1930,13 +1860,19 @@ function restackNest(nest) {
 // Clone deliveries run outside the step queue so a whole flock can fly at
 // once; each clone drops its copy and then leaves the world for good.
 const flights = [];
-const roomOutbox = [];   // deliveries addressed outside a room's bottled run
 function deliverCopy(nest2, gift) {
   gift.scale.setScalar(1);
   gift.quaternion.identity();
   nest2.add(gift);
   nest2.userData.pile.unshift(gift);
   restackNest(nest2);
+  // mail into a house wakes it -- every house the nest sits inside
+  for (let p = nest2.parent; p; p = p.parent) {
+    if (p.userData?.kind === 'room' && p.__ctx) {
+      p.userData.dirty = true;
+      p.userData.stepRounds = 0;
+    }
+  }
   sfx('chime');
   flash(nest2.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0)));
   refreshUI();
@@ -1976,24 +1912,23 @@ function inScene(o) {
 function findNestByGuid(guid) {
   return guid ? allNests.find(n2 => n2.userData.guid === guid && inScene(n2)) ?? null : null;
 }
+// worlds saved before nests had guids link birds by numeric id
+function findNestById(id) {
+  return id != null ? allNests.find(n2 => n2.userData.id === id && inScene(n2)) ?? null : null;
+}
 function allNestsByGuid(guid) {
   return guid ? allNests.filter(n2 => n2.userData.guid === guid && inScene(n2)) : [];
 }
 function birdDeliver(bird) {
   let nest = bird.__nest;
-  if (!nest || !inScene(nest)) nest = bird.__nest = findNestByGuid(bird.userData.nestGuid);
   if (!nest || !inScene(nest)) {
-    // her nest may have been filed inside a room: she flies in through a
-    // window, delivers, and comes back out
+    nest = bird.__nest = findNestByGuid(bird.userData.nestGuid)
+      ?? findNestById(bird.__nestId);
+  }
+  if (!nest || !inScene(nest)) {
     const thing = held; held = null;
-    if (thing && birdIntoRoom(bird, thing)) return;
-    if (thing && roomWorkBusy) {
-      // a bird INSIDE a bottled room, delivering out: the letter waits in the
-      // outbox until the worlds swap back, then flies to the nest for real
-      roomOutbox.push({ nestId: bird.userData.nestGuid ?? null, rec: thingOut(thing) });
-      thing.removeFromParent();
-      return;
-    }
+    // in a background world there is no hand to take it back into
+    if (thing && worldStack.length) { putOnBench(thing, benchSpot()); return; }
     if (thing) takeIntoHand(thing);
     return say('Her nest is gone — she has nowhere to take it.');
   }
@@ -2293,8 +2228,11 @@ function copyThingRaw(t) {
     c = makeNotebook({ pages: JSON.parse(JSON.stringify(ud.pages)), page: ud.page });
   }
   else if (ud.kind === 'room') {
-    c = makeRoom({ world: ud.world ? JSON.parse(JSON.stringify(ud.world)) : null,
-                   opaque: ud.opaque, dirty: ud.dirty });
+    // a copy hydrates fresh from a record of the live world: independent
+    // contents, but nests inside keep their guids, so copied worlds stay
+    // wired to the same flocks
+    const rec = t.__ctx ? ctxToRec(t) : (ud.world ? JSON.parse(JSON.stringify(ud.world)) : null);
+    c = makeRoom({ world: rec, opaque: ud.opaque, dirty: ud.dirty });
   }
   else if (ud.kind === 'bird') {
     c = makeBird(t.__nest);
@@ -3070,10 +3008,10 @@ let puffGeo = null;
 // Smoke and bustle mean somebody inside is working -- a room merely holding
 // unopened mail sits quiet.
 function roomWorking(t) {
-  const w = t.userData.world;
   if (!t.userData.dirty) return false;
-  if (w?.active && w?.stations?.stand) return true;
-  return recHasDirtyRoom(w);         // or a house inside it is running
+  if (roomHasWorker(t)) return true;
+  // or a house inside it is running
+  return !!(t.__ctx?.bench ?? []).some(t2 => t2.userData?.kind === 'room' && t2.userData.dirty);
 }
 function advanceWorldClocks(dt) {
   advanceWiggle(dt);
@@ -3085,12 +3023,9 @@ function advanceWorldClocks(dt) {
       t.__lever.rotation.z += (want - t.__lever.rotation.z) * Math.min(1, dt * 10);
     }
     // through glass walls, the miniature robot bustles while there is work
-    if (roomWorking(t) && !t.userData.opaque && t.__contents?.length) {
-      let mini2 = null;
-      for (const c of t.__contents) {
-        c.traverse(o => { if (!mini2 && o.userData?.kind === 'robot') mini2 = o; });
-        if (mini2) break;
-      }
+    if (roomWorking(t) && !t.userData.opaque && t.__ctx) {
+      let mini2 = t.__ctx.activeBot?.node ?? null;
+      if (!mini2) t.__ctx.root.traverse(o => { if (!mini2 && o.userData?.kind === 'robot') mini2 = o; });
       if (mini2) {
         t.__workT = (t.__workT || 0) + dt;
         mini2.rotation.y = Math.sin(t.__workT * 4.2) * 0.6;
@@ -3789,6 +3724,13 @@ function resolve(ev) {
     // What you are carrying rides under the pointer (or sits in the claw), so
     // it would otherwise intercept every click meant for what is behind it.
     if (held && isDescendantOf(h.object, held)) continue;
+    // things inside a room's miniature world belong to that world -- walk in
+    // through the door to touch them
+    let inMini = false;
+    for (let p = h.object; p; p = p.parent) {
+      if (p.name === 'worldRoot' && p.parent !== scene) { inMini = true; break; }
+    }
+    if (inMini) continue;
     let o = h.object;
     while (o && !o.__pick) o = o.parent;
     if (!o) continue;
@@ -3855,7 +3797,7 @@ function handleClick(target) {
     if (room.userData.dirty) {
       room.userData.dirty = false;
       say('The lever goes down — the robot inside stops.');
-    } else if (room.userData.world?.active && room.userData.world?.stations?.stand) {
+    } else if (roomHasWorker(room)) {
       room.userData.stepRounds = 0;
       room.userData.dirty = true;
       say('The lever goes up — the robot inside gets to work.');
@@ -5249,7 +5191,8 @@ function thingOutRaw(t) {
   if (ud.kind === 'text') return { kind: 'text', text: ud.text };
   if (ud.kind === 'die') return { kind: 'die', faces: ud.faces };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
-  if (ud.kind === 'room') return { kind: 'room', world: ud.world, opaque: ud.opaque,
+  if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
+                                   opaque: ud.opaque,
                                    dirty: ud.dirty, id: ud.id, label: ud.label ?? undefined };
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
@@ -5264,14 +5207,27 @@ function thingOutRaw(t) {
 }
 function worldOut() {
   syncBot();
+  // Snapshot the world's nodes BEFORE serialising anything: serialising a
+  // room switches worlds, which swaps these very globals underfoot.
+  const bench = benchThings.slice();
+  // dozing robots and their desks are not on the bench: save them as bench
+  // things so nothing is lost (they wake benched rather than waiting)
+  for (const b of [...waiters]) {
+    if (b !== activeBot) bench.push(b.node);
+    if (b.stand && b.stand !== defaultStand && b.stand.occupant) bench.push(b.stand.occupant);
+  }
+  const stationNodes = Object.values(stations)
+    .filter(s2 => s2.kind !== 'stack')
+    .map(s2 => [s2.id, s2.occupant]);
+  const act = activeBot;
   const sts = {};
-  for (const s2 of Object.values(stations)) if (s2.kind !== 'stack') sts[s2.id] = thingOut(s2.occupant);
+  for (const [id, occ] of stationNodes) sts[id] = thingOut(occ);
   return {
     kind: 'world', v: 1,
-    bench: benchThings.map(t => ({ thing: thingOut(t),
+    bench: bench.map(t => ({ thing: thingOut(t),
       x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })),
     stations: sts,
-    active: activeBot ? botOut(activeBot) : null,
+    active: act ? botOut(act) : null,
   };
 }
 function botIn(o) {
@@ -5421,12 +5377,10 @@ function snapshotWorld() {
     .map(s => [s.id, specOf(s.occupant)]));
   // robots on the bench are kept by reference -- they carry training that a
   // spec could not describe, and nothing in a daydream can touch them
+  // rooms go by reference too: their worlds are live things a spec cannot
+  // describe, so undo moves them about but does not rewind their insides
   snap.bench = benchThings.map(t =>
-    t.userData.kind === 'room'
-    ? { bot: t, at: { x: t.position.x, z: t.position.z },
-        roomWorld: JSON.stringify(t.userData.world ?? null),
-        roomDirty: !!t.userData.dirty }
-    : ['robot', 'nest', 'bird'].includes(t.userData.kind)
+    ['robot', 'nest', 'bird', 'room'].includes(t.userData.kind)
     ? { bot: t, at: { x: t.position.x, z: t.position.z } }
     : { spec: specOf(t), at: { x: t.position.x, z: t.position.z } });
   snap.piles = allNests.filter(n => n.parent)
@@ -5442,12 +5396,6 @@ function restoreWorld(snap) {
   (snap.bench || []).forEach(b => {
     const t = b.bot ?? buildThing(b.spec);
     putOnBench(t, b.at);
-    // a room's inner world is data the by-ref restore would otherwise miss
-    if (b.roomWorld !== undefined) {
-      t.userData.world = JSON.parse(b.roomWorld);
-      t.userData.dirty = b.roomDirty;
-      renderRoomContents(t);
-    }
   });
   (snap.piles || []).forEach(p => {
     p.nest.userData.pile.forEach(t => t.removeFromParent());
@@ -5861,7 +5809,7 @@ function refreshUI() {
       : kind === 'text' ? (held.userData.text
           ? `a pad: “${held.userData.text.length > 24 ? held.userData.text.slice(0, 24) + '…' : held.userData.text}”`
           : 'a blank text pad')
-      : kind === 'room' ? (held.userData.world ? 'a room with things inside' : 'an empty room')
+      : kind === 'room' ? ((held.__ctx || held.userData.world) ? 'a room with things inside' : 'an empty room')
       : kind === 'notebook' ? 'a notebook'
       : kind === 'scale' ? 'a scale'
       : kind === 'nest' ? (held.userData.pile.length
@@ -7002,7 +6950,7 @@ window.__nano = {
       : t.userData.kind === 'robot' ? 'robot'
       : t.userData.kind === 'text' ? { text: t.userData.text }
       : t.userData.kind === 'notebook' ? { notebook: t.userData.pages.length }
-      : t.userData.kind === 'room' ? { room: { has: !!t.userData.world, dirty: !!t.userData.dirty } }
+      : t.userData.kind === 'room' ? { room: { has: !!(t.__ctx || t.userData.world), dirty: !!t.userData.dirty } }
       : t.userData.kind === 'bird' ? 'bird'
       : t.userData.kind === 'die' ? { die: t.userData.faces }
       : t.userData.kind === 'nest' ? { nest: t.userData.pile.map(d) }
