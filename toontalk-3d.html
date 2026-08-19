@@ -1312,7 +1312,8 @@ function loadCtx(ctx) {
   const sf = standFor(ctx);
   defaultStand.point.copy(sf.point);
   defaultStand.topY = sf.topY;
-  if (defaultStand.obj) defaultStand.obj.visible = sf.desk;
+  if (defaultStand.obj) defaultStand.obj.visible = sf.top;
+  if (houseDeskObj) houseDeskObj.visible = !sf.top;
   activeBot = ctx.activeBot ?? null;
   if (activeBot) bindBot(activeBot);
   else {
@@ -1737,7 +1738,9 @@ function enterRoom(room) {
     // the world being left, stashed into a fresh shell
     stashCtx(curCtx);
     const outerCtx = curCtx;
-    const back = makeRoom({});
+    // glass, so your own things stay in plain sight -- shut behind solid
+    // walls they may as well have been thrown away
+    const back = makeRoom({ opaque: false });
     back.__ctx = outerCtx;
     back.userData.dirty =
       !!(outerCtx.activeBot?.program.length && outerCtx.standOcc)
@@ -1749,6 +1752,7 @@ function enterRoom(room) {
     back.userData.label = outerCtx.shell?.label ?? 'your table';
     paintRoomLabel(back);
     if (outerCtx.shell) back.setOpaque(outerCtx.shell.opaque);
+    else back.setOpaque(false);
     // the entered world takes the stage
     innerCtx.shell = oldShell;
     curCtx = innerCtx;
@@ -2659,17 +2663,17 @@ function newWorldCtx() {
   return { root, bench: [], occ: {}, activeBot: null, waiters: [],
            hatching: [], asides: [], standSt: null };
 }
-// Where the thing a robot is given rests: your workshop has a desk for it,
-// a house just uses the near edge of the table.
+// Where the thing a robot is given rests. Your workshop has a desk for it,
+// facing you across the table. A house has no such desk -- nobody visits to
+// hand things over -- so in there the given sits on a work area of its own,
+// alongside the spots the robot uses for its own business.
 const DESK_SPOT = new THREE.Vector3();
 let DESK_TOP = 0;
 const HOUSE_SPOT = new THREE.Vector3();
-let HOUSE_TOP = 0;
+let houseDeskObj = null;
 function standFor(ctx) {
-  if (ctx === topCtx) return { point: DESK_SPOT, topY: DESK_TOP, desk: true };
-  HOUSE_SPOT.set(0, DESK_SPOT.y, BENCH.z0 + 0.34);
-  HOUSE_TOP = BENCH_TOP;
-  return { point: HOUSE_SPOT, topY: HOUSE_TOP, desk: false };
+  if (ctx === topCtx) return { point: DESK_SPOT, topY: DESK_TOP, top: true };
+  return { point: HOUSE_SPOT, topY: HOUSE_SPOT.y - CUBE / 2, top: false };
 }
 const topCtx = newWorldCtx();
 let curCtx = topCtx;
@@ -6600,6 +6604,14 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   scene.add(defaultStand.obj);
   DESK_SPOT.copy(defaultStand.point);
   DESK_TOP = defaultStand.topY;
+  // a house's work area: the same little bench the robot keeps its own things
+  // on, one place along from the first work spot
+  HOUSE_SPOT.set(0.15, reachLocal.y, reachLocal.z);
+  houseDeskObj = makeMiniDesk(HOUSE_SPOT.y - CUBE / 2, 0.44, 0.38, 0x8a744d);
+  houseDeskObj.position.set(HOUSE_SPOT.x, 0, HOUSE_SPOT.z);
+  houseDeskObj.traverse(o => setPick(o, { kind: 'station', id: 'stand' }));
+  houseDeskObj.visible = false;
+  scene.add(houseDeskObj);
   stations.stand = defaultStand;
 
   // One scratch desk to begin with; more grow beside it as they are needed.
