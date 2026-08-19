@@ -1607,7 +1607,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
         const from = (node ?? nest2).getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0));
         const courier = makeBird(nest2);
         delete courier.__pick;
-        scene.add(courier);
+        WROOT.add(courier);
         courier.position.copy(from);
         if (courierShow === 0) sfx('chirp');
         flights.push({ clone: courier, nest: nest2,
@@ -1760,7 +1760,7 @@ function birdIntoRoom(bird, thing) {
   const originHole = holeContaining(bird);
   const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
   detach(bird);
-  scene.attach(bird);
+  WROOT.attach(bird);
   bird.__flying = true;
   bird.position.copy(wasAt);
   const dest = room.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.25, 0));
@@ -1946,7 +1946,7 @@ function spawnCloneDelivery(bird, thing, nest2, from) {
   const clone = makeBird(bird.__nest);
   if (bird.userData.label) setThingLabel(clone, bird.userData.label);
   delete clone.__pick;                   // a passing clone is not clickable
-  scene.add(clone);
+  WROOT.add(clone);
   clone.position.copy(from);
   const gift = copyThing(thing);
   if (!gift) { clone.removeFromParent(); return; }
@@ -2012,7 +2012,7 @@ function birdDeliver(bird) {
   const originHole = holeContaining(bird);
   const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
   detach(bird);
-  scene.attach(bird);
+  WROOT.attach(bird);
   bird.__flying = true;
   bird.add(thing);
   thing.position.set(0, -0.02, 0.16);
@@ -2523,7 +2523,7 @@ function clearBenchSpot(thing, x, z) {
   return { x, z };
 }
 function putOnBench(thing, at) {
-  scene.add(thing);
+  WROOT.add(thing);
   thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : 1);
   thing.quaternion.identity();
   const half = (thing.userData.width || 0.3) / 2 + 0.05;
@@ -2538,7 +2538,7 @@ function putOnBench(thing, at) {
 }
 
 function putOnStation(st, thing) {
-  scene.add(thing);
+  WROOT.add(thing);
   thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : 1);
   thing.quaternion.identity();
   thing.position.set(st.point.x, st.topY + thing.userData.rest, st.point.z);
@@ -2604,6 +2604,24 @@ const STATION_DEFS = [
   const th = (-78 + i * (156 / (all.length - 1))) * Math.PI / 180;
   return { ...d, x: ARC.cx + ARC.r * Math.sin(th), z: ARC.cz - ARC.r * Math.cos(th) };
 });
+// ---------------------------------------------------------------- worlds
+// Every world's things -- bench things, station occupants, robots, birds in
+// flight -- live under one root group. The top world's root sits in the scene
+// at identity, so coordinates read exactly as before; a room's world will
+// hang its root inside the room at miniature scale. One interpreter, many
+// live worlds: the globals below always describe the CURRENT world, and
+// switching worlds swaps their contents in and out of ctx objects.
+function newWorldCtx() {
+  const root = new THREE.Group();
+  root.name = 'worldRoot';
+  return { root, bench: [], occ: {}, activeBot: null, waiters: [],
+           hatching: [], asides: [], standSt: null };
+}
+const topCtx = newWorldCtx();
+let curCtx = topCtx;
+let WROOT = topCtx.root;
+const worldStack = [];
+
 const benchThings = [];      // free-standing things the user has put down
 // The robot's scratch area grows on demand: one little side-table to begin
 // with, and a fresh one rises beside it whenever the last free one is taken --
@@ -2839,7 +2857,7 @@ function makeStandStation(dx, dz) {
   const obj = makeMiniDesk(Math.max(0.15, st.topY), 0.52, 0.44, 0xcabc98);
   obj.position.set(point.x, 0, point.z);
   setPick(obj, { kind: 'station', id: 'stand', st });
-  scene.add(obj);
+  WROOT.add(obj);
   st.obj = obj;
   allStands.push(st);
   return st;
@@ -3355,7 +3373,7 @@ function runDuplicate() {
     dur: 0.45,
     start() {
       copy = copyThing(inSt.occupant);
-      scene.add(copy);
+      WROOT.add(copy);
       from = inSt.occupant.getWorldPosition(new THREE.Vector3());
       copy.position.copy(from);
       copy.scale.setScalar(0.01);
@@ -3502,7 +3520,7 @@ function joinBoxes(target, incoming, refuse, side) {
   if (hole) putInHole(hole, nb);
   else if (st) putOnStation(st, nb);
   else if (bi >= 0) putOnBench(nb, at);
-  else scene.add(nb);
+  else WROOT.add(nb);
   flash(nb.getWorldPosition(new THREE.Vector3()));
   refreshUI();
 }
@@ -3515,7 +3533,7 @@ function sideOf(target, point) {
 // The perch-then-sink merge that numbers use, shared by text drops: the
 // arriving thing rests on the target for a beat, then sinks in and applies.
 function mergeOnto(incoming, fromWorld, target, apply) {
-  scene.attach(incoming);
+  WROOT.attach(incoming);
   const dest = target.getWorldPosition(new THREE.Vector3());
   const iScale = new THREE.Vector3();
   incoming.getWorldScale(iScale);
@@ -3554,7 +3572,7 @@ function replaceThing(target, made) {
   if (hole) putInHole(hole, made);
   else if (st2) putOnStation(st2, made);
   else if (bi >= 0) putOnBench(made, at);
-  else scene.add(made);
+  else WROOT.add(made);
   refreshUI();
   return made;
 }
@@ -3718,7 +3736,7 @@ function combine(slot, incoming, isHole, fromWorld, side) {
       : `That ${op} makes a number too big to hold.`);
   }
   sfx('combine');
-  scene.attach(incoming);
+  WROOT.attach(incoming);
   const dest = target.getWorldPosition(new THREE.Vector3());
   const base = isHole ? fitScale(target, slot) : 1;
   // Rest on top of the number it landed on for a beat before merging, rather
@@ -4251,6 +4269,7 @@ function directRobot(target) {
 // hand -- rather than being mimed by the robot.
 const handNode = new THREE.Object3D();
 scene.add(handNode);
+scene.add(topCtx.root);
 const handPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function moveHand(ev, hoverY = null) {
   if (!reachLocal) return;
@@ -4445,7 +4464,7 @@ function activateBot(bot, after) {
   busy = true;
   addMiniBubble(bot.node, null);   // the full-size bubble takes over
   detach(bot.node);
-  scene.attach(bot.node);
+  WROOT.attach(bot.node);
   bot.home = HOME;                       // it takes the middle
   bot.stand = defaultStand;
   bot.root.position.set(0, 0, 0);
@@ -4498,7 +4517,7 @@ function parkActiveAside() {
   enqueue({ dur: 0.5, update(t) { node.scale.setScalar(lerp(1, MINI, ease(t))); } });
   enqueue(doNow(() => {
     node.scale.setScalar(MINI);
-    scene.attach(node);
+    WROOT.attach(node);
     putOnBench(node, benchSpot());
     addMiniBubble(node, bot.program.length ? bot.condition : null);
     enqueueNext(settleInto(node, from, 0.3));
@@ -5348,8 +5367,8 @@ function clearWorld() {
   }
   for (const s2 of allStands) if (s2.occupant) keep.add(s2.occupant);
   for (const f of flights) { keep.add(f.clone); keep.add(f.gift); }
-  const THING_KINDS = ['number', 'box', 'text', 'scale', 'nest', 'bird', 'robot', 'room', 'notebook'];
-  for (const ch of [...scene.children]) {
+  const THING_KINDS = ['number', 'box', 'text', 'scale', 'nest', 'bird', 'robot', 'room', 'notebook', 'die'];
+  for (const ch of [...WROOT.children, ...scene.children]) {
     if (THING_KINDS.includes(ch.userData?.kind) && !keep.has(ch)) ch.removeFromParent();
   }
   renderProgram(); rebuildCondition();
