@@ -120,8 +120,9 @@
   </div>
 </div>
 
-<div id="held" class="card">
-  <span class="k" title="What your invisible hand is carrying. It follows your pointer.">holding</span><span class="v" id="heldVal">–</span>
+<div id="held" class="card" style="cursor:pointer"
+     title="What your invisible hand is carrying. It follows your pointer. Click to hold a text pad up and read it.">
+  <span class="k">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
 </div>
 
@@ -2986,6 +2987,26 @@ function fastForward(maxSteps = 100000, sliceMs = 14) {
 // Time-based world effects that must not depend on the screen being visible:
 // egg hatching and clone-bird flights. Called from tick() and, at Instant
 // speed, straight from the frame loop.
+// The thing under the pointer while your hand is full jiggles, so you can
+// see what a drop would land on -- even down inside a box.
+let wiggle = null;
+function setWiggle(node) {
+  if (wiggle?.node === node) return;
+  if (wiggle) {
+    wiggle.node.rotation.y = wiggle.ry;
+    wiggle.node.scale.setScalar(wiggle.s);
+    wiggle = null;
+  }
+  if (!node || !node.parent) return;
+  wiggle = { node, ry: node.rotation.y, s: node.scale.x, t: 0 };
+}
+function advanceWiggle(dt) {
+  if (!wiggle) return;
+  if (!wiggle.node.parent || !held) return setWiggle(null);
+  wiggle.t += dt;
+  wiggle.node.rotation.y = wiggle.ry + Math.sin(wiggle.t * 15) * 0.10;
+  wiggle.node.scale.setScalar(wiggle.s * (1 + 0.035 * Math.abs(Math.sin(wiggle.t * 15))));
+}
 let puffGeo = null;
 // Smoke and bustle mean somebody inside is working -- a room merely holding
 // unopened mail sits quiet.
@@ -2996,6 +3017,7 @@ function roomWorking(t) {
   return recHasDirtyRoom(w);         // or a house inside it is running
 }
 function advanceWorldClocks(dt) {
+  advanceWiggle(dt);
   // a working room's chimney smokes
   for (const t of benchThings) {
     if (t.userData?.kind !== 'room') continue;
@@ -3323,37 +3345,20 @@ function runDuplicate() {
 
 // The robot's wand-style duplicating: it names an address, not a machine. The
 // original stays put and the copy arrives in the claw.
+// Copying is a trip to Mimi, the same one you would make: fetch the thing,
+// set it on her platform, put the original back where it belongs, and carry
+// the copy away. Nothing appears out of thin air.
 function actionCopy(at) {
-  enqueue(walkTo(walkTargetFor(at.c)));
-  enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
-  let copy = null, src = null;
-  enqueue({
-    dur: 0.5,
-    start() {
-      src = thingAt(at);
-      if (!src) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
-      copy = copyThing(src);
-      scene.add(copy);
-      const p = src.getWorldPosition(new THREE.Vector3());
-      copy.position.copy(p);
-      copy.scale.setScalar(0.01);
-      flash(p);
-    },
-    update(t) {
-      if (!copy) return;
-      const e = ease(t);
-      copy.scale.setScalar(0.01 + 0.99 * e);
-      copy.position.y = src.getWorldPosition(new THREE.Vector3()).y + 0.34 * e;
-    },
-  });
   enqueue(doNow(() => {
-    if (!copy) return;
-    grip.attach(copy);
-    held = copy;
-    noteHeld();
-    enqueueNext(graspSettle(copy));
+    if (stations.copyIn.occupant || stations.copyOut.occupant) {
+      abort('The copier is not empty — the robot could not use it.');
+    }
   }));
-  enqueue(armTo(POSE.carry, JAW_CLOSED, 0.5));
+  actionTake(at);                              // fetch the original
+  actionPut({ c: 'in', path: [] });            // onto the platform: she scans it
+  actionTake({ c: 'in', path: [] });           // the original back off the platform
+  actionPut(at);                               // and home to where it came from
+  actionTake({ c: 'out', path: [] });          // the copy is what it carries away
   enqueue(doNow(refreshUI));
 }
 
@@ -3985,7 +3990,17 @@ function userClick(target) {
       // so robots can carry robots into rooms
       if (held.userData.kind === 'robot') return say('Robots don’t work on robots.');
       if (bot === activeBot) return giveToRobot();
-      if (activeBot) return say('Another robot is already at the bench — click it first to send it away.');
+      if (activeBot) {
+        // an idle robot does not block the bench: it shrinks and steps onto
+        // the table by itself, and the one you chose takes its place
+        if (activeBot.waiting) {
+          return say(`${activeBot.name ? `“${activeBot.name}”` : 'The robot'} at the bench is waiting on its nest — click it first.`);
+        }
+        if (busy || mode !== 'world') return say('Wait for the work to finish first.');
+        parkActiveAside();
+        enqueue(doNow(() => activateBot(bot)));   // it takes what you are holding
+        return;
+      }
       return activateBot(bot);
     }
     if (bot === activeBot) return miniaturizeActive();
@@ -4252,6 +4267,41 @@ function takeIntoHand(obj) {
   enqueueNext(settleInto(obj, fromWorld, 0.24));
   refreshUI();      // the "holding" readout must track every pickup
 }
+// Holding a wordy pad up to the light: it turns to face you, big enough to
+// read, and goes back to the hand when you are done.
+let reading = null;
+function toggleReading() {
+  if (reading) {
+    const r = reading; reading = null;
+    r.node.scale.setScalar(r.scale);
+    if (r.node === held) { r.node.position.set(0, 0, 0); r.node.quaternion.identity(); }
+    refreshUI();
+    return;
+  }
+  if (held?.userData.kind !== 'text') return say('Hold a text pad to read it.');
+  reading = { node: held, scale: held.scale.x };
+  refreshUI();
+}
+function placeReading() {
+  if (!reading) return;
+  const node = reading.node;
+  if (node !== held || !node.parent) { reading = null; return; }
+  const dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  const at = camera.position.clone().addScaledVector(dir, 0.62);
+  node.parent.updateMatrixWorld();
+  node.position.copy(node.parent.worldToLocal(at.clone()));
+  // the writing is on the pad's top face, so its +Y must point at the camera
+  const m = new THREE.Matrix4().lookAt(at, camera.position, camera.up);
+  const q = new THREE.Quaternion().setFromRotationMatrix(m)
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2));
+  const pq = new THREE.Quaternion();
+  node.parent.getWorldQuaternion(pq);
+  node.quaternion.copy(pq.invert().multiply(q));
+  node.scale.setScalar(1.5);
+}
+document.getElementById('held')
+  .addEventListener('click', () => { if (held || reading) toggleReading(); });
 function noteHeld() {
   valueAtPickup = held?.userData.value ?? null;
   opAtPickup = held?.userData.op ?? '+';
@@ -4377,6 +4427,38 @@ function activateBot(bot, after) {
   }));
 }
 
+// The active robot shrinks and steps onto the table by itself, making room
+// for another. Unlike miniaturizeActive it never touches your hand -- you are
+// already carrying the thing you meant to hand over.
+function parkActiveAside() {
+  const bot = activeBot;
+  if (!bot) return;
+  cancelWaiting(bot);
+  clearUndo();
+  syncBot();
+  returnGivenToTable();
+  clearScratch();
+  parkRobot();
+  dropStand(bot.stand);
+  bot.stand = null; bot.home = HOME;
+  bot.root.position.set(0, 0, 0);
+  stations.stand = defaultStand;
+  activeBot = null; robot = null; root = null;
+  program = []; condition = null;
+  renderProgram(); rebuildCondition();
+  const node = bot.node;
+  const from = node.getWorldPosition(new THREE.Vector3());
+  busy = true;
+  enqueue({ dur: 0.5, update(t) { node.scale.setScalar(lerp(1, MINI, ease(t))); } });
+  enqueue(doNow(() => {
+    node.scale.setScalar(MINI);
+    scene.attach(node);
+    putOnBench(node, benchSpot());
+    addMiniBubble(node, bot.program.length ? bot.condition : null);
+    enqueueNext(settleInto(node, from, 0.3));
+    busy = false;
+  }));
+}
 // The active robot shrinks into the user's hand, keeping all its training.
 function miniaturizeActive() {
   if (!activeBot || busy || mode !== 'world') return;
@@ -5732,6 +5814,8 @@ function refreshUI() {
       : kind === 'room' ? 'set it down; drop a robot in, then things for it to work on'
       : kind === 'notebook' ? 'set it down and drop things on its pages'
       : kind === 'text' ? 'type to write on it; drop it on a pad’s left or right edge to join'
+      : kind === 'text' ? (reading ? 'click here to lower it; type to write on it'
+          : 'click here to hold it up and read it; type to write on it')
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
       : kind === 'die' ? 'drop it on a number to re-roll it; a whole number dropped on it sets its faces'
       : 'put it down on the bench';
@@ -5968,6 +6052,19 @@ addEventListener('keydown', (e) => {
 });
 // --- scene tooltips ---------------------------------------------------------
 // What a click would mean, phrased for the current mode and what is being held.
+// What a drop would actually land on, for the jiggle: the thing itself, the
+// occupant of the hole aimed at, or the robot being offered something.
+function wiggleTargetOf(t) {
+  if (!t || !held) return null;
+  if (t.kind === 'thing') return t.thing === held ? null : t.thing;
+  if (t.kind === 'hole') return t.box?.userData.holes?.[t.index]?.thing ?? t.box;
+  if (t.kind === 'botThing') return t.bot?.node ?? null;
+  if (t.kind === 'station') {
+    const st = t.st ?? stations[t.id];
+    return st?.occupant && st.occupant !== held ? st.occupant : null;
+  }
+  return null;
+}
 function tipFor(t) {
   if (!t || mode === 'replay') return null;
   const training = mode === 'training';
@@ -6127,6 +6224,12 @@ function tipFor(t) {
       return 'A scale — put a number in each of its two holes and it tips toward the larger.'
         + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
+    if (ud.kind === 'text') {
+      const txt = ud.text ?? '';
+      if (!held && txt.length > 24) {
+        return txt.length > 700 ? txt.slice(0, 700) + '…' : txt;
+      }
+    }
     if (ud.kind === 'nest') {
       if (ud.hasEgg) return 'A nest with an egg — set it on the table and watch.';
       if (ud.pile.length) return `A nest with ${ud.pile.length} deliver${ud.pile.length > 1 ? 'ies' : 'y'} — the top is the oldest; click to take it.`;
@@ -6176,6 +6279,7 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
   // track always, not only while carrying: otherwise picking something up
   // teleports it to wherever the hand was last left
   if (mode === 'world') moveHand(ev, target?.point?.y ?? null);
+  setWiggle(held ? wiggleTargetOf(target) : null);
   renderer.domElement.style.cursor = target ? 'pointer' : '';
   const tip = tipFor(target);
   if (tip) {
@@ -6663,6 +6767,7 @@ renderer.setAnimationLoop((now) => {
     if (speed === Infinity) { fastForward(); advanceWorldClocks(dt); }
     else tick(dt * speed);
   }
+  placeReading();          // a pad held up to read stays facing the camera
   if (condDisplay) {
     condDisplay.position.lerp(condAnchor(), Math.min(1, dt * 7));
     // the red mismatch marks pulse until something actually changes -- fading
