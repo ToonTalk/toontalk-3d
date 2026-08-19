@@ -890,11 +890,13 @@ function setThingLabel(thing, text) {
 function makeBox(n = HOLES) {
   // No upper limit -- boxes are arrays, and joining must work at any size.
   // Holes shrink to a floor as the count grows; past that the box widens.
-  n = Math.max(1, n | 0);
+  // Zero holes is a box too: the empty array, identity of joining.
+  n = Math.max(0, n | 0);
   const g = new THREE.Group();
   const wall = 0.032;
-  const holeW = Math.max(0.12, Math.min(HOLE_W, (BOX_MAX_W - (n + 1) * wall) / n));
-  const W = n * holeW + (n + 1) * wall;
+  const holeW = n === 0 ? HOLE_W
+    : Math.max(0.12, Math.min(HOLE_W, (BOX_MAX_W - (n + 1) * wall) / n));
+  const W = Math.max(0.09, n * holeW + (n + 1) * wall);
   const D = holeW + 0.07, H = 0.11;
   const woodMat = new THREE.MeshStandardMaterial({ color: 0xe2cfa6, roughness: 0.62 });
   const base = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), woodMat);
@@ -1999,6 +2001,18 @@ function birdDeliver(bird) {
 // takes its two things directly.
 const SCALE_TILT = 0.22;
 const allScales = [];
+// What a scale is saying: 'L' left pan heavier, 'R' right, '=' balanced,
+// null when it has nothing definite to compare.
+function scaleTilt(node) {
+  const [a, b] = node.userData.holes.map(h => h.thing);
+  if (a?.userData.kind === 'number' && b?.userData.kind === 'number'
+      && !a.userData.erased && !b.userData.erased) {
+    const d = a.userData.value.n * b.userData.value.d
+            - b.userData.value.n * a.userData.value.d;
+    return d > 0n ? 'L' : d < 0n ? 'R' : '=';
+  }
+  return null;
+}
 function makeScale() {
   const g = new THREE.Group();
   // two metals, as a good instrument deserves: brushed steel for the frame,
@@ -2128,6 +2142,10 @@ function specOf(thing) {
   if (kind === 'number') return { kind: 'number', value: thing.userData.value, op: thing.userData.op };
   if (kind === 'text') return { kind: 'text', text: thing.userData.text };
   if (kind === 'die') return { kind: 'die', faces: thing.userData.faces };
+  if (kind === 'scale') {
+    return { kind, label: thing.userData.label ?? undefined, tilt: scaleTilt(thing),
+             holes: thing.userData.holes.map(h => specOf(h.thing)) };
+  }
   // birds, nests and robots inside boxes go by reference: their identity (a
   // bird's pairing, a robot's training) has no data form
   if (kind === 'nest' || kind === 'bird' || kind === 'robot'
@@ -2151,6 +2169,14 @@ function buildThing(spec) {
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
   if (spec.kind === 'text') return makeText(spec.text);
   if (spec.kind === 'die') return makeDie(spec.faces);
+  if (spec.kind === 'scaleTilt') {
+    const t = makeScale();
+    t.__tiltLock = spec.tilt;
+    t.__pivot.rotation.z = spec.tilt === 'L' ? SCALE_TILT
+      : spec.tilt === 'R' ? -SCALE_TILT : 0;
+    t.__pans.forEach(p => { p.rotation.z = -t.__pivot.rotation.z; });
+    return t;
+  }
   const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   if (spec.label) setThingLabel(b, spec.label);
@@ -2233,6 +2259,7 @@ function condFromSpec(sp) {
       : k === 'robot' ? { kind: 'anyRobot' }
       : k === 'room' ? { kind: 'anyRoom' } : WILD;
   }
+  if (sp.kind === 'scale' && sp.tilt) return { kind: 'scaleTilt', tilt: sp.tilt };
   if (sp.kind === 'box' || sp.kind === 'scale') {
     return { kind: sp.kind, holes: sp.holes.map(condFromSpec) };
   }
@@ -2285,6 +2312,9 @@ function matchState(cond, spec) {
   if (cond.kind === 'wildScale') return spec.kind === 'scale' ? 'yes' : 'no';
   if (cond.kind === 'wildText') return spec.kind === 'text' ? 'yes' : 'no';
   if (cond.kind === 'wildDie') return spec.kind === 'die' ? 'yes' : 'no';
+  if (cond.kind === 'scaleTilt') {
+    return spec.kind === 'scale' && spec.tilt === cond.tilt ? 'yes' : 'no';
+  }
   if (cond.kind === 'die') {
     return spec.kind === 'die' && spec.faces === cond.faces ? 'yes' : 'no';
   }
@@ -2321,12 +2351,17 @@ function condText(c) {
   if (c.kind === 'anyBox') return 'any box — any number of holes';
   if (c.kind === 'wildScale') return 'any scale';
   if (c.kind === 'wildDie') return 'any die';
+  if (c.kind === 'scaleTilt') {
+    return c.tilt === '=' ? 'a balanced scale'
+      : `a scale tipping ${c.tilt === 'L' ? 'left' : 'right'}`;
+  }
   if (c.kind === 'die') return `a die of ${c.faces} faces`;
   if (c.kind === 'number') {
     return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
   }
   if (c.kind === 'scale') return `a scale weighing ${c.holes.map(condText).join(' against ')}`;
-  return `a box of ${c.holes.map(condText).join(' and ')}`;
+  return c.holes.length ? `a box of ${c.holes.map(condText).join(' and ')}`
+                        : 'a box with no holes';
 }
 // Erasing keeps the type the first time -- an erased box still means "a box
 // like this one", contents ignored -- and only a second erase means "anything".
@@ -2335,7 +2370,7 @@ function eraseAt(cond, path) {
     if (cond?.kind === 'number') return { kind: 'wildNumber' };
     if (cond?.kind === 'text') return { kind: 'wildText' };
     if (cond?.kind === 'box') return { kind: 'anyBox' };
-    if (cond?.kind === 'scale') return { kind: 'wildScale' };
+    if (cond?.kind === 'scale' || cond?.kind === 'scaleTilt') return { kind: 'wildScale' };
     if (cond?.kind === 'die') return { kind: 'wildDie' };
     return WILD;    // a second erase of any wild kind means truly anything
   }
@@ -3183,7 +3218,7 @@ function actionCopy(at) {
 // like an array: the excess holes fall away as a box of their own -- onto the
 // bench when you do it, onto a free work spot when the robot does.
 function resizeHeldBox(n) {
-  n = Math.max(1, Math.min(MAX_HOLES, n));
+  n = Math.max(0, Math.min(MAX_HOLES, n));
   const old = held;
   const oldHoles = old.userData.holes;
   if (n === oldHoles.length) return;
@@ -3407,6 +3442,48 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   }
   if (target.userData.kind === 'text' || incoming.userData.kind === 'text') {
     return refuse('Text combines with text — or take a number to shift a letter or fill a blank pad.');
+  }
+  // a box dropped on a whole number splits there: [first N] and [the rest];
+  // the number is spent showing where to cut
+  if (target.userData.kind === 'number' && incoming.userData.kind === 'box') {
+    const v = target.userData.value;
+    const H = incoming.userData.holes.length;
+    if (target.userData.erased || v.d !== 1n || v.n < 0n || v.n > BigInt(H)) {
+      return refuse(`Only a whole number from 0 to ${H} can split this box.`);
+    }
+    const n = Number(v.n);
+    const left = makeBox(n), right = makeBox(H - n);
+    incoming.userData.holes.forEach((h, i) => {
+      const t = h.thing;
+      if (!t) return;
+      h.thing = null;
+      putInHole((i < n ? left : right).userData.holes[i < n ? i : i - n], t);
+    });
+    if (incoming.userData.label) setThingLabel(left, incoming.userData.label);
+    const at = { x: target.position.x, z: target.position.z };
+    const hole = holeContaining(target);
+    const st2 = Object.values(stations).find(s2 => s2.occupant === target);
+    const bi = benchThings.indexOf(target);
+    detach(target); target.removeFromParent();
+    incoming.removeFromParent();
+    sfx('combine');
+    const park = (b) => {
+      if (mode === 'world') putOnBench(b, benchSpot());
+      else {
+        const spot = Object.values(stations).find(s2 => s2.kind === 'scratch' && !s2.occupant)
+          ?? ensureScratchStation(scratchObjs.length, true);
+        putOnStation(spot, b);
+      }
+    };
+    if (hole) { putInHole(hole, left); park(right); }
+    else if (st2) { putOnStation(st2, left); park(right); }
+    else if (bi >= 0) {
+      putOnBench(left, { x: at.x - 0.12 - left.userData.width / 2, z: at.z });
+      putOnBench(right, { x: at.x + 0.12 + right.userData.width / 2, z: at.z });
+    } else { park(left); park(right); }
+    flash(left.getWorldPosition(new THREE.Vector3()));
+    refreshUI();
+    return;
   }
   if (target.userData.kind !== 'number' || incoming.userData.kind !== 'number') {
     return refuse('Only numbers combine — a box joins a box, a number adds to a number.');
@@ -4298,6 +4375,21 @@ function buildCondNode(cond, path, marks) {
     g.add(q);
   }
   else if (cond.kind === 'number') g = makeNumber(cond.value, cond.op);
+  else if (cond.kind === 'die') g = makeDie(cond.faces);
+  else if (cond.kind === 'wildDie') {
+    g = makeDie();
+    const q = ghostQuestion(0.18);
+    q.position.y = 0.24;
+    g.add(q);
+  }
+  else if (cond.kind === 'scaleTilt') {
+    // the verdict itself: a scale frozen mid-tip
+    g = makeScale();
+    g.__tiltLock = cond.tilt;
+    g.__pivot.rotation.z = cond.tilt === 'L' ? SCALE_TILT
+      : cond.tilt === 'R' ? -SCALE_TILT : 0;
+    g.__pans.forEach(p => { p.rotation.z = -g.__pivot.rotation.z; });
+  }
   else {
     g = cond.kind === 'scale' ? makeScale() : makeBox(cond.holes.length);
     cond.holes.forEach((h, i) => {
@@ -4628,16 +4720,16 @@ const ratIn = (o) => o ? { n: BigInt(o.n), d: BigInt(o.d) } : null;
 
 function condOut(c) {
   if (!c) return null;
-  if (/^(wild|any)/.test(c.kind)) return { ...c };
   if (c.kind === 'number') return { kind: 'number', value: ratOut(c.value), op: c.op };
-  return { kind: c.kind, holes: c.holes.map(condOut) };
+  if (c.holes) return { kind: c.kind, holes: c.holes.map(condOut) };
+  return { ...c };
 }
 function condIn(o) {
   if (!o) return null;
   if (o.kind === 'wild') return WILD;
-  if (/^(wild|any)/.test(o.kind)) return { ...o };
   if (o.kind === 'number') return { kind: 'number', value: ratIn(o.value), op: o.op };
-  return { kind: o.kind, holes: o.holes.map(condIn) };
+  if (o.holes) return { kind: o.kind, holes: o.holes.map(condIn) };
+  return { ...o };
 }
 const stepOut = (s) => s.type === 'setValue' ? { ...s, value: ratOut(s.value) } : s;
 const stepIn = (s) => {
@@ -5615,7 +5707,7 @@ addEventListener('keydown', (e) => {
     return;
   }
   if (held.userData.kind === 'box') {
-    if (/^[1-9]$/.test(e.key)) {
+    if (/^[0-9]$/.test(e.key)) {
       pushUndo();
       resizeHeldBox(+e.key);
       say(`A box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}.`);
@@ -6322,6 +6414,7 @@ renderer.setAnimationLoop((now) => {
   for (let i = allScales.length - 1; i >= 0; i--) {
     const sc = allScales[i];
     if (!sc.parent) { allScales.splice(i, 1); continue; }
+    if (sc.__tiltLock) continue;      // a bubble scale holds its verdict
     const [a, b] = sc.userData.holes.map(h => h.thing);
     let targetTilt = 0;
     if (a?.userData.kind === 'number' && b?.userData.kind === 'number') {

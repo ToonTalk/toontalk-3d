@@ -39,11 +39,10 @@ Update this file as decisions are made.
   **SAME** in spirit (ours splits the excess off as a box *with its
   contents*; original drops "the extra part" — **KEEP** ours, it loses
   nothing).
-- **Box dropped on a number N splits into [N holes | rest]** — **GAP**, and a
-  lovely array primitive (the manual pairs it with blank-box matching to
-  index arbitrary holes).
-- Zero-hole boxes (vanish when joined) — **GAP** (needed as the empty-array
-  base case for recursive box programs).
+- Box dropped on a number N splits into [first N] and [the rest] — **DONE**
+  (2026-08-19; our flavour spends the number and keeps both parts' contents).
+- Zero-hole boxes — **DONE** (2026-08-19; type 0 on a held box; joining a
+  0-hole box adds nothing and spends the husk).
 - Conversions onto a blank box: text → one character per hole; robot team →
   one robot per hole; notebook → one page per hole (and box → blank notebook
   the other way) — **GAP** (low priority, very ToonTalk).
@@ -85,15 +84,15 @@ Update this file as decisions are made.
   and "He'll start working right away".
 - Ours: rooms are *things* — nestable, mailable, fileable — which the
   original's houses are not. **KEEP** the rooms-as-things model.
-- **GAP (critical for recursion): robots cannot obtain or populate rooms.**
-  The room stack refuses robots, and there is no `newRoom` step. Everything
-  else exists: dropping a robot into a room installs it; dropping a gift
-  starts it. Plan: let robots take rooms and treat "robot + box into a room"
-  as our truck.
-- **GAP (critical): the copier refuses robots**, but the original's Magic
-  Wand in 'S' mode copies a robot *and its team* — this self-copying is how
-  doubly-recursive programs (Fibonacci) spawn their children. Plan: Mimi
-  copies robots (botOut/botIn already round-trips them faithfully).
+- Robots obtain and populate rooms — **DONE** (2026-08-19): the `newRoom`
+  step takes one from the stack, and a robot loads it the way users do —
+  robot + gift dropped in, our truck. Rooms stowed in the given box persist
+  (scratch spots are still swept); dirty rooms now run wherever they sit,
+  box holes included, and rooms inside rooms run recursively during the
+  bottle (depth cap 6), fixing the old depth-2 deadlock.
+- The copier duplicates robots, training, name and team included — **DONE**
+  (2026-08-19), the original wand's 'S' mode; broadcast birds carry robots
+  too. Recursive self-copying programs are now expressible.
 - Bombs: a robot can destroy the house it is in; contents are rescued only if
   Dusty is present. We have no teardown a robot can perform — finished
   recursive workers would accumulate forever. — **GAP**; our flavour needs
@@ -126,9 +125,10 @@ Update this file as decisions are made.
 
 - Original scales sit in a 3-hole box comparing their *neighbours*; ours are
   standalone with two pans — **KEEP** (documented divergence).
-- Robots can match on a scale's tilt (>, <, =); ours cannot — **GAP** (this
-  is the original's comparison/branching primitive; needed for real
-  programs).
+- Robots match on a scale's tilt — **DONE** (2026-08-19): a scale showing a
+  verdict trains a tilt condition ("a scale tipping left / right / a
+  balanced scale"), contents ignored; Ruby erases it to "any scale". The
+  bubble shows the scale frozen mid-tip.
 - Text comparison (alphabetical) — **GAP** alongside tilt matching.
 
 ## Sensors & randomness
@@ -136,10 +136,12 @@ Update this file as decisions are made.
 - Original sensors are live pads in the notebook: mouse, keyboard, time,
   "my address" — **GAP** as a family (needed only when pictures/games
   arrive).
-- **The random source** (needed for the sentence generator): sensor page 28,
-  a live pad showing 0–999, "It tries its best to be random"; freeze a
-  sample by dropping it on a zero. — **GAP**; our flavour could be a dice
-  thing from a stack whose value re-rolls on each take. **Planned.**
+- **The random source** — **DONE** (2026-08-19), as dice rather than the
+  original's live sensor pad (0–999 frozen by dropping on a zero): a dice
+  stack on the arc; drop a die on a number and it re-rolls to 1..faces (the
+  die is spent, like any dropped pad); drop a whole number on a die to set
+  its faces. Robots take dice (`newDie`); an erased die matches any die.
+  Dice also remove the main need for a remainder operation.
 
 ## Architecture: how the original ran dozens of houses (from the C++)
 
@@ -163,11 +165,11 @@ one level of nesting).
 
 **The scaling plan** (in order):
 
-1. *Semantics unlocks, current engine*: Mimi copies robots; robots take and
-   populate rooms (`newRoom`); nested rooms' pending work runs recursively
-   after each bottle; a dice thing for randomness; box-split-on-number and
-   zero-hole boxes; scale-tilt matching. This makes the sentence generator
-   and recursive Fibonacci *expressible*, if slow.
+1. *Semantics unlocks, current engine* — **DONE 2026-08-19**: Mimi copies
+   robots; robots take and populate rooms (`newRoom`); nested rooms run
+   recursively inside the bottle; dice for randomness; box-split-on-number
+   and zero-hole boxes; scale-tilt matching. The sentence generator and
+   recursive Fibonacci are now *expressible*, if slow.
 2. *The original's architecture*: separate the world model from the scene.
    Worlds stay data (the save format already is the data model); a headless
    interpreter steps robots against records; bird mail is guid-addressed
