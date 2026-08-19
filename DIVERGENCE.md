@@ -168,8 +168,14 @@ one level of nesting).
 1. *Semantics unlocks, current engine* — **DONE 2026-08-19**: Mimi copies
    robots; robots take and populate rooms (`newRoom`); nested rooms run
    recursively inside the bottle; dice for randomness; box-split-on-number
-   and zero-hole boxes; scale-tilt matching. The sentence generator and
-   recursive Fibonacci are now *expressible*, if slow.
+   and zero-hole boxes; scale-tilt matching. **Proven the same day**: the
+   sentence generator (examples/sentence-generator.world.json), doubly-
+   recursive Fibonacci — a robot that copies itself through Mimi and builds
+   its own call tree of 40 rooms, 6 deep, fib(8)=21 (examples/
+   fibonacci.world.json) — and a message-passing bank account with a dozing
+   teller (examples/bank-account.world.json). Room work is time-sliced
+   (~1.2 s per idle tick) so deep recursion never freezes the page, and
+   letters from deep rooms ride the bottles up one level at a time.
 2. *The original's architecture*: separate the world model from the scene.
    Worlds stay data (the save format already is the data model); a headless
    interpreter steps robots against records; bird mail is guid-addressed

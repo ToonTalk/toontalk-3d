@@ -1451,9 +1451,15 @@ function recHasDirtyRoom(o) {
   return false;
 }
 const ROOM_DEPTH_MAX = 12;
+// One idle tick spends at most this much wall-clock on room work, however
+// deep the recursion; whatever is still dirty resumes on the next tick.
+const ROOM_WORK_SLICE = 1200;
+let roomWorkT0 = 0;
 function runRoomWork(room, depth = 0, miOverride = null) {
   if (depth === 0 && roomWorkBusy) return;
+  if (depth === 0) roomWorkT0 = performance.now();
   if (depth > ROOM_DEPTH_MAX) return;
+  if (depth > 0 && performance.now() - roomWorkT0 > ROOM_WORK_SLICE) return;
   const ud = room.userData;
   // a room still counts as working when only a room INSIDE it has work left
   if (!ud.world?.active || !ud.world.stations?.stand) {
@@ -1473,7 +1479,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
   // couriers still in the air deliver first, so a burst can never overtake
   // them and scramble the pile's order
   for (const f of flights.splice(0)) {
-    const n2 = findNestByGuid(f.nestGuid) ?? (f.nest.parent ? f.nest : null);
+    const n2 = findNestByGuid(f.nestGuid) ?? (inScene(f.nest) ? f.nest : null);
     // cosmetic couriers carry no gift -- their delivery already happened
     if (f.phase === 0 && n2 && f.gift) { f.clone.remove(f.gift); deliverCopy(n2, f.gift); }
     f.clone.removeFromParent();
@@ -1498,6 +1504,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
     // rooms inside this room work too -- recursion is bottles all the way down
     if (depth < ROOM_DEPTH_MAX && !waiters.size && allStands.length <= 1) {
       for (let g = 0; g < 50; g++) {
+        if (performance.now() - roomWorkT0 > ROOM_WORK_SLICE) break;
         const r2 = findDirtyRoom(true);
         if (!r2) break;
         runRoomWork(r2, depth + 1, mi);
@@ -1595,8 +1602,9 @@ function findDirtyRoom(ignoreCooldown = false) {
     return null;
   };
   for (const t of benchThings) { const r = walk(t); if (r) return r; }
-  // inside a bottled room with no robot, the desk is just another surface
-  if (!activeBot && stations.stand?.occupant) {
+  // rooms work wherever they sit -- the robot's desk included. This only
+  // runs when the world is idle, so a mid-replay desk is never bottled.
+  if (stations.stand?.occupant) {
     const r = walk(stations.stand.occupant);
     if (r) return r;
   }
@@ -1899,16 +1907,23 @@ function spawnCloneDelivery(bird, thing, nest2, from) {
 // wherever she was -- a box hole, a spot, or the bench.
 // The guid is the pairing: it survives any rebuild, and copies of a nest
 // share it, so one bird feeds them all. The node reference is only a cache.
+// Part of the current world means the scene root is an ancestor -- a bare
+// parent check lies for things sitting inside detached containers.
+function inScene(o) {
+  let p = o;
+  while (p.parent) p = p.parent;
+  return p === scene;
+}
 function findNestByGuid(guid) {
-  return guid ? allNests.find(n2 => n2.parent && n2.userData.guid === guid) ?? null : null;
+  return guid ? allNests.find(n2 => n2.userData.guid === guid && inScene(n2)) ?? null : null;
 }
 function allNestsByGuid(guid) {
-  return guid ? allNests.filter(n2 => n2.parent && n2.userData.guid === guid) : [];
+  return guid ? allNests.filter(n2 => n2.userData.guid === guid && inScene(n2)) : [];
 }
 function birdDeliver(bird) {
   let nest = bird.__nest;
-  if (!nest || !nest.parent) nest = bird.__nest = findNestByGuid(bird.userData.nestGuid);
-  if (!nest || !nest.parent) {
+  if (!nest || !inScene(nest)) nest = bird.__nest = findNestByGuid(bird.userData.nestGuid);
+  if (!nest || !inScene(nest)) {
     // her nest may have been filed inside a room: she flies in through a
     // window, delivers, and comes back out
     const thing = held; held = null;
@@ -2968,7 +2983,7 @@ function advanceWorldClocks(dt) {
     f.t += dt;
     if (f.t < 0) continue;      // staggered start
     if (f.phase === 0) {
-      if (!f.nest.parent) {
+      if (!inScene(f.nest)) {
         // the nest node may have been rebuilt mid-flight: the guid finds it
         const again = findNestByGuid(f.nestGuid);
         if (!again) { f.clone.removeFromParent(); flights.splice(i, 1); continue; }

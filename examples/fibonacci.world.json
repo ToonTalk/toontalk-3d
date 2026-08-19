@@ -1,0 +1,818 @@
+{
+ "kind": "world",
+ "v": 1,
+ "bench": [
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "nest",
+      "id": 9101,
+      "guid": "fib-nest-1",
+      "hasEgg": false,
+      "pile": []
+     }
+    ]
+   },
+   "x": 1.25,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "8",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9101,
+      "nestGuid": "fib-nest-1"
+     },
+     {
+      "kind": "robot",
+      "name": "Fib",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        null,
+        null,
+        null,
+        null
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": [
+       {
+        "kind": "robot",
+        "name": "leaf-2",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "branch",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "1",
+           "d": "1"
+          },
+          "op": "-"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "in",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "in",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "out",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "1",
+           "d": "1"
+          },
+          "op": "-"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "in",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "in",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "out",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s2",
+           "path": []
+          }
+         },
+         {
+          "type": "newRoom"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "s1",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "newRoom"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "s2",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s2",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            4
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       }
+      ]
+     },
+     null,
+     null
+    ]
+   },
+   "x": 0.0,
+   "z": 1.7
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Fib",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "number",
+       "value": {
+        "n": "1",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      null,
+      null,
+      null,
+      null
+     ]
+    },
+    "program": [
+     {
+      "type": "newNumber"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "vacuum",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": null,
+    "team": [
+     {
+      "kind": "robot",
+      "name": "leaf-2",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "2",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        null,
+        null,
+        null,
+        null
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": []
+     },
+     {
+      "kind": "robot",
+      "name": "branch",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        null,
+        null,
+        null,
+        null
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "-"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "in",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "in",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "out",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "-"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "in",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "in",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "out",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s2",
+         "path": []
+        }
+       },
+       {
+        "type": "newRoom"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "s1",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "newRoom"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "s2",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s2",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": []
+     }
+    ]
+   },
+   "x": -0.85,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Sum",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "wildNumber"
+      },
+      {
+       "kind": "wildNumber"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ],
+       "nest": true
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": null,
+    "team": []
+   },
+   "x": 0.75,
+   "z": 1.3
+  }
+ ],
+ "stations": {},
+ "active": null
+}
