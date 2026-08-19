@@ -910,7 +910,13 @@ function setThingLabel(thing, text) {
     new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
   if (kind === 'box') plate.position.set(0, 0, (thing.userData.holeW + 0.07) / 2 + 0.004);
   else if (kind === 'bird') plate.position.set(0, 0.33, 0.03);
-  else plate.position.set(0, 0.27, 0.06);   // nests and anything else
+  else if (kind === 'nest') {
+    // flat on the table in front, like a museum label: standing up it poked
+    // out from behind whatever had been delivered, and read as wings
+    plate.rotation.x = -Math.PI / 2;
+    plate.position.set(0, 0.012, 0.30);
+  }
+  else plate.position.set(0, 0.27, 0.06);
   thing.add(plate);
   thing.__labelNode = plate;
 }
@@ -1486,23 +1492,33 @@ function renderRoomContents(room) {
   room.__contents = [];
   const ud = room.userData;
   if (ud.opaque) return;
-  // the standing furniture every room conceptually has: table, desk, and the
-  // arc of stacks behind -- a schematic miniature, not the live originals
-  const F = 0.085;   // world-to-room miniature factor
+  // The furniture a room conceptually has -- table, desk, the arc of stacks --
+  // drawn at EXACTLY the scale and offset the live world is mounted at, and
+  // from the real measurements, so a robot in there stands behind its own desk
+  // instead of being buried by a table drawn to a different plan.
+  const F = MINI_WORLD;
   const mini = new THREE.Group();
-  const tbl = new THREE.Mesh(new THREE.BoxGeometry(3.4 * F, 0.02, 1.3 * F),
+  mini.position.set(0, 0.034, -0.02);        // the same mount as the world
+  const bw = (BENCH.x1 - BENCH.x0) * F, bd = (BENCH.z1 - BENCH.z0) * F;
+  const tbl = new THREE.Mesh(new THREE.BoxGeometry(bw, 0.012, bd),
     new THREE.MeshStandardMaterial({ color: 0xc9b990, roughness: 0.7 }));
-  tbl.position.set(0, 0.052, 1.7 * F);
+  tbl.position.set((BENCH.x0 + BENCH.x1) / 2 * F, BENCH_TOP * F,
+                   (BENCH.z0 + BENCH.z1) / 2 * F);
   mini.add(tbl);
-  const dsk = new THREE.Mesh(new THREE.BoxGeometry(0.52 * F, 0.015, 0.44 * F),
-    new THREE.MeshStandardMaterial({ color: 0xcabc98, roughness: 0.6 }));
-  dsk.position.set(0.03, 0.045, 0.35 * F);
-  mini.add(dsk);
-  for (let k = 0; k < 8; k++) {
-    const th = (-78 + k * (156 / 7)) * Math.PI / 180;
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * F, 0.27 * F, 0.05, 10),
-      new THREE.MeshStandardMaterial({ color: k === 7 ? 0x9fd8ff : 0x3a414d, roughness: 0.7 }));
-    p.position.set(2.45 * F * Math.sin(th), 0.04, (0.55 - 2.45 * Math.cos(th)) * F);
+  const sp = stations.stand?.point;
+  if (sp) {
+    const dsk = new THREE.Mesh(new THREE.BoxGeometry(0.52 * F, 0.010, 0.44 * F),
+      new THREE.MeshStandardMaterial({ color: 0xcabc98, roughness: 0.6 }));
+    dsk.position.set(sp.x * F, stations.stand.topY * F, sp.z * F);
+    mini.add(dsk);
+  }
+  for (const def of STATION_DEFS) {
+    const st = stations[def.id];
+    const h = Math.max(0.02, (st?.plinth ?? 0.5) * F);
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * F, 0.27 * F, h, 10),
+      new THREE.MeshStandardMaterial({ color: def.kind === 'copier' ? 0x9fd8ff : 0x3a414d,
+                                       roughness: 0.7 }));
+    p.position.set(def.x * F, h / 2, def.z * F);
     mini.add(p);
   }
   mini.traverse(o => { delete o.__pick; });
@@ -1706,7 +1722,9 @@ function enterRoom(room) {
     back.userData.stepRounds = 0;
     scene.remove(outerCtx.root);
     mountRoomWorld(back);
-    if (outerCtx.shell?.label) { back.userData.label = outerCtx.shell.label; paintRoomLabel(back); }
+    // whatever you had out on the table is in here now: say so on the walls
+    back.userData.label = outerCtx.shell?.label ?? 'your table';
+    paintRoomLabel(back);
     if (outerCtx.shell) back.setOpaque(outerCtx.shell.opaque);
     // the entered world takes the stage
     innerCtx.shell = oldShell;
@@ -2212,6 +2230,27 @@ function buildThing(spec) {
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   if (spec.label) setThingLabel(b, spec.label);
   return b;
+}
+// What a thought asks for, as a thing you can hold. A robot trained from a
+// file never met an original, so reaching into its bubble hands you what it
+// expects instead: erased where the thought is general.
+function thingFromCond(c) {
+  if (!c) return null;
+  if (c.kind === 'anyBird') return makeBird(null);
+  if (c.kind === 'anyNest') { const n = makeNest(); n.__egg.removeFromParent(); n.userData.hasEgg = false; return n; }
+  if (c.kind === 'anyRobot') return makeMiniRobot();
+  if (c.kind === 'anyRoom') return makeRoom();
+  if (c.kind === 'wildDie' || c.kind === 'die') return makeDie(c.faces ?? 6);
+  if (c.kind === 'scaleTilt') return makeScale();
+  if (c.kind === 'box' || c.kind === 'scale') {
+    const b = c.kind === 'scale' ? makeScale() : makeBox(c.holes.length);
+    c.holes.forEach((h, i) => {
+      const t = thingFromCond(h);
+      if (t) putInHole(b.userData.holes[i], t);
+    });
+    return b;
+  }
+  return buildThing(c);       // numbers, texts and the wildcards it knows
 }
 // A true copy for the copier and the wand step. Unlike buildThing, identities
 // entangle the way ToonTalk's do: a copied bird serves the same nest, and a
@@ -2980,7 +3019,7 @@ function setWiggle(node) {
 }
 function advanceWiggle(dt) {
   if (!wiggle) return;
-  if (!wiggle.node.parent || !held) return setWiggle(null);
+  if (!wiggle.node.parent) return setWiggle(null);
   wiggle.t += dt;
   wiggle.node.rotation.y = wiggle.ry + Math.sin(wiggle.t * 15) * 0.10;
   wiggle.node.scale.setScalar(wiggle.s * (1 + 0.035 * Math.abs(Math.sin(wiggle.t * 15))));
@@ -3591,13 +3630,8 @@ function combine(slot, incoming, isHole, fromWorld, side) {
       target.setValue(rat(1n + BigInt(Math.floor(Math.random() * Number(faces)))));
     });
   }
-  // a whole number dropped on a die sets how many faces it has
   if (target.userData.kind === 'die' && incoming.userData.kind === 'number') {
-    const v = incoming.userData.value;
-    if (v.d !== 1n || v.n < 1n || v.n > 1000000000n) {
-      return refuse('A die takes a whole number of faces, one or more.');
-    }
-    return mergeOnto(incoming, fromWorld, target, () => target.setFaces(Number(v.n)));
+    return refuse('Nothing to do — to change a die, hold it and type how many faces it should have.');
   }
   if (target.userData.kind === 'die' || incoming.userData.kind === 'die') {
     return refuse('A die rolls onto a number — or takes a whole number to set its faces.');
@@ -3885,12 +3919,14 @@ function handleClick(target) {
   if (target.kind === 'miniCond') {
     const bot = target.bot;
     if (held) return say('Empty your hand first.');
-    if (!bot.trainedOn) return say('It does not remember what it was first shown.');
-    const copy = thingIn(bot.trainedOn, new Map(), []);
-    scene.add(copy);
+    const copy = bot.trainedOn ? thingIn(bot.trainedOn, new Map(), [])
+                               : thingFromCond(bot.condition);
+    if (!copy) return say('Its thought is empty — there is nothing to take out.');
+    WROOT.add(copy);
     copy.position.copy(bot.node.getWorldPosition(new THREE.Vector3())).y += 0.5;
     userTake(copy);
-    say('A copy of what it was first shown.');
+    say(bot.trainedOn ? 'A copy of what it was first shown.'
+                      : 'A copy of what it expects.');
     return;
   }
   if (target.kind === 'cond') {
@@ -3901,15 +3937,19 @@ function handleClick(target) {
     {
       // reaching into the bubble empty-handed takes out a copy of the very
       // thing the robot was first shown
-      if (!held && activeBot?.trainedOn) {
-        const copy = thingIn(activeBot.trainedOn, new Map(), []);
-        scene.add(copy);
-        copy.position.copy(condDisplay
-          ? condDisplay.getWorldPosition(new THREE.Vector3())
-          : new THREE.Vector3(0, 2.1, 0.4));
-        userTake(copy);
-        say('A copy of what the robot was first shown.');
-        return;
+      if (!held && activeBot) {
+        const copy = activeBot.trainedOn ? thingIn(activeBot.trainedOn, new Map(), [])
+                                         : thingFromCond(condition);
+        if (copy) {
+          WROOT.add(copy);
+          copy.position.copy(condDisplay
+            ? condDisplay.getWorldPosition(new THREE.Vector3())
+            : new THREE.Vector3(0, 2.1, 0.4));
+          userTake(copy);
+          say(activeBot.trainedOn ? 'A copy of what the robot was first shown.'
+                                  : 'A copy of what the robot expects.');
+          return;
+        }
       }
       return say('Wake Ruby to erase parts of the thought, or Dusty to remove them.');
     }
@@ -4316,6 +4356,7 @@ function placeReading() {
 document.getElementById('held')
   .addEventListener('click', () => { if (held || reading) toggleReading(); });
 function noteHeld() {
+  if (held) delete held.__faceBuf;     // typing on a die starts a fresh count
   valueAtPickup = held?.userData.value ?? null;
   opAtPickup = held?.userData.op ?? '+';
   holesAtPickup = held?.userData.holes?.length ?? 0;
@@ -4951,7 +4992,7 @@ function dustySuck(getVictim) {
   sfx('vacuum');
   let victim = null, dest = null, from0 = null, scale0 = 1;
   enqueue({
-    dur: 0.45,
+    dur: 0.7,
     start() {
       victim = getVictim();
       if (!victim) { busy = false; return; }
@@ -5836,7 +5877,7 @@ function refreshUI() {
       : kind === 'text' ? (reading ? 'click here to lower it; type to write on it'
           : 'click here to hold it up and read it; type to write on it')
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
-      : kind === 'die' ? 'drop it on a number to re-roll it; a whole number dropped on it sets its faces'
+      : kind === 'die' ? 'type how many faces it should have; drop it on a number to re-roll that number'
       : 'put it down on the bench';
   }
   if (hintTimer) return;
@@ -6027,6 +6068,24 @@ addEventListener('keydown', (e) => {
     refreshUI();
     return;
   }
+  if (held.userData.kind === 'die') {
+    if (/^[0-9]$/.test(e.key)) {
+      pushUndo();
+      held.__faceBuf = ((held.__faceBuf ?? '') + e.key).slice(0, 7);
+      const n = Math.max(1, Math.min(1000000, +held.__faceBuf));
+      held.setFaces(n);
+      say(`A die of ${n} face${n > 1 ? 's' : ''}.`);
+      return refreshUI();
+    }
+    if (e.key === 'Backspace') {
+      pushUndo();
+      held.__faceBuf = (held.__faceBuf ?? String(held.userData.faces)).slice(0, -1);
+      held.setFaces(Math.max(1, +held.__faceBuf || 1));
+      e.preventDefault();
+      return refreshUI();
+    }
+    return;
+  }
   if (held.userData.kind === 'box') {
     if (/^[0-9]$/.test(e.key)) {
       pushUndo();
@@ -6074,7 +6133,12 @@ addEventListener('keydown', (e) => {
 // What a drop would actually land on, for the jiggle: the thing itself, the
 // occupant of the hole aimed at, or the robot being offered something.
 function wiggleTargetOf(t) {
-  if (!t || !held) return null;
+  if (!t) return null;
+  // the thought bubble answers to an empty hand too: its parts are small, and
+  // knowing which one you are about to take is half the game
+  if (t.kind === 'cond') return condNodeAt(t.path);
+  if (t.kind === 'miniCond') return t.bot?.node?.__miniBubble ?? null;
+  if (!held) return null;
   if (t.kind === 'thing') {
     if (t.thing === held) return null;
     // aimed at a box: the hole the drop would land in answers, not the shell
@@ -6180,6 +6244,14 @@ function tipFor(t) {
   if (t.kind === 'roomDoor') {
     return 'The door — click to step inside: the room becomes the world around you, and this one shrinks onto its table.';
   }
+  if (t.kind === 'roomLever') {
+    const r = t.room;
+    return r?.userData.dirty
+      ? 'The switch, up — the robot inside is working. Click to stop it.'
+      : (roomHasWorker(r)
+         ? 'The switch, down — click to set the robot inside working, up to the Rounds limit.'
+         : 'The switch — nothing to run yet: the room needs a robot and something on its desk.');
+  }
   if (t.kind === 'roomRoof') {
     return 'The roof — click to switch between solid walls (works instantly, unseen) and glass (you can watch). A robot stopped at the Rounds limit also picks its work back up.';
   }
@@ -6270,10 +6342,7 @@ function tipFor(t) {
                   : 'A bird — drop something on her to send it to her nest, or click to pick her up.';
     }
     if (ud.kind === 'die') {
-      if (held?.userData.kind === 'number') {
-        return 'Drop the number on the die to set how many faces it has.';
-      }
-      return `A die — drop it on a number and the number re-rolls to anything from 1 to ${ud.faces}; the die is spent in the throw. Click to pick it up.`;
+      return `A die — drop it on a number and the number re-rolls to anything from 1 to ${ud.faces}; the die is spent in the throw. Click to pick it up, then type to change its faces.`;
     }
     return null;
   }
@@ -6309,7 +6378,7 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
   // track always, not only while carrying: otherwise picking something up
   // teleports it to wherever the hand was last left
   if (mode === 'world') moveHand(ev, target?.point?.y ?? null);
-  setWiggle(held ? wiggleTargetOf(target) : null);
+  setWiggle(wiggleTargetOf(target));
   renderer.domElement.style.cursor = target ? 'pointer' : '';
   const tip = tipFor(target);
   if (tip) {
