@@ -6560,6 +6560,10 @@ function setupDemo(name) {
     const three = makeNumber(rat(3));
     three.setOp('*');
     putOnBench(three, { x: 0.95, z: 1.95 });
+  } else if (name === 'dice') {
+    putOnBench(makeNumber(rat(1)), { x: -0.35, z: 1.7 });
+    putOnBench(makeDie(), { x: 0.3, z: 1.65 });
+    putOnBench(makeNumber(rat(20)), { x: 0.95, z: 1.95 });
   } else if (name === 'copier') {
     putOnBench(makeNumber(rat(7)), { x: -0.4, z: 1.7 });
     const bx = makeBox(1);
@@ -6573,7 +6577,7 @@ function setupDemo(name) {
   // strip the scene to what the lesson needs: only the listed stacks stay
   const keep = ({ pads: ['texts', 'numbers'], box: ['boxes', 'numbers'],
                   bird: ['numbers'], robot: ['numbers'], room: [],
-                  numbers: ['numbers'], copier: [] })[name] ?? [];
+                  numbers: ['numbers'], copier: [], dice: ['dice', 'numbers'] })[name] ?? [];
   for (const [id, st] of Object.entries(stations)) {
     if (st.kind === 'stack' && !keep.includes(id)) {
       st.cubes.forEach(c2 => { c2.visible = false; });

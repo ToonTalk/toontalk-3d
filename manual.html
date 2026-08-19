@@ -70,12 +70,14 @@
   <a href="#numbers">Numbers</a>
   <a href="#pads">Text pads</a>
   <a href="#boxes">Boxes</a>
+  <a href="#dice">Dice</a>
   <a href="#birds">Birds &amp; nests</a>
   <a href="#robots">Robots</a>
   <a href="#copier">Mimi</a>
   <a href="#tools">Dusty &amp; Ruby</a>
   <a href="#rooms">Rooms</a>
   <a href="#notebook">Notebook &amp; files</a>
+  <a href="#examples">Examples</a>
   <a href="toontalk-3d.html" style="font-weight:bold">The workshop &rarr;</a>
 </nav>
 <main>
@@ -106,7 +108,9 @@ Dropping a number on a number combines them: the arriving one applies its
 operation. Division gives exact fractions, never rounded decimals.</p>
 <p>A number block shows its value on the front and top; walk the camera close
 and the other faces show the same value in English words, scientific notation,
-and decimal form — with a bar over a repeating part when it fits.</p>
+and decimal form — with a bar over a repeating part when it fits. Fractions get
+words too: <b>1/6</b> reads <em>one sixth</em>, <b>3/4</b> <em>three
+quarters</em>, <b>7/2</b> <em>seven halves</em>.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> drop the 6 on the &frac12; to add them. Pick
   up the &times;3 and drop it on the result. Take fresh 1s from the stack and
@@ -121,24 +125,52 @@ for a new line, <kbd>Ctrl</kbd>+<kbd>V</kbd> pastes). Drop one pad on
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
 A whole number dropped on a written pad shifts its first or last letter along
 the alphabet; on a blank pad, the number writes itself out as digits.</p>
+<p>The other way round picks letters out: <b>drop a pad on a whole number</b>
+and that number chooses a letter — "Talk" dropped on a <b>2</b> leaves a pad
+reading "a". The number is spent saying which letter you meant.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> pick up "Talk" and drop it on the right edge
-  of "Toon". Then try the 2 on a pad's left edge.</div>
+  of "Toon". Take a 1 from the number stack, type <kbd>2</kbd>, and drop it on a
+  pad's left edge to shift a letter — or drop a pad on it to pick out letter 2.</div>
   <iframe loading="lazy" src="toontalk-3d.html?demo=pads"></iframe>
 </div>
 
 <h2 id="boxes">Boxes and scales</h2>
 <p>Boxes have holes, and holes hold anything — numbers, pads, nests, other
-boxes, even little robots (they lie down). Type a digit while holding a box to
-give it that many holes. Boxes are arrays: <b>drop a box on a box to join
-them</b> — left half to put its holes in front, right half behind — and
-shrinking a box splits the extra holes off as a box of their own.</p>
+boxes, even little robots (they lie down inside). Type a digit while holding a
+box to give it that many holes; type <kbd>0</kbd> and you have an empty box,
+which joins onto another box without changing it. Boxes are arrays: <b>drop a
+box on a box to join them</b> — left half to put its holes in front, right half
+behind — and shrinking a box splits the extra holes off as a box of their
+own.</p>
+<p><b>Drop a box on a whole number</b> and it splits there: a box of five
+dropped on a <b>2</b> becomes a box of the first two and a box of the rest.
+That, with an empty box for the end, is how a robot walks along an array.</p>
 <p>Scales have two pans that work exactly like holes; the beam tips toward the
-larger number, so a robot's eye can compare.</p>
+larger number. A robot trained on a scale that is <em>saying</em> something
+remembers the tilt, not the numbers: its thought reads "a scale tipping left",
+and it fires on any pair that leans that way — which is how a robot chooses
+between two paths.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> put the 8 and 9 in the holes. Hold the box and
   type <kbd>4</kbd>. Take a second box from the stack and join them.</div>
   <iframe loading="lazy" src="toontalk-3d.html?demo=box"></iframe>
+</div>
+
+<h2 id="dice">Dice</h2>
+<p>Dice are where chance comes from. A die does not show a rolled number of its
+own — it <b>re-rolls the number it lands on</b>: drop a die on a 1 and the 1
+becomes anything from 1 to 6, and the die is spent in the throw, like any pad
+you drop. To change the range, <b>drop a whole number on a die</b>: a 20 on a
+die makes a twenty-sided one, and it says so on its faces.</p>
+<p>Robots take dice from the stack exactly as you do, so "throw a die into hole
+2" is an ordinary step. A team whose members expect different rolled numbers is
+a program that branches on chance — that is all the
+<a href="#examples">sentence factory</a> does.</p>
+<div class="try">
+  <div class="cap"><b>Try it:</b> drop the die on the number and watch it
+  change. Take another die, drop the 20 on it, then roll that.</div>
+  <iframe loading="lazy" src="toontalk-3d.html?demo=dice"></iframe>
 </div>
 
 <h2 id="birds">Birds and nests</h2>
@@ -184,8 +216,10 @@ anything on her upper platform and she scans it; an independent, exact copy
 drops into the lower tray — contents, names and all. Click a surface with an
 empty hand to take from it (the tray first, then the original). Robots use
 Mimi exactly the way you do, which is how a robot copies things mid-program.
-She copies anything except robots — a copied bird serves the same nest, and a
-copied nest joins the flock so deliveries broadcast.</p>
+She copies <em>anything</em> — a copied bird serves the same nest, a copied
+nest joins the flock so deliveries broadcast, and a copied robot arrives with
+its training, its name and its whole team. A robot that copies <em>itself</em>
+this way and sets the copy to work in a new room is a recursive program.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> set the 7 on Mimi's top platform and watch
   the tray. Copy the box too — then put a number in one box and see the other
@@ -197,7 +231,7 @@ copied nest joins the flock so deliveries broadcast.</p>
 <p>Two helpers live in front of the table. <b>Dusty the vacuum removes</b>:
 click him to wake him, then click things to vacuum them away, entries off
 notebook pages, or parts of a robot's thought (leaving an empty hole, which
-matches anything or nothing). <b>Ruby the eraser generalises</b>: wake her and
+then matches anything). <b>Ruby the eraser generalises</b>: wake her and
 click a part of a thought — a 7 becomes <em>any number</em>, then
 <em>anything</em>. She also erases real things in place: an erased number
 stands for any number, which is how you build a robot's expectations by hand.
@@ -207,14 +241,21 @@ Waking one settles the other, and whoever is awake fidgets.</p>
 <p>Rooms are little houses that each hold <b>an entire workshop</b>. Drop a
 robot on a room and it steps inside, ready behind the desk. Drop anything else
 on the room and it lands on that desk — and the robot inside gets to work the
-moment your world goes quiet. The chimney smokes while there is work going on.</p>
+moment your world goes quiet. The chimney smokes while somebody in there is
+actually working; a room merely holding unopened deliveries sits quiet.</p>
 <p>Click the <b>roof</b> to switch between solid walls (the room works
 instantly, unseen) and glass (you watch it work, round by round, at your speed
-setting). The big lever on the side wall runs and stops the room: up, the robot inside works; down, it rests. Click the
-<b>door</b> to step inside: the room becomes the world around you, and the
-world you left shrinks onto the table as a little room of its own — walk back
-out through its door. Birds fly in and out of rooms to reach their nests, so
-a machine in a box can feed a nest on your table.</p>
+setting). The big lever on the side wall runs and stops the room: up, the robot
+inside works; down, it rests. Click the <b>door</b> to step inside: the room
+becomes the world around you, and the world you left shrinks onto the table as
+a little room of its own — walk back out through its door. If the room was
+running when you opened the door, its robot picks straight back up once it has
+grown to full size. Birds fly in and out of rooms to reach their nests, so a
+machine in a box can feed a nest on your table.</p>
+<p><b>Robots can build rooms too.</b> A robot may take a room from the stack,
+drop a robot in and something for it to work on, and stow the whole house in a
+hole of the box it is holding — a machine that builds machines. Rooms inside
+rooms work as well, all the way down.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> drop the mini robot on the room, then the 4.
   Click the roof to make the walls glass. Click the door to step inside.</div>
@@ -233,6 +274,30 @@ notebook remembers everything between visits.</p>
 trained robot, a room with a whole workshop inside. <b>Save world</b> writes
 everything. <b>Import file</b> (or dropping a file onto the app) brings either
 back: things land in your hand, worlds replace the workshop.</p>
+
+<h2 id="examples">Example worlds</h2>
+<p>Three finished programs live in the
+<a href="https://github.com/ToonTalk/toontalk-3d/tree/main/examples">examples
+folder</a>. Download one and use <b>Import file</b> to load it.</p>
+<p><b>The sentence factory.</b> A glass room called the Scriptorium holds a team
+of twenty robots that roll dice to pick words, join text pads into sentences,
+and hand each one to a bird who flies it out to a nest on your table. Pull the
+room's lever and the nest fills with lines like <em>"the frog dreams of the
+witch."</em> Every mechanism in it is one from this manual: dice for the choice,
+team matching for the branch, pads for the words, a bird for the stream.</p>
+<p><b>Fibonacci.</b> A robot that copies itself. Given a box holding a number,
+it drops a &minus;1 on the number, copies its own box through Mimi twice,
+builds two rooms, puts a copy of itself in each, and carries both houses away
+in its own box — the two recursive calls. The robots that reach 1 or 2 mail a
+single <b>1</b> to a shared nest, so counting the letters counts the leaves of
+the call tree: for 8, twenty-one of them, from forty rooms nested six deep. A
+second robot then adds the pile up.</p>
+<p><b>The bank account.</b> A box holding a balance and a nest, worked by a
+robot called the Teller who dozes whenever the nest is empty. A request is a
+box holding an amount and a bird to reply to; give one to the request bird and
+the Teller wakes, adds the amount (negative to withdraw), sends a copy of the
+new balance home with the request's own bird, and goes back to sleep. It is a
+whole message-passing object in two boxes and one robot.</p>
 
 <footer>
   ToonTalk 3D is an open experiment in rebuilding
