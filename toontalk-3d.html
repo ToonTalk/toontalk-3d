@@ -2539,7 +2539,7 @@ function putOnBench(thing, at) {
 
 function putOnStation(st, thing) {
   scene.add(thing);
-  thing.scale.setScalar(1);
+  thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : 1);
   thing.quaternion.identity();
   thing.position.set(st.point.x, st.topY + thing.userData.rest, st.point.z);
   st.occupant = thing;
@@ -4134,6 +4134,16 @@ function userClick(target) {
         return say('That hole is taken — drop the robot in an empty one.');
       }
       return say('Robots only team up with other robots.');
+    }
+    // Any drop aimed at a box goes to the hole under the pointer -- clicks on
+    // the shell used to fall through to a refusal and bounce to the bench.
+    // (A held box still means join, and a box dropped on a number splits.)
+    if (held.userData.kind !== 'box' && holesOf(target.thing)) {
+      const h = holeUnder(target.thing, target.point);
+      if (h) {
+        if (!h.thing) return userPutInHole(h);
+        return handleClick({ kind: 'thing', thing: h.thing, point: target.point });
+      }
     }
     if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
       return say('Set it down on the bench.');
@@ -6092,8 +6102,19 @@ addEventListener('keydown', (e) => {
 // occupant of the hole aimed at, or the robot being offered something.
 function wiggleTargetOf(t) {
   if (!t || !held) return null;
-  if (t.kind === 'thing') return t.thing === held ? null : t.thing;
-  if (t.kind === 'hole') return t.box?.userData.holes?.[t.index]?.thing ?? t.box;
+  if (t.kind === 'thing') {
+    if (t.thing === held) return null;
+    // aimed at a box: the hole the drop would land in answers, not the shell
+    if (held.userData.kind !== 'box' && holesOf(t.thing)) {
+      const h = holeUnder(t.thing, t.point);
+      if (h) return h.thing ?? h.pocket;
+    }
+    return t.thing;
+  }
+  if (t.kind === 'hole') {
+    const h = t.box?.userData.holes?.[t.index];
+    return h ? (h.thing ?? h.pocket) : null;
+  }
   if (t.kind === 'botThing') return t.bot?.node ?? null;
   if (t.kind === 'station') {
     const st = t.st ?? stations[t.id];
