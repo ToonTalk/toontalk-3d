@@ -82,27 +82,83 @@ bird travels with the child — builds a house for each, and then simply
 needed. When both nests hold a number, the adder robot takes them, drops one
 on the other, and answers.
 
-This is the more faithful program, but it is the slower one: every house's
-turn re-bottles the whole tree, so `fib(6)` takes a second or two and larger
-inputs can stall. Until the engine/view split (see `DIVERGENCE.md`) the
-leaf-counting version above is the one to reach for.
+This is the faithful one, and since worlds became live (see `DIVERGENCE.md`)
+it is also fast: `fib(7)` answers in under a second, and `fib(10) = 55` —
+109 houses nested eight deep — in about three. Edit `N` in the generator to
+push it further.
 
 Regenerate with `python make_fibonacci_recursive.py`.
 
 ## bank-account.world.json
 
-A message-passing bank account. The account is a box `[balance,
-request-nest]` worked by the **Teller**. A request is a box `[amount,
-reply-bird]`: drop one on the request bird (labelled *requests*) and she
-files it on the teller's nest. The dozing Teller wakes, moves the amount
-onto the balance — a negative amount is a withdrawal — sends a *copy* of
-the new balance home with the request's own bird, vacuums the emptied
-request away, and dozes again. The nest labelled *statements* piles up the
-balance history.
+A bank account as a message-passing object, **sealed inside a house**. The
+account box sits on the Teller's desk in there, so nothing on the table can
+reach the balance: the only way in is to send a request to the bird marked
+*requests*. That is encapsulation you can walk around and look at.
 
-Hand the account box to the Teller first (it dozes: the nest is empty),
-then feed requests to the bird. Copy a request on Mimi for more — a copied
-bird serves the same statements nest. Watch the Teller shrink to doze and
-spring up whenever mail lands.
+A request is a box `[amount, a bird to reply to]` — negative takes money out.
+Drop one on the requests bird and she flies it into the house, onto the nest
+in the account box. The Teller wakes and his team decides **with a scale
+rather than a counter**:
+
+- **take one** — the nest holds a request: lift it off, fetch a scale, and
+  weigh what the balance *would* be (a copy of the balance with the amount
+  added) against nothing at all.
+- **Teller / ok too** — the scale tips left or sits level, so the sum is zero
+  or better: bank the amount and send the new balance home with the request's
+  own bird.
+- **sorry** — the scale tips right: copy the *not enough money* slip and send
+  that instead. The balance is not touched.
+
+With no scale on the desk only *take one* can match, and with one there only
+the three verdicts can, so the team walks through weigh-then-decide without
+any step counter — the scale itself is the state.
+
+Try the −500 request. Withdrawing *exactly* the balance is allowed (the scale
+balances), which is the boundary worth checking by hand.
 
 Regenerate with `python make_bank_account.py`.
+
+
+## grammar.world.json
+
+The sentence factory again, but this time **the robots do not know the
+grammar — they read it**. Modelled on the *Sentences* notebook in ToonTalk 3.
+
+Inside the house, the work box holds `[still to say, the sentence so far, the
+dictionary, a bird, the symbol in hand, what to start over with]`. A symbol is
+either a **word** (a text pad, said as it stands) or a **rule** (a number,
+looked up and expanded). Rule *k* lives in hole *k* of the dictionary as
+`[alternatives, die]` — the die has one face per alternative:
+
+```
+1 sentence    -> noun-phrase verb noun-phrase . | noun-phrase verb .
+2 noun phrase -> noun | adjective noun-phrase        (mentions itself!)
+3 verb        -> rule | kick | walk
+4 noun        -> girls | boys | dogs | cats
+5 adjective   -> big | pink | silly
+```
+
+Four robots run the whole language:
+
+- **take one** splits the first symbol off the front of what is still to say.
+- **say it** (the symbol in hand is a word) joins it onto the sentence.
+- **expand it** (a number) splits a *copy* of the dictionary at that number to
+  find the rule, throws the die kept with it, splits the alternatives at the
+  roll to choose one, and joins its symbols onto the **front** of what is
+  still to say.
+- **send it** (nothing left to say — an empty box) gives the sentence to the
+  bird and starts the next one.
+
+Splitting a box on a number is how everything is indexed here, exactly as
+*PickOne* does it in the original, and the empty box is the base case exactly
+as *MakeExamplestop* matches it. Because rule 2 mentions itself, adjectives
+pile up as deep as the dice allow: *"pink silly big big boys kick silly silly
+dogs."*
+
+Set Rounds to 200 and pull the lever. Then walk in through the door and edit
+the dictionary — type new words on the pads, or give a rule another
+alternative and add a face to its die. The language changes; no robot is
+retrained, because none of them ever knew the language.
+
+Regenerate with `python make_grammar.py`.
