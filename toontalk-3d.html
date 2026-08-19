@@ -1860,19 +1860,25 @@ function restackNest(nest) {
 // Clone deliveries run outside the step queue so a whole flock can fly at
 // once; each clone drops its copy and then leaves the world for good.
 const flights = [];
+// A delivery landed: wake every house the nest sits inside (a server deep in
+// a stack of rooms must stir when its post arrives) and rouse any robot that
+// was dozing over it.
+function nestReceived(nest) {
+  for (let p = nest.parent; p; p = p.parent) {
+    if (p.userData?.kind === 'room' && p.__ctx) {
+      p.userData.dirty = true;
+      p.userData.stepRounds = 0;
+    }
+  }
+  checkWaiting();
+}
 function deliverCopy(nest2, gift) {
   gift.scale.setScalar(1);
   gift.quaternion.identity();
   nest2.add(gift);
   nest2.userData.pile.unshift(gift);
   restackNest(nest2);
-  // mail into a house wakes it -- every house the nest sits inside
-  for (let p = nest2.parent; p; p = p.parent) {
-    if (p.userData?.kind === 'room' && p.__ctx) {
-      p.userData.dirty = true;
-      p.userData.stepRounds = 0;
-    }
-  }
+  nestReceived(nest2);
   sfx('chime');
   flash(nest2.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0)));
   refreshUI();
@@ -1987,7 +1993,7 @@ function birdDeliver(bird) {
       thing.position.set(0, nestSlots(pile)[0], 0);
       sfx('chime');
       flash(npos());
-      checkWaiting();
+      nestReceived(nest);
     }));
     if (old.length) steps.push({
       dur: 0.4,

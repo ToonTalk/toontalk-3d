@@ -4,118 +4,418 @@
  "bench": [
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "100",
-       "d": "1"
-      },
-      "op": "+"
+    "kind": "room",
+    "label": "The Bank",
+    "opaque": false,
+    "dirty": false,
+    "world": {
+     "kind": "world",
+     "v": 1,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "100",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "nest",
+         "id": 9201,
+         "guid": "bank-request-nest",
+         "hasEgg": false,
+         "pile": []
+        },
+        null,
+        null,
+        {
+         "kind": "text",
+         "text": "not enough money"
+        }
+       ]
+      }
      },
-     {
-      "kind": "nest",
-      "id": 9201,
-      "guid": "bank-request-nest",
-      "hasEgg": false,
-      "pile": []
-     }
-    ]
-   },
-   "x": -0.05,
-   "z": 1.5
-  },
-  {
-   "thing": {
-    "kind": "robot",
-    "name": "Teller",
-    "condition": {
-     "kind": "box",
-     "holes": [
-      {
-       "kind": "wildNumber"
-      },
-      {
+     "active": {
+      "kind": "robot",
+      "name": "Teller",
+      "condition": {
        "kind": "box",
        "holes": [
         {
          "kind": "wildNumber"
         },
+        null,
         {
-         "kind": "anyBird"
+         "kind": "scaleTilt",
+         "tilt": "L"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBird"
+          }
+         ]
+        },
+        null
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          3,
+          0
+         ]
         }
-       ]
-      }
-     ]
-    },
-    "program": [
-     {
-      "type": "take",
-      "at": {
-       "c": "given",
-       "path": [
-        1
-       ],
-       "nest": true
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "s0",
-       "path": []
-      }
-     },
-     {
-      "type": "take",
-      "at": {
-       "c": "s0",
-       "path": [
-        0
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "s0",
-       "path": [
-        1
-       ]
-      }
-     },
-     {
-      "type": "vacuum",
-      "at": {
-       "c": "s0",
-       "path": []
-      }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          3,
+          1
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": [
+       {
+        "kind": "robot",
+        "name": "ok too",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          null,
+          {
+           "kind": "scaleTilt",
+           "tilt": "="
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wildNumber"
+            },
+            {
+             "kind": "anyBird"
+            }
+           ]
+          },
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            1
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "sorry",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          null,
+          {
+           "kind": "scaleTilt",
+           "tilt": "R"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wildNumber"
+            },
+            {
+             "kind": "anyBird"
+            }
+           ]
+          },
+          {
+           "kind": "wildText"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            1
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "take one",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wildNumber"
+            },
+            {
+             "kind": "anyBird"
+            }
+           ]
+          },
+          null,
+          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "newScale"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2,
+            0
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2,
+            0
+           ]
+          }
+         },
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "0",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2,
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       }
+      ]
      }
-    ],
-    "trainedOn": null,
-    "team": []
+    }
    },
-   "x": -1.15,
-   "z": 1.3
+   "x": -0.45,
+   "z": 1.55
   },
   {
    "thing": {
@@ -124,8 +424,8 @@
     "nestGuid": "bank-request-nest",
     "label": "requests"
    },
-   "x": 0.7,
-   "z": 1.55
+   "x": 0.55,
+   "z": 1.5
   },
   {
    "thing": {
@@ -136,8 +436,8 @@
     "pile": [],
     "label": "statements"
    },
-   "x": 1.25,
-   "z": 1.8
+   "x": 1.2,
+   "z": 1.75
   },
   {
    "thing": {
@@ -158,7 +458,7 @@
      }
     ]
    },
-   "x": -1.15,
+   "x": -1.2,
    "z": 2.15
   },
   {
@@ -180,23 +480,45 @@
      }
     ]
    },
-   "x": -0.55,
+   "x": -0.6,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "-500",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9202,
+      "nestGuid": "bank-reply-nest"
+     }
+    ]
+   },
+   "x": 0.0,
    "z": 2.15
   },
   {
    "thing": {
     "kind": "text",
-    "text": "THE BANK ACCOUNT\n\nThe box holds the balance\nand a nest for requests.\nA request is a box: an\namount and a bird to reply\nto. Negative means\ntake money out."
+    "text": "THE BANK\n\nThe account lives on the\nTeller's desk inside the\nhouse. Nothing out here can\nreach it \u2014 the only way in\nis to send a request.\n\nA request is a box: an\namount and a bird to reply\nto. Negative takes money out."
    },
-   "x": 0.35,
+   "x": 0.62,
    "z": 2.15
   },
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\n1. Give the [100, nest] box\n   to the Teller. He dozes:\n   the nest is empty.\n2. Drop a request on the\n   bird marked \"requests\".\n3. He wakes, banks it, and\n   sends the new balance to\n   the statements nest.\n\nCopy a request on Mimi for\nmore of them."
+    "text": "TO RUN IT\n\nDrop a request on the bird\nmarked \"requests\". She flies\nit into the house.\n\nThe Teller weighs what the\nbalance WOULD be against\nnothing: tipping left or\nlevel, he banks it and sends\nthe new balance back.\nTipping right, he sends the\n\"not enough money\" slip.\n\nTry the \u2212500 one."
    },
-   "x": 1.15,
+   "x": 1.25,
    "z": 2.15
   }
  ],
