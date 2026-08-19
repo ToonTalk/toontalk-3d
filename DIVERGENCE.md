@@ -176,9 +176,15 @@ one level of nesting).
    teller (examples/bank-account.world.json). Room work is time-sliced
    (~1.2 s per idle tick) so deep recursion never freezes the page, and
    letters from deep rooms ride the bottles up one level at a time.
-2. *The original's architecture*: separate the world model from the scene.
-   Worlds stay data (the save format already is the data model); a headless
-   interpreter steps robots against records; bird mail is guid-addressed
-   queues between records; the 3D scene renders only the world you stand in,
-   with everything else running at duration 0 — exactly the C++'s trick,
-   reconstructed. This makes dozens of houses cheap.
+2. *The original's architecture* — **DONE 2026-08-19**, in an even more
+   ToonTalk-native form than planned: rather than a headless interpreter
+   over records, there is **one scene containing every world live** — a
+   room's world is real nodes hanging inside the room at toy scale, and
+   running it means pointing the single interpreter at that world's context
+   for a moment, at Instant speed (the C++'s `default_duration → 0`,
+   reconstructed as a context switch). No serialisation anywhere at
+   runtime; records exist only in save files. Bird mail is direct, since
+   every nest in every world is scene-connected. Glass rooms show the real
+   miniature world, not stand-ins. Measured: recursive fib(10) = 55 across
+   109 nested houses in under 3 seconds; the old engine stalled for
+   minutes on fib(6).
