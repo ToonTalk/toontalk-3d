@@ -285,19 +285,39 @@ and hand each one to a bird who flies it out to a nest on your table. Pull the
 room's lever and the nest fills with lines like <em>"the frog dreams of the
 witch."</em> Every mechanism in it is one from this manual: dice for the choice,
 team matching for the branch, pads for the words, a bird for the stream.</p>
-<p><b>Fibonacci.</b> A robot that copies itself. Given a box holding a number,
+<p><b>Fibonacci.</b> Two of them: one that counts the leaves of the call
+tree, and one written exactly as the definition reads — answer 1 for 1 and 2,
+otherwise ask fib(n−1) and fib(n−2) and answer their sum, with each call
+getting its own house, its own nest and its own bird to reply on. A robot
+facing a bare nest simply dozes, so waiting for two answers needs no
+machinery at all. The leaf-counting one works like this: given a box holding a number,
 it drops a &minus;1 on the number, copies its own box through Mimi twice,
 builds two rooms, puts a copy of itself in each, and carries both houses away
 in its own box — the two recursive calls. The robots that reach 1 or 2 mail a
 single <b>1</b> to a shared nest, so counting the letters counts the leaves of
 the call tree: for 8, twenty-one of them, from forty rooms nested six deep. A
 second robot then adds the pile up.</p>
-<p><b>The bank account.</b> A box holding a balance and a nest, worked by a
-robot called the Teller who dozes whenever the nest is empty. A request is a
-box holding an amount and a bird to reply to; give one to the request bird and
-the Teller wakes, adds the amount (negative to withdraw), sends a copy of the
-new balance home with the request's own bird, and goes back to sleep. It is a
-whole message-passing object in two boxes and one robot.</p>
+<p><b>The bank account.</b> The account sits on the Teller's desk
+<em>inside a house</em>, so nothing on the table can reach the balance — the
+only way in is to send a request to the bird. A request is a box holding an
+amount and a bird to reply to. The Teller weighs what the balance
+<em>would</em> be against nothing at all: tipping left or level he banks it
+and sends the new balance home with the request's own bird; tipping right he
+sends a "not enough money" slip instead. The scale is the whole decision, and
+also the whole state — with no scale on the desk only the robot that takes a
+request can match, and with one there only the three verdicts can.</p>
+<p><b>The grammar.</b> The sentence factory again, except the robots know
+nothing about nouns or verbs: the grammar is a dictionary box on the desk.
+A symbol is a word (a pad, said as it stands) or a rule (a number, looked
+up); each rule keeps its alternatives and a die with one face per
+alternative. Four robots run any language you write in those boxes — one
+splits the next symbol off the front, one joins a word onto the sentence,
+one expands a rule by splitting the dictionary at that number and throwing
+its die, and one sends the finished sentence off when nothing is left to
+say. Because the noun-phrase rule mentions itself, adjectives pile up:
+<em>"pink silly big big boys kick silly silly dogs."</em> Walk in through
+the door, edit the dictionary, and the language changes — no robot is
+retrained, because none of them ever knew it.</p>
 
 <footer>
   ToonTalk 3D is an open experiment in rebuilding
