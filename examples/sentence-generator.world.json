@@ -1,0 +1,1888 @@
+{
+ "kind": "world",
+ "v": 1,
+ "bench": [
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9001,
+    "guid": "sentence-gen-nest-1",
+    "hasEgg": false,
+    "pile": []
+   },
+   "x": 1.35,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Scriptorium",
+    "opaque": false,
+    "dirty": false,
+    "world": {
+     "kind": "world",
+     "v": 1,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        null,
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": " cat"
+          },
+          {
+           "kind": "text",
+           "text": " dog"
+          },
+          {
+           "kind": "text",
+           "text": " frog"
+          },
+          {
+           "kind": "text",
+           "text": " witch"
+          },
+          {
+           "kind": "text",
+           "text": " robot"
+          },
+          {
+           "kind": "text",
+           "text": " bird"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": " sees the"
+          },
+          {
+           "kind": "text",
+           "text": " chases the"
+          },
+          {
+           "kind": "text",
+           "text": " likes the"
+          },
+          {
+           "kind": "text",
+           "text": " fears the"
+          },
+          {
+           "kind": "text",
+           "text": " paints the"
+          },
+          {
+           "kind": "text",
+           "text": " dreams of the"
+          }
+         ]
+        },
+        {
+         "kind": "bird",
+         "nestId": 9001,
+         "nestGuid": "sentence-gen-nest-1"
+        },
+        {
+         "kind": "text",
+         "text": "the"
+        },
+        {
+         "kind": "text",
+         "text": "."
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Scribe",
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          6
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "newDie"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ]
+      },
+      "trainedOn": null,
+      "team": [
+       {
+        "kind": "robot",
+        "name": "noun1-1",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "2",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun1-2",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "2",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun1-3",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "2",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun1-4",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "2",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "4",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun1-5",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            4
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "2",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun1-6",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            5
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "2",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "6",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "verb-1",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "3",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "verb-2",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "3",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "verb-3",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "3",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "verb-4",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "3",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "4",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "verb-5",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            4
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "3",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "verb-6",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            5
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "newDie"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "3",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "6",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun2-1",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "4",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun2-2",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "4",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun2-3",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "4",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun2-4",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "4",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "4",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun2-5",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            4
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "4",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "noun2-6",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            5
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "4",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "6",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "post",
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            5
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "0",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "4",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "trainedOn": null,
+        "team": []
+       }
+      ]
+     }
+    }
+   },
+   "x": -0.4,
+   "z": 1.7
+  }
+ ],
+ "stations": {},
+ "active": null
+}
