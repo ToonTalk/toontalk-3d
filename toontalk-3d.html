@@ -795,6 +795,64 @@ function makeNumber(value, op = '+', lite = false) {
   return g;
 }
 
+// ---------------------------------------------------------------- dice
+// The random source. Drop a die on a number and the number re-rolls to a
+// random 1..faces (the die is spent in the throw, like any dropped pad);
+// drop a whole number on a die to set how many faces it has.
+function makeDie(faces = 6) {
+  const g = new THREE.Group();
+  const size = 0.19;
+  const canvases = [], mats = [];
+  for (let i = 0; i < 6; i++) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 128;
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    canvases.push({ canvas, tex });
+    mats.push(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35 }));
+  }
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), mats);
+  cube.castShadow = true; cube.receiveShadow = true;
+  g.add(cube);
+  Object.assign(g.userData, { id: nextId++, kind: 'die', faces, width: size, rest: size / 2 });
+  const PIPS = [
+    [[64, 64]],
+    [[40, 40], [88, 88]],
+    [[38, 38], [64, 64], [90, 90]],
+    [[40, 40], [88, 40], [40, 88], [88, 88]],
+    [[38, 38], [90, 38], [64, 64], [38, 90], [90, 90]],
+    [[38, 36], [90, 36], [38, 64], [90, 64], [38, 92], [90, 92]],
+  ];
+  function draw() {
+    const n = g.userData.faces;
+    canvases.forEach(({ canvas, tex }, i) => {
+      const c = canvas.getContext('2d');
+      c.fillStyle = '#f6f1e4'; c.fillRect(0, 0, 128, 128);
+      c.strokeStyle = '#b8241a'; c.lineWidth = 7; c.strokeRect(5, 5, 118, 118);
+      c.fillStyle = '#232323';
+      if (n === 6) {
+        for (const [x, y] of PIPS[i]) { c.beginPath(); c.arc(x, y, 12, 0, Math.PI * 2); c.fill(); }
+      } else {
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = 'bold 30px Georgia, serif';
+        c.fillText('1…', 64, 40);
+        let px = 52;
+        c.font = `bold ${px}px Georgia, serif`;
+        while (px > 16 && c.measureText(String(n)).width > 106) {
+          px = Math.floor(px * 0.85);
+          c.font = `bold ${px}px Georgia, serif`;
+        }
+        c.fillText(String(n), 64, 88);
+      }
+      tex.needsUpdate = true;
+    });
+  }
+  g.setFaces = (n) => { g.userData.faces = n; draw(); };
+  draw();
+  setPick(g, { kind: 'thing', thing: g });
+  return g;
+}
+
 // A little wooden name-plaque stuck on the thing itself. Typing letters while
 // holding a bird, nest or box writes one.
 function setThingLabel(thing, text) {
@@ -1373,16 +1431,33 @@ function drainQueue(guard = 400) {
     }
   }
 }
-function runRoomWork(room) {
-  if (roomWorkBusy) return;
+// Does this saved record hold a dirty room anywhere -- desk, bench, holes?
+function recHasDirtyRoom(o) {
+  if (!o) return false;
+  if (o.kind === 'world') {
+    return (o.bench || []).some(b => recHasDirtyRoom(b.thing))
+      || Object.values(o.stations || {}).some(recHasDirtyRoom);
+  }
+  if (o.kind === 'room') return !!o.dirty || recHasDirtyRoom(o.world);
+  if (o.holes) return o.holes.some(recHasDirtyRoom);
+  if (o.pile) return o.pile.some(recHasDirtyRoom);
+  return false;
+}
+const ROOM_DEPTH_MAX = 6;
+function runRoomWork(room, depth = 0, miOverride = null) {
+  if (depth === 0 && roomWorkBusy) return;
+  if (depth > ROOM_DEPTH_MAX) return;
   const ud = room.userData;
-  if (!ud.world?.active || !ud.world.stations?.stand) { ud.dirty = false; return; }
-  roomWorkBusy = true;
+  // a room still counts as working when only a room INSIDE it has work left
+  if (!ud.world?.active || !ud.world.stations?.stand) {
+    if (!recHasDirtyRoom(ud.world)) { ud.dirty = false; return; }
+  }
+  if (depth === 0) roomWorkBusy = true;
   window.__rrw = (window.__rrw || 0) + 1;
   const __t0 = performance.now();
   const roomId = ud.id;
   const spd = speed;
-  const mi = maxIter;
+  const mi = miOverride ?? maxIter;
   // a glass room works round by round, at a pace set by the speed control,
   // so you can watch its miniature contents change; an opaque one runs dry
   // in a single hidden burst
@@ -1413,6 +1488,14 @@ function runRoomWork(room) {
       const members = [activeBot, ...activeBot.team];
       more = members.some(m => matchState(m.condition, specOf(stations.stand.occupant)) === 'yes');
     }
+    // rooms inside this room work too -- recursion is bottles all the way down
+    if (depth < ROOM_DEPTH_MAX && !waiters.size && allStands.length <= 1) {
+      for (let g = 0; g < 50; g++) {
+        const r2 = findDirtyRoom(true);
+        if (!r2) break;
+        runRoomWork(r2, depth + 1, mi);
+      }
+    }
     const inner = worldOut();
     worldIn(outer);
     drainQueue(60);
@@ -1423,7 +1506,7 @@ function runRoomWork(room) {
       // the Rounds limit is honoured across bottle-runs: a room's robot works
       // on one gift for at most that many rounds in total
       node.userData.stepRounds = (ud.stepRounds || 0) + chunk;
-      const cont = more && node.userData.stepRounds < mi;
+      const cont = (more && node.userData.stepRounds < mi) || recHasDirtyRoom(inner);
       node.userData.dirty = cont;
       if (cont) node.__nextStep = performance.now() + (stepped ? 1100 / Math.max(0.25, spd) : 80);
       renderRoomContents(node);
@@ -1475,7 +1558,7 @@ function runRoomWork(room) {
   } finally {
     speed = spd;
     maxIter = mi;
-    roomWorkBusy = false;
+    if (depth === 0) roomWorkBusy = false;
     const __ms = performance.now() - __t0;
     if (__ms > 500) console.warn('runRoomWork took', Math.round(__ms), 'ms');
     if (__ms > 6000) {
@@ -1487,11 +1570,30 @@ function runRoomWork(room) {
   }
   refreshUI();
 }
+// A dirty room may sit on the bench itself or in a hole of something there --
+// a robot stows the rooms it builds in its given box.
+function findDirtyRoom(ignoreCooldown = false) {
+  const ready = (t) => t.userData.kind === 'room' && t.userData.dirty
+    && (ignoreCooldown || !t.__nextStep || performance.now() >= t.__nextStep);
+  const walk = (t) => {
+    if (!t) return null;
+    if (ready(t)) return t;
+    const hs = holesOf(t);
+    if (hs) for (const h of hs) { const r = walk(h.thing); if (r) return r; }
+    return null;
+  };
+  for (const t of benchThings) { const r = walk(t); if (r) return r; }
+  // inside a bottled room with no robot, the desk is just another surface
+  if (!activeBot && stations.stand?.occupant) {
+    const r = walk(stations.stand.occupant);
+    if (r) return r;
+  }
+  return null;
+}
 function processDirtyRooms() {
   if (roomWorkBusy || busy || held || mode !== 'world' || queue.length) return;
   if (waiters.size || allStands.length > 1) return;   // worldOut can't bottle those yet
-  const room = benchThings.find(t => t.userData.kind === 'room' && t.userData.dirty
-    && (!t.__nextStep || performance.now() >= t.__nextStep));
+  const room = findDirtyRoom();
   if (room) runRoomWork(room);
 }
 // Walking through the door: the room swells to become the world, and the
@@ -1810,7 +1912,7 @@ function birdDeliver(bird) {
   // copied nests: the bird copies herself and the gift, one clone per copy.
   // Only she returns; the clones deliver and fly away, never to be seen again.
   const others = allNestsByGuid(bird.userData.nestGuid).filter(n2 => n2 !== nest);
-  if (others.length && !hasRobot(thing)) {
+  if (others.length) {
     const from0 = bird.getWorldPosition(new THREE.Vector3());
     for (const n2 of others) spawnCloneDelivery(bird, thing, n2, from0);
   }
@@ -2019,11 +2121,13 @@ function specOf(thing) {
   const kind = thing.userData.kind;
   // an erased thing IS its wildcard: it stands for any of its kind
   if (thing.userData.erased) {
-    return { kind: { number: 'wildNumber', text: 'wildText', box: 'anyBox', scale: 'wildScale' }[kind] ?? 'wild',
+    return { kind: { number: 'wildNumber', text: 'wildText', box: 'anyBox', scale: 'wildScale',
+                     die: 'wildDie' }[kind] ?? 'wild',
              n: thing.userData.holes?.length };
   }
   if (kind === 'number') return { kind: 'number', value: thing.userData.value, op: thing.userData.op };
   if (kind === 'text') return { kind: 'text', text: thing.userData.text };
+  if (kind === 'die') return { kind: 'die', faces: thing.userData.faces };
   // birds, nests and robots inside boxes go by reference: their identity (a
   // bird's pairing, a robot's training) has no data form
   if (kind === 'nest' || kind === 'bird' || kind === 'robot'
@@ -2038,6 +2142,7 @@ function buildThing(spec) {
     const t = spec.kind === 'wildText' ? makeText('')
       : spec.kind === 'anyBox' ? makeBox(spec.n ?? 2)
       : spec.kind === 'wildScale' ? makeScale()
+      : spec.kind === 'wildDie' ? makeDie()
       : makeNumber(rat(0));
     t.userData.erased = true;
     applyErasedLook(t);
@@ -2045,6 +2150,7 @@ function buildThing(spec) {
   }
   if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
   if (spec.kind === 'text') return makeText(spec.text);
+  if (spec.kind === 'die') return makeDie(spec.faces);
   const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   if (spec.label) setThingLabel(b, spec.label);
@@ -2061,9 +2167,11 @@ function copyThing(t) {
 function copyThingRaw(t) {
   if (!t) return null;
   const ud = t.userData;
-  if (ud.kind === 'robot') return null;              // the gates refuse robots
   let c;
+  if (ud.kind === 'robot') c = botIn(botOut(t.__bot));   // team and training too
+  else
   if (ud.kind === 'number') c = makeNumber(ud.value, ud.op);
+  else if (ud.kind === 'die') c = makeDie(ud.faces);
   else if (ud.kind === 'text') c = makeText(ud.text);
   else if (ud.kind === 'notebook') {
     c = makeNotebook({ pages: JSON.parse(JSON.stringify(ud.pages)), page: ud.page });
@@ -2153,7 +2261,8 @@ function matchState(cond, spec) {
   if (!spec) return 'no';
   // an erased thing on the given side matches an equally-loose thought
   if (spec.kind === 'wildNumber' || spec.kind === 'wildText'
-      || spec.kind === 'anyBox' || spec.kind === 'wildScale') {
+      || spec.kind === 'anyBox' || spec.kind === 'wildScale'
+      || spec.kind === 'wildDie') {
     return cond.kind === spec.kind ? 'yes' : 'no';
   }
   if (spec.kind === 'ref') {
@@ -2175,6 +2284,10 @@ function matchState(cond, spec) {
   if (cond.kind === 'anyBox') return spec.kind === 'box' ? 'yes' : 'no';
   if (cond.kind === 'wildScale') return spec.kind === 'scale' ? 'yes' : 'no';
   if (cond.kind === 'wildText') return spec.kind === 'text' ? 'yes' : 'no';
+  if (cond.kind === 'wildDie') return spec.kind === 'die' ? 'yes' : 'no';
+  if (cond.kind === 'die') {
+    return spec.kind === 'die' && spec.faces === cond.faces ? 'yes' : 'no';
+  }
   if (cond.kind === 'text') {
     return spec.kind === 'text' && spec.text === cond.text ? 'yes' : 'no';
   }
@@ -2207,6 +2320,8 @@ function condText(c) {
   if (c.kind === 'wildText') return 'any text';
   if (c.kind === 'anyBox') return 'any box — any number of holes';
   if (c.kind === 'wildScale') return 'any scale';
+  if (c.kind === 'wildDie') return 'any die';
+  if (c.kind === 'die') return `a die of ${c.faces} faces`;
   if (c.kind === 'number') {
     return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
   }
@@ -2221,6 +2336,7 @@ function eraseAt(cond, path) {
     if (cond?.kind === 'text') return { kind: 'wildText' };
     if (cond?.kind === 'box') return { kind: 'anyBox' };
     if (cond?.kind === 'scale') return { kind: 'wildScale' };
+    if (cond?.kind === 'die') return { kind: 'wildDie' };
     return WILD;    // a second erase of any wild kind means truly anything
   }
   const [i, ...rest] = path;
@@ -2310,6 +2426,7 @@ const STATION_DEFS = [
   { id: 'texts',   label: 'the text stack',   kind: 'stack' },
   { id: 'nests',   label: 'the nest stack',   kind: 'stack' },
   { id: 'scales',  label: 'the scale stack',  kind: 'stack' },
+  { id: 'dice',    label: 'the dice stack',   kind: 'stack' },
   { id: 'minis',   label: 'the robot stack',  kind: 'stack' },
   { id: 'numbers', label: 'the number stack', kind: 'stack' },
   { id: 'boxes',   label: 'the box stack',    kind: 'stack' },
@@ -2469,6 +2586,7 @@ function refillStack(st, animate = false) {
             : st.id === 'texts' ? makeText('')
             : st.id === 'rooms' ? makeRoom()
             : st.id === 'nests' ? makeNest()
+            : st.id === 'dice' ? makeDie()
             : makeBox();
     scene.add(t);
     setPick(t, { kind: 'station', id: st.id });
@@ -2883,6 +3001,7 @@ function abort(msg) {
 function actionNew(kind) {
   const st = stations[kind === 'box' ? 'boxes' : kind === 'scale' ? 'scales'
                     : kind === 'text' ? 'texts' : kind === 'nest' ? 'nests'
+                    : kind === 'room' ? 'rooms' : kind === 'die' ? 'dice'
                     : 'numbers'];
   enqueue(walkTo(() => standForPoint(st.point)));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
@@ -3006,7 +3125,8 @@ function runDuplicate() {
       flash(from);
     },
     update(t) {
-      const s = 0.01 + 0.99 * ease(t);
+      const full = copy.userData.kind === 'robot' ? MINI : 1;
+      const s = 0.01 + (full - 0.01) * ease(t);
       copy.scale.setScalar(s);
       copy.position.y = inSt.point.y + inSt.occupant.userData.rest + copy.userData.rest * s;
     },
@@ -3265,6 +3385,25 @@ function combine(slot, incoming, isHole, fromWorld, side) {
       const code = ((BigInt(txt.charCodeAt(i)) + v.n) % 65536n + 65536n) % 65536n;
       target.setText(txt.slice(0, i) + String.fromCharCode(Number(code)) + txt.slice(i + 1));
     });
+  }
+  // the die re-rolls the number it lands on: a random 1..faces
+  if (target.userData.kind === 'number' && incoming.userData.kind === 'die') {
+    const faces = BigInt(incoming.userData.faces);
+    return mergeOnto(incoming, fromWorld, target, () => {
+      unErase(target);
+      target.setValue(rat(1n + BigInt(Math.floor(Math.random() * Number(faces)))));
+    });
+  }
+  // a whole number dropped on a die sets how many faces it has
+  if (target.userData.kind === 'die' && incoming.userData.kind === 'number') {
+    const v = incoming.userData.value;
+    if (v.d !== 1n || v.n < 1n || v.n > 1000000000n) {
+      return refuse('A die takes a whole number of faces, one or more.');
+    }
+    return mergeOnto(incoming, fromWorld, target, () => target.setFaces(Number(v.n)));
+  }
+  if (target.userData.kind === 'die' || incoming.userData.kind === 'die') {
+    return refuse('A die rolls onto a number — or takes a whole number to set its faces.');
   }
   if (target.userData.kind === 'text' || incoming.userData.kind === 'text') {
     return refuse('Text combines with text — or take a number to shift a letter or fill a blank pad.');
@@ -3629,9 +3768,10 @@ function userClick(target) {
       return say('Nothing there to pick up.');
     }
     if (st.kind === 'stack') return say('Stacks only give things out.');
-    if (holdingBot && st.kind !== 'stand') return say('Little robots go on the table, or on another robot.');
+    if (holdingBot && st.kind !== 'stand' && !isCopier) {
+      return say('Little robots go on the table, or on another robot.');
+    }
     if (isCopier) {
-      if (hasRobot(held)) return say('The copier can’t copy robots.');
       if (stations.copyIn.occupant) return say('Take the original off the platform first.');
       if (stations.copyOut.occupant) return say('Take the copy out of the tray first.');
       return userUseCopier();
@@ -3711,9 +3851,9 @@ function directRobot(target) {
   if (st?.kind === 'stack') {
     if (held) return say('It is already holding something.');
     if (st.id === 'minis') return say('It cannot make robots.');
-    if (st.id === 'rooms') return say('Rooms are yours to place, not the robot’s.');
     return go({ type: st.id === 'boxes' ? 'newBox' : st.id === 'scales' ? 'newScale'
               : st.id === 'texts' ? 'newText' : st.id === 'nests' ? 'newNest'
+              : st.id === 'rooms' ? 'newRoom' : st.id === 'dice' ? 'newDie'
               : 'newNumber' });
   }
   const c = st ? containerOfStation(st.id) : null;
@@ -4059,6 +4199,8 @@ function runStep(step) {
   else if (step.type === 'newScale') actionNew('scale');
   else if (step.type === 'newText') actionNew('text');
   else if (step.type === 'newNest') actionNew('nest');
+  else if (step.type === 'newRoom') actionNew('room');
+  else if (step.type === 'newDie') actionNew('die');
   else if (step.type === 'take') actionTake(step.at);
   else if (step.type === 'copy') actionCopy(step.at);
   else if (step.type === 'put') actionPut(step.at, step.side);
@@ -4339,7 +4481,8 @@ function dustyErase(path) {
 // Ruby also erases real things where they stand: the thing keeps its shape
 // but forgets its particulars, so it stands for "any" of its kind -- handy
 // for training a robot's expectations by hand.
-const ERASE_NAME = { number: 'any number', text: 'any text', box: 'any box', scale: 'any scale' };
+const ERASE_NAME = { number: 'any number', text: 'any text', box: 'any box',
+                     scale: 'any scale', die: 'any die' };
 function applyErasedLook(thing) {
   // live occupants (birds, nests, robots, rooms) keep their own look: the
   // erasure is about the container's shape, and they are restored by
@@ -4668,6 +4811,7 @@ function thingOutRaw(t) {
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
   if (ud.kind === 'text') return { kind: 'text', text: ud.text };
+  if (ud.kind === 'die') return { kind: 'die', faces: ud.faces };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: ud.world, opaque: ud.opaque,
                                    dirty: ud.dirty, id: ud.id, label: ud.label ?? undefined };
@@ -4715,6 +4859,7 @@ function thingInRaw(o, nests, birds) {
   let t = null;
   if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
   else if (o.kind === 'text') t = makeText(o.text);
+  else if (o.kind === 'die') t = makeDie(o.faces);
   else if (o.kind === 'notebook') t = makeNotebook(o);
   else if (o.kind === 'room') t = makeRoom(o);
   else if (o.kind === 'robot') t = botIn(o);
@@ -5191,6 +5336,8 @@ function describe(s) {
        : s.type === 'newScale' ? 'take a new scale'
        : s.type === 'newText' ? 'take a new text pad'
        : s.type === 'newNest' ? 'take a new nest'
+       : s.type === 'newRoom' ? 'take a new room'
+       : s.type === 'newDie' ? 'take a new die'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
        : s.type === 'take' ? (s.at.nest ? `take the top of ${holeName(s.at)}`
            : s.at.path.length ? `take what is in ${holeName(s.at)}`
@@ -5265,6 +5412,7 @@ function refreshUI() {
           : held.userData.label ? `the nest “${held.userData.label}”`
           : held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
       : kind === 'bird' ? (held.userData.label ? `the bird “${held.userData.label}”` : 'a bird')
+      : kind === 'die' ? `a die (1 to ${held.userData.faces})`
       : `${held.userData.label ? `“${held.userData.label}” — ` : ''}a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
     $('heldTip').textContent = kind === 'number' ? 'digits set it, − negates, * / ^ set what it does'
       : kind === 'robot' ? 'put it on the table, or on another robot'
@@ -5275,6 +5423,7 @@ function refreshUI() {
       : kind === 'notebook' ? 'set it down and drop things on its pages'
       : kind === 'text' ? 'type to write on it; drop it on a pad’s left or right edge to join'
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
+      : kind === 'die' ? 'drop it on a number to re-roll it; a whole number dropped on it sets its faces'
       : 'put it down on the bench';
   }
   if (hintTimer) return;
@@ -5538,7 +5687,8 @@ function tipFor(t) {
       if (t.id === 'numbers') return training
         ? 'Click to have the robot take a fresh number.'
         : 'The number stack — click to take a 1, then type digits to change it.';
-      if (t.id === 'rooms') return training ? null
+      if (t.id === 'rooms') return training
+        ? 'Click to have the robot take a fresh room.'
         : 'The room stack — each holds a whole workshop. Drop a robot in, then things for it to work on; click its door to step inside.';
       if (t.id === 'texts') return training
         ? 'Click to have the robot take a fresh text pad.'
@@ -5546,6 +5696,9 @@ function tipFor(t) {
       if (t.id === 'nests') return training
         ? 'Click to have the robot take a fresh nest.'
         : 'The nest stack — each nest holds an egg. Set one on the table and watch.';
+      if (t.id === 'dice') return training
+        ? 'Click to have the robot take a die.'
+        : 'The dice stack — drop a die on a number to re-roll it 1 up to its faces; drop a whole number on a die to set its faces.';
       if (t.id === 'scales') return training
         ? 'Click to have the robot take a fresh scale.'
         : 'The scale stack — a scale tips toward the larger of the numbers in its two holes.';
@@ -5750,7 +5903,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
                    || def.id === 'rooms') ? 3 : 4;
       st.pitch = def.id === 'numbers' ? 0.25 : def.id === 'minis' ? 0.52
                : def.id === 'scales' ? 0.30 : def.id === 'nests' ? 0.24
-               : def.id === 'rooms' ? 0.5 : 0.15;
+               : def.id === 'rooms' ? 0.5 : def.id === 'dice' ? 0.2 : 0.15;
       st.plinth = Math.max(0.02, st.topY - (st.stackN - 1) * st.pitch);
       const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.27, st.plinth, 36),
         new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7 }));
@@ -6271,6 +6424,11 @@ window.__nano = {
   clickCond(path = []) { handleClick({ kind: 'cond', path }); },
   clickRaw(target) { handleClick(target); },
   get hatchN() { return hatching.length; },
+  get st() {
+    return { mode, busy, held: held?.userData.kind ?? null,
+      active: activeBot ? activeBot.program.map(s2 => s2.type) : null,
+      queue: queue.length, waiters: waiters.size };
+  },
   get flagged() { return flagged.length; },
   save(name) { saveRobot(name); },
   load(name) { loadRobot(name); },
@@ -6288,6 +6446,7 @@ window.__nano = {
       : t.userData.kind === 'notebook' ? { notebook: t.userData.pages.length }
       : t.userData.kind === 'room' ? { room: { has: !!t.userData.world, dirty: !!t.userData.dirty } }
       : t.userData.kind === 'bird' ? 'bird'
+      : t.userData.kind === 'die' ? { die: t.userData.faces }
       : t.userData.kind === 'nest' ? { nest: t.userData.pile.map(d) }
       : { [t.userData.kind]: t.userData.holes.map(h => d(h.thing)) };
     return { stand: d(stations.stand.occupant), bench: benchThings.map(d),
