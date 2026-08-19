@@ -59,16 +59,18 @@ def copy_box(park):
             take('out'), put(park)]                      # the copy, parked
 
 def build_room(src, hole):
-    return [newroom(), put('s0'),                        # fresh room
-            copy(src, 2), put('s0'),                     # spare robot -> room
-            take(src), put('s0'),                        # copied box -> room
-            take('s0'), put('given', hole)]              # room stowed aboard
+    return [newroom(), put('s2'),                        # fresh room
+            copy(src, 2), put('s2'),                     # spare robot -> room
+            take(src), put('s2'),                        # copied box -> room
+            take('s2'), put('given', hole)]              # room stowed aboard
 
+# work spots are used in order -- spot 1 and 2 hold the two box copies, spot 3
+# is where each room is furnished, so no spot is skipped
 branch = {'kind': 'robot', 'name': 'branch',
     'condition': cond5({'kind': 'wildNumber'}),
-    'program': (dec() + copy_box('s1')                   # box copy with n-1
-              + dec() + copy_box('s2')                   # box copy with n-2
-              + build_room('s1', 3) + build_room('s2', 4)
+    'program': (dec() + copy_box('s0')                   # box copy with n-1
+              + dec() + copy_box('s1')                   # box copy with n-2
+              + build_room('s0', 3) + build_room('s1', 4)
               + [vac('given', 0)]),
     'trainedOn': None, 'team': []}
 

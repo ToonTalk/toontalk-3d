@@ -493,8 +493,31 @@ function englishText(v) {
     const w = englishInt(n);
     return w ? (neg ? 'negative ' : '') + w : sciText(v);
   }
-  const a = englishInt(n), b = englishInt(v.d);
+  const a = englishInt(n);
+  const part = fractionWord(v.d, n !== 1n);
+  if (a && part) return `${neg ? 'negative ' : ''}${a} ${part}`;
+  const b = englishInt(v.d);
   return a && b ? `${neg ? 'negative ' : ''}${a} over ${b}` : sciText(v);
+}
+// "sixth", "sixths", "half", "halves" -- what one part of d is called
+function fractionWord(d, plural) {
+  const NAMED = { 2n: 'half', 3n: 'third', 4n: 'quarter' };
+  let w = NAMED[d];
+  if (!w) {
+    const base = englishInt(d);
+    if (!base) return null;
+    const tail = base.split(/[\s-]/).pop();
+    const ORD = { one: 'first', two: 'second', three: 'third', five: 'fifth',
+      eight: 'eighth', nine: 'ninth', twelve: 'twelfth', twenty: 'twentieth',
+      thirty: 'thirtieth', forty: 'fortieth', fifty: 'fiftieth', sixty: 'sixtieth',
+      seventy: 'seventieth', eighty: 'eightieth', ninety: 'ninetieth',
+      hundred: 'hundredth', thousand: 'thousandth', million: 'millionth' };
+    const suffix = ORD[tail] ?? (/(four|six|seven|ten|teen)$/.test(tail) ? tail + 'th' : null);
+    if (!suffix) return null;
+    w = base.slice(0, base.length - tail.length) + suffix;
+  }
+  if (!plural) return w;
+  return w === 'half' ? 'halves' : w + 's';
 }
 function mixedText(v) {
   const neg = v.n < 0n, n = neg ? -v.n : v.n;
@@ -775,7 +798,8 @@ function makeNumber(value, op = '+', lite = false) {
       }));
       return;
     }
-    paint(fBack, (c) => drawWrapped(c, v.d === 1n ? englishText(v) : mixedText(v), 128, 140, 192, 168));
+    // words on the back, fractions included: "one sixth", "three quarters"
+    paint(fBack, (c) => drawWrapped(c, englishText(v), 128, 140, 192, 168));
     paint(fSci, (c) => drawSci(c, v, lod));
     paint(fAlt, (c) => v.d === 1n
       ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
@@ -928,6 +952,19 @@ function makeBox(n = HOLES) {
 
 // Contents scale to the hole they sit in, which now varies with hole count.
 const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / (thing.userData.width || 0.3);
+// Which hole a click on a box means: the nearest one to the point aimed at.
+function holeUnder(box, point) {
+  const hs = (box?.userData.kind === 'box' || box?.userData.kind === 'scale')
+    ? box.userData.holes : null;
+  if (!hs || !point) return null;
+  let best = null, bd = Infinity;
+  for (const h of hs) {
+    const p = h.anchor.getWorldPosition(new THREE.Vector3());
+    const d = (p.x - point.x) ** 2 + (p.z - point.z) ** 2;
+    if (d < bd) { bd = d; best = h; }
+  }
+  return best;
+}
 
 // ---------------------------------------------------------------- tree helpers
 function holesOf(t) {
@@ -1626,6 +1663,7 @@ function enterRoom(room) {
   }
   const innerRec = room.userData.world ?? emptyWorldRec();
   const opaque = room.userData.opaque;
+  const wasRunning = !!room.userData.dirty;   // the lever was up as you walked in
   detach(room);
   const from = room.position.clone();
   scene.attach(room);
@@ -1644,7 +1682,7 @@ function enterRoom(room) {
   enqueue(doNow(() => {
     room.removeFromParent();
     worldIn(innerRec);
-    if (opaque) {
+    if (opaque && wasRunning) {
       // an opaque room has been running at Instant all along: arrive to find
       // the work done
       const spd = speed;
@@ -1661,11 +1699,15 @@ function enterRoom(room) {
       update(t) { back.scale.setScalar(Math.max(0.01, ease(t))); },
       end() { back.scale.setScalar(1); },
     });
-    if (!opaque && activeBot && program.length && stations.stand.occupant) {
-      // a glass room runs at the speed you watch it at
-      enqueue(doNow(() => runProgram()));
+    if (!opaque && wasRunning) {
+      // the robot was working when you opened the door: it carries on the
+      // moment it has grown to full size behind its desk
+      enqueue(doNow(() => {
+        if (activeBot && program.length && stations.stand.occupant) runProgram();
+      }));
     }
-    say('You step inside — the room you came from sits on the table.');
+    say(wasRunning ? 'You step inside — the robot gets straight back to work.'
+                   : 'You step inside — the room you came from sits on the table.');
     refreshUI();
   }));
 }
@@ -2370,7 +2412,7 @@ function matchState(cond, spec) {
 }
 function matches(cond, spec) { return matchState(cond, spec) === 'yes'; }
 function condText(c) {
-  if (!c) return 'anything or nothing';
+  if (!c) return 'anything';
   if (c.kind === 'wild') return 'anything';
   if (c.kind === 'anyBird') return 'a bird';
   if (c.kind === 'anyNest') return 'a nest';
@@ -2391,8 +2433,19 @@ function condText(c) {
     return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
   }
   if (c.kind === 'scale') return `a scale weighing ${c.holes.map(condText).join(' against ')}`;
-  return c.holes.length ? `a box of ${c.holes.map(condText).join(' and ')}`
-                        : 'a box with no holes';
+  if (!c.holes.length) return 'a box with no holes';
+  // a long box of don't-cares reads as "and 7 more of anything", not as
+  // seven repetitions of the same phrase
+  const runs = [];
+  for (const p of c.holes.map(condText)) {
+    const last = runs[runs.length - 1];
+    if (last && last.t === p) last.n++;
+    else runs.push({ t: p, n: 1 });
+  }
+  const words = runs.map((r, i) => r.n === 1 ? r.t
+    : r.n === 2 ? `${r.t} and ${r.t}`
+    : `${r.n} more of ${r.t}`.replace('more of ', i === 0 ? '' : 'more of '));
+  return `a box of ${words.join(' and ')}`;
 }
 // Erasing keeps the type the first time -- an erased box still means "a box
 // like this one", contents ignored -- and only a second erase means "anything".
@@ -2458,10 +2511,19 @@ function putInHole(hole, thing) {
   thing.scale.setScalar(s);
   thing.position.y = thing.userData.rest * s;
   if (thing.userData.kind === 'robot') {
-    // a mini lies on its back in a hole, properly small
-    thing.scale.setScalar(0.165);
-    thing.rotation.x = -Math.PI / 2;
-    thing.position.y = 0.055;
+    // A robot lies on its back across the hole: rotating it puts its height
+    // along the box's depth, which is roomier than a hole is wide. It rests on
+    // the rim rather than sinking into the pocket, where it would vanish.
+    const bb = robotBox();
+    const sz = bb ? new THREE.Vector3().subVectors(bb.max, bb.min) : null;
+    const s2 = sz ? Math.min(MINI, ((hole.w + 0.06) * 0.9) / Math.max(sz.y, 0.001),
+                             (hole.w * 0.9) / Math.max(sz.x, 0.001)) : 0.165;
+    thing.scale.setScalar(s2);
+    thing.rotation.set(-Math.PI / 2, 0, 0);
+    if (bb) {
+      thing.position.y = 0.04 - bb.min.z * s2;
+      thing.position.z = ((bb.min.y + bb.max.y) / 2) * s2;
+    } else thing.position.y = 0.055;
   }
   // pads lie flat, floating just above the pocket rim, so they read from
   // above exactly as they do on the bench
@@ -2789,6 +2851,10 @@ const _lodV = new THREE.Vector3();
 // and `condition` always mirror the active robot's.
 const MINI = 0.24;
 let template = null;       // pristine model every robot is cloned from
+// The model's own bounds at scale 1, measured once: hole-fitting needs real
+// numbers, not guesses about how tall a robot is.
+let ROBOT_BB = null;
+function robotBox() { return ROBOT_BB; }
 let activeBot = null;
 let nextBotId = 1;
 
@@ -2817,6 +2883,7 @@ function makeMiniRobot() {
 }
 function bindBot(bot) {
   activeBot = bot;
+  teamView = 0;
   bot.home ??= HOME;
   bot.stand ??= defaultStand;
   stations.stand = bot.stand;      // a robot works at its own desk
@@ -2895,6 +2962,14 @@ function fastForward(maxSteps = 100000, sliceMs = 14) {
 // egg hatching and clone-bird flights. Called from tick() and, at Instant
 // speed, straight from the frame loop.
 let puffGeo = null;
+// Smoke and bustle mean somebody inside is working -- a room merely holding
+// unopened mail sits quiet.
+function roomWorking(t) {
+  const w = t.userData.world;
+  if (!t.userData.dirty) return false;
+  if (w?.active && w?.stations?.stand) return true;
+  return recHasDirtyRoom(w);         // or a house inside it is running
+}
 function advanceWorldClocks(dt) {
   // a working room's chimney smokes
   for (const t of benchThings) {
@@ -2904,7 +2979,7 @@ function advanceWorldClocks(dt) {
       t.__lever.rotation.z += (want - t.__lever.rotation.z) * Math.min(1, dt * 10);
     }
     // through glass walls, the miniature robot bustles while there is work
-    if (t.userData.dirty && !t.userData.opaque && t.__contents?.length) {
+    if (roomWorking(t) && !t.userData.opaque && t.__contents?.length) {
       let mini2 = null;
       for (const c of t.__contents) {
         c.traverse(o => { if (!mini2 && o.userData?.kind === 'robot') mini2 = o; });
@@ -2918,7 +2993,7 @@ function advanceWorldClocks(dt) {
       }
     } else t.__workT = 0;
     t.__puffT = (t.__puffT || 0) - dt;
-    if (t.userData.dirty && t.__puffT <= 0) {
+    if (roomWorking(t) && t.__puffT <= 0) {
       t.__puffT = 0.32;
       const puff = new THREE.Mesh(puffGeo ??= new THREE.SphereGeometry(0.05, 8, 6),
         new THREE.MeshBasicMaterial({ color: 0xe8e8e8, transparent: true, opacity: 0.7 }));
@@ -3306,14 +3381,16 @@ function resizeHeldBox(n) {
 function graspSettle(thing, dur = 0.2) {
   const p0 = thing.position.clone(), s0 = thing.scale.x;
   const to = new THREE.Vector3(0, 0, 0);
+  // a robot rides in the claw at its little size, never grown to full height
+  const s1 = thing.userData.kind === 'robot' ? MINI : 1;
   return {
     dur,
     update(t) {
       const e = ease(t);
       thing.position.lerpVectors(p0, to, e);
-      thing.scale.setScalar(lerp(s0, 1, e));
+      thing.scale.setScalar(lerp(s0, s1, e));
     },
-    end() { thing.position.copy(to); thing.scale.setScalar(1); },
+    end() { thing.position.copy(to); thing.scale.setScalar(s1); },
   };
 }
 function settleInto(thing, fromWorld, dur = 0.22, fromQuatWorld = null) {
@@ -3399,6 +3476,22 @@ function mergeOnto(incoming, fromWorld, target, apply) {
     },
   });
 }
+// Put `made` exactly where `target` sits -- hole, station or bench -- and
+// retire the target. What a thing turns INTO belongs where it was.
+function replaceThing(target, made) {
+  const hole = holeContaining(target);
+  const st2 = Object.values(stations).find(s2 => s2.occupant === target);
+  const bi = benchThings.indexOf(target);
+  const at = { x: target.position.x, z: target.position.z };
+  detach(target);
+  target.removeFromParent();
+  if (hole) putInHole(hole, made);
+  else if (st2) putOnStation(st2, made);
+  else if (bi >= 0) putOnBench(made, at);
+  else scene.add(made);
+  refreshUI();
+  return made;
+}
 function combine(slot, incoming, isHole, fromWorld, side) {
   const target = isHole ? slot.thing : slot.occupant;
   // The old fallback parked refused things on a free pillar; pillars are gone,
@@ -3483,6 +3576,23 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   }
   if (target.userData.kind === 'die' || incoming.userData.kind === 'die') {
     return refuse('A die rolls onto a number — or takes a whole number to set its faces.');
+  }
+  // a pad dropped on a whole number picks out that letter: the number is
+  // spent saying which one, and the letter takes its place
+  if (target.userData.kind === 'number' && !target.userData.erased
+      && incoming.userData.kind === 'text') {
+    const v = target.userData.value;
+    const chars = [...(incoming.userData.text ?? '')];
+    if (!chars.length) return refuse('That pad is blank — write on it first.');
+    if (v.d !== 1n || v.n < 1n || v.n > BigInt(chars.length)) {
+      return refuse(`Only a whole number from 1 to ${chars.length} picks a letter out of “${chars.join('')}”.`);
+    }
+    const ch = chars[Number(v.n) - 1];
+    return mergeOnto(incoming, fromWorld, target, () => {
+      const made = makeText(ch);
+      replaceThing(target, made);
+      flash(made.getWorldPosition(new THREE.Vector3()));
+    });
   }
   if (target.userData.kind === 'text' || incoming.userData.kind === 'text') {
     return refuse('Text combines with text — or take a number to shift a letter or fill a blank pad.');
@@ -3939,7 +4049,16 @@ function userClick(target) {
       return userTake(target.thing);
     }
     if (target.thing === held) return;
-    if (holdingBot) return say('Robots only team up with other robots.');
+    if (holdingBot) {
+      // the shell of a box occludes its holes: aim at the hole meant
+      const hs = holesOf(target.thing);
+      if (hs) {
+        const h = holeUnder(target.thing, target.point) ?? hs.find(x => !x.thing);
+        if (h && !h.thing) return userPutInHole(h);
+        return say('That hole is taken — drop the robot in an empty one.');
+      }
+      return say('Robots only team up with other robots.');
+    }
     if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
       return say('Set it down on the bench.');
     }
@@ -5308,7 +5427,8 @@ function nextIteration() {
     return finishRun(`Stopped after ${maxIter} rounds — the “Rounds” limit, not its condition.`);
   }
   runCount++;
-  renderProgram(member.program);         // show the program actually running
+  teamView = states.indexOf('yes');      // the panel follows whoever is running
+  renderProgram();
   member.program.forEach((step, i) => {
     enqueue(doNow(() => highlight(i)));
     runStep(step);
@@ -5490,16 +5610,36 @@ function describe(s) {
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
-function renderProgram(list = program) {
+let teamView = 0;             // which member the panel shows; 0 is the leader
+function renderProgram(list = null) {
   const ul = $('steps');
-  $('trainedOn').textContent = (condition ? `runs on ${condText(condition)}` : '')
-    + (activeBot?.team.length ? ` · leads ${activeBot.team.length} more` : '');
-  if (!list.length) {
+  const team = activeBot?.team ?? [];
+  if (teamView > team.length) teamView = 0;
+  const member = teamView > 0 ? team[teamView - 1] : null;
+  const shown = list ?? (member ? member.program : program);
+  const cond = member ? member.condition : condition;
+  const el = $('trainedOn');
+  const who = member ? (member.name ? `“${member.name}” ` : '') : '';
+  el.textContent = (cond ? `${who}runs on ${condText(cond)}` : '')
+    + (team.length ? ` · ${teamView === 0
+        ? `one of a team of ${team.length + 1}` : `${teamView + 1} of ${team.length + 1}`}`
+      + ' — click for the next' : '');
+  el.style.cursor = team.length ? 'pointer' : '';
+  if (!el.__wired) {
+    el.__wired = true;
+    el.addEventListener('click', () => {
+      const t2 = activeBot?.team ?? [];
+      if (!t2.length) return;
+      teamView = (teamView + 1) % (t2.length + 1);
+      renderProgram();
+    });
+  }
+  if (!shown.length) {
     ul.innerHTML = `<li class="empty">${mode === 'training' ? 'watching…'
       : activeBot ? 'not trained yet' : 'no robot at the bench'}</li>`;
     return;
   }
-  ul.innerHTML = list.map((s, i) =>
+  ul.innerHTML = shown.map((s, i) =>
     `<li><span class="n">${i + 1}</span><span>${describe(s)}</span></li>`).join('');
 }
 function refreshUI() {
@@ -5927,12 +6067,26 @@ function tipFor(t) {
       if (held?.userData.kind === 'die') {
         return `Drop the die to re-roll this number — it becomes anything from 1 to ${held.userData.faces}.`;
       }
+      if (held?.userData.kind === 'text') {
+        const chars = [...(held.userData.text ?? '')];
+        if (!chars.length) return 'That pad is blank — write on it first.';
+        const v = ud.value;
+        return (v.d === 1n && v.n >= 1n && v.n <= BigInt(chars.length))
+          ? `Drop the pad to pick out its letter ${v.n}: “${chars[Number(v.n) - 1]}”.`
+          : `Drop a pad on a whole number from 1 to ${chars.length} to pick out that letter.`;
+      }
       const OPW = { '+': 'adds itself to', '-': 'subtracts itself from', '*': 'multiplies',
                     '/': 'divides', '^': 'raises the power of' };
       return `${ratShort(ud.value)} — dropped on a number, it ${OPW[ud.op]} it. Click to pick it up; then type digits or + − * / ^.`;
     }
     if (ud.kind === 'box') {
-      return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — holes hold numbers or boxes.`
+      if (held?.userData.kind === 'robot') {
+        const h = holeUnder(t.thing, t.point);
+        const i = h ? ud.holes.indexOf(h) + 1 : 0;
+        return h && !h.thing ? `Drop the robot into hole ${i} — it lies down inside.`
+          : 'Every hole is taken — empty one first.';
+      }
+      return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — a hole holds anything: numbers, pads, boxes, even a robot.`
         + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     if (ud.kind === 'scale') {
@@ -6036,6 +6190,19 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   BENCH_TOP = reachLocal.y - CUBE / 2;
   applyArm(POSE.rest.sh, POSE.rest.el); applyJaw(JAW_CLOSED);
   template.updateMatrixWorld(true);
+  {
+    const keep = { p: template.position.clone(), q: template.quaternion.clone(),
+                   s: template.scale.clone() };
+    template.position.set(0, 0, 0);
+    template.quaternion.identity();
+    template.scale.setScalar(1);
+    template.updateMatrixWorld(true);
+    ROBOT_BB = new THREE.Box3().setFromObject(template);
+    template.position.copy(keep.p);
+    template.quaternion.copy(keep.q);
+    template.scale.copy(keep.s);
+    template.updateMatrixWorld(true);
+  }
   scene.remove(template);
   activeBot = null; robot = null; root = null;
   program = []; condition = null;
@@ -6055,6 +6222,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
       plate.position.set(point.x, st.plinth / 2, point.z);
       plate.castShadow = true; plate.receiveShadow = true;
       setPick(plate, { kind: 'station', id: def.id });
+      st.__plinth = plate;
       scene.add(plate); pickables.push(plate);
       stations[def.id] = st;
       refillStack(st);
@@ -6403,21 +6571,42 @@ function setupDemo(name) {
     putOnBench(makeNumber(rat(9)), { x: -0.7, z: 1.9 });
   }
   // strip the scene to what the lesson needs: only the listed stacks stay
-  const keep = ({ pads: ['texts'], box: ['boxes', 'numbers'], bird: ['numbers'],
-                  robot: ['numbers'], room: [], numbers: ['numbers'],
-                  copier: [] })[name] ?? [];
+  const keep = ({ pads: ['texts', 'numbers'], box: ['boxes', 'numbers'],
+                  bird: ['numbers'], robot: ['numbers'], room: [],
+                  numbers: ['numbers'], copier: [] })[name] ?? [];
   for (const [id, st] of Object.entries(stations)) {
     if (st.kind === 'stack' && !keep.includes(id)) {
       st.cubes.forEach(c2 => { c2.visible = false; });
       st.demoHidden = true;
     }
   }
+  // only a lesson with a robot in it needs the robot's desk and work spots
+  const needsRobot = name === 'robot' || name === 'room';
   scene.traverse(o => {
     const pk = o.__pick;
     if (!pk || pk.kind !== 'station') return;
     if (stations[pk.id]?.kind === 'stack' && !keep.includes(pk.id)) o.visible = false;
     if ((pk.id === 'copyOut' || pk.id === 'copyIn')
         && name !== 'robot' && name !== 'copier') o.visible = false;
+    if (!needsRobot && (pk.id === 'stand' || /^s\d+$/.test(pk.id))) o.visible = false;
+  });
+  // the stacks that remain stand ON the table at the back, a short column
+  // each: a lesson should not be two rooms wide, and a stack on its floor
+  // plinth would hide behind the table edge
+  keep.forEach((id, i) => {
+    const st = stations[id];
+    if (!st) return;
+    const x = keep.length === 1 ? -0.1 : -0.75 + i * (1.5 / (keep.length - 1));
+    const z = 1.18;
+    st.__plinth && (st.__plinth.visible = false);
+    st.stackN = 2;
+    while (st.cubes.length > st.stackN) st.cubes.pop()?.removeFromParent();
+    st.plinth = BENCH_TOP;
+    if (id === 'texts') st.pitch = 0.055;      // pads are thin: no floating gap
+    st.cubes.forEach((c2, k) => c2.position.set(x, stackY(st, c2, k), z));
+    const top = st.cubes[st.cubes.length - 1];
+    st.point.set(x, top ? top.position.y : BENCH_TOP + CUBE / 2, z);
+    st.topY = st.point.y - CUBE / 2;
   });
   camera.position.set(0.1, 2.1, 3.7);
   orbit.target.set(0, 0.8, 1.4);
@@ -6582,6 +6771,8 @@ window.__nano = {
   holes(n) { if (held?.userData.kind === 'box') resizeHeldBox(n); },
   get condition() { return condition; },
   get condText() { return condText(condition); },
+  words(n, d = 1) { return englishText(rat(BigInt(n), BigInt(d))); },
+  say(c) { return condText(c); },
   get hint() { return document.getElementById('hint').textContent; },
   dump() {
     const d = (t) => !t ? null
