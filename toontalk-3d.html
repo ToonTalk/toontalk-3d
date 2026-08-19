@@ -813,6 +813,9 @@ function makeDie(faces = 6) {
   }
   const cube = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), mats);
   cube.castShadow = true; cube.receiveShadow = true;
+  // each die rests with a different face up, the way thrown dice land
+  cube.rotation.set(Math.floor(Math.random() * 4) * Math.PI / 2,
+                    Math.floor(Math.random() * 4) * Math.PI / 2, 0);
   g.add(cube);
   Object.assign(g.userData, { id: nextId++, kind: 'die', faces, width: size, rest: size / 2 });
   const PIPS = [
@@ -1426,8 +1429,10 @@ function drainQueue(guard = 400) {
   const t0 = performance.now();
   for (let g = 0; g < guard && (busy || queue.length || current); g++) {
     fastForward(100000, Infinity);   // bottled runs complete in one go
-    if (performance.now() - t0 > 4000) {
-      console.warn('drainQueue: 4s budget spent, abandoning', queue.length, 'queued steps');
+    if (performance.now() - t0 > 8000) {
+      // past the room watchdog's own limit, so a heavy room gets paused whole
+      // rather than cut mid-round with a die or a phase number in the claw
+      console.warn('drainQueue: 8s budget spent, abandoning', queue.length, 'queued steps');
       queue.length = 0; current = null; busy = false; pendingAfter = null;
       break;
     }
@@ -1445,7 +1450,7 @@ function recHasDirtyRoom(o) {
   if (o.pile) return o.pile.some(recHasDirtyRoom);
   return false;
 }
-const ROOM_DEPTH_MAX = 6;
+const ROOM_DEPTH_MAX = 12;
 function runRoomWork(room, depth = 0, miOverride = null) {
   if (depth === 0 && roomWorkBusy) return;
   if (depth > ROOM_DEPTH_MAX) return;
@@ -1536,6 +1541,11 @@ function runRoomWork(room, depth = 0, miOverride = null) {
           renderRoomContents(dest.room);
           continue;
         }
+      }
+      if (!nest2 && depth > 0) {
+        // the nest is further out: the letter rides up with the next bottle
+        roomOutbox.push(m);
+        continue;
       }
       const gift = buildFromRec(m.rec);
       if (!gift) continue;
@@ -1680,6 +1690,8 @@ function birdIntoRoom(bird, thing) {
   clearUndo();
   busy = true;
   const wasAt = bird.getWorldPosition(new THREE.Vector3());
+  const originHole = holeContaining(bird);
+  const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
   detach(bird);
   scene.attach(bird);
   bird.__flying = true;
@@ -1712,7 +1724,11 @@ function birdIntoRoom(bird, thing) {
     end() {
       bird.__flying = false;
       bird.scale.setScalar(1);
-      putOnBench(bird, { x: wasAt.x, z: wasAt.z });
+      // home is wherever she was -- a box hole, a desk, or the bench;
+      // benching her would strand the hole empty and swallow later letters
+      if (originHole && !originHole.thing) putInHole(originHole, bird);
+      else if (originSt && !originSt.occupant) putOnStation(originSt, bird);
+      else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
       refreshUI();
     },
   });
@@ -2432,11 +2448,10 @@ function putInHole(hole, thing) {
     thing.rotation.x = -Math.PI / 2;
     thing.position.y = 0.055;
   }
-  // a flat pad would sink out of sight below the hole's rim: it leans back
-  // like a card in a holder instead
+  // pads lie flat, floating just above the pocket rim, so they read from
+  // above exactly as they do on the bench
   if (thing.userData.kind === 'text') {
-    thing.rotation.x = -1.05;
-    thing.position.y += 0.075;
+    thing.position.y += 0.062;
   } else if (['box', 'scale', 'notebook', 'room'].includes(thing.userData.kind)) {
     // containers perch on the rim rather than sinking below it
     thing.position.y += 0.05;
@@ -2873,6 +2888,20 @@ function advanceWorldClocks(dt) {
       const want = t.userData.dirty ? -0.85 : 0.85;
       t.__lever.rotation.z += (want - t.__lever.rotation.z) * Math.min(1, dt * 10);
     }
+    // through glass walls, the miniature robot bustles while there is work
+    if (t.userData.dirty && !t.userData.opaque && t.__contents?.length) {
+      let mini2 = null;
+      for (const c of t.__contents) {
+        c.traverse(o => { if (!mini2 && o.userData?.kind === 'robot') mini2 = o; });
+        if (mini2) break;
+      }
+      if (mini2) {
+        t.__workT = (t.__workT || 0) + dt;
+        mini2.rotation.y = Math.sin(t.__workT * 4.2) * 0.6;
+        mini2.position.y = (mini2.__baseY ??= mini2.position.y)
+          + Math.abs(Math.sin(t.__workT * 8)) * 0.012;
+      }
+    } else t.__workT = 0;
     t.__puffT = (t.__puffT || 0) - dt;
     if (t.userData.dirty && t.__puffT <= 0) {
       t.__puffT = 0.32;
@@ -5880,6 +5909,9 @@ function tipFor(t) {
           : o === '*' ? `multiply ${tv} by ${hv}` : o === '/' ? `divide ${tv} by ${hv}`
           : `raise ${tv} to the power ${hv}`) + '.';
       }
+      if (held?.userData.kind === 'die') {
+        return `Drop the die to re-roll this number — it becomes anything from 1 to ${held.userData.faces}.`;
+      }
       const OPW = { '+': 'adds itself to', '-': 'subtracts itself from', '*': 'multiplies',
                     '/': 'divides', '^': 'raises the power of' };
       return `${ratShort(ud.value)} — dropped on a number, it ${OPW[ud.op]} it. Click to pick it up; then type digits or + − * / ^.`;
@@ -5900,6 +5932,12 @@ function tipFor(t) {
     if (ud.kind === 'bird') {
       return held ? 'Give it to the bird — she flies it home to her nest.'
                   : 'A bird — drop something on her to send it to her nest, or click to pick her up.';
+    }
+    if (ud.kind === 'die') {
+      if (held?.userData.kind === 'number') {
+        return 'Drop the number on the die to set how many faces it has.';
+      }
+      return `A die — drop it on a number and the number re-rolls to anything from 1 to ${ud.faces}; the die is spent in the throw. Click to pick it up.`;
     }
     return null;
   }
