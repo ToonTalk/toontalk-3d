@@ -232,17 +232,27 @@ scene.add(grid);
 // Additive only: with no environment map a physical/clearcoat bubble reflects
 // black and smears a dark disc over the floor.
 const BUBBLE_OPACITY = 0.11;
+// Every identical shape is one buffer. Hundreds of houses, each with walls,
+// a roof, a door and a lever, otherwise allocate thousands of copies of the
+// same six numbers -- and nothing here ever mutates or disposes a geometry.
+const _geoPool = new Map();
+function geo(kind, ...args) {
+  const key = kind + args.join(',');
+  let g = _geoPool.get(key);
+  if (!g) { g = new THREE[kind](...args); _geoPool.set(key, g); }
+  return g;
+}
 const bubbleMat = new THREE.MeshBasicMaterial({
   color: 0x9fd8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending,
   side: THREE.DoubleSide, depthWrite: false });
 const bubble = new THREE.Group();
 {
   const dome = new THREE.Mesh(
-    new THREE.SphereGeometry(3.35, 48, 32, 0, Math.PI * 2, 0, Math.PI * 0.66), bubbleMat);
+    geo('SphereGeometry', 3.35, 48, 32, 0, Math.PI * 2, 0, Math.PI * 0.66), bubbleMat);
   dome.position.set(0, 0.95, 0.75);
   bubble.add(dome);
   for (const [x, y, z, r] of [[2.85, 0.6, 2.5, 0.24], [3.25, 0.32, 2.85, 0.15], [3.55, 0.15, 3.1, 0.09]]) {
-    const b = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), bubbleMat);
+    const b = new THREE.Mesh(geo('SphereGeometry', r, 24, 16), bubbleMat);
     b.position.set(x, y, z);
     bubble.add(b);
   }
@@ -254,8 +264,8 @@ scene.add(bubble);
 // included, so the whole structure is a tree rooted at a station.
 const HOLES = 2, HOLE_W = 0.19, MAX_HOLES = 8, BOX_MAX_W = 0.62;
 const CUBE = 0.24;
-const cubeGeo = new THREE.BoxGeometry(CUBE, CUBE, CUBE);
-const faceGeo = new THREE.PlaneGeometry(CUBE * 0.86, CUBE * 0.86);
+const cubeGeo = geo('BoxGeometry', CUBE, CUBE, CUBE);
+const faceGeo = geo('PlaneGeometry', CUBE * 0.86, CUBE * 0.86);
 let nextId = 1;
 
 function setPick(obj, data) { obj.__pick = data; }
@@ -319,7 +329,12 @@ function noiseFx(dur, { at = 0, from = 800, to = 300, q = 1.2, gain = 0.3 } = {}
   src.connect(f); f.connect(g); g.connect(sndGain);
   src.start(t0); src.stop(t0 + dur + 0.02);
 }
+// Nothing a background world does is seen or heard: it is not on screen, so
+// its sounds, flashes, messages and panel updates are pure cost. This one
+// check is most of what makes a hundred live houses affordable.
+const offstage = () => worldStack.length > 0;
 function sfx(name) {
+  if (offstage()) return;
   if (sndMuted) return;
   const now = performance.now();
   // coalesce: at Instant speed a run would machine-gun otherwise
@@ -836,7 +851,7 @@ function makeDie(faces = 6) {
     canvases.push({ canvas, tex });
     mats.push(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35 }));
   }
-  const cube = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), mats);
+  const cube = new THREE.Mesh(geo('BoxGeometry', size, size, size), mats);
   cube.castShadow = true; cube.receiveShadow = true;
   // each die rests with a different face up, the way thrown dice land
   cube.rotation.set(Math.floor(Math.random() * 4) * Math.PI / 2,
@@ -906,7 +921,7 @@ function setThingLabel(thing, text) {
   tex.colorSpace = THREE.SRGBColorSpace;
   const kind = thing.userData.kind;
   const w = kind === 'box' ? Math.min(0.44, thing.userData.width * 0.85) : 0.3;
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4),
+  const plate = new THREE.Mesh(geo('PlaneGeometry', w, w / 4),
     new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
   if (kind === 'box') plate.position.set(0, 0, (thing.userData.holeW + 0.07) / 2 + 0.004);
   else if (kind === 'bird') plate.position.set(0, 0.33, 0.03);
@@ -933,7 +948,7 @@ function makeBox(n = HOLES) {
   const W = Math.max(0.09, n * holeW + (n + 1) * wall);
   const D = holeW + 0.07, H = 0.11;
   const woodMat = new THREE.MeshStandardMaterial({ color: 0xe2cfa6, roughness: 0.62 });
-  const base = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), woodMat);
+  const base = new THREE.Mesh(geo('BoxGeometry', W, H, D), woodMat);
   base.castShadow = true; base.receiveShadow = true;
   g.add(base);
 
@@ -941,7 +956,7 @@ function makeBox(n = HOLES) {
   const pocketMat = new THREE.MeshStandardMaterial({ color: 0x4a3f2e, roughness: 0.85 });
   for (let i = 0; i < n; i++) {
     const x = -W / 2 + wall + holeW / 2 + i * (holeW + wall);
-    const pocket = new THREE.Mesh(new THREE.BoxGeometry(holeW, 0.055, holeW), pocketMat);
+    const pocket = new THREE.Mesh(geo('BoxGeometry', holeW, 0.055, holeW), pocketMat);
     pocket.position.set(x, H / 2 - 0.026, 0);
     pocket.receiveShadow = true;
     g.add(pocket);
@@ -1004,7 +1019,7 @@ function makeText(str) {
   const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85,
     emissive: 0xffffff, emissiveIntensity: 0.34, emissiveMap: tex });
   const side = new THREE.MeshStandardMaterial({ color: 0xf5eeda, roughness: 0.85 });
-  const pad = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.045, 0.26),
+  const pad = new THREE.Mesh(geo('BoxGeometry', 0.34, 0.045, 0.26),
     [side, side, mat, side, side, side]);
   pad.castShadow = true; pad.receiveShadow = true;
   g.add(pad);
@@ -1065,7 +1080,7 @@ function makeText(str) {
 const NB_KEY = 'nano-toontalk.notebook';
 function makeNotebook(rec = null) {
   const g = new THREE.Group();
-  const cover = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.035, 0.56),
+  const cover = new THREE.Mesh(geo('BoxGeometry', 0.86, 0.035, 0.56),
     new THREE.MeshStandardMaterial({ roughness: 0.55,
       map: (leatherTex ??= leatherTexture()) }));
   cover.position.y = 0.0175;
@@ -1073,17 +1088,17 @@ function makeNotebook(rec = null) {
   g.add(cover);
   const pageMat = new THREE.MeshStandardMaterial({ color: 0xf7f1df, roughness: 0.9 });
   for (const sx of [-1, 1]) {
-    const page = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.012, 0.52), pageMat);
+    const page = new THREE.Mesh(geo('BoxGeometry', 0.40, 0.012, 0.52), pageMat);
     page.position.set(sx * 0.21, 0.041, 0);
     page.receiveShadow = true;
     g.add(page);
   }
-  const spine = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.055, 0.52),
+  const spine = new THREE.Mesh(geo('BoxGeometry', 0.02, 0.055, 0.52),
     new THREE.MeshStandardMaterial({ color: 0x4a120c, roughness: 0.6 }));
   spine.position.y = 0.03;
   g.add(spine);
   for (const [sx, dir] of [[-1, -2], [1, 2]]) {
-    const tab = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.02, 3),
+    const tab = new THREE.Mesh(geo('CylinderGeometry', 0.045, 0.045, 0.02, 3),
       new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.4 }));
     tab.position.set(sx * 0.36, 0.055, 0.22);
     tab.rotation.y = sx > 0 ? Math.PI : 0;
@@ -1173,7 +1188,7 @@ function notebookFlip(nb, dir) {
   if (to > last) to = 0;
   if (to === ud.page) return say('This is the only spread.');
   sfx('flip');
-  const flap = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.008, 0.52),
+  const flap = new THREE.Mesh(geo('BoxGeometry', 0.40, 0.008, 0.52),
     new THREE.MeshStandardMaterial({ color: 0xf7f1df, roughness: 0.9 }));
   flap.position.set(dir > 0 ? 0.21 : -0.21, 0.05, 0);
   nb.add(flap);
@@ -1293,6 +1308,11 @@ function loadCtx(ctx) {
     if (st) st.occupant = occ;
   }
   defaultStand.occupant = ctx.standOcc ?? null;
+  // a house has no desk: what its robot is working on rests on the table
+  const sf = standFor(ctx);
+  defaultStand.point.copy(sf.point);
+  defaultStand.topY = sf.topY;
+  if (defaultStand.obj) defaultStand.obj.visible = sf.desk;
   activeBot = ctx.activeBot ?? null;
   if (activeBot) bindBot(activeBot);
   else {
@@ -1392,7 +1412,7 @@ function paintRoomLabel(room) {
     { p: [-0.265, 0.15, 0], ry: -Math.PI / 2 },
     { p: [0.265, 0.15, 0], ry: Math.PI / 2 },
   ]) {
-    const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.085), mat);
+    const plate = new THREE.Mesh(geo('PlaneGeometry', 0.34, 0.085), mat);
     plate.position.set(...sp.p);
     plate.rotation.y = sp.ry;
     room.add(plate);
@@ -1404,13 +1424,13 @@ function makeRoom(data = null) {
   const wallMat = new THREE.MeshStandardMaterial({ roughness: 0.85, transparent: true,
     map: (stuccoTex ??= stuccoTexture()) });
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x8a2f1d, roughness: 0.7, transparent: true });
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.42),
+  const floor = new THREE.Mesh(geo('BoxGeometry', 0.5, 0.03, 0.42),
     new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.75 }));
   floor.position.y = 0.015;
   floor.castShadow = true; floor.receiveShadow = true;
   g.add(floor);
   const wall = (w, x, z, ry = 0) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.24, 0.02), wallMat);
+    const m = new THREE.Mesh(geo('BoxGeometry', w, 0.24, 0.02), wallMat);
     m.position.set(x, 0.15, z);
     m.rotation.y = ry;
     m.castShadow = true;
@@ -1423,16 +1443,16 @@ function makeRoom(data = null) {
   wall(0.17, 0.165, 0.2);
   // an actual door: cream frame, wooden leaf, brass knob
   const door = new THREE.Group();
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.175, 0.215, 0.018),
+  const frame = new THREE.Mesh(geo('BoxGeometry', 0.175, 0.215, 0.018),
     new THREE.MeshStandardMaterial({ color: 0xf0e6cf, roughness: 0.6 }));
   frame.position.y = 0.107;
   door.add(frame);
-  const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.19, 0.024),
+  const leaf = new THREE.Mesh(geo('BoxGeometry', 0.14, 0.19, 0.024),
     new THREE.MeshStandardMaterial({ color: 0x8a5a2c, roughness: 0.55,
       map: (woodTex ??= woodTexture()) }));
   leaf.position.y = 0.098;
   door.add(leaf);
-  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.013, 10, 8),
+  const knob = new THREE.Mesh(geo('SphereGeometry', 0.013, 10, 8),
     new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.3, metalness: 0.8 }));
   knob.position.set(0.048, 0.098, 0.02);
   door.add(knob);
@@ -1446,24 +1466,24 @@ function makeRoom(data = null) {
   roof.castShadow = true;
   setPick(roof, { kind: 'roomRoof', room: g });
   g.add(roof);
-  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.13, 0.055),
+  const chimney = new THREE.Mesh(geo('BoxGeometry', 0.055, 0.13, 0.055),
     new THREE.MeshStandardMaterial({ color: 0x8a5a4a, roughness: 0.8 }));
   chimney.position.set(0.13, 0.42, -0.1);
   setPick(chimney, { kind: 'roomRoof', room: g });
   g.add(chimney);
   // the big lever on the right wall runs and stops the room
   const lever = new THREE.Group();
-  const plateL = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.13, 0.07),
+  const plateL = new THREE.Mesh(geo('BoxGeometry', 0.018, 0.13, 0.07),
     new THREE.MeshStandardMaterial({ color: 0x6a7280, roughness: 0.4, metalness: 0.6 }));
   lever.add(plateL);
   const armPivot = new THREE.Group();
   armPivot.position.set(0.012, 0, 0);
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.11, 0.02),
+  const arm = new THREE.Mesh(geo('BoxGeometry', 0.016, 0.11, 0.02),
     new THREE.MeshStandardMaterial({ color: 0x8a5a2c, roughness: 0.5,
       map: (woodTex ??= woodTexture()) }));
   arm.position.y = 0.05;
   armPivot.add(arm);
-  const knobL = new THREE.Mesh(new THREE.SphereGeometry(0.017, 10, 8),
+  const knobL = new THREE.Mesh(geo('SphereGeometry', 0.017, 10, 8),
     new THREE.MeshStandardMaterial({ color: 0xb8241a, roughness: 0.4 }));
   knobL.position.y = 0.105;
   armPivot.add(knobL);
@@ -1507,22 +1527,15 @@ function renderRoomContents(room) {
   const mini = new THREE.Group();
   mini.position.set(0, 0.034, -0.02);        // the same mount as the world
   const bw = (BENCH.x1 - BENCH.x0) * F, bd = (BENCH.z1 - BENCH.z0) * F;
-  const tbl = new THREE.Mesh(new THREE.BoxGeometry(bw, 0.012, bd),
+  const tbl = new THREE.Mesh(geo('BoxGeometry', bw, 0.012, bd),
     new THREE.MeshStandardMaterial({ color: 0xc9b990, roughness: 0.7 }));
   tbl.position.set((BENCH.x0 + BENCH.x1) / 2 * F, BENCH_TOP * F,
                    (BENCH.z0 + BENCH.z1) / 2 * F);
   mini.add(tbl);
-  const sp = stations.stand?.point;
-  if (sp) {
-    const dsk = new THREE.Mesh(new THREE.BoxGeometry(0.52 * F, 0.010, 0.44 * F),
-      new THREE.MeshStandardMaterial({ color: 0xcabc98, roughness: 0.6 }));
-    dsk.position.set(sp.x * F, stations.stand.topY * F, sp.z * F);
-    mini.add(dsk);
-  }
   for (const def of STATION_DEFS) {
     const st = stations[def.id];
     const h = Math.max(0.02, (st?.plinth ?? 0.5) * F);
-    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * F, 0.27 * F, h, 10),
+    const p = new THREE.Mesh(geo('CylinderGeometry', 0.24 * F, 0.27 * F, h, 10),
       new THREE.MeshStandardMaterial({ color: def.kind === 'copier' ? 0x9fd8ff : 0x3a414d,
                                        roughness: 0.7 }));
     p.position.set(def.x * F, h / 2, def.z * F);
@@ -1566,14 +1579,14 @@ function roomDrop(room, dropped, refuse) {
     : 'Set down inside the room.');
   refreshUI();
 }
-// The room's robot works while nobody is looking: the outer world is bottled,
+// The room's robot works while nobody is looking: the interpreter turns to
 // the room's world takes the stage at Instant speed, runs dry, and the two
 // swap back -- all inside a single frame, so nothing visibly flickers.
 let roomWorkBusy = false;
 function drainQueue(guard = 400) {
   const t0 = performance.now();
   for (let g = 0; g < guard && (busy || queue.length || current); g++) {
-    fastForward(100000, Infinity);   // bottled runs complete in one go
+    fastForward(100000, Infinity);   // an offstage run completes in one go
     if (performance.now() - t0 > 8000) {
       // past the room watchdog's own limit, so a heavy room gets paused whole
       // rather than cut mid-round with a die or a phase number in the claw
@@ -1609,9 +1622,11 @@ function runRoomWork(room, depth = 0, miOverride = null) {
       drainQueue(60);
       const chunk = stepped ? 1 : Math.max(1, Math.min(40, mi - (room.userData.stepRounds || 0)));
       maxIter = chunk;
+      let ran = 0;
       if (activeBot && program.length && stations.stand.occupant && !activeBot.waiting) {
         runProgram();
         drainQueue();
+        ran = runCount;            // what it really did, not what it was allowed
       }
       checkWaiting();                     // a delivery may have woken a dozing robot
       drainQueue();
@@ -1636,7 +1651,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
         const g2 = specOf(b.stand?.occupant);
         if (g2 && [b, ...b.team].some(m => matchState(m.condition, g2) === 'yes')) more = true;
       }
-      room.userData.stepRounds = (room.userData.stepRounds || 0) + chunk;
+      room.userData.stepRounds = (room.userData.stepRounds || 0) + Math.max(1, ran);
       cont = (more && room.userData.stepRounds < mi) || !!findDirtyRoom(true);
     } finally {
       popWorld();
@@ -1675,7 +1690,7 @@ function findDirtyRoom(ignoreCooldown = false) {
   };
   for (const t of benchThings) { const r = walk(t); if (r) return r; }
   // rooms work wherever they sit -- the robot's desk included. This only
-  // runs when the world is idle, so a mid-replay desk is never bottled.
+  // runs when the world is idle, so a mid-replay desk is never swapped away.
   if (stations.stand?.occupant) {
     const r = walk(stations.stand.occupant);
     if (r) return r;
@@ -1686,7 +1701,7 @@ function processDirtyRooms() {
   if (roomWorkBusy || busy || held || mode !== 'world' || queue.length) return;
   // A dozing robot must NOT stop the houses: it is usually waiting on an
   // answer from one of them. Its vigil is re-derived after the swap back.
-  if (allStands.length > 1) return;                   // worldOut can't bottle those yet
+  if (allStands.length > 1) return;                   // several robots aside: not yet
   const room = findDirtyRoom();
   if (room) runRoomWork(room);
 }
@@ -1761,16 +1776,16 @@ function makeNest() {
   const g = new THREE.Group();
   const straw = new THREE.MeshStandardMaterial({ roughness: 0.95,
     map: (strawTex ??= strawTexture()) });
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.045, 12, 24), straw);
+  const rim = new THREE.Mesh(geo('TorusGeometry', 0.13, 0.045, 12, 24), straw);
   rim.rotation.x = Math.PI / 2;
   rim.position.y = 0.075;
   rim.castShadow = true; rim.receiveShadow = true;
   g.add(rim);
-  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.07, 0.075, 20), straw);
+  const bowl = new THREE.Mesh(geo('CylinderGeometry', 0.115, 0.07, 0.075, 20), straw);
   bowl.position.y = 0.038;
   bowl.receiveShadow = true;
   g.add(bowl);
-  const egg = new THREE.Mesh(new THREE.SphereGeometry(0.068, 20, 14),
+  const egg = new THREE.Mesh(geo('SphereGeometry', 0.068, 20, 14),
     new THREE.MeshStandardMaterial({ color: 0xf2ead8, roughness: 0.5 }));
   egg.scale.set(1, 1.25, 1);
   egg.position.y = 0.13;
@@ -1787,16 +1802,16 @@ function makeBird(nest) {
   const g = new THREE.Group();
   const coral = new THREE.MeshStandardMaterial({ color: 0xb8412f, roughness: 0.5 });
   const cream = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.09, 20, 14), coral);
+  const body = new THREE.Mesh(geo('SphereGeometry', 0.09, 20, 14), coral);
   body.scale.set(1, 0.9, 1.15);
   body.position.y = 0.1;
   body.castShadow = true;
   g.add(body);
-  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.068, 16, 12), cream);
+  const belly = new THREE.Mesh(geo('SphereGeometry', 0.068, 16, 12), cream);
   belly.scale.set(1, 0.8, 1);
   belly.position.set(0, 0.085, 0.048);
   g.add(belly);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 12), coral);
+  const head = new THREE.Mesh(geo('SphereGeometry', 0.055, 16, 12), coral);
   head.position.set(0, 0.2, 0.05);
   head.castShadow = true;
   g.add(head);
@@ -1806,13 +1821,13 @@ function makeBird(nest) {
   beak.position.set(0, 0.2, 0.115);
   g.add(beak);
   for (const sgn of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6),
+    const eye = new THREE.Mesh(geo('SphereGeometry', 0.012, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0x14171d }));
     eye.position.set(0.028 * sgn, 0.216, 0.09);
     g.add(eye);
     const pivot = new THREE.Group();
     pivot.position.set(0.05 * sgn, 0.11, -0.01);
-    const wing = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 8), coral);
+    const wing = new THREE.Mesh(geo('SphereGeometry', 0.055, 12, 8), coral);
     wing.scale.set(0.35, 0.55, 1);
     wing.position.set(0.038 * sgn, -0.01, 0);
     wing.castShadow = true;
@@ -1876,7 +1891,7 @@ function restackNest(nest) {
       c.fillText(`⋯ ${n} more ⋯`, 128, 34);
       nest.__elideTex.needsUpdate = true;
     }
-    const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.075),
+    const plate = new THREE.Mesh(geo('PlaneGeometry', 0.3, 0.075),
       new THREE.MeshBasicMaterial({ map: nest.__elideTex, toneMapped: false }));
     plate.position.set(0, (ys[BOTTOM - 1] + ys[BOTTOM] + GAP) / 2, 0.14);
     nest.add(plate);
@@ -2115,29 +2130,29 @@ function makeScale() {
   const dark = new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.8,
     color: 0xc89448,
     map: (brassTex ??= metalTexture('#9a5f1e', '60,35,10')) });
-  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.095, 0.03, 24), dark);
+  const foot = new THREE.Mesh(geo('CylinderGeometry', 0.075, 0.095, 0.03, 24), dark);
   foot.position.y = 0.015; foot.castShadow = true; foot.receiveShadow = true;
   g.add(foot);
-  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.024, 0.17, 16), steel);
+  const post = new THREE.Mesh(geo('CylinderGeometry', 0.018, 0.024, 0.17, 16), steel);
   post.position.y = 0.115; post.castShadow = true;
   g.add(post);
   const pivot = new THREE.Group();
   pivot.position.y = 0.20;
   g.add(pivot);
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.018, 0.03), steel);
+  const beam = new THREE.Mesh(geo('BoxGeometry', 0.46, 0.018, 0.03), steel);
   beam.castShadow = true;
   pivot.add(beam);
-  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.027, 16, 12), dark);
+  const knob = new THREE.Mesh(geo('SphereGeometry', 0.027, 16, 12), dark);
   pivot.add(knob);
   const holes = [], pans = [];
   [-1, 1].forEach((s, i) => {
     const hang = new THREE.Group();          // counter-rotated so pans stay level
     hang.position.set(0.20 * s, 0, 0);
     pivot.add(hang);
-    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.075, 8), steel);
+    const wire = new THREE.Mesh(geo('CylinderGeometry', 0.005, 0.005, 0.075, 8), steel);
     wire.position.y = -0.038;
     hang.add(wire);
-    const pan = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.075, 0.016, 24), dark);
+    const pan = new THREE.Mesh(geo('CylinderGeometry', 0.088, 0.075, 0.016, 24), dark);
     pan.position.y = -0.08;
     pan.castShadow = true; pan.receiveShadow = true;
     hang.add(pan);
@@ -2644,6 +2659,18 @@ function newWorldCtx() {
   return { root, bench: [], occ: {}, activeBot: null, waiters: [],
            hatching: [], asides: [], standSt: null };
 }
+// Where the thing a robot is given rests: your workshop has a desk for it,
+// a house just uses the near edge of the table.
+const DESK_SPOT = new THREE.Vector3();
+let DESK_TOP = 0;
+const HOUSE_SPOT = new THREE.Vector3();
+let HOUSE_TOP = 0;
+function standFor(ctx) {
+  if (ctx === topCtx) return { point: DESK_SPOT, topY: DESK_TOP, desk: true };
+  HOUSE_SPOT.set(0, DESK_SPOT.y, BENCH.z0 + 0.34);
+  HOUSE_TOP = BENCH_TOP;
+  return { point: HOUSE_SPOT, topY: HOUSE_TOP, desk: false };
+}
 const topCtx = newWorldCtx();
 let curCtx = topCtx;
 let WROOT = topCtx.root;
@@ -2663,11 +2690,11 @@ function makePillar(height, special) {
   // `special` is the robot's own stand -- where whatever it is given sits while
   // it works. Plain metal now: the glowing pillar used to be how you started
   // training, and that is no longer how it works.
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.16, height, 36),
+  const body = new THREE.Mesh(geo('CylinderGeometry', 0.11, 0.16, height, 36),
     new THREE.MeshStandardMaterial({ color: special ? 0x353b43 : 0x272d38,
       roughness: special ? 0.4 : 0.7, metalness: special ? 0.7 : 0.1 }));
   body.position.y = height / 2; body.castShadow = true; body.receiveShadow = true;
-  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 0.035, 36),
+  const top = new THREE.Mesh(geo('CylinderGeometry', 0.20, 0.20, 0.035, 36),
     new THREE.MeshStandardMaterial({ color: special ? 0x929aa6 : 0xefe2c6,
       roughness: special ? 0.28 : 0.45, metalness: special ? 0.85 : 0 }));
   top.position.y = height; top.castShadow = true; top.receiveShadow = true;
@@ -2679,7 +2706,7 @@ function makePillar(height, special) {
 // from the dark pedestals of the stacks and copier.
 function makeMiniDesk(topY, w, d, topColor) {
   const g = new THREE.Group();
-  const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.035, d),
+  const top = new THREE.Mesh(geo('BoxGeometry', w, 0.035, d),
     new THREE.MeshStandardMaterial({ color: topColor, roughness: 0.55,
       map: (woodTex ??= woodTexture()) }));
   top.position.y = topY - 0.0175;
@@ -2687,7 +2714,7 @@ function makeMiniDesk(topY, w, d, topColor) {
   g.add(top);
   const legMat = new THREE.MeshStandardMaterial({ color: 0x33383f, roughness: 0.6, metalness: 0.4 });
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.028, topY - 0.035, 12), legMat);
+    const leg = new THREE.Mesh(geo('CylinderGeometry', 0.022, 0.028, topY - 0.035, 12), legMat);
     leg.position.set(sx * (w / 2 - 0.05), (topY - 0.035) / 2, sz * (d / 2 - 0.05));
     leg.castShadow = true;
     g.add(leg);
@@ -2751,31 +2778,31 @@ function makeCopier(height, st) {
   const g = new THREE.Group();
   const dark = new THREE.MeshStandardMaterial({ color: 0x242a34, roughness: 0.65, metalness: 0.25 });
   const cream = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.45 });
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.19, height, 32), dark);
+  const base = new THREE.Mesh(geo('CylinderGeometry', 0.14, 0.19, height, 32), dark);
   base.position.y = height / 2; base.castShadow = true; base.receiveShadow = true;
   g.add(base);
 
-  const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.185, 0.04, 32), cream);
+  const tray = new THREE.Mesh(geo('CylinderGeometry', 0.185, 0.185, 0.04, 32), cream);
   tray.position.y = height; tray.castShadow = true; tray.receiveShadow = true;
   setPick(tray, { kind: 'station', id: 'copyOut' });
   g.add(tray);
 
   for (const s of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, COPY_LIFT + 0.42, 0.05), dark);
+    const post = new THREE.Mesh(geo('BoxGeometry', 0.05, COPY_LIFT + 0.42, 0.05), dark);
     post.position.set(0.215 * s, height + (COPY_LIFT + 0.42) / 2, 0);
     post.castShadow = true;
     g.add(post);
   }
-  const platform = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.04, 0.34), cream);
+  const platform = new THREE.Mesh(geo('BoxGeometry', 0.44, 0.04, 0.34), cream);
   platform.position.y = height + COPY_LIFT;
   platform.castShadow = true; platform.receiveShadow = true;
   setPick(platform, { kind: 'station', id: 'copyIn' });
   g.add(platform);
 
-  const cap = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.05, 0.07), dark);
+  const cap = new THREE.Mesh(geo('BoxGeometry', 0.53, 0.05, 0.07), dark);
   cap.position.set(0, height + COPY_LIFT + 0.42, 0);
   g.add(cap);
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.028, 0.10),
+  const bar = new THREE.Mesh(geo('BoxGeometry', 0.44, 0.028, 0.10),
     new THREE.MeshStandardMaterial({ color: 0x0b3d4d, roughness: 0.2,
       emissive: 0x2fd3ff, emissiveIntensity: 2.6, toneMapped: false }));
   bar.position.set(0, height + COPY_LIFT + 0.36, 0);
@@ -2988,10 +3015,27 @@ function syncBot() {
 // ---------------------------------------------------------------- sequencer
 const queue = [];
 let current = null, tCur = 0;
-function enqueue(...steps) { queue.push(...steps); }
+// A step that only moves a body -- a walk, an arm swing, a pause -- has
+// nothing to say to a world nobody is watching. Offstage those run to their
+// end state on the spot instead of joining the queue, which is most of the
+// cost of a robot's turn. Steps that CHANGE things still queue, so ordering
+// (and enqueueNext's "before the rest") is untouched.
+function enqueue(...steps) {
+  for (const st of steps) {
+    if (st.__visual && offstage()) { st.start?.(); st.update?.(1); st.end?.(); }
+    else queue.push(st);
+  }
+}
 // Steps spawned from inside a running step (settling into a hole, combining)
 // must happen *now*, not after the retract-and-walk-home already in the queue.
-function enqueueNext(...steps) { queue.unshift(...steps); }
+function enqueueNext(...steps) {
+  const keep = [];
+  for (const st of steps) {
+    if (st.__visual && offstage()) { st.start?.(); st.update?.(1); st.end?.(); }
+    else keep.push(st);
+  }
+  if (keep.length) queue.unshift(...keep);
+}
 function tick(dt) {
   advanceWorldClocks(dt);
   if (!current) {
@@ -3125,7 +3169,7 @@ function advanceWorldClocks(dt) {
     t.__puffT = (t.__puffT || 0) - dt;
     if (roomWorking(t) && t.__puffT <= 0) {
       t.__puffT = 0.32;
-      const puff = new THREE.Mesh(puffGeo ??= new THREE.SphereGeometry(0.05, 8, 6),
+      const puff = new THREE.Mesh(puffGeo ??= geo('SphereGeometry', 0.05, 8, 6),
         new THREE.MeshBasicMaterial({ color: 0xe8e8e8, transparent: true, opacity: 0.7 }));
       puff.position.set(0.13, 0.52, -0.1);
       t.add(puff);
@@ -3223,6 +3267,7 @@ function advanceWorldClocks(dt) {
 const walkTo = (target) => {
   let p0, y0, y1, dist, tgt;
   return {
+    __visual: true,
     dur: 0.01,
     start() {
       tgt = typeof target === 'function' ? target() : target;
@@ -3248,6 +3293,7 @@ const walkTo = (target) => {
 const armTo = (pose, jaw, dur = 0.8) => {
   let a0, j0;
   return {
+    __visual: true,
     dur,
     start() { a0 = { ...armPose }; j0 = jawNow; },
     update(t) {
@@ -3258,7 +3304,7 @@ const armTo = (pose, jaw, dur = 0.8) => {
   };
 };
 const doNow = (fn) => ({ dur: 0.0001, end: fn });
-const pause = (d) => ({ dur: d });
+const pause = (d) => ({ __visual: true, dur: d });
 
 function abort(msg) {
   queue.length = 0;
@@ -3492,6 +3538,7 @@ function graspSettle(thing, dur = 0.2) {
   // a robot rides in the claw at its little size, never grown to full height
   const s1 = thing.userData.kind === 'robot' ? MINI : 1;
   return {
+    __visual: true,       // its end() still lands the thing squarely in the claw
     dur,
     update(t) {
       const e = ease(t);
@@ -3502,6 +3549,8 @@ function graspSettle(thing, dur = 0.2) {
   };
 }
 function settleInto(thing, fromWorld, dur = 0.22, fromQuatWorld = null) {
+  // the thing is already where it belongs; this only shows the trip there
+  if (offstage()) return { __visual: true, dur: 0.0001 };
   const to = thing.position.clone();
   const from = thing.parent.worldToLocal(fromWorld.clone());
   const toQ = thing.quaternion.clone();
@@ -3790,8 +3839,8 @@ function combine(slot, incoming, isHole, fromWorld, side) {
 
 const flashes = [];
 function flash(pos) {
-  if (speed === Infinity) return;      // nothing to see at instant speed
-  const m = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 12),
+  if (speed === Infinity || offstage()) return;   // nothing to see
+  const m = new THREE.Mesh(geo('SphereGeometry', 0.15, 20, 12),
     new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.55,
       blending: THREE.AdditiveBlending, depthWrite: false }));
   m.position.copy(pos); scene.add(m); flashes.push({ m, t: 0 });
@@ -4682,7 +4731,7 @@ function ghostQuestion(size = 0.2) {
   g2.fillText('?', 64, 70);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  return new THREE.Mesh(new THREE.PlaneGeometry(size, size),
+  return new THREE.Mesh(geo('PlaneGeometry', size, size),
     new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
 }
 // "anything": its own cloud-with-? shape, so it can never be mistaken for a
@@ -4691,7 +4740,7 @@ function makeAnything() {
   const g = new THREE.Group();
   const mat = bubbleMat.clone();
   mat.opacity = 0.4;
-  const s = new THREE.Mesh(new THREE.SphereGeometry(0.13, 20, 14), mat);
+  const s = new THREE.Mesh(geo('SphereGeometry', 0.13, 20, 14), mat);
   s.position.y = 0.13;
   g.add(s);
   const q = ghostQuestion(0.2);
@@ -4790,7 +4839,7 @@ function addMiniBubble(node, cond) {
   inner.scale.setScalar(0.5);
   inner.position.y = 0.02;
   g.add(inner);
-  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 14), bubbleMat.clone());
+  const halo = new THREE.Mesh(geo('SphereGeometry', 0.22, 20, 14), bubbleMat.clone());
   halo.material.opacity = 0.14;
   g.add(halo);
   g.position.y = 1.95;
@@ -4819,7 +4868,7 @@ function rebuildCondition() {
   condDisplay = new THREE.Group();
   inner.scale.setScalar(0.72);
   condDisplay.add(inner);
-  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.34, 28, 20), bubbleMat.clone());
+  const halo = new THREE.Mesh(geo('SphereGeometry', 0.34, 28, 20), bubbleMat.clone());
   halo.material.opacity = 0.16;
   // the whole bubble is a click target for taking a copy of the memory --
   // no need to hit a tiny ghost part
@@ -4828,7 +4877,7 @@ function rebuildCondition() {
   condDisplay.__ownRoot = WROOT;
   // tail straight down toward the head it belongs to
   for (const [dy, r] of [[-0.40, 0.058], [-0.55, 0.036], [-0.66, 0.022]]) {
-    const b = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), halo.material);
+    const b = new THREE.Mesh(geo('SphereGeometry', r, 16, 12), halo.material);
     b.position.set(0, dy, 0);
     setPick(b, { kind: 'cond', path: [], outer: true });
     condDisplay.add(b);
@@ -5152,7 +5201,7 @@ function paintBotName(bot) {
   g2.fillText(bot.name, 160, 84);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.17),
+  const plate = new THREE.Mesh(geo('PlaneGeometry', 0.34, 0.17),
     new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
   plate.position.z = 0.03;
   mesh.add(plate);
@@ -5800,9 +5849,10 @@ function stepAside(bot) {
 // ---------------------------------------------------------------- UI
 const $ = (id) => document.getElementById(id);
 let hintTimer = null;
-function say(msg, hold = 2800) { $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, hold); }
+function say(msg, hold = 2800) { if (offstage()) return; $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, hold); }
 // For messages worth looking up for: flash the message card a few times.
 function sayAttn(msg) {
+  if (offstage()) return;
   sfx('alert');
   say(msg, 7000);
   const t = $('title');
@@ -5844,6 +5894,7 @@ function describe(s) {
 }
 let teamView = 0;             // which member the panel shows; 0 is the leader
 function renderProgram(list = null) {
+  if (offstage()) return;
   const ul = $('steps');
   const team = activeBot?.team ?? [];
   if (teamView > team.length) teamView = 0;
@@ -5875,6 +5926,7 @@ function renderProgram(list = null) {
     `<li><span class="n">${i + 1}</span><span>${describe(s)}</span></li>`).join('');
 }
 function refreshUI() {
+  if (offstage()) return;
   const training = mode === 'training';
   $('badge').textContent = mode === 'replay' ? 'repeating'
     : training ? 'inside the thought'
@@ -6512,7 +6564,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
                : def.id === 'scales' ? 0.30 : def.id === 'nests' ? 0.24
                : def.id === 'rooms' ? 0.5 : def.id === 'dice' ? 0.2 : 0.15;
       st.plinth = Math.max(0.02, st.topY - (st.stackN - 1) * st.pitch);
-      const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.27, st.plinth, 36),
+      const plate = new THREE.Mesh(geo('CylinderGeometry', 0.24, 0.27, st.plinth, 36),
         new THREE.MeshStandardMaterial({ color: 0x272d38, roughness: 0.7 }));
       plate.position.set(point.x, st.plinth / 2, point.z);
       plate.castShadow = true; plate.receiveShadow = true;
@@ -6541,10 +6593,13 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   // The desk in the middle, where the claw reaches: whichever robot is being
   // worked with stands behind it.
   defaultStand = makeStandStation(0, 0);
-  // the middle desk is shared by every world, like the stacks and the copier,
-  // so it must live in the scene rather than in whichever world made it --
-  // otherwise a robot inside a house works at an invisible desk
+  // The desk belongs to YOUR workshop, so it lives in the scene rather than in
+  // whichever world made it. A house has no desk at all: in there the thing a
+  // robot is working on rests on the table, and all it needs of its own are
+  // work spots.
   scene.add(defaultStand.obj);
+  DESK_SPOT.copy(defaultStand.point);
+  DESK_TOP = defaultStand.topY;
   stations.stand = defaultStand;
 
   // One scratch desk to begin with; more grow beside it as they are needed.
@@ -6641,21 +6696,21 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
     // Ruby the eraser lives beside him: a pink block with eyes.
     ruby = new THREE.Group();
     const pink = new THREE.MeshStandardMaterial({ color: 0xe0708a, roughness: 0.55 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.26, 0.14), pink);
+    const body = new THREE.Mesh(geo('BoxGeometry', 0.2, 0.26, 0.14), pink);
     body.position.y = 0.15;
     body.rotation.y = 0.3;
     body.castShadow = true; body.receiveShadow = true;
     ruby.add(body);
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.07, 0.15),
+    const cap = new THREE.Mesh(geo('BoxGeometry', 0.21, 0.07, 0.15),
       new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: 0.35 }));
     cap.position.y = 0.30;
     cap.rotation.y = 0.3;
     ruby.add(cap);
     for (const sx of [-1, 1]) {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.026, 12, 10),
+      const eye = new THREE.Mesh(geo('SphereGeometry', 0.026, 12, 10),
         new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 }));
       eye.position.set(sx * 0.05 + 0.02, 0.2, 0.075);
-      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8),
+      const pupil = new THREE.Mesh(geo('SphereGeometry', 0.012, 8, 8),
         new THREE.MeshStandardMaterial({ color: 0x141821 }));
       pupil.position.set(sx * 0.05 + 0.02, 0.2, 0.098);
       ruby.add(eye, pupil);
@@ -6766,7 +6821,7 @@ function buildBench() {
   woodTex ??= woodTexture();
   woodTex.repeat.set(Math.max(1, w / 1.3), Math.max(1, d / 1.3));
   const topMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.72 });
-  const top = new THREE.Mesh(new THREE.BoxGeometry(w, 0.07, d), topMat);
+  const top = new THREE.Mesh(geo('BoxGeometry', w, 0.07, d), topMat);
   top.position.set(cx, BENCH_TOP - 0.035, cz);
   top.castShadow = true; top.receiveShadow = true;
   setPick(top, { kind: 'bench' });
@@ -6774,7 +6829,7 @@ function buildBench() {
   benchParts.push(top);
   const legMat = new THREE.MeshStandardMaterial({ color: 0x33383f, roughness: 0.6, metalness: 0.4 });
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, BENCH_TOP - 0.07, 16), legMat);
+    const leg = new THREE.Mesh(geo('CylinderGeometry', 0.035, 0.045, BENCH_TOP - 0.07, 16), legMat);
     leg.position.set(cx + sx * (w / 2 - 0.1), (BENCH_TOP - 0.07) / 2, cz + sz * (d / 2 - 0.1));
     leg.castShadow = true;
     scene.add(leg);
@@ -6785,7 +6840,7 @@ function buildBench() {
 function showHandles(on) {
   if (on && !benchHandles.length) {
     for (let i = 0; i < 4; i++) {
-      const h = new THREE.Mesh(new THREE.SphereGeometry(0.07, 18, 14),
+      const h = new THREE.Mesh(geo('SphereGeometry', 0.07, 18, 14),
         new THREE.MeshStandardMaterial({ color: 0x9fd8ff, roughness: 0.3,
           emissive: 0x2c6f8c, emissiveIntensity: 1.2, toneMapped: false }));
       h.position.copy(cornerOf(i));
