@@ -215,9 +215,8 @@ one work surface. Click a member to take it out of the team; drop it back on
 the Teller to put it in again.
 
 A message's bird is swept away with the message she came in — one bird, one
-answer — so six messages are laid out ready, and a spare nest sits on the
-table: set it down and its egg hatches into another bird who answers on the
-same nest.
+answer — so six messages are laid out ready. For another, take a nest from its
+stack and set it down: its egg hatches a bird of its own.
 
 The Owner pad is part of every thought, so these robots serve Sally's account
 and nobody else's. Rewrite the name on the pad and they all stop recognising

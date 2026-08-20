@@ -111,9 +111,6 @@ world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': box(txt('deposit'), num(20)), 'x': -0.70, 'z': 2.28},
     {'thing': box(txt('withdraw'), num(7)), 'x': -0.05, 'z': 2.28},
     {'thing': box(txt('query'), reply_bird()), 'x': 0.60, 'z': 2.28},
-    # a spare egg: set it down and it hatches another bird for the answers nest
-    {'thing': {'kind': 'nest', 'id': REP_ID + 1, 'guid': REP_GUID, 'hasEgg': True,
-               'pile': [], 'label': 'spare'}, 'x': 1.20, 'z': 1.18},
     {'thing': txt("SALLY'S ACCOUNT\n\n [ Requests, Balance,\n   Owner ]\n\n"
                   'The first hole is a NEST.\nMessages land on it one at a\n'
                   'time; a robot lifts the top\none off, does what it says,\n'
@@ -126,8 +123,9 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'carries it to the nest. The\nrobot whose thought carries\n'
                   'that word wakes, serves it,\nand dozes again.\n\n'
                   'A query answers on the nest\nmarked "answers". Its bird\n'
-                  'goes with the message, so\nfor more, set the spare nest\n'
-                  'down: its egg hatches\nanother.'),
+                  'goes with the message and\nis used up. For another,\n'
+                  'take a nest from its stack\nand set it down: its egg\n'
+                  'hatches a bird of its own.'),
      'x': -1.35, 'z': 1.18},
 ], 'stations': {}, 'active': None}
 

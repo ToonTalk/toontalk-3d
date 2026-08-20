@@ -1971,15 +1971,47 @@ function nestReceived(nest) {
     autoRunArmed = true;
   }
 }
+// Landing on a nest always looks the same, whoever brought it: the pile is
+// set aside, the new thing tucked in UNDER it, and the pile stacked back on
+// top -- so the oldest delivery is always the one on top, and you can see that
+// happen. Couriers and clone-birds used to skip straight to the end state.
+function tuckIntoNest(nest, thing) {
+  const pile = nest.userData.pile;
+  const old = pile.slice();
+  const p0 = old.map(t2 => t2.position.clone());
+  const steps = [];
+  if (old.length) steps.push({
+    dur: 0.4,
+    update(t) { old.forEach((it, i) => { it.position.x = lerp(p0[i].x, 0.58, ease(t)); }); },
+    end() { old.forEach(it => { it.position.x = 0.58; }); },
+  });
+  steps.push(doNow(() => {
+    nest.add(thing);
+    thing.quaternion.identity();
+    thing.scale.setScalar(1);
+    pile.unshift(thing);
+    thing.position.set(0, nestSlots(pile)[0], 0);
+    sfx('chime');
+    flash(nest.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0)));
+    nestReceived(nest);
+  }));
+  if (old.length) steps.push({
+    dur: 0.4,
+    update(t) {
+      const ys = nestSlots(nest.userData.pile);
+      const e = ease(t);
+      old.forEach((it, i) => {
+        it.position.x = lerp(0.58, 0, e);
+        it.position.y = lerp(p0[i].y, ys[i + 1], e);
+      });
+    },
+    end() { restackNest(nest); },
+  });
+  steps.push(doNow(refreshUI));
+  return steps;
+}
 function deliverCopy(nest2, gift) {
-  gift.scale.setScalar(1);
-  gift.quaternion.identity();
-  nest2.add(gift);
-  nest2.userData.pile.unshift(gift);
-  restackNest(nest2);
-  nestReceived(nest2);
-  sfx('chime');
-  flash(nest2.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0)));
+  enqueueNext(...tuckIntoNest(nest2, gift));
   refreshUI();
   checkWaiting();
 }
@@ -2113,39 +2145,7 @@ function birdDeliver(bird) {
     // Newer deliveries go UNDERNEATH: the bird sets the pile aside, tucks the
     // new thing in at the bottom, and stacks the pile back on top -- so the
     // top of a nest's pile is always the oldest delivery.
-    const pile = nest.userData.pile;
-    const old = pile.slice();
-    const p0 = old.map(t2 => t2.position.clone());
-    const steps = [];
-    if (old.length) steps.push({
-      dur: 0.4,
-      update(t) { old.forEach((it, i) => { it.position.x = lerp(p0[i].x, 0.58, ease(t)); }); },
-      end() { old.forEach(it => { it.position.x = 0.58; }); },
-    });
-    steps.push(doNow(() => {
-      nest.add(thing);
-      thing.quaternion.identity();
-      thing.scale.setScalar(1);
-      pile.unshift(thing);
-      thing.position.set(0, nestSlots(pile)[0], 0);
-      sfx('chime');
-      flash(npos());
-      nestReceived(nest);
-    }));
-    if (old.length) steps.push({
-      dur: 0.4,
-      update(t) {
-        const ys = nestSlots(nest.userData.pile);
-        const e = ease(t);
-        old.forEach((it, i) => {
-          it.position.x = lerp(0.58, 0, e);
-          it.position.y = lerp(p0[i].y, ys[i + 1], e);
-        });
-      },
-      end() { restackNest(nest); },
-    });
-    steps.push(doNow(refreshUI));
-    enqueueNext(...steps);
+    enqueueNext(...tuckIntoNest(nest, thing));
   }), {
     dur: 0.8,
     update(t) {
@@ -2647,9 +2647,16 @@ function putOnBench(thing, at) {
   }
 }
 
+// A work spot is a small desk. Something too wide for it -- a box of eight
+// holes, say -- used to hang over its neighbours; it sizes what it holds
+// instead, exactly as a hole does, and never magnifies.
+const SPOT_W = 0.4;
+const spotScale = (thing) =>
+  Math.max(0.35, Math.min(1, (SPOT_W * 0.95) / (thing.userData.width || 0.3)));
 function putOnStation(st, thing) {
   WROOT.add(thing);
-  thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : 1);
+  thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI
+    : st.kind === 'scratch' ? spotScale(thing) : 1);
   thing.quaternion.identity();
   thing.position.set(st.point.x, st.topY + thing.userData.rest, st.point.z);
   st.occupant = thing;
@@ -3080,8 +3087,8 @@ const roster = () => (activeBot ? [activeBot, ...activeBot.team] : []);
 // They line up on the open floor behind the leader -- never out among the
 // stacks -- and the rows are centred on however many there are, so a team of
 // three is a tidy row and a team of twenty is a small crowd.
-function teamSlot(i) {
-  const h = homeFor(activeBot);
+function teamSlot(i, bot = activeBot) {
+  const h = homeFor(bot);
   const perFile = 6;                       // a long team folds into more files
   const back = i % perFile, file = Math.floor(i / perFile);
   return new THREE.Vector3(h.pos.x + file * 0.45, 0,
@@ -4703,6 +4710,17 @@ function activateBot(bot, after) {
     giftFrom = gift.parent.worldToLocal(fromW);
     gift.position.copy(giftFrom);
   }
+  // A team crosses the floor together. Leaving the members to snap into place
+  // after the leader had arrived made them look like scenery rather than like
+  // robots that came with it.
+  const marchers = bot.team.map((m, i) => {
+    const n = m.node;
+    const start = n.parent ? n.getWorldPosition(new THREE.Vector3()) : null;
+    WROOT.add(n);
+    if (start) n.position.copy(WROOT.worldToLocal(start));
+    else n.position.copy(from);
+    return { m, node: n, from: n.position.clone(), to: teamSlot(i + 1, bot), s0: n.scale.x };
+  });
   enqueue({
     dur: 0.9,
     update(t) {
@@ -4713,10 +4731,15 @@ function activateBot(bot, after) {
         gift.position.lerpVectors(giftFrom, giftTo, e);
         gift.position.y += 0.18 * Math.sin(Math.PI * e);      // a gentle arc over
       }
+      for (const w of marchers) {
+        w.node.position.lerpVectors(w.from, w.to, e);
+        w.node.scale.setScalar(lerp(w.s0, MINI, e));
+      }
     },
     end() {
       bot.node.position.set(0, 0, 0); bot.node.scale.setScalar(1); bot.node.rotation.y = 0;
       if (gift) gift.position.copy(giftTo);
+      for (const w of marchers) { w.node.position.copy(w.to); w.node.scale.setScalar(MINI); }
     },
   });
   enqueue(doNow(() => {
@@ -6661,7 +6684,10 @@ function wiggleTargetOf(t) {
   if (t.kind === 'thing') {
     if (t.thing === held) return null;
     // aimed at a box: the hole the drop would land in answers, not the shell
-    if ((!held || held.userData.kind !== 'box') && holesOf(t.thing)) {
+    // Only while you are carrying something does a hole answer for the box: a
+    // drop lands in a hole, but a CLICK picks up the whole box, so an empty
+    // hand must make the box itself jiggle.
+    if (held && held.userData.kind !== 'box' && holesOf(t.thing)) {
       const h = holeUnder(t.thing, t.point);
       if (h) return h.thing ?? h.pocket;
     }
