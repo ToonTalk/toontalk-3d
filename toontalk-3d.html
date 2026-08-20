@@ -414,9 +414,9 @@ ask anything about the workshop — or say "show me birds" (or
 fractions, numbers, pads, boxes, dice, scales, robot, copier, dusty, rooms,
 notebook) and he demonstrates it right on your table, using the workshop
 exactly the way you do — holding the pieces in his own hand.
-A demonstration plays one narrated step at a time: Marty walks over to
-what he is showing, does one thing, and waits for you to click
-Next ▸ — Stop ends it, and so does asking him something else. When
+A demonstration plays one narrated step at a time: Marty walks to the
+stack, fetches what he needs, carries it to the table, does one thing, and
+waits for you to click Next ▸ — Stop ends it, and so does asking him something else. When
 an answer of his suggests a demonstration, you get a Show me
 button rather than a surprise performance. He never builds programs for you —
 doing it yourself is the whole point.
@@ -436,9 +436,11 @@ is written here rather than what a model imagines a workshop like this might
 do. If the manual does not say, he is asked to admit he is unsure.
 
 Marty can also speak and listen. The 🔊 button has him read his
-replies aloud; the 🎤 button lets you ask by voice, where the browser offers a
-microphone — inside a Claude artifact it does not, so there the button simply
-is not shown.
+replies aloud, in phrases whose pitch steps about — a Martian does not speak in
+one steady tone. How Marty thinks also lets you pick which of your
+browser's voices he uses. The 🎤 button lets you ask by voice, where the browser
+offers a microphone — inside a Claude artifact it does not, so there the button
+simply is not shown.
 
 ## The notebook, saving and sharing
 
@@ -8325,41 +8327,84 @@ function advanceMarty(dt) {
 let martyPerforming = false;
 
 // --- his demonstrations: short scripts using the workshop the way you do ----
-const _mSt = (id) => handleClick({ kind: 'station', id });
+// He FETCHES: a demo's steps take him to the stack and back to the table, so
+// nothing appears in his hand or lands on the table by itself. Steps are async
+// now -- the runner awaits each one.
+function martyArrive(ms = 2500) {
+  return new Promise((res) => {
+    const t0 = performance.now();
+    const iv = setInterval(() => {
+      if (!martyTarget || performance.now() - t0 > ms) { clearInterval(iv); res(); }
+    }, 80);
+  });
+}
+async function martyWalk(v, look) {
+  if (!martyNode || !v) return;
+  martyLookAt = (look || v).clone();
+  if (martyNode.position.distanceTo(v) > 0.35) { martyGoTo(v); await martyArrive(); }
+}
+// Standing to reach a stack: just INSIDE the arc, so he never disappears
+// behind the stacks he is fetching from.
+function martyStationSpot(id) {
+  const st = id === 'dusty' ? { point: dustyHome } : stations[id];
+  const p = st?.point;
+  if (!p) return null;
+  const c = new THREE.Vector3(ARC.cx, 0, ARC.cz);
+  const inward = c.clone().sub(new THREE.Vector3(p.x, 0, p.z));
+  if (inward.lengthSq() < 0.01) inward.set(0, 0, 1);
+  inward.normalize();
+  return new THREE.Vector3(p.x, 0, p.z).add(inward.multiplyScalar(0.62));
+}
+async function _mSt(id) {
+  const spot = martyStationSpot(id);
+  const p = (id === 'dusty' ? dustyHome : stations[id]?.point);
+  await martyWalk(spot, p ? new THREE.Vector3(p.x, 0, p.z) : null);
+  handleClick({ kind: 'station', id });
+}
 // A demo lays its things out in front of Marty, not at fixed coordinates he
 // may be nowhere near: x is measured from where he is standing, inward.
-function _mBench(x, z) {
+async function _mBench(x, z) {
   const inward = martyNode && martyNode.position.x > 0 ? -1 : 1;
-  const base = martyNode ? martyNode.position.x + inward * 0.55 : 0;
+  const anchor = martySpot ? martySpot.x : (martyNode ? martyNode.position.x : 0);
+  const base = anchor + inward * 0.55;
   const px = Math.max(BENCH.x0 + 0.2, Math.min(BENCH.x1 - 0.2, base + inward * Math.abs(x)));
   const pz = Math.max(BENCH.z0 + 0.2, Math.min(BENCH.z1 - 0.2, z));
-  martyLookAt = new THREE.Vector3(px, 0, pz);
+  const here = new THREE.Vector3(px, 0, pz);
+  await martyWalk(new THREE.Vector3(
+    Math.max(BENCH.x0 - 0.6, Math.min(BENCH.x1 + 0.6, px)), 0, BENCH.z1 + 0.55), here);
+  martyLookAt = here;
   handleClick({ kind: 'bench', point: new THREE.Vector3(px, BENCH_TOP, pz) });
 }
+// where this demo is being presented from, so props keep a stable home
+let martySpot = null;
 const _mLast = () => benchThings[benchThings.length - 1];
 const MARTY_DEMOS = {
   fractions: { blurb: 'make an exact fraction like 1/4', near: 'numbers', steps: [
     { say: 'The stack only gives 1s — but every number here is an exact fraction underneath.', do: () => _mSt('numbers') },
     { do: () => _mBench(-0.5, 1.5) },
-    { do: (c) => { c.one = _mLast(); _mSt('numbers'); } },
+    { do: (c) => { c.one = _mLast(); return _mSt('numbers'); } },
     { say: 'On this one I type 4, then ÷ — so dropping it DIVIDES.', do: () => { held?.setValue?.(rat(4n)); held?.setOp?.('/'); refreshUI(); } },
     { say: 'Dropped on the 1: exactly one quarter. No rounding, ever.', do: (c) => handleClick({ kind: 'thing', thing: c.one }) },
     { say: 'Any fraction the same way — type the bottom number and ÷, drop it on the top one. Click a number to see its other faces.' },
   ] },
-  numbers: { blurb: 'numbers: type values, drop to add', near: 'numbers', steps: [
+  numbers: { blurb: 'numbers: typing values, adding AND multiplying', near: 'numbers', steps: [
     { say: 'Numbers come off this stack as 1s.', do: () => _mSt('numbers') },
     { say: 'A held number listens to typing — digits make this one 25.', do: () => { held?.setValue?.(rat(25n)); refreshUI(); } },
     { do: () => _mBench(-0.55, 1.5) },
-    { do: (c) => { c.a = _mLast(); _mSt('numbers'); } },
+    { do: (c) => { c.a = _mLast(); return _mSt('numbers'); } },
     { say: 'Another — I type 17 on it.', do: () => { held?.setValue?.(rat(17n)); refreshUI(); } },
     { say: 'Dropped on the 25, it adds. Numbers combine.', do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
-    { say: '42! Type − to subtract, * / ^ — or the words “mod” and “set” — to change what a number does.' },
+    { say: '42. Now watch what typing an OPERATION does — another number…', do: () => _mSt('numbers') },
+    { say: '…I make it a 3, and type × on it, so it multiplies instead of adding.',
+      do: () => { held?.setValue?.(rat(3n)); held?.setOp?.('*'); refreshUI(); } },
+    { say: '42 times 3 — 126. Type − to negate, / and ^ likewise, or the words “mod” and “set”.',
+      do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
   ] },
   pads: { blurb: 'text pads: write, join words', near: 'texts', steps: [
     { say: 'Text pads are paper for words.', do: () => _mSt('texts') },
     { say: 'Type on a held pad to write on it.', do: () => { held?.setText?.('Toon'); refreshUI(); } },
     { do: () => _mBench(-0.5, 1.55) },
-    { do: (c) => { c.p = _mLast(); _mSt('texts'); } },
+    { do: (c) => { c.p = _mLast(); return _mSt('texts'); } },
     { do: () => { held?.setText?.('Talk'); refreshUI(); } },
     { say: 'Dropped on another pad’s RIGHT edge, they join…', do: (c) => {
         const pt = c.p.getWorldPosition(new THREE.Vector3()); pt.x += 0.15;
@@ -8370,7 +8415,7 @@ const MARTY_DEMOS = {
     { say: 'Boxes come off this stack.', do: () => _mSt('boxes') },
     { say: 'A digit while holding one sets its holes — three.', do: () => resizeHeldBox(3) },
     { do: () => _mBench(0.0, 1.5) },
-    { do: (c) => { c.b = _mLast(); _mSt('numbers'); } },
+    { do: (c) => { c.b = _mLast(); return _mSt('numbers'); } },
     { do: () => { held?.setValue?.(rat(7n)); refreshUI(); } },
     { say: 'A hole holds anything — numbers, pads, boxes, even a robot.', do: (c) => handleClick({ kind: 'hole', box: c.b, index: 1 }) },
     { say: 'Drop box on box to join them; drop a box on a whole number to split it there. A box with NO holes is a mould — it takes words and teams apart.' },
@@ -8378,14 +8423,14 @@ const MARTY_DEMOS = {
   dice: { blurb: 'dice: re-roll a number', near: 'dice', steps: [
     { do: () => _mSt('numbers') },
     { do: () => _mBench(0.3, 1.5) },
-    { say: 'Dice hop off their own stack…', do: (c) => { c.n = _mLast(); _mSt('dice'); } },
+    { say: 'Dice hop off their own stack…', do: (c) => { c.n = _mLast(); return _mSt('dice'); } },
     { say: '…and dropped on a number, the die re-rolls it: anything from 1 to its faces.', do: (c) => handleClick({ kind: 'thing', thing: c.n }) },
     { say: 'Type a number while holding a die to change how many faces it has. Robots throw them too — that is how programs choose at random.' },
   ] },
   scales: { blurb: 'scales: compare, and robots match the lean', near: 'scales', steps: [
     { say: 'A scale is a balance.', do: () => _mSt('scales') },
     { do: () => _mBench(0.0, 1.6) },
-    { do: (c) => { c.s = _mLast(); _mSt('numbers'); } },
+    { do: (c) => { c.s = _mLast(); return _mSt('numbers'); } },
     { do: () => { held?.setValue?.(rat(3n)); refreshUI(); } },
     { do: (c) => handleClick({ kind: 'hole', box: c.s, index: 0 }) },
     { do: () => _mSt('numbers') },
@@ -8406,7 +8451,7 @@ const MARTY_DEMOS = {
   robot: { blurb: 'robots: train by doing, then run', trains: true, near: 'minis', steps: [
     { say: 'Robots come off this stack as minis.', do: () => _mSt('minis') },
     { do: () => _mBench(-0.2, 1.6) },
-    { do: (c) => { c.bot = _mLast(); _mSt('numbers'); } },
+    { do: (c) => { c.bot = _mLast(); return _mSt('numbers'); } },
     { say: 'Give a mini something and you are TRAINING it: everything I make it do, it remembers.', do: () => { held?.setValue?.(rat(3n)); refreshUI(); } },
     { do: (c) => handleClick({ kind: 'botThing', bot: c.bot.__bot }), hold: 900 },
     { say: 'Inside its thought: I have it take a fresh number…', do: () => handleClick({ kind: 'station', id: 'numbers' }), hold: 700 },
@@ -8488,7 +8533,8 @@ async function runMartyDemo(id) {
   martyStopFlag = false;
   martyPendingDemo = null;
   martyCtl();
-  martyGoTo(martySpotFor(demo));
+  martySpot = martySpotFor(demo);
+  martyGoTo(martySpot);
   // let him get there first, or his first props land wherever he happened to
   // be as he walked past
   await new Promise((res) => {
@@ -8504,7 +8550,7 @@ async function runMartyDemo(id) {
       const step = steps[i];
       if (step.say) { martySay(step.say); say(step.say, 6000); }
       martyPerforming = true;
-      if (step.do) step.do(ctx);
+      if (step.do) await step.do(ctx);
       await martyIdleWait();
       await new Promise(r => setTimeout(r, step.hold ?? (speed === Infinity ? 150 : 600)));
       martyPerforming = false;
@@ -8521,6 +8567,7 @@ async function runMartyDemo(id) {
   } finally {
     martyBusyDemo = false;
     martyPerforming = false;
+    martySpot = null;
     if (mode === 'training') leaveTraining();
     // a stopped demo must not leave its prop in anyone's hand
     if (held && held.parent === martyNode.__hand) {
@@ -8646,7 +8693,7 @@ async function martyThink(q) {
       'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
-    body: JSON.stringify({ model, max_tokens: 300, system: sys,
+    body: JSON.stringify({ model, max_tokens: 900, system: sys,
       messages: [...martyHistory, { role: 'user', content: q }] }),
   });
   if (!res.ok) throw new Error('Claude said ' + res.status);
@@ -8694,7 +8741,17 @@ async function askMarty(q) {
       const m = reply.match(/\{[\s\S]*\}/);
       const j = JSON.parse(m ? m[0] : reply);
       text = j.say; demo = j.demo;
-    } catch { text = reply; }
+    } catch {
+      // a reply cut off mid-JSON must still read as Marty talking, not as
+      // machinery: pull the words out of whatever arrived
+      const say = reply.match(/"say"\s*:\s*"((?:[^"\\]|\\.)*)/);
+      const d = reply.match(/"demo"\s*:\s*"(\w+)"/);
+      text = say
+        ? say[1].replace(/\\n/g, ' ').replace(/\\"/g, '"').replace(/\\\\/g, '\\').trim()
+        : reply.replace(/^[\s\S]*?\{/, '').replace(/[{}"]/g, ' ').trim();
+      demo = d ? d[1] : null;
+      if (say && !/[.!?…]$/.test(text)) text += '…';
+    }
   }
   martyHistory.push({ role: 'user', content: q },
                     { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null }) });
@@ -8732,17 +8789,44 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<option value="claude">Claude</option><option value="openai">ChatGPT (OpenAI)</option><option value="gemini">Gemini</option></select>'
   + '<input id="martyModel" placeholder="model" '
   + 'style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;min-width:0"></div>'
+  + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
+  + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
   + '<input id="martyKey" type="password" placeholder="API key\u2026" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '</details>';
 document.body.appendChild(martyUI);
 const MARTY_VOICE = 'tt3d.marty-voice';
+const MARTY_VOICE_NAME = 'tt3d.marty-voice-name';
 let martyVoiceOn = localStorage.getItem(MARTY_VOICE) === '1';
+function martyVoiceObj() {
+  const want = localStorage.getItem(MARTY_VOICE_NAME);
+  const all = speechSynthesis.getVoices?.() || [];
+  if (!all.length) return null;
+  if (want) { const v = all.find(v2 => v2.name === want); if (v) return v; }
+  // failing a choice, something not too human: a compact/eSpeak voice if the
+  // browser has one, else any voice that is not the system default
+  return all.find(v => /espeak|compact|zarvox|trinoids|whisper|bells/i.test(v.name))
+    ?? all.find(v => !v.default && /en/i.test(v.lang)) ?? all[0];
+}
+// A Martian does not speak in one steady tone: the line is said in short
+// phrases whose pitch steps up and down, which turns any browser voice into
+// something from further away.
 function martySpeak(text) {
   if (!martyVoiceOn || !window.speechSynthesis) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 1.05; u.pitch = 1.25;      // a little Martian
-  speechSynthesis.speak(u);
+  const voice = martyVoiceObj();
+  const parts = String(text).match(/[^,.;:!?…—]+[,.;:!?…—]*/g) || [text];
+  const chunks = [];
+  for (const p of parts) {
+    const words = p.trim().split(/\s+/).filter(Boolean);
+    for (let i = 0; i < words.length; i += 4) chunks.push(words.slice(i, i + 4).join(' '));
+  }
+  chunks.forEach((c, i) => {
+    const u = new SpeechSynthesisUtterance(c);
+    if (voice) u.voice = voice;
+    u.pitch = 1.7 - (i % 3) * 0.32;      // a warble across the phrase
+    u.rate = 1.18 + (i % 2) * 0.12;
+    speechSynthesis.speak(u);
+  });
 }
 function martySay(text, who = 'marty') {
   const log = document.getElementById('martyLog');
@@ -8813,6 +8897,28 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   };
   // Dictation, where the browser offers it. Artifacts do not permit the
   // microphone, so there the button simply is not shown.
+  const sel = document.getElementById('martyVoiceSel');
+  const fillVoices = () => {
+    const all = speechSynthesis.getVoices?.() || [];
+    if (!all.length || !sel) return;
+    const cur = localStorage.getItem(MARTY_VOICE_NAME) || '';
+    sel.innerHTML = '<option value="">Most alien one available</option>'
+      + all.map(v => `<option value="${v.name.replace(/"/g, '')}">${v.name} (${v.lang})</option>`).join('');
+    sel.value = cur;
+  };
+  if (sel) {
+    fillVoices();
+    speechSynthesis.addEventListener?.('voiceschanged', fillVoices);
+    sel.onchange = () => {
+      if (sel.value) localStorage.setItem(MARTY_VOICE_NAME, sel.value);
+      else localStorage.removeItem(MARTY_VOICE_NAME);
+      speechSynthesis.cancel();
+      martyVoiceOn = true;
+      localStorage.setItem(MARTY_VOICE, '1');
+      showV();
+      martySay('Greetings from the red planet!');
+    };
+  }
   const mic = document.getElementById('martyMic');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR || window.claude?.complete) mic.style.display = 'none';
