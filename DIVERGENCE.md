@@ -94,14 +94,21 @@ Update this file as decisions are made.
   (2026-08-19), the original wand's 'S' mode; broadcast birds carry robots
   too. Recursive self-copying programs are now expressible.
 - Bombs: a robot can destroy the house it is in; contents are rescued only if
-  Dusty is present. We have no teardown a robot can perform — finished
-  recursive workers would accumulate forever. — **GAP**; our flavour needs
-  deciding (a bomb thing? a self-vacuum step? parent-side cleanup of a room
-  whose robot has stopped?). **UNDECIDED** on form, needed in substance.
-  Every one of Ken's five ported programs ends with a bomb, and every one of
-  them ports by having the finisher **vacuum something its own thought needs**
-  — the number, the bird, the scale — which stops the team just as dead but
-  leaves the house standing.
+  Dusty is present. **DONE** (2026-08-20) in our own flavour: **a robot
+  vacuums the very box it was working on**. The original manual already says
+  that ends the team for good, and it needs no new object — Dusty is the tool
+  a child already knows. Three consequences, all deliberate:
+  - the run ends with "swept its own box away: finished, for good" rather than
+    advice about erasing its thought;
+  - a house whose robot has done that is dead — nobody works there and nothing
+    is left to work on — so it **folds away to nothing** (`markRoomDone` →
+    `retireRoom`), which is what stops recursive workers accumulating;
+  - anything still inside goes with it, which is the point: the robot swept up
+    its own work first.
+  Ken's five ports use it: `append`, `n-to-1` and `factorial` end this way, and
+  `reverse`'s houses now clear themselves as each one finishes. A finisher
+  whose box still holds live houses (reverse's own) sweeps a smaller thing
+  instead — its bird.
 - The original's truck can carry a **notebook**, and `reverse.tt` uses that as
   a module system: it writes a name on a text pad, drops it on the notebook to
   look the append team up, and puts what it finds in the truck. Ours carries a

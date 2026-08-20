@@ -187,6 +187,10 @@ is a box whose first hole is a *word* saying what to do:
 [ "query",  a bird ]    tell me the balance
 ```
 
+The three robots are a team, and on the table they stand together: Teller,
+withdraw and query, each with its own thought. Click one to take it out of the
+team, drop it back on the Teller to put it in again.
+
 Give the account box to the Teller, then drop a request into its first hole.
 The robot whose thought carries that word does the work and vacuums the
 request away, leaving the hole empty for the next one — **the dispatch is the
@@ -201,6 +205,11 @@ The three robots are a **team**, and you can watch them take turns: the Teller
 stands at the desk and *withdraw* and *query* wait in line behind him, each
 with its own small thought over its head. Drop in a withdrawal and *withdraw*
 walks up, does the work, and steps back.
+
+A request's bird is swept away with the request she came in — one bird, one
+answer — so six requests are laid out ready, and a spare nest sits on the
+table: set it down and its egg hatches into another bird who answers on the
+same nest.
 
 The Owner pad is part of every thought, so these robots serve Sally's account
 and nobody else's. Rewrite the name on the pad and they all stop recognising
@@ -241,7 +250,8 @@ else — the state it needs is built in front of you.
   1 on the count, wand-copy the count, type a **times sign** on the copy, and
   drop that on *so far*.
 - **answer** — the scale is **level**, so the count has reached N: give *so
-  far* to the bird and vacuum the scale, which stops the team.
+  far* to the bird and then vacuum its own box, which is how a robot says it
+  has finished.
 
 Nobody counts rounds and nobody compares anything: the scale compares
 continuously, and the two workers simply recognise what it says. 5! = 120
@@ -254,8 +264,8 @@ Regenerate with `python make_factorial.py` (edit `N`).
 **A list nobody ever holds.** A list here is the pair `[first, the rest]`, and
 the rest is usually a *nest* — an answer that has not arrived yet.
 
-- **FinishList** sees the number **0** and gives the bird a box with **no
-  holes**: the empty list, and the end of it.
+- **FinishList** sees the number **0**, gives the bird a box with **no holes**
+  — the empty list, and the end of it — and then sweeps away its own box.
 - **ListWorker** sees any other number: it makes a two-hole box, copies the
   number into the front, drops a fresh nest in the back, and gives that pair
   away. Then it keeps the new nest's own bird — so the next link will land
@@ -277,7 +287,8 @@ Two robots joining one list onto the end of another, a link at a time.
   holds `[head, a promise]`. Keep the promise's bird and carry on with the
   tail.
 - **FinishAppend** — List1 is a box with no holes: List2 *is* the rest of the
-  answer, so hand it over and stop.
+  answer, so hand it over and then sweep away its own box. That ends the team
+  for good, and inside `reverse` it also folds the house away.
 
 Nothing is copied and nothing waits for the whole of List1 to be known, which
 is why the same two robots keep working when List1 is still being computed
@@ -302,9 +313,12 @@ and the answer unwinds from the end of the list back to the front.
 Give it `[1,[2,[3,[]]]]` with Rounds at 10: three houses pile up in the last
 hole of the work box, and `[3,[2,[1,[]]]]` comes back on the nest.
 
-Two things differ from the original: it fetches its append team from the
-notebook by writing the name on a pad (we carry a spare team in a hole, as
-`fibonacci-recursive` does), and its finisher blows up its own house (ours
-vacuums the bird it has just answered, which stops it just as dead).
+Each house sweeps away its own box when its append is done, so **the houses
+clear themselves**: by the time the answer is on the nest the last hole of the
+work box is empty again. One thing differs from the original: it fetches its
+append team from the notebook by writing the name on a pad, where we carry a
+spare team in a hole, as `fibonacci-recursive` does. (Reverse's own finisher
+sweeps its bird rather than its box — its box is still holding houses that are
+hard at work.)
 
 Regenerate with `python make_reverse.py`.

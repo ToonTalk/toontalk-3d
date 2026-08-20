@@ -354,6 +354,7 @@ function sfx(name) {
       case 'flip':    noiseFx(0.16, { from: 1800, to: 700, q: 0.8, gain: 0.18 }); break;
       case 'whoosh':  noiseFx(0.7, { from: 300, to: 2400, q: 1, gain: 0.32 }); tone(220, 0.7, { slide: -140, gain: 0.07 }); break;
       case 'grow':    tone(300, 0.3, { type: 'triangle', slide: 420, gain: 0.13 }); break;
+      case 'shrink':  tone(520, 0.35, { type: 'triangle', slide: -380, gain: 0.13 }); break;
       case 'type':    tone(2400, 0.03, { type: 'square', gain: 0.045 }); break;
       case 'chime':   tone(880, 0.3, { gain: 0.13 }); tone(1320, 0.34, { at: 0.03, gain: 0.09 }); break;
       case 'alert':   tone(740, 0.12, { type: 'square', gain: 0.09 }); tone(560, 0.16, { at: 0.13, type: 'square', gain: 0.09 }); break;
@@ -1341,6 +1342,7 @@ function hydrateRoom(room) {
   const rec = room.userData.world;
   room.userData.world = null;
   room.__ctx = newWorldCtx();
+  room.__ctx.room = room;           // so a robot inside can find its own house
   const savedPending = nestGroupPending;   // hydration can run mid-load
   nestGroupPending = null;
   pushWorld(room);
@@ -1678,8 +1680,53 @@ function findDirtyRoom(ignoreCooldown = false) {
   }
   return null;
 }
+// The same walk, looking for houses whose work is over.
+function findDoneRoom() {
+  const ready = (t) => t.userData.kind === 'room' && t.userData.done
+    && !t.__running && !t.__retiring;
+  const walk = (t) => {
+    if (!t) return null;
+    if (ready(t)) return t;
+    const hs = holesOf(t);
+    if (hs) for (const h of hs) { const r = walk(h.thing); if (r) return r; }
+    return null;
+  };
+  for (const t of benchThings) { const r = walk(t); if (r) return r; }
+  for (const st of Object.values(stations)) {
+    if (st.occupant) { const r = walk(st.occupant); if (r) return r; }
+  }
+  return null;
+}
+// A house nobody works in any more folds itself away. Whatever is still inside
+// goes with it -- which is the point: the robot swept its own box away, so
+// there was nothing left in there worth keeping.
+const retiring = [];
+function retireRoom(room) {
+  if (room.__retiring) return;
+  room.__retiring = true;
+  const at = room.getWorldPosition(new THREE.Vector3());
+  detach(room);
+  scene.attach(room);
+  room.position.copy(at);
+  retiring.push({ node: room, t: 0, s0: room.scale.x });
+  sfx('shrink');
+  refreshUI();
+}
+function advanceRetiring(dt) {
+  for (let i = retiring.length - 1; i >= 0; i--) {
+    const r = retiring[i];
+    r.t += dt / 0.55;
+    if (r.t >= 1) { r.node.removeFromParent(); retiring.splice(i, 1); continue; }
+    const e = ease(r.t);
+    r.node.scale.setScalar(r.s0 * (1 - e));
+    r.node.position.y += dt * 0.35;
+    r.node.rotation.y += dt * 2.2;
+  }
+}
 function processDirtyRooms() {
   if (roomWorkBusy || busy || held || mode !== 'world' || queue.length) return;
+  const spent = findDoneRoom();
+  if (spent) retireRoom(spent);
   // A dozing robot must NOT stop the houses: it is usually waiting on an
   // answer from one of them. Its vigil is re-derived after the swap back.
   if (allStands.length > 1) return;                   // several robots aside: not yet
@@ -3201,6 +3248,7 @@ function roomWorking(t) {
 }
 function advanceWorldClocks(dt) {
   advanceWiggle(dt);
+  advanceRetiring(dt);
   // a working room's chimney smokes
   for (const t of benchThings) {
     if (t.userData?.kind !== 'room') continue;
@@ -3365,7 +3413,7 @@ function abort(msg) {
   if (mode === 'replay') mode = 'world';
   highlight(-1);
   stowHeld();
-  say(msg);
+  sayAttn(msg);
 }
 
 // ---------------------------------------------------------------- actions
@@ -4205,6 +4253,11 @@ function userClick(target) {
         ? `${bot.name ? `“${bot.name}”` : 'That robot'} is waiting on its nest — click again to pick it up.`
         : `Now showing ${bot.name ? `“${bot.name}”` : 'that robot'}.`);
     }
+    if (leaveTeam(bot)) {
+      userTake(bot.node);
+      refreshUI();
+      return say('Out of the team — set it down, or drop it on a robot to join another.');
+    }
     return userTake(bot.node);       // pick a mini off the bench
   }
   if (target.kind === 'station') {
@@ -4640,6 +4693,51 @@ function activateBot(bot, after) {
 // The active robot shrinks and steps onto the table by itself, making room
 // for another. Unlike miniaturizeActive it never touches your hand -- you are
 // already carrying the thing you meant to hand over.
+// A team on the table is not one robot keeping a secret: they all stand there,
+// the leader in front and the rest lined up beside it, each with its own small
+// thought. Click any of them to take it out of the team; drop a robot on the
+// leader to add one back.
+const benchTeamShown = new Set();
+function teamLeaderOf(bot) {
+  if (activeBot?.team.includes(bot)) return activeBot;
+  for (const t of benchThings) {
+    if (t.userData?.kind === 'robot' && t.__bot?.team.includes(bot)) return t.__bot;
+  }
+  return null;
+}
+function layoutBenchTeams() {
+  if (offstage()) return;
+  const keep = new Set();
+  for (const t of benchThings) {
+    if (t.userData?.kind !== 'robot' || t.__bot === activeBot) continue;
+    const lead = t.__bot;
+    if (!lead) continue;
+    lead.team.forEach((m, i) => {
+      const n = m.node;
+      if (n === held) return;
+      if (n.parent !== benchRoot) benchRoot.add(n);
+      n.position.set(t.position.x + 0.3 * (i + 1), t.position.y, t.position.z);
+      n.quaternion.copy(t.quaternion);
+      n.scale.setScalar(MINI);
+      m.root.position.set(0, 0, 0);
+      addMiniBubble(n, m.program.length ? m.condition : null);
+      setPick(n, { kind: 'botThing', bot: m });
+      keep.add(n);
+    });
+  }
+  for (const n of benchTeamShown) if (!keep.has(n)) n.removeFromParent();
+  benchTeamShown.clear();
+  keep.forEach(n => benchTeamShown.add(n));
+}
+// Taking a member out of the team it belongs to -- the rest close ranks.
+function leaveTeam(bot) {
+  const lead = teamLeaderOf(bot);
+  if (!lead) return false;
+  lead.team = lead.team.filter(m => m !== bot);
+  benchTeamShown.delete(bot.node);
+  if (lead === activeBot) { teamView = 0; renderProgram(); layoutTeam(); }
+  return true;
+}
 function hideTeam(bot) {
   (bot?.team ?? []).forEach(m => { if (m !== bot) m.node.removeFromParent(); });
   if (bot) addMiniBubble(bot.node, bot.program.length ? bot.condition : null);
@@ -5803,11 +5901,27 @@ function nextIteration() {
   const member = members[states.indexOf('yes')];
   if (!member) {
     if (states.includes('wait')) return enterWaiting();
-    if (members.length === 1) flagMismatch(mismatchPaths(condition, given));
+    // A robot that vacuums away the very box it was working on has said it is
+    // finished -- the team stops for good, and there is nothing to erase.
+    if (!stations.stand.occupant) {
+      finishRun();
+      markRoomDone();
+      return sayAttn(runCount
+        ? `Ran ${runCount}× — then swept its own box away: finished, for good.`
+        : 'It swept its own box away — finished.');
+    }
+    // Only a lone robot has red parts to show: for a team nothing is flagged,
+    // so pointing at red parts that are not there would be nonsense.
+    const alone = members.length === 1;
+    if (alone) flagMismatch(mismatchPaths(condition, given));
     finishRun();
-    return sayAttn(runCount
-      ? `Ran ${runCount}× — stopped: the red parts of its thought no longer match. Dusty can vacuum them away.`
-      : 'Nothing recognises what it was given — Dusty can vacuum the red parts of its thought.');
+    return sayAttn(alone
+      ? (runCount
+        ? `Ran ${runCount}× — stopped: the red parts of its thought no longer match. Dusty can vacuum them away.`
+        : 'Nothing recognises what it was given — Dusty can vacuum the red parts of its thought.')
+      : (runCount
+        ? `Ran ${runCount}× — stopped: no robot on the team recognises the box any more.`
+        : 'No robot on the team recognises what it was given.'));
   }
   if (runCount >= maxIter) {
     return finishRun(`Stopped after ${maxIter} rounds — the “Rounds” limit, not its condition.`);
@@ -5821,6 +5935,16 @@ function nextIteration() {
     runStep(step);
   });
   enqueue(pause(0.25), doNow(nextIteration));
+}
+// A robot that has swept its own box away is done, and so is the house it was
+// working in: an empty house with nobody to work for is dead, and dead houses
+// shrink away rather than standing about smoking. Ken's originals blow them up
+// with a bomb; this is the same act, done with Dusty.
+function markRoomDone() {
+  const room = curCtx?.room;
+  if (!room || !room.userData) return;
+  room.userData.dirty = false;
+  room.userData.done = true;
 }
 // A team takes turns in the open: the member that recognises the work walks
 // up to the desk and the one standing there steps back into the queue. The
@@ -6010,12 +6134,24 @@ function stepAside(bot) {
 // ---------------------------------------------------------------- UI
 const $ = (id) => document.getElementById(id);
 let hintTimer = null;
-function say(msg, hold = 2800) { if (offstage()) return; $('hint').textContent = msg; clearTimeout(hintTimer); hintTimer = setTimeout(() => { hintTimer = null; refreshUI(); }, hold); }
+// An explanation of what went wrong is not chatter: it stays on the card until
+// you do something about it. Routine messages may not sweep it away, and the
+// next click -- the moment you act on it -- lets the card go back to normal.
+let attnHeld = false;
+addEventListener('pointerdown', () => { attnHeld = false; }, true);
+function say(msg, hold = 2800, attn = false) {
+  if (offstage()) return;
+  if (attnHeld && !attn) return;
+  attnHeld = attn;
+  $('hint').textContent = msg;
+  clearTimeout(hintTimer);
+  hintTimer = attn ? null : setTimeout(() => { hintTimer = null; refreshUI(); }, hold);
+}
 // For messages worth looking up for: flash the message card a few times.
 function sayAttn(msg) {
   if (offstage()) return;
   sfx('alert');
-  say(msg, 7000);
+  say(msg, 0, true);
   const t = $('title');
   t.classList.remove('attn');
   void t.offsetWidth;              // restart the animation
@@ -6091,6 +6227,7 @@ function renderProgram(list = null) {
 }
 function refreshUI() {
   if (offstage()) return;
+  layoutBenchTeams();          // a team on the table stands together
   const training = mode === 'training';
   $('badge').textContent = mode === 'replay' ? 'repeating'
     : training ? 'inside the thought'
@@ -6152,7 +6289,7 @@ function refreshUI() {
       : kind === 'die' ? 'type how many faces it should have; drop it on a number to re-roll that number'
       : 'put it down on the bench';
   }
-  if (hintTimer) return;
+  if (hintTimer || attnHeld) return;
   const holdingBot = held?.userData.kind === 'robot';
   $('hint').textContent =
     mode === 'replay' ? 'Watching it repeat what it learned…' :

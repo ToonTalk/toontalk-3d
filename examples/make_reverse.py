@@ -68,7 +68,7 @@ append = {
     'condition': box(EMPTY, ANYBOX, ANYBIRD),
     'program': [
         take(at('given', 1)), put('given', 2),
-        vac('given', 0),
+        vac('given'),          # its own box: the house folds away with it
     ],
     'trainedOn': None, 'team': [append_worker],
 }

@@ -19,8 +19,8 @@
 # too, and the worker would happily grab it.
 #
 # Move for move the original, except that the original's finisher fetches a
-# bomb and blows up its own house; ours empties the number hole, which stops
-# the team just as surely.
+# bomb and blows up its own house; ours vacuums the box it was working on,
+# which ends the team for good and, in a house, folds the house away.
 import json, io, os
 
 N = 5
@@ -49,7 +49,7 @@ finish = {
     'program': [
         newbox, holes(0),        # a box with no holes at all: the empty list
         put('given', 1),         # to the bird, who takes it home
-        vac('given', 0),         # the 0 goes: nothing matches now, and it stops
+        vac('given'),            # then its own box: finished, for good
     ],
     'trainedOn': box(num(N), bird()),
     'team': [],

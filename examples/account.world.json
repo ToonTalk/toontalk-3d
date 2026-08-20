@@ -308,6 +308,78 @@
   },
   {
    "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "deposit"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "20",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": -1.2,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "withdraw"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "7",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": -0.55,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "query"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9401,
+      "nestGuid": "account-reply-nest"
+     }
+    ]
+   },
+   "x": 0.1,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9402,
+    "guid": "account-reply-nest",
+    "hasEgg": true,
+    "pile": [],
+    "label": "spare"
+   },
+   "x": 1.2,
+   "z": 1.15
+  },
+  {
+   "thing": {
     "kind": "nest",
     "id": 9401,
     "guid": "account-reply-nest",
@@ -329,7 +401,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nGive the account box to the\nTeller, then drop a request\ninto its first hole. The\nrobot whose thought matches\nthat word does the work and\nsweeps the request away.\n\nThe query one answers on the\nnest marked \"answers\".\n\nThe Owner pad is in every\nthought, so they serve\nSally's account and no\nother. Rewrite the name and\nthey all stop knowing it."
+    "text": "TO RUN IT\n\nGive the account box to the\nTeller, then drop a request\ninto its first hole. The\nrobot whose thought matches\nthat word does the work and\nsweeps the request away.\n\nThe query one answers on the\nnest marked \"answers\".\n\nA request's bird is swept up\nwith it, so six are laid out\nready. For more, set the\nspare nest down: its egg\nhatches into a bird who\nanswers on the same nest.\n\nThe Owner pad is in every\nthought, so they serve\nSally's account and no\nother."
    },
    "x": 1.35,
    "z": 2.15

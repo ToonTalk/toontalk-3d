@@ -24,8 +24,8 @@
 # on either side of it, ours holds the two numbers in its own pans.
 #
 # The original ends with the Finish robot fetching a bomb and blowing up its
-# own house. We have no bombs: it empties the "so far" hole instead, which
-# stops the team just as dead, since every thought wants a number there.
+# own house. We have no bombs: it vacuums the box it was working on, which
+# ends the team for good and, in a house, folds the house away.
 import json, io, os
 
 N = 5                       # 5! = 120
@@ -83,7 +83,7 @@ finish = {
     'kind': 'robot', 'name': 'answer', 'condition': box(WILD, tilt('='), ANYBIRD),
     'program': [
         take('given', 0), put('given', 2),   # so far, into the bird's wings
-        vac('given', 1),                     # the scale goes, and with it the team
+        vac('given'),                        # then its own box: finished
     ],
     'trainedOn': None, 'team': [],
 }

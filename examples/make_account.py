@@ -79,14 +79,24 @@ teller = dict(deposit, name='Teller', team=[withdraw, query])
 account = box(None, num(START), txt(OWNER))
 teller['trainedOn'] = box(box(txt('deposit'), num(50)), num(START), txt(OWNER))
 
-reply_bird = {'kind': 'bird', 'nestId': REP_ID, 'nestGuid': REP_GUID}
+# One bird per request: she carries the answer home and is swept away with
+# the request she arrived in. So the world lays out more than one -- copies
+# of a nest share its identity, so every one of these birds answers on the
+# same nest -- and a spare egg for when they run out.
+reply_bird = lambda: {'kind': 'bird', 'nestId': REP_ID, 'nestGuid': REP_GUID}
 
 world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': account, 'x': -0.10, 'z': 1.55},
     {'thing': teller, 'x': -1.15, 'z': 1.30},
     {'thing': box(txt('deposit'), num(50)), 'x': -1.20, 'z': 2.15},
     {'thing': box(txt('withdraw'), num(30)), 'x': -0.55, 'z': 2.15},
-    {'thing': box(txt('query'), reply_bird), 'x': 0.10, 'z': 2.15},
+    {'thing': box(txt('query'), reply_bird()), 'x': 0.10, 'z': 2.15},
+    {'thing': box(txt('deposit'), num(20)), 'x': -1.20, 'z': 1.15},
+    {'thing': box(txt('withdraw'), num(7)), 'x': -0.55, 'z': 1.15},
+    {'thing': box(txt('query'), reply_bird()), 'x': 0.10, 'z': 1.15},
+    {'thing': {'kind': 'nest', 'id': REP_ID + 1, 'guid': REP_GUID,
+               'hasEgg': True, 'pile': [], 'label': 'spare'},
+     'x': 1.20, 'z': 1.15},
     {'thing': {'kind': 'nest', 'id': REP_ID, 'guid': REP_GUID, 'hasEgg': False,
                'pile': [], 'label': 'answers'}, 'x': 1.20, 'z': 1.70},
     {'thing': txt('SALLY\'S ACCOUNT\n\nThe box is\n\n [ Request, Balance,\n   Owner ]\n\n'
@@ -97,9 +107,11 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'into its first hole. The\nrobot whose thought matches\n'
                   'that word does the work and\nsweeps the request away.\n\n'
                   'The query one answers on the\nnest marked "answers".\n\n'
+                  'A request\'s bird is swept up\nwith it, so six are laid out\n'
+                  'ready. For more, set the\nspare nest down: its egg\n'
+                  'hatches into a bird who\nanswers on the same nest.\n\n'
                   'The Owner pad is in every\nthought, so they serve\n'
-                  'Sally\'s account and no\nother. Rewrite the name and\n'
-                  'they all stop knowing it.'),
+                  'Sally\'s account and no\nother.'),
      'x': 1.35, 'z': 2.15},
 ], 'stations': {}, 'active': None}
 

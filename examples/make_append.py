@@ -12,7 +12,9 @@
 #                 promise, and carries on with the tail.
 #   FinishAppend  sees [a box with NO holes, any box, a bird]
 #                 List1 is used up, so List2 itself is the rest of the answer:
-#                 hand it to the bird and stop.
+#                 hand it to the bird, then sweep away its OWN box -- which is
+#                 how a robot says it has finished. Inside reverse.world.json
+#                 that also folds the house away.
 #
 # Nothing is ever copied and nothing waits for the whole of List1 to be known:
 # each link is passed on as soon as it exists. That is why the same two robots
@@ -60,8 +62,8 @@ finish = {
     'condition': box(EMPTY, ANYBOX, ANYBIRD),
     'program': [
         take(at('given', 1)), put('given', 2),   # List2 itself, to the bird
-        vac('given', 0),                         # nothing matches now: it stops
-    ],
+        vac('given'),                            # then it sweeps away its OWN
+    ],                                           # box: finished, for good
     'trainedOn': box(box(num(1), box(num(2), EMPTY)),
                      box(num(3), box(num(4), EMPTY)), bird()),
     'team': [],
