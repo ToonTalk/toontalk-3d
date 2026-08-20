@@ -8327,7 +8327,8 @@ function advanceMarty(dt) {
     while (diff < -Math.PI) diff += Math.PI * 2;
     martyNode.rotation.y += diff * Math.min(1, dt * 5);
   }
-  martyNode.position.y = Math.abs(Math.sin(martyT * 2.4 * lively)) * 0.03 * lively;
+  martyLift += (martyLiftTarget - martyLift) * Math.min(1, dt * 9);
+  martyNode.position.y = Math.abs(Math.sin(martyT * 2.4 * lively)) * 0.03 * lively + martyLift;
   martyNode.__antBob.material.emissiveIntensity = 0.5 + 0.4 * Math.sin(martyT * 3);
   // What a demo picks up rides in MARTY'S hand, not on the visitor's cursor --
   // it is his demonstration. Only while a step of his is running, so anything
@@ -8339,6 +8340,16 @@ function advanceMarty(dt) {
   }
 }
 let martyPerforming = false;
+// A Martian does not stoop over a table: he rises to take a thing and to set
+// it down, and sinks back afterwards.
+let martyLift = 0, martyLiftTarget = 0;
+async function martyReach(act) {
+  martyLiftTarget = 0.46;
+  await new Promise(r => setTimeout(r, 320));
+  act();
+  await new Promise(r => setTimeout(r, 340));
+  martyLiftTarget = 0;
+}
 
 // --- his demonstrations: short scripts using the workshop the way you do ----
 // He FETCHES: a demo's steps take him to the stack and back to the table, so
@@ -8403,7 +8414,7 @@ async function _mSt(id) {
   const spot = martyStationSpot(id);
   const p = (id === 'dusty' ? dustyHome : stations[id]?.point);
   await martyWalk(spot, p ? new THREE.Vector3(p.x, 0, p.z) : null);
-  handleClick({ kind: 'station', id });
+  await martyReach(() => handleClick({ kind: 'station', id }));
 }
 // A demo lays its things out in front of Marty, not at fixed coordinates he
 // may be nowhere near: x is measured from where he is standing, inward.
@@ -8419,7 +8430,7 @@ async function _mBench(x, z) {
   await martyWalk(new THREE.Vector3(
     Math.max(BENCH.x0 - 0.6, Math.min(BENCH.x1 + 0.6, px)), 0, BENCH.z1 + 0.46), here);
   martyLookAt = here;
-  handleClick({ kind: 'bench', point: new THREE.Vector3(px, BENCH_TOP, pz) });
+  await martyReach(() => handleClick({ kind: 'bench', point: new THREE.Vector3(px, BENCH_TOP, pz) }));
 }
 // where this demo is being presented from, so props keep a stable home
 let martySpot = null;
@@ -8433,7 +8444,7 @@ const MARTY_DEMOS = {
     { say: 'Dropped on the 1: exactly one quarter. No rounding, ever.', do: (c) => handleClick({ kind: 'thing', thing: c.one }) },
     { say: 'Any fraction the same way — type the bottom number and ÷, drop it on the top one. Click a number to see its other faces.' },
   ] },
-  numbers: { blurb: 'numbers: typing values, adding AND multiplying', near: 'numbers', steps: [
+  numbers: { blurb: 'numbers: typing values, and the operations — adding, multiplying, powers', near: 'numbers', steps: [
     { say: 'Numbers come off this stack as 1s.', do: () => _mSt('numbers') },
     { say: 'A held number listens to typing — digits make this one 25.', do: () => { held?.setValue?.(rat(25n)); refreshUI(); } },
     { do: () => _mBench(-0.55, 1.5) },
@@ -8443,7 +8454,12 @@ const MARTY_DEMOS = {
     { say: '42. Now watch what typing an OPERATION does — another number…', do: () => _mSt('numbers') },
     { say: '…I make it a 3, and type × on it, so it multiplies instead of adding.',
       do: () => { held?.setValue?.(rat(3n)); held?.setOp?.('*'); refreshUI(); } },
-    { say: '42 times 3 — 126. Type − to negate, / and ^ likewise, or the words “mod” and “set”.',
+    { say: '42 times 3 — 126. Powers work the same way: one more number…',
+      do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
+    { do: () => _mSt('numbers') },
+    { say: '…made a 2 with ^ typed on it, so it raises to a power rather than adding.',
+      do: () => { held?.setValue?.(rat(2n)); held?.setOp?.('^'); refreshUI(); } },
+    { say: '126 squared — 15876, exactly. − negates, / divides, and the words “mod” and “set” work the same way.',
       do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
   ] },
   pads: { blurb: 'text pads: write, join words', near: 'texts', steps: [
@@ -8607,6 +8623,7 @@ async function runMartyDemo(id) {
   } finally {
     martyBusyDemo = false;
     martyPerforming = false;
+    martyLiftTarget = 0;
     martySpot = null;
     if (mode === 'training') leaveTraining();
     // a stopped demo must not leave its prop in anyone's hand
@@ -8648,7 +8665,7 @@ Rules for you:
 - Answer in one to three short, warm sentences, for a child or a teacher.
 - NEVER write, design, or plan programs for the visitor, even if they insist. Building it themselves is the whole point. Offer a demonstration of the pieces instead.
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
-- Demos are FIXED scripts — their names say what they show. Never promise a demo will use the visitor's own numbers or words, and never offer one that does not match the question.
+- Demos are FIXED scripts — the blurb after each name says exactly what it covers. Offer one ONLY if its blurb covers what was asked; if nothing covers it, set demo to null and say so plainly ("I have no demonstration of that, but here is how it works…"). Never promise a demo will use the visitor's own numbers or words, and never offer a demo you have already given for the same question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
 - Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null"}`;
 // Marty answers from THE MANUAL, not from what a model imagines a workshop

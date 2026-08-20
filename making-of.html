@@ -1,0 +1,545 @@
+<title>Reading the Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500;9..144,700;9..144,900&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  /* ---- tokens: the workshop's own materials -------------------------- */
+  :root {
+    --paper: #faf6ec;          /* the cream of a text pad */
+    --paper-2: #f2ebda;
+    --ink: #22282f;            /* the slate the workshop floats on */
+    --ink-soft: #55606d;
+    --rule: #ded3ba;
+    --card: #b02a1c;           /* the double rule on a number card */
+    --card-deep: #8f1c14;
+    --kraft: #a9743a;          /* box board */
+    --brass: #b8873f;
+    --robin: #46a598;          /* the egg */
+    --marty: #3f8f52;          /* the Martian */
+    --shade: rgba(34, 40, 47, .07);
+
+    --measure: 34rem;
+    --step-0: 1.0625rem;
+    --step-1: 1.35rem;
+    --step-2: 1.8rem;
+    --step-3: 2.6rem;
+    --step-4: clamp(2.9rem, 7vw, 4.6rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171c24;
+      --paper-2: #1e242e;
+      --ink: #ece4d4;
+      --ink-soft: #a3a99f;
+      --rule: #333b46;
+      --card: #e2705d;
+      --card-deep: #f0a091;
+      --kraft: #cfa066;
+      --brass: #d7ac6a;
+      --robin: #7fd3c6;
+      --marty: #7cc98c;
+      --shade: rgba(0, 0, 0, .32);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171c24;
+    --paper-2: #1e242e;
+    --ink: #ece4d4;
+    --ink-soft: #a3a99f;
+    --rule: #333b46;
+    --card: #e2705d;
+    --card-deep: #f0a091;
+    --kraft: #cfa066;
+    --brass: #d7ac6a;
+    --robin: #7fd3c6;
+    --marty: #7cc98c;
+    --shade: rgba(0, 0, 0, .32);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Newsreader, Georgia, "Times New Roman", serif;
+    font-size: var(--step-0);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem 6rem; }
+
+  /* the reading column, with a mono rail for dates and hashes */
+  .col { display: grid; grid-template-columns: 1fr; gap: 0; }
+  @media (min-width: 60rem) {
+    .col { grid-template-columns: 9.5rem minmax(0, var(--measure)); gap: 0 2.75rem; }
+  }
+  .rail {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-top: .55rem;
+  }
+  @media (max-width: 59.99rem) { .rail { padding: 1.5rem 0 0; } }
+  .body > * + * { margin-top: 1.15rem; }
+  .body p { margin: 0; }
+
+  /* ---- masthead ------------------------------------------------------ */
+  header.top { padding: 5rem 0 2.5rem; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .74rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--card); margin: 0 0 1.6rem;
+  }
+  h1 {
+    font-family: Fraunces, Georgia, serif;
+    font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 120;
+    font-weight: 900;
+    font-size: var(--step-4);
+    line-height: .97;
+    letter-spacing: -.02em;
+    margin: 0;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+  .standfirst {
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-soft);
+    max-width: 40ch;
+    margin: 1.6rem 0 0;
+  }
+  .byline {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .76rem; letter-spacing: .05em; color: var(--ink-soft);
+    margin-top: 2.2rem; padding-top: 1.1rem;
+    border-top: 2px solid var(--card);
+    box-shadow: 0 3px 0 -1px var(--card);
+    max-width: 40ch;
+  }
+
+  /* ---- facts strip: the ledger --------------------------------------- */
+  .ledger {
+    display: grid; gap: 1px;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin: 3rem 0 4.5rem;
+  }
+  .ledger div { background: var(--paper); padding: 1rem 1.1rem; }
+  .ledger dt {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 .4rem;
+  }
+  .ledger dd {
+    margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 700;
+    font-size: var(--step-1); font-variant-numeric: tabular-nums;
+    font-variation-settings: "SOFT" 30, "opsz" 40;
+  }
+
+  /* ---- sections: a number-card badge on a double rule ----------------- */
+  section { margin-top: 4.5rem; }
+  .head { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.9rem; }
+  @media (min-width: 60rem) { .head { margin-left: -3.5rem; } }
+  .badge {
+    flex: 0 0 auto; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+    background: var(--card); color: var(--paper);
+    display: grid; place-items: center;
+    font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 1.15rem;
+    margin-top: .15rem;
+  }
+  .badge.k { background: var(--kraft); }
+  .badge.r { background: var(--robin); }
+  .badge.m { background: var(--marty); }
+  h2 {
+    font-family: Fraunces, Georgia, serif;
+    font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 90;
+    font-weight: 700; font-size: var(--step-3); line-height: 1.05;
+    letter-spacing: -.015em; margin: 0; text-wrap: balance;
+    padding-bottom: .7rem;
+    border-bottom: 2px solid var(--card);
+    box-shadow: 0 4px 0 -2px var(--card);
+    flex: 1 1 auto;
+  }
+  h3 {
+    font-family: Fraunces, Georgia, serif;
+    font-variation-settings: "SOFT" 30, "opsz" 40;
+    font-weight: 700; font-size: var(--step-1); line-height: 1.2;
+    margin: 2.4rem 0 0; text-wrap: balance;
+  }
+  .body h3 + p { margin-top: .6rem; }
+
+  a { color: var(--card); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+  a:focus-visible { outline: 2px solid var(--robin); outline-offset: 3px; }
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .86em;
+  }
+  code { background: var(--paper-2); padding: .1em .34em; border-radius: 3px; }
+  em.term { font-style: normal; font-weight: 600; }
+
+  /* ---- the pivot: before / after -------------------------------------- */
+  .split {
+    display: grid; gap: 1.5rem; margin-top: 2rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 44rem) { .split { grid-template-columns: 1fr 1fr; } }
+  .panel {
+    border: 1px solid var(--rule); background: var(--paper-2);
+    padding: 1.4rem 1.4rem 1.5rem;
+  }
+  .panel h4 {
+    margin: 0 0 .9rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .panel.after { border-color: var(--robin); }
+  .panel.after h4 { color: var(--robin); }
+  .panel ul { margin: 0; padding-left: 1.1rem; }
+  .panel li + li { margin-top: .6rem; }
+
+  /* ---- the days: a stack, like the workshop's stacks ------------------ */
+  .days { margin-top: 2rem; display: grid; gap: .75rem; }
+  .day {
+    display: grid; gap: .35rem 1.2rem; align-items: baseline;
+    grid-template-columns: 1fr;
+    border-left: 4px solid var(--kraft);
+    background: var(--paper-2);
+    padding: .95rem 1.2rem;
+  }
+  @media (min-width: 40rem) { .day { grid-template-columns: 7.5rem 1fr; } }
+  .day .when {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--kraft);
+  }
+  .day .what { margin: 0; }
+  .day .what b { font-weight: 600; }
+
+  blockquote {
+    margin: 2rem 0; padding: 0 0 0 1.3rem;
+    border-left: 3px solid var(--brass);
+    font-size: var(--step-1); line-height: 1.42;
+    font-style: italic; color: var(--ink);
+  }
+  blockquote .attrib {
+    display: block; margin-top: .6rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; font-style: normal; letter-spacing: .06em;
+    color: var(--ink-soft); text-transform: uppercase;
+  }
+  pre {
+    margin: 1.6rem 0; padding: 1rem 1.1rem;
+    background: var(--paper-2); border: 1px solid var(--rule);
+    overflow-x: auto; font-size: .82rem; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; }
+
+  footer.end {
+    margin-top: 5.5rem; padding-top: 1.6rem;
+    border-top: 1px solid var(--rule);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .76rem; color: var(--ink-soft); line-height: 1.7;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .body > *, .day, .panel { animation: rise .5s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
+  <h1>Reading the manual</h1>
+  <p class="standfirst">Five days, 104 commits and one 9,000-line file — and the
+    day the project stopped guessing at ToonTalk and went and read it.</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;20 August 2026</p>
+</header>
+
+<dl class="ledger">
+  <div><dt>Built in</dt><dd>5 days</dd></div>
+  <div><dt>Commits</dt><dd>104</dd></div>
+  <div><dt>The app</dt><dd>1 file</dd></div>
+  <div><dt>Lines</dt><dd>9,144</dd></div>
+  <div><dt>Examples</dt><dd>11 worlds</dd></div>
+</dl>
+
+<section>
+  <div class="col">
+    <div class="rail">What it is</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">+</span>
+        <h2>A workshop you can pick up</h2>
+      </div>
+      <p><a href="https://en.wikipedia.org/wiki/ToonTalk">ToonTalk</a> is a
+        programming language from 1995 that looks like a video game. You do not
+        write code in it; you go into an animated world and <em class="term">show
+        a robot what to do</em> once, and it remembers. Numbers are blocks you
+        type on. Messages are birds who fly things to their nests. A program is
+        a house with somebody working inside.</p>
+      <p>ToonTalk 3D is a from-scratch reimagining of those ideas in real-time
+        3D: a single HTML file, three.js, and a cast modelled by Blender scripts
+        rather than by hand. Nothing of the original's artwork is copied — the
+        robot, the vacuum, the Martian are all new. What is being copied, and
+        argued with, is the <em class="term">semantics</em>.</p>
+      <p>This is the log of how it went, and of the moment it changed
+        direction.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">Days 1&ndash;3<br>bd30591 &rarr; 3bd714f</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">&times;</span>
+        <h2>Building from the idea of a thing</h2>
+      </div>
+      <p>The first three days were built from ToonTalk's <em class="term">reputation</em>
+        — from what its ideas are famous for. That gets you further than it
+        should. By the end of day three the workshop had numbers as exact
+        fractions, text pads, boxes with holes, a copier, robots trained by
+        demonstration with thought bubbles, teams that take turns, birds and
+        nests with real message-passing, a notebook, and rooms that hold whole
+        worlds inside them.</p>
+
+      <div class="days">
+        <div class="day"><span class="when">16 Aug</span><p class="what"><b>Numbers, robots, thought bubbles.</b> The first rule arrives early and never changes: a robot's every action is relative to the box it was given, never to a place on the table.</p></div>
+        <div class="day"><span class="when">17 Aug</span><p class="what"><b>A population.</b> Miniature robots, teams, the copier as a machine rather than a wand, scales, Dusty the vacuum, birds and nests — the first real message sent.</p></div>
+        <div class="day"><span class="when">18 Aug</span><p class="what"><b>Rooms and the notebook.</b> Worlds inside boxes, with doors and glass walls. Then a performance wall, and a nagging feeling that the semantics were thinner than they looked.</p></div>
+      </div>
+
+      <p>It looked right. It was even fun. But asked to write a real program in
+        it — one that branches, recurses, and chooses — it could not. Nobody
+        could say precisely why.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">18 Aug<br>791ff2a<br>the pivot</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge r">=</span>
+        <h2>Then we read the manual</h2>
+      </div>
+      <p>On the third evening the work stopped and turned to two documents that
+        had been sitting there the whole time: <b>the original ToonTalk manual</b>
+        at toontalk.com, and <b>the original C++ source</b>. The output was not
+        code but a file called <code>DIVERGENCE.md</code> — every difference
+        found, each marked <span class="mono">SAME</span>,
+        <span class="mono">KEEP</span> (a deliberate improvement),
+        <span class="mono">GAP</span> (something real we lacked), or
+        <span class="mono">FIX</span> (a misunderstanding).</p>
+      <p>The gaps were not decoration. They were the reason no real program
+        could be written.</p>
+
+      <div class="split">
+        <div class="panel">
+          <h4>What we had built from memory</h4>
+          <ul>
+            <li>Scales that tip toward the larger number — <em>and no way for a robot to notice which way</em>.</li>
+            <li>Boxes that join, but never split.</li>
+            <li>No empty box, so recursion had no base case.</li>
+            <li>No source of randomness at all.</li>
+            <li>Each room's world <em>bottled</em> — serialised out, run, serialised back — because the engine assumed one world at a time.</li>
+          </ul>
+        </div>
+        <div class="panel after">
+          <h4>What the manual said</h4>
+          <ul>
+            <li>A scale's <b>tilt is the branch</b>: robots match on it. That one omission was why nothing could make a decision.</li>
+            <li>A box dropped on the number <span class="mono">N</span> splits there — the array primitive.</li>
+            <li>A box with <b>no holes</b> is the empty array, the base case.</li>
+            <li>Randomness is a live sensor pad; ours became dice, which a robot can throw.</li>
+            <li>And, from the C++: there is <b>one live world</b>. Off-screen animations simply take zero time.</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>That last one was the deepest. The whole concurrency model of the
+        original reduces to a single method:</p>
+      <pre><code>if (showing_on_a_screen()) { ... return the_default_duration; }
+return 0;                 // off-screen: every animation takes 0 ms</code></pre>
+      <p>Houses in ToonTalk are not separate documents. They are places in one
+        city, every robot stepped from one list, and the ones you are not
+        watching run at zero seconds per move. Our bottling was an accident of
+        architecture pretending to be a design. Within a day it was gone: rooms
+        became real objects hanging inside the scene at toy scale, and a single
+        interpreter turns to whichever world needs a moment.</p>
+      <p>The measurement, from the audit file: recursive <span class="mono">fib(10) = 55</span>,
+        across <b>109 nested houses</b>, in under three seconds. The bottling
+        engine had stalled for <em>minutes</em> on <span class="mono">fib(6)</span>.</p>
+
+      <blockquote>Semantics unlocks, current engine — <b>DONE</b>. Proven the
+        same day: a sentence factory, doubly-recursive Fibonacci, and a
+        message-passing bank account with a dozing teller.
+        <span class="attrib">DIVERGENCE.md, 19 August</span></blockquote>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">19&ndash;20 Aug<br>4bd7e7e</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">&divide;</span>
+        <h2>Then we read his programs</h2>
+      </div>
+      <p>A manual tells you what a language <em>offers</em>. It does not tell
+        you how anyone actually writes in it. The third source of truth arrived
+        when Ken handed over five of his own ToonTalk files —
+        <span class="mono">swap</span>, <span class="mono">factorial</span>,
+        <span class="mono">n-to-1</span>, <span class="mono">append</span>,
+        <span class="mono">reverse</span> — saved out of ToonTalk 3 itself.
+        A <span class="mono">.tt</span> file turns out to be a zip with an XML
+        document inside, so they could be read move by move.</p>
+      <p>They were full of idioms no manual would think to mention:</p>
+      <h3>Typing an operation is not typing a value</h3>
+      <p><span class="mono">factorial</span> takes a 1 from the stack and types
+        a <span class="mono">&times;</span> on it. Our engine recorded that as
+        "make it &times;1" — an absolute value — so a robot taught on 30 would
+        forever withdraw exactly 30. The fix was a new kind of remembered step:
+        <em class="term">make it multiply</em>, which works on whatever number
+        the robot is handed.</p>
+      <h3>Every program ends with a bomb</h3>
+      <p>All five of Ken's programs finish by fetching a bomb and blowing up
+        their own house. We have no bombs. The replacement is quieter and, we
+        think, better: a robot <em class="term">vacuums the very box it was
+        working on</em>. Nothing matches any more, so the team stops for good —
+        and a house with nobody working in it and nothing to work on folds
+        itself away. Recursive programs now clear up after themselves.</p>
+      <h3>A scale sits between two holes</h3>
+      <p>In the original, a scale lives <em>in</em> a box and weighs the holes
+        either side of it. Ours is a balance with two pans. Both of Ken's
+        scale programs port cleanly by moving the compared numbers into the
+        pans, and the difference is written down rather than papered over —
+        which is what <code>DIVERGENCE.md</code> is for.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">20 Aug<br>b0b1b31 &rarr; 621b0fa</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge m">?</span>
+        <h2>The lesson, learned twice</h2>
+      </div>
+      <p>The last day added <b>Marty the Martian</b>, an AI helper who lives in
+        the workshop. He answers questions and — deliberately — never writes
+        programs for you, since doing it yourself is the entire point. When
+        showing beats telling he gives a demonstration, driving the workshop
+        through exactly the same clicks a person makes: walking to the stack,
+        fetching a number, carrying it to the table.</p>
+      <p>Marty was given a careful system prompt describing the workshop. And
+        Marty, fluently and confidently, began to make things up. Asked how to
+        make one third, he explained you type <em>1, then a slash, then 3</em>.
+        You cannot. Asked whether a number could be seen as a decimal, he said
+        the workshop keeps everything exact and never shows decimals — while
+        the number blocks in front of him were displaying decimal faces with a
+        bar over the repeating part.</p>
+      <blockquote>I wonder if Marty needs to be provided with a textual version
+        of the manual to base its answers on.
+        <span class="attrib">Ken, 20 August</span></blockquote>
+      <p>Which is, of course, the same sentence the project itself had needed
+        two days earlier. Marty is now handed the manual — the real one, this
+        app's own, twenty-one thousand characters of it — with every single
+        question, and told to say he is unsure rather than invent. The
+        hallucinations stopped, because they were never really hallucinations:
+        he was doing what the project had done for three days, describing a
+        workshop he had never read about.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">How it worked</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">&plusmn;</span>
+        <h2>The loop</h2>
+      </div>
+      <p>The working rhythm never varied. Ken plays with the workshop and sends
+        a batch of observations — often with screenshots, usually five or six
+        at a time, ranging from "the bird flew to the wrong room" to "eggs
+        should be robin's-egg blue". Each one gets fixed, verified, and
+        committed with a message that says what was actually wrong.</p>
+      <p>Verification is not by eye. The app exposes a development hook that can
+        drive it headlessly — load a world, hand a box to a robot, run at
+        instant speed, read the result — so every example is re-run after every
+        change: <span class="mono">swap</span> gives 3/7,
+        <span class="mono">5! = 120</span>, reverse turns
+        <span class="mono">[1,2,3]</span> into <span class="mono">[3,2,1]</span>
+        across three houses that then fold themselves away.</p>
+      <h3>Two honest failures</h3>
+      <p>Twice the verification lied, and both times in the same way — the
+        measurement was wrong, not the code. Chasing why Dusty the vacuum was
+        invisible during a robot's clean-up, a cached index into the scene's
+        object list went stale, "proving" he never moved when he had. In
+        another run, Dusty had been left awake from an earlier probe, so a test
+        click vacuumed the very thing it was meant to pick up. Both wasted more
+        time than the bugs did.</p>
+      <p>The real answer, when it came, was better than the bug report: Dusty
+        <em>was</em> flying — at floor level, straight under the table, arriving
+        hidden behind it. He goes over the top now.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">Still open</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">&hellip;</span>
+        <h2>What is missing, on purpose and not</h2>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h4>Deliberate departures</h4>
+          <ul>
+            <li>Dusty <em>removes</em>; Ruby <em>erases</em>. The original had one character with modes and a legend.</li>
+            <li>The copier is a machine on the floor, not a wand in your hand — so robots can use it exactly as you do.</li>
+            <li>Rooms are <em>things</em>: nestable, mailable, fileable. The original's houses are not.</li>
+            <li><span class="mono">mod</span> and <span class="mono">set</span> are spelled out. Nothing says an operation must be one character.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Gaps still marked open</h4>
+          <ul>
+            <li>Operation-only pads: backspace the digits away and the bare operation remains.</li>
+            <li>Sensors — mouse, keyboard, time — the family that games are made of.</li>
+            <li>Insertion-point editing in numbers and pads.</li>
+            <li>ToonTalk's puzzle game, which is how the original taught itself to a child without a manual.</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:2rem">Every one of those lines is a row in
+        <code>DIVERGENCE.md</code>, which is still the file the project argues
+        with. It is the closest thing this workshop has to a conscience: a
+        written record of where it departs from the thing it admires, and
+        why.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="end">
+  <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
+  characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
+  <p>Written from the repository's own history: 104 commits between 16 and 20
+  August 2026, and the audit file they kept arguing with.</p>
+</footer>
+
+</div>
