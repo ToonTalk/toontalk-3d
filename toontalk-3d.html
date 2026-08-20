@@ -3373,6 +3373,7 @@ function roomWorking(t) {
 function advanceWorldClocks(dt) {
   advanceWiggle(dt);
   advanceRetiring(dt);
+  advanceMarty(dt);
   // a working room's chimney smokes
   for (const t of benchThings) {
     if (t.userData?.kind !== 'room') continue;
@@ -4201,6 +4202,7 @@ function handleClick(target) {
     }
     return refreshUI();
   }
+  if (target.kind === 'marty') { toggleMartyPanel(); return; }
   if (busy || mode === 'replay') return;
 
   if (target.kind === 'roomRoof' || target.kind === 'roomDoor') {
@@ -4543,6 +4545,11 @@ function userClick(target) {
       if (hs && hs.length) {
         const h = holeUnder(target.thing, target.point) ?? hs.find(x => !x.thing);
         if (h && !h.thing) return userPutInHole(h);
+        // the hole may be taken by a MOULD -- a box with no holes -- and a
+        // team dropped on that comes apart into it, right where it sits
+        if (h?.thing?.userData.kind === 'box' && !h.thing.userData.holes.length) {
+          return handleClick({ kind: 'thing', thing: h.thing, point: target.point });
+        }
         return say('That hole is taken — drop the robot in an empty one.');
       }
       // a box with NO holes has nowhere to file a robot, so it is the mould
@@ -7015,6 +7022,9 @@ function tipFor(t) {
     return held ? 'Your workbench — click to put that down.'
                 : 'Your workbench — build here. Robots cannot reach it.';
   }
+  if (t.kind === 'marty') {
+    return 'Marty the Martian — ask him anything about the workshop, or for a demonstration. Click to talk.';
+  }
   if (t.kind === 'dusty') {
     return dustyActive
       ? 'Dusty is awake — click a part of the robot’s thought to vacuum it away.'
@@ -7105,6 +7115,9 @@ function tipFor(t) {
     }
     if (ud.kind === 'box') {
       if (held?.userData.kind === 'robot') {
+        if (!ud.holes.length) {
+          return 'A box with no holes is a mould — drop the team on it and it comes apart, one robot to a hole.';
+        }
         const h = holeUnder(t.thing, t.point);
         const i = h ? ud.holes.indexOf(h) + 1 : 0;
         return h && !h.thing ? `Drop the robot into hole ${i} — it lies down inside.`
@@ -7805,6 +7818,367 @@ renderer.setAnimationLoop((now) => {
 });
 
 // dev hook -- lets the whole thing be driven headlessly (see serve.js /capture)
+// =========================== Marty the Martian =============================
+// Marty explains and DEMONSTRATES -- he never writes programs for you. Ask a
+// question and he answers in a sentence or two; ask how something works and he
+// shows you, using the workshop exactly the way you do. He thinks three ways,
+// picked by what is available: inside a Claude artifact, window.claude answers
+// with no key at all; an Anthropic API key pasted into his panel talks to the
+// API directly (the key stays in this browser); with neither, a little
+// phrasebook still picks the right demonstration.
+let martyNode = null, martyT = 0, martyBusyDemo = false;
+function makeMarty() {
+  const g = new THREE.Group();
+  const green = new THREE.MeshStandardMaterial({ color: 0x53b86a, roughness: 0.55 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2c7d44, roughness: 0.6 });
+  const body = new THREE.Mesh(geo('SphereGeometry', 0.16, 20, 14), green);
+  body.scale.set(1, 1.25, 0.9); body.position.y = 0.34; body.castShadow = true; g.add(body);
+  const head = new THREE.Mesh(geo('SphereGeometry', 0.13, 20, 14), green);
+  head.position.y = 0.62; head.castShadow = true; g.add(head);
+  for (const sx of [-1, 1]) {
+    const stalk = new THREE.Mesh(geo('CylinderGeometry', 0.012, 0.012, 0.1, 8), dark);
+    stalk.position.set(0.05 * sx, 0.76, 0); stalk.rotation.z = -0.35 * sx; g.add(stalk);
+    const eye = new THREE.Mesh(geo('SphereGeometry', 0.032, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+    eye.position.set(0.075 * sx, 0.81, 0.005); g.add(eye);
+    const pupil = new THREE.Mesh(geo('SphereGeometry', 0.014, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0x101418 }));
+    pupil.position.set(0.075 * sx, 0.81, 0.033); g.add(pupil);
+    const foot = new THREE.Mesh(geo('SphereGeometry', 0.05, 10, 8), dark);
+    foot.scale.set(1.2, 0.5, 1.6); foot.position.set(0.08 * sx, 0.03, 0.02); g.add(foot);
+    const arm = new THREE.Mesh(geo('CylinderGeometry', 0.02, 0.025, 0.22, 8), green);
+    arm.position.set(0.17 * sx, 0.38, 0); arm.rotation.z = 0.5 * sx; arm.castShadow = true; g.add(arm);
+  }
+  const ant = new THREE.Mesh(geo('CylinderGeometry', 0.008, 0.008, 0.12, 6), dark);
+  ant.position.y = 0.8; g.add(ant);
+  const bob = new THREE.Mesh(geo('SphereGeometry', 0.025, 10, 8),
+    new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0x8a6a10, emissiveIntensity: 0.7 }));
+  bob.position.y = 0.87; g.add(bob);
+  g.__antBob = bob;
+  g.traverse(o => setPick(o, { kind: 'marty' }));
+  setPick(g, { kind: 'marty' });
+  return g;
+}
+martyNode = makeMarty();
+martyNode.position.set(1.85, 0, 2.95);
+martyNode.rotation.y = -0.2;
+scene.add(martyNode);
+pickables.push(martyNode);
+function advanceMarty(dt) {
+  if (!martyNode) return;
+  martyT += dt;
+  const lively = martyBusyDemo ? 2.2 : 1;
+  martyNode.position.y = Math.abs(Math.sin(martyT * 2.4 * lively)) * 0.03 * lively;
+  martyNode.__antBob.material.emissiveIntensity = 0.5 + 0.4 * Math.sin(martyT * 3);
+}
+
+// --- his demonstrations: short scripts using the workshop the way you do ----
+const _mSt = (id) => handleClick({ kind: 'station', id });
+const _mBench = (x, z) => handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) });
+const _mLast = () => benchThings[benchThings.length - 1];
+const MARTY_DEMOS = {
+  numbers: { blurb: 'numbers: type values, drop to add', steps: [
+    { say: 'Numbers come off this stack as 1s.', do: () => _mSt('numbers') },
+    { say: 'A held number listens to typing — digits make this one 25.', do: () => { held?.setValue?.(rat(25n)); refreshUI(); } },
+    { do: () => _mBench(-0.55, 1.5) },
+    { do: (c) => { c.a = _mLast(); _mSt('numbers'); } },
+    { say: 'Another — I type 17 on it.', do: () => { held?.setValue?.(rat(17n)); refreshUI(); } },
+    { say: 'Dropped on the 25, it adds. Numbers combine.', do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
+    { say: '42! Type − to subtract, * / ^ — or the words “mod” and “set” — to change what a number does.' },
+  ] },
+  pads: { blurb: 'text pads: write, join words', steps: [
+    { say: 'Text pads are paper for words.', do: () => _mSt('texts') },
+    { say: 'Type on a held pad to write on it.', do: () => { held?.setText?.('Toon'); refreshUI(); } },
+    { do: () => _mBench(-0.5, 1.55) },
+    { do: (c) => { c.p = _mLast(); _mSt('texts'); } },
+    { do: () => { held?.setText?.('Talk'); refreshUI(); } },
+    { say: 'Dropped on another pad’s RIGHT edge, they join…', do: (c) => {
+        const pt = c.p.getWorldPosition(new THREE.Vector3()); pt.x += 0.15;
+        handleClick({ kind: 'thing', thing: c.p, point: pt }); } },
+    { say: '…into “ToonTalk”. The side you drop on decides the order.' },
+  ] },
+  boxes: { blurb: 'boxes: holes hold anything', steps: [
+    { say: 'Boxes come off this stack.', do: () => _mSt('boxes') },
+    { say: 'A digit while holding one sets its holes — three.', do: () => resizeHeldBox(3) },
+    { do: () => _mBench(0.0, 1.5) },
+    { do: (c) => { c.b = _mLast(); _mSt('numbers'); } },
+    { do: () => { held?.setValue?.(rat(7n)); refreshUI(); } },
+    { say: 'A hole holds anything — numbers, pads, boxes, even a robot.', do: (c) => handleClick({ kind: 'hole', box: c.b, index: 1 }) },
+    { say: 'Drop box on box to join them; drop a box on a whole number to split it there. A box with NO holes is a mould — it takes words and teams apart.' },
+  ] },
+  dice: { blurb: 'dice: re-roll a number', steps: [
+    { do: () => _mSt('numbers') },
+    { do: () => _mBench(0.3, 1.5) },
+    { say: 'Dice hop off their own stack…', do: (c) => { c.n = _mLast(); _mSt('dice'); } },
+    { say: '…and dropped on a number, the die re-rolls it: anything from 1 to its faces.', do: (c) => handleClick({ kind: 'thing', thing: c.n }) },
+    { say: 'Type a number while holding a die to change how many faces it has. Robots throw them too — that is how programs choose at random.' },
+  ] },
+  scales: { blurb: 'scales: compare, and robots match the lean', steps: [
+    { say: 'A scale is a balance.', do: () => _mSt('scales') },
+    { do: () => _mBench(0.0, 1.6) },
+    { do: (c) => { c.s = _mLast(); _mSt('numbers'); } },
+    { do: () => { held?.setValue?.(rat(3n)); refreshUI(); } },
+    { do: (c) => handleClick({ kind: 'hole', box: c.s, index: 0 }) },
+    { do: () => _mSt('numbers') },
+    { do: () => { held?.setValue?.(rat(8n)); refreshUI(); } },
+    { say: 'It leans toward the larger — and a robot’s thought can match on the lean.', do: (c) => handleClick({ kind: 'hole', box: c.s, index: 1 }) },
+    { say: 'Words weigh too: later in the alphabet is heavier, and “Apple” balances “apple”.' },
+  ] },
+  birds: { blurb: 'birds and nests: messages', steps: [
+    { say: 'Nests come with an egg.', do: () => _mSt('nests') },
+    { say: 'Set one down and the egg hatches into its bird.', do: () => _mBench(0.6, 1.6), hold: 2300 },
+    { do: () => _mSt('numbers') },
+    { do: () => { held?.setValue?.(rat(9n)); refreshUI(); } },
+    { say: 'Give the bird anything and she flies it home to her nest.', do: () => {
+        const b = [...benchThings].reverse().find(t => t.userData.kind === 'bird');
+        if (b) handleClick({ kind: 'thing', thing: b }); }, hold: 1200 },
+    { say: 'A COPY of a bird delivers to the same nest; a copy of a NEST makes a broadcast — every copy gets the mail. Robots doze on a bare nest until something lands.' },
+  ] },
+  robot: { blurb: 'robots: train by doing, then run', trains: true, steps: [
+    { say: 'Robots come off this stack as minis.', do: () => _mSt('minis') },
+    { do: () => _mBench(-0.2, 1.6) },
+    { do: (c) => { c.bot = _mLast(); _mSt('numbers'); } },
+    { say: 'Give a mini something and you are TRAINING it: everything I make it do, it remembers.', do: () => { held?.setValue?.(rat(3n)); refreshUI(); } },
+    { do: (c) => handleClick({ kind: 'botThing', bot: c.bot.__bot }), hold: 900 },
+    { say: 'Inside its thought: I have it take a fresh number…', do: () => handleClick({ kind: 'station', id: 'numbers' }), hold: 700 },
+    { say: '…and drop it on what it was given. Add 1 — that is the whole lesson.', do: () => handleClick({ kind: 'thing', thing: stations.stand.occupant }) },
+    { say: 'Leave the bubble and the lesson is kept.', do: () => leaveTraining(), hold: 700 },
+    { say: 'But its thought wants exactly a 3 — it would refuse anything else. Ruby can erase that…', do: (c) => { c.r = maxIter; maxIter = 3; handleClick({ kind: 'ruby' }); }, hold: 700 },
+    { say: '…to “any number”. And the moment its thought fits, off it goes — three rounds allowed.', do: () => handleClick({ kind: 'cond', path: [] }), hold: 1600 },
+    { say: 'Three rounds: 4, 5, 6. Doing the job once taught it; erasing made it general. Drop one trained robot on another to form a team.', do: (c) => { handleClick({ kind: 'ruby' }); maxIter = c.r; } },
+  ] },
+  copier: { blurb: 'Mimi the copier', steps: [
+    { do: () => _mSt('numbers') },
+    { do: () => { held?.setValue?.(rat(5n)); refreshUI(); } },
+    { say: 'Mimi the copier: set anything on her platform…', do: () => handleClick({ kind: 'station', id: 'copyIn' }) },
+    { say: '…and an exact copy drops into the tray.', do: () => handleClick({ kind: 'station', id: 'copyOut' }) },
+    { do: () => _mBench(0.9, 1.5) },
+    { say: 'The original comes back off the platform.', do: () => handleClick({ kind: 'station', id: 'copyIn' }) },
+    { do: () => _mBench(0.55, 1.5) },
+    { say: 'She copies robots too — training, name and team included. That is how a program copies itself.' },
+  ] },
+  dusty: { blurb: 'Dusty removes, Ruby erases', steps: [
+    { do: () => _mSt('texts') },
+    { do: () => { held?.setText?.('scrap'); refreshUI(); } },
+    { do: () => _mBench(0.2, 1.5) },
+    { do: (c) => { c.v = _mLast(); handleClick({ kind: 'dusty' }); } },
+    { say: 'Dusty awake: click a thing and he vacuums it away.', do: (c) => handleClick({ kind: 'thing', thing: c.v }), hold: 900 },
+    { say: 'He also vacuums parts of a robot’s THOUGHT — an emptied part accepts anything. Ruby, beside him, erases in place: a 5 becomes “any number”.', do: () => handleClick({ kind: 'dusty' }) },
+  ] },
+  rooms: { blurb: 'rooms: little worlds that work alone', steps: [
+    { say: 'Rooms come off this stack.', do: () => _mSt('rooms') },
+    { say: 'A room holds a whole little world — drop in a robot, then things for it to work on.', do: () => _mBench(0.0, 1.55) },
+    { do: (c) => { c.r = _mLast(); handleClick({ kind: 'roomRoof', room: c.r }); }, hold: 900 },
+    { say: 'Click the roof: solid walls to let it work in private — the chimney smokes — or glass to watch. The lever runs it; the door lets you walk inside.', do: (c) => handleClick({ kind: 'roomRoof', room: c.r }) },
+  ] },
+  notebook: { blurb: 'the notebook: file, look up by name', steps: [
+    { do: () => _mSt('numbers') },
+    { do: () => { held?.setValue?.(rat(7n)); refreshUI(); } },
+    { say: 'Drop anything on the notebook to FILE it.', do: () => { const nb = mainNotebook(); if (nb) handleClick({ kind: 'thing', thing: nb }); } },
+    { say: 'Click a page to take a COPY out — the page keeps the original.', do: (c) => {
+        const nb = mainNotebook(); if (!nb) return;
+        c.slot = nb.userData.pages.findIndex(p => p && p.kind === 'number' && p.value?.n === '7');
+        if (c.slot >= 0) handleClick({ kind: 'nbItem', nb, slot: c.slot }); } },
+    { do: () => _mBench(1.1, 1.5) },
+    { say: 'And Dusty clears the entry again, so your library is as it was.', do: () => handleClick({ kind: 'dusty' }) },
+    { do: (c) => { const nb = mainNotebook(); if (nb && c.slot >= 0) handleClick({ kind: 'nbItem', nb, slot: c.slot }); } },
+    { do: () => handleClick({ kind: 'dusty' }) },
+    { say: 'Robots use the notebook too: write a name on a pad, drop it on, take a copy of what it finds. One program using another, by name.' },
+  ] },
+};
+const martyIdleWait = () => new Promise((res) => {
+  const t0 = performance.now();
+  const iv = setInterval(() => {
+    if ((!busy && !queue.length && !current) || performance.now() - t0 > 15000) {
+      clearInterval(iv); res();
+    }
+  }, 100);
+});
+async function runMartyDemo(id) {
+  const demo = MARTY_DEMOS[id];
+  if (!demo) return;
+  if (martyBusyDemo) return martySay('One demonstration at a time!');
+  if (offstage()) return martySay('Step back out through the tall door first — I demonstrate on the big table.');
+  if (mode !== 'world' || busy) return martySay('Wait for the robot to finish, then ask me again.');
+  if (held) return martySay('Set down what you are holding first, then ask me again.');
+  martyBusyDemo = true;
+  const ctx = {};
+  try {
+    for (const step of demo.steps) {
+      if (step.say) { martySay(step.say); say(step.say, 4500); }
+      if (step.do) step.do(ctx);
+      await martyIdleWait();
+      await new Promise(r => setTimeout(r, step.hold ?? (speed === Infinity ? 150 : 600)));
+    }
+  } catch (e) {
+    martySay('Hm — that did not go as I meant. (' + e.message + ')');
+  } finally {
+    martyBusyDemo = false;
+    if (mode === 'training') leaveTraining();
+  }
+}
+
+// --- what Marty can see: the table, in plain English ------------------------
+function martyWorldText() {
+  const d = (t) => { const u = t.userData;
+    return u.kind === 'number' ? 'the number ' + ratShort(u.value)
+      : u.kind === 'text' ? (u.text ? `a pad saying "${u.text.slice(0, 40)}"` : 'a blank pad')
+      : u.kind === 'box' ? `a box with ${u.holes.length} hole${u.holes.length === 1 ? '' : 's'}`
+      : u.kind === 'robot' ? (t.__bot?.name ? `the robot "${t.__bot.name}"` : 'a robot')
+      : u.kind === 'nest' ? `a nest${u.label ? ` "${u.label}"` : ''}${u.pile.length ? ' holding ' + u.pile.length + ' deliveries' : ''}`
+      : u.kind === 'bird' ? `a bird${u.label ? ` "${u.label}"` : ''}`
+      : 'a ' + u.kind; };
+  const lines = [];
+  lines.push('Mode: ' + (mode === 'training' ? "inside a robot's thought (training)" : mode));
+  if (held) lines.push("In the visitor's hand: " + d(held));
+  if (activeBot) lines.push(`Robot at the bench: ${activeBot.name || '(unnamed)'} — ${activeBot.program.length} steps, runs on ${condText(activeBot.condition)}, team of ${activeBot.team.length + 1}${activeBot.waiting ? ', dozing on a bare nest' : ''}.`);
+  if (stations.stand?.occupant) lines.push('On its desk: ' + d(stations.stand.occupant));
+  const b = benchThings.filter(t => !t.userData.main).slice(0, 12).map(d);
+  if (b.length) lines.push('On the table: ' + b.join('; ') + '.');
+  return lines.join('\n');
+}
+const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (exact fractions; type digits or an operation on a held one; drop to combine), TEXT PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
+
+Rules for you:
+- Answer in one to three short, warm sentences, for a child or a teacher.
+- NEVER write, design, or plan programs for the visitor, even if they insist. Building it themselves is the whole point. Offer a demonstration of the pieces instead.
+- When showing beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
+- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null"}`;
+const MARTY_KEY = 'tt3d.marty-key';
+const MARTY_MODEL = 'claude-sonnet-5';
+let martyHistory = [];
+async function martyThink(q) {
+  const sys = MARTY_SYSTEM + '\n\nOn the table right now:\n' + martyWorldText();
+  if (window.claude?.complete) {
+    const lines = martyHistory.map(m => (m.role === 'user' ? 'Visitor: ' : 'Marty: ') + m.content).join('\n');
+    return await window.claude.complete(sys + '\n\n' + lines + '\nVisitor: ' + q + '\nReply with ONLY the JSON object.');
+  }
+  const key = (localStorage.getItem(MARTY_KEY) || '').trim();
+  if (!key) return null;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({ model: MARTY_MODEL, max_tokens: 300, system: sys,
+      messages: [...martyHistory, { role: 'user', content: q }] }),
+  });
+  if (!res.ok) throw new Error('the API said ' + res.status);
+  const data = await res.json();
+  return (data.content || []).map(c => c.text || '').join('');
+}
+// no artifact, no key: a phrasebook still picks the right demonstration
+function martyOffline(q) {
+  const t = q.toLowerCase();
+  const table = [
+    [/number|add|subtract|multiply|divide|fraction|math|mod\b|remainder/, 'numbers', 'Numbers are blocks you type on — let me show you.'],
+    [/pad|text|word|write|letter|sentence/, 'pads', 'Words live on text pads — watch.'],
+    [/\bbox|hole|mould|mold|split|join/, 'boxes', 'Boxes are how things are kept together — like this.'],
+    [/dice|die\b|random|roll/, 'dice', 'Dice are the workshop’s way of choosing at random.'],
+    [/scale|weigh|compare|balance|bigger|larger/, 'scales', 'A scale compares by leaning — look.'],
+    [/bird|nest|mail|message|send|deliver/, 'birds', 'Birds carry things home to their nests — watch.'],
+    [/robot|train|teach|program|team|repeat|loop/, 'robot', 'You do not write programs here — you train a robot by doing the job once. Let me show you.'],
+    [/cop(y|ier)|mimi|duplicate|clone/, 'copier', 'Mimi copies anything exactly — watch.'],
+    [/dusty|vacuum|ruby|erase|remove|delete|wildcard/, 'dusty', 'Dusty removes; Ruby erases. The difference matters — look.'],
+    [/room|house|world|door|roof|lever|smoke/, 'rooms', 'A room is a little world of its own — like this.'],
+    [/notebook|file|save|library|page|look.?up/, 'notebook', 'The notebook is your library — and the robots’ too.'],
+  ];
+  for (const [re, demo, line] of table) if (re.test(t)) return { say: line, demo };
+  return { say: 'Without a key I only know my demonstrations — ask me about: ' +
+    Object.keys(MARTY_DEMOS).join(', ') + '. In a Claude artifact, or with an API key in my panel, I can really talk.', demo: null };
+}
+async function askMarty(q) {
+  martySay(q, 'you');
+  let reply = null;
+  try { reply = await martyThink(q); }
+  catch (e) { martySay('I could not reach the mothership — ' + e.message + '. Check the key in my panel?'); return; }
+  let text = null, demo = null;
+  if (reply == null) { const off = martyOffline(q); text = off.say; demo = off.demo; }
+  else {
+    try {
+      const m = reply.match(/\{[\s\S]*\}/);
+      const j = JSON.parse(m ? m[0] : reply);
+      text = j.say; demo = j.demo;
+    } catch { text = reply; }
+  }
+  martyHistory.push({ role: 'user', content: q },
+                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null }) });
+  if (martyHistory.length > 12) martyHistory = martyHistory.slice(-12);
+  if (text) martySay(text);
+  if (demo && MARTY_DEMOS[demo]) runMartyDemo(demo);
+}
+
+// --- his panel --------------------------------------------------------------
+const martyUI = document.createElement('div');
+martyUI.id = 'martyPanel';
+martyUI.style.cssText = 'position:fixed;right:14px;bottom:14px;width:320px;max-width:92vw;'
+  + 'background:rgba(18,22,30,.94);color:#e6ecf7;font:13px/1.45 system-ui,sans-serif;'
+  + 'border:1px solid #3a4356;border-radius:12px;padding:10px 12px;z-index:40;display:none;'
+  + 'box-shadow:0 8px 30px rgba(0,0,0,.45)';
+martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+  + '<b style="color:#7fe09a">Marty the Martian</b><span style="flex:1"></span>'
+  + '<button id="martyClose" title="Close" style="background:none;border:none;color:#9fb0c8;cursor:pointer;font-size:15px">\u2715</button></div>'
+  + '<div id="martyLog" style="max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>'
+  + '<form id="martyForm" style="display:flex;gap:6px">'
+  + '<input id="martyIn" autocomplete="off" placeholder="Ask, or \u201cshow me birds\u201d\u2026" '
+  + 'style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit">'
+  + '<button style="background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer">Ask</button></form>'
+  + '<details style="margin-top:8px;color:#9fb0c8"><summary style="cursor:pointer">How Marty thinks</summary>'
+  + '<div style="margin-top:6px">Inside a Claude artifact he needs no key at all. Anywhere else, paste an Anthropic '
+  + 'API key (it stays in this browser) \u2014 or leave it empty and he uses his phrasebook of demonstrations.</div>'
+  + '<input id="martyKey" type="password" placeholder="sk-ant-\u2026" '
+  + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
+  + '</details>';
+document.body.appendChild(martyUI);
+function martySay(text, who = 'marty') {
+  const log = document.getElementById('martyLog');
+  const line = document.createElement('div');
+  line.style.cssText = who === 'you'
+    ? 'align-self:flex-end;background:#2b3546;border-radius:10px 10px 2px 10px;padding:5px 9px;max-width:85%'
+    : 'align-self:flex-start;background:#1d3a28;border-radius:10px 10px 10px 2px;padding:5px 9px;max-width:85%';
+  line.textContent = text;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+let martyGreeted = false;
+function toggleMartyPanel() {
+  const on = martyUI.style.display === 'none';
+  martyUI.style.display = on ? 'block' : 'none';
+  if (on && !martyGreeted) {
+    martyGreeted = true;
+    martySay('Hi! I\u2019m Marty. Ask me anything about the workshop \u2014 or say \u201cshow me\u201d and one of: '
+      + Object.keys(MARTY_DEMOS).join(', ') + '. I never build programs, but I love showing how the pieces work.');
+  }
+  if (on) document.getElementById('martyIn').focus();
+}
+document.getElementById('martyClose').onclick = () => { martyUI.style.display = 'none'; };
+{
+  const keyEl = document.getElementById('martyKey');
+  keyEl.value = localStorage.getItem(MARTY_KEY) || '';
+  keyEl.onchange = () => {
+    if (keyEl.value.trim()) localStorage.setItem(MARTY_KEY, keyEl.value.trim());
+    else localStorage.removeItem(MARTY_KEY);
+    martySay(keyEl.value.trim() ? 'Key saved in this browser \u2014 now I can really talk.' : 'Key cleared.');
+  };
+  document.getElementById('martyForm').onsubmit = (ev) => {
+    ev.preventDefault();
+    const q = document.getElementById('martyIn').value.trim();
+    if (!q) return;
+    document.getElementById('martyIn').value = '';
+    // "show me X" runs a demonstration directly, whatever backend he has
+    const m = q.toLowerCase().match(/^(?:show|demo)(?:\s+me)?\s+(?:the\s+)?(\w+)/);
+    if (m && MARTY_DEMOS[m[1]]) { martySay(q, 'you'); martySay('Watch!'); runMartyDemo(m[1]); return; }
+    askMarty(q);
+  };
+  // typing in Marty's box must not fall through to the workshop's keys
+  for (const ev of ['keydown', 'keypress', 'keyup']) {
+    martyUI.addEventListener(ev, (e) => e.stopPropagation());
+  }
+}
+window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_DEMOS),
+                   world: martyWorldText, offline: martyOffline };
+
 window.__nano = {
   THREE, scene, camera, renderer, stations,
   worldOut, worldIn, setThingLabel,

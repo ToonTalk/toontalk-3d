@@ -102,6 +102,13 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   *erases*: each click makes a part of a thought one step more general — 7,
   then *any number*, then *anything*. Waking one settles the other, and
   whoever is awake sways and fidgets so there is never any doubt.
+- **Marty the Martian**, the green fellow beside them. Click him and ask
+  anything about the workshop, or say *"show me birds"* and he demonstrates it
+  on your table, using the workshop the way you do. He never builds programs —
+  that part is yours. Inside a Claude artifact he answers with no key; paste an
+  Anthropic API key into his panel (kept in this browser only) and he converses
+  anywhere, seeing what is on your table; with neither, a phrasebook still
+  picks the right demonstration.
 
 ### The robots
 
