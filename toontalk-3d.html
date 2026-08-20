@@ -7849,6 +7849,10 @@ function makeMarty() {
     const arm = new THREE.Mesh(geo('CylinderGeometry', 0.02, 0.025, 0.22, 8), green);
     arm.position.set(0.17 * sx, 0.38, 0); arm.rotation.z = 0.5 * sx; arm.castShadow = true; g.add(arm);
   }
+  const hand = new THREE.Group();
+  hand.position.set(0.24, 0.42, 0.2);
+  g.add(hand);
+  g.__hand = hand;
   const mouth = new THREE.Mesh(geo('TorusGeometry', 0.045, 0.009, 8, 14, Math.PI), dark);
   mouth.position.set(0, 0.585, 0.112);
   mouth.rotation.z = Math.PI;          // the bottom half of the ring: a smile
@@ -7917,13 +7921,30 @@ function advanceMarty(dt) {
   }
   martyNode.position.y = Math.abs(Math.sin(martyT * 2.4 * lively)) * 0.03 * lively;
   martyNode.__antBob.material.emissiveIntensity = 0.5 + 0.4 * Math.sin(martyT * 3);
+  // What a demo picks up rides in MARTY'S hand, not on the visitor's cursor --
+  // it is his demonstration. Only while a step of his is running, so anything
+  // the visitor picks up between beats stays theirs.
+  if (martyPerforming && held && held.parent !== martyNode.__hand) {
+    martyNode.__hand.add(held);
+    held.position.set(0, 0, 0);
+    held.quaternion.identity();
+  }
 }
+let martyPerforming = false;
 
 // --- his demonstrations: short scripts using the workshop the way you do ----
 const _mSt = (id) => handleClick({ kind: 'station', id });
 const _mBench = (x, z) => handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) });
 const _mLast = () => benchThings[benchThings.length - 1];
 const MARTY_DEMOS = {
+  fractions: { blurb: 'make an exact fraction like 1/4', near: 'numbers', steps: [
+    { say: 'The stack only gives 1s — but every number here is an exact fraction underneath.', do: () => _mSt('numbers') },
+    { do: () => _mBench(-0.5, 1.5) },
+    { do: (c) => { c.one = _mLast(); _mSt('numbers'); } },
+    { say: 'On this one I type 4, then ÷ — so dropping it DIVIDES.', do: () => { held?.setValue?.(rat(4n)); held?.setOp?.('/'); refreshUI(); } },
+    { say: 'Dropped on the 1: exactly one quarter. No rounding, ever.', do: (c) => handleClick({ kind: 'thing', thing: c.one }) },
+    { say: 'Any fraction the same way — type the bottom number and ÷, drop it on the top one. Click a number to see its other faces.' },
+  ] },
   numbers: { blurb: 'numbers: type values, drop to add', near: 'numbers', steps: [
     { say: 'Numbers come off this stack as 1s.', do: () => _mSt('numbers') },
     { say: 'A held number listens to typing — digits make this one 25.', do: () => { held?.setValue?.(rat(25n)); refreshUI(); } },
@@ -8050,6 +8071,7 @@ function martyOfferDemo(id) {
 }
 function martyStopDemo() {
   martyStopFlag = true;
+  window.speechSynthesis?.cancel();
   martyPendingDemo = null;
   if (martyNextResolve) { const r = martyNextResolve; martyNextResolve = null; r(); }
   martyCtl();
@@ -8072,9 +8094,11 @@ async function runMartyDemo(id) {
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
       if (step.say) { martySay(step.say); say(step.say, 6000); }
+      martyPerforming = true;
       if (step.do) step.do(ctx);
       await martyIdleWait();
       await new Promise(r => setTimeout(r, step.hold ?? (speed === Infinity ? 150 : 600)));
+      martyPerforming = false;
       if (martyStopFlag) break;
       if (step.say && i < steps.length - 1) {
         martyCtl('next');
@@ -8087,7 +8111,14 @@ async function runMartyDemo(id) {
     martySay('Hm — that did not go as I meant. (' + e.message + ')');
   } finally {
     martyBusyDemo = false;
+    martyPerforming = false;
     if (mode === 'training') leaveTraining();
+    // a stopped demo must not leave its prop in anyone's hand
+    if (held && held.parent === martyNode.__hand) {
+      const t = held; held = null;
+      putOnBench(t, benchSpot());
+      refreshUI();
+    }
     martyGoTo(MARTY_HOME);
     martyCtl();
   }
@@ -8112,12 +8143,13 @@ function martyWorldText() {
   if (b.length) lines.push('On the table: ' + b.join('; ') + '.');
   return lines.join('\n');
 }
-const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (exact fractions; type digits or an operation on a held one; drop to combine), TEXT PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
+const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits sets its value, the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), TEXT PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
 
 Rules for you:
 - Answer in one to three short, warm sentences, for a child or a teacher.
 - NEVER write, design, or plan programs for the visitor, even if they insist. Building it themselves is the whole point. Offer a demonstration of the pieces instead.
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
+- Demos are FIXED scripts — their names say what they show. Never promise a demo will use the visitor's own numbers or words, and never offer one that does not match the question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
 - Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null"}`;
 const MARTY_PROVIDERS = {
@@ -8190,7 +8222,8 @@ async function martyThink(q) {
 function martyOffline(q) {
   const t = q.toLowerCase();
   const table = [
-    [/number|add|subtract|multiply|divide|fraction|math|mod\b|remainder/, 'numbers', 'Numbers are blocks you type on — let me show you.'],
+    [/fraction|\bhalf\b|third|quarter|divide|\d\s*\/\s*\d/, 'fractions', 'Every number here is an exact fraction — let me make one.'],
+    [/number|add|subtract|multiply|math|mod\b|remainder/, 'numbers', 'Numbers are blocks you type on — let me show you.'],
     [/pad|text|word|write|letter|sentence/, 'pads', 'Words live on text pads — watch.'],
     [/\bbox|hole|mould|mold|split|join/, 'boxes', 'Boxes are how things are kept together — like this.'],
     [/dice|die\b|random|roll/, 'dice', 'Dice are the workshop’s way of choosing at random.'],
@@ -8207,6 +8240,7 @@ function martyOffline(q) {
     Object.keys(MARTY_DEMOS).join(', ') + '. In a Claude artifact, or with an API key in my panel, I can really talk.', demo: null };
 }
 async function askMarty(q) {
+  window.speechSynthesis?.cancel();
   martySay(q, 'you');
   let reply = null;
   try { reply = await martyThink(q); }
@@ -8243,6 +8277,8 @@ martyUI.style.cssText = 'position:fixed;right:14px;bottom:14px;width:320px;max-w
   + 'box-shadow:0 8px 30px rgba(0,0,0,.45)';
 martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
   + '<b style="color:#7fe09a">Marty the Martian</b><span style="flex:1"></span>'
+  + '<button id="martyVoice" title="Marty reads his replies aloud" style="background:none;border:none;cursor:pointer;font-size:15px">\u{1F508}</button>'
+  + '<button id="martyMic" title="Ask by voice" style="background:none;border:none;cursor:pointer;font-size:15px">\u{1F3A4}</button>'
   + '<button id="martyClose" title="Close" style="background:none;border:none;color:#9fb0c8;cursor:pointer;font-size:15px">\u2715</button></div>'
   + '<div id="martyLog" style="max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>'
   + '<div id="martyCtl" style="display:none;gap:6px;margin-bottom:8px"></div>'
@@ -8265,6 +8301,14 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '</details>';
 document.body.appendChild(martyUI);
+const MARTY_VOICE = 'tt3d.marty-voice';
+let martyVoiceOn = localStorage.getItem(MARTY_VOICE) === '1';
+function martySpeak(text) {
+  if (!martyVoiceOn || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.05; u.pitch = 1.25;      // a little Martian
+  speechSynthesis.speak(u);
+}
 function martySay(text, who = 'marty') {
   const log = document.getElementById('martyLog');
   const line = document.createElement('div');
@@ -8274,6 +8318,7 @@ function martySay(text, who = 'marty') {
   line.textContent = text;
   log.appendChild(line);
   log.scrollTop = log.scrollHeight;
+  if (who !== 'you') martySpeak(text);
 }
 // The row under the log: an offered demonstration, or Next/Stop mid-demo.
 function martyCtl(state) {
@@ -8318,6 +8363,47 @@ function toggleMartyPanel() {
   if (on) { martyModeLine(); document.getElementById('martyIn').focus(); }
 }
 document.getElementById('martyClose').onclick = () => { martyUI.style.display = 'none'; };
+{
+  const vb = document.getElementById('martyVoice');
+  const showV = () => { vb.textContent = martyVoiceOn ? '\u{1F50A}' : '\u{1F508}';
+    vb.style.opacity = martyVoiceOn ? 1 : 0.55; };
+  showV();
+  if (!window.speechSynthesis) vb.style.display = 'none';
+  vb.onclick = () => {
+    martyVoiceOn = !martyVoiceOn;
+    localStorage.setItem(MARTY_VOICE, martyVoiceOn ? '1' : '0');
+    if (!martyVoiceOn) speechSynthesis.cancel();
+    showV();
+    martySay(martyVoiceOn ? 'I\u2019ll read my replies aloud now.' : 'Quiet mode.');
+  };
+  // Dictation, where the browser offers it. Artifacts do not permit the
+  // microphone, so there the button simply is not shown.
+  const mic = document.getElementById('martyMic');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR || window.claude?.complete) mic.style.display = 'none';
+  else {
+    let listening = null;
+    mic.onclick = () => {
+      if (listening) { listening.stop(); return; }
+      const rec = new SR();
+      rec.lang = navigator.language || 'en-US';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      mic.textContent = '\u{1F534}';
+      listening = rec;
+      rec.onresult = (e) => {
+        const t = e.results[0]?.[0]?.transcript?.trim();
+        if (t) {
+          document.getElementById('martyIn').value = t;
+          document.getElementById('martyForm').requestSubmit();
+        }
+      };
+      rec.onerror = (e) => { martySay('The microphone said: ' + (e.error || 'no')); };
+      rec.onend = () => { mic.textContent = '\u{1F3A4}'; listening = null; };
+      try { rec.start(); } catch { mic.textContent = '\u{1F3A4}'; listening = null; }
+    };
+  }
+}
 {
   const provEl = document.getElementById('martyProv');
   const modelEl = document.getElementById('martyModel');
