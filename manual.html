@@ -286,9 +286,10 @@ everything. <b>Import file</b> (or dropping a file onto the app) brings either
 back: things land in your hand, worlds replace the workshop.</p>
 
 <h2 id="examples">Example worlds</h2>
-<p>Three finished programs live in the
+<p>Finished programs live in the
 <a href="https://github.com/ToonTalk/toontalk-3d/tree/main/examples">examples
-folder</a>. Download one and use <b>Import file</b> to load it.</p>
+folder</a>. Download one and use <b>Import file</b> to load it. The last five
+are ports of Ken Kahn's own ToonTalk 3 programs, move for move.</p>
 <p><b>The sentence factory.</b> A glass room called the Scriptorium holds a team
 of twenty robots that roll dice to pick words, join text pads into sentences,
 and hand each one to a bird who flies it out to a nest on your table. Pull the
@@ -328,6 +329,27 @@ say. Because the noun-phrase rule mentions itself, adjectives pile up:
 <em>"pink silly big big boys kick silly silly dogs."</em> Walk in through
 the door, edit the dictionary, and the language changes — no robot is
 retrained, because none of them ever knew it.</p>
+<p><b>Swap, and factorial.</b> Two programs where a <b>balance does the
+thinking</b>. Swap is the smallest program here: its thought is "a scale
+leaning left", and it puts the two numbers the other way round — after which
+the scale leans the other way and it stops, because its thought no longer
+matches. Factorial is the same idea kept running: you hand the team
+<em>[N, a bird]</em> and the first robot builds the rest in front of you — a
+scale with 1 in one pan and N in the other, and "so far" joined onto the left
+of its own box. Then one robot counts up while the scale leans, and another
+answers when it comes level. Nothing counts rounds; the scale is the only
+test.</p>
+<p><b>Lists: counting down, append, reverse.</b> A list is the pair
+<em>[first, the rest]</em>, a box with <b>no holes</b> is the empty list, and
+"the rest" is usually a nest — an answer that has not arrived yet. Counting
+down hands its list over one link at a time, keeping each new nest's bird so
+the next link lands inside the promise it just gave away. Append does the same
+to join two lists, which is why it keeps working when its first list is still
+being computed elsewhere. Reverse is the showpiece: for every link it sends a
+box and a copy of the append team into a house of its own, and each house
+dozes — smoking gently — until the nest it is watching fills. The last link is
+settled first, and the answer unwinds from the end of the list back to the
+front.</p>
 
 <footer>
   ToonTalk 3D is an open experiment in rebuilding

@@ -1,0 +1,160 @@
+{
+ "kind": "world",
+ "v": 1,
+ "bench": [
+  {
+   "thing": {
+    "kind": "scale",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "7",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "3",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": -0.3,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Swap",
+    "condition": {
+     "kind": "scaleTilt",
+     "tilt": "L"
+    },
+    "program": [
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "scale",
+     "holes": [
+      {
+       "kind": "number",
+       "value": {
+        "n": "7",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "3",
+        "d": "1"
+       },
+       "op": "+"
+      }
+     ]
+    },
+    "team": []
+   },
+   "x": -1.2,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "scale",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "2",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "9",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": 0.55,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "SWAP\n\nA scale is a balance: put\na number in each pan and\nit leans towards the\nheavier one.\n\nThe robot's thought is \"a\nscale leaning left\" -- the\nnumbers themselves are not\nin the thought at all, only\nwhich way it leans."
+   },
+   "x": -0.95,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nGive the leaning scale to\nthe Swap robot. It puts the\ntwo numbers the other way\nround, the scale leans the\nother way, and the robot\nstops -- because its thought\nno longer matches.\n\nGive it the other scale and\nnothing happens: that one is\nalready in order."
+   },
+   "x": -0.25,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

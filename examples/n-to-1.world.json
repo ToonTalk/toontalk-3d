@@ -1,0 +1,249 @@
+{
+ "kind": "world",
+ "v": 1,
+ "bench": [
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "5",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9601,
+      "nestGuid": "n-to-1-answer"
+     }
+    ]
+   },
+   "x": -0.3,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "FinishList",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "number",
+       "value": {
+        "n": "0",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "anyBird"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "newBox"
+     },
+     {
+      "type": "setHoles",
+      "n": 0
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "vacuum",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "number",
+       "value": {
+        "n": "5",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "bird",
+       "nestId": 9601,
+       "nestGuid": "n-to-1-answer"
+      }
+     ]
+    },
+    "team": [
+     {
+      "kind": "robot",
+      "name": "ListWorker",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "newBox"
+       },
+       {
+        "type": "setHoles",
+        "n": 2
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "newNest"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setOp",
+        "op": "-"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": []
+     }
+    ]
+   },
+   "x": -1.2,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9601,
+    "guid": "n-to-1-answer",
+    "hasEgg": false,
+    "pile": [],
+    "label": "the list"
+   },
+   "x": 1.15,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "COUNTING DOWN\n\nA list is a pair:\n\n  [ first, the rest ]\n\nand \"the rest\" is a nest --\nan answer that has not\narrived yet. The team hands\nthe list over one link at a\ntime and never holds all of\nit at once."
+   },
+   "x": -1.05,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nGive the two-hole box to the\nFinishList robot.\n\nEach round one link lands on\nthe nest marked \"the list\":\n5, then 4, and so on down to\n1, and last a box with no\nholes, which means the end.\n\nSet Rounds high enough to\nreach it."
+   },
+   "x": -0.35,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

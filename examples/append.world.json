@@ -1,0 +1,357 @@
+{
+ "kind": "world",
+ "v": 1,
+ "bench": [
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "number",
+          "value": {
+           "n": "2",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "kind": "box",
+          "holes": []
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "3",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "number",
+          "value": {
+           "n": "4",
+           "d": "1"
+          },
+          "op": "+"
+         },
+         {
+          "kind": "box",
+          "holes": []
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "bird",
+      "nestId": 9701,
+      "nestGuid": "append-answer"
+     }
+    ]
+   },
+   "x": -0.3,
+   "z": 1.5
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "FinishAppend",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "box",
+       "holes": []
+      },
+      {
+       "kind": "anyBox"
+      },
+      {
+       "kind": "anyBird"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "vacuum",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "4",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": []
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "bird",
+       "nestId": 9701,
+       "nestGuid": "append-answer"
+      }
+     ]
+    },
+    "team": [
+     {
+      "kind": "robot",
+      "name": "AppendWorker",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          null,
+          null
+         ]
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s1",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "newNest"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": []
+     }
+    ]
+   },
+   "x": -1.2,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9701,
+    "guid": "append-answer",
+    "hasEgg": false,
+    "pile": [],
+    "label": "both lists"
+   },
+   "x": 1.15,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "APPEND\n\nA list is a pair:\n\n  [ first, the rest ]\n\nand a box with NO holes is\nthe empty list. Here\n\n  [1,[2,[]]]  and  [3,[4,[]]]\n\ngo in, and 1,2,3,4 comes\nback -- one link at a time,\neach carrying a promise of\nthe next."
+   },
+   "x": -1.05,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nGive the three-hole box to\nthe FinishAppend robot.\n\nSet Rounds to 5 or more.\n\nEach link lands inside the\npromise the last one carried,\nso the answer grows on the\nnest marked \"both lists\"\nfrom the outside in."
+   },
+   "x": -0.35,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

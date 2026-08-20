@@ -98,6 +98,15 @@ Update this file as decisions are made.
   recursive workers would accumulate forever. — **GAP**; our flavour needs
   deciding (a bomb thing? a self-vacuum step? parent-side cleanup of a room
   whose robot has stopped?). **UNDECIDED** on form, needed in substance.
+  Every one of Ken's five ported programs ends with a bomb, and every one of
+  them ports by having the finisher **vacuum something its own thought needs**
+  — the number, the bird, the scale — which stops the team just as dead but
+  leaves the house standing.
+- The original's truck can carry a **notebook**, and `reverse.tt` uses that as
+  a module system: it writes a name on a text pad, drops it on the notebook to
+  look the append team up, and puts what it finds in the truck. Ours carries a
+  spare team in a hole of the work box instead — **GAP** (robot-side notebook
+  lookup by name), worked around.
 
 ## Magic Wand & Pumpy
 
@@ -112,6 +121,12 @@ Update this file as decisions are made.
   **KEEP** (the mode button needed a legend; two characters don't).
 - 'R' spit-back — covered by Undo; Dusty's rescue role in explosions becomes
   relevant only with teardown — **UNDECIDED** with bombs.
+- Dusty over an **empty hole** does nothing at all — **DONE** (2026-08-20).
+  It used to stop the robot dead ("Dusty found nothing there"), which made it
+  impossible to write one robot for a hole that sometimes holds a spent nest
+  and sometimes holds nothing. That is exactly what Ken's `append` needs, and
+  it is how the original behaves. A hole that does not EXIST is still an
+  error worth stopping for.
 
 ## Notebook
 
@@ -124,7 +139,11 @@ Update this file as decisions are made.
 ## Scales
 
 - Original scales sit in a 3-hole box comparing their *neighbours*; ours are
-  standalone with two pans — **KEEP** (documented divergence).
+  standalone with two pans — **KEEP** (documented divergence). Ken's
+  `factorial.tt` and `swap.tt` both turn on this, and both port cleanly by
+  moving the two compared numbers into the pans: `[so far, scale, bird]`
+  where the scale holds `[count, N]`, instead of `[so far, count, scale, N,
+  bird]`. The live comparison — the point of the idiom — survives intact.
 - Robots match on a scale's tilt — **DONE** (2026-08-19): a scale showing a
   verdict trains a tilt condition ("a scale tipping left / right / a
   balanced scale"), contents ignored; Ruby erases it to "any scale". The

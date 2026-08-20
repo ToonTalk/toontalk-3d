@@ -5,6 +5,11 @@ the page). Each world lays two text pads on the table — what the program is,
 and how to run it — so the instructions arrive with the program. They are
 ordinary pads: vacuum them away with Dusty once you know the drill.
 
+The last five are ports of Ken's own ToonTalk 3 programs, from the `.tt` files
+in `My Programs`. Where the two systems differ the difference is named in the
+generator's header and in `DIVERGENCE.md`; otherwise they are move for move
+the originals.
+
 ## sentence-generator.world.json
 
 A random-sentence factory — the first program to use the recursion-era pieces
@@ -202,3 +207,104 @@ and nobody else's. Rewrite the name on the pad and they all stop recognising
 it — which is the point of putting it there.
 
 Regenerate with `python make_account.py`.
+
+
+# From Ken's own ToonTalk programs
+
+## swap.world.json
+
+The smallest program here: one robot, three steps, no counting.
+
+A scale is a balance — put a number in each pan and it leans towards the
+heavier one. The robot's thought is **"a scale leaning left"**; the numbers are
+not in the thought at all. Give it the leaning scale and it puts the two the
+other way round, the scale leans the other way, and it stops, because its
+thought no longer matches. Give it the scale that is already in order and
+nothing happens.
+
+The original's scale sits in a three-hole box `[a, scale, b]` and weighs the
+holes on either side of it; ours holds the two numbers in its own pans. That is
+the one difference, and it changes nothing about the program.
+
+Regenerate with `python make_swap.py`.
+
+## factorial.world.json
+
+**A loop decided by a balance.** You hand the team `[N, a bird]` and nothing
+else — the state it needs is built in front of you.
+
+- **Factorial** (the leader) fetches a scale, puts a 1 in its left pan and N in
+  its right, sets the scale where N was, then makes a one-hole box holding
+  another 1 and joins it onto the **left** of its own box. What it was given is
+  now `[so far, scale, bird]`.
+- **multiply** — the scale leans right, so the count has not reached N: drop a
+  1 on the count, wand-copy the count, type a **times sign** on the copy, and
+  drop that on *so far*.
+- **answer** — the scale is **level**, so the count has reached N: give *so
+  far* to the bird and vacuum the scale, which stops the team.
+
+Nobody counts rounds and nobody compares anything: the scale compares
+continuously, and the two workers simply recognise what it says. 5! = 120
+arrives on the nest.
+
+Regenerate with `python make_factorial.py` (edit `N`).
+
+## n-to-1.world.json
+
+**A list nobody ever holds.** A list here is the pair `[first, the rest]`, and
+the rest is usually a *nest* — an answer that has not arrived yet.
+
+- **FinishList** sees the number **0** and gives the bird a box with **no
+  holes**: the empty list, and the end of it.
+- **ListWorker** sees any other number: it makes a two-hole box, copies the
+  number into the front, drops a fresh nest in the back, and gives that pair
+  away. Then it keeps the new nest's own bird — so the next link will land
+  inside the promise it just handed over — and types a minus sign on a 1 to
+  count down.
+
+The finisher leads the team, because 0 is a number too and the worker would
+happily take it. Set Rounds past N and the whole of `[5,[4,[3,[2,[1,[]]]]]]`
+grows on the nest, from the outside in.
+
+Regenerate with `python make_n_to_1.py`.
+
+## append.world.json
+
+Two robots joining one list onto the end of another, a link at a time.
+
+- **AppendWorker** — List1 is a two-hole box: take the first link off, replace
+  its tail with a fresh nest, and give that link to the bird. The caller now
+  holds `[head, a promise]`. Keep the promise's bird and carry on with the
+  tail.
+- **FinishAppend** — List1 is a box with no holes: List2 *is* the rest of the
+  answer, so hand it over and stop.
+
+Nothing is copied and nothing waits for the whole of List1 to be known, which
+is why the same two robots keep working when List1 is still being computed
+somewhere else — see `reverse` below.
+
+Regenerate with `python make_append.py`.
+
+## reverse.world.json
+
+> reverse [first, rest] = reverse rest, with [first] appended to it
+
+The showpiece: **a crowd of houses all waiting on one another.**
+
+For each link, the Reverse robot builds a box `[a nest, [first, []], the bird
+that asked]` and sends it into a house of its own along with a copy of the
+**append team**. That house cannot start — its first list is a bare nest, and a
+robot facing a bare nest simply dozes — so it stands there smoking gently until
+the answer it needs turns up. Meanwhile Reverse carries on down the list
+holding the nest's own bird, so the **last** link is the first to be settled
+and the answer unwinds from the end of the list back to the front.
+
+Give it `[1,[2,[3,[]]]]` with Rounds at 10: three houses pile up in the last
+hole of the work box, and `[3,[2,[1,[]]]]` comes back on the nest.
+
+Two things differ from the original: it fetches its append team from the
+notebook by writing the name on a pad (we carry a spare team in a hole, as
+`fibonacci-recursive` does), and its finisher blows up its own house (ours
+vacuums the bird it has just answered, which stops it just as dead).
+
+Regenerate with `python make_reverse.py`.
