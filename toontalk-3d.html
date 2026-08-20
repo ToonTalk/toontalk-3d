@@ -1267,7 +1267,6 @@ const emptyWorldRec = () => ({ kind: 'world', v: 1, bench: [], stations: {}, act
 // at it for a moment -- no serialisation, no rebuilding, no stale references.
 const MINI_WORLD = 0.075;
 function stashCtx(ctx) {
-  ctx.bench = benchThings.slice();
   ctx.occ = {};
   for (const [id, st] of Object.entries(stations)) {
     if (st.kind === 'scratch' || st.kind === 'copyIn' || st.kind === 'copyOut') {
@@ -1277,7 +1276,6 @@ function stashCtx(ctx) {
   ctx.standOcc = defaultStand.occupant ?? null;
   ctx.activeBot = activeBot;
   ctx.waiters = [...waiters];
-  ctx.hatching = hatching.slice();
   ctx.asides = allStands.filter(st => st !== defaultStand);
   // the bubble hangs in its own world: leaving one behind in the scene left
   // an orphan thought floating over the table with no robot under it
@@ -1292,10 +1290,6 @@ function stashCtx(ctx) {
   ctx.runCount = runCount; runCount = 0;
 }
 function loadCtx(ctx) {
-  benchThings.length = 0;
-  benchThings.push(...(ctx.bench ?? []));
-  hatching.length = 0;
-  hatching.push(...(ctx.hatching ?? []));
   waiters.clear();
   (ctx.waiters ?? []).forEach(b => waiters.add(b));
   allStands.length = 0;
@@ -1308,12 +1302,6 @@ function loadCtx(ctx) {
     if (st) st.occupant = occ;
   }
   defaultStand.occupant = ctx.standOcc ?? null;
-  // a house has no desk: what its robot is working on rests on the table
-  const sf = standFor(ctx);
-  defaultStand.point.copy(sf.point);
-  defaultStand.topY = sf.topY;
-  if (defaultStand.obj) defaultStand.obj.visible = sf.top;
-  if (houseDeskObj) houseDeskObj.visible = !sf.top;
   activeBot = ctx.activeBot ?? null;
   if (activeBot) bindBot(activeBot);
   else {
@@ -1518,33 +1506,9 @@ function makeRoom(data = null) {
 function renderRoomContents(room) {
   room.__contents.forEach(n => n.removeFromParent());
   room.__contents = [];
-  const ud = room.userData;
-  if (ud.opaque) return;
-  // The furniture a room conceptually has -- table, desk, the arc of stacks --
-  // drawn at EXACTLY the scale and offset the live world is mounted at, and
-  // from the real measurements, so a robot in there stands behind its own desk
-  // instead of being buried by a table drawn to a different plan.
-  const F = MINI_WORLD;
-  const mini = new THREE.Group();
-  mini.position.set(0, 0.034, -0.02);        // the same mount as the world
-  const bw = (BENCH.x1 - BENCH.x0) * F, bd = (BENCH.z1 - BENCH.z0) * F;
-  const tbl = new THREE.Mesh(geo('BoxGeometry', bw, 0.012, bd),
-    new THREE.MeshStandardMaterial({ color: 0xc9b990, roughness: 0.7 }));
-  tbl.position.set((BENCH.x0 + BENCH.x1) / 2 * F, BENCH_TOP * F,
-                   (BENCH.z0 + BENCH.z1) / 2 * F);
-  mini.add(tbl);
-  for (const def of STATION_DEFS) {
-    const st = stations[def.id];
-    const h = Math.max(0.02, (st?.plinth ?? 0.5) * F);
-    const p = new THREE.Mesh(geo('CylinderGeometry', 0.24 * F, 0.27 * F, h, 10),
-      new THREE.MeshStandardMaterial({ color: def.kind === 'copier' ? 0x9fd8ff : 0x3a414d,
-                                       roughness: 0.7 }));
-    p.position.set(def.x * F, h / 2, def.z * F);
-    mini.add(p);
-  }
-  mini.traverse(o => { delete o.__pick; });
-  room.add(mini);
-  room.__contents.push(mini);
+  // No furniture: the desk, the table and the stacks are the user's, shared
+  // by every world. What a house owns is its robot and its things, and those
+  // hang inside it live, at toy scale.
 }
 function roomDrop(room, dropped, refuse) {
   pushUndo();
@@ -1608,6 +1572,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
   if (depth > ROOM_DEPTH_MAX) return;
   if (depth > 0 && performance.now() - roomWorkT0 > ROOM_WORK_SLICE) return;
   hydrateRoom(room);
+  room.__running = true;
   if (depth === 0) roomWorkBusy = true;
   window.__rrw = (window.__rrw || 0) + 1;
   const __t0 = performance.now();
@@ -1658,6 +1623,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
       popWorld();
     }
   } finally {
+    room.__running = false;
     speed = spd;
     maxIter = mi;
     if (depth === 0) roomWorkBusy = false;
@@ -1680,7 +1646,9 @@ function runRoomWork(room, depth = 0, miOverride = null) {
 // A dirty room may sit on the bench itself or in a hole of something there --
 // a robot stows the rooms it builds in its given box.
 function findDirtyRoom(ignoreCooldown = false) {
-  const ready = (t) => t.userData.kind === 'room' && t.userData.dirty
+  // a house whose turn is on the stack right now must not be found again --
+  // the bench is global, so a running house can see itself from inside
+  const ready = (t) => t.userData.kind === 'room' && t.userData.dirty && !t.__running
     && (ignoreCooldown || !t.__nextStep || performance.now() >= t.__nextStep);
   const walk = (t) => {
     if (!t) return null;
@@ -1696,6 +1664,12 @@ function findDirtyRoom(ignoreCooldown = false) {
     const r = walk(stations.stand.occupant);
     if (r) return r;
   }
+  for (const st of Object.values(stations)) {
+    if (st.kind === 'scratch' && st.occupant) {
+      const r = walk(st.occupant);
+      if (r) return r;
+    }
+  }
   return null;
 }
 function processDirtyRooms() {
@@ -1706,8 +1680,10 @@ function processDirtyRooms() {
   const room = findDirtyRoom();
   if (room) runRoomWork(room);
 }
-// Walking through the door: the room's live world takes the stage at full
-// size, and the world you leave shrinks into a little room of its own.
+// Walking through a door: your table, your desk, the stacks and the tools
+// all stay exactly where they are. What changes is whose domain surrounds
+// them -- the house's robot takes the desk at full size, with its things.
+// The way back out is the tall door that appears at the left.
 function enterRoom(room) {
   if (held) return say('Empty your hand to step through the door.');
   if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
@@ -1716,8 +1692,9 @@ function enterRoom(room) {
   clearUndo();
   busy = true;
   sfx('whoosh');
+  const at = { x: room.position.x, z: room.position.z };
   detach(room);
-  WROOT.attach(room);
+  benchRoot.attach(room);
   const from = room.position.clone();
   const camT = camera.position.clone().lerp(new THREE.Vector3(from.x, from.y + 0.2, from.z), 0.35);
   enqueue({
@@ -1732,49 +1709,59 @@ function enterRoom(room) {
     busy = false;
     current = null;                       // this very step must not be re-run
     const innerCtx = room.__ctx;
-    const oldShell = { label: room.userData.label ?? null, opaque: room.userData.opaque };
     innerCtx.root.removeFromParent();
     room.removeFromParent();
-    // the world being left, stashed into a fresh shell
+    room.scale.setScalar(1);
+    // the domain you were among steps aside, intact
     stashCtx(curCtx);
-    const outerCtx = curCtx;
-    // glass, so your own things stay in plain sight -- shut behind solid
-    // walls they may as well have been thrown away
-    const back = makeRoom({ opaque: false });
-    back.__ctx = outerCtx;
-    back.userData.dirty =
-      !!(outerCtx.activeBot?.program.length && outerCtx.standOcc)
-      || (outerCtx.bench ?? []).some(t2 => t2.userData.kind === 'room' && t2.userData.dirty);
-    back.userData.stepRounds = 0;
-    scene.remove(outerCtx.root);
-    mountRoomWorld(back);
-    // whatever you had out on the table is in here now: say so on the walls
-    back.userData.label = outerCtx.shell?.label ?? 'your table';
-    paintRoomLabel(back);
-    if (outerCtx.shell) back.setOpaque(outerCtx.shell.opaque);
-    else back.setOpaque(false);
-    // the entered world takes the stage
-    innerCtx.shell = oldShell;
+    curCtx.root.removeFromParent();
+    worldTrail.push({ ctx: curCtx, room, at });
+    // the house's domain takes the stage at full size
     curCtx = innerCtx;
     WROOT = innerCtx.root;
     innerCtx.root.scale.setScalar(1);
     innerCtx.root.position.set(0, 0, 0);
     scene.add(innerCtx.root);
     loadCtx(innerCtx);
-    putOnBench(back, benchSpot());
-    back.scale.setScalar(0.01);
-    enqueueNext({
-      dur: 0.5,
-      update(t) { back.scale.setScalar(Math.max(0.01, ease(t))); },
-      end() { back.scale.setScalar(1); },
-    });
+    if (exitDoor) exitDoor.visible = true;
     if (wasRunning && activeBot && program.length && stations.stand.occupant) {
       enqueue(doNow(() => runProgram()));
     }
-    say(wasRunning ? 'You step inside \u2014 the robot gets straight back to work.'
-                   : 'You step inside \u2014 the room you came from sits on the table.');
+    say(wasRunning
+      ? 'You step inside — the robot gets straight back to work. Your table came with you; the tall door on the left leads back out.'
+      : 'You step inside — your table came with you, and the tall door on the left leads back out.');
     refreshUI();
   }));
+}
+function leaveRoom() {
+  const entry = worldTrail[worldTrail.length - 1];
+  if (!entry) return;
+  if (held) return say('Empty your hand to step back out.');
+  if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
+  worldTrail.pop();
+  clearUndo();
+  sfx('whoosh');
+  // the house's domain folds back into its shell, at toy scale
+  stashCtx(curCtx);
+  const houseCtx = curCtx;
+  houseCtx.root.removeFromParent();
+  const room = entry.room;
+  mountRoomWorld(room);
+  putOnBench(room, entry.at);
+  room.userData.stepRounds = 0;
+  room.userData.dirty = !!(houseCtx.activeBot?.program.length && houseCtx.standOcc);
+  // the domain you left off returns around your unchanged table
+  curCtx = entry.ctx;
+  WROOT = curCtx.root;
+  curCtx.root.scale.setScalar(1);
+  curCtx.root.position.set(0, 0, 0);
+  scene.add(curCtx.root);
+  loadCtx(curCtx);
+  if (exitDoor) exitDoor.visible = worldTrail.length > 0;
+  say(room.userData.dirty
+    ? 'You step back out — the house keeps working behind you.'
+    : 'You step back out.');
+  refreshUI();
 }
 function makeNest() {
   const g = new THREE.Group();
@@ -1916,6 +1903,13 @@ function nestReceived(nest) {
     }
   }
   checkWaiting();
+  // a standing robot whose OWN GIVEN just gained mail gets to work as soon as
+  // the floor is free -- same path as an erasure that fixes a mismatch. Mail
+  // landing anywhere else (a factory posting its results out, say) must not
+  // hand that factory's robot a fresh head of steam.
+  if (stations.stand.occupant && isDescendantOf(nest, stations.stand.occupant)) {
+    autoRunArmed = true;
+  }
 }
 function deliverCopy(nest2, gift) {
   gift.scale.setScalar(1);
@@ -1998,15 +1992,17 @@ function birdDeliver(bird) {
   // instant, but the flight across your table is worth seeing, so it is handed
   // to a courier who flies it for real in the world that will watch her.
   const nestRoot = worldRootOf(nest);
-  if (held && nestRoot === topCtx.root && worldRootOf(bird) !== nestRoot
-      && runOuterSpeed !== Infinity) {
+  const nestWatched = nestRoot ? nestRoot.parent === scene : inScene(nest);
+  const birdRoot = worldRootOf(bird);
+  const birdWatched = birdRoot ? birdRoot.parent === scene : inScene(bird);
+  if (held && nestWatched && !birdWatched && runOuterSpeed !== Infinity) {
     const gift = held; held = null;
     const house = roomOf(bird);
     const from = (house ?? bird).getWorldPosition(new THREE.Vector3());
     if (house) from.y += 0.22;
     const courier = makeBird(nest);
     delete courier.__pick;
-    nestRoot.add(courier);
+    (nestRoot ?? benchRoot).add(courier);
     courier.position.copy(from);
     courier.add(gift);
     gift.position.set(0, -0.02, 0.16);
@@ -2569,7 +2565,15 @@ function clearBenchSpot(thing, x, z) {
   return { x, z };
 }
 function putOnBench(thing, at) {
-  WROOT.add(thing);
+  // The table is the user's. A robot -- or a house running offstage -- that
+  // needs to set something down uses a free work spot instead; robots can
+  // never reach your table.
+  if (offstage() || (busy && mode === 'replay')) {
+    const spot = Object.values(stations).find(s2 => s2.kind === 'scratch' && !s2.occupant)
+      ?? ensureScratchStation(scratchObjs.length, true);
+    if (spot) return putOnStation(spot, thing);
+  }
+  benchRoot.add(thing);
   thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : 1);
   thing.quaternion.identity();
   const half = (thing.userData.width || 0.3) / 2 + 0.05;
@@ -2663,18 +2667,14 @@ function newWorldCtx() {
   return { root, bench: [], occ: {}, activeBot: null, waiters: [],
            hatching: [], asides: [], standSt: null };
 }
-// Where the thing a robot is given rests. Your workshop has a desk for it,
-// facing you across the table. A house has no such desk -- nobody visits to
-// hand things over -- so in there the given sits on a work area of its own,
-// alongside the spots the robot uses for its own business.
-const DESK_SPOT = new THREE.Vector3();
-let DESK_TOP = 0;
-const HOUSE_SPOT = new THREE.Vector3();
-let houseDeskObj = null;
-function standFor(ctx) {
-  if (ctx === topCtx) return { point: DESK_SPOT, topY: DESK_TOP, top: true };
-  return { point: HOUSE_SPOT, topY: HOUSE_SPOT.y - CUBE / 2, top: false };
-}
+// The table, the desk, the stacks and the tools are YOURS -- one workshop,
+// shared by every world. A house is only a robot's domain: the robot, the
+// thing it is working on, and its work spots. Walking through a door changes
+// who stands behind the desk, never what is on your table.
+const benchRoot = new THREE.Group();
+benchRoot.name = 'benchRoot';
+const worldTrail = [];    // the houses you are standing inside, outermost first
+let exitDoor = null;      // the way back out, visible while the trail is deep
 const topCtx = newWorldCtx();
 let curCtx = topCtx;
 let WROOT = topCtx.root;
@@ -3144,11 +3144,16 @@ function hatchNow(nest) {
 let puffGeo = null;
 // Smoke and bustle mean somebody inside is working -- a room merely holding
 // unopened mail sits quiet.
+function dirtyRoomWithin(o) {
+  if (!o) return false;
+  if (o.userData?.kind === 'room' && o.userData.dirty) return true;
+  return !!holesOf(o)?.some(h => dirtyRoomWithin(h.thing));
+}
 function roomWorking(t) {
   if (!t.userData.dirty) return false;
   if (roomHasWorker(t)) return true;
-  // or a house inside it is running
-  return !!(t.__ctx?.bench ?? []).some(t2 => t2.userData?.kind === 'room' && t2.userData.dirty);
+  // or a house among its things is running
+  return Object.values(t.__ctx?.occ ?? {}).some(dirtyRoomWithin);
 }
 function advanceWorldClocks(dt) {
   advanceWiggle(dt);
@@ -3954,6 +3959,9 @@ function handleClick(target) {
   if (target.kind === 'roomDoor') {
     return enterRoom(target.room);
   }
+  if (target.kind === 'exitDoor') {
+    return leaveRoom();
+  }
   if (target.kind === 'growToggle') {
     resizeMode = !resizeMode;
     orbit.enabled = !resizeMode;      // dragging a handle must not spin the camera
@@ -4355,6 +4363,7 @@ function directRobot(target) {
 const handNode = new THREE.Object3D();
 scene.add(handNode);
 scene.add(topCtx.root);
+scene.add(benchRoot);
 const handPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 function moveHand(ev, hoverY = null) {
   if (!reachLocal) return;
@@ -5354,7 +5363,7 @@ function worldOut() {
   syncBot();
   // Snapshot the world's nodes BEFORE serialising anything: serialising a
   // room switches worlds, which swaps these very globals underfoot.
-  const bench = benchThings.slice();
+  const bench = offstage() ? [] : benchThings.slice();
   // dozing robots and their desks are not on the bench: save them as bench
   // things so nothing is lost (they wake benched rather than waiting)
   for (const b of [...waiters]) {
@@ -5437,11 +5446,16 @@ function thingInRaw(o, nests, birds) {
 function clearWorld() {
   queue.length = 0; current = null; busy = false; pendingAfter = null;
   clearUndo();
-  if (mode === 'training') { mode = 'world'; bubbleTarget = 0; preTraining = null; }
-  if (held) { held.removeFromParent(); held = null; }
-  benchThings.slice().forEach(t => t.removeFromParent());
-  benchThings.length = 0;
-  hatching.length = 0;
+  if (mode === 'training') { bubbleTarget = 0; preTraining = null; }
+  mode = 'world';        // a stale 'replay' must never leak into a fresh world
+  // The bench is the user's, not any world's: a house being built offstage
+  // must never sweep the user's table while it clears its own domain.
+  if (!offstage()) {
+    if (held) { held.removeFromParent(); held = null; }
+    benchThings.slice().forEach(t => t.removeFromParent());
+    benchThings.length = 0;
+    hatching.length = 0;
+  }
   for (const s2 of Object.values(stations)) {
     if (s2.kind === 'stack') continue;
     if (s2.occupant) { s2.occupant.removeFromParent(); s2.occupant = null; }
@@ -5469,12 +5483,23 @@ function clearWorld() {
   for (const s2 of allStands) if (s2.occupant) keep.add(s2.occupant);
   for (const f of flights) { keep.add(f.clone); keep.add(f.gift); }
   const THING_KINDS = ['number', 'box', 'text', 'scale', 'nest', 'bird', 'robot', 'room', 'notebook', 'die'];
-  for (const ch of [...WROOT.children, ...scene.children]) {
+  const sweep = offstage() ? [...WROOT.children]
+    : [...WROOT.children, ...benchRoot.children, ...scene.children];
+  for (const ch of sweep) {
     if (THING_KINDS.includes(ch.userData?.kind) && !keep.has(ch)) ch.removeFromParent();
   }
   renderProgram(); rebuildCondition();
 }
 function worldIn(data) {
+  if (!offstage() && worldTrail.length) {
+    // a fresh world replaces everything, wherever you were standing
+    curCtx.root.removeFromParent();
+    worldTrail.length = 0;
+    curCtx = topCtx;
+    WROOT = topCtx.root;
+    if (!topCtx.root.parent) scene.add(topCtx.root);
+    if (exitDoor) exitDoor.visible = false;
+  }
   clearWorld();
   nestGroupPending = [];
   const nests = new Map(), birds = [];
@@ -5505,9 +5530,11 @@ function worldIn(data) {
     rec.node.__group = arr;
   }
   nestGroupPending = null;
-  benchThings.forEach(t => {
-    if (t.userData.kind === 'nest' && t.userData.hasEgg) hatching.push({ nest: t, t: 0 });
-  });
+  if (!offstage()) {
+    benchThings.forEach(t => {
+      if (t.userData.kind === 'nest' && t.userData.hasEgg) hatching.push({ nest: t, t: 0 });
+    });
+  }
   if (data.active) {
     const node = botIn(data.active);
     putOnBench(node, { x: 0.9, z: 1.5 });
@@ -6354,7 +6381,10 @@ function tipFor(t) {
     return 'Drop to send that inside — it lands on the desk, and the room’s robot gets to work.';
   }
   if (t.kind === 'roomDoor') {
-    return 'The door — click to step inside: the room becomes the world around you, and this one shrinks onto its table.';
+    return 'The door — click to step inside. Your table and everything on it comes with you; only the robot\u2019s domain changes.';
+  }
+  if (t.kind === 'exitDoor') {
+    return 'The way out — click to step back to where you came from.';
   }
   if (t.kind === 'roomLever') {
     const r = t.room;
@@ -6602,17 +6632,34 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   // robot is working on rests on the table, and all it needs of its own are
   // work spots.
   scene.add(defaultStand.obj);
-  DESK_SPOT.copy(defaultStand.point);
-  DESK_TOP = defaultStand.topY;
-  // a house's work area: the same little bench the robot keeps its own things
-  // on, one place along from the first work spot
-  HOUSE_SPOT.set(0.15, reachLocal.y, reachLocal.z);
-  houseDeskObj = makeMiniDesk(HOUSE_SPOT.y - CUBE / 2, 0.44, 0.38, 0x8a744d);
-  houseDeskObj.position.set(HOUSE_SPOT.x, 0, HOUSE_SPOT.z);
-  houseDeskObj.traverse(o => setPick(o, { kind: 'station', id: 'stand' }));
-  houseDeskObj.visible = false;
-  scene.add(houseDeskObj);
   stations.stand = defaultStand;
+
+  // The way out of a house: a tall door standing clear of the table. It only
+  // shows while you are inside somewhere.
+  {
+    const g = new THREE.Group();
+    const frame = new THREE.Mesh(geo('BoxGeometry', 0.62, 1.62, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0xf2ede2, roughness: 0.8 }));
+    frame.position.y = 0.81;
+    g.add(frame);
+    const leaf = new THREE.Mesh(geo('BoxGeometry', 0.5, 1.44, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x6b3f1d, roughness: 0.6,
+        map: (woodTex ??= woodTexture()) }));
+    leaf.position.set(0, 0.75, 0.03);
+    g.add(leaf);
+    const knob = new THREE.Mesh(geo('SphereGeometry', 0.045, 12, 10),
+      new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.35, metalness: 0.7 }));
+    knob.position.set(0.17, 0.78, 0.09);
+    g.add(knob);
+    g.traverse(o => { o.castShadow = true; setPick(o, { kind: 'exitDoor' }); });
+    setPick(g, { kind: 'exitDoor' });
+    g.position.set(-2.75, 0, 1.15);
+    g.rotation.y = 0.9;
+    g.visible = false;
+    scene.add(g);
+    pickables.push(g);
+    exitDoor = g;
+  }
 
   // One scratch desk to begin with; more grow beside it as they are needed.
   ensureScratchStation(0);
