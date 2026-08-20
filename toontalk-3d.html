@@ -5737,6 +5737,7 @@ function thingInRaw(o, nests, birds) {
 }
 function clearWorld() {
   queue.length = 0; current = null; busy = false; pendingAfter = null;
+  attnHeld = false;      // an explanation of the old world explains nothing here
   clearUndo();
   if (mode === 'training') { bubbleTarget = 0; preTraining = null; }
   mode = 'world';        // a stale 'replay' must never leak into a fresh world
