@@ -162,3 +162,33 @@ alternative and add a face to its die. The language changes; no robot is
 retrained, because none of them ever knew the language.
 
 Regenerate with `python make_grammar.py`.
+
+## account.world.json
+
+Sally's account — an object that answers messages **by name**, after the
+ToonTalk 3 notebook of the same shape. Where `bank-account` is a server
+behind a door, this one sits open on the table and shows the idiom bare.
+
+The account is a three-hole box: `[Request, Balance, Owner]`, and a request
+is a box whose first hole is a *word* saying what to do:
+
+```
+[ "deposit",  50 ]      put 50 in
+[ "withdraw", 30 ]      take 30 out
+[ "query",  a bird ]    tell me the balance
+```
+
+Give the account box to the Teller, then drop a request into its first hole.
+The robot whose thought carries that word does the work and vacuums the
+request away, leaving the hole empty for the next one — **the dispatch is the
+pattern matching**, nothing more. Deposit drops the amount on the balance;
+withdraw turns the amount round first (a "times −1" dropped on it, since the
+amount is whatever it turns out to be); query copies the balance and hands
+the copy to the bird that came with the request, which flies it to the nest
+marked *answers*.
+
+The Owner pad is part of every thought, so these robots serve Sally's account
+and nobody else's. Rewrite the name on the pad and they all stop recognising
+it — which is the point of putting it there.
+
+Regenerate with `python make_account.py`.

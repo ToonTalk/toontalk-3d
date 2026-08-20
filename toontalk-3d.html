@@ -1265,7 +1265,9 @@ const emptyWorldRec = () => ({ kind: 'world', v: 1, bench: [], stations: {}, act
 // inside the room at miniature scale, with its own bench list, occupants,
 // robots and animation queue. Running it means pointing the one interpreter
 // at it for a moment -- no serialisation, no rebuilding, no stale references.
-const MINI_WORLD = 0.075;
+// Big enough to watch: a house holds only its robot, its given and its work
+// spots now, so the miniature can be nearly as tall as the room itself.
+const MINI_WORLD = 0.11;
 function stashCtx(ctx) {
   ctx.occ = {};
   for (const [id, st] of Object.entries(stations)) {
@@ -1460,6 +1462,7 @@ function makeRoom(data = null) {
   chimney.position.set(0.13, 0.42, -0.1);
   setPick(chimney, { kind: 'roomRoof', room: g });
   g.add(chimney);
+  g.__chimney = chimney;
   // the big lever on the right wall runs and stops the room
   const lever = new THREE.Group();
   const plateL = new THREE.Mesh(geo('BoxGeometry', 0.018, 0.13, 0.07),
@@ -1493,6 +1496,9 @@ function makeRoom(data = null) {
     g.userData.opaque = on;
     wallMat.opacity = on ? 1 : 0.22;
     roofMat.opacity = on ? 1 : 0.15;
+    // through glass you can watch the work itself, so the chimney and its
+    // smoke are neither needed nor welcome -- they only get in the way
+    if (g.__chimney) g.__chimney.visible = on;
     renderRoomContents(g);
   };
   setPick(g, { kind: 'thing', thing: g });
@@ -3176,7 +3182,7 @@ function advanceWorldClocks(dt) {
       }
     } else t.__workT = 0;
     t.__puffT = (t.__puffT || 0) - dt;
-    if (roomWorking(t) && t.__puffT <= 0) {
+    if (roomWorking(t) && t.userData.opaque && t.__puffT <= 0) {
       t.__puffT = 0.32;
       const puff = new THREE.Mesh(puffGeo ??= geo('SphereGeometry', 0.05, 8, 6),
         new THREE.MeshBasicMaterial({ color: 0xe8e8e8, transparent: true, opacity: 0.7 }));
@@ -4486,6 +4492,11 @@ function userTake(thing) {
 function userPutInHole(hole) {
   pushUndo();
   const dropped = held; held = null;
+  // A robot watches what it was given: completing its shape sets it going,
+  // the same way an erasure that fixes a mismatch does. Queued rather than
+  // called, so it judges the world once the thing has settled into place.
+  const intoGiven = stations.stand.occupant
+    && isDescendantOf(hole.anchor, stations.stand.occupant);
   const from = dropped.getWorldPosition(new THREE.Vector3());
   const fromQ = dropped.getWorldQuaternion(new THREE.Quaternion());
   if (hole.thing) combine(hole, dropped, true, from);
@@ -4498,6 +4509,7 @@ function userPutInHole(hole) {
       hatching.push({ nest: dropped, t: 0 });
     }
   }
+  if (intoGiven) enqueue(doNow(maybeAutoRun));
   refreshUI();
 }
 function userDropOn(target, point) {
@@ -6271,13 +6283,13 @@ addEventListener('keydown', (e) => {
 // What a click would mean, phrased for the current mode and what is being held.
 // What a drop would actually land on, for the jiggle: the thing itself, the
 // occupant of the hole aimed at, or the robot being offered something.
+// Whatever your click would act on jiggles under the pointer -- the thing you
+// would pick up, the hole a drop would land in, the thought part you would
+// take a copy of. Hand full or empty: it answers "this one".
 function wiggleTargetOf(t) {
   if (!t) return null;
-  // the thought bubble answers to an empty hand too: its parts are small, and
-  // knowing which one you are about to take is half the game
   if (t.kind === 'cond') return condNodeAt(t.path);
   if (t.kind === 'miniCond') return t.bot?.node?.__miniBubble ?? null;
-  if (!held) return null;
   if (t.kind === 'thing') {
     if (t.thing === held) return null;
     // aimed at a box: the hole the drop would land in answers, not the shell
