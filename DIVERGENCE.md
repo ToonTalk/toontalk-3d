@@ -45,12 +45,12 @@ Update this file as decisions are made.
   (2026-08-19; our flavour spends the number and keeps both parts' contents).
 - Zero-hole boxes — **DONE** (2026-08-19; type 0 on a held box; joining a
   0-hole box adds nothing and spends the husk).
-- Conversions: **text → one character per hole**, and a box of pads poured onto
-  a blank pad → the word — **DONE** (2026-08-20). An EMPTY box is a mould; a box
-  with anything in it stays a container, so nothing surprises you.
-  **Robot team → one robot per hole is deliberately NOT done**: dropping a robot
-  into a hole is how a program carries a spare team (fibonacci-recursive,
-  reverse), and that gesture must go on meaning that. Notebook ↔ box — **GAP**
+- Conversions: **text → one character per hole**, **robot team → one robot per
+  hole**, and a box of pads poured onto a blank pad → the word — **DONE**
+  (2026-08-20). The mould is a box with **no holes at all**, which the project
+  owner rightly pointed out is a different gesture from dropping a robot into a
+  hole: a zero-hole box has no hole to drop into, so carrying a spare team in a
+  hole (fibonacci-recursive, reverse) is untouched. Notebook ↔ box — **GAP**
   (low priority).
 - Hole labels exist and matching ignores them — **SAME**.
 - Blank box matches any size — **SAME** (`anyBox`).

@@ -975,7 +975,8 @@ function makeBox(n = HOLES) {
   const W = n === 0 ? 0.16 : Math.max(0.09, n * holeW + (n + 1) * wall);
   const D = n === 0 ? 0.16 : holeW + 0.07;
   const H = n === 0 ? 0.05 : 0.11;
-  const woodMat = new THREE.MeshStandardMaterial({ color: 0xe2cfa6, roughness: 0.62 });
+  const woodMat = new THREE.MeshStandardMaterial({ roughness: 0.78,
+    map: (crateTex ??= crateTexture()) });
   const base = new THREE.Mesh(geo('BoxGeometry', W, H, D), woodMat);
   base.castShadow = true; base.receiveShadow = true;
   g.add(base);
@@ -1863,7 +1864,8 @@ function makeNest() {
   bowl.receiveShadow = true;
   g.add(bowl);
   const egg = new THREE.Mesh(geo('SphereGeometry', 0.068, 20, 14),
-    new THREE.MeshStandardMaterial({ color: 0xf2ead8, roughness: 0.5 }));
+    new THREE.MeshStandardMaterial({ roughness: 0.55,
+      map: (eggTex ??= eggTexture()) }));
   egg.scale.set(1, 1.25, 1);
   egg.position.y = 0.13;
   egg.castShadow = true;
@@ -2258,7 +2260,7 @@ function makeScale() {
     anchor.position.y = -0.072;
     hang.add(anchor);
     setPick(pan, { kind: 'hole', box: g, index: i });
-    holes.push({ index: i, anchor, thing: null, pocket: pan, w: 0.14 });
+    holes.push({ index: i, anchor, thing: null, pocket: pan, w: 0.14, pan: true });
     pans.push(hang);
   });
   Object.assign(g.userData, { id: nextId++, kind: 'scale', holes, width: 0.52, rest: 0 });
@@ -2769,7 +2771,8 @@ function putInHole(hole, thing) {
   // A nest is a shallow ring with nothing under it: left at the pocket floor
   // it disappears into the shadow and the hole reads as empty. It sits on the
   // rim instead, where you can see it -- and see what lands on it.
-  thing.position.y = thing.userData.kind === 'nest' ? 0.05 : thing.userData.rest * s;
+  thing.position.y = (thing.userData.kind === 'nest' && !hole.pan) ? 0.05
+    : thing.userData.rest * s;
   if (thing.userData.kind === 'robot') {
     // A robot lies on its back across the hole: rotating it puts its height
     // along the box's depth, which is roomier than a hole is wide. It rests on
@@ -2787,11 +2790,13 @@ function putInHole(hole, thing) {
   }
   // pads lie flat, floating just above the pocket rim, so they read from
   // above exactly as they do on the bench
+  // A scale's pan is a flat dish with no rim to clear, so nothing is lifted
+  // there -- a pad floated up over a pocket ends up in the beam.
   if (thing.userData.kind === 'text') {
-    thing.position.y += 0.062;
+    thing.position.y += hole.pan ? 0.009 : 0.062;
   } else if (['box', 'scale', 'notebook', 'room'].includes(thing.userData.kind)) {
     // containers perch on the rim rather than sinking below it
-    thing.position.y += 0.05;
+    thing.position.y += hole.pan ? 0.009 : 0.05;
   }
   hole.thing = thing;
 }
@@ -3921,13 +3926,29 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   if (target.userData.kind === 'box' && incoming.userData.kind === 'box') {
     return joinBoxes(target, incoming, refuse, side);
   }
-  // An EMPTY box is a mould: pour something into it and it takes that thing
-  // apart, one part per hole. A pad becomes its letters, a team becomes its
-  // robots. (A box with anything in it is a container, not a mould, so this
-  // never surprises you.)
-  const emptyBox = target.userData.kind === 'box'
-    && target.userData.holes.every(h => !h.thing);
-  if (emptyBox && incoming.userData.kind === 'text') {
+  // A box with NO HOLES is a mould: pour something into it and it comes apart,
+  // one part to a hole. A pad becomes its letters; a team becomes its robots.
+  // A box that HAS holes is a container -- dropping a robot in one is how a
+  // program carries a spare team -- so the two gestures never collide.
+  const mould = target.userData.kind === 'box' && !target.userData.holes.length;
+  if (mould && incoming.userData.kind === 'robot') {
+    const bot = incoming.__bot;
+    const members = [bot, ...bot.team];
+    return mergeOnto(incoming, fromWorld, target, () => {
+      const nb = makeBox(members.length);
+      members.forEach((m, i) => {
+        m.team = [];
+        m.node.removeFromParent();
+        putInHole(nb.userData.holes[i], m.node);
+        setPick(m.node, { kind: 'botThing', bot: m });
+      });
+      replaceThing(target, nb);
+      say(members.length > 1
+        ? `The team, one robot to a hole — ${members.length} of them. Drop one on another to make a team again.`
+        : 'The robot, in a box of its own.');
+    });
+  }
+  if (mould && incoming.userData.kind === 'text') {
     const chars = [...(incoming.userData.text ?? '')];
     if (!chars.length) return refuse('That pad is blank — write on it first.');
     return mergeOnto(incoming, fromWorld, target, () => {
@@ -4519,10 +4540,17 @@ function userClick(target) {
     if (holdingBot) {
       // the shell of a box occludes its holes: aim at the hole meant
       const hs = holesOf(target.thing);
-      if (hs) {
+      if (hs && hs.length) {
         const h = holeUnder(target.thing, target.point) ?? hs.find(x => !x.thing);
         if (h && !h.thing) return userPutInHole(h);
         return say('That hole is taken — drop the robot in an empty one.');
+      }
+      // a box with NO holes has nowhere to file a robot, so it is the mould
+      if (target.thing.userData.kind === 'box') {
+        pushUndo();
+        const dropped = held; held = null;
+        const from = dropped.getWorldPosition(new THREE.Vector3());
+        return combine({ thing: target.thing }, dropped, true, from);
       }
       return say('Robots only team up with other robots.');
     }
@@ -7421,7 +7449,7 @@ let resizeMode = false, grabbedCorner = null;
 const cornerOf = (i) => new THREE.Vector3(i % 2 ? BENCH.x1 : BENCH.x0, BENCH_TOP,
                                           i < 2 ? BENCH.z0 : BENCH.z1);
 let woodTex = null, steelTex = null, brassTex = null, strawTex = null,
-    leatherTex = null, stuccoTex = null;
+    leatherTex = null, stuccoTex = null, crateTex = null, eggTex = null;
 // small canvas painters, one per material family
 function speckTexture(w, base, marks, n, mk) {
   const cv = document.createElement('canvas');
@@ -7432,6 +7460,10 @@ function speckTexture(w, base, marks, n, mk) {
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < n; i++) mk(c, rnd, w, marks);
   const tex = new THREE.CanvasTexture(cv);
+  // these little canvases are painted in sRGB, and saying so is the difference
+  // between kraft board and washed-out cream -- straw, leather and stucco were
+  // all being read as linear and coming out pale
+  tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   return tex;
 }
@@ -7441,6 +7473,35 @@ function metalTexture(base, streak) {
     c.lineWidth = 0.5 + rnd();
     const y = rnd() * w;
     c.beginPath(); c.moveTo(0, y); c.lineTo(w, y + (rnd() - 0.5) * 3); c.stroke();
+  });
+}
+// Boxes had the pale flat colour of paper, which made a box with no holes and
+// a text pad twins. Kraft board with its corrugations showing belongs to
+// nothing else in the workshop.
+function crateTexture() {
+  const tex = speckTexture(128, '#a9743a', null, 300, (c, rnd, w) => {
+    c.fillStyle = rnd() > 0.5 ? 'rgba(70,44,16,0.16)' : 'rgba(255,226,180,0.14)';
+    c.fillRect(rnd() * w, rnd() * w, 1 + rnd() * 3, 1 + rnd() * 2);
+  });
+  // the flutes: fine vertical ribs, the way a cut edge of cardboard looks
+  const cv = tex.image, c = cv.getContext('2d');
+  for (let x = 0; x < cv.width; x += 5) {
+    c.fillStyle = 'rgba(74,46,16,0.34)';
+    c.fillRect(x, 0, 2, cv.height);
+    c.fillStyle = 'rgba(255,231,186,0.22)';
+    c.fillRect(x + 2.4, 0, 1.4, cv.height);
+  }
+  tex.needsUpdate = true;
+  return tex;
+}
+// Robin's egg: a pale blue-green, freckled brown, the way the real ones are.
+function eggTexture() {
+  return speckTexture(96, '#8fd8cf', null, 240, (c, rnd, w) => {
+    const r = rnd();
+    c.fillStyle = r > 0.72 ? 'rgba(120,84,50,0.45)'
+      : r > 0.4 ? 'rgba(255,255,255,0.22)' : 'rgba(60,140,132,0.18)';
+    const s2 = r > 0.72 ? 0.8 + rnd() * 1.8 : 1 + rnd() * 3;
+    c.beginPath(); c.arc(rnd() * w, rnd() * w, s2, 0, Math.PI * 2); c.fill();
   });
 }
 function strawTexture() {
