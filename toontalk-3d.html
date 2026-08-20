@@ -8330,15 +8330,22 @@ function advanceMarty(dt) {
   martyLift += (martyLiftTarget - martyLift) * Math.min(1, dt * 9);
   martyNode.position.y = Math.abs(Math.sin(martyT * 2.4 * lively)) * 0.03 * lively + martyLift;
   martyNode.__antBob.material.emissiveIntensity = 0.5 + 0.4 * Math.sin(martyT * 3);
-  // What a demo picks up rides in MARTY'S hand, not on the visitor's cursor --
-  // it is his demonstration. Only while a step of his is running, so anything
-  // the visitor picks up between beats stays theirs.
-  if (martyPerforming && held && held.parent !== martyNode.__hand) {
-    martyNode.__hand.add(held);
-    held.position.set(0, 0, 0);
-    held.quaternion.identity();
-  }
+  // What a demo picks up rides in MARTY'S hand, not on the visitor's cursor.
+  // The hand itself is moved to him rather than the thing being re-parented:
+  // re-parenting left the take-animation lerping toward a target in the wrong
+  // space, so the thing appeared to fly across the room into his grip.
+  if (martyBusyDemo) martyTakeTheHand();
 }
+// The hand must already BE at his hand when he takes something, or the
+// take-animation measures its start against wherever the visitor's pointer
+// happened to be, and the thing slides in from across the room.
+function martyTakeTheHand() {
+  if (!martyNode) return;
+  martyNode.__hand.getWorldPosition(_martyHandPos);
+  handNode.position.copy(_martyHandPos);
+  handNode.updateMatrixWorld();
+}
+const _martyHandPos = new THREE.Vector3();
 let martyPerforming = false;
 // A Martian does not stoop over a table: he rises to take a thing and to set
 // it down, and sinks back afterwards.
@@ -8346,6 +8353,7 @@ let martyLift = 0, martyLiftTarget = 0;
 async function martyReach(act) {
   martyLiftTarget = 0.46;
   await new Promise(r => setTimeout(r, 320));
+  martyTakeTheHand();
   act();
   await new Promise(r => setTimeout(r, 340));
   martyLiftTarget = 0;
