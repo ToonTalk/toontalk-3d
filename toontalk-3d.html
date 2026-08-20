@@ -946,8 +946,12 @@ function makeBox(n = HOLES) {
   const wall = 0.032;
   const holeW = n === 0 ? HOLE_W
     : Math.max(0.12, Math.min(HOLE_W, (BOX_MAX_W - (n + 1) * wall) / n));
-  const W = Math.max(0.09, n * holeW + (n + 1) * wall);
-  const D = holeW + 0.07, H = 0.11;
+  // A box with no holes is square and shallow, so that dropped into a hole it
+  // lies flat in it like a little empty tray. Sized from the hole it must fit,
+  // since contents are scaled by width alone.
+  const W = n === 0 ? 0.16 : Math.max(0.09, n * holeW + (n + 1) * wall);
+  const D = n === 0 ? 0.16 : holeW + 0.07;
+  const H = n === 0 ? 0.05 : 0.11;
   const woodMat = new THREE.MeshStandardMaterial({ color: 0xe2cfa6, roughness: 0.62 });
   const base = new THREE.Mesh(geo('BoxGeometry', W, H, D), woodMat);
   base.castShadow = true; base.receiveShadow = true;
@@ -3145,6 +3149,10 @@ function tick(dt) {
 }
 let pendingAfter = null;
 let autoRunArmed = false;   // set when an erasure may have fixed the mismatch
+// Stop means "finish what you are doing and stand still", not "freeze". The
+// remaining steps of the round run at once so nothing is left half done --
+// a claw full, a box split in two -- and Run picks up from there.
+let stopRequested = false;
 function maybeAutoRun() {
   if (mode !== 'world' || busy || held || !activeBot?.program.length) return;
   const given = stations.stand.occupant;
@@ -4644,7 +4652,7 @@ function giveToRobot() {
   sfx('drop');
   putOnStation(stand, thing);
   const from = thing.getWorldPosition(new THREE.Vector3());
-  enqueueNext(settleInto(thing, from));
+  enqueueNext(settleInto(thing, from, 0.5));
   if (!program.length) enterTraining();
   else {
     refreshUI();
@@ -4669,14 +4677,36 @@ function activateBot(bot, after) {
   bot.root.scale.setScalar(1);
   const from = bot.node.position.clone();
   const fromScale = bot.node.scale.x;
+  // Whatever you dropped on it goes to the work platform straight away, in the
+  // same breath as the robot growing -- waiting for the robot to arrive and
+  // then flicking the box across reads as two events, and it is one.
+  const gift = held && held.userData.kind !== 'robot' ? held : null;
+  let giftFrom = null, giftTo = null;
+  if (gift) {
+    held = null;
+    clearFlags();
+    sfx('drop');
+    const fromW = gift.getWorldPosition(new THREE.Vector3());
+    putOnStation(bot.stand, gift);
+    giftTo = gift.position.clone();
+    giftFrom = gift.parent.worldToLocal(fromW);
+    gift.position.copy(giftFrom);
+  }
   enqueue({
     dur: 0.9,
     update(t) {
       const e = ease(t);
       bot.node.scale.setScalar(lerp(fromScale, 1, e));
       bot.node.position.set(lerp(from.x, 0, e), lerp(from.y, 0, e), lerp(from.z, 0, e));
+      if (gift) {
+        gift.position.lerpVectors(giftFrom, giftTo, e);
+        gift.position.y += 0.18 * Math.sin(Math.PI * e);      // a gentle arc over
+      }
     },
-    end() { bot.node.position.set(0, 0, 0); bot.node.scale.setScalar(1); bot.node.rotation.y = 0; },
+    end() {
+      bot.node.position.set(0, 0, 0); bot.node.scale.setScalar(1); bot.node.rotation.y = 0;
+      if (gift) gift.position.copy(giftTo);
+    },
   });
   enqueue(doNow(() => {
     bindBot(bot);
@@ -4684,7 +4714,14 @@ function activateBot(bot, after) {
     parkRobot();
     renderProgram(); rebuildCondition();
     busy = false;
-    if (held && held.userData.kind !== 'robot') giveToRobot();
+    if (gift) {
+      // it is already on the platform: all that is left is what to do about it
+      if (!program.length) enterTraining();
+      else {
+        say('It has something to work on.');
+        enqueue(pause(0.3), doNow(() => { if (mode === 'world' && !busy) runProgram(); }));
+      }
+    }
     if (after) after();
     refreshUI();
   }));
@@ -4728,6 +4765,19 @@ function layoutBenchTeams() {
   for (const n of benchTeamShown) if (!keep.has(n)) n.removeFromParent();
   benchTeamShown.clear();
   keep.forEach(n => benchTeamShown.add(n));
+}
+// Send one robot of the team back to its place in the queue. layoutTeam does
+// this for the whole team when there is somebody watching; inside a house it
+// is the only thing that puts a finished performer back where it belongs.
+function parkInQueue(bot) {
+  const i = roster().indexOf(bot);
+  if (i < 0 || !bot.node) return;
+  bot.node.scale.setScalar(MINI);
+  bot.node.position.copy(teamSlot(i));
+  bot.node.rotation.y = 0;
+  bot.root.position.set(0, 0, 0);
+  addMiniBubble(bot.node, bot.program.length ? bot.condition : null);
+  setPick(bot.node, { kind: 'botThing', bot });
 }
 // Taking a member out of the team it belongs to -- the rest close ranks.
 function leaveTeam(bot) {
@@ -4777,6 +4827,7 @@ function parkActiveAside() {
 // Whoever was performing steps back so the leader is the one you pick up.
 function restoreLeaderBody(bot) {
   if (!bot || bodyBot === bot) return;
+  parkInQueue(bodyBot);              // whoever was performing steps back
   bot.node.position.set(0, 0, 0);
   bot.node.scale.setScalar(1);
   bot.node.rotation.y = 0;
@@ -5283,9 +5334,18 @@ function dustySuck(getVictim) {
       victim = getVictim();
       if (!victim) { busy = false; return; }
       dest = victim.getWorldPosition(new THREE.Vector3());
-      dest.y = 0; dest.z += 0.36;
+      // He hovers up beside whatever he is fetching. On the floor he would
+      // cross UNDER the table and arrive hidden behind it -- which looked, from
+      // where you sit, as though things vanished by themselves.
+      dest.y = Math.max(0, dest.y - 0.42);
+      dest.z += 0.36;
     },
-    update(t) { if (victim) dusty.position.lerpVectors(dustyHome, dest, ease(t)); },
+    update(t) {
+      if (!victim) return;
+      const e = ease(t);
+      dusty.position.lerpVectors(dustyHome, dest, e);
+      dusty.position.y += 0.5 * Math.sin(Math.PI * e);      // up and over
+    },
   });
   enqueue({
     dur: 0.5,
@@ -5318,7 +5378,12 @@ function dustySuck(getVictim) {
   });
   enqueue({
     dur: 0.45,
-    update(t) { if (dest) dusty.position.lerpVectors(dest, dustyHome, ease(t)); },
+    update(t) {
+      if (!dest) return;
+      const e = ease(t);
+      dusty.position.lerpVectors(dest, dustyHome, e);
+      dusty.position.y += 0.5 * Math.sin(Math.PI * e);
+    },
     end() { dusty.position.copy(dustyHome); refreshUI(); },
   });
 }
@@ -5895,6 +5960,12 @@ function nextIteration() {
   // A pass never ends with something still in the claw: put it down first, so
   // the condition is judged against a settled world.
   stowHeld();
+  if (stopRequested) {
+    stopRequested = false;
+    return finishRun(runCount
+      ? `Stopped after ${runCount} round${runCount > 1 ? 's' : ''} — it finished the one it was in, so Run carries on from here.`
+      : 'Stopped.');
+  }
   const given = specOf(stations.stand.occupant);
   const members = [activeBot, ...activeBot.team];
   const states = members.map(m => matchState(m.condition, given));
@@ -5950,12 +6021,24 @@ function markRoomDone() {
 // up to the desk and the one standing there steps back into the queue. The
 // leader is still the robot you gave the work to -- only the body changes.
 function takeTheFloor(member) {
-  if (member === bodyBot || offstage()) { bodyBot = member; return; }
+  if (member === bodyBot) return;
   const out = bodyBot;
   const outIdx = roster().indexOf(out);      // the leader has a slot too
   const outSlot = outIdx >= 0 ? teamSlot(outIdx) : null;
   const inNode = member.node, inFrom = inNode.position.clone();
   if (inNode.parent !== WROOT) WROOT.add(inNode);
+  // Inside a house nobody is watching the walk, but the swap must still HAPPEN:
+  // skipping it left the member doing the work at doll size, which is what you
+  // then found when you opened the door.
+  if (offstage()) {
+    if (out) parkInQueue(out);
+    inNode.scale.setScalar(1);
+    inNode.position.set(0, 0, 0);
+    inNode.rotation.y = 0;
+    bindBody(member);
+    parkRobot();
+    return;
+  }
   addMiniBubble(inNode, null);            // the big bubble speaks for it now
   enqueue({
     dur: 0.45,
@@ -6306,7 +6389,7 @@ function refreshUI() {
 
 $('exitBtn').onclick = () => { if (!busy) leaveTraining(); };
 $('runBtn').onclick = () => {
-  if (mode === 'replay') { abort('Stopped.'); busy = false; refreshUI(); }
+  if (mode === 'replay') { stopRequested = true; fastForward(100000, 4000); refreshUI(); }
   else runProgram();
 };
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
