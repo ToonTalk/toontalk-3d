@@ -106,10 +106,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   anything about the workshop, or say *"show me birds"* and he walks over and
   demonstrates it on your table, one narrated step per click of **Next** — and
   when an answer of his suggests a demo, you get a *Show me* button, never a
-  surprise performance. He never builds programs — that part is yours. Inside a
-  Claude artifact he answers with no key; anywhere else pick a brain in his
-  panel — Claude, ChatGPT or Gemini, and the model — and paste that provider's
-  key (kept in this browser only). Without one, his replies are canned lines
+  surprise performance. He never builds programs — that part is yours. Pick a
+  brain in his panel — Claude, ChatGPT or Gemini, and the model — and paste that
+  provider's key (kept in this browser only); a published artifact is sealed and
+  cannot reach any of them, so there he only ever has the phrasebook. Without one, his replies are canned lines
   from a phrasebook that picks the right demonstration, and the panel says so.
   Whatever brain he has, **he answers from the manual**: `manual.html` is
   handed to him with every question (live when a server is serving it, from a
@@ -221,6 +221,27 @@ every example can actually be tried.
 `serve.js` also accepts `POST /capture`, which the pages use to write rendered
 frames to `captures/` — that is how the 3D work gets reviewed without a human
 having to eyeball every change.
+
+### One file, no server
+
+```bash
+python build_artifact.py
+```
+
+writes `toontalk-3d.artifact.html`: the same workshop with three.js, the
+GLTFLoader and both `.glb` models packed inside it, so it needs nothing beside
+it — hand it to somebody, put it on any static host, open it from disk. It is
+built from `toontalk-3d.html`, which stays the only source; every one of the
+eleven example worlds produces byte-identical results in the two.
+
+It does **not** run as a published claude.ai artifact. The frame there tolerates
+a full-screen three.js scene rendered once, but goes white — markup and all —
+as soon as this workshop's animation loop runs, however long the boot is
+delayed. Two smaller limits of that frame are worked around in the build:
+inline scripts over about a megabyte are dropped silently (so the bundle is
+split across several), and nothing may be fetched at all, not even a `data:`
+URI the page made itself (so the models are parsed out of memory instead).
+Marty, likewise, could only ever speak from his phrasebook inside one.
 
 ## Assets
 

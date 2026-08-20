@@ -115,8 +115,7 @@
   <div id="library">
     <div class="row"><button id="exportHeldBtn" title="Save whatever you are holding to a file — any thing: a box, a number, a robot, a nest.">Save held thing</button>
       <button id="exportWorldBtn" title="Save the whole workshop to a file.">Save world</button></div>
-    <div class="row"><button id="importBtn" title="Open a saved file — a thing lands in your hand; a world replaces the workshop.">Import file</button>
-      <input id="importFile" type="file" accept=".json,application/json" style="display:none"></div>
+    <div class="row"><button id="importBtn" title="Open a saved file — a thing lands in your hand; a world replaces the workshop.">Import file</button></div>
   </div>
 </div>
 
@@ -7093,6 +7092,28 @@ $('progMin').onclick = () => {
   }
   $('progMin').textContent = min ? '–' : '+';
 };
+// Published as a Claude artifact the page is sealed: it may not start a
+// download itself, and an <a download> click is simply ignored. The host will
+// do it, if asked through the downloads capability -- so ask first, and fall
+// back to the ordinary anchor everywhere else.
+async function saveFile(filename, text, note) {
+  let host = null;
+  try { host = (await window.claude?.use?.('downloads')) ?? null; } catch { host = null; }
+  if (host) {
+    try { await host.save({ filename, data: text }); say(note); }
+    catch (e) {
+      say(e?.code === 'declined' ? 'Nothing saved, then.'
+        : 'Could not save that file: ' + (e?.message || e));
+    }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  say(note);
+}
 $('exportHeldBtn').onclick = () => {
   if (!held) return say('Pick something up first — this saves what you are holding.');
   if (held.userData.kind === 'robot' && held.__bot === activeBot) syncBot();
@@ -7100,14 +7121,18 @@ $('exportHeldBtn').onclick = () => {
   const base = (held.userData.label
     || (held.userData.kind === 'robot' ? held.__bot?.name : null)
     || held.userData.kind).replace(/[^\w-]+/g, '_').slice(0, 40);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(rec)], { type: 'application/json' }));
-  a.download = `${base}.thing.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  say(`Saved what you are holding as “${base}.thing.json”.`);
+  saveFile(`${base}.thing.json`, JSON.stringify(rec),
+           `Saved what you are holding as “${base}.thing.json”.`);
 };
-$('importBtn').onclick = () => $('importFile').click();
+$('importBtn').onclick = () => {
+  // A hidden <input type=file> that sits in the page never opens a picker in
+  // the Claude app's web view. A fresh one, never attached, does.
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json,application/json';
+  inp.onchange = () => { const f = inp.files?.[0]; if (f) importRobotFile(f); };
+  inp.click();
+};
 async function importRobotFile(file) {
   try {
     const rec = JSON.parse(await file.text());
@@ -7164,11 +7189,6 @@ async function importRobotFile(file) {
     sayAttn('Could not import that file: ' + e.message);
   }
 }
-$('importFile').onchange = (ev) => {
-  const file = ev.target.files[0];
-  ev.target.value = '';
-  if (file) importRobotFile(file);
-};
 // dropping a .robot.json anywhere on the page imports it too
 addEventListener('dragover', (e) => e.preventDefault());
 addEventListener('drop', (e) => {
@@ -7179,13 +7199,8 @@ addEventListener('drop', (e) => {
 $('exportWorldBtn').onclick = () => {
   if (busy || mode !== 'world') return say('Leave the thought bubble first.');
   if (held) stowHeld();
-  const blob = new Blob([JSON.stringify(worldOut(), null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'workshop.world.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  say('Saved the whole workshop to a file.');
+  saveFile('workshop.world.json', JSON.stringify(worldOut(), null, 2),
+           'Saved the whole workshop to a file.');
 };
 $('speed').onchange = (e) => {
   speed = e.target.value === 'inf' ? Infinity : +e.target.value;
@@ -7617,7 +7632,20 @@ addEventListener('resize', () => {
 });
 
 // ---------------------------------------------------------------- load
-new GLTFLoader().load('robot_v4.glb', (gltf) => {
+// Served as ordinary files, the models sit beside the page and are fetched.
+// A packed build (build_artifact.py) puts their bytes in __TT_MODELS instead
+// and they are parsed straight out of memory: a published artifact may not
+// fetch anything at all, not even from a data: URI of its own making.
+function loadModel(name, onLoad) {
+  const loader = new GLTFLoader();
+  const packed = window.__TT_MODELS?.[name];
+  if (!packed) return loader.load(name, onLoad);
+  const bin = atob(packed);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  loader.parse(bytes.buffer, '', onLoad);
+}
+loadModel('robot_v4.glb', (gltf) => {
   template = gltf.scene;
   template.traverse(o => {
     if (!o.isMesh) return;
@@ -7794,7 +7822,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
   renderProgram(); refreshUI();
   $('loading').classList.add('gone');
 
-  new GLTFLoader().load('dusty_v1.glb', (dg) => {
+  loadModel('dusty_v1.glb', (dg) => {
     if (new URLSearchParams(location.search).get('demo')) { refreshUI(); return; }
     dusty = dg.scene;
     dusty.traverse(o => {
@@ -8426,6 +8454,22 @@ async function _mSt(id) {
 }
 // A demo lays its things out in front of Marty, not at fixed coordinates he
 // may be nowhere near: x is measured from where he is standing, inward.
+// Anything he acts ON gets the same courtesy as the stacks: he walks to it
+// first. Dropping a number onto another number from across the room was the
+// last place where something still moved by itself.
+async function _mAt(target, node) {
+  const p = node?.getWorldPosition?.(new THREE.Vector3());
+  if (p) {
+    const stand = new THREE.Vector3(
+      Math.max(BENCH.x0 - 0.7, Math.min(BENCH.x1 + 0.7, p.x)), 0,
+      p.z > (BENCH.z0 + BENCH.z1) / 2 - 0.2 ? BENCH.z1 + 0.46 : p.z + 0.75);
+    await martyWalk(stand, new THREE.Vector3(p.x, 0, p.z));
+  }
+  await martyReach(() => handleClick(target));
+}
+const _mOn = (thing) => _mAt({ kind: 'thing', thing }, thing);
+const _mHole = (box, index) =>
+  _mAt({ kind: 'hole', box, index }, box.userData.holes[index].anchor);
 async function _mBench(x, z) {
   // Everything he sets down goes along the NEAR edge of the table, within
   // reach of where he is standing -- across the table it looked like a toss.
@@ -8449,7 +8493,7 @@ const MARTY_DEMOS = {
     { do: () => _mBench(-0.5, 1.5) },
     { do: (c) => { c.one = _mLast(); return _mSt('numbers'); } },
     { say: 'On this one I type 4, then ÷ — so dropping it DIVIDES.', do: () => { held?.setValue?.(rat(4n)); held?.setOp?.('/'); refreshUI(); } },
-    { say: 'Dropped on the 1: exactly one quarter. No rounding, ever.', do: (c) => handleClick({ kind: 'thing', thing: c.one }) },
+    { say: 'Dropped on the 1: exactly one quarter. No rounding, ever.', do: (c) => _mOn(c.one) },
     { say: 'Any fraction the same way — type the bottom number and ÷, drop it on the top one. Click a number to see its other faces.' },
   ] },
   numbers: { blurb: 'numbers: typing values, and the operations — adding, multiplying, powers', near: 'numbers', steps: [
@@ -8458,17 +8502,17 @@ const MARTY_DEMOS = {
     { do: () => _mBench(-0.55, 1.5) },
     { do: (c) => { c.a = _mLast(); return _mSt('numbers'); } },
     { say: 'Another — I type 17 on it.', do: () => { held?.setValue?.(rat(17n)); refreshUI(); } },
-    { say: 'Dropped on the 25, it adds. Numbers combine.', do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
+    { say: 'Dropped on the 25, it adds. Numbers combine.', do: (c) => _mOn(c.a) },
     { say: '42. Now watch what typing an OPERATION does — another number…', do: () => _mSt('numbers') },
     { say: '…I make it a 3, and type × on it, so it multiplies instead of adding.',
       do: () => { held?.setValue?.(rat(3n)); held?.setOp?.('*'); refreshUI(); } },
     { say: '42 times 3 — 126. Powers work the same way: one more number…',
-      do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
+      do: (c) => _mOn(c.a) },
     { do: () => _mSt('numbers') },
     { say: '…made a 2 with ^ typed on it, so it raises to a power rather than adding.',
       do: () => { held?.setValue?.(rat(2n)); held?.setOp?.('^'); refreshUI(); } },
     { say: '126 squared — 15876, exactly. − negates, / divides, and the words “mod” and “set” work the same way.',
-      do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
+      do: (c) => _mOn(c.a) },
   ] },
   pads: { blurb: 'text pads: write, join words', near: 'texts', steps: [
     { say: 'Text pads are paper for words.', do: () => _mSt('texts') },
@@ -8478,7 +8522,7 @@ const MARTY_DEMOS = {
     { do: () => { held?.setText?.('Talk'); refreshUI(); } },
     { say: 'Dropped on another pad’s RIGHT edge, they join…', do: (c) => {
         const pt = c.p.getWorldPosition(new THREE.Vector3()); pt.x += 0.15;
-        handleClick({ kind: 'thing', thing: c.p, point: pt }); } },
+        return _mAt({ kind: 'thing', thing: c.p, point: pt }, c.p); } },
     { say: '…into “ToonTalk”. The side you drop on decides the order.' },
   ] },
   boxes: { blurb: 'boxes: holes hold anything', near: 'boxes', steps: [
@@ -8487,14 +8531,14 @@ const MARTY_DEMOS = {
     { do: () => _mBench(0.0, 1.5) },
     { do: (c) => { c.b = _mLast(); return _mSt('numbers'); } },
     { do: () => { held?.setValue?.(rat(7n)); refreshUI(); } },
-    { say: 'A hole holds anything — numbers, pads, boxes, even a robot.', do: (c) => handleClick({ kind: 'hole', box: c.b, index: 1 }) },
+    { say: 'A hole holds anything — numbers, pads, boxes, even a robot.', do: (c) => _mHole(c.b, 1) },
     { say: 'Drop box on box to join them; drop a box on a whole number to split it there. A box with NO holes is a mould — it takes words and teams apart.' },
   ] },
   dice: { blurb: 'dice: re-roll a number', near: 'dice', steps: [
     { do: () => _mSt('numbers') },
     { do: () => _mBench(0.3, 1.5) },
     { say: 'Dice hop off their own stack…', do: (c) => { c.n = _mLast(); return _mSt('dice'); } },
-    { say: '…and dropped on a number, the die re-rolls it: anything from 1 to its faces.', do: (c) => handleClick({ kind: 'thing', thing: c.n }) },
+    { say: '…and dropped on a number, the die re-rolls it: anything from 1 to its faces.', do: (c) => _mOn(c.n) },
     { say: 'Type a number while holding a die to change how many faces it has. Robots throw them too — that is how programs choose at random.' },
   ] },
   scales: { blurb: 'scales: compare, and robots match the lean', near: 'scales', steps: [
@@ -8502,10 +8546,10 @@ const MARTY_DEMOS = {
     { do: () => _mBench(0.0, 1.6) },
     { do: (c) => { c.s = _mLast(); return _mSt('numbers'); } },
     { do: () => { held?.setValue?.(rat(3n)); refreshUI(); } },
-    { do: (c) => handleClick({ kind: 'hole', box: c.s, index: 0 }) },
+    { do: (c) => _mHole(c.s, 0) },
     { do: () => _mSt('numbers') },
     { do: () => { held?.setValue?.(rat(8n)); refreshUI(); } },
-    { say: 'It leans toward the larger — and a robot’s thought can match on the lean.', do: (c) => handleClick({ kind: 'hole', box: c.s, index: 1 }) },
+    { say: 'It leans toward the larger — and a robot’s thought can match on the lean.', do: (c) => _mHole(c.s, 1) },
     { say: 'Words weigh too: later in the alphabet is heavier, and “Apple” balances “apple”.' },
   ] },
   birds: { blurb: 'birds and nests: messages', near: 'nests', steps: [
@@ -8515,7 +8559,7 @@ const MARTY_DEMOS = {
     { do: () => { held?.setValue?.(rat(9n)); refreshUI(); } },
     { say: 'Give the bird anything and she flies it home to her nest.', do: () => {
         const b = [...benchThings].reverse().find(t => t.userData.kind === 'bird');
-        if (b) handleClick({ kind: 'thing', thing: b }); }, hold: 1200 },
+        return b ? _mOn(b) : null; }, hold: 1200 },
     { say: 'A COPY of a bird delivers to the same nest; a copy of a NEST makes a broadcast — every copy gets the mail. Robots doze on a bare nest until something lands.' },
   ] },
   robot: { blurb: 'robots: train by doing, then run', trains: true, near: 'minis', steps: [
@@ -8523,9 +8567,10 @@ const MARTY_DEMOS = {
     { do: () => _mBench(-0.2, 1.6) },
     { do: (c) => { c.bot = _mLast(); return _mSt('numbers'); } },
     { say: 'Give a mini something and you are TRAINING it: everything I make it do, it remembers.', do: () => { held?.setValue?.(rat(3n)); refreshUI(); } },
-    { do: (c) => handleClick({ kind: 'botThing', bot: c.bot.__bot }), hold: 900 },
+    { do: (c) => _mAt({ kind: 'botThing', bot: c.bot.__bot }, c.bot), hold: 900 },
     { say: 'Inside its thought: I have it take a fresh number…', do: () => handleClick({ kind: 'station', id: 'numbers' }), hold: 700 },
-    { say: '…and drop it on what it was given. Add 1 — that is the whole lesson.', do: () => handleClick({ kind: 'thing', thing: stations.stand.occupant }) },
+    { say: '…and drop it on what it was given. Add 1 — that is the whole lesson.',
+      do: () => handleClick({ kind: 'thing', thing: stations.stand.occupant }), hold: 500 },
     { say: 'Leave the bubble and the lesson is kept.', do: () => leaveTraining(), hold: 700 },
     { say: 'But its thought wants exactly a 3 — it would refuse anything else. Ruby can erase that…', do: (c) => { c.r = maxIter; maxIter = 3; handleClick({ kind: 'ruby' }); }, hold: 700 },
     { say: '…to “any number”. And the moment its thought fits, off it goes — three rounds allowed.', do: () => handleClick({ kind: 'cond', path: [] }), hold: 1600 },
@@ -8546,7 +8591,7 @@ const MARTY_DEMOS = {
     { do: () => { held?.setText?.('scrap'); refreshUI(); } },
     { do: () => _mBench(0.2, 1.5) },
     { do: (c) => { c.v = _mLast(); handleClick({ kind: 'dusty' }); } },
-    { say: 'Dusty awake: click a thing and he vacuums it away.', do: (c) => handleClick({ kind: 'thing', thing: c.v }), hold: 900 },
+    { say: 'Dusty awake: click a thing and he vacuums it away.', do: (c) => _mOn(c.v), hold: 900 },
     { say: 'He also vacuums parts of a robot’s THOUGHT — an emptied part accepts anything. Ruby, beside him, erases in place: a 5 becomes “any number”.', do: () => handleClick({ kind: 'dusty' }) },
   ] },
   rooms: { blurb: 'rooms: little worlds that work alone', near: 'rooms', steps: [
@@ -8558,7 +8603,7 @@ const MARTY_DEMOS = {
   notebook: { blurb: 'the notebook: file, look up by name', near: 'notebook', steps: [
     { do: () => _mSt('numbers') },
     { do: () => { held?.setValue?.(rat(7n)); refreshUI(); } },
-    { say: 'Drop anything on the notebook to FILE it.', do: () => { const nb = mainNotebook(); if (nb) handleClick({ kind: 'thing', thing: nb }); } },
+    { say: 'Drop anything on the notebook to FILE it.', do: () => { const nb = mainNotebook(); return nb ? _mOn(nb) : null; } },
     { say: 'Click a page to take a COPY out — the page keeps the original.', do: (c) => {
         const nb = mainNotebook(); if (!nb) return;
         c.slot = nb.userData.pages.findIndex(p => p && p.kind === 'number' && p.value?.n === '7');
@@ -8710,6 +8755,8 @@ const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
 // What is behind Marty's eyes right now, in words the panel can show.
 function martyBrainText() {
   if (window.claude?.complete) return 'the Claude artifact — no key needed';
+  if (window.claude?.use) return 'his phrasebook — a published artifact is sealed and cannot call out, '
+    + 'so no brain, and no key, can be reached from here. The demonstrations still work.';
   const p = martyProv();
   return martyKeyOf(p) ? `${MARTY_PROVIDERS[p].label}, model ${martyModelOf(p)}`
     : 'his phrasebook only — replies are canned lines until you add a key';
@@ -8793,7 +8840,18 @@ async function askMarty(q) {
   martySay(q, 'you');
   let reply = null;
   try { reply = await martyThink(q); }
-  catch (e) { martySay('I could not reach the mothership — ' + e.message + '. Check the key in my panel?'); return; }
+  catch (e) {
+    // Sealed inside an artifact there is no way out at all, and no key will
+    // ever help. Say so once and carry on with the phrasebook, which still
+    // knows which demonstration to give.
+    const sealed = e instanceof TypeError || /fetch|network|load failed/i.test(e.message || '');
+    martySay(sealed
+      ? 'No signal reaches Mars from this page — it is sealed and cannot call out. '
+        + 'My phrasebook it is, then; the demonstrations are all still real.'
+      : 'I could not reach the mothership — ' + e.message + '. Check the key in my panel?');
+    martyToldOffline = true;
+    reply = null;
+  }
   let text = null, demo = null;
   if (reply == null) {
     const off = martyOffline(q);
@@ -8849,8 +8907,9 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<div id="martyMode" style="margin-top:6px;color:#cdd8e8"></div>'
   + '<div style="margin-top:6px">Without a key (and outside a Claude artifact) his replies are <b>canned lines from a '
   + 'phrasebook</b> \u2014 he can pick the right demonstration, but he is not really answering. For real conversation, '
-  + 'choose a brain and paste its API key; the key is kept only in this browser. Inside a Claude artifact he needs no '
-  + 'key at all.</div>'
+  + 'choose a brain and paste its API key; the key is kept only in this browser. A <b>published artifact is sealed</b> '
+  + '— nothing can be reached from inside it, so there Marty always speaks from the phrasebook. His '
+  + 'demonstrations are the real workshop either way.</div>'
   + '<div style="display:flex;gap:6px;margin-top:6px">'
   + '<select id="martyProv" style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
   + '<option value="claude">Claude</option><option value="openai">ChatGPT (OpenAI)</option><option value="gemini">Gemini</option></select>'
