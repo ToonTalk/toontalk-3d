@@ -174,12 +174,23 @@ Regenerate with `python make_grammar.py`.
 
 ## account.world.json
 
-Sally's account — an object that answers messages **by name**, after the
-ToonTalk 3 notebook of the same shape. Where `bank-account` is a server
-behind a door, this one sits open on the table and shows the idiom bare.
+Sally's account — an object that **serves messages**, after the ToonTalk 3
+notebook of the same shape. Where `bank-account` is a server behind a door,
+this one sits open on the table and shows the idiom bare.
 
-The account is a three-hole box: `[Request, Balance, Owner]`, and a request
-is a box whose first hole is a *word* saying what to do:
+The account is a three-hole box:
+
+```
+[ Requests: a nest,   Balance: 100,   Owner: "Sally" ]
+```
+
+The first hole is a **nest**, and that is the whole mechanism. Messages land on
+it one at a time; a robot lifts the top one off, does what it says, and the
+nest is bare again — so the team dozes until the next message arrives. A robot
+facing a bare nest waits, which is what makes this an object that *serves*
+requests rather than a program that runs once.
+
+A message is a box whose first hole is a *word* saying what to do:
 
 ```
 [ "deposit",  50 ]      put 50 in
@@ -187,27 +198,24 @@ is a box whose first hole is a *word* saying what to do:
 [ "query",  a bird ]    tell me the balance
 ```
 
-The three robots are a team, and on the table they stand together: Teller,
-withdraw and query, each with its own thought. Click one to take it out of the
-team, drop it back on the Teller to put it in again.
-
-Give the account box to the Teller, then drop a request into its first hole.
-The robot whose thought carries that word does the work and vacuums the
-request away, leaving the hole empty for the next one — **the dispatch is the
+Give the account box to the Teller — it waits — then drop a message on the
+bird marked *requests*. She carries it to the nest, the robot whose thought
+carries that word wakes, serves it, and dozes again: **the dispatch is the
 pattern matching**, nothing more. Deposit drops the amount on the balance;
 withdraw does the same but types a minus sign on the amount first, exactly as
 the original does — typing only an operation is remembered as *"make it
-subtract"*, so the robot takes away whatever amount it is handed, not the 30
-it was taught on; query copies the balance and hands the copy to the bird that
-came with the request, which flies it to the nest marked *answers*.
+subtract"*, so the robot takes away whatever amount it is handed, not the 30 it
+was taught on; query copies the balance and hands the copy to the bird that
+came with the message, which flies it to the nest marked *answers*.
 
-The three robots are a **team**, and you can watch them take turns: the Teller
-stands at the desk and *withdraw* and *query* wait in line behind him, each
-with its own small thought over its head. Drop in a withdrawal and *withdraw*
-walks up, does the work, and steps back.
+The three robots are a **team**, and they stand in a queue: the Teller at the
+front and *withdraw* and *query* behind him, each with its own small thought
+over its head. Whatever you hand a member is handed to the leader — a team has
+one work surface. Click a member to take it out of the team; drop it back on
+the Teller to put it in again.
 
-A request's bird is swept away with the request she came in — one bird, one
-answer — so six requests are laid out ready, and a spare nest sits on the
+A message's bird is swept away with the message she came in — one bird, one
+answer — so six messages are laid out ready, and a spare nest sits on the
 table: set it down and its egg hatches into another bird who answers on the
 same nest.
 

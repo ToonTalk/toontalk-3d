@@ -6,7 +6,14 @@
    "thing": {
     "kind": "box",
     "holes": [
-     null,
+     {
+      "kind": "nest",
+      "id": 9400,
+      "guid": "account-request-nest",
+      "hasEgg": false,
+      "pile": [],
+      "label": "requests"
+     },
      {
       "kind": "number",
       "value": {
@@ -21,8 +28,8 @@
      }
     ]
    },
-   "x": -0.1,
-   "z": 1.55
+   "x": -0.35,
+   "z": 1.72
   },
   {
    "thing": {
@@ -58,7 +65,23 @@
       "at": {
        "c": "given",
        "path": [
-        0,
+        0
+       ],
+       "nest": true
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "s0",
+       "path": [
         1
        ]
       }
@@ -75,10 +98,8 @@
      {
       "type": "vacuum",
       "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
+       "c": "s0",
+       "path": []
       }
      }
     ],
@@ -86,21 +107,30 @@
      "kind": "box",
      "holes": [
       {
-       "kind": "box",
-       "holes": [
+       "kind": "nest",
+       "id": 9400,
+       "guid": "account-request-nest",
+       "hasEgg": false,
+       "pile": [
         {
-         "kind": "text",
-         "text": "deposit"
-        },
-        {
-         "kind": "number",
-         "value": {
-          "n": "50",
-          "d": "1"
-         },
-         "op": "+"
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "deposit"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "50",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
         }
-       ]
+       ],
+       "label": "requests"
       },
       {
        "kind": "number",
@@ -150,7 +180,23 @@
         "at": {
          "c": "given",
          "path": [
-          0,
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": [
           1
          ]
         }
@@ -171,10 +217,8 @@
        {
         "type": "vacuum",
         "at": {
-         "c": "given",
-         "path": [
-          0
-         ]
+         "c": "s0",
+         "path": []
         }
        }
       ],
@@ -210,6 +254,23 @@
       },
       "program": [
        {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
         "type": "copy",
         "at": {
          "c": "given",
@@ -221,9 +282,8 @@
        {
         "type": "put",
         "at": {
-         "c": "given",
+         "c": "s0",
          "path": [
-          0,
           1
          ]
         }
@@ -231,10 +291,8 @@
        {
         "type": "vacuum",
         "at": {
-         "c": "given",
-         "path": [
-          0
-         ]
+         "c": "s0",
+         "path": []
         }
        }
       ],
@@ -243,8 +301,30 @@
      }
     ]
    },
-   "x": -1.15,
-   "z": 1.3
+   "x": -1.45,
+   "z": 1.95
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 9400,
+    "nestGuid": "account-request-nest",
+    "label": "requests"
+   },
+   "x": 0.42,
+   "z": 1.72
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9401,
+    "guid": "account-reply-nest",
+    "hasEgg": false,
+    "pile": [],
+    "label": "answers"
+   },
+   "x": 1.15,
+   "z": 1.72
   },
   {
    "thing": {
@@ -264,8 +344,8 @@
      }
     ]
    },
-   "x": -1.2,
-   "z": 2.15
+   "x": -0.7,
+   "z": 1.18
   },
   {
    "thing": {
@@ -285,8 +365,8 @@
      }
     ]
    },
-   "x": -0.55,
-   "z": 2.15
+   "x": -0.05,
+   "z": 1.18
   },
   {
    "thing": {
@@ -303,8 +383,8 @@
      }
     ]
    },
-   "x": 0.1,
-   "z": 2.15
+   "x": 0.6,
+   "z": 1.18
   },
   {
    "thing": {
@@ -324,8 +404,8 @@
      }
     ]
    },
-   "x": -1.2,
-   "z": 1.15
+   "x": -0.7,
+   "z": 2.28
   },
   {
    "thing": {
@@ -345,8 +425,8 @@
      }
     ]
    },
-   "x": -0.55,
-   "z": 1.15
+   "x": -0.05,
+   "z": 2.28
   },
   {
    "thing": {
@@ -363,8 +443,8 @@
      }
     ]
    },
-   "x": 0.1,
-   "z": 1.15
+   "x": 0.6,
+   "z": 2.28
   },
   {
    "thing": {
@@ -376,35 +456,23 @@
     "label": "spare"
    },
    "x": 1.2,
-   "z": 1.15
-  },
-  {
-   "thing": {
-    "kind": "nest",
-    "id": 9401,
-    "guid": "account-reply-nest",
-    "hasEgg": false,
-    "pile": [],
-    "label": "answers"
-   },
-   "x": 1.2,
-   "z": 1.7
+   "z": 1.18
   },
   {
    "thing": {
     "kind": "text",
-    "text": "SALLY'S ACCOUNT\n\nThe box is\n\n [ Request, Balance,\n   Owner ]\n\nand a request is a box\nthat says what to do:\n\n [ \"deposit\",  50 ]\n [ \"withdraw\", 30 ]\n [ \"query\", a bird ]"
+    "text": "SALLY'S ACCOUNT\n\n [ Requests, Balance,\n   Owner ]\n\nThe first hole is a NEST.\nMessages land on it one at a\ntime; a robot lifts the top\none off, does what it says,\nand the nest is bare again --\nso the team dozes until the\nnext message comes.\n\nA message says what to do:\n\n [ \"deposit\",  50 ]\n [ \"withdraw\", 30 ]\n [ \"query\", a bird ]"
    },
-   "x": 0.75,
-   "z": 2.15
+   "x": 1.25,
+   "z": 2.28
   },
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nGive the account box to the\nTeller, then drop a request\ninto its first hole. The\nrobot whose thought matches\nthat word does the work and\nsweeps the request away.\n\nThe query one answers on the\nnest marked \"answers\".\n\nA request's bird is swept up\nwith it, so six are laid out\nready. For more, set the\nspare nest down: its egg\nhatches into a bird who\nanswers on the same nest.\n\nThe Owner pad is in every\nthought, so they serve\nSally's account and no\nother."
+    "text": "TO RUN IT\n\nGive the account box to the\nTeller. It waits.\n\nDrop a message on the bird\nmarked \"requests\" and she\ncarries it to the nest. The\nrobot whose thought carries\nthat word wakes, serves it,\nand dozes again.\n\nA query answers on the nest\nmarked \"answers\". Its bird\ngoes with the message, so\nfor more, set the spare nest\ndown: its egg hatches\nanother."
    },
-   "x": 1.35,
-   "z": 2.15
+   "x": -1.35,
+   "z": 1.18
   }
  ],
  "stations": {},

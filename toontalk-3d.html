@@ -977,8 +977,11 @@ function makeBox(n = HOLES) {
   return g;
 }
 
-// Contents scale to the hole they sit in, which now varies with hole count.
-const fitScale = (thing, hole) => ((hole?.w ?? HOLE_W) * 0.94) / (thing.userData.width || 0.3);
+// Contents scale to the hole they sit in, which varies with hole count. Only
+// ever DOWN: a small thing -- a box with no holes, say -- blown up to fill the
+// hole reads as a slab wedged in it rather than as the little thing it is.
+const fitScale = (thing, hole) =>
+  Math.min(1, ((hole?.w ?? HOLE_W) * 0.94) / (thing.userData.width || 0.3));
 // Which hole a click on a box means: the nearest one to the point aimed at.
 function holeUnder(box, point) {
   const hs = (box?.userData.kind === 'box' || box?.userData.kind === 'scale')
@@ -2658,7 +2661,10 @@ function putInHole(hole, thing) {
   thing.quaternion.identity();
   const s = fitScale(thing, hole);
   thing.scale.setScalar(s);
-  thing.position.y = thing.userData.rest * s;
+  // A nest is a shallow ring with nothing under it: left at the pocket floor
+  // it disappears into the shadow and the hole reads as empty. It sits on the
+  // rim instead, where you can see it -- and see what lands on it.
+  thing.position.y = thing.userData.kind === 'nest' ? 0.05 : thing.userData.rest * s;
   if (thing.userData.kind === 'robot') {
     // A robot lies on its back across the hole: rotating it puts its height
     // along the box's depth, which is roomier than a hole is wide. It rests on
@@ -3076,10 +3082,10 @@ const roster = () => (activeBot ? [activeBot, ...activeBot.team] : []);
 // three is a tidy row and a team of twenty is a small crowd.
 function teamSlot(i) {
   const h = homeFor(activeBot);
-  const per = Math.min(7, Math.max(1, roster().length));
-  const col = i % per, row = Math.floor(i / per);
-  return new THREE.Vector3(h.pos.x + (col - (per - 1) / 2) * 0.32, 0,
-                           h.pos.z - 0.5 - row * 0.4);
+  const perFile = 6;                       // a long team folds into more files
+  const back = i % perFile, file = Math.floor(i / perFile);
+  return new THREE.Vector3(h.pos.x + file * 0.45, 0,
+                           h.pos.z - 0.5 - back * 0.34);
 }
 // Show the team standing by, each with its own thought over its head.
 function layoutTeam() {
@@ -3152,7 +3158,7 @@ let autoRunArmed = false;   // set when an erasure may have fixed the mismatch
 // Stop means "finish what you are doing and stand still", not "freeze". The
 // remaining steps of the round run at once so nothing is left half done --
 // a claw full, a box split in two -- and Run picks up from there.
-let stopRequested = false;
+let stopRequested = false, lastStopAt = 0;
 function maybeAutoRun() {
   if (mode !== 'world' || busy || held || !activeBot?.program.length) return;
   const given = stations.stand.occupant;
@@ -4227,7 +4233,12 @@ function userClick(target) {
     return notebookDrop(it, dropped, side, refuse);
   }
   if (target.kind === 'botThing') {
-    const bot = target.bot;
+    let bot = target.bot;
+    // A team has one leader and one work surface: whatever you hand to a
+    // member is handed to the leader instead, and a robot dropped on a member
+    // joins the leader's team rather than starting a team inside a team.
+    const lead = teamLeaderOf(bot);
+    if (lead && lead !== bot && (held || holdingBot)) bot = lead;
     if (holdingBot) {
       if (held.__bot === bot) return;
       return formTeam(bot, held.__bot);
@@ -4748,12 +4759,19 @@ function layoutBenchTeams() {
   for (const t of benchThings) {
     if (t.userData?.kind !== 'robot' || t.__bot === activeBot) continue;
     const lead = t.__bot;
-    if (!lead) continue;
+    if (!lead || !lead.team.length) continue;
+    // A queue, not a row: the leader stands at the front and the rest line up
+    // behind it. If the line would run off the back of the table, the whole
+    // queue -- leader included -- steps forward to make room.
+    const gap = 0.28, depth = gap * lead.team.length;
+    if (t.position.z - depth < BENCH.z0 + 0.12) {
+      t.position.z = Math.min(BENCH.z1 - 0.12, BENCH.z0 + 0.12 + depth);
+    }
     lead.team.forEach((m, i) => {
       const n = m.node;
       if (n === held) return;
       if (n.parent !== benchRoot) benchRoot.add(n);
-      n.position.set(t.position.x + 0.3 * (i + 1), t.position.y, t.position.z);
+      n.position.set(t.position.x, t.position.y, t.position.z - gap * (i + 1));
       n.quaternion.copy(t.quaternion);
       n.scale.setScalar(MINI);
       m.root.position.set(0, 0, 0);
@@ -4762,6 +4780,9 @@ function layoutBenchTeams() {
       keep.add(n);
     });
   }
+  // the robot at the desk has its own queue, kept by layoutTeam -- those nodes
+  // are not the bench's to sweep away
+  if (activeBot) for (const m of activeBot.team) keep.add(m.node);
   for (const n of benchTeamShown) if (!keep.has(n)) n.removeFromParent();
   benchTeamShown.clear();
   keep.forEach(n => benchTeamShown.add(n));
@@ -6102,7 +6123,7 @@ function finishRun(msg) {
   // to the table only when the robot itself leaves the bench.
   parkRobot();
   renderProgram();          // back to the lead robot's own list
-  if (msg) say(msg);
+  if (msg) sayAttn(msg);    // how a run ended replaces whatever stood there
   refreshUI();
 }
 
@@ -6133,7 +6154,7 @@ function setBotScale(bot, v) { bot.root.scale.setScalar(v); }
 function enterWaiting() {
   const bot = activeBot;
   bot.waiting = true;
-  bot.rounds = runCount;          // it resumes with the rounds it had left
+  bot.rounds = runCount;          // what it had done when it dozed off
   waiters.add(bot);
   mode = 'world'; busy = false;
   highlight(-1);
@@ -6184,7 +6205,10 @@ function wakeWaiter(bot) {
     bindBot(bot);
     renderProgram(); rebuildCondition();
   }
-  runCount = bot.rounds;
+  // Its rounds start over. What woke it was a delivery from outside, not a
+  // loop of its own, so counting the whole life of a server object against one
+  // Rounds limit would stop it for no reason a child could see.
+  runCount = 0;
   mode = 'replay'; busy = true;
   enqueue({
     dur: 0.4,
@@ -6389,8 +6413,11 @@ function refreshUI() {
 
 $('exitBtn').onclick = () => { if (!busy) leaveTraining(); };
 $('runBtn').onclick = () => {
-  if (mode === 'replay') { stopRequested = true; fastForward(100000, 4000); refreshUI(); }
-  else runProgram();
+  if (mode === 'replay') {
+    stopRequested = true; lastStopAt = performance.now();
+    fastForward(100000, 4000);
+    refreshUI();
+  } else if (performance.now() - lastStopAt > 500) runProgram();
 };
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
 $('progMin').onclick = () => {
@@ -6634,7 +6661,7 @@ function wiggleTargetOf(t) {
   if (t.kind === 'thing') {
     if (t.thing === held) return null;
     // aimed at a box: the hole the drop would land in answers, not the shell
-    if (held.userData.kind !== 'box' && holesOf(t.thing)) {
+    if ((!held || held.userData.kind !== 'box') && holesOf(t.thing)) {
       const h = holeUnder(t.thing, t.point);
       if (h) return h.thing ?? h.pocket;
     }
