@@ -110,9 +110,13 @@ rather than a counter**:
 - **sorry** — the scale tips right: copy the *not enough money* slip and send
   that instead. The balance is not touched.
 
-With no scale on the desk only *take one* can match, and with one there only
-the three verdicts can, so the team walks through weigh-then-decide without
-any step counter — the scale itself is the state.
+Each verdict robot carries a **tilted scale in its thought bubble**, and a
+thought only matches a scale leaning the same way — so the weighing is the
+decision, and the tilt is what is tested. With no scale on the desk only
+*take one* can match, and with one there only the three verdicts can, so the
+team walks through weigh-then-decide without any step counter: the scale
+itself is the state. Walk in through the door and you can watch the four of
+them hand the floor to one another, one robot per round.
 
 Try the −500 request. Withdrawing *exactly* the balance is allowed (the scale
 balances), which is the boundary worth checking by hand.
@@ -182,10 +186,16 @@ Give the account box to the Teller, then drop a request into its first hole.
 The robot whose thought carries that word does the work and vacuums the
 request away, leaving the hole empty for the next one — **the dispatch is the
 pattern matching**, nothing more. Deposit drops the amount on the balance;
-withdraw turns the amount round first (a "times −1" dropped on it, since the
-amount is whatever it turns out to be); query copies the balance and hands
-the copy to the bird that came with the request, which flies it to the nest
-marked *answers*.
+withdraw does the same but types a minus sign on the amount first, exactly as
+the original does — typing only an operation is remembered as *"make it
+subtract"*, so the robot takes away whatever amount it is handed, not the 30
+it was taught on; query copies the balance and hands the copy to the bird that
+came with the request, which flies it to the nest marked *answers*.
+
+The three robots are a **team**, and you can watch them take turns: the Teller
+stands at the desk and *withdraw* and *query* wait in line behind him, each
+with its own small thought over its head. Drop in a withdrawal and *withdraw*
+walks up, does the work, and steps back.
 
 The Owner pad is part of every thought, so these robots serve Sally's account
 and nobody else's. Rewrite the name on the pad and they all stop recognising

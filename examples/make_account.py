@@ -19,8 +19,8 @@
 #   Deposit  sees [["deposit", any number], any number, "Sally"]
 #            take the amount, drop it on the balance, sweep the request away
 #   Withdraw sees [["withdraw", any number], any number, "Sally"]
-#            the same, but the amount is negated on the way -- a robot types
-#            the minus sign, as you would
+#            the same, but the robot types a minus sign on the amount first,
+#            exactly as you would -- so it subtracts whatever it is given
 #   Query    sees [["query", a bird], any number, "Sally"]
 #            copy the balance, hand the copy to the bird, sweep up
 #
@@ -59,17 +59,13 @@ deposit = robot('deposit', 'deposit', WILD, [
     vac(0),                      # the served request is swept away
 ])
 
-# A withdrawal is a deposit of the opposite. The original types a minus sign
-# on the amount in hand; here the robot turns it round by dropping a "times
-# -1" on it, which works whatever the amount turns out to be.
-spot = lambda i=0: {'c': 's' + str(i), 'path': []}
+# A withdrawal is a deposit that subtracts. The robot takes the amount and
+# types a minus sign on it, exactly as the original does -- typing only an
+# operation is remembered as an operation, so it works for any amount.
 withdraw = robot('withdraw', 'withdraw', WILD, [
-    take(0, 1), {'type': 'put', 'at': spot()},        # the amount, on a work spot
-    {'type': 'newNumber'},
-    {'type': 'setValue', 'value': {'n': '-1', 'd': '1'}, 'op': '*'},
-    {'type': 'put', 'at': spot()},                    # times -1: now it is a debt
-    {'type': 'take', 'at': spot()},
-    put(1),                                           # and that joins the balance
+    take(0, 1),                       # the amount, in hand
+    {'type': 'setOp', 'op': '-'},     # "make it subtract"
+    put(1),                           # dropped on the balance, it takes it away
     vac(0),
 ])
 

@@ -3005,17 +3005,55 @@ function makeMiniRobot() {
   setPick(node, { kind: 'botThing', bot });
   return node;
 }
+// The body that is actually performing. A team's members each have their own
+// robot; the leader owns the team, but whichever member recognises the work
+// is the one that steps up and does it, so the rig follows that one.
+let bodyBot = null;
+function bindBody(bot) {
+  bodyBot = bot;
+  robot = bot.node; root = bot.root;
+  shoulder = bot.parts.shoulder; elbow = bot.parts.elbow;
+  jawA = bot.parts.jawA; jawB = bot.parts.jawB; grip = bot.parts.grip;
+  hipL = bot.parts.hipL; hipR = bot.parts.hipR;
+  kneeL = bot.parts.kneeL; kneeR = bot.parts.kneeR;
+}
+// The whole team, leader first: any of them may be the one performing, so
+// they all need a place in the queue to wait their turn.
+const roster = () => (activeBot ? [activeBot, ...activeBot.team] : []);
+// They line up on the open floor behind the leader -- never out among the
+// stacks -- and the rows are centred on however many there are, so a team of
+// three is a tidy row and a team of twenty is a small crowd.
+function teamSlot(i) {
+  const h = homeFor(activeBot);
+  const per = Math.min(7, Math.max(1, roster().length));
+  const col = i % per, row = Math.floor(i / per);
+  return new THREE.Vector3(h.pos.x + (col - (per - 1) / 2) * 0.32, 0,
+                           h.pos.z - 0.5 - row * 0.4);
+}
+// Show the team standing by, each with its own thought over its head.
+function layoutTeam() {
+  if (offstage() || !worldReady) return;
+  roster().forEach((m, i) => {
+    if (m === bodyBot) return;                 // this one is up at the desk
+    const n = m.node;
+    if (n.parent !== WROOT) WROOT.add(n);
+    n.position.copy(teamSlot(i));
+    n.scale.setScalar(MINI);
+    n.rotation.y = 0;
+    m.root.position.set(0, 0, 0);
+    addMiniBubble(n, m.program.length ? m.condition : null);
+    setPick(n, { kind: 'botThing', bot: m });
+  });
+}
 function bindBot(bot) {
   activeBot = bot;
+  bindBody(bot);
   teamView = 0;
   bot.home ??= HOME;
   bot.stand ??= defaultStand;
   stations.stand = bot.stand;      // a robot works at its own desk
-  robot = bot.node; root = bot.root;
-  shoulder = bot.parts.shoulder; elbow = bot.parts.elbow;
-  jawA = bot.parts.jawA; jawB = bot.parts.jawB; grip = bot.parts.grip;
-  hipL = bot.parts.hipL; hipR = bot.parts.hipR; kneeL = bot.parts.kneeL; kneeR = bot.parts.kneeR;
   program = bot.program; condition = bot.condition;
+  layoutTeam();
 }
 // condition gets reassigned (not mutated), so write it back whenever it changes
 function syncBot() {
@@ -4602,9 +4640,15 @@ function activateBot(bot, after) {
 // The active robot shrinks and steps onto the table by itself, making room
 // for another. Unlike miniaturizeActive it never touches your hand -- you are
 // already carrying the thing you meant to hand over.
+function hideTeam(bot) {
+  (bot?.team ?? []).forEach(m => { if (m !== bot) m.node.removeFromParent(); });
+  if (bot) addMiniBubble(bot.node, bot.program.length ? bot.condition : null);
+}
 function parkActiveAside() {
   const bot = activeBot;
   if (!bot) return;
+  restoreLeaderBody(bot);
+  hideTeam(bot);
   cancelWaiting(bot);
   clearUndo();
   syncBot();
@@ -4632,9 +4676,22 @@ function parkActiveAside() {
   }));
 }
 // The active robot shrinks into the user's hand, keeping all its training.
+// Whoever was performing steps back so the leader is the one you pick up.
+function restoreLeaderBody(bot) {
+  if (!bot || bodyBot === bot) return;
+  bot.node.position.set(0, 0, 0);
+  bot.node.scale.setScalar(1);
+  bot.node.rotation.y = 0;
+  addMiniBubble(bot.node, null);      // the big thought is the leader's again
+  bindBody(bot);
+  parkRobot();
+  layoutTeam();                       // and whoever was performing rejoins the queue
+}
 function miniaturizeActive() {
   if (!activeBot || busy || mode !== 'world') return;
   const bot = activeBot;
+  restoreLeaderBody(bot);
+  hideTeam(bot);
   cancelWaiting(bot);
   clearUndo();
   syncBot();
@@ -4675,6 +4732,7 @@ function formTeam(leader, follower) {
   flash(leader.node.getWorldPosition(new THREE.Vector3())
     .add(new THREE.Vector3(0, 1.4 * leader.node.scale.x, 0)));
   say(`A team of ${leader.team.length + 1} — each waits for something it recognises.`);
+  if (leader === activeBot) layoutTeam();
   renderProgram(); refreshUI();
 }
 
@@ -4705,7 +4763,11 @@ function go(step) {
   // typing is recorded as its own step, just before whatever it applies to
   if (step.type === 'put' && held && held.userData.kind === 'number') {
     const v = held.userData.value, o = held.userData.op;
-    if (!ratEq(v, valueAtPickup) || o !== opAtPickup) record({ type: 'setValue', value: v, op: o });
+    // Typing digits fixes a value; typing only an operation must NOT, or a
+    // robot shown "take 30, make it minus" would remember "make it -30" and
+    // be useless on any other amount. The operation alone is a step of its own.
+    if (!ratEq(v, valueAtPickup)) record({ type: 'setValue', value: v, op: o });
+    else if (o !== opAtPickup) record({ type: 'setOp', op: o });
   }
   if (step.type === 'put' && held && held.userData.kind === 'box') {
     const n = held.userData.holes.length;
@@ -4729,6 +4791,13 @@ function runStep(step) {
   else if (step.type === 'vacuum') actionVacuum(step.at);
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); } });
+  } else if (step.type === 'setOp') {
+    enqueue({
+      dur: 0.35,
+      start() { if (held?.setOp) { held.setOp(step.op); flash(held.getWorldPosition(new THREE.Vector3())); } },
+      update(t) { if (held) held.scale.setScalar(1 + 0.2 * Math.sin(Math.PI * t)); },
+      end() { if (held) held.scale.setScalar(1); refreshUI(); },
+    });
   } else if (step.type === 'setValue') {
     enqueue({
       dur: 0.4,
@@ -5742,12 +5811,53 @@ function nextIteration() {
   runCount++;
   teamView = states.indexOf('yes');      // the panel follows whoever is running
   renderProgram();
+  takeTheFloor(member);                  // and so does the floor
   member.program.forEach((step, i) => {
     enqueue(doNow(() => highlight(i)));
     runStep(step);
   });
   enqueue(pause(0.25), doNow(nextIteration));
 }
+// A team takes turns in the open: the member that recognises the work walks
+// up to the desk and the one standing there steps back into the queue. The
+// leader is still the robot you gave the work to -- only the body changes.
+function takeTheFloor(member) {
+  if (member === bodyBot || offstage()) { bodyBot = member; return; }
+  const out = bodyBot;
+  const outIdx = roster().indexOf(out);      // the leader has a slot too
+  const outSlot = outIdx >= 0 ? teamSlot(outIdx) : null;
+  const inNode = member.node, inFrom = inNode.position.clone();
+  if (inNode.parent !== WROOT) WROOT.add(inNode);
+  addMiniBubble(inNode, null);            // the big bubble speaks for it now
+  enqueue({
+    dur: 0.45,
+    update(t) {
+      const e = ease(t);
+      inNode.scale.setScalar(lerp(MINI, 1, e));
+      inNode.position.lerpVectors(inFrom, ZERO3, e);
+      if (out && outSlot) {
+        out.node.scale.setScalar(lerp(1, MINI, e));
+        out.node.position.lerpVectors(ZERO3, outSlot, e);
+      }
+    },
+    end() {
+      inNode.scale.setScalar(1);
+      inNode.position.set(0, 0, 0);
+      if (out && outSlot) {
+        out.node.scale.setScalar(MINI);
+        out.node.position.copy(outSlot);
+        out.root.position.set(0, 0, 0);
+        addMiniBubble(out.node, out.program.length ? out.condition : null);
+        setPick(out.node, { kind: 'botThing', bot: out });
+      }
+      bindBody(member);
+      member.node.rotation.y = 0;
+      parkRobot();
+      refreshUI();
+    },
+  });
+}
+const ZERO3 = new THREE.Vector3();
 // A run must never end with something stuck in the claw: it would sit there
 // invisible to the next run and make the pad look empty.
 // A gently spread series of bench spots, so repeated automatic placements do
@@ -5771,6 +5881,10 @@ function finishRun(msg) {
   highlight(-1);
   mode = 'world';
   stowHeld();
+  if (activeBot && bodyBot !== activeBot) {
+    restoreLeaderBody(activeBot);
+    layoutTeam();
+  }
   clearScratch();
   // the given STAYS on the desk -- as in ToonTalk, a robot that stops just
   // stops; loosen a red part or raise Rounds and it can go again. It returns
@@ -5932,6 +6046,9 @@ function describe(s) {
            : s.at.c === 'in' ? 'put it on the copier'
            : s.at.c === 'given' ? 'drop it on what it was given'
            : `set it down on ${containerText(s.at.c)}`)
+       : s.type === 'setOp' ? ({ '+': 'make it add', '-': 'make it subtract',
+           '*': 'make it multiply', '/': 'make it divide',
+           '^': 'make it raise to a power' })[s.op] ?? `make it ${s.op}`
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
