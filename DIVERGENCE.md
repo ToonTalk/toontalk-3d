@@ -15,10 +15,12 @@ Update this file as decisions are made.
 ## Numbers
 
 - Drop combines, target modified, dropped pad consumed — **SAME**.
-- Ops: we have `+ - * / ^`. Original also has `=` (assignment), `%`
-  (remainder), `& | ~` (bitwise), and **operation-only pads** (Backspace a
-  number away and the bare operation remains; operations concatenate on one
-  pad). — **GAP** (`=` and `%` are the useful ones; op-only pads are elegant).
+- Ops: `+ - * / ^`, and since 2026-08-20 **`mod` and `set`** — **DONE**, the
+  original's `%` and `=` under names a child can read. An operation need not be
+  one character: type the letters onto a held number and it takes the word as
+  soon as it is complete. `& | ~` (bitwise) and **operation-only pads**
+  (Backspace the digits away and the bare operation remains) — **GAP**; the
+  `setOp` step is half of the latter already.
 - Exact rationals, huge integers, ellipsised digits — **SAME** (theirs
   inspired ours).
 - Five faces showing English / scientific / decimal forms with repetend bars —
@@ -43,9 +45,13 @@ Update this file as decisions are made.
   (2026-08-19; our flavour spends the number and keeps both parts' contents).
 - Zero-hole boxes — **DONE** (2026-08-19; type 0 on a held box; joining a
   0-hole box adds nothing and spends the husk).
-- Conversions onto a blank box: text → one character per hole; robot team →
-  one robot per hole; notebook → one page per hole (and box → blank notebook
-  the other way) — **GAP** (low priority, very ToonTalk).
+- Conversions: **text → one character per hole**, and a box of pads poured onto
+  a blank pad → the word — **DONE** (2026-08-20). An EMPTY box is a mould; a box
+  with anything in it stays a container, so nothing surprises you.
+  **Robot team → one robot per hole is deliberately NOT done**: dropping a robot
+  into a hole is how a program carries a spare team (fibonacci-recursive,
+  reverse), and that gesture must go on meaning that. Notebook ↔ box — **GAP**
+  (low priority).
 - Hole labels exist and matching ignores them — **SAME**.
 - Blank box matches any size — **SAME** (`anyBox`).
 
@@ -56,8 +62,10 @@ Update this file as decisions are made.
   shared guid; the C++ confirms the original also keyed nests by GUID).
 - Original birds accept only "rectangular" items (pads, boxes, pictures);
   ours carry anything, rooms included — **KEEP**.
-- **Nest merging**: drop nest on nest, deliveries redirect to the survivor —
-  **GAP** (cheap with guids: merging = adopting the other guid).
+- **Nest merging**: drop nest on nest — **DONE** (2026-08-20). The pile of the
+  one you are holding joins the pile below it and the survivor gains the
+  other's guid as an *alias*, so the birds of both go on delivering without
+  knowing anything changed. Aliases travel in save files.
 - Save a bird alone → she gets a new nest; save a nest alone → fresh egg —
   **SAME** in spirit (our notebook lone-copy rules).
 - Robot facing a bare nest waits until covered — **SAME**; ours shows it by
@@ -67,9 +75,11 @@ Update this file as decisions are made.
 
 - Positional hole addressing, re-run while matching, team pass-along, Escape/
   leave to end training — **SAME**.
-- A robot in a thought bubble originally matches only a robot *with the same
-  name* until erased; ours always reads "a robot" — **UNDECIDED** (named
-  matching is more expressive; ours is simpler).
+- A robot in a thought bubble matches only a robot with the **same name and
+  the same lesson** — **DONE** (2026-08-20, the project owner's rule). Ruby
+  erases it to "a robot — any one", and again to "anything". The lesson is
+  compared as its recorded steps, so two robots taught the same moves are the
+  same robot as far as a thought is concerned.
 - "If a robot vacuums up the box he's working on the team stops for good" —
   **UNDECIDED** (we currently abort the step).
 - Our extras: the bubble hands out a copy of the training object; robots
@@ -110,10 +120,12 @@ Update this file as decisions are made.
   whose box still holds live houses (reverse's own) sweeps a smaller thing
   instead — its bird.
 - The original's truck can carry a **notebook**, and `reverse.tt` uses that as
-  a module system: it writes a name on a text pad, drops it on the notebook to
-  look the append team up, and puts what it finds in the truck. Ours carries a
-  spare team in a hole of the work box instead — **GAP** (robot-side notebook
-  lookup by name), worked around.
+  a module system. **DONE** (2026-08-20) in our own form: the workshop's
+  notebook is *furniture*, like the stacks and the table — it survives loading
+  a world — and robots can address it as a container. A robot fetches a blank
+  pad, writes a name on it (the new `setText` step), drops it on the notebook
+  to open it there, and takes a copy off the page: `take {c:'notebook',
+  path:[1]}`. That is a module system, and it is how one program uses another.
 
 ## Magic Wand & Pumpy
 
@@ -140,7 +152,8 @@ Update this file as decisions are made.
 - Filing, text/number navigation, Dusty-only removal, main-notebook
   persistence, blank first page holding a blank notebook — **SAME**.
 - Robots may not touch the original's main notebook (it is shared); ours lets
-  robots file — **UNDECIDED**.
+  robots file AND look up — **KEEP** (2026-08-20). A shared library a robot can
+  read is what makes one program able to use another by name.
 - Retrieval gives a copy (manual is silent; we chose copy) — **KEEP**.
 
 ## Scales
@@ -155,7 +168,9 @@ Update this file as decisions are made.
   verdict trains a tilt condition ("a scale tipping left / right / a
   balanced scale"), contents ignored; Ruby erases it to "any scale". The
   bubble shows the scale frozen mid-tip.
-- Text comparison (alphabetical) — **GAP** alongside tilt matching.
+- Text comparison (alphabetical) — **DONE** (2026-08-20): two pads on a scale
+  weigh by alphabetical order, the later word being the heavier, and case is
+  not weight, so "Apple" and "apple" balance.
 
 ## Sensors & randomness
 

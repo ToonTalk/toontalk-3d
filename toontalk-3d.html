@@ -365,7 +365,20 @@ function sfx(name) {
 // --- exact rational arithmetic --------------------------------------------
 // Division has to produce something honest, so numbers are BigInt fractions
 // kept in lowest terms rather than floats.
-const OPS = ['+', '-', '*', '/', '^'];
+// Two of these have names rather than signs: nothing says an operation has to
+// be one character, and "mod" and "set" say what they do to a child who has
+// never met % or :=. You type the word onto a number just as you type digits.
+const OPS = ['+', '-', '*', '/', '^', 'mod', 'set'];
+const OP_TELLS = {
+  '+': 'Dropped on a number, this one adds to it.',
+  '-': 'Dropped on a number, this one takes itself away.',
+  '*': 'Dropped on a number, this one multiplies it.',
+  '/': 'Dropped on a number, this one divides it.',
+  '^': 'Dropped on a number, this one raises it to that power.',
+  'mod': 'Dropped on a number, this one leaves what is left over.',
+  'set': 'Dropped on a number, this one replaces it, whatever it was.',
+};
+const OP_WORDS = { mod: 'mod', set: 'set' };
 // Each operation gets its own colour and badge so what a number will *do* is
 // readable at a glance, not just from a small corner glyph.
 const OP_STYLE = {
@@ -374,6 +387,8 @@ const OP_STYLE = {
   '*': { ink: '#5b1a8f', edge: '#8028c0', face: '#e9ddf7', shell: 0xdccff0, glyph: '×' },
   '/': { ink: '#0e6b50', edge: '#14957c', face: '#d9f0e5', shell: 0xcdead9, glyph: '÷' },
   '^': { ink: '#8a5410', edge: '#c08a1a', face: '#f7ecd2', shell: 0xf0e0b8, glyph: '^' },
+  'mod': { ink: '#7a4a00', edge: '#a86a10', face: '#f7eddb', shell: 0xf0e3c8, glyph: 'mod' },
+  'set': { ink: '#2f2f38', edge: '#5a5a68', face: '#eceef2', shell: 0xdfe2e8, glyph: 'set' },
 };
 // Numbers are unbounded BigInts as in ToonTalk; the only limit is a guard so a
 // runaway `^` cannot lock the browser building a million-digit result. The
@@ -403,6 +418,14 @@ function applyOp(a, op, b) {
   else if (op === '-') r = rat(a.n * b.d - b.n * a.d, a.d * b.d);
   else if (op === '*') r = rat(a.n * b.n, a.d * b.d);
   else if (op === '/') r = rat(a.n * b.d, a.d * b.n);          // null if b is 0
+  else if (op === 'mod') {
+    // what is left over: only whole numbers have a remainder
+    if (a.d !== 1n || b.d !== 1n || b.n === 0n) return null;
+    let m = a.n % b.n;
+    if (m !== 0n && (m < 0n) !== (b.n < 0n)) m += b.n;   // the sign follows the divisor
+    r = rat(m);
+  }
+  else if (op === 'set') r = rat(b.n, b.d);              // it simply becomes that
   else if (op === '^') {
     if (b.d !== 1n) return null;                                // integer powers only
     let e = b.n;
@@ -770,7 +793,7 @@ function makeNumber(value, op = '+', lite = false) {
     c.beginPath(); c.arc(54, 54, 30, 0, Math.PI * 2);
     c.fillStyle = st.ink; c.fill();
     c.fillStyle = st.face;
-    c.font = 'bold 42px Georgia, serif';
+    c.font = `bold ${st.glyph.length > 1 ? 26 : 42}px Georgia, serif`;
     c.fillText(st.glyph, 54, 57);
     face.tex.needsUpdate = true;
   };
@@ -1244,11 +1267,14 @@ function notebookDrop(nb, incoming, side, refuse) {
     say(`Opened to page ${i + 1}.`);
     refreshUI();
   };
-  if (k === 'text' && incoming.userData.text && mode === 'world') {
+  // A written name opens the notebook at what it names -- for a robot exactly
+  // as for you, since looking a program up by name is how one program uses
+  // another. The pad comes back to your hand; a robot's goes on a work spot.
+  if (k === 'text' && incoming.userData.text) {
     const q = incoming.userData.text.toLowerCase();
     const i = ud.pages.findIndex(r => recWords(r).toLowerCase().includes(q));
     if (i < 0) return refuse(`No page mentions “${incoming.userData.text}”.`);
-    return navigate(i, true);
+    return navigate(i, mode === 'world');
   }
   if (k === 'number' && incoming.userData.value.d === 1n && mode === 'world') {
     const n = Number(incoming.userData.value.n);
@@ -2057,15 +2083,20 @@ function inScene(o) {
   while (p.parent) p = p.parent;
   return p === scene;
 }
+// A merged nest answers to its own name and to the names of every nest folded
+// into it, so the birds of both keep delivering without knowing anything
+// changed.
+const nestAnswersTo = (n2, guid) =>
+  n2.userData.guid === guid || !!n2.userData.aliases?.includes(guid);
 function findNestByGuid(guid) {
-  return guid ? allNests.find(n2 => n2.userData.guid === guid && inScene(n2)) ?? null : null;
+  return guid ? allNests.find(n2 => nestAnswersTo(n2, guid) && inScene(n2)) ?? null : null;
 }
 // worlds saved before nests had guids link birds by numeric id
 function findNestById(id) {
   return id != null ? allNests.find(n2 => n2.userData.id === id && inScene(n2)) ?? null : null;
 }
 function allNestsByGuid(guid) {
-  return guid ? allNests.filter(n2 => n2.userData.guid === guid && inScene(n2)) : [];
+  return guid ? allNests.filter(n2 => nestAnswersTo(n2, guid) && inScene(n2)) : [];
 }
 function birdDeliver(bird) {
   let nest = bird.__nest;
@@ -2173,11 +2204,18 @@ const allScales = [];
 // null when it has nothing definite to compare.
 function scaleTilt(node) {
   const [a, b] = node.userData.holes.map(h => h.thing);
-  if (a?.userData.kind === 'number' && b?.userData.kind === 'number'
-      && !a.userData.erased && !b.userData.erased) {
+  if (a?.userData.erased || b?.userData.erased) return null;
+  if (a?.userData.kind === 'number' && b?.userData.kind === 'number') {
     const d = a.userData.value.n * b.userData.value.d
             - b.userData.value.n * a.userData.value.d;
     return d > 0n ? 'L' : d < 0n ? 'R' : '=';
+  }
+  // Words weigh too: the one later in the alphabet is the heavier. Case is not
+  // weight, so "Apple" and "apple" balance.
+  if (a?.userData.kind === 'text' && b?.userData.kind === 'text') {
+    const c = (a.userData.text || '').localeCompare(b.userData.text || '',
+      undefined, { sensitivity: 'base', numeric: true });
+    return c > 0 ? 'L' : c < 0 ? 'R' : '=';
   }
   return null;
 }
@@ -2241,17 +2279,56 @@ const roots = () => Object.values(stations)
 // A step addresses things as {c, path}: one of the robot's own containers,
 // then a chain of hole indices into whatever sits there. Every container is
 // private to the robot, so an address can never name the user's world.
-const CONTAINER_STATION = { given: 'stand', in: 'copyIn', out: 'copyOut' };
+const CONTAINER_STATION = { given: 'stand', in: 'copyIn', out: 'copyOut',
+  notebook: 'notebook' };
 const containerText = (c) => /^s\d+$/.test(c) ? `spot ${+c.slice(1) + 1}`
-  : ({ given: 'what it was given', in: 'the copier platform', out: 'the copy tray' })[c];
+  : ({ given: 'what it was given', in: 'the copier platform',
+       out: 'the copy tray', notebook: 'the notebook' })[c];
+// The workshop's own notebook is furniture, like the stacks: a robot can drop a
+// name on it to look something up and take a copy of what it finds. That is the
+// original's module system -- reverse.tt writes "append" on a pad, drops it on
+// the notebook, and puts what it finds in the truck.
+const mainNotebook = () =>
+  benchThings.find(t => t.userData?.kind === 'notebook' && t.userData.main) ?? null;
+// One main notebook, restored from this browser. It belongs to the workshop
+// rather than to any world, so loading a world leaves it where it is.
+function ensureMainNotebook() {
+  if (mainNotebook()) return mainNotebook();
+  if (new URLSearchParams(location.search).get('demo')) return null;
+  let rec = null;
+  try { rec = JSON.parse(localStorage.getItem(NB_KEY) || 'null'); } catch {}
+  const nb = makeNotebook(rec ?? { pages: [{ kind: 'notebook', pages: [], page: 0 }], page: 0 });
+  nb.userData.main = true;
+  putOnBench(nb, { x: 0.95, z: BENCH.z0 + 0.28 });
+  return nb;
+}
+const NOTEBOOK_STATION = {
+  id: 'notebook', kind: 'notebook', label: 'the notebook',
+  get occupant() { return mainNotebook(); },
+  get point() {
+    const n = mainNotebook();
+    return n ? n.position.clone() : new THREE.Vector3(0.95, 0, 1.3);
+  },
+  get topY() { return BENCH_TOP; },
+};
 const stationOf = (c) => /^s\d+$/.test(c) ? ensureScratchStation(+c.slice(1))
+  : c === 'notebook' ? NOTEBOOK_STATION
   : stations[CONTAINER_STATION[c]];
 const containerOfStation = (id) => /^s\d+$/.test(id) ? id
   : Object.keys(CONTAINER_STATION).find(c => CONTAINER_STATION[c] === id) ?? null;
 const myThing = () => stations.stand?.occupant ?? null;
 function thingAt(at) {
   let node = stationOf(at.c)?.occupant ?? null;
-  for (const i of at.path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
+  let path = at.path;
+  // the notebook is paged, not holed: hole 1 of "the notebook" is the left page
+  // of whatever it is open at, and what you take is a copy, as it is for you
+  if (at.c === 'notebook' && node && path.length) {
+    const ud = node.userData;
+    const rec = ud.pages[ud.page + path[0]];
+    node = rec ? buildFromRec(rec) : null;
+    path = path.slice(1);
+  }
+  for (const i of path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
   // `nest: true` addresses the top of the pile on the nest found there; if a
   // bare thing sits where the nest was expected, that thing itself is taken
   if (at.nest) {
@@ -2357,7 +2434,11 @@ function thingFromCond(c) {
   if (!c) return null;
   if (c.kind === 'anyBird') return makeBird(null);
   if (c.kind === 'anyNest') { const n = makeNest(); n.__egg.removeFromParent(); n.userData.hasEgg = false; return n; }
-  if (c.kind === 'anyRobot') return makeMiniRobot();
+  if (c.kind === 'anyRobot' || c.kind === 'robot') {
+    const n = makeMiniRobot();
+    if (c.name) { n.__bot.name = c.name; paintBotName(n.__bot); }
+    return n;
+  }
   if (c.kind === 'anyRoom') return makeRoom();
   if (c.kind === 'wildDie' || c.kind === 'die') return makeDie(c.faces ?? 6);
   if (c.kind === 'scaleTilt') return makeScale();
@@ -2437,6 +2518,13 @@ function hasRobot(thing) {
   if (thing.userData.kind === 'robot') return true;
   return !!holesOf(thing)?.some(h => hasRobot(h.thing));
 }
+// A robot in a thought bubble is not "some robot": it is a robot with that
+// name and that lesson, the way the original reads it. Erase it once with Ruby
+// and it becomes "any robot". The lesson is compared as its recorded steps --
+// two robots taught the same moves are the same robot as far as a thought is
+// concerned, whoever made them.
+const botSig = (bot) => JSON.stringify((bot?.program ?? []).map(stepOut));
+const robotCond = (bot) => ({ kind: 'robot', name: bot?.name ?? null, sig: botSig(bot) });
 // A condition never stores a live reference: a given bird means "a bird".
 function condFromSpec(sp) {
   if (!sp) return null;
@@ -2448,7 +2536,7 @@ function condFromSpec(sp) {
       return pile.length ? condFromSpec(specOf(pile[pile.length - 1])) : { kind: 'anyNest' };
     }
     return k === 'bird' ? { kind: 'anyBird' }
-      : k === 'robot' ? { kind: 'anyRobot' }
+      : k === 'robot' ? robotCond(sp.node.__bot)
       : k === 'room' ? { kind: 'anyRoom' } : WILD;
   }
   if (sp.kind === 'scale' && sp.tilt) return { kind: 'scaleTilt', tilt: sp.tilt };
@@ -2494,10 +2582,16 @@ function matchState(cond, spec) {
     }
     if (cond.kind === 'anyBird') return k === 'bird' ? 'yes' : 'no';
     if (cond.kind === 'anyRobot') return k === 'robot' ? 'yes' : 'no';
+    if (cond.kind === 'robot') {
+      if (k !== 'robot') return 'no';
+      const bot = spec.node.__bot;
+      return (bot?.name ?? null) === (cond.name ?? null) && botSig(bot) === cond.sig
+        ? 'yes' : 'no';
+    }
     if (cond.kind === 'anyRoom') return k === 'room' ? 'yes' : 'no';
     return 'no';                        // 'wild' already matched above
   }
-  if (cond.kind === 'anyBird' || cond.kind === 'anyNest'
+  if (cond.kind === 'anyBird' || cond.kind === 'anyNest' || cond.kind === 'robot'
       || cond.kind === 'anyRobot' || cond.kind === 'anyRoom') return 'no';
   if (cond.kind === 'wildNumber') return spec.kind === 'number' ? 'yes' : 'no';
   if (cond.kind === 'anyBox') return spec.kind === 'box' ? 'yes' : 'no';
@@ -2535,7 +2629,10 @@ function condText(c) {
   if (c.kind === 'wild') return 'anything';
   if (c.kind === 'anyBird') return 'a bird';
   if (c.kind === 'anyNest') return 'a nest';
-  if (c.kind === 'anyRobot') return 'a robot';
+  if (c.kind === 'anyRobot') return 'a robot — any one';
+  if (c.kind === 'robot') {
+    return c.name ? `the robot “${c.name}”` : 'a robot that has learned those very steps';
+  }
   if (c.kind === 'anyRoom') return 'a room';
   if (c.kind === 'wildNumber') return 'any number';
   if (c.kind === 'text') return `the text “${c.text}”`;
@@ -2575,6 +2672,7 @@ function eraseAt(cond, path) {
     if (cond?.kind === 'box') return { kind: 'anyBox' };
     if (cond?.kind === 'scale' || cond?.kind === 'scaleTilt') return { kind: 'wildScale' };
     if (cond?.kind === 'die') return { kind: 'wildDie' };
+    if (cond?.kind === 'robot') return { kind: 'anyRobot' };
     return WILD;    // a second erase of any wild kind means truly anything
   }
   const [i, ...rest] = path;
@@ -3018,7 +3116,7 @@ function standForPoint(p) {
 
 // ---------------------------------------------------------------- state
 let held = null, mode = 'world', program = [], busy = false;
-let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0;
+let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0, textAtPickup = null;
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
@@ -3510,6 +3608,9 @@ function actionTake(at) {
 // a bare container places it (or combines with what sits there); placing on
 // the copier platform sets the machine going.
 function actionPut(at, side) {
+  if (at.c === 'notebook' && !mainNotebook()) {
+    return enqueue(doNow(() => abort('There is no notebook here to file that in.')));
+  }
   const reach = at.c === 'in' ? POSE.reachHigh : POSE.reach;
   enqueue(walkTo(walkTargetForAt(at)));
   enqueue(armTo(reach, JAW_CLOSED, 0.6));
@@ -3793,11 +3894,62 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   if (incoming.userData.kind === 'notebook') {
     return refuse('Set the notebook down and drop things ON it instead.');
   }
+  // Two nests dropped together become ONE nest: the pile of the one you are
+  // holding joins the pile below it, and the survivor answers to both names --
+  // so every bird of either nest goes on delivering, to here. That is how you
+  // rewire a program that is already running.
+  if (target.userData.kind === 'nest' && incoming.userData.kind === 'nest') {
+    const keep = target.userData, gone = incoming.userData;
+    keep.aliases = [...new Set([...(keep.aliases ?? []), gone.guid,
+                                ...(gone.aliases ?? [])])].filter(g => g && g !== keep.guid);
+    for (const it of gone.pile.slice()) { it.removeFromParent(); keep.pile.push(it); }
+    gone.pile.length = 0;
+    if (!keep.label && gone.label) setThingLabel(target, gone.label);
+    if (gone.hasEgg && !keep.hasEgg && incoming.__egg) hatchNow(incoming);
+    return mergeOnto(incoming, fromWorld, target, () => {
+      const i = allNests.indexOf(incoming);
+      if (i >= 0) allNests.splice(i, 1);
+      keep.pile.forEach(it => { target.add(it); });
+      restackNest(target);
+      nestReceived(target);
+      say('One nest now — it answers to both, so every bird still knows the way.');
+    });
+  }
   if (target.userData.kind === 'bird' || target.userData.kind === 'nest') {
     return refuse('Give things to the bird herself — she delivers to her nest.');
   }
   if (target.userData.kind === 'box' && incoming.userData.kind === 'box') {
     return joinBoxes(target, incoming, refuse, side);
+  }
+  // An EMPTY box is a mould: pour something into it and it takes that thing
+  // apart, one part per hole. A pad becomes its letters, a team becomes its
+  // robots. (A box with anything in it is a container, not a mould, so this
+  // never surprises you.)
+  const emptyBox = target.userData.kind === 'box'
+    && target.userData.holes.every(h => !h.thing);
+  if (emptyBox && incoming.userData.kind === 'text') {
+    const chars = [...(incoming.userData.text ?? '')];
+    if (!chars.length) return refuse('That pad is blank — write on it first.');
+    return mergeOnto(incoming, fromWorld, target, () => {
+      const nb = makeBox(chars.length);
+      chars.forEach((ch, i) => putInHole(nb.userData.holes[i], makeText(ch)));
+      replaceThing(target, nb);
+      say(`One hole per letter — ${chars.length} of them.`);
+    });
+  }
+  // and the other way: a box of letters poured onto a BLANK pad becomes the
+  // word. (A robot is not poured out this way -- dropping a robot into a hole
+  // is how a program carries a spare team, and that must go on meaning that.)
+  if (target.userData.kind === 'text' && !(target.userData.text ?? '')
+      && incoming.userData.kind === 'box' && incoming.userData.holes.length
+      && incoming.userData.holes.every(h => h.thing?.userData.kind === 'text'
+                                         || h.thing?.userData.kind === 'number')) {
+    const word = incoming.userData.holes.map(h => h.thing.userData.kind === 'text'
+      ? h.thing.userData.text : ratText(h.thing.userData.value)).join('');
+    return mergeOnto(incoming, fromWorld, target, () => {
+      target.setText(word);
+      say(`The holes, read straight through: “${word}”.`);
+    });
   }
   // Text pads concatenate; the side of the drop decides the order, exactly as
   // dropping "Talk" on the right of "Toon" makes "ToonTalk" in the original.
@@ -3923,6 +4075,7 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   if (!result) {
     return refuse(op === '/' && incoming.userData.value.n === 0n
       ? 'Nothing can be divided by zero.'
+      : op === 'mod' ? 'A remainder needs two whole numbers, and no dividing by zero.'
       : `That ${op} makes a number too big to hold.`);
   }
   sfx('combine');
@@ -4102,6 +4255,10 @@ function handleClick(target) {
       return refreshUI();
     }
     if (held) return say('Your hand is full.');
+    if (mode === 'training' && nb.userData.main) {
+      // the page it is open at is what the robot will look at when it runs
+      return go({ type: 'take', at: { c: 'notebook', path: [slot - nb.userData.page] } });
+    }
     pushUndo();
     let t = buildFromRec(nb.userData.pages[slot]);
     if (!t) return;
@@ -4379,6 +4536,14 @@ function userClick(target) {
         return handleClick({ kind: 'thing', thing: h.thing, point: target.point });
       }
     }
+    // a nest dropped on a nest folds the two into one -- everything else you
+    // are carrying by the base is simply set down
+    if (held.userData.kind === 'nest' && kind === 'nest') {
+      pushUndo();
+      const dropped = held; held = null;
+      const from = dropped.getWorldPosition(new THREE.Vector3());
+      return combine({ thing: target.thing }, dropped, true, from);
+    }
     if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
       return say('Set it down on the bench.');
     }
@@ -4589,6 +4754,7 @@ function noteHeld() {
   valueAtPickup = held?.userData.value ?? null;
   opAtPickup = held?.userData.op ?? '+';
   holesAtPickup = held?.userData.holes?.length ?? 0;
+  textAtPickup = held?.userData.text ?? null;
 }
 
 // --- the user acting directly (no robot involved) --------------------------
@@ -4966,6 +5132,12 @@ function go(step) {
     const n = held.userData.holes.length;
     if (n !== holesAtPickup) record({ type: 'setHoles', n });
   }
+  // writing on a pad is a step too -- without it a robot could fetch a blank
+  // pad but never a WORD, and a word is how you ask the notebook for something
+  if (step.type === 'put' && held && held.userData.kind === 'text'
+      && (held.userData.text ?? '') !== (textAtPickup ?? '')) {
+    record({ type: 'setText', text: held.userData.text ?? '' });
+  }
   record(step);
   runStep(step);
   refreshUI();
@@ -4989,6 +5161,13 @@ function runStep(step) {
       dur: 0.35,
       start() { if (held?.setOp) { held.setOp(step.op); flash(held.getWorldPosition(new THREE.Vector3())); } },
       update(t) { if (held) held.scale.setScalar(1 + 0.2 * Math.sin(Math.PI * t)); },
+      end() { if (held) held.scale.setScalar(1); refreshUI(); },
+    });
+  } else if (step.type === 'setText') {
+    enqueue({
+      dur: 0.35,
+      start() { if (held?.setText) { held.setText(step.text); flash(held.getWorldPosition(new THREE.Vector3())); } },
+      update(t) { if (held) held.scale.setScalar(1 + 0.15 * Math.sin(Math.PI * t)); },
       end() { if (held) held.scale.setScalar(1); refreshUI(); },
     });
   } else if (step.type === 'setValue') {
@@ -5073,6 +5252,11 @@ function buildCondNode(cond, path, marks) {
     const q = ghostQuestion(0.22);
     q.position.y = 0.48;
     g.add(q);
+  }
+  else if (cond.kind === 'robot') {
+    // a particular robot: it wears its name, and no question mark
+    g = makeMiniRobot();
+    if (cond.name) { g.__bot.name = cond.name; paintBotName(g.__bot); }
   }
   else if (cond.kind === 'anyRoom') {
     g = makeRoom();
@@ -5644,6 +5828,7 @@ function thingOutRaw(t) {
   if (ud.kind === 'nest') {
     return { kind: 'nest', id: ud.id, guid: ud.guid, hasEgg: !!ud.hasEgg,
       label: ud.label ?? undefined,
+      aliases: ud.aliases?.length ? ud.aliases.slice() : undefined,
       pile: ud.pile.map(thingOut) };
   }
   if (ud.kind === 'bird') return { kind: 'bird', nestId: t.__nest?.userData.id ?? null,
@@ -5720,6 +5905,7 @@ function thingInRaw(o, nests, birds) {
       nextId = Math.max(nextId, o.id + 1);
     }
     if (o.guid) t.userData.guid = o.guid;
+    if (o.aliases?.length) t.userData.aliases = o.aliases.slice();
     if (nestGroupPending && o.group) nestGroupPending.push({ node: t, ids: o.group });
   } else if (o.kind === 'bird') {
     t = makeBird(null);
@@ -5794,6 +5980,7 @@ function worldIn(data) {
     if (exitDoor) exitDoor.visible = false;
   }
   clearWorld();
+  ensureMainNotebook();      // your library is furniture, not part of the world
   nestGroupPending = [];
   const nests = new Map(), birds = [];
   (data.bench || []).forEach(b => {
@@ -6291,6 +6478,13 @@ function sayAttn(msg) {
 function highlight(i) { [...$('steps').children].forEach((li, k) => li.classList.toggle('now', k === i)); }
 // Steps only ever name holes of the robot's own object, never places.
 const holeName = (at) => {
+  // the notebook is paged, so its first index is a page, not a hole
+  if (at.c === 'notebook') {
+    if (!at.path.length) return 'the notebook';
+    const rest = at.path.slice(1);
+    const page = `the ${at.path[0] ? 'right' : 'left'} page of the notebook`;
+    return rest.length ? `hole ${rest.map(i => i + 1).join('.')} of ${page}` : page;
+  }
   const base = at.path.length
     ? `hole ${at.path.map(i => i + 1).join('.')} of ${containerText(at.c)}`
     : containerText(at.c);
@@ -6319,7 +6513,9 @@ function describe(s) {
            : `set it down on ${containerText(s.at.c)}`)
        : s.type === 'setOp' ? ({ '+': 'make it add', '-': 'make it subtract',
            '*': 'make it multiply', '/': 'make it divide',
-           '^': 'make it raise to a power' })[s.op] ?? `make it ${s.op}`
+           '^': 'make it raise to a power', 'mod': 'make it leave a remainder',
+           'set': 'make it replace' })[s.op] ?? `make it ${s.op}`
+       : s.type === 'setText' ? (s.text ? `write “${s.text}” on it` : 'wipe it clean')
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
@@ -6406,7 +6602,7 @@ function refreshUI() {
       : kind === 'bird' ? (held.userData.label ? `the bird “${held.userData.label}”` : 'a bird')
       : kind === 'die' ? `a die (1 to ${held.userData.faces})`
       : `${held.userData.label ? `“${held.userData.label}” — ` : ''}a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
-    $('heldTip').textContent = kind === 'number' ? 'digits set it, − negates, * / ^ set what it does'
+    $('heldTip').textContent = kind === 'number' ? 'digits set it, − negates; * / ^ or the words “mod” and “set” say what it does'
       : kind === 'robot' ? 'put it on the table, or on another robot'
       : kind === 'box' ? (held.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
@@ -6667,10 +6863,26 @@ addEventListener('keydown', (e) => {
     pushUndo();
     const op = (e.key === 'x' || e.key === 'X') ? '*' : e.key;
     held.setOp(op);
-    say(`This number will ${ {'+':'add','*':'multiply by','/':'divide by','^':'raise to the power of'}[op] } when you drop it on another.`);
+    opWord = '';
+    say(OP_TELLS[op]);
     refreshUI();
+  } else if (/^[a-zA-Z]$/.test(e.key)) {
+    // An operation may be a WORD. The last few letters you typed are kept, and
+    // as soon as they end in one, the number takes it: type m-o-d and it is a
+    // remainder from the "d".
+    opWord = (opWord + e.key.toLowerCase()).slice(-6);
+    const name = Object.keys(OP_WORDS).find(w => opWord.endsWith(w));
+    if (name) {
+      pushUndo();
+      held.setOp(name);
+      opWord = '';
+      say(OP_TELLS[name]);
+      refreshUI();
+    }
   }
 });
+// the last letters typed onto a held number, while an operation name forms
+let opWord = '';
 // --- scene tooltips ---------------------------------------------------------
 // What a click would mean, phrased for the current mode and what is being held.
 // What a drop would actually land on, for the jiggle: the thing itself, the
@@ -6844,6 +7056,8 @@ function tipFor(t) {
         const o = held.userData.op, hv = ratShort(held.userData.value), tv = ratShort(ud.value);
         return 'Drop to ' + (o === '+' ? `add ${hv} to ${tv}` : o === '-' ? `subtract ${hv} from ${tv}`
           : o === '*' ? `multiply ${tv} by ${hv}` : o === '/' ? `divide ${tv} by ${hv}`
+          : o === 'mod' ? `leave what is left of ${tv} after taking ${hv}s away`
+          : o === 'set' ? `make ${tv} into ${hv}`
           : `raise ${tv} to the power ${hv}`) + '.';
       }
       if (held?.userData.kind === 'die') {
@@ -7117,13 +7331,7 @@ new GLTFLoader().load('robot_v4.glb', (gltf) => {
 
   // the main notebook: restored from this browser, or fresh with a blank
   // notebook filed on its first page (not in the manual's little demo worlds)
-  if (!new URLSearchParams(location.search).get('demo')) {
-    let nbRec = null;
-    try { nbRec = JSON.parse(localStorage.getItem(NB_KEY) || 'null'); } catch {}
-    const mainNb = makeNotebook(nbRec ?? { pages: [{ kind: 'notebook', pages: [], page: 0 }], page: 0 });
-    mainNb.userData.main = true;
-    putOnBench(mainNb, { x: 0.95, z: BENCH.z0 + 0.28 });
-  }
+  ensureMainNotebook();
 
   worldReady = true;
   const demo = new URLSearchParams(location.search).get('demo');
@@ -7482,12 +7690,8 @@ renderer.setAnimationLoop((now) => {
     const sc = allScales[i];
     if (!sc.parent) { allScales.splice(i, 1); continue; }
     if (sc.__tiltLock) continue;      // a bubble scale holds its verdict
-    const [a, b] = sc.userData.holes.map(h => h.thing);
-    let targetTilt = 0;
-    if (a?.userData.kind === 'number' && b?.userData.kind === 'number') {
-      const d = a.userData.value.n * b.userData.value.d - b.userData.value.n * a.userData.value.d;
-      targetTilt = d > 0n ? SCALE_TILT : d < 0n ? -SCALE_TILT : 0;
-    }
+    const say = scaleTilt(sc);        // one rule for what a scale says
+    const targetTilt = say === 'L' ? SCALE_TILT : say === 'R' ? -SCALE_TILT : 0;
     const piv = sc.__pivot;
     piv.rotation.z += (targetTilt - piv.rotation.z) * Math.min(1, dt * 5);
     sc.__pans.forEach(p => { p.rotation.z = -piv.rotation.z; });
