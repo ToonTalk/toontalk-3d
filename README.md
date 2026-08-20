@@ -103,12 +103,14 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   then *any number*, then *anything*. Waking one settles the other, and
   whoever is awake sways and fidgets so there is never any doubt.
 - **Marty the Martian**, the green fellow beside them. Click him and ask
-  anything about the workshop, or say *"show me birds"* and he demonstrates it
-  on your table, using the workshop the way you do. He never builds programs —
-  that part is yours. Inside a Claude artifact he answers with no key; paste an
-  Anthropic API key into his panel (kept in this browser only) and he converses
-  anywhere, seeing what is on your table; with neither, a phrasebook still
-  picks the right demonstration.
+  anything about the workshop, or say *"show me birds"* and he walks over and
+  demonstrates it on your table, one narrated step per click of **Next** — and
+  when an answer of his suggests a demo, you get a *Show me* button, never a
+  surprise performance. He never builds programs — that part is yours. Inside a
+  Claude artifact he answers with no key; anywhere else pick a brain in his
+  panel — Claude, ChatGPT or Gemini, and the model — and paste that provider's
+  key (kept in this browser only). Without one, his replies are canned lines
+  from a phrasebook that picks the right demonstration, and the panel says so.
 
 ### The robots
 

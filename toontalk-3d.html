@@ -7849,6 +7849,11 @@ function makeMarty() {
     const arm = new THREE.Mesh(geo('CylinderGeometry', 0.02, 0.025, 0.22, 8), green);
     arm.position.set(0.17 * sx, 0.38, 0); arm.rotation.z = 0.5 * sx; arm.castShadow = true; g.add(arm);
   }
+  const mouth = new THREE.Mesh(geo('TorusGeometry', 0.045, 0.009, 8, 14, Math.PI), dark);
+  mouth.position.set(0, 0.585, 0.112);
+  mouth.rotation.z = Math.PI;          // the bottom half of the ring: a smile
+  mouth.rotation.x = -0.25;            // following the curve of his face
+  g.add(mouth);
   const ant = new THREE.Mesh(geo('CylinderGeometry', 0.008, 0.008, 0.12, 6), dark);
   ant.position.y = 0.8; g.add(ant);
   const bob = new THREE.Mesh(geo('SphereGeometry', 0.025, 10, 8),
@@ -7864,10 +7869,52 @@ martyNode.position.set(1.85, 0, 2.95);
 martyNode.rotation.y = -0.2;
 scene.add(martyNode);
 pickables.push(martyNode);
+const MARTY_HOME = new THREE.Vector3(1.85, 0, 2.95);
+let martyTarget = null;
+function martyGoTo(v) { martyTarget = v ? v.clone() : null; }
+// Where to stand to present a demo: beside its station, never on top of it,
+// and never under the table.
+function martySpotFor(demo) {
+  let p = null;
+  if (demo.near === 'dusty') p = dustyHome?.clone();
+  else if (demo.near === 'notebook') p = mainNotebook()?.getWorldPosition(new THREE.Vector3());
+  else if (demo.near && stations[demo.near]?.point) p = stations[demo.near].point.clone();
+  if (!p) return null;
+  const away = p.clone().sub(new THREE.Vector3(ARC.cx, 0, ARC.cz)).setY(0);
+  if (away.lengthSq() < 0.01) away.set(0, 0, -1);
+  away.normalize();
+  const side = new THREE.Vector3(-away.z, 0, away.x);
+  const q = p.clone().add(away.multiplyScalar(0.85)).add(side.multiplyScalar(0.6));
+  q.y = 0;
+  if (q.x > BENCH.x0 - 0.25 && q.x < BENCH.x1 + 0.25
+      && q.z > BENCH.z0 - 0.25 && q.z < BENCH.z1 + 0.25) {
+    q.z = BENCH.z1 + 0.5;      // never under the table
+  }
+  return q;
+}
 function advanceMarty(dt) {
   if (!martyNode) return;
   martyT += dt;
   const lively = martyBusyDemo ? 2.2 : 1;
+  if (martyTarget) {
+    const p = martyNode.position;
+    const d = martyTarget.clone().sub(p); d.y = 0;
+    const dist = d.length();
+    if (dist < 0.05) martyTarget = null;
+    else {
+      d.normalize();
+      p.addScaledVector(d, Math.min(dist, dt * 2.4));
+      martyNode.rotation.y = Math.atan2(d.x, d.z);
+    }
+  } else {
+    const home = martyNode.position.distanceTo(MARTY_HOME) < 0.15;
+    const want = home ? -0.2
+      : Math.atan2(0 - martyNode.position.x, 1.2 - martyNode.position.z);
+    let diff = want - martyNode.rotation.y;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    martyNode.rotation.y += diff * Math.min(1, dt * 5);
+  }
   martyNode.position.y = Math.abs(Math.sin(martyT * 2.4 * lively)) * 0.03 * lively;
   martyNode.__antBob.material.emissiveIntensity = 0.5 + 0.4 * Math.sin(martyT * 3);
 }
@@ -7877,7 +7924,7 @@ const _mSt = (id) => handleClick({ kind: 'station', id });
 const _mBench = (x, z) => handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) });
 const _mLast = () => benchThings[benchThings.length - 1];
 const MARTY_DEMOS = {
-  numbers: { blurb: 'numbers: type values, drop to add', steps: [
+  numbers: { blurb: 'numbers: type values, drop to add', near: 'numbers', steps: [
     { say: 'Numbers come off this stack as 1s.', do: () => _mSt('numbers') },
     { say: 'A held number listens to typing — digits make this one 25.', do: () => { held?.setValue?.(rat(25n)); refreshUI(); } },
     { do: () => _mBench(-0.55, 1.5) },
@@ -7886,7 +7933,7 @@ const MARTY_DEMOS = {
     { say: 'Dropped on the 25, it adds. Numbers combine.', do: (c) => handleClick({ kind: 'thing', thing: c.a }) },
     { say: '42! Type − to subtract, * / ^ — or the words “mod” and “set” — to change what a number does.' },
   ] },
-  pads: { blurb: 'text pads: write, join words', steps: [
+  pads: { blurb: 'text pads: write, join words', near: 'texts', steps: [
     { say: 'Text pads are paper for words.', do: () => _mSt('texts') },
     { say: 'Type on a held pad to write on it.', do: () => { held?.setText?.('Toon'); refreshUI(); } },
     { do: () => _mBench(-0.5, 1.55) },
@@ -7897,7 +7944,7 @@ const MARTY_DEMOS = {
         handleClick({ kind: 'thing', thing: c.p, point: pt }); } },
     { say: '…into “ToonTalk”. The side you drop on decides the order.' },
   ] },
-  boxes: { blurb: 'boxes: holes hold anything', steps: [
+  boxes: { blurb: 'boxes: holes hold anything', near: 'boxes', steps: [
     { say: 'Boxes come off this stack.', do: () => _mSt('boxes') },
     { say: 'A digit while holding one sets its holes — three.', do: () => resizeHeldBox(3) },
     { do: () => _mBench(0.0, 1.5) },
@@ -7906,14 +7953,14 @@ const MARTY_DEMOS = {
     { say: 'A hole holds anything — numbers, pads, boxes, even a robot.', do: (c) => handleClick({ kind: 'hole', box: c.b, index: 1 }) },
     { say: 'Drop box on box to join them; drop a box on a whole number to split it there. A box with NO holes is a mould — it takes words and teams apart.' },
   ] },
-  dice: { blurb: 'dice: re-roll a number', steps: [
+  dice: { blurb: 'dice: re-roll a number', near: 'dice', steps: [
     { do: () => _mSt('numbers') },
     { do: () => _mBench(0.3, 1.5) },
     { say: 'Dice hop off their own stack…', do: (c) => { c.n = _mLast(); _mSt('dice'); } },
     { say: '…and dropped on a number, the die re-rolls it: anything from 1 to its faces.', do: (c) => handleClick({ kind: 'thing', thing: c.n }) },
     { say: 'Type a number while holding a die to change how many faces it has. Robots throw them too — that is how programs choose at random.' },
   ] },
-  scales: { blurb: 'scales: compare, and robots match the lean', steps: [
+  scales: { blurb: 'scales: compare, and robots match the lean', near: 'scales', steps: [
     { say: 'A scale is a balance.', do: () => _mSt('scales') },
     { do: () => _mBench(0.0, 1.6) },
     { do: (c) => { c.s = _mLast(); _mSt('numbers'); } },
@@ -7924,7 +7971,7 @@ const MARTY_DEMOS = {
     { say: 'It leans toward the larger — and a robot’s thought can match on the lean.', do: (c) => handleClick({ kind: 'hole', box: c.s, index: 1 }) },
     { say: 'Words weigh too: later in the alphabet is heavier, and “Apple” balances “apple”.' },
   ] },
-  birds: { blurb: 'birds and nests: messages', steps: [
+  birds: { blurb: 'birds and nests: messages', near: 'nests', steps: [
     { say: 'Nests come with an egg.', do: () => _mSt('nests') },
     { say: 'Set one down and the egg hatches into its bird.', do: () => _mBench(0.6, 1.6), hold: 2300 },
     { do: () => _mSt('numbers') },
@@ -7934,7 +7981,7 @@ const MARTY_DEMOS = {
         if (b) handleClick({ kind: 'thing', thing: b }); }, hold: 1200 },
     { say: 'A COPY of a bird delivers to the same nest; a copy of a NEST makes a broadcast — every copy gets the mail. Robots doze on a bare nest until something lands.' },
   ] },
-  robot: { blurb: 'robots: train by doing, then run', trains: true, steps: [
+  robot: { blurb: 'robots: train by doing, then run', trains: true, near: 'minis', steps: [
     { say: 'Robots come off this stack as minis.', do: () => _mSt('minis') },
     { do: () => _mBench(-0.2, 1.6) },
     { do: (c) => { c.bot = _mLast(); _mSt('numbers'); } },
@@ -7947,7 +7994,7 @@ const MARTY_DEMOS = {
     { say: '…to “any number”. And the moment its thought fits, off it goes — three rounds allowed.', do: () => handleClick({ kind: 'cond', path: [] }), hold: 1600 },
     { say: 'Three rounds: 4, 5, 6. Doing the job once taught it; erasing made it general. Drop one trained robot on another to form a team.', do: (c) => { handleClick({ kind: 'ruby' }); maxIter = c.r; } },
   ] },
-  copier: { blurb: 'Mimi the copier', steps: [
+  copier: { blurb: 'Mimi the copier', near: 'copyOut', steps: [
     { do: () => _mSt('numbers') },
     { do: () => { held?.setValue?.(rat(5n)); refreshUI(); } },
     { say: 'Mimi the copier: set anything on her platform…', do: () => handleClick({ kind: 'station', id: 'copyIn' }) },
@@ -7957,7 +8004,7 @@ const MARTY_DEMOS = {
     { do: () => _mBench(0.55, 1.5) },
     { say: 'She copies robots too — training, name and team included. That is how a program copies itself.' },
   ] },
-  dusty: { blurb: 'Dusty removes, Ruby erases', steps: [
+  dusty: { blurb: 'Dusty removes, Ruby erases', near: 'dusty', steps: [
     { do: () => _mSt('texts') },
     { do: () => { held?.setText?.('scrap'); refreshUI(); } },
     { do: () => _mBench(0.2, 1.5) },
@@ -7965,13 +8012,13 @@ const MARTY_DEMOS = {
     { say: 'Dusty awake: click a thing and he vacuums it away.', do: (c) => handleClick({ kind: 'thing', thing: c.v }), hold: 900 },
     { say: 'He also vacuums parts of a robot’s THOUGHT — an emptied part accepts anything. Ruby, beside him, erases in place: a 5 becomes “any number”.', do: () => handleClick({ kind: 'dusty' }) },
   ] },
-  rooms: { blurb: 'rooms: little worlds that work alone', steps: [
+  rooms: { blurb: 'rooms: little worlds that work alone', near: 'rooms', steps: [
     { say: 'Rooms come off this stack.', do: () => _mSt('rooms') },
     { say: 'A room holds a whole little world — drop in a robot, then things for it to work on.', do: () => _mBench(0.0, 1.55) },
     { do: (c) => { c.r = _mLast(); handleClick({ kind: 'roomRoof', room: c.r }); }, hold: 900 },
     { say: 'Click the roof: solid walls to let it work in private — the chimney smokes — or glass to watch. The lever runs it; the door lets you walk inside.', do: (c) => handleClick({ kind: 'roomRoof', room: c.r }) },
   ] },
-  notebook: { blurb: 'the notebook: file, look up by name', steps: [
+  notebook: { blurb: 'the notebook: file, look up by name', near: 'notebook', steps: [
     { do: () => _mSt('numbers') },
     { do: () => { held?.setValue?.(rat(7n)); refreshUI(); } },
     { say: 'Drop anything on the notebook to FILE it.', do: () => { const nb = mainNotebook(); if (nb) handleClick({ kind: 'thing', thing: nb }); } },
@@ -7994,6 +8041,19 @@ const martyIdleWait = () => new Promise((res) => {
     }
   }, 100);
 });
+// A demonstration moves one narrated beat at a time: after each thing Marty
+// says and does, he waits for “Next” — nobody learns from a firehose.
+let martyPendingDemo = null, martyNextResolve = null, martyStopFlag = false;
+function martyOfferDemo(id) {
+  martyPendingDemo = id;
+  martyCtl();
+}
+function martyStopDemo() {
+  martyStopFlag = true;
+  martyPendingDemo = null;
+  if (martyNextResolve) { const r = martyNextResolve; martyNextResolve = null; r(); }
+  martyCtl();
+}
 async function runMartyDemo(id) {
   const demo = MARTY_DEMOS[id];
   if (!demo) return;
@@ -8002,19 +8062,34 @@ async function runMartyDemo(id) {
   if (mode !== 'world' || busy) return martySay('Wait for the robot to finish, then ask me again.');
   if (held) return martySay('Set down what you are holding first, then ask me again.');
   martyBusyDemo = true;
+  martyStopFlag = false;
+  martyPendingDemo = null;
+  martyCtl();
+  martyGoTo(martySpotFor(demo));
   const ctx = {};
   try {
-    for (const step of demo.steps) {
-      if (step.say) { martySay(step.say); say(step.say, 4500); }
+    const steps = demo.steps;
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      if (step.say) { martySay(step.say); say(step.say, 6000); }
       if (step.do) step.do(ctx);
       await martyIdleWait();
       await new Promise(r => setTimeout(r, step.hold ?? (speed === Infinity ? 150 : 600)));
+      if (martyStopFlag) break;
+      if (step.say && i < steps.length - 1) {
+        martyCtl('next');
+        await new Promise(res => { martyNextResolve = res; });
+        martyNextResolve = null;
+        if (martyStopFlag) break;
+      }
     }
   } catch (e) {
     martySay('Hm — that did not go as I meant. (' + e.message + ')');
   } finally {
     martyBusyDemo = false;
     if (mode === 'training') leaveTraining();
+    martyGoTo(MARTY_HOME);
+    martyCtl();
   }
 }
 
@@ -8042,29 +8117,72 @@ const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who l
 Rules for you:
 - Answer in one to three short, warm sentences, for a child or a teacher.
 - NEVER write, design, or plan programs for the visitor, even if they insist. Building it themselves is the whole point. Offer a demonstration of the pieces instead.
-- When showing beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
+- Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
+- When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
 - Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null"}`;
-const MARTY_KEY = 'tt3d.marty-key';
-const MARTY_MODEL = 'claude-sonnet-5';
-let martyHistory = [];
+const MARTY_PROVIDERS = {
+  claude: { label: 'Claude', model: 'claude-sonnet-5' },
+  openai: { label: 'ChatGPT (OpenAI)', model: 'gpt-5' },
+  gemini: { label: 'Gemini', model: 'gemini-2.5-flash' },
+};
+const martyProv = () => localStorage.getItem('tt3d.marty-provider') || 'claude';
+const martyKeyOf = (p) => (localStorage.getItem('tt3d.marty-key.' + p)
+  ?? (p === 'claude' ? localStorage.getItem('tt3d.marty-key') : null) ?? '').trim();
+const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
+  || MARTY_PROVIDERS[p].model).trim();
+// What is behind Marty's eyes right now, in words the panel can show.
+function martyBrainText() {
+  if (window.claude?.complete) return 'the Claude artifact — no key needed';
+  const p = martyProv();
+  return martyKeyOf(p) ? `${MARTY_PROVIDERS[p].label}, model ${martyModelOf(p)}`
+    : 'his phrasebook only — replies are canned lines until you add a key';
+}
+let martyHistory = [], martyToldOffline = false;
 async function martyThink(q) {
   const sys = MARTY_SYSTEM + '\n\nOn the table right now:\n' + martyWorldText();
   if (window.claude?.complete) {
     const lines = martyHistory.map(m => (m.role === 'user' ? 'Visitor: ' : 'Marty: ') + m.content).join('\n');
     return await window.claude.complete(sys + '\n\n' + lines + '\nVisitor: ' + q + '\nReply with ONLY the JSON object.');
   }
-  const key = (localStorage.getItem(MARTY_KEY) || '').trim();
+  const prov = martyProv();
+  const key = martyKeyOf(prov);
   if (!key) return null;
+  const model = martyModelOf(prov);
+  if (prov === 'openai') {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'authorization': 'Bearer ' + key, 'content-type': 'application/json' },
+      body: JSON.stringify({ model,
+        messages: [{ role: 'system', content: sys }, ...martyHistory, { role: 'user', content: q }] }),
+    });
+    if (!res.ok) throw new Error('OpenAI said ' + res.status);
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content ?? '';
+  }
+  if (prov === 'gemini') {
+    const contents = [
+      ...martyHistory.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] })),
+      { role: 'user', parts: [{ text: q }] },
+    ];
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/'
+        + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key), {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: sys }] }, contents }),
+    });
+    if (!res.ok) throw new Error('Gemini said ' + res.status);
+    const data = await res.json();
+    return (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+  }
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
-    body: JSON.stringify({ model: MARTY_MODEL, max_tokens: 300, system: sys,
+    body: JSON.stringify({ model, max_tokens: 300, system: sys,
       messages: [...martyHistory, { role: 'user', content: q }] }),
   });
-  if (!res.ok) throw new Error('the API said ' + res.status);
+  if (!res.ok) throw new Error('Claude said ' + res.status);
   const data = await res.json();
   return (data.content || []).map(c => c.text || '').join('');
 }
@@ -8094,7 +8212,14 @@ async function askMarty(q) {
   try { reply = await martyThink(q); }
   catch (e) { martySay('I could not reach the mothership — ' + e.message + '. Check the key in my panel?'); return; }
   let text = null, demo = null;
-  if (reply == null) { const off = martyOffline(q); text = off.say; demo = off.demo; }
+  if (reply == null) {
+    const off = martyOffline(q);
+    text = off.say; demo = off.demo;
+    if (!martyToldOffline) {
+      martyToldOffline = true;
+      text += ' (That was a canned line from my phrasebook, not a real answer — see “How Marty thinks” to give me a brain.)';
+    }
+  }
   else {
     try {
       const m = reply.match(/\{[\s\S]*\}/);
@@ -8106,7 +8231,7 @@ async function askMarty(q) {
                     { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null }) });
   if (martyHistory.length > 12) martyHistory = martyHistory.slice(-12);
   if (text) martySay(text);
-  if (demo && MARTY_DEMOS[demo]) runMartyDemo(demo);
+  if (demo && MARTY_DEMOS[demo]) martyOfferDemo(demo);
 }
 
 // --- his panel --------------------------------------------------------------
@@ -8120,14 +8245,23 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<b style="color:#7fe09a">Marty the Martian</b><span style="flex:1"></span>'
   + '<button id="martyClose" title="Close" style="background:none;border:none;color:#9fb0c8;cursor:pointer;font-size:15px">\u2715</button></div>'
   + '<div id="martyLog" style="max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>'
+  + '<div id="martyCtl" style="display:none;gap:6px;margin-bottom:8px"></div>'
   + '<form id="martyForm" style="display:flex;gap:6px">'
   + '<input id="martyIn" autocomplete="off" placeholder="Ask, or \u201cshow me birds\u201d\u2026" '
   + 'style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit">'
   + '<button style="background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer">Ask</button></form>'
   + '<details style="margin-top:8px;color:#9fb0c8"><summary style="cursor:pointer">How Marty thinks</summary>'
-  + '<div style="margin-top:6px">Inside a Claude artifact he needs no key at all. Anywhere else, paste an Anthropic '
-  + 'API key (it stays in this browser) \u2014 or leave it empty and he uses his phrasebook of demonstrations.</div>'
-  + '<input id="martyKey" type="password" placeholder="sk-ant-\u2026" '
+  + '<div id="martyMode" style="margin-top:6px;color:#cdd8e8"></div>'
+  + '<div style="margin-top:6px">Without a key (and outside a Claude artifact) his replies are <b>canned lines from a '
+  + 'phrasebook</b> \u2014 he can pick the right demonstration, but he is not really answering. For real conversation, '
+  + 'choose a brain and paste its API key; the key is kept only in this browser. Inside a Claude artifact he needs no '
+  + 'key at all.</div>'
+  + '<div style="display:flex;gap:6px;margin-top:6px">'
+  + '<select id="martyProv" style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
+  + '<option value="claude">Claude</option><option value="openai">ChatGPT (OpenAI)</option><option value="gemini">Gemini</option></select>'
+  + '<input id="martyModel" placeholder="model" '
+  + 'style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;min-width:0"></div>'
+  + '<input id="martyKey" type="password" placeholder="API key\u2026" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '</details>';
 document.body.appendChild(martyUI);
@@ -8141,6 +8275,37 @@ function martySay(text, who = 'marty') {
   log.appendChild(line);
   log.scrollTop = log.scrollHeight;
 }
+// The row under the log: an offered demonstration, or Next/Stop mid-demo.
+function martyCtl(state) {
+  const el = document.getElementById('martyCtl');
+  const btn = (label, fn, primary) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.style.cssText = (primary
+      ? 'background:#2f6b43;color:#eafff0;'
+      : 'background:#2b3546;color:#cdd8e8;')
+      + 'border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit';
+    b.onclick = fn;
+    return b;
+  };
+  el.innerHTML = '';
+  if (martyBusyDemo) {
+    const n = btn('Next \u25b8', () => { if (martyNextResolve) { const r = martyNextResolve; martyNextResolve = null; r(); martyCtl(); } }, true);
+    if (state !== 'next') { n.disabled = true; n.style.opacity = 0.45; n.style.cursor = 'default'; }
+    el.appendChild(n);
+    el.appendChild(btn('Stop', martyStopDemo, false));
+    el.style.display = 'flex';
+  } else if (martyPendingDemo) {
+    el.appendChild(btn('\u25b8 Show me: ' + martyPendingDemo, () => runMartyDemo(martyPendingDemo), true));
+    el.style.display = 'flex';
+  } else {
+    el.style.display = 'none';
+  }
+}
+function martyModeLine() {
+  const el = document.getElementById('martyMode');
+  if (el) el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
+}
 let martyGreeted = false;
 function toggleMartyPanel() {
   const on = martyUI.style.display === 'none';
@@ -8150,25 +8315,49 @@ function toggleMartyPanel() {
     martySay('Hi! I\u2019m Marty. Ask me anything about the workshop \u2014 or say \u201cshow me\u201d and one of: '
       + Object.keys(MARTY_DEMOS).join(', ') + '. I never build programs, but I love showing how the pieces work.');
   }
-  if (on) document.getElementById('martyIn').focus();
+  if (on) { martyModeLine(); document.getElementById('martyIn').focus(); }
 }
 document.getElementById('martyClose').onclick = () => { martyUI.style.display = 'none'; };
 {
+  const provEl = document.getElementById('martyProv');
+  const modelEl = document.getElementById('martyModel');
   const keyEl = document.getElementById('martyKey');
-  keyEl.value = localStorage.getItem(MARTY_KEY) || '';
+  const showProv = () => {
+    provEl.value = martyProv();
+    modelEl.value = martyModelOf(provEl.value);
+    keyEl.value = martyKeyOf(provEl.value);
+    martyModeLine();
+  };
+  showProv();
+  provEl.onchange = () => {
+    localStorage.setItem('tt3d.marty-provider', provEl.value);
+    showProv();
+    martySay('Brain: ' + MARTY_PROVIDERS[provEl.value].label
+      + (martyKeyOf(provEl.value) ? '.' : ' \u2014 it still needs its key.'));
+  };
+  modelEl.onchange = () => {
+    const v = modelEl.value.trim();
+    if (v) localStorage.setItem('tt3d.marty-model.' + provEl.value, v);
+    else localStorage.removeItem('tt3d.marty-model.' + provEl.value);
+    showProv();
+  };
   keyEl.onchange = () => {
-    if (keyEl.value.trim()) localStorage.setItem(MARTY_KEY, keyEl.value.trim());
-    else localStorage.removeItem(MARTY_KEY);
-    martySay(keyEl.value.trim() ? 'Key saved in this browser \u2014 now I can really talk.' : 'Key cleared.');
+    const v = keyEl.value.trim();
+    if (v) localStorage.setItem('tt3d.marty-key.' + provEl.value, v);
+    else { localStorage.removeItem('tt3d.marty-key.' + provEl.value);
+           if (provEl.value === 'claude') localStorage.removeItem('tt3d.marty-key'); }
+    martyModeLine();
+    martySay(v ? 'Key saved in this browser \u2014 now I can really talk.' : 'Key cleared \u2014 back to my phrasebook.');
   };
   document.getElementById('martyForm').onsubmit = (ev) => {
     ev.preventDefault();
     const q = document.getElementById('martyIn').value.trim();
     if (!q) return;
     document.getElementById('martyIn').value = '';
-    // "show me X" runs a demonstration directly, whatever backend he has
+    if (martyBusyDemo) martyStopDemo();      // a new question ends the show
+    // "show me X" starts a demonstration directly, whatever brain he has
     const m = q.toLowerCase().match(/^(?:show|demo)(?:\s+me)?\s+(?:the\s+)?(\w+)/);
-    if (m && MARTY_DEMOS[m[1]]) { martySay(q, 'you'); martySay('Watch!'); runMartyDemo(m[1]); return; }
+    if (m && MARTY_DEMOS[m[1]]) { martySay(q, 'you'); martySay('Watch!'); setTimeout(() => runMartyDemo(m[1]), 50); return; }
     askMarty(q);
   };
   // typing in Marty's box must not fall through to the workshop's keys
@@ -8177,7 +8366,12 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   }
 }
 window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_DEMOS),
-                   world: martyWorldText, offline: martyOffline };
+                   world: martyWorldText, offline: martyOffline, offer: martyOfferDemo,
+                   next: () => { if (martyNextResolve) { const r = martyNextResolve; martyNextResolve = null; r(); } },
+                   stop: martyStopDemo, brain: martyBrainText,
+                   get waiting() { return !!martyNextResolve; },
+                   get running() { return martyBusyDemo; },
+                   get pos() { return martyNode.position.toArray().map(v => +v.toFixed(2)); } };
 
 window.__nano = {
   THREE, scene, camera, renderer, stations,
