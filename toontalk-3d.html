@@ -436,9 +436,10 @@ is written here rather than what a model imagines a workshop like this might
 do. If the manual does not say, he is asked to admit he is unsure.
 
 Marty can also speak and listen. The 🔊 button has him read his
-replies aloud, in phrases whose pitch steps about — a Martian does not speak in
-one steady tone. How Marty thinks also lets you pick which of your
-browser's voices he uses. The 🎤 button lets you ask by voice, where the browser
+replies aloud, a little high and quick with a drift between sentences.
+How Marty thinks lets you pick which of your browser's voices he uses
+— the list puts the ones that speak your language first, since a voice meant
+for another language reads English with an accent. The 🎤 button lets you ask by voice, where the browser
 offers a microphone — inside a Claude artifact it does not, so there the button
 simply is not shown.
 
@@ -472,14 +473,23 @@ examples
 folder. Download one and use Import file to load it. The last five
 are ports of Ken Kahn's own ToonTalk 3 programs, move for move.
 
-The sentence factory. A glass room called the Scriptorium holds a team
+Each example is a file in the examples folder, and the file name is worth
+knowing — it is what you will be looking at in the folder, and what to call it
+when asking Marty: sentence-generator, fibonacci and
+fibonacci-recursive, bank-account, grammar,
+account (Sally's), swap, factorial,
+n-to-1 (the counting-down one), append and
+reverse.
+
+The sentence factory (sentence-generator.world.json). A glass room called the Scriptorium holds a team
 of twenty robots that roll dice to pick words, join text pads into sentences,
 and hand each one to a bird who flies it out to a nest on your table. Pull the
 room's lever and the nest fills with lines like "the frog dreams of the
 witch." Every mechanism in it is one from this manual: dice for the choice,
 team matching for the branch, pads for the words, a bird for the stream.
 
-Fibonacci. Two of them: one that counts the leaves of the call
+Fibonacci (fibonacci.world.json and
+fibonacci-recursive.world.json). Two of them: one that counts the leaves of the call
 tree, and one written exactly as the definition reads — answer 1 for 1 and 2,
 otherwise ask fib(n−1) and fib(n−2) and answer their sum, with each call
 getting its own house, its own nest and its own bird to reply on. A robot
@@ -492,7 +502,7 @@ single 1 to a shared nest, so counting the letters counts the leaves of
 the call tree: for 8, twenty-one of them, from forty rooms nested six deep. A
 second robot then adds the pile up.
 
-The bank account. The account sits on the Teller's desk
+The bank account (bank-account.world.json). The account sits on the Teller's desk
 inside a house, so nothing on the table can reach the balance — the
 only way in is to send a request to the bird. A request is a box holding an
 amount and a bird to reply to. The Teller weighs what the balance
@@ -502,7 +512,7 @@ sends a "not enough money" slip instead. The scale is the whole decision, and
 also the whole state — with no scale on the desk only the robot that takes a
 request can match, and with one there only the three verdicts can.
 
-The grammar. The sentence factory again, except the robots know
+The grammar (grammar.world.json). The sentence factory again, except the robots know
 nothing about nouns or verbs: the grammar is a dictionary box on the desk.
 A symbol is a word (a pad, said as it stands) or a rule (a number, looked
 up); each rule keeps its alternatives and a die with one face per
@@ -515,7 +525,7 @@ say. Because the noun-phrase rule mentions itself, adjectives pile up:
 the door, edit the dictionary, and the language changes — no robot is
 retrained, because none of them ever knew it.
 
-Sally's account. The same idea as the bank, but open on the table so
+Sally's account (account.world.json). The same idea as the bank, but open on the table so
 you can see the whole of it, and message-driven: the account is
 [Requests, Balance, Owner] and the first hole is a nest. Drop a
 message like ["withdraw", 30] on the bird marked requests and
@@ -525,7 +535,8 @@ messages and the team waits. The dispatch is nothing but the pattern matching,
 and because the owner's name is in every thought, these robots serve Sally's
 account and no other.
 
-Swap, and factorial. Two programs where a balance does the
+Swap, and factorial (swap.world.json,
+factorial.world.json). Two programs where a balance does the
 thinking. Swap is the smallest program here: its thought is "a scale
 leaning left", and it puts the two numbers the other way round — after which
 the scale leans the other way and it stops, because its thought no longer
@@ -536,7 +547,9 @@ of its own box. Then one robot counts up while the scale leans, and another
 answers when it comes level. Nothing counts rounds; the scale is the only
 test.
 
-Lists: counting down, append, reverse. A list is the pair
+Lists: counting down, append, reverse — the counting-down one is
+n-to-1.world.json, then append.world.json and
+reverse.world.json. A list is the pair
 [first, the rest], a box with no holes is the empty list, and
 "the rest" is usually a nest — an answer that has not arrived yet. Counting
 down hands its list over one link at a time, keeping each new nest's bird so
@@ -7101,6 +7114,7 @@ async function importRobotFile(file) {
     if (rec.kind === 'world') {
       if (busy || mode === 'replay') return say('Wait for the robot to finish first.');
       worldIn(rec);
+      loadedWorldName = file.name;      // so Marty knows which example this is
       return say('Workshop loaded from the file.');
     }
     if (rec.kind === 'thing') {
@@ -8338,10 +8352,40 @@ function martyArrive(ms = 2500) {
     }, 80);
   });
 }
+// The table is solid: a straight line to the stacks would take him under it,
+// antennae poking through the top. If the way crosses the table he goes round
+// the nearer end first.
+const MARTY_CLEAR = 0.45;
+function martyCrossesTable(a, b) {
+  const x0 = BENCH.x0 - MARTY_CLEAR, x1 = BENCH.x1 + MARTY_CLEAR;
+  const z0 = BENCH.z0 - MARTY_CLEAR, z1 = BENCH.z1 + MARTY_CLEAR;
+  const inside = (p) => p.x > x0 && p.x < x1 && p.z > z0 && p.z < z1;
+  if (inside(a) || inside(b)) return true;
+  // sample the segment: cheap, and the table is a small rectangle
+  for (let t = 0.1; t < 1; t += 0.1) {
+    const p = a.clone().lerp(b, t);
+    if (inside(p)) return true;
+  }
+  return false;
+}
+function martyDetour(a, b) {
+  const endX = (a.x + b.x) / 2 >= 0 ? BENCH.x1 + MARTY_CLEAR + 0.15
+                                    : BENCH.x0 - MARTY_CLEAR - 0.15;
+  return new THREE.Vector3(endX, 0, (BENCH.z0 + BENCH.z1) / 2);
+}
 async function martyWalk(v, look) {
   if (!martyNode || !v) return;
   martyLookAt = (look || v).clone();
-  if (martyNode.position.distanceTo(v) > 0.35) { martyGoTo(v); await martyArrive(); }
+  if (martyNode.position.distanceTo(v) <= 0.35) return;
+  if (martyCrossesTable(martyNode.position, v)) {
+    const via = martyDetour(martyNode.position, v);
+    if (via.distanceTo(martyNode.position) > 0.3 && via.distanceTo(v) > 0.3) {
+      martyGoTo(via);
+      await martyArrive();
+    }
+  }
+  martyGoTo(v);
+  await martyArrive();
 }
 // Standing to reach a stack: just INSIDE the arc, so he never disappears
 // behind the stacks he is fetching from.
@@ -8364,14 +8408,16 @@ async function _mSt(id) {
 // A demo lays its things out in front of Marty, not at fixed coordinates he
 // may be nowhere near: x is measured from where he is standing, inward.
 async function _mBench(x, z) {
+  // Everything he sets down goes along the NEAR edge of the table, within
+  // reach of where he is standing -- across the table it looked like a toss.
   const inward = martyNode && martyNode.position.x > 0 ? -1 : 1;
   const anchor = martySpot ? martySpot.x : (martyNode ? martyNode.position.x : 0);
-  const base = anchor + inward * 0.55;
-  const px = Math.max(BENCH.x0 + 0.2, Math.min(BENCH.x1 - 0.2, base + inward * Math.abs(x)));
-  const pz = Math.max(BENCH.z0 + 0.2, Math.min(BENCH.z1 - 0.2, z));
+  const spread = 0.35 + Math.min(0.5, Math.abs(x));
+  const px = Math.max(BENCH.x0 + 0.25, Math.min(BENCH.x1 - 0.25, anchor + inward * spread));
+  const pz = BENCH.z1 - 0.32;
   const here = new THREE.Vector3(px, 0, pz);
   await martyWalk(new THREE.Vector3(
-    Math.max(BENCH.x0 - 0.6, Math.min(BENCH.x1 + 0.6, px)), 0, BENCH.z1 + 0.55), here);
+    Math.max(BENCH.x0 - 0.6, Math.min(BENCH.x1 + 0.6, px)), 0, BENCH.z1 + 0.46), here);
   martyLookAt = here;
   handleClick({ kind: 'bench', point: new THREE.Vector3(px, BENCH_TOP, pz) });
 }
@@ -8534,15 +8580,9 @@ async function runMartyDemo(id) {
   martyPendingDemo = null;
   martyCtl();
   martySpot = martySpotFor(demo);
-  martyGoTo(martySpot);
   // let him get there first, or his first props land wherever he happened to
   // be as he walked past
-  await new Promise((res) => {
-    const t0 = performance.now();
-    const iv = setInterval(() => {
-      if (!martyTarget || performance.now() - t0 > 2500) { clearInterval(iv); res(); }
-    }, 80);
-  });
+  await martyWalk(martySpot);
   const ctx = {};
   try {
     const steps = demo.steps;
@@ -8575,12 +8615,13 @@ async function runMartyDemo(id) {
       putOnBench(t, benchSpot());
       refreshUI();
     }
-    martyGoTo(MARTY_HOME);
+    martyWalk(MARTY_HOME);
     martyCtl();
   }
 }
 
 // --- what Marty can see: the table, in plain English ------------------------
+let loadedWorldName = null;
 function martyWorldText() {
   const d = (t) => { const u = t.userData;
     return u.kind === 'number' ? 'the number ' + ratShort(u.value)
@@ -8591,6 +8632,7 @@ function martyWorldText() {
       : u.kind === 'bird' ? `a bird${u.label ? ` "${u.label}"` : ''}`
       : 'a ' + u.kind; };
   const lines = [];
+  if (loadedWorldName) lines.push('The visitor has loaded the world file: ' + loadedWorldName);
   lines.push('Mode: ' + (mode === 'training' ? "inside a robot's thought (training)" : mode));
   if (held) lines.push("In the visitor's hand: " + d(held));
   if (activeBot) lines.push(`Robot at the bench: ${activeBot.name || '(unnamed)'} — ${activeBot.program.length} steps, runs on ${condText(activeBot.condition)}, team of ${activeBot.team.length + 1}${activeBot.waiting ? ', dozing on a bare nest' : ''}.`);
@@ -8798,33 +8840,34 @@ document.body.appendChild(martyUI);
 const MARTY_VOICE = 'tt3d.marty-voice';
 const MARTY_VOICE_NAME = 'tt3d.marty-voice-name';
 let martyVoiceOn = localStorage.getItem(MARTY_VOICE) === '1';
+// He speaks the language of the page, so a voice for some other language is
+// not offered by default -- reading English aloud with a Greek voice was what
+// made him sound shrill and hurried, not the pitch.
+const martyLang = () => (navigator.language || 'en-US').slice(0, 2).toLowerCase();
+function martyVoiceFits(v) { return (v.lang || '').slice(0, 2).toLowerCase() === martyLang(); }
 function martyVoiceObj() {
   const want = localStorage.getItem(MARTY_VOICE_NAME);
   const all = speechSynthesis.getVoices?.() || [];
   if (!all.length) return null;
   if (want) { const v = all.find(v2 => v2.name === want); if (v) return v; }
-  // failing a choice, something not too human: a compact/eSpeak voice if the
-  // browser has one, else any voice that is not the system default
-  return all.find(v => /espeak|compact|zarvox|trinoids|whisper|bells/i.test(v.name))
-    ?? all.find(v => !v.default && /en/i.test(v.lang)) ?? all[0];
+  const mine = all.filter(martyVoiceFits);
+  const pool = mine.length ? mine : all;
+  // among voices that speak his words properly, the least ordinary one
+  return pool.find(v => /zarvox|trinoids|whisper|bells|boing|compact/i.test(v.name))
+    ?? pool.find(v => !v.default) ?? pool[0];
 }
-// A Martian does not speak in one steady tone: the line is said in short
-// phrases whose pitch steps up and down, which turns any browser voice into
-// something from further away.
+// A Martian is not quite of this world -- but chopping the line into phrases
+// made him stutter. One utterance per SENTENCE, a touch high and quick, with a
+// little drift between sentences: strange, not annoying.
 function martySpeak(text) {
   if (!martyVoiceOn || !window.speechSynthesis) return;
   const voice = martyVoiceObj();
-  const parts = String(text).match(/[^,.;:!?…—]+[,.;:!?…—]*/g) || [text];
-  const chunks = [];
-  for (const p of parts) {
-    const words = p.trim().split(/\s+/).filter(Boolean);
-    for (let i = 0; i < words.length; i += 4) chunks.push(words.slice(i, i + 4).join(' '));
-  }
-  chunks.forEach((c, i) => {
-    const u = new SpeechSynthesisUtterance(c);
+  const parts = String(text).match(/[^.!?…]+[.!?…]*/g) || [text];
+  parts.map(p => p.trim()).filter(Boolean).forEach((p, i) => {
+    const u = new SpeechSynthesisUtterance(p);
     if (voice) u.voice = voice;
-    u.pitch = 1.7 - (i % 3) * 0.32;      // a warble across the phrase
-    u.rate = 1.18 + (i % 2) * 0.12;
+    u.pitch = 1.32 + (i % 2 ? 0.06 : -0.06);
+    u.rate = 1.04;
     speechSynthesis.speak(u);
   });
 }
@@ -8902,8 +8945,12 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
     const all = speechSynthesis.getVoices?.() || [];
     if (!all.length || !sel) return;
     const cur = localStorage.getItem(MARTY_VOICE_NAME) || '';
-    sel.innerHTML = '<option value="">Most alien one available</option>'
-      + all.map(v => `<option value="${v.name.replace(/"/g, '')}">${v.name} (${v.lang})</option>`).join('');
+    const mine = all.filter(martyVoiceFits), other = all.filter(v => !martyVoiceFits(v));
+    const opt = (v) => `<option value="${v.name.replace(/"/g, '')}">${v.name} (${v.lang})</option>`;
+    sel.innerHTML = '<option value="">Most alien one that speaks your language</option>'
+      + mine.map(opt).join('')
+      + (other.length ? '<optgroup label="Other languages — these read English with an accent">'
+          + other.map(opt).join('') + '</optgroup>' : '');
     sel.value = cur;
   };
   if (sel) {

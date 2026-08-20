@@ -346,9 +346,10 @@ are reading is handed to him with every question, so what he tells you is what
 is written here rather than what a model imagines a workshop like this might
 do. If the manual does not say, he is asked to admit he is unsure.</p>
 <p>Marty can also <b>speak and listen</b>. The 🔊 button has him read his
-replies aloud, in phrases whose pitch steps about — a Martian does not speak in
-one steady tone. <em>How Marty thinks</em> also lets you pick which of your
-browser's voices he uses. The 🎤 button lets you ask by voice, where the browser
+replies aloud, a little high and quick with a drift between sentences.
+<em>How Marty thinks</em> lets you pick which of your browser's voices he uses
+— the list puts the ones that speak your language first, since a voice meant
+for another language reads English with an accent. The 🎤 button lets you ask by voice, where the browser
 offers a microphone — inside a Claude artifact it does not, so there the button
 simply is not shown.</p>
 
@@ -377,13 +378,21 @@ back: things land in your hand, worlds replace the workshop.</p>
 <a href="https://github.com/ToonTalk/toontalk-3d/tree/main/examples">examples
 folder</a>. Download one and use <b>Import file</b> to load it. The last five
 are ports of Ken Kahn's own ToonTalk 3 programs, move for move.</p>
-<p><b>The sentence factory.</b> A glass room called the Scriptorium holds a team
+<p>Each example is a file in the examples folder, and the file name is worth
+knowing — it is what you will be looking at in the folder, and what to call it
+when asking Marty: <em>sentence-generator</em>, <em>fibonacci</em> and
+<em>fibonacci-recursive</em>, <em>bank-account</em>, <em>grammar</em>,
+<em>account</em> (Sally's), <em>swap</em>, <em>factorial</em>,
+<em>n-to-1</em> (the counting-down one), <em>append</em> and
+<em>reverse</em>.</p>
+<p><b>The sentence factory</b> (<code>sentence-generator.world.json</code>). A glass room called the Scriptorium holds a team
 of twenty robots that roll dice to pick words, join text pads into sentences,
 and hand each one to a bird who flies it out to a nest on your table. Pull the
 room's lever and the nest fills with lines like <em>"the frog dreams of the
 witch."</em> Every mechanism in it is one from this manual: dice for the choice,
 team matching for the branch, pads for the words, a bird for the stream.</p>
-<p><b>Fibonacci.</b> Two of them: one that counts the leaves of the call
+<p><b>Fibonacci</b> (<code>fibonacci.world.json</code> and
+<code>fibonacci-recursive.world.json</code>). Two of them: one that counts the leaves of the call
 tree, and one written exactly as the definition reads — answer 1 for 1 and 2,
 otherwise ask fib(n−1) and fib(n−2) and answer their sum, with each call
 getting its own house, its own nest and its own bird to reply on. A robot
@@ -395,7 +404,7 @@ in its own box — the two recursive calls. The robots that reach 1 or 2 mail a
 single <b>1</b> to a shared nest, so counting the letters counts the leaves of
 the call tree: for 8, twenty-one of them, from forty rooms nested six deep. A
 second robot then adds the pile up.</p>
-<p><b>The bank account.</b> The account sits on the Teller's desk
+<p><b>The bank account</b> (<code>bank-account.world.json</code>). The account sits on the Teller's desk
 <em>inside a house</em>, so nothing on the table can reach the balance — the
 only way in is to send a request to the bird. A request is a box holding an
 amount and a bird to reply to. The Teller weighs what the balance
@@ -404,7 +413,7 @@ and sends the new balance home with the request's own bird; tipping right he
 sends a "not enough money" slip instead. The scale is the whole decision, and
 also the whole state — with no scale on the desk only the robot that takes a
 request can match, and with one there only the three verdicts can.</p>
-<p><b>The grammar.</b> The sentence factory again, except the robots know
+<p><b>The grammar</b> (<code>grammar.world.json</code>). The sentence factory again, except the robots know
 nothing about nouns or verbs: the grammar is a dictionary box on the desk.
 A symbol is a word (a pad, said as it stands) or a rule (a number, looked
 up); each rule keeps its alternatives and a die with one face per
@@ -416,7 +425,7 @@ say. Because the noun-phrase rule mentions itself, adjectives pile up:
 <em>"pink silly big big boys kick silly silly dogs."</em> Walk in through
 the door, edit the dictionary, and the language changes — no robot is
 retrained, because none of them ever knew it.</p>
-<p><b>Sally's account.</b> The same idea as the bank, but open on the table so
+<p><b>Sally's account</b> (<code>account.world.json</code>). The same idea as the bank, but open on the table so
 you can see the whole of it, and message-driven: the account is
 <em>[Requests, Balance, Owner]</em> and the first hole is a <b>nest</b>. Drop a
 message like <em>["withdraw", 30]</em> on the bird marked <em>requests</em> and
@@ -425,7 +434,8 @@ the message off, does it, and dozes again — so the nest is bare between
 messages and the team waits. The dispatch is nothing but the pattern matching,
 and because the owner's name is in every thought, these robots serve Sally's
 account and no other.</p>
-<p><b>Swap, and factorial.</b> Two programs where a <b>balance does the
+<p><b>Swap, and factorial</b> (<code>swap.world.json</code>,
+<code>factorial.world.json</code>). Two programs where a <b>balance does the
 thinking</b>. Swap is the smallest program here: its thought is "a scale
 leaning left", and it puts the two numbers the other way round — after which
 the scale leans the other way and it stops, because its thought no longer
@@ -435,7 +445,9 @@ scale with 1 in one pan and N in the other, and "so far" joined onto the left
 of its own box. Then one robot counts up while the scale leans, and another
 answers when it comes level. Nothing counts rounds; the scale is the only
 test.</p>
-<p><b>Lists: counting down, append, reverse.</b> A list is the pair
+<p><b>Lists: counting down, append, reverse</b> — the counting-down one is
+<code>n-to-1.world.json</code>, then <code>append.world.json</code> and
+<code>reverse.world.json</code>. A list is the pair
 <em>[first, the rest]</em>, a box with <b>no holes</b> is the empty list, and
 "the rest" is usually a nest — an answer that has not arrived yet. Counting
 down hands its list over one link at a time, keeping each new nest's bird so
