@@ -111,6 +111,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   panel — Claude, ChatGPT or Gemini, and the model — and paste that provider's
   key (kept in this browser only). Without one, his replies are canned lines
   from a phrasebook that picks the right demonstration, and the panel says so.
+  Whatever brain he has, **he answers from the manual**: `manual.html` is
+  handed to him with every question (live when a server is serving it, from a
+  copy embedded by `embed_manual.py` otherwise), so he describes the workshop
+  that exists rather than one a model imagines.
 
 ### The robots
 

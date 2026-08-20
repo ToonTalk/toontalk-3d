@@ -150,6 +150,402 @@
     title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
 </div>
 
+<script type="text/plain" id="martyManual">
+## ToonTalk 3D
+
+A workshop where you teach little robots by showing them what to do —
+and everything, even a whole workshop, is a thing you can pick up.
+
+Open the workshop ->
+
+## The basics
+
+Moving around
+Drag with the left mouse button held to orbit the camera around the
+workshop; scroll to zoom in and out (numbers show more digits and more
+of their faces up close); drag with the right button to slide sideways.
+On a touchpad: one-finger drag orbits, pinch zooms, two-finger drag slides.
+
+Handling things
+You do everything with single clicks: click a thing to pick it up, and
+it follows your pointer; click where you want it to set it down. The row of dark
+pedestals in a semicircle behind the robot's work area are stacks — endless
+supplies of numbers, text pads, boxes, scales, nests, rooms and little robots.
+Click a stack to take the top one.
+
+The wooden table in front is your workbench. Robots can never reach it —
+that is the point: what you build there is yours until you hand it over.
+
+Everything in the manual's little windows below is the real
+workshop — click things, carry them, try it.
+
+## Numbers
+
+Numbers come off their stack as 1s. While holding one, type digits to
+set its value, - to make it negative, and * /
+^ to choose what it does when dropped on another number
+(adding is the default — and adding a negative is subtraction).
+Dropping a number on a number combines them: the arriving one applies its
+operation. Division gives exact fractions, never rounded decimals.
+
+A number block shows its value on the front and top; walk the camera close
+and the other faces show the same value in English words, scientific notation,
+and decimal form — with a bar over a repeating part when it fits. Fractions get
+words too: 1/6 reads one sixth, 3/4 three
+quarters, 7/2 seven halves.
+
+Try it: drop the 6 on the 1/2 to add them. Pick
+up the ×3 and drop it on the result. Take fresh 1s from the stack and
+type digits while holding them.
+
+Two operations have names rather than signs, because nothing says an
+operation has to be one character. Type mod on
+a held number and it will leave what is left over — 17 dropped on… rather, drop
+a mod 5 on 17 and 2 remains. Type set
+and it simply replaces whatever it lands on. The letters need not be typed
+cleanly: as soon as the last few you typed spell a name, the number takes it.
+
+## Text pads
+
+Text pads are paper for words. Type on a held pad to write (Enter
+for a new line, Ctrl+V pastes). Drop one pad on
+the left edge of another and it reads first; on the right edge
+and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
+A whole number dropped on a written pad shifts its first or last letter along
+the alphabet; on a blank pad, the number writes itself out as digits.
+
+The other way round picks letters out: drop a pad on a whole number
+and that number chooses a letter — "Talk" dropped on a 2 leaves a pad
+reading "a". The number is spent saying which letter you meant.
+
+Try it: pick up "Talk" and drop it on the right edge
+of "Toon". Take a 1 from the number stack, type 2, and drop it on a
+pad's left edge to shift a letter — or drop a pad on it to pick out letter 2.
+
+## Boxes and scales
+
+Boxes have holes, and holes hold anything — numbers, pads, nests, other
+boxes, even little robots (they lie down inside). Type a digit while holding a
+box to give it that many holes; type 0 and you have an empty box,
+which joins onto another box without changing it. Boxes are arrays: drop a
+box on a box to join them — left half to put its holes in front, right half
+behind — and shrinking a box splits the extra holes off as a box of their
+own.
+
+Drop a box on a whole number and it splits there: a box of five
+dropped on a 2 becomes a box of the first two and a box of the rest.
+That, with an empty box for the end, is how a robot walks along an array.
+
+Scales have two pans that work exactly like holes; the beam tips toward the
+larger number. A robot trained on a scale that is saying something
+remembers the tilt, not the numbers: its thought reads "a scale tipping left",
+and it fires on any pair that leans that way — which is how a robot chooses
+between two paths.
+
+Try it: put the 8 and 9 in the holes. Hold the box and
+type 4. Take a second box from the stack and join them.
+
+A box with no holes is a mould. Drop a written pad onto one and it
+takes the word apart, one letter to a hole; drop a robot team on one and it
+comes apart, one robot to a hole (drop them on each other to make a team
+again); and pour a box of letters onto a blank pad to get the word
+back. A box that has holes is a container rather than a mould — dropping a
+robot into a hole is how a program carries a spare team — so the two never get
+in each other's way.
+
+A scale weighs words as well as numbers: the one later in the
+alphabet is the heavier, and case is not weight, so "Apple" and "apple"
+balance.
+
+## Dice
+
+Dice are where chance comes from. A die does not show a rolled number of its
+own — it re-rolls the number it lands on: drop a die on a 1 and the 1
+becomes anything from 1 to 6, and the die is spent in the throw, like any pad
+you drop. To change the range, hold a die and type: type 20 and you
+have a twenty-sided one, and it says so on its faces.
+
+Robots take dice from the stack exactly as you do, so "throw a die into hole
+2" is an ordinary step. A team whose members expect different rolled numbers is
+a program that branches on chance — that is all the
+sentence factory does.
+
+Try it: drop the die on the number and watch it
+change. Take a die from the stack, type 20 while
+holding it, and roll that one instead.
+
+## Birds and nests
+
+Take a nest from its stack and set it down: the egg hatches into a bird —
+they are a pair for life. Give the bird anything and she flies it home
+to her nest, tucking new deliveries under the pile so the top is
+always the oldest. Click the top of a pile to take one delivery; grab the
+tower lower down and you pick up the whole nest, deliveries and all.
+
+Copy a bird on the copier and both birds serve the same nest. Copy a
+nest and you have a broadcast: give any of their birds something and
+every copy of the nest receives its own copy at once.
+
+Try it: wait for the egg to hatch, then drop the 3 on
+the bird and watch the delivery. Give her the 7 next — it goes under.
+
+Two nests dropped together become one. The pile of the nest you are
+holding joins the pile below it, and the survivor answers to both names — so
+every bird of either nest goes on delivering, to here. That is how you rewire a
+program that is already running.
+
+## Robots
+
+Take a mini robot from its stack, set it on the table, and drop something
+on it: it grows, steps behind the bench, and its thought bubble opens —
+you are now teaching it. Everything you make it do (take things, drop them,
+fetch from stacks, use the copier) is remembered as steps about its own
+things — "hole 1 of what it was given", never places in your world. Leave
+the bubble and the daydream rewinds; the robot keeps the lesson.
+
+Its thought bubble shows the condition: the shape it must be given
+before it will run. Give a trained robot something that fits and it gets to
+work at once, repeating while the condition still matches, up to the Rounds
+limit. Stop does not freeze it mid-move: the round it is in finishes at
+once, so nothing is left half done, and Run carries on from there. Drop one trained robot on another to form a team: the members
+line up on the floor behind the leader, each with its own small thought over
+its head, and whichever one recognises what the team was given walks up to the
+desk and does the work while the others wait their turn.
+
+A team stands in a queue — the leader at the front, the rest lined up
+behind it, on the table as well as at the desk. Nothing is hidden. Whatever you
+hand to a member is handed to the leader: a team has one leader and
+one work surface. Click a member to take it out of the team; set it down
+and it is a robot of its own again, or drop it on another robot to join that
+one. Drop a robot on the leader to add it to the end. Picking the leader up
+picks up the whole team.
+
+How a robot says it is finished. A robot that vacuums away the very
+box it was working on has ended the team for good — there is nothing left for
+any thought to match, and the message says so rather than suggesting you erase
+anything. It is worth doing deliberately at the end of a program. A house whose
+robot has done that is a house with nobody working and nothing to work on, so
+it folds away to nothing, taking whatever is left inside with it. That is how
+a recursive program clears up after itself.
+
+A robot in a thought bubble means that robot: one with the same name
+and the same lesson. Erase it with Ruby and it becomes "a robot — any one", and
+again "anything".
+
+Typing on a number a robot is holding is remembered two ways, and the
+difference matters. Type digits and the robot remembers that exact
+number. Type only an operation — -,
+* and so on — and it remembers "make it subtract",
+which then works on whatever number it is handed. That is how one robot can
+take away 30 today and 7 tomorrow.
+
+Click the bubble of a robot (big or mini) to take out a copy of the very
+thing it was first shown. Type while holding a robot to name it — the name
+appears on its chest. To save a robot, hold it and press
+Save held thing.
+
+Try it: drop the 5 on the mini robot. In the thought
+bubble, click the number stack, then click a work spot; leave the bubble and
+it will run. Then erase its thought with Ruby and give it anything.
+
+The little desks beside the robot are its work spots — its own
+scratch space, swept clean when it finishes. A spot sizes what you set on it
+the way a hole does: something too wide, a box of eight holes say, sits there
+smaller rather than hanging over its neighbours, and comes back to full size
+the moment it is picked up.
+
+## Mimi the copier
+
+The tall machine at the right end of the arc is Mimi the copier. Set
+anything on her upper platform and she scans it; an independent, exact copy
+drops into the lower tray — contents, names and all. Click a surface with an
+empty hand to take from it (the tray first, then the original). Robots use
+Mimi exactly the way you do, which is how a robot copies things mid-program.
+She copies anything — a copied bird serves the same nest, a copied
+nest joins the flock so deliveries broadcast, and a copied robot arrives with
+its training, its name and its whole team. A robot that copies itself
+this way and sets the copy to work in a new room is a recursive program.
+
+Try it: set the 7 on Mimi's top platform and watch
+the tray. Copy the box too — then put a number in one box and see the other
+stays empty: copies are independent.
+
+## Dusty and Ruby
+
+Two helpers live in front of the table. Dusty the vacuum removes:
+click him to wake him, then click things to vacuum them away, entries off
+notebook pages, or parts of a robot's thought (leaving an empty hole, which
+then matches anything). Ruby the eraser generalises: wake her and
+click a part of a thought — a 7 becomes any number, then
+anything. She also erases real things in place: an erased number
+stands for any number, which is how you build a robot's expectations by hand.
+Waking one settles the other, and whoever is awake fidgets.
+
+## Rooms
+
+Rooms are little houses that each hold an entire workshop. Drop a
+robot on a room and it steps inside, ready behind the desk. Drop anything else
+on the room and it lands on that desk — and the robot inside gets to work the
+moment your world goes quiet. The chimney smokes while somebody in there is
+actually working; a room merely holding unopened deliveries sits quiet.
+
+Click the roof to switch between solid walls (the room works
+instantly, unseen) and glass (you watch it work, round by round, at your speed
+setting). The big lever on the side wall runs and stops the room: up, the robot
+inside works; down, it rests. Click the door to step inside: the room
+becomes the world around you, and the world you left shrinks onto the table as
+a little room of its own — walk back out through its door. If the room was
+running when you opened the door, its robot picks straight back up once it has
+grown to full size. Birds fly in and out of rooms to reach their nests, so a
+machine in a box can feed a nest on your table.
+
+Robots can build rooms too. A robot may take a room from the stack,
+drop a robot in and something for it to work on, and stow the whole house in a
+hole of the box it is holding — a machine that builds machines. Rooms inside
+rooms work as well, all the way down.
+
+Try it: drop the mini robot on the room, then the 4.
+Click the roof to make the walls glass. Click the door to step inside.
+
+## Marty the Martian
+
+The little green fellow beside Dusty and Ruby is Marty. Click him and
+ask anything about the workshop — or say "show me birds" (or
+fractions, numbers, pads, boxes, dice, scales, robot, copier, dusty, rooms,
+notebook) and he demonstrates it right on your table, using the workshop
+exactly the way you do — holding the pieces in his own hand.
+A demonstration plays one narrated step at a time: Marty walks over to
+what he is showing, does one thing, and waits for you to click
+Next ▸ — Stop ends it, and so does asking him something else. When
+an answer of his suggests a demonstration, you get a Show me
+button rather than a surprise performance. He never builds programs for you —
+doing it yourself is the whole point.
+
+Marty thinks with whatever brain he has. Without a key his replies are
+canned lines from a phrasebook — he can pick the right demonstration, but
+he is not really answering. For real conversation open How Marty
+thinks in his panel and choose a brain — Claude, ChatGPT or Gemini, and
+which model — then paste that provider's API key; it is kept only in this
+browser, and he then also sees what is on your table when he answers. Inside a
+Claude artifact he needs no key at all. The panel always says which of these
+he is using right now.
+
+Whatever brain he has, Marty answers from this manual — the page you
+are reading is handed to him with every question, so what he tells you is what
+is written here rather than what a model imagines a workshop like this might
+do. If the manual does not say, he is asked to admit he is unsure.
+
+Marty can also speak and listen. The 🔊 button has him read his
+replies aloud; the 🎤 button lets you ask by voice, where the browser offers a
+microphone — inside a Claude artifact it does not, so there the button simply
+is not shown.
+
+## The notebook, saving and sharing
+
+The notebook on your table is a two-page spread. Drop anything on a blank
+page to file it; click a filed entry to take out a copy (the page
+keeps its own). Drop a written text pad on a full page to open the first page
+mentioning that text; a whole number jumps to that page number. Only Dusty can
+remove an entry, and a notebook itself only goes when open at two blank pages.
+The first page holds a blank notebook — copy it out to make more. The main
+notebook remembers everything between visits, and it is furniture: it
+stays where it is when you load somebody else's world, because it is your
+library, not part of theirs.
+
+Robots can use it too, which is what lets one program use another by
+name. A robot fetches a blank pad, writes a name on it, drops it on the
+notebook — which opens at whatever that name finds — and takes a copy off the
+page. That is the whole of the module system: the same three gestures you would
+make yourself.
+
+Save held thing writes whatever is in your hand to a file — a box, a
+trained robot, a room with a whole workshop inside. Save world writes
+everything. Import file (or dropping a file onto the app) brings either
+back: things land in your hand, worlds replace the workshop.
+
+## Example worlds
+
+Finished programs live in the
+examples
+folder. Download one and use Import file to load it. The last five
+are ports of Ken Kahn's own ToonTalk 3 programs, move for move.
+
+The sentence factory. A glass room called the Scriptorium holds a team
+of twenty robots that roll dice to pick words, join text pads into sentences,
+and hand each one to a bird who flies it out to a nest on your table. Pull the
+room's lever and the nest fills with lines like "the frog dreams of the
+witch." Every mechanism in it is one from this manual: dice for the choice,
+team matching for the branch, pads for the words, a bird for the stream.
+
+Fibonacci. Two of them: one that counts the leaves of the call
+tree, and one written exactly as the definition reads — answer 1 for 1 and 2,
+otherwise ask fib(n−1) and fib(n−2) and answer their sum, with each call
+getting its own house, its own nest and its own bird to reply on. A robot
+facing a bare nest simply dozes, so waiting for two answers needs no
+machinery at all. The leaf-counting one works like this: given a box holding a number,
+it drops a −1 on the number, copies its own box through Mimi twice,
+builds two rooms, puts a copy of itself in each, and carries both houses away
+in its own box — the two recursive calls. The robots that reach 1 or 2 mail a
+single 1 to a shared nest, so counting the letters counts the leaves of
+the call tree: for 8, twenty-one of them, from forty rooms nested six deep. A
+second robot then adds the pile up.
+
+The bank account. The account sits on the Teller's desk
+inside a house, so nothing on the table can reach the balance — the
+only way in is to send a request to the bird. A request is a box holding an
+amount and a bird to reply to. The Teller weighs what the balance
+would be against nothing at all: tipping left or level he banks it
+and sends the new balance home with the request's own bird; tipping right he
+sends a "not enough money" slip instead. The scale is the whole decision, and
+also the whole state — with no scale on the desk only the robot that takes a
+request can match, and with one there only the three verdicts can.
+
+The grammar. The sentence factory again, except the robots know
+nothing about nouns or verbs: the grammar is a dictionary box on the desk.
+A symbol is a word (a pad, said as it stands) or a rule (a number, looked
+up); each rule keeps its alternatives and a die with one face per
+alternative. Four robots run any language you write in those boxes — one
+splits the next symbol off the front, one joins a word onto the sentence,
+one expands a rule by splitting the dictionary at that number and throwing
+its die, and one sends the finished sentence off when nothing is left to
+say. Because the noun-phrase rule mentions itself, adjectives pile up:
+"pink silly big big boys kick silly silly dogs." Walk in through
+the door, edit the dictionary, and the language changes — no robot is
+retrained, because none of them ever knew it.
+
+Sally's account. The same idea as the bank, but open on the table so
+you can see the whole of it, and message-driven: the account is
+[Requests, Balance, Owner] and the first hole is a nest. Drop a
+message like ["withdraw", 30] on the bird marked requests and
+she carries it there; the robot whose thought carries that word wakes, lifts
+the message off, does it, and dozes again — so the nest is bare between
+messages and the team waits. The dispatch is nothing but the pattern matching,
+and because the owner's name is in every thought, these robots serve Sally's
+account and no other.
+
+Swap, and factorial. Two programs where a balance does the
+thinking. Swap is the smallest program here: its thought is "a scale
+leaning left", and it puts the two numbers the other way round — after which
+the scale leans the other way and it stops, because its thought no longer
+matches. Factorial is the same idea kept running: you hand the team
+[N, a bird] and the first robot builds the rest in front of you — a
+scale with 1 in one pan and N in the other, and "so far" joined onto the left
+of its own box. Then one robot counts up while the scale leans, and another
+answers when it comes level. Nothing counts rounds; the scale is the only
+test.
+
+Lists: counting down, append, reverse. A list is the pair
+[first, the rest], a box with no holes is the empty list, and
+"the rest" is usually a nest — an answer that has not arrived yet. Counting
+down hands its list over one link at a time, keeping each new nest's bird so
+the next link lands inside the promise it just gave away. Append does the same
+to join two lists, which is why it keeps working when its first list is still
+being computed elsewhere. Reverse is the showpiece: for every link it sends a
+box and a copy of the append team into a house of its own, and each house
+dozes — smoking gently — until the nest it is watching fills. The last link is
+settled first, and the answer unwinds from the end of the list back to the
+front.
+</script><!-- /martyManual -->
 <div id="loading">Loading…</div>
 <div id="tip"></div>
 
@@ -7875,26 +8271,21 @@ scene.add(martyNode);
 pickables.push(martyNode);
 const MARTY_HOME = new THREE.Vector3(1.85, 0, 2.95);
 let martyTarget = null;
+// what he is presenting: the middle of the table unless a step says otherwise
+let martyLookAt = new THREE.Vector3(0, 0, 1.6);
 function martyGoTo(v) { martyTarget = v ? v.clone() : null; }
-// Where to stand to present a demo: beside its station, never on top of it,
-// and never under the table.
+// Where to stand to present. Beside the STATION he ends up among the stacks,
+// half hidden behind them and far from the table where the demonstration
+// actually happens -- so he takes the near end of the table instead, on the
+// side his subject is on, and everything he does is between him and you.
 function martySpotFor(demo) {
-  let p = null;
-  if (demo.near === 'dusty') p = dustyHome?.clone();
-  else if (demo.near === 'notebook') p = mainNotebook()?.getWorldPosition(new THREE.Vector3());
-  else if (demo.near && stations[demo.near]?.point) p = stations[demo.near].point.clone();
-  if (!p) return null;
-  const away = p.clone().sub(new THREE.Vector3(ARC.cx, 0, ARC.cz)).setY(0);
-  if (away.lengthSq() < 0.01) away.set(0, 0, -1);
-  away.normalize();
-  const side = new THREE.Vector3(-away.z, 0, away.x);
-  const q = p.clone().add(away.multiplyScalar(0.85)).add(side.multiplyScalar(0.6));
-  q.y = 0;
-  if (q.x > BENCH.x0 - 0.25 && q.x < BENCH.x1 + 0.25
-      && q.z > BENCH.z0 - 0.25 && q.z < BENCH.z1 + 0.25) {
-    q.z = BENCH.z1 + 0.5;      // never under the table
-  }
-  return q;
+  let x = 0;
+  if (demo.near === 'dusty') x = dustyHome?.x ?? 1;
+  else if (demo.near === 'notebook') x = mainNotebook()?.position.x ?? 1;
+  else if (demo.near && stations[demo.near]?.point) x = stations[demo.near].point.x;
+  const right = x >= 0;
+  return new THREE.Vector3(right ? BENCH.x1 + 0.62 : BENCH.x0 - 0.62, 0,
+                           (BENCH.z0 + BENCH.z1) / 2 + 0.25);
 }
 function advanceMarty(dt) {
   if (!martyNode) return;
@@ -7912,8 +8303,9 @@ function advanceMarty(dt) {
     }
   } else {
     const home = martyNode.position.distanceTo(MARTY_HOME) < 0.15;
+    const focus = martyBusyDemo ? martyLookAt : new THREE.Vector3(0, 0, 1.2);
     const want = home ? -0.2
-      : Math.atan2(0 - martyNode.position.x, 1.2 - martyNode.position.z);
+      : Math.atan2(focus.x - martyNode.position.x, focus.z - martyNode.position.z);
     let diff = want - martyNode.rotation.y;
     while (diff > Math.PI) diff -= Math.PI * 2;
     while (diff < -Math.PI) diff += Math.PI * 2;
@@ -7934,7 +8326,16 @@ let martyPerforming = false;
 
 // --- his demonstrations: short scripts using the workshop the way you do ----
 const _mSt = (id) => handleClick({ kind: 'station', id });
-const _mBench = (x, z) => handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) });
+// A demo lays its things out in front of Marty, not at fixed coordinates he
+// may be nowhere near: x is measured from where he is standing, inward.
+function _mBench(x, z) {
+  const inward = martyNode && martyNode.position.x > 0 ? -1 : 1;
+  const base = martyNode ? martyNode.position.x + inward * 0.55 : 0;
+  const px = Math.max(BENCH.x0 + 0.2, Math.min(BENCH.x1 - 0.2, base + inward * Math.abs(x)));
+  const pz = Math.max(BENCH.z0 + 0.2, Math.min(BENCH.z1 - 0.2, z));
+  martyLookAt = new THREE.Vector3(px, 0, pz);
+  handleClick({ kind: 'bench', point: new THREE.Vector3(px, BENCH_TOP, pz) });
+}
 const _mLast = () => benchThings[benchThings.length - 1];
 const MARTY_DEMOS = {
   fractions: { blurb: 'make an exact fraction like 1/4', near: 'numbers', steps: [
@@ -8088,6 +8489,14 @@ async function runMartyDemo(id) {
   martyPendingDemo = null;
   martyCtl();
   martyGoTo(martySpotFor(demo));
+  // let him get there first, or his first props land wherever he happened to
+  // be as he walked past
+  await new Promise((res) => {
+    const t0 = performance.now();
+    const iv = setInterval(() => {
+      if (!martyTarget || performance.now() - t0 > 2500) { clearInterval(iv); res(); }
+    }, 80);
+  });
   const ctx = {};
   try {
     const steps = demo.steps;
@@ -8146,12 +8555,34 @@ function martyWorldText() {
 const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits sets its value, the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), TEXT PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
 
 Rules for you:
+- The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
 - Answer in one to three short, warm sentences, for a child or a teacher.
 - NEVER write, design, or plan programs for the visitor, even if they insist. Building it themselves is the whole point. Offer a demonstration of the pieces instead.
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
 - Demos are FIXED scripts — their names say what they show. Never promise a demo will use the visitor's own numbers or words, and never offer one that does not match the question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
 - Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null"}`;
+// Marty answers from THE MANUAL, not from what a model imagines a workshop
+// like this might do -- that is what had him inventing ways to type a fraction
+// and denying that numbers show decimals at all. A live copy is preferred, so
+// edits to manual.html show up at once; a build with no server behind it (an
+// artifact) falls back to the copy embedded in this page by embed_manual.py.
+let martyManual = null;
+async function martyManualText() {
+  if (martyManual !== null) return martyManual;
+  try {
+    const res = await fetch('manual.html', { cache: 'no-store' });
+    if (res.ok) {
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      doc.querySelectorAll('nav, footer, iframe, script, style').forEach(n => n.remove());
+      doc.querySelectorAll('h1, h2').forEach(h => { h.textContent = '\n## ' + h.textContent + '\n'; });
+      martyManual = (doc.body.textContent || '').replace(/[ \t]+/g, ' ')
+        .replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+  } catch {}
+  if (!martyManual) martyManual = document.getElementById('martyManual')?.textContent?.trim() || '';
+  return martyManual;
+}
 const MARTY_PROVIDERS = {
   claude: { label: 'Claude', model: 'claude-sonnet-5' },
   openai: { label: 'ChatGPT (OpenAI)', model: 'gpt-5' },
@@ -8171,7 +8602,11 @@ function martyBrainText() {
 }
 let martyHistory = [], martyToldOffline = false;
 async function martyThink(q) {
-  const sys = MARTY_SYSTEM + '\n\nOn the table right now:\n' + martyWorldText();
+  const manual = await martyManualText();
+  const sys = MARTY_SYSTEM
+    + (manual ? '\n\n=== THE MANUAL (authoritative; answer from it, and say you are unsure rather than inventing anything it does not say) ===\n'
+        + manual + '\n=== end of manual ===' : '')
+    + '\n\nOn the table right now:\n' + martyWorldText();
   if (window.claude?.complete) {
     const lines = martyHistory.map(m => (m.role === 'user' ? 'Visitor: ' : 'Marty: ') + m.content).join('\n');
     return await window.claude.complete(sys + '\n\n' + lines + '\nVisitor: ' + q + '\nReply with ONLY the JSON object.');
