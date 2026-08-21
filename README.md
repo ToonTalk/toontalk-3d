@@ -75,8 +75,10 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   a blank half to file it; clicking a page's entry hands you a fresh copy
   while the page keeps its own. On a full page, a written text pad opens the
   first page whose contents mention its text and a whole number jumps to that
-  page; corner tabs flip the spread. Dusty removes an entry, and a notebook
-  itself only goes when open at two blank pages. The desk notebook persists
+  page; corner tabs flip the spread. Dusty removes an entry — and undo puts it
+  back — but he will not touch your own notebook, and clicking it wobbles it
+  rather than lifting it, so its corner tabs stay clickable. Any other notebook
+  goes when open at two blank pages. The desk notebook persists
   in this browser **under your name** — the app asks who is working here at
   the start, with the last name already filled in, and each name gets a
   notebook of its own. It starts with a blank notebook filed on page 1 — copy
@@ -84,6 +86,8 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   A robot trained on the desk notebook looks it up by name when it runs; one
   trained on any *other* notebook — one it was given, or one on its own work
   area — reads that very notebook instead.
+- **The message under the title can read itself aloud** — a speaker button
+  there turns it on and picks the voice, separately from Marty's.
 - **The workbench reshapes.** "Reshape table" reveals glowing corner handles:
   click one to carry that corner, move the pointer to stretch or shrink the
   top (legs follow), click again to set it. Anything left overboard by a

@@ -104,6 +104,8 @@
   <p>You move things yourself. The robot only acts inside its thought bubble —
      or when repeating what it learned.</p>
   <p id="hint">Click a stack to have the robot fetch something.</p>
+  <p id="sayRow" style="margin-top:6px;font-size:11.5px;color:var(--dim);
+     display:flex;align-items:center;gap:6px"></p>
   <p id="whoLine" style="margin-top:6px;font-size:11.5px;color:var(--dim)"></p>
 </div>
 
@@ -449,7 +451,10 @@ The notebook on your table is a two-page spread. Drop anything on a blank
 page to file it; click a filed entry to take out a copy (the page
 keeps its own). Drop a written text pad on a full page to open the first page
 mentioning that text; a whole number jumps to that page number. Only Dusty can
-remove an entry, and a notebook itself only goes when open at two blank pages.
+remove an entry (and Undo puts it back). He will not vacuum your own
+notebook at all, and clicking it makes it wobble where it stands rather than
+lifting it — so its corner tabs stay within reach. Any other notebook goes when
+open at two blank pages.
 The first page holds a blank notebook — copy it out to make more. The desk
 notebook remembers everything between visits, and it is furniture: it
 stays where it is when you load somebody else's world, because it is your
@@ -1548,21 +1553,26 @@ const knownUsers = () => {
 function setUser(name) {
   currentUser = String(name || '').trim().slice(0, 40);
   try {
+    const known = knownUsers();
     localStorage.setItem(USER_KEY, currentUser);
-    const all = knownUsers().filter(n => n !== currentUser);
+    const all = known.filter(n => n !== currentUser);
     if (currentUser) all.unshift(currentUser);
     localStorage.setItem(USERS_KEY, JSON.stringify(all.slice(0, 12)));
-    // the FIRST person to give a name inherits whatever this browser already
-    // had, rather than starting empty -- and then it is theirs, so everybody
-    // after them starts with a notebook of their own
+    // The FIRST person ever to sign in here inherits whatever this browser
+    // already had, rather than starting empty. Anyone after them starts with a
+    // notebook of their own -- so the old one is adopted or dropped at that
+    // first sign-in, never left lying about to be picked up by a later name.
     const legacy = localStorage.getItem(NB_KEY);
-    if (currentUser && legacy && !localStorage.getItem(nbKey())) {
-      localStorage.setItem(nbKey(), legacy);
+    if (currentUser && legacy) {
+      if (!known.length && !localStorage.getItem(nbKey())) {
+        localStorage.setItem(nbKey(), legacy);
+      }
       localStorage.removeItem(NB_KEY);
     }
   } catch {}
   showWho();
 }
+const allNotebooks = [];
 const clonePages = (pages) => {
   try { return structuredClone(pages); }
   catch { return JSON.parse(JSON.stringify(pages)); }
@@ -1600,6 +1610,7 @@ function makeNotebook(rec = null) {
                  pages: rec?.pages ? clonePages(rec.pages) : [],
                  page: rec?.page || 0 };
   setPick(g, { kind: 'thing', thing: g });
+  allNotebooks.push(g);
   renderNotebook(g);
   return g;
 }
@@ -3791,6 +3802,24 @@ function setWiggle(node) {
   if (!node || !node.parent) return;
   wiggle = { node, ry: node.rotation.y, s: node.scale.x, t: 0 };
 }
+// A short shake, for "no": the same motion the pointer-hover wiggle uses, but
+// it runs itself out and puts the thing back exactly as it was.
+const wobbles = [];
+function wobble(node) {
+  if (!node || wobbles.some(w => w.node === node)) return;
+  wobbles.push({ node, t: 0, ry: node.rotation.y });
+  sfx('alert');
+}
+function advanceWobbles(dt) {
+  for (let i = wobbles.length - 1; i >= 0; i--) {
+    const w = wobbles[i];
+    w.t += dt;
+    const done = w.t > 0.45 || !w.node.parent;
+    w.node.rotation.y = done ? w.ry
+      : w.ry + Math.sin(w.t * 42) * 0.13 * (1 - w.t / 0.45);
+    if (done) wobbles.splice(i, 1);
+  }
+}
 function advanceWiggle(dt) {
   if (!wiggle) return;
   if (!wiggle.node.parent) return setWiggle(null);
@@ -3839,6 +3868,7 @@ function roomWorking(t) {
 }
 function advanceWorldClocks(dt) {
   advanceWiggle(dt);
+  advanceWobbles(dt);
   advanceRetiring(dt);
   advanceMarty(dt);
   // a working room's chimney smokes
@@ -4858,6 +4888,12 @@ function handleClick(target) {
       }
       if (victim.userData.kind === 'notebook') {
         const ud = victim.userData;
+        // your own library is furniture: Dusty may empty its pages one by one,
+        // but the book itself stays on the desk
+        if (ud.main) {
+          return sayAttn('Dusty leaves your notebook alone — it is yours, and it stays '
+            + 'on the desk. He will take an entry off a page if you point him at one.');
+        }
         if (ud.pages[ud.page] || ud.pages[ud.page + 1]) {
           return say('A notebook only goes when it is open at two blank pages.');
         }
@@ -5009,6 +5045,13 @@ function userClick(target) {
       const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
       if (pn && pn.userData.pile[pn.userData.pile.length - 1] !== target.thing) {
         return userTake(pn);
+      }
+      // Picking your own notebook up put it in the way of its own corner tabs.
+      // It is furniture: it wobbles where it stands and stays on the desk.
+      if (target.thing.userData.main && kind === 'notebook') {
+        wobble(target.thing);
+        return say('Your notebook stays on the desk. Its first page holds a blank '
+          + 'one — take a copy of that if you want a notebook to carry about.');
       }
       return userTake(target.thing);
     }
@@ -6546,6 +6589,10 @@ function snapshotWorld() {
     : { spec: specOf(t), at: { x: t.position.x, z: t.position.z } });
   snap.piles = allNests.filter(n => n.parent)
     .map(n => ({ nest: n, items: n.userData.pile.map(specOf) }));
+  // notebooks travel by reference, so their contents have to be remembered
+  // separately -- otherwise undo hands back the same book, still altered
+  snap.books = allNotebooks.filter(nb => nb.parent)
+    .map(nb => ({ nb, pages: clonePages(nb.userData.pages), page: nb.userData.page }));
   return snap;
 }
 function restoreWorld(snap) {
@@ -6563,6 +6610,12 @@ function restoreWorld(snap) {
     p.nest.userData.pile = p.items.map(buildThing).filter(Boolean);
     p.nest.userData.pile.forEach(t => p.nest.add(t));
     restackNest(p.nest);
+  });
+  (snap.books || []).forEach(b => {
+    b.nb.userData.pages = clonePages(b.pages);
+    b.nb.userData.page = b.page;
+    renderNotebook(b.nb);
+    saveNotebook(b.nb);
   });
   for (const st of Object.values(stations)) {
     if (st.kind === 'stack') continue;
@@ -6966,11 +7019,37 @@ let hintTimer = null;
 // next click -- the moment you act on it -- lets the card go back to normal.
 let attnHeld = false;
 addEventListener('pointerdown', () => { attnHeld = false; }, true);
+// The messages under the title can be read aloud -- useful when your eyes are
+// on the table rather than on the card. Its own switch and its own voice: this
+// is the workshop talking, not Marty.
+const HINT_SAY = 'tt3d.hint-say';
+const HINT_VOICE = 'tt3d.hint-voice';
+let hintSayOn = localStorage.getItem(HINT_SAY) === '1';
+let hintLastSpoken = '';
+const pageLang = () => (navigator.language || 'en-US').slice(0, 2).toLowerCase();
+const voiceFitsPage = (v) => (v.lang || '').slice(0, 2).toLowerCase() === pageLang();
+function hintVoice() {
+  const all = speechSynthesis.getVoices?.() || [];
+  if (!all.length) return null;
+  const want = localStorage.getItem(HINT_VOICE);
+  if (want) { const v = all.find(v2 => v2.name === want); if (v) return v; }
+  const mine = all.filter(voiceFitsPage);
+  return mine.find(v => v.default) ?? mine[0] ?? all[0];
+}
+function hintSpeak(msg) {
+  if (!hintSayOn || !window.speechSynthesis || !msg || msg === hintLastSpoken) return;
+  hintLastSpoken = msg;
+  const u = new SpeechSynthesisUtterance(msg);
+  const v = hintVoice();
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
 function say(msg, hold = 2800, attn = false) {
   if (offstage()) return;
   if (attnHeld && !attn) return;
   attnHeld = attn;
   $('hint').textContent = msg;
+  hintSpeak(msg);
   clearTimeout(hintTimer);
   hintTimer = attn ? null : setTimeout(() => { hintTimer = null; refreshUI(); }, hold);
 }
@@ -7886,7 +7965,9 @@ loadModel('robot_v4.glb', (gltf) => {
   // nobody's name and say nothing about whose it is
   if (new URLSearchParams(location.search).get('demo')) {
     document.getElementById('whoLine')?.remove();
+    document.getElementById('sayRow')?.remove();
   } else {
+    buildSayRow();
     showWho();
     askWho();
   }
@@ -9115,6 +9196,53 @@ function martyCtl(state) {
 function martyModeLine() {
   const el = document.getElementById('martyMode');
   if (el) el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
+}
+// The speaker button under the message, and the voice it reads with.
+function buildSayRow() {
+  const row = document.getElementById('sayRow');
+  if (!row) return;
+  const btn = document.createElement('button');
+  btn.id = 'sayVoiceBtn';
+  btn.style.cssText = 'font:inherit;font-size:13px;padding:1px 7px;border-radius:7px';
+  const sel = document.createElement('select');
+  sel.id = 'sayVoiceSel';
+  sel.title = 'Which voice reads these messages.';
+  sel.style.cssText = 'flex:1;min-width:0;font:inherit;font-size:11.5px;padding:2px 4px';
+  const fill = () => {
+    const all = speechSynthesis.getVoices?.() || [];
+    if (!all.length) return;
+    const opt = (v) => `<option value="${v.name.replace(/"/g, '')}">${v.name} (${v.lang})</option>`;
+    const mine = all.filter(voiceFitsPage), other = all.filter(v => !voiceFitsPage(v));
+    sel.innerHTML = '<option value="">Your language\u2019s usual voice</option>'
+      + mine.map(opt).join('')
+      + (other.length ? '<optgroup label="Other languages">' + other.map(opt).join('')
+          + '</optgroup>' : '');
+    sel.value = localStorage.getItem(HINT_VOICE) || '';
+  };
+  const show = () => {
+    btn.textContent = hintSayOn ? '\u{1F50A}' : '\u{1F508}';
+    btn.title = hintSayOn ? 'These messages are read aloud. Click for silence.'
+                          : 'Read these messages aloud.';
+    sel.style.display = hintSayOn ? '' : 'none';
+  };
+  btn.onclick = () => {
+    hintSayOn = !hintSayOn;
+    localStorage.setItem(HINT_SAY, hintSayOn ? '1' : '0');
+    speechSynthesis?.cancel();
+    show();
+    if (hintSayOn) { fill(); hintLastSpoken = ''; hintSpeak($('hint').textContent); }
+  };
+  sel.onchange = () => {
+    if (sel.value) localStorage.setItem(HINT_VOICE, sel.value);
+    else localStorage.removeItem(HINT_VOICE);
+    speechSynthesis?.cancel();
+    hintLastSpoken = '';
+    hintSpeak($('hint').textContent);
+  };
+  row.append(btn, sel);
+  fill();
+  show();
+  speechSynthesis?.addEventListener?.('voiceschanged', fill);
 }
 // Whose notebook is on the desk, shown in the title card and changeable there.
 function showWho() {
