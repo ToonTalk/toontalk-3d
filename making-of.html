@@ -260,16 +260,16 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Six days, 112 commits and one 9,500-line file — and the
+  <p class="standfirst">Six days, 117 commits and one 9,700-line file — and the
     day the project stopped guessing at ToonTalk and went and read it.</p>
   <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;21 August 2026</p>
 </header>
 
 <dl class="ledger">
   <div><dt>Built in</dt><dd>6 days</dd></div>
-  <div><dt>Commits</dt><dd>112</dd></div>
+  <div><dt>Commits</dt><dd>117</dd></div>
   <div><dt>The app</dt><dd>1 file</dd></div>
-  <div><dt>Lines</dt><dd>9,568</dd></div>
+  <div><dt>Lines</dt><dd>9,764</dd></div>
   <div><dt>Examples</dt><dd>11 worlds</dd></div>
 </dl>
 
@@ -474,7 +474,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
-    <div class="rail">21 Aug<br>7cf18cd &rarr; bf8ca1f</div>
+    <div class="rail">21 Aug<br>7cf18cd &rarr; e7c3edd</div>
     <div class="body">
       <div class="head">
         <span class="badge">□</span>
@@ -510,6 +510,58 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         and Ruby moved to stand along the sides of the desk, because the
         opening view is the first thing anybody sees and half of them were
         under it or past its edge.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">21 Aug<br>8b48ff5 &rarr; 2341b4b</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge r">&infin;</span>
+        <h2>Half a million holes</h2>
+      </div>
+      <p>Then Ken trained a robot to copy the box it was working on and join
+        the copy back on. It is a perfectly ordinary thing to teach — it
+        doubles a number, and it doubles the length of an array. He put it in
+        a glass house and pulled the lever.</p>
+      <p>Twenty-odd rounds later the box had <b>over 500,000 holes</b>, and
+        three separate layers had quietly given way, each in its own manner:</p>
+
+      <div class="days">
+        <div class="day"><span class="when">The room</span><p class="what"><b>The box burst the walls.</b> A house mounts its world at a fixed miniature scale — a constant shrink, which cannot cope with contents that grow without bound. The box punched through both walls and dragged the house off across the floor. Rooms now measure what is inside them and shrink further when outgrown, never magnifying a small one back up.</p></div>
+        <div class="day"><span class="when">The frame</span><p class="what"><b>The camera moved once every second or two.</b> Every hole was building a pocket mesh and an anchor, so half a million holes meant a million objects for three.js to walk on every frame — all of it geometry nobody could see. A long box now draws its first and last six holes with a <span class="mono">⋯ N more ⋯</span> plate between, exactly as a tall pile on a nest already did.</p></div>
+        <div class="day"><span class="when">The file</span><p class="what"><b>Saving it wrote 11&nbsp;MB.</b> Every empty hole was spelled out longhand. A box past sixty-four holes is now written sparsely: a hole count, and only the holes that hold something.</p></div>
+      </div>
+
+      <p>The measurements, on a 500,000-hole box holding a number at each end:
+        <b>20 objects</b> added to the scene rather than a million;
+        <b>4.25&nbsp;ms</b> a frame against 4.61&nbsp;ms for an <em>empty</em>
+        workshop; the file down from <b>2.5&nbsp;MB to 448 bytes</b>, and its
+        load from <b>1,916&nbsp;ms to 334&nbsp;ms</b>. Both file shapes still
+        read, so nothing saved before that day changed.</p>
+
+      <h3>Version numbers, before they are needed</h3>
+      <blockquote>Updating the file format is fine. But for the future can we
+        include version numbers in the files so changes won't break things.
+        <span class="attrib">Ken, 21 August</span></blockquote>
+      <p>Which is the request of somebody who has maintained a format before.
+        Every world, thing, saved robot and notebook now records the format it
+        was written in. An older file is migrated; a <em>newer</em> one is
+        refused outright, naming both versions — rather than half-read into
+        something that looks right and is quietly wrong, which is the failure
+        the stamp exists to prevent. It cost nothing on the day it went in, and
+        the sparse box was its first use.</p>
+
+      <h3>Getting it wrong first</h3>
+      <p>The room fix landed the wrong way round to begin with: the budget was
+        written in the room's outer units rather than its inner ones, and since
+        a bare robot already measures about 1.2 across on that inside scale,
+        the very first version clamped <em>every</em> room — robot included,
+        nothing having grown at all. Caught by measuring a room that had no
+        business shrinking, which is the sort of check that only gets written
+        when you have already been fooled twice.</p>
     </div>
   </div>
 </section>
@@ -575,6 +627,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
             <li>Insertion-point editing in numbers and pads.</li>
             <li>ToonTalk's puzzle game, which is how the original taught itself to a child without a manual.</li>
             <li>Somewhere to publish it that will run a live 3D scene, since the artifact frame will not.</li>
+            <li>Matching a robot's thought against a box of half a million holes still walks every one — per action, not per frame, but it walks them.</li>
           </ul>
         </div>
       </div>
@@ -590,7 +643,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 112 commits between 16 and 21
+  <p>Written from the repository's own history: 117 commits between 16 and 21
   August 2026, and the audit file they kept arguing with.</p>
   <p>Ken Kahn's own account of the project is
   <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">here</a>.</p>
