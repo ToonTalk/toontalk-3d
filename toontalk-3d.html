@@ -1142,8 +1142,13 @@ function wrapLines(c, text, maxW) {
   return lines;
 }
 function drawWrapped(c, text, cx, cy, maxW, maxH) {
+  const words = String(text).split(' ');
   for (let px = 64; px >= 9; px = Math.floor(px * 0.88)) {
     c.font = `bold ${px}px Georgia, serif`;
+    // Never settle for a size that has to break a word: at 64px "sevenths" is
+    // wider than the face, so it came out as "sevent / hs" -- which fits the
+    // height and reads as nonsense. A size or two smaller holds the whole word.
+    if (words.some(w => c.measureText(w).width > maxW)) continue;
     const lines = wrapLines(c, text, maxW);
     const lh = px * 1.12;
     if (lines.length * lh <= maxH) {
@@ -1166,9 +1171,9 @@ function makeNumber(value, op = '+', lite = false) {
   // `lite` skips all meshes and canvases: the hidden middle of a tall pile
   // only needs its data. __materialize() builds the visuals on demand.
   let built = false;
-  let fMain, fBack, fSci, fAlt, shellMat;
-  const build = () => {
-  built = true;
+  let fMain, fBack, fSci, fAlt, fTop, shellMat, topMesh;
+  // out here rather than inside build(), because the top's mixed-fraction face
+  // is made on demand the first time a value actually needs one
   const mkFace = () => {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 256;
@@ -1176,6 +1181,8 @@ function makeNumber(value, op = '+', lite = false) {
     tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
     return { canvas, tex, mat: new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45 }) };
   };
+  const build = () => {
+  built = true;
   // front and top show the value; the other faces show the same number written
   // other ways
   fMain = mkFace(); fBack = mkFace(); fSci = mkFace(); fAlt = mkFace();
@@ -1190,10 +1197,14 @@ function makeNumber(value, op = '+', lite = false) {
     q.position.set(px, py, pz);
     q.rotation.set(rx, ry, 0);
     g.add(q);
+    return q;
   };
   addFace(fMain.mat, 0, 0, p, 0, 0);                  // front: the value
-  addFace(fMain.mat, 0, p, 0, -Math.PI / 2, 0);       // top: the value again
-  addFace(fBack.mat, 0, 0, -p, 0, Math.PI);           // back: words / mixed
+  // top: the value again -- except for an improper fraction, where repeating
+  // the front wastes the one face you are looking straight down at, and the
+  // mixed form is the same number read more easily
+  topMesh = addFace(fMain.mat, 0, p, 0, -Math.PI / 2, 0);
+  addFace(fBack.mat, 0, 0, -p, 0, Math.PI);           // back: words
   addFace(fSci.mat, -p, 0, 0, 0, -Math.PI / 2);       // left: scientific
   addFace(fAlt.mat, p, 0, 0, 0, Math.PI / 2);         // right: grouped / decimal
   };
@@ -1250,11 +1261,39 @@ function makeNumber(value, op = '+', lite = false) {
         c.beginPath(); c.moveTo(128 - w, 143); c.lineTo(128 + w, 143); c.stroke();
       }
     });
+    // An improper fraction reads far better as "1 3/7" than as a second copy
+    // of 10/7, so the top face carries the mixed form. Everything else keeps
+    // repeating the front there -- for an integer or a proper fraction there
+    // is nothing better to put. The face is built the first time one is
+    // actually needed, so ordinary numbers never pay for a canvas.
+    if (topMesh) {
+      const improper = v && v.d !== 1n && (v.n < 0n ? -v.n : v.n) > v.d;
+      if (improper && label == null) {
+        if (!fTop) fTop = mkFace();
+        paint(fTop, (c, st) => drawMixed(c, st, v, lod));
+        topMesh.material = fTop.mat;
+      } else {
+        topMesh.material = fMain.mat;
+      }
+    }
     // the three secondary faces are expensive; a thousand pile members must
     // not each paint four canvases on every rebuild. They are painted lazily,
     // a few per LOD sweep, once the number is close enough to read them.
     if (g.__facesLive) paintSecondary();
     else g.__facesStale = true;
+  }
+  // the whole number, then what is left over stacked beside it
+  function drawMixed(c, st, v, lod) {
+    const neg = v.n < 0n, n0 = neg ? -v.n : v.n;
+    const q = (neg ? '-' : '') + (n0 / v.d).toString();
+    const r = (n0 % v.d).toString(), d = v.d.toString();
+    const wq = drawNum(c, q, 92, 142, 110, 150, lod);
+    const fx = Math.min(212, 92 + wq / 2 + 46);
+    const wn = drawNum(c, r, fx, 104, 84, 62, lod);
+    const wd = drawNum(c, d, fx, 182, 84, 62, lod);
+    c.strokeStyle = st.ink; c.lineWidth = 8;
+    const w = Math.max(wn, wd) / 2 + 10;
+    c.beginPath(); c.moveTo(fx - w, 143); c.lineTo(fx + w, 143); c.stroke();
   }
   function paintSecondary() {
     const label = g.userData.label;
@@ -1437,12 +1476,14 @@ function makeBox(n = HOLES) {
   for (let i = 0; i < n; i++) {
     const k = !long ? i : i < BOX_END ? i : i >= n - BOX_END ? BOX_END + (i - (n - BOX_END)) : -1;
     if (k < 0) {
-      // an elided hole: it holds things and answers to its index like any
+      // An elided hole: it holds things and answers to its index like any
       // other, but has no geometry, and its anchor is deliberately left out
-      // of the scene -- so whatever sits in it costs nothing to draw
-      const anchor = new THREE.Object3D();
-      const hole = { index: i, anchor, thing: null, pocket: null, w: holeW, hidden: true };
-      holes.push(hole);
+      // of the scene -- so whatever sits in it costs nothing to draw. The
+      // anchor is also built only if something is actually put there: half a
+      // million Object3Ds, each with its own matrices, was most of the two
+      // seconds a box that size took to load, and almost none are ever used.
+      holes.push({ index: i, thing: null, pocket: null, w: holeW, hidden: true,
+        get anchor() { return this._a ?? (this._a = new THREE.Object3D()); } });
       continue;
     }
     const x = drawnX(k);
@@ -1629,6 +1670,9 @@ function setUser(name) {
   showWho();
 }
 const allNotebooks = [];
+// set when this browser's stored notebook was written by a newer build: it is
+// left alone rather than overwritten with a blank one
+let notebookLocked = false;
 const clonePages = (pages) => {
   try { return structuredClone(pages); }
   catch { return JSON.parse(JSON.stringify(pages)); }
@@ -1727,8 +1771,10 @@ function renderNotebook(nb) {
 }
 function saveNotebook(nb) {
   if (!nb.userData.main) return;
+  if (notebookLocked) return;      // do not overwrite what we could not read
   try {
-    localStorage.setItem(nbKey(), JSON.stringify({ pages: nb.userData.pages, page: nb.userData.page }));
+    localStorage.setItem(nbKey(),
+      JSON.stringify({ v: FILE_V, pages: nb.userData.pages, page: nb.userData.page }));
   } catch {}
 }
 // what a page's entry "says", for text-pad navigation
@@ -1819,7 +1865,7 @@ function notebookDrop(nb, incoming, side, refuse) {
 // a thing on it and it lands on that desk, and the robot inside gets to work
 // the moment the outer world goes quiet. Walk through the door to swap views.
 let nextRoomId = 1;
-const emptyWorldRec = () => ({ kind: 'world', v: 1, bench: [], stations: {}, active: null });
+const emptyWorldRec = () => ({ kind: 'world', v: FILE_V, bench: [], stations: {}, active: null });
 
 // --- live world contexts -----------------------------------------------------
 // A room's world is not a bottled document any more: it is live nodes hanging
@@ -2856,6 +2902,9 @@ function ensureMainNotebook() {
   if (new URLSearchParams(location.search).get('demo')) return null;
   let rec = null;
   try { rec = JSON.parse(localStorage.getItem(nbKey()) || 'null'); } catch {}
+  // a notebook this browser cannot read is left untouched rather than
+  // overwritten by a blank one -- the pages are still there for a newer build
+  if (rec && fileTooNew(rec)) { notebookLocked = true; rec = null; }
   const nb = makeNotebook(rec ?? { pages: [{ kind: 'notebook', pages: [], page: 0 }], page: 0 });
   nb.userData.main = true;
   putOnBench(nb, { x: 0.95, z: BENCH.z0 + 0.28 });
@@ -6356,7 +6405,7 @@ function saveRobot(name) {
   if (!name) return say('Give the robot a name first.');
   if (!program.length) return say('Train it before saving it.');
   const lib = loadLibrary();
-  lib[name] = { program: program.map(stepOut), condition: condOut(condition),
+  lib[name] = { v: FILE_V, program: program.map(stepOut), condition: condOut(condition),
                 trainedOn: activeBot?.trainedOn ?? null };
   saveLibrary(lib);
   refreshLibrary(name);
@@ -6364,6 +6413,8 @@ function saveRobot(name) {
   say(`Saved “${name}”.`);
 }
 function applyLoaded(rec, name) {
+  const tooNew = fileTooNew(rec, 'robot');
+  if (tooNew) return sayAttn(tooNew);
   clearUndo();
   program = rec.program.map(stepIn);
   condition = condIn(rec.condition);
@@ -6465,6 +6516,30 @@ function botOut(bot) {
            condition: condOut(bot.condition), trainedOn: bot.trainedOn ?? null,
            team: bot.team.map(botOut) };
 }
+// --- what a saved file says about itself -------------------------------------
+// Every file this app writes -- a world, a single thing, a robot in the
+// library, the notebook in this browser -- carries FILE_V. A file with no `v`
+// at all predates versioning and is read as v1.
+//
+// The rule on reading: an OLDER file is migrated (there is nothing to do so
+// far -- v2 only ADDED the sparse box form, and the reader accepts both). A
+// NEWER file is refused outright with a message naming the versions, rather
+// than half-read into something that looks fine and is quietly wrong. That
+// refusal is the whole point of the stamp: it costs nothing today and means a
+// future change to the format cannot silently mangle somebody's work.
+//
+//   v1  the original format
+//   v2  a box past SPARSE_FROM holes writes {n, at} instead of a full array
+const FILE_V = 2;
+const SPARSE_FROM = 64;
+const fileV = (o) => (Number.isFinite(o?.v) ? o.v : 1);
+// Returns null when the file is readable, or a message saying why it is not.
+function fileTooNew(o, what = 'file') {
+  const v = fileV(o);
+  return v > FILE_V
+    ? `That ${what} was saved by a newer ToonTalk 3D (format v${v}; this one reads up to v${FILE_V}). Update, and it will open.`
+    : null;
+}
 function thingOut(t) {
   const r = thingOutRaw(t);
   if (r && t?.userData?.erased) r.erased = true;
@@ -6489,8 +6564,23 @@ function thingOutRaw(t) {
   }
   if (ud.kind === 'bird') return { kind: 'bird', nestId: t.__nest?.userData.id ?? null,
     nestGuid: ud.nestGuid ?? null, label: ud.label ?? undefined };
+  // A box is an array, and a robot that doubles one reaches hundreds of
+  // thousands of holes in a couple of dozen rounds -- nearly all of them
+  // empty. Writing every empty hole out longhand made an 11 MB file for one
+  // box. A long box is written sparsely instead: how many holes, and only the
+  // ones that hold something. Short boxes keep the plain array, which is
+  // easier to read and is what every file written before v2 contains.
+  const holes = ud.holes;
+  if (ud.kind === 'box' && holes.length > SPARSE_FROM) {
+    const at = {};
+    for (let i = 0; i < holes.length; i++) {
+      const h = thingOut(holes[i].thing);
+      if (h) at[i] = h;
+    }
+    return { kind: ud.kind, label: ud.label ?? undefined, n: holes.length, at };
+  }
   return { kind: ud.kind, label: ud.label ?? undefined,
-           holes: ud.holes.map(h => thingOut(h.thing)) };
+           holes: holes.map(h => thingOut(h.thing)) };
 }
 function worldOut() {
   syncBot();
@@ -6510,7 +6600,7 @@ function worldOut() {
   const sts = {};
   for (const [id, occ] of stationNodes) sts[id] = thingOut(occ);
   return {
-    kind: 'world', v: 1,
+    kind: 'world', v: FILE_V,
     bench: bench.map(t => ({ thing: thingOut(t),
       x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })),
     stations: sts,
@@ -6567,6 +6657,14 @@ function thingInRaw(o, nests, birds) {
     t = makeBird(null);
     t.userData.nestGuid = o.nestGuid ?? null;
     birds.push({ node: t, nestId: o.nestId });
+  } else if (o.n != null && o.at) {
+    // a sparsely written box (v2 and later): a hole count and only the holes
+    // that hold something
+    t = makeBox(o.n);
+    for (const [i, h] of Object.entries(o.at)) {
+      const child = thingIn(h, nests, birds);
+      if (child) putInHole(t.userData.holes[+i], child);
+    }
   } else {
     t = o.kind === 'scale' ? makeScale() : makeBox(o.holes.length);
     o.holes.forEach((h, i) => {
@@ -7368,7 +7466,7 @@ async function saveFile(filename, text, note) {
 $('exportHeldBtn').onclick = () => {
   if (!held) return say('Pick something up first — this saves what you are holding.');
   if (held.userData.kind === 'robot' && held.__bot === activeBot) syncBot();
-  const rec = { kind: 'thing', thing: thingOut(held) };
+  const rec = { kind: 'thing', v: FILE_V, thing: thingOut(held) };
   const base = (held.userData.label
     || (held.userData.kind === 'robot' ? held.__bot?.name : null)
     || held.userData.kind).replace(/[^\w-]+/g, '_').slice(0, 40);
@@ -7387,6 +7485,8 @@ $('importBtn').onclick = () => {
 async function importRobotFile(file) {
   try {
     const rec = JSON.parse(await file.text());
+    const tooNew = fileTooNew(rec, rec.kind === 'world' ? 'workshop' : 'thing');
+    if (tooNew) return sayAttn(tooNew);
     if (rec.kind === 'world') {
       if (busy || mode === 'replay') return say('Wait for the robot to finish first.');
       worldIn(rec);
@@ -7789,7 +7889,12 @@ function tipFor(t) {
       }
       const OPW = { '+': 'adds itself to', '-': 'subtracts itself from', '*': 'multiplies',
                     '/': 'divides', '^': 'raises the power of' };
-      return `${ratShort(ud.value)} — dropped on a number, it ${OPW[ud.op]} it. Click to pick it up; then type digits or + − * / ^.`;
+      const v = ud.value;
+      // an improper fraction says its mixed form too -- it is on the block's
+      // top face, but the tooltip saves turning it round
+      const mixed = v && v.d !== 1n && (v.n < 0n ? -v.n : v.n) > v.d
+        ? ` (${mixedText(v)})` : '';
+      return `${ratShort(ud.value)}${mixed} — dropped on a number, it ${OPW[ud.op]} it. Click to pick it up; then type digits or + − * / ^.`;
     }
     if (ud.kind === 'box') {
       if (held?.userData.kind === 'robot') {

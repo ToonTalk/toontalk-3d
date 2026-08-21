@@ -86,6 +86,13 @@ designs, generated from Blender Python scripts rather than modelled by hand.
   A robot trained on the desk notebook looks it up by name when it runs; one
   trained on any *other* notebook — one it was given, or one on its own work
   area — reads that very notebook instead.
+- **Saved files carry a format version.** Every world, thing, robot and the
+  notebook records the format it was written in; a file from a *newer* build is
+  refused with a message naming both versions rather than half-read into
+  something quietly wrong, and a file with no version at all is read as the
+  original v1. A box past 64 holes is written sparsely — a hole count and only
+  the holes that hold something — which took one 500,000-hole box from 2.5 MB
+  to 448 bytes.
 - **The message under the title can read itself aloud** — a speaker button
   there turns it on and picks the voice, separately from Marty's.
 - **The workbench reshapes.** "Reshape table" reveals glowing corner handles:
