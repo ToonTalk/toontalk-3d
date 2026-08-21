@@ -8488,7 +8488,9 @@ async function _mSt(id) {
 // first. Dropping a number onto another number from across the room was the
 // last place where something still moved by itself.
 async function _mAt(target, node) {
-  const p = node?.getWorldPosition?.(new THREE.Vector3());
+  return _mAtPos(target, node?.getWorldPosition?.(new THREE.Vector3()));
+}
+async function _mAtPos(target, p) {
   if (p) {
     // Anything on the table he comes to the NEAR edge for, in line with it:
     // never underneath, and never with his back to you. Something off the
@@ -8506,6 +8508,9 @@ async function _mAt(target, node) {
 const _mOn = (thing) => _mAt({ kind: 'thing', thing }, thing);
 const _mHole = (box, index) =>
   _mAt({ kind: 'hole', box, index }, box.userData.holes[index].anchor);
+// Dusty lives under the near edge of the bench; waking him from across the
+// room looked exactly like the tossing did.
+const _mDusty = () => _mAtPos({ kind: 'dusty' }, dustyHome);
 async function _mBench(x, z) {
   // Everything he sets down goes along the NEAR edge of the table, within
   // reach of where he is standing -- across the table it looked like a toss.
@@ -8615,10 +8620,10 @@ const MARTY_DEMOS = {
   copier: { blurb: 'Mimi the copier', near: 'copyOut', steps: [
     { do: () => _mSt('numbers') },
     { do: () => { held?.setValue?.(rat(5n)); refreshUI(); } },
-    { say: 'Mimi the copier: set anything on her platform…', do: () => handleClick({ kind: 'station', id: 'copyIn' }) },
-    { say: '…and an exact copy drops into the tray.', do: () => handleClick({ kind: 'station', id: 'copyOut' }) },
+    { say: 'Mimi the copier: set anything on her platform…', do: () => _mSt('copyIn') },
+    { say: '…and an exact copy drops into the tray.', do: () => _mSt('copyOut') },
     { do: () => _mBench(0.9, 1.5) },
-    { say: 'The original comes back off the platform.', do: () => handleClick({ kind: 'station', id: 'copyIn' }) },
+    { say: 'The original comes back off the platform.', do: () => _mSt('copyIn') },
     { do: () => _mBench(0.55, 1.5) },
     { say: 'She copies robots too — training, name and team included. That is how a program copies itself.' },
   ] },
@@ -8626,15 +8631,15 @@ const MARTY_DEMOS = {
     { do: () => _mSt('texts') },
     { do: () => { held?.setText?.('scrap'); refreshUI(); } },
     { do: () => _mBench(0.2, 1.5) },
-    { do: (c) => { c.v = _mLast(); handleClick({ kind: 'dusty' }); } },
+    { do: (c) => { c.v = _mLast(); return _mDusty(); } },
     { say: 'Dusty awake: click a thing and he vacuums it away.', do: (c) => _mOn(c.v), hold: 900 },
-    { say: 'He also vacuums parts of a robot’s THOUGHT — an emptied part accepts anything. Ruby, beside him, erases in place: a 5 becomes “any number”.', do: () => handleClick({ kind: 'dusty' }) },
+    { say: 'He also vacuums parts of a robot’s THOUGHT — an emptied part accepts anything. Ruby, beside him, erases in place: a 5 becomes “any number”.', do: () => _mDusty() },
   ] },
   rooms: { blurb: 'rooms: little worlds that work alone', near: 'rooms', steps: [
     { say: 'Rooms come off this stack.', do: () => _mSt('rooms') },
     { say: 'A room holds a whole little world — drop in a robot, then things for it to work on.', do: () => _mBench(0.0, 1.55) },
-    { do: (c) => { c.r = _mLast(); handleClick({ kind: 'roomRoof', room: c.r }); }, hold: 900 },
-    { say: 'Click the roof: solid walls to let it work in private — the chimney smokes — or glass to watch. The lever runs it; the door lets you walk inside.', do: (c) => handleClick({ kind: 'roomRoof', room: c.r }) },
+    { do: (c) => { c.r = _mLast(); return _mAt({ kind: 'roomRoof', room: c.r }, c.r); }, hold: 900 },
+    { say: 'Click the roof: solid walls to let it work in private — the chimney smokes — or glass to watch. The lever runs it; the door lets you walk inside.', do: (c) => _mAt({ kind: 'roomRoof', room: c.r }, c.r) },
   ] },
   notebook: { blurb: 'the notebook: file, look up by name', near: 'notebook', steps: [
     { do: () => _mSt('numbers') },
@@ -8643,11 +8648,12 @@ const MARTY_DEMOS = {
     { say: 'Click a page to take a COPY out — the page keeps the original.', do: (c) => {
         const nb = mainNotebook(); if (!nb) return;
         c.slot = nb.userData.pages.findIndex(p => p && p.kind === 'number' && p.value?.n === '7');
-        if (c.slot >= 0) handleClick({ kind: 'nbItem', nb, slot: c.slot }); } },
+        return c.slot >= 0 ? _mAt({ kind: 'nbItem', nb, slot: c.slot }, nb) : null; } },
     { do: () => _mBench(1.1, 1.5) },
-    { say: 'And Dusty clears the entry again, so your library is as it was.', do: () => handleClick({ kind: 'dusty' }) },
-    { do: (c) => { const nb = mainNotebook(); if (nb && c.slot >= 0) handleClick({ kind: 'nbItem', nb, slot: c.slot }); } },
-    { do: () => handleClick({ kind: 'dusty' }) },
+    { say: 'And Dusty clears the entry again, so your library is as it was.', do: () => _mDusty() },
+    { do: (c) => { const nb = mainNotebook();
+        return nb && c.slot >= 0 ? _mAt({ kind: 'nbItem', nb, slot: c.slot }, nb) : null; } },
+    { do: () => _mDusty() },
     { say: 'Robots use the notebook too: write a name on a pad, drop it on, take a copy of what it finds. One program using another, by name.' },
   ] },
 };
