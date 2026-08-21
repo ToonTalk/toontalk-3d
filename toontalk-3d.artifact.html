@@ -18087,9 +18087,9 @@ async function martyManualText() {
   return martyManual;
 }
 const MARTY_PROVIDERS = {
-  claude: { label: 'Claude', model: 'claude-sonnet-5' },
-  openai: { label: 'ChatGPT (OpenAI)', model: 'gpt-5' },
-  gemini: { label: 'Gemini', model: 'gemini-2.5-flash' },
+  claude: { label: 'Claude', say: 'Claude', model: 'claude-sonnet-5' },
+  openai: { label: 'ChatGPT (OpenAI)', say: 'ChatGPT', model: 'gpt-5' },
+  gemini: { label: 'Gemini', say: 'Gemini', model: 'gemini-2.5-flash' },
 };
 const martyProv = () => localStorage.getItem('tt3d.marty-provider') || 'claude';
 const martyKeyOf = (p) => (localStorage.getItem('tt3d.marty-key.' + p)
@@ -18434,7 +18434,7 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   provEl.onchange = () => {
     localStorage.setItem('tt3d.marty-provider', provEl.value);
     showProv();
-    martySay('Brain: ' + MARTY_PROVIDERS[provEl.value].label
+    martySay('Switched to ' + MARTY_PROVIDERS[provEl.value].say + ' as my brain'
       + (martyKeyOf(provEl.value) ? '.' : ' \u2014 it still needs its key.'));
   };
   modelEl.onchange = () => {
