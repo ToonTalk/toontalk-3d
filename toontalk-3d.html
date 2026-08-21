@@ -4713,7 +4713,13 @@ function handleClick(target) {
     return refreshUI();
   }
   if (target.kind === 'marty') { toggleMartyPanel(); return; }
-  if (busy || mode === 'replay') return;
+  // A second click on the thought while Ruby (or Dusty) is still flying home
+  // from the first should still register -- the flights just queue and play
+  // back to back -- rather than being silently dropped as though nothing was
+  // clicked. That silent drop is what made "click again to generalize
+  // further" seem to stop working once erasing grew an animation.
+  const eraseContinuation = busy && target.kind === 'cond' && (rubyActive || dustyActive);
+  if ((busy && !eraseContinuation) || mode === 'replay') return;
 
   if (target.kind === 'roomRoof' || target.kind === 'roomDoor') {
     const room = target.room;
