@@ -1,4 +1,5 @@
 <title>Reading the Manual</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b02a1c'/%3E%3Cpath d='M4.6 10.4C8.6 8.9 12.6 9.5 15.3 11.2L15.3 23.6C12.6 21.9 8.6 21.3 4.6 22.4Z' fill='%23faf6ec'/%3E%3Cpath d='M27.4 10.4C23.4 8.9 19.4 9.5 16.7 11.2L16.7 23.6C19.4 21.9 23.4 21.3 27.4 22.4Z' fill='%23e8dfc9'/%3E%3Crect x='15.3' y='11' width='1.4' height='12.7' rx='.5' fill='%237d1a12'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500;9..144,700;9..144,900&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -247,7 +248,10 @@
   }
   @media (prefers-reduced-motion: no-preference) {
     .body > *, .day, .panel { animation: rise .5s ease both; }
-    @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+    .alsoby { margin: 1.6rem 0 0; font-size: .92rem; color: var(--ink-soft);
+            font-style: italic; }
+  .alsoby a { font-style: normal; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
   }
 </style>
 
@@ -256,18 +260,23 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Five days, 104 commits and one 9,000-line file — and the
+  <p class="standfirst">Six days, 112 commits and one 9,500-line file — and the
     day the project stopped guessing at ToonTalk and went and read it.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;20 August 2026</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;21 August 2026</p>
 </header>
 
 <dl class="ledger">
-  <div><dt>Built in</dt><dd>5 days</dd></div>
-  <div><dt>Commits</dt><dd>104</dd></div>
+  <div><dt>Built in</dt><dd>6 days</dd></div>
+  <div><dt>Commits</dt><dd>112</dd></div>
   <div><dt>The app</dt><dd>1 file</dd></div>
-  <div><dt>Lines</dt><dd>9,144</dd></div>
+  <div><dt>Lines</dt><dd>9,568</dd></div>
   <div><dt>Examples</dt><dd>11 worlds</dd></div>
 </dl>
+
+<p class="alsoby">Ken Kahn is writing about this project from the other side of
+  the collaboration —
+  <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">his
+  post is here</a>.</p>
 
 <section>
   <div class="col">
@@ -465,6 +474,48 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
+    <div class="rail">21 Aug<br>7cf18cd &rarr; bf8ca1f</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">□</span>
+        <h2>The sixth day, and a wall</h2>
+      </div>
+      <p>The last day went looking for somewhere to put the thing. A build
+        script now packs the whole workshop — three.js, the loader, both
+        Blender-made models as text — into a single 2.3&nbsp;MB file that
+        fetches nothing and runs from a disk, an email attachment or any static
+        host. All eleven example worlds give byte-identical results in the
+        packed build and the source, which is how it is checked.</p>
+      <p>It will not run as a published Claude artifact, and finding out why
+        took a morning of probe pages. That frame will render a full-screen
+        three.js scene <em>once</em> and hold it happily for as long as you
+        watch; it drops any inline script over about a megabyte without a word;
+        it refuses to fetch anything at all, including a
+        <span class="mono">data:</span> URL the page made itself. And the wall:
+        the moment this workshop's animation loop runs, the whole frame goes
+        white, markup and all, however long the start is delayed. A live
+        workshop is more than that frame will carry.</p>
+      <h3>Furniture, and who it belongs to</h3>
+      <p>The rest of the day was the kind of correction only the person using
+        it can make. Marty walked under the table with his antennae through the
+        top. He clicked Mimi the copier from across the room, so the number
+        appeared on her platform by itself. Your notebook came up in your hand
+        when you meant to turn a page, and Dusty would vacuum it away
+        altogether. Undo did not reach inside it, because a notebook travels
+        through a snapshot <em>by reference</em> — so undo handed back the
+        same book with the page already gone.</p>
+      <p>And the notebook, which remembers everything between visits, now
+        belongs to a name: the workshop asks who is working here, and two
+        people sharing a browser no longer share a library. Marty, Mimi, Dusty
+        and Ruby moved to stand along the sides of the desk, because the
+        opening view is the first thing anybody sees and half of them were
+        under it or past its edge.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
     <div class="rail">How it worked</div>
     <div class="body">
       <div class="head">
@@ -523,6 +574,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
             <li>Sensors — mouse, keyboard, time — the family that games are made of.</li>
             <li>Insertion-point editing in numbers and pads.</li>
             <li>ToonTalk's puzzle game, which is how the original taught itself to a child without a manual.</li>
+            <li>Somewhere to publish it that will run a live 3D scene, since the artifact frame will not.</li>
           </ul>
         </div>
       </div>
@@ -538,8 +590,10 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 104 commits between 16 and 20
+  <p>Written from the repository's own history: 112 commits between 16 and 21
   August 2026, and the audit file they kept arguing with.</p>
+  <p>Ken Kahn's own account of the project is
+  <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">here</a>.</p>
 </footer>
 
 </div>

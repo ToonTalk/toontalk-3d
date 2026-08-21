@@ -9931,7 +9931,9 @@ function frameScene() {
   if (userMoved) return;
   // wide enough for Dusty's mat at one end, tall enough for the thought bubble
   // riding above the robot's head
-  const centre = new THREE.Vector3(0, 1.05, 0.35), halfW = 3.1, halfH = 1.85;
+  // wide enough for the helpers standing at either side of the desk, even in
+  // a narrow window where the width is what sets the distance
+  const centre = new THREE.Vector3(0, 1.05, 0.35), halfW = 3.25, halfH = 1.85;
   const vFov = camera.fov * DEG;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
   const d = Math.max(halfH / Math.tan(vFov / 2), halfW / Math.tan(hFov / 2)) + 1.15;
@@ -12593,20 +12595,31 @@ const ROW_Z = 1.35;
 // the robot's work area, so it turns round to fetch from them.
 const BENCH = { x0: -1.7, x1: 1.7, z0: 1.05, z1: 2.35 };
 const ARC = { cx: 0, cz: 0.55, r: 2.45 };
+// Where the helpers stand: beside the desk rather than out on the arc with
+// the stacks, so all of them are in the opening view and none is under it.
+// Measured from the bench's own edges as they are at load.
+const HELPERS = {
+  marty:  { x: BENCH.x0 - 0.82, z: (BENCH.z0 + BENCH.z1) / 2 - 0.05 },
+  copier: { x: BENCH.x1 + 0.86, z: BENCH.z0 - 0.10 },
+  dusty:  { x: BENCH.x1 + 0.70, z: BENCH.z1 - 0.73 },
+  ruby:   { x: BENCH.x1 + 1.25, z: BENCH.z1 - 0.63 },
+};
 const STATION_DEFS = [
-  { id: 'rooms',   label: 'the room stack',   kind: 'stack' },
-  { id: 'texts',   label: 'the text stack',   kind: 'stack' },
-  { id: 'nests',   label: 'the nest stack',   kind: 'stack' },
-  { id: 'scales',  label: 'the scale stack',  kind: 'stack' },
-  { id: 'dice',    label: 'the dice stack',   kind: 'stack' },
-  { id: 'minis',   label: 'the robot stack',  kind: 'stack' },
-  { id: 'numbers', label: 'the number stack', kind: 'stack' },
-  { id: 'boxes',   label: 'the box stack',    kind: 'stack' },
-  { id: 'copier',  label: 'the copier',       kind: 'copier' },
-].map((d, i, all) => {
-  const th = (-78 + i * (156 / (all.length - 1))) * Math.PI / 180;
-  return { ...d, x: ARC.cx + ARC.r * Math.sin(th), z: ARC.cz - ARC.r * Math.cos(th) };
-});
+  ...[
+    { id: 'rooms',   label: 'the room stack',   kind: 'stack' },
+    { id: 'texts',   label: 'the text stack',   kind: 'stack' },
+    { id: 'nests',   label: 'the nest stack',   kind: 'stack' },
+    { id: 'scales',  label: 'the scale stack',  kind: 'stack' },
+    { id: 'dice',    label: 'the dice stack',   kind: 'stack' },
+    { id: 'minis',   label: 'the robot stack',  kind: 'stack' },
+    { id: 'numbers', label: 'the number stack', kind: 'stack' },
+    { id: 'boxes',   label: 'the box stack',    kind: 'stack' },
+  ].map((d, i, all) => {
+    const th = (-78 + i * (156 / (all.length - 1))) * Math.PI / 180;
+    return { ...d, x: ARC.cx + ARC.r * Math.sin(th), z: ARC.cz - ARC.r * Math.cos(th) };
+  }),
+  { id: 'copier', label: 'the copier', kind: 'copier', ...HELPERS.copier },
+];
 // ---------------------------------------------------------------- worlds
 // Every world's things -- bench things, station occupants, robots, birds in
 // flight -- live under one root group. The top world's root sits in the scene
@@ -17294,11 +17307,11 @@ loadModel('robot_v4.glb', (gltf) => {
         m.toneMapped = false;
       }
     });
-    // Dusty lives under the bench, near the front edge so he stays visible
-    // and clickable between the legs.
-    dustyHome = new THREE.Vector3(1.05, 0, BENCH.z1 + 0.42);
+    // Dusty stands beside the desk, on the machines' side with Mimi -- he used
+    // to sit under the bench, where the table hid him.
+    dustyHome = new THREE.Vector3(HELPERS.dusty.x, 0, HELPERS.dusty.z);
     dusty.position.copy(dustyHome);
-    dusty.rotation.y = -0.35;
+    dusty.rotation.y = -1.5;       // turned to face the desk
     setPick(dusty, { kind: 'dusty' });
     scene.add(dusty);
     const mat = new THREE.Mesh(new THREE.CircleGeometry(0.34, 32).rotateX(-Math.PI / 2),
@@ -17330,7 +17343,7 @@ loadModel('robot_v4.glb', (gltf) => {
       pupil.position.set(sx * 0.05 + 0.02, 0.2, 0.098);
       ruby.add(eye, pupil);
     }
-    rubyHome = new THREE.Vector3(dustyHome.x - 0.55, 0, dustyHome.z + 0.05);
+    rubyHome = new THREE.Vector3(HELPERS.ruby.x, 0, HELPERS.ruby.z);
     ruby.position.copy(rubyHome);
     setPick(ruby, { kind: 'ruby' });
     scene.add(ruby);
@@ -17769,11 +17782,11 @@ function makeMarty() {
   return g;
 }
 martyNode = makeMarty();
-martyNode.position.set(1.85, 0, 2.95);
-martyNode.rotation.y = -0.2;
+martyNode.position.set(HELPERS.marty.x, 0, HELPERS.marty.z);
+martyNode.rotation.y = 1.5;        // looking across the desk
 scene.add(martyNode);
 pickables.push(martyNode);
-const MARTY_HOME = new THREE.Vector3(1.85, 0, 2.95);
+const MARTY_HOME = new THREE.Vector3(HELPERS.marty.x, 0, HELPERS.marty.z);
 let martyTarget = null;
 // what he is presenting: the middle of the table unless a step says otherwise
 let martyLookAt = new THREE.Vector3(0, 0, 1.6);
@@ -17788,8 +17801,10 @@ function martySpotFor(demo) {
   else if (demo.near === 'notebook') x = mainNotebook()?.position.x ?? 1;
   else if (demo.near && stations[demo.near]?.point) x = stations[demo.near].point.x;
   const right = x >= 0;
+  // the machines stand along the right-hand side now, so presenting from that
+  // side means standing nearer the front of the desk to keep clear of them
   return new THREE.Vector3(right ? BENCH.x1 + 0.62 : BENCH.x0 - 0.62, 0,
-                           (BENCH.z0 + BENCH.z1) / 2 + 0.25);
+                           (BENCH.z0 + BENCH.z1) / 2 + (right ? 0.55 : 0.25));
 }
 function advanceMarty(dt) {
   if (!martyNode) return;
@@ -17913,12 +17928,19 @@ function martyRoute(a, b) {
   const one = round(1), other = round(-1);
   return [...(one.length <= other.length ? one : other), b];
 }
+// One walk at a time. Sending him home at the end of a demonstration does not
+// wait, so the next demonstration used to start walking him somewhere else
+// while the old route still had legs to go -- the two took turns setting his
+// target and he cut straight across the table between them.
+let martyWalkGen = 0;
 async function martyWalk(v, look) {
   if (!martyNode || !v) return;
+  const gen = ++martyWalkGen;
   martyLookAt = (look || v).clone();
   const dest = martyClearOfTable(v.clone());
   if (martyNode.position.distanceTo(dest) <= 0.35) return;
   for (const leg of martyRoute(martyNode.position, dest)) {
+    if (gen !== martyWalkGen) return;          // a newer walk has taken over
     if (martyNode.position.distanceTo(leg) <= 0.3) continue;
     martyGoTo(leg);
     await martyArrive();
