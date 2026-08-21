@@ -8415,24 +8415,54 @@ function martyCrossesTable(a, b) {
   }
   return false;
 }
-function martyDetour(a, b) {
-  const endX = (a.x + b.x) / 2 >= 0 ? BENCH.x1 + MARTY_CLEAR + 0.15
-                                    : BENCH.x0 - MARTY_CLEAR - 0.15;
-  return new THREE.Vector3(endX, 0, (BENCH.z0 + BENCH.z1) / 2);
+// Nowhere to stand under the table either: the top would cut him off at the
+// chest and his antennae would come up through it. Whatever a caller asks for,
+// a spot inside the footprint is moved out to the nearest edge -- so no demo
+// can put him there by arithmetic of its own.
+function martyClearOfTable(v) {
+  const x0 = BENCH.x0 - MARTY_CLEAR, x1 = BENCH.x1 + MARTY_CLEAR;
+  const z0 = BENCH.z0 - MARTY_CLEAR, z1 = BENCH.z1 + MARTY_CLEAR;
+  if (!(v.x > x0 && v.x < x1 && v.z > z0 && v.z < z1)) return v;
+  return [[v.z - z0, new THREE.Vector3(v.x, 0, z0)],
+          [z1 - v.z, new THREE.Vector3(v.x, 0, z1)],
+          [v.x - x0, new THREE.Vector3(x0, 0, v.z)],
+          [x1 - v.x, new THREE.Vector3(x1, 0, v.z)]]
+    .sort((a, b) => a[0] - b[0])[0][1];
+}
+// Round the table by its corners: out to the nearest one, along the outside,
+// and in. A single waypoint at one end still cut the corner.
+function martyRoute(a, b) {
+  if (!martyCrossesTable(a, b)) return [b];
+  const c = MARTY_CLEAR + 0.15;
+  const ring = [new THREE.Vector3(BENCH.x0 - c, 0, BENCH.z0 - c),
+                new THREE.Vector3(BENCH.x1 + c, 0, BENCH.z0 - c),
+                new THREE.Vector3(BENCH.x1 + c, 0, BENCH.z1 + c),
+                new THREE.Vector3(BENCH.x0 - c, 0, BENCH.z1 + c)];
+  const nearest = (p) => ring.reduce(
+    (best, q, i) => (p.distanceTo(q) < p.distanceTo(ring[best]) ? i : best), 0);
+  const from = nearest(a), to = nearest(b);
+  const round = (step) => {
+    const out = [];
+    for (let i = from, n = 0; n < 4; n++) {
+      out.push(ring[i]);
+      if (i === to) break;
+      i = (i + step + 4) % 4;
+    }
+    return out;
+  };
+  const one = round(1), other = round(-1);
+  return [...(one.length <= other.length ? one : other), b];
 }
 async function martyWalk(v, look) {
   if (!martyNode || !v) return;
   martyLookAt = (look || v).clone();
-  if (martyNode.position.distanceTo(v) <= 0.35) return;
-  if (martyCrossesTable(martyNode.position, v)) {
-    const via = martyDetour(martyNode.position, v);
-    if (via.distanceTo(martyNode.position) > 0.3 && via.distanceTo(v) > 0.3) {
-      martyGoTo(via);
-      await martyArrive();
-    }
+  const dest = martyClearOfTable(v.clone());
+  if (martyNode.position.distanceTo(dest) <= 0.35) return;
+  for (const leg of martyRoute(martyNode.position, dest)) {
+    if (martyNode.position.distanceTo(leg) <= 0.3) continue;
+    martyGoTo(leg);
+    await martyArrive();
   }
-  martyGoTo(v);
-  await martyArrive();
 }
 // Standing to reach a stack: just INSIDE the arc, so he never disappears
 // behind the stacks he is fetching from.
@@ -8460,9 +8490,15 @@ async function _mSt(id) {
 async function _mAt(target, node) {
   const p = node?.getWorldPosition?.(new THREE.Vector3());
   if (p) {
-    const stand = new THREE.Vector3(
-      Math.max(BENCH.x0 - 0.7, Math.min(BENCH.x1 + 0.7, p.x)), 0,
-      p.z > (BENCH.z0 + BENCH.z1) / 2 - 0.2 ? BENCH.z1 + 0.46 : p.z + 0.75);
+    // Anything on the table he comes to the NEAR edge for, in line with it:
+    // never underneath, and never with his back to you. Something off the
+    // table he simply walks up to, and the route keeps him clear.
+    const onTable = p.x > BENCH.x0 - 0.2 && p.x < BENCH.x1 + 0.2
+                 && p.z > BENCH.z0 - 0.2 && p.z < BENCH.z1 + 0.2;
+    const stand = onTable
+      ? new THREE.Vector3(Math.max(BENCH.x0 - 0.7, Math.min(BENCH.x1 + 0.7, p.x)),
+                          0, BENCH.z1 + MARTY_CLEAR + 0.05)
+      : new THREE.Vector3(p.x, 0, p.z + 0.7);
     await martyWalk(stand, new THREE.Vector3(p.x, 0, p.z));
   }
   await martyReach(() => handleClick(target));
