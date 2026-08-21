@@ -104,6 +104,7 @@
   <p>You move things yourself. The robot only acts inside its thought bubble —
      or when repeating what it learned.</p>
   <p id="hint">Click a stack to have the robot fetch something.</p>
+  <p id="whoLine" style="margin-top:6px;font-size:11.5px;color:var(--dim)"></p>
 </div>
 
 <div id="prog" class="card">
@@ -449,16 +450,29 @@ page to file it; click a filed entry to take out a copy (the page
 keeps its own). Drop a written text pad on a full page to open the first page
 mentioning that text; a whole number jumps to that page number. Only Dusty can
 remove an entry, and a notebook itself only goes when open at two blank pages.
-The first page holds a blank notebook — copy it out to make more. The main
+The first page holds a blank notebook — copy it out to make more. The desk
 notebook remembers everything between visits, and it is furniture: it
 stays where it is when you load somebody else's world, because it is your
 library, not part of theirs.
+
+It is kept under your name. The workshop asks who is working here
+when it opens, with the last name already filled in, and each name has a
+notebook of its own — so two people sharing a browser do not share a library.
+The line under the title says whose notebook is on the desk; click it to hand
+the desk to somebody else. A copy of a notebook is wholly its own from
+the moment it leaves the copier: filing in one never shows up in the other.
 
 Robots can use it too, which is what lets one program use another by
 name. A robot fetches a blank pad, writes a name on it, drops it on the
 notebook — which opens at whatever that name finds — and takes a copy off the
 page. That is the whole of the module system: the same three gestures you would
 make yourself.
+
+That lookup is by name — the robot asks for the notebook on
+the desk wherever it runs, which is what makes a program portable. If
+instead you train it on a notebook it was given (or one sitting on its
+own work area), the step names that notebook, and the robot reads that one and
+no other, whatever is open on the desk at the time.
 
 Save held thing writes whatever is in your hand to a file — a box, a
 trained robot, a room with a whole workshop inside. Save world writes
@@ -1519,7 +1533,40 @@ function makeText(str) {
 // display copy, and picking it up hands you a fresh copy -- only Dusty can
 // remove an entry. The first notebook on the table is the MAIN notebook, and
 // every change to it is persisted in this browser.
+// The notebook persists in this browser, so it needs to know whose it is: one
+// notebook per name, and the name is asked for at the start (with the last one
+// already filled in). A browser with no name yet keeps the old single key, so
+// nobody's library disappears the first time they run this.
 const NB_KEY = 'nano-toontalk.notebook';
+const USER_KEY = 'tt3d.user';
+const USERS_KEY = 'tt3d.users';
+let currentUser = (localStorage.getItem(USER_KEY) || '').trim();
+const nbKey = () => (currentUser ? NB_KEY + '.' + currentUser : NB_KEY);
+const knownUsers = () => {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
+};
+function setUser(name) {
+  currentUser = String(name || '').trim().slice(0, 40);
+  try {
+    localStorage.setItem(USER_KEY, currentUser);
+    const all = knownUsers().filter(n => n !== currentUser);
+    if (currentUser) all.unshift(currentUser);
+    localStorage.setItem(USERS_KEY, JSON.stringify(all.slice(0, 12)));
+    // the FIRST person to give a name inherits whatever this browser already
+    // had, rather than starting empty -- and then it is theirs, so everybody
+    // after them starts with a notebook of their own
+    const legacy = localStorage.getItem(NB_KEY);
+    if (currentUser && legacy && !localStorage.getItem(nbKey())) {
+      localStorage.setItem(nbKey(), legacy);
+      localStorage.removeItem(NB_KEY);
+    }
+  } catch {}
+  showWho();
+}
+const clonePages = (pages) => {
+  try { return structuredClone(pages); }
+  catch { return JSON.parse(JSON.stringify(pages)); }
+};
 function makeNotebook(rec = null) {
   const g = new THREE.Group();
   const cover = new THREE.Mesh(geo('BoxGeometry', 0.86, 0.035, 0.56),
@@ -1548,7 +1595,9 @@ function makeNotebook(rec = null) {
     g.add(tab);
   }
   g.userData = { kind: 'notebook', rest: 0.03, main: false, width: 0.86,
-                 pages: rec?.pages ? rec.pages.slice() : [],
+                 // deep, not a slice: a copy of a notebook must share nothing
+                 // at all with the one it was copied from
+                 pages: rec?.pages ? clonePages(rec.pages) : [],
                  page: rec?.page || 0 };
   setPick(g, { kind: 'thing', thing: g });
   renderNotebook(g);
@@ -1612,7 +1661,7 @@ function renderNotebook(nb) {
 function saveNotebook(nb) {
   if (!nb.userData.main) return;
   try {
-    localStorage.setItem(NB_KEY, JSON.stringify({ pages: nb.userData.pages, page: nb.userData.page }));
+    localStorage.setItem(nbKey(), JSON.stringify({ pages: nb.userData.pages, page: nb.userData.page }));
   } catch {}
 }
 // what a page's entry "says", for text-pad navigation
@@ -2708,7 +2757,7 @@ function ensureMainNotebook() {
   if (mainNotebook()) return mainNotebook();
   if (new URLSearchParams(location.search).get('demo')) return null;
   let rec = null;
-  try { rec = JSON.parse(localStorage.getItem(NB_KEY) || 'null'); } catch {}
+  try { rec = JSON.parse(localStorage.getItem(nbKey()) || 'null'); } catch {}
   const nb = makeNotebook(rec ?? { pages: [{ kind: 'notebook', pages: [], page: 0 }], page: 0 });
   nb.userData.main = true;
   putOnBench(nb, { x: 0.95, z: BENCH.z0 + 0.28 });
@@ -2741,6 +2790,14 @@ function thingAt(at) {
     path = path.slice(1);
   }
   for (const i of path) { node = holesOf(node)?.[i]?.thing; if (!node) return null; }
+  // `nbHalf` addresses a page of the notebook found there -- the robot's own
+  // notebook, wherever it is, rather than the one on the desk
+  if (at.nbHalf != null) {
+    if (node?.userData.kind !== 'notebook') return null;
+    const ud = node.userData;
+    const rec = ud.pages[ud.page + at.nbHalf];
+    return rec ? buildFromRec(rec) : null;
+  }
   // `nest: true` addresses the top of the pile on the nest found there; if a
   // bare thing sits where the nest was expected, that thing itself is taken
   if (at.nest) {
@@ -4688,9 +4745,16 @@ function handleClick(target) {
       return refreshUI();
     }
     if (held) return say('Your hand is full.');
-    if (mode === 'training' && nb.userData.main) {
+    if (mode === 'training') {
       // the page it is open at is what the robot will look at when it runs
-      return go({ type: 'take', at: { c: 'notebook', path: [slot - nb.userData.page] } });
+      if (nb.userData.main) {
+        return go({ type: 'take', at: { c: 'notebook', path: [slot - nb.userData.page] } });
+      }
+      // any OTHER notebook is an ordinary thing: the robot can only use one it
+      // can reach, and the step names that notebook, never the desk's own
+      const a = addrOf(nb);
+      if (!a) return say('The robot can only touch what it was given and its own work area.');
+      return go({ type: 'take', at: { c: a.c, path: a.path, nbHalf: slot - nb.userData.page } });
     }
     pushUndo();
     let t = buildFromRec(nb.userData.pages[slot]);
@@ -6933,6 +6997,9 @@ const holeName = (at) => {
   const base = at.path.length
     ? `hole ${at.path.map(i => i + 1).join('.')} of ${containerText(at.c)}`
     : containerText(at.c);
+  if (at.nbHalf != null) {
+    return `the ${at.nbHalf ? 'right' : 'left'} page of the notebook in ${base}`;
+  }
   return at.nest ? `the pile on ${base}` : base;
 };
 function describe(s) {
@@ -6944,7 +7011,8 @@ function describe(s) {
        : s.type === 'newRoom' ? 'take a new room'
        : s.type === 'newDie' ? 'take a new die'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
-       : s.type === 'take' ? (s.at.nest ? `take the top of ${holeName(s.at)}`
+       : s.type === 'take' ? (s.at.nbHalf != null ? `take a copy from ${holeName(s.at)}`
+           : s.at.nest ? `take the top of ${holeName(s.at)}`
            : s.at.path.length ? `take what is in ${holeName(s.at)}`
            : s.at.c === 'out' ? 'take the copy'
            : s.at.c === 'in' ? 'take back the original'
@@ -7810,9 +7878,18 @@ loadModel('robot_v4.glb', (gltf) => {
   pickables.length = 0;
   pickables.push(scene);
 
-  // the main notebook: restored from this browser, or fresh with a blank
-  // notebook filed on its first page (not in the manual's little demo worlds)
+  // the main notebook: restored from this browser under whoever is working
+  // here, or fresh with a blank notebook filed on its first page (not in the
+  // manual's little demo worlds, which have no notebook and ask nobody)
   ensureMainNotebook();
+  // the manual's little embedded workshops have no notebook, so they ask
+  // nobody's name and say nothing about whose it is
+  if (new URLSearchParams(location.search).get('demo')) {
+    document.getElementById('whoLine')?.remove();
+  } else {
+    showWho();
+    askWho();
+  }
 
   worldReady = true;
   const demo = new URLSearchParams(location.search).get('demo');
@@ -9038,6 +9115,94 @@ function martyCtl(state) {
 function martyModeLine() {
   const el = document.getElementById('martyMode');
   if (el) el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
+}
+// Whose notebook is on the desk, shown in the title card and changeable there.
+function showWho() {
+  const el = document.getElementById('whoLine');
+  if (!el) return;
+  el.textContent = '';
+  el.append(currentUser ? `${currentUser}\u2019s notebook \u2014 ` : 'Nobody\u2019s notebook yet \u2014 ');
+  const a = document.createElement('button');
+  a.textContent = currentUser ? 'someone else' : 'sign in';
+  a.style.cssText = 'font:inherit;font-size:11.5px;padding:1px 7px;border-radius:7px';
+  a.title = 'The notebook is kept per person in this browser. Switching swaps the one on the desk.';
+  a.onclick = () => askWho(true);
+  el.appendChild(a);
+}
+// No prompt(): it silently does nothing inside an artifact. A card of our own.
+function askWho(switching = false) {
+  if (document.getElementById('whoCard')) return;
+  const veil = document.createElement('div');
+  veil.id = 'whoCard';
+  veil.style.cssText = 'position:fixed;inset:0;z-index:60;display:grid;place-items:center;'
+    + 'background:rgba(8,10,14,.72);backdrop-filter:blur(2px)';
+  const card = document.createElement('form');
+  card.className = 'card';
+  card.style.cssText = 'position:static;min-width:280px;max-width:92vw;display:flex;'
+    + 'flex-direction:column;gap:8px';
+  const h = document.createElement('b');
+  h.textContent = switching ? 'Whose workshop now?' : 'Who is working here?';
+  const p = document.createElement('p');
+  p.style.cssText = 'margin:0;font-size:12px;color:var(--dim);max-width:34ch';
+  p.textContent = 'Your notebook \u2014 everything you file in it \u2014 is kept in this '
+    + 'browser under this name. Type a new one to start a fresh notebook.';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = currentUser;
+  input.placeholder = 'a name';
+  input.setAttribute('list', 'whoList');
+  input.style.cssText = 'font:inherit;color:var(--ink);background:rgba(255,255,255,.07);'
+    + 'border:1px solid var(--edge);border-radius:8px;padding:6px 9px';
+  const list = document.createElement('datalist');
+  list.id = 'whoList';
+  for (const n of knownUsers()) {
+    const o = document.createElement('option');
+    o.value = n;
+    list.appendChild(o);
+  }
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;justify-content:flex-end';
+  if (switching) {
+    const no = document.createElement('button');
+    no.type = 'button';
+    no.textContent = 'Never mind';
+    no.onclick = () => veil.remove();
+    row.appendChild(no);
+  }
+  const ok = document.createElement('button');
+  ok.type = 'submit';
+  ok.className = 'go';
+  ok.textContent = switching ? 'Switch' : 'Start';
+  row.appendChild(ok);
+  card.append(h, p, input, list, row);
+  veil.appendChild(card);
+  document.body.appendChild(veil);
+  input.focus();
+  input.select();
+  card.onsubmit = (e) => {
+    e.preventDefault();
+    const name = input.value.trim();
+    if (!name) return input.focus();
+    veil.remove();
+    const same = name === currentUser;
+    setUser(name);
+    if (!same) swapNotebook();
+  };
+  // keystrokes here are typing, not workshop commands
+  for (const ev of ['keydown', 'keyup', 'keypress', 'pointerdown', 'click']) {
+    veil.addEventListener(ev, (e) => e.stopPropagation());
+  }
+}
+// Switching person: the desk notebook goes, and this name's comes out instead.
+function swapNotebook() {
+  const nb = mainNotebook();
+  if (nb) {
+    const ix = benchThings.indexOf(nb);
+    if (ix >= 0) benchThings.splice(ix, 1);
+    nb.removeFromParent();
+  }
+  ensureMainNotebook();
+  refreshUI();
 }
 let martyGreeted = false;
 function toggleMartyPanel() {
