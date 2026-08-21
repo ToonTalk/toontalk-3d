@@ -1869,6 +1869,35 @@ function mountRoomWorld(room) {
   r.scale.setScalar(MINI_WORLD);
   r.position.set(0, 0.034, -0.02);
   room.add(r);
+  fitRoomContents(room);
+}
+// A room's walls are a fixed size, but what a robot builds inside is not --
+// a box that doubles its holes every round is arrays growing exponentially,
+// and MINI_WORLD alone only ever shrinks it by the same fixed amount. Past
+// some size the content has to give further, or it punches straight through
+// the glass.
+//
+// The budget is in the room's OWN local units (undoing MINI_WORLD), not the
+// room-group's -- a bare robot alone already measures about 1.2 wide, so a
+// figure in room-group units (like the 0.5 x 0.42 floor itself) would clamp
+// every room on the very first hydrate, robot included, before anything had
+// grown at all. 3.2 leaves a comfortable margin under the ~3.6 the 0.5-wide
+// floor implies once MINI_WORLD is undone, so an ordinary scene -- robot
+// plus whatever it was given -- passes through untouched.
+const ROOM_FIT = 3.2;
+function fitRoomContents(room) {
+  const r = room.__ctx?.root;
+  if (!r || !r.children.length) return;
+  const had = r.scale.x;
+  r.scale.setScalar(1);           // measure the content's own footprint,
+  const box = new THREE.Box3().setFromObject(r);   // independent of any prior fit
+  r.scale.setScalar(had);
+  const size = box.getSize(new THREE.Vector3());
+  const span = Math.max(size.x, size.z, 0.001);
+  // never magnify a small room back up past its usual toy scale -- only ever
+  // shrink further once content outgrows it
+  const factor = Math.min(1, ROOM_FIT / span);
+  r.scale.setScalar(MINI_WORLD * factor);
 }
 // Serialise a live world back into a record -- only when actually saving.
 function ctxToRec(room) {
@@ -2052,6 +2081,7 @@ function roomDrop(room, dropped, refuse) {
     }
     drainQueue(60);
   } finally { popWorld(); speed = spd; }
+  fitRoomContents(room);   // whatever just went in may already be too big for it
   say(dropped.userData.kind === 'robot'
     ? (roomHasWorker(room) ? 'The robot steps inside, ready behind the desk.'
                            : 'Another robot joins the room, waiting on the table.')
@@ -2148,6 +2178,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
       sayAttn('The room\u2019s work was taking too long \u2014 it has been paused. Pull its lever to try again.');
     }
   }
+  fitRoomContents(room);           // a round may have grown what's inside
   room.userData.dirty = cont;
   if (cont) room.__nextStep = performance.now() + (stepped ? 1100 / Math.max(0.25, spd) : 80);
   if (depth === 0) {
