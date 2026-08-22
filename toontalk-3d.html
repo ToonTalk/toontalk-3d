@@ -61,8 +61,13 @@
   #bottom { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center; gap: 10px;
             max-width: calc(100vw - 24px); }
+  /* width:max-content is what keeps it on ONE row wherever one row fits. A
+     wrapping flex box asked for its shrink-to-fit width answers with the
+     NARROWER wrapped layout, so the row broke in two while there was still
+     half a screen of room beside it. */
   #bar { position: static; display: flex; align-items: center; justify-content: center;
-         flex-wrap: wrap; max-width: 100%; gap: 8px; padding: 9px 10px; }
+         flex-wrap: wrap; width: max-content; max-width: 100%;
+         gap: 8px; padding: 9px 10px; }
   button { font: inherit; font-size: 12.5px; color: var(--ink);
            background: rgba(255,255,255,.07); border: 1px solid var(--edge);
            border-radius: 8px; padding: 6px 11px; cursor: pointer; }
@@ -155,7 +160,7 @@
     title="Dusty vacuums things away, and vacuums parts of a robot's thought into wildcards so more things match.">Dusty: asleep</button>
   <span class="sep"></span>
   <label for="speed" title="How fast robots move. Instant skips the animation entirely.">Speed</label>
-  <select id="speed">
+  <select id="speed" title="How fast robots move. Instant skips the animation entirely.">
     <option value="0.5">½×</option>
     <option value="1" selected>1×</option>
     <option value="2">2×</option>
@@ -163,13 +168,13 @@
     <option value="8">8×</option>
     <option value="inf">Instant</option>
   </select>
-  <label for="rounds">Rounds</label>
-  <input id="rounds" type="number" min="1" max="10000" value="100" title="How many times a running robot may repeat before stopping">
+  <label for="rounds" title="How many times a running robot may repeat before stopping — a stop by this limit says so, rather than pretending the robot decided.">Rounds</label>
+  <input id="rounds" type="number" min="1" max="10000" value="100" title="How many times a running robot may repeat before stopping — a stop by this limit says so, rather than pretending the robot decided.">
   <span class="sep"></span>
   <button id="undoBtn"
     title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
   <button id="fullBtn"
-    title="Fill the screen with the workshop. On a tablet this is what gets the browser's own bars out of the way.">⛶ Full screen</button>
+    title="Full screen — fill the screen with the workshop. On a tablet this is what gets the browser's own bars out of the way.">⛶</button>
 </div>
 </div>
 
@@ -188,7 +193,7 @@ Drag with the left mouse button held to orbit the camera around the
 workshop; scroll to zoom in and out (numbers show more digits and more
 of their faces up close); drag with the right button to slide sideways.
 On a touchpad: one-finger drag orbits, pinch zooms, two-finger drag slides.
-The same gestures work on a touch screen. Full screen at the end of the
+The same gestures work on a touch screen. ⛶ at the end of the
 bottom row is worth pressing first on a tablet — it wins back the height the
 browser's own bars take, and asks to stay landscape while you are in it.
 
@@ -214,7 +219,10 @@ Typing works there too, though nothing on the screen looks like a place to
 type: the ⌨ button on the holding card raises your keyboard, and
 what you type goes onto the thing in your hand — digits onto a number, letters
 onto a text pad or a name plaque, just as a real keyboard would. Press it again,
-or put the thing down, and the keyboard goes away.
+or put the thing down, and the keyboard goes away. A tablet's keyboard offers
+the real symbols where a typewriter offered stand-ins, so on a number
+× multiplies, ÷ divides and a proper minus sign negates,
+exactly as *, / and - do.
 
 Everything in the manual's little windows below is the real
 workshop — click things, carry them, try it.
@@ -253,6 +261,12 @@ the left edge of another and it reads first; on the right edge
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
 A whole number dropped on a written pad shifts its first or last letter along
 the alphabet; on a blank pad, the number writes itself out as digits.
+
+Typing on a pad adds to what it says, and that is what a robot shown
+it remembers — not the words it ended up with. Train one on a blank pad by
+typing "Ken " and it goes on adding "Ken " each round: "Ken Ken Ken ". A robot
+shown something that was not a plain addition — letters rubbed out with
+Backspace, say — remembers the words instead.
 
 The other way round picks letters out: drop a pad on a whole number
 and that number chooses a letter — "Talk" dropped on a 2 leaves a pad
@@ -389,10 +403,18 @@ bubble, click the number stack, then click a work spot; leave the bubble and
 it will run. Then erase its thought with Ruby and give it anything.
 
 The little desks beside the robot are its work spots — its own
-scratch space, swept clean when it finishes. A spot sizes what you set on it
-the way a hole does: something too wide, a box of eight holes say, sits there
-smaller rather than hanging over its neighbours, and comes back to full size
-the moment it is picked up.
+scratch space, cleared onto the table when it finishes, so nothing left there
+is ever lost. A spot sizes what you set on it the way a hole does: something
+too wide, a box of eight holes say, sits there smaller rather than hanging over
+its neighbours, and comes back to full size the moment it is picked up.
+
+You need not keep the difference between the stand and the work spots in
+your head while you work. If a round leaves the stand empty — because
+you carried the robot's own thing off it and combined it with something on a
+spot — whatever is on the spot comes back to the stand at the end of the round,
+and the next round finds it there. A robot has only really finished when its
+stand is empty and it has nothing to show for it, which happens when
+it vacuums its own box away on purpose.
 
 ## Mimi the copier
 
@@ -2290,7 +2312,7 @@ function drainQueue(guard = 400) {
       // past the room watchdog's own limit, so a heavy room gets paused whole
       // rather than cut mid-round with a die or a phase number in the claw
       console.warn('drainQueue: 8s budget spent, abandoning', queue.length, 'queued steps');
-      queue.length = 0; current = null; busy = false; pendingAfter = null;
+      dropQueue();
       break;
     }
   }
@@ -3945,6 +3967,18 @@ function syncBot() {
 // ---------------------------------------------------------------- sequencer
 const queue = [];
 let current = null, tCur = 0;
+// Throwing the queue away drops whatever it was in the MIDDLE of, and a step's
+// end() -- the one that sets the exact final state -- never runs. Anything the
+// abandoned step was moving is then left part-way, which is how a robot cut
+// short while growing to full size ended up standing at the bench the size of
+// a toy. Sizes like that are facts about where a thing is, not the residue of
+// whichever animation last finished, so the ones that matter are restated here.
+// activeBot is null for the whole of a shrink (it is cleared before the
+// animation is queued), so this can never fight a robot on its way out.
+function dropQueue() {
+  queue.length = 0; current = null; busy = false; pendingAfter = null;
+  if (activeBot?.node) activeBot.node.scale.setScalar(1);
+}
 // A step that only moves a body -- a walk, an arm swing, a pause -- has
 // nothing to say to a world nobody is watching. Offstage those run to their
 // end state on the spot instead of joining the queue, which is most of the
@@ -5590,9 +5624,12 @@ document.getElementById('held')
     || document.documentElement.webkitRequestFullscreen);
   if (!can) btn.style.display = 'none';
   const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  // An icon, not a phrase: spelled out it was wider than the space left on the
+  // row and wrapped to a line of its own even where there was room beside Undo.
   const show = () => {
     const on = isFull();
-    btn.textContent = on ? '⛶ Leave full screen' : '⛶ Full screen';
+    btn.title = (on ? 'Leave full screen' : 'Full screen')
+      + " — on a tablet this is what gets the browser's own bars out of the way.";
     btn.classList.toggle('think', on);
   };
   btn.onclick = async () => {
@@ -5634,28 +5671,48 @@ for (const [a, v] of [['autocapitalize', 'off'], ['autocorrect', 'off'],
 document.body.appendChild(softKeys);
 // Kept holding a few spaces: a keyboard over an EMPTY field may decline to
 // report backspace at all, having nothing it believes it can delete.
-const SOFT_PAD = '    ';
+const SOFT_PAD = '\u00a0\u00a0\u00a0\u00a0';
+let softLast = SOFT_PAD;
 function softReset() {
   softKeys.value = SOFT_PAD;
+  softLast = SOFT_PAD;
   try { softKeys.setSelectionRange(SOFT_PAD.length, SOFT_PAD.length); } catch {}
 }
 const asKey = (key) => window.dispatchEvent(
   new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+// A phone keyboard does not hand you letters -- it hands you its opinion of the
+// WORD SO FAR, again and again, and revises it when it changes its mind. Taking
+// the text of each event as newly typed turned "hello" into "hhehelhellhello".
+// So nothing is read out of the events at all now: the field is left to fill up
+// however it likes, and what CHANGED in it is worked out by comparing it with
+// what it held last time. A prediction that rewrites a whole word then arrives
+// as the backspaces and letters it really is.
+let softComposing = false;
+function softDiff() {
+  const now = softKeys.value;
+  let i = 0;
+  while (i < softLast.length && i < now.length && softLast[i] === now[i]) i++;
+  for (let k = softLast.length; k > i; k--) asKey('Backspace');
+  for (const ch of now.slice(i)) asKey(ch === '\n' ? 'Enter' : ch);
+  softLast = now;
+  // Never mid-word: emptying the field under the keyboard's feet makes it
+  // start the whole word over again.
+  if (!softComposing && (now.length > 60 || now.length < SOFT_PAD.length)) softReset();
+}
 // A real keyboard plugged into the tablet reports the key itself, and that
-// keydown reaches the window on its own; only then must the text event that
-// follows it be ignored, or every letter would arrive twice.
-let softPhysical = false;
+// keydown reaches the window on its own. Keeping it out of the FIELD is what
+// stops the same letter arriving a second time as a text change.
 softKeys.addEventListener('keydown', (e) => {
-  softPhysical = e.keyCode !== 229 && !!e.key && e.key !== 'Unidentified';
+  if (e.keyCode !== 229 && e.key && e.key !== 'Unidentified' && !e.isComposing) {
+    e.preventDefault();
+  }
 });
-softKeys.addEventListener('beforeinput', (e) => {
-  e.preventDefault();
+softKeys.addEventListener('input', softDiff);
+softKeys.addEventListener('compositionstart', () => { softComposing = true; });
+softKeys.addEventListener('compositionend', () => {
+  softComposing = false;
+  softDiff();
   softReset();
-  if (softPhysical) { softPhysical = false; return; }
-  const t = e.inputType || '';
-  if (t.startsWith('delete')) return asKey('Backspace');
-  if (t === 'insertLineBreak' || t === 'insertParagraph') return asKey('Enter');
-  for (const ch of (e.data || '')) asKey(ch);
 });
 softKeys.addEventListener('focus', softReset);
 softKeys.addEventListener('blur', () => showSoftKeys(false));
@@ -6024,12 +6081,48 @@ function formTeam(leader, follower) {
 
 // Everything in the robot's private area is temporary: it is swept away when
 // the robot is done, and whatever it was given goes back on the table.
-function clearScratch() {
+// The work spots start every run empty, so a replay cannot lean on leftovers.
+// What was on them is put back on the TABLE rather than destroyed: a robot
+// that left its answer on a work spot had its answer deleted, silently, and
+// nothing in the workshop should ever make a thing simply cease to exist
+// except Dusty. Only a rewind, where the world is about to be restored whole,
+// passes keep = false.
+function clearScratch(keep = true) {
   for (const st of Object.values(stations)) {
     if (st.kind !== 'scratch' && st.kind !== 'copyIn' && st.kind !== 'copyOut') continue;
-    if (st.occupant) { st.occupant.removeFromParent(); st.occupant = null; }
+    if (!st.occupant) continue;
+    const t = st.occupant;
+    st.occupant = null;
+    if (keep) {
+      const from = t.getWorldPosition(new THREE.Vector3());
+      putOnBench(t, benchSpot());
+      enqueueNext(settleInto(t, from, 0.3));
+    } else {
+      t.removeFromParent();
+    }
   }
   collapseScratch();
+}
+// A robot is given something and works on it. If it carried that thing off the
+// stand and set it down on a work spot, it has not FINISHED -- it has just put
+// its work somewhere else, and the next round should find it. So an empty
+// stand reclaims from the work spots first, and only a stand still empty
+// afterwards means the robot vacuumed its own box away and is done.
+//
+// This is what makes the stand and the work spots behave alike while a robot
+// is being trained, which is the only way to explain them to somebody who has
+// not yet been told there is a difference.
+function reclaimToStand() {
+  if (stations.stand.occupant) return;
+  const spot = Object.values(stations)
+    .filter(s2 => s2.kind === 'scratch' && s2.occupant)
+    .sort((a, b) => a.slot - b.slot)[0];
+  if (!spot) return;
+  const t = spot.occupant;
+  const from = t.getWorldPosition(new THREE.Vector3());
+  spot.occupant = null;
+  putOnStation(stations.stand, t);
+  enqueueNext(settleInto(t, from, 0.3));
 }
 function returnGivenToTable() {
   const t = stations.stand.occupant;
@@ -6059,11 +6152,20 @@ function go(step) {
     const n = held.userData.holes.length;
     if (n !== holesAtPickup) record({ type: 'setHoles', n });
   }
-  // writing on a pad is a step too -- without it a robot could fetch a blank
-  // pad but never a WORD, and a word is how you ask the notebook for something
+  // Writing on a pad is a step too -- without it a robot could fetch a blank
+  // pad but never a WORD, and a word is how you ask the notebook for something.
+  // What is remembered is the writing, not the result: typing "Ken " onto a
+  // blank pad is ADDING "Ken ", and a robot shown that should go on adding it
+  // each round, not set every pad it meets to "Ken ". (The same reasoning as
+  // the number above, where an operation typed alone is its own step: the
+  // robot must remember what you DID, not what it happened to leave behind.)
+  // Anything that is not a pure addition -- backspacing, replacing -- is still
+  // remembered as the text it ended up with.
   if (step.type === 'put' && held && held.userData.kind === 'text'
       && (held.userData.text ?? '') !== (textAtPickup ?? '')) {
-    record({ type: 'setText', text: held.userData.text ?? '' });
+    const was = textAtPickup ?? '', now = held.userData.text ?? '';
+    if (now.startsWith(was)) record({ type: 'setText', add: now.slice(was.length) });
+    else record({ type: 'setText', text: now });
   }
   record(step);
   runStep(step);
@@ -6093,7 +6195,11 @@ function runStep(step) {
   } else if (step.type === 'setText') {
     enqueue({
       dur: 0.35,
-      start() { if (held?.setText) { held.setText(step.text); flash(held.getWorldPosition(new THREE.Vector3())); } },
+      start() {
+        if (!held?.setText) return;
+        held.setText(step.add != null ? (held.userData.text ?? '') + step.add : step.text);
+        flash(held.getWorldPosition(new THREE.Vector3()));
+      },
       update(t) { if (held) held.scale.setScalar(1 + 0.15 * Math.sin(Math.PI * t)); },
       end() { if (held) held.scale.setScalar(1); refreshUI(); },
     });
@@ -6752,7 +6858,10 @@ function botOut(bot) {
 //
 //   v1  the original format
 //   v2  a box past SPARSE_FROM holes writes {n, at} instead of a full array
-const FILE_V = 2;
+//   v3  writing on a pad records {add} -- what was typed -- where it used to
+//       record {text}, the whole result. A v1/v2 robot still carries {text}
+//       and is still replayed as it always was, so old files are unchanged.
+const FILE_V = 3;
 const SPARSE_FROM = 64;
 const fileV = (o) => (Number.isFinite(o?.v) ? o.v : 1);
 // Returns null when the file is readable, or a message saying why it is not.
@@ -6898,7 +7007,7 @@ function thingInRaw(o, nests, birds) {
   return t;
 }
 function clearWorld() {
-  queue.length = 0; current = null; busy = false; pendingAfter = null;
+  dropQueue();
   attnHeld = false;      // an explanation of the old world explains nothing here
   clearUndo();
   if (mode === 'training') { bubbleTarget = 0; preTraining = null; }
@@ -7020,7 +7129,7 @@ function snapshotWorld() {
   return snap;
 }
 function restoreWorld(snap) {
-  queue.length = 0; current = null; busy = false; pendingAfter = null;
+  dropQueue();
   // removeFromParent, not scene.remove: while held its parent is the claw
   if (held) { held.removeFromParent(); held = null; }
   benchThings.forEach(t => t.removeFromParent());
@@ -7074,7 +7183,7 @@ function leaveTraining(restore = true) {
   clearUndo();
   mode = 'world';
   bubbleTarget = 0;
-  clearScratch();
+  clearScratch(!restore);      // a rewind is about to replace the world anyway
   if (restore && preTraining) restoreWorld(preTraining);
   // The given thing stays on the robot's stand, rewound: it is set up to Run
   // immediately. (A finished RUN is different -- the result goes to the table.)
@@ -7142,7 +7251,7 @@ function resetWorld() {
   // removeFromParent, not scene.remove: while held its parent is the claw
   if (held) { held.removeFromParent(); held = null; }
   parkRobot();
-  queue.length = 0; current = null; busy = false; pendingAfter = null;
+  dropQueue();
   refreshUI();
 }
 
@@ -7176,8 +7285,10 @@ function runProgram() {
 // team rule, and it is also how a loop is expressed.
 function nextIteration() {
   // A pass never ends with something still in the claw: put it down first, so
-  // the condition is judged against a settled world.
+  // the condition is judged against a settled world. And if that left the
+  // stand empty, whatever the robot set down on a work spot comes back to it.
   stowHeld();
+  reclaimToStand();
   if (stopRequested) {
     stopRequested = false;
     return finishRun(runCount
@@ -7531,7 +7642,8 @@ function describe(s) {
            '*': 'make it multiply', '/': 'make it divide',
            '^': 'make it raise to a power', 'mod': 'make it leave a remainder',
            'set': 'make it replace' })[s.op] ?? `make it ${s.op}`
-       : s.type === 'setText' ? (s.text ? `write “${s.text}” on it` : 'wipe it clean')
+       : s.type === 'setText' ? (s.add != null ? `add “${s.add}” to what it says`
+           : s.text ? `make it say “${s.text}”` : 'wipe it clean')
        : s.type === 'setHoles' ? `give it ${s.n} hole${s.n > 1 ? 's' : ''}`
        : `make it ${ratShort(s.value)}${s.op && s.op !== '+' ? ` (${s.op})` : ''}`;
 }
@@ -7875,38 +7987,42 @@ addEventListener('keydown', (e) => {
       || held.userData.kind === 'room') { editLabel(); return; }
   if (held.userData.kind !== 'number') return;
   const v = held.userData.value;
-  if (/^[0-9]$/.test(e.key)) {
+  // A tablet's keyboard offers the SYMBOLS -- ×, ÷, a real minus sign -- where a
+  // typewriter offered ASCII stand-ins, and a child reaching for × means
+  // multiply. Only numbers read keys this way: × typed onto a text pad is the
+  // character ×, and must stay that.
+  const key = NUM_KEY_ALIAS[e.key] ?? e.key;
+  if (/^[0-9]$/.test(key)) {
     // typing digits builds a whole number, keeping its sign; it replaces a
     // fraction outright
     pushUndo();
     const sign = v.n < 0n ? -1n : 1n;
     const mag = v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;
-    held.setValue(rat(sign * (mag * 10n + BigInt(e.key))));
+    held.setValue(rat(sign * (mag * 10n + BigInt(key))));
     sfx('type');
     refreshUI();
-  } else if (e.key === 'Backspace') {
+  } else if (key === 'Backspace') {
     pushUndo();
     held.setValue(v.d === 1n ? rat(v.n / 10n) : rat(0));
     refreshUI(); e.preventDefault();
-  } else if (e.key === '-') {
+  } else if (key === '-') {
     // minus makes the number negative -- and adding a negative IS subtraction,
     // so there is no separate subtract operation to type any more
     pushUndo();
     held.setValue(rat(-v.n, v.d));
     say(v.n > 0n ? 'Negative now — dropping it on a number subtracts.' : 'Positive again.');
     refreshUI();
-  } else if (['+', '*', '/', '^'].includes(e.key) || e.key === 'x' || e.key === 'X') {
+  } else if (['+', '*', '/', '^'].includes(key)) {
     pushUndo();
-    const op = (e.key === 'x' || e.key === 'X') ? '*' : e.key;
-    held.setOp(op);
+    held.setOp(key);
     opWord = '';
-    say(OP_TELLS[op]);
+    say(OP_TELLS[key]);
     refreshUI();
-  } else if (/^[a-zA-Z]$/.test(e.key)) {
+  } else if (/^[a-zA-Z]$/.test(key)) {
     // An operation may be a WORD. The last few letters you typed are kept, and
     // as soon as they end in one, the number takes it: type m-o-d and it is a
     // remainder from the "d".
-    opWord = (opWord + e.key.toLowerCase()).slice(-6);
+    opWord = (opWord + key.toLowerCase()).slice(-6);
     const name = Object.keys(OP_WORDS).find(w => opWord.endsWith(w));
     if (name) {
       pushUndo();
@@ -7919,6 +8035,16 @@ addEventListener('keydown', (e) => {
 });
 // the last letters typed onto a held number, while an operation name forms
 let opWord = '';
+// What a key MEANS on a number. x and X have always stood for multiply; the
+// rest are what a touch keyboard puts under the same finger.
+const NUM_KEY_ALIAS = {
+  x: '*', X: '*', '\u00d7': '*', '\u2715': '*', '\u2716': '*', '\u22c5': '*',
+  '\u00b7': '*', '\u2219': '*', '\u2217': '*', '\uff0a': '*',
+  '\u00f7': '/', '\u2215': '/', '\u2044': '/', '\uff0f': '/', ':': '/',
+  '\u2212': '-', '\u2013': '-', '\u2014': '-', '\uff0d': '-',
+  '\uff0b': '+', '\u2795': '+',
+  '\u2191': '^', '\uff3e': '^',
+};
 // --- scene tooltips ---------------------------------------------------------
 // What a click would mean, phrased for the current mode and what is being held.
 // What a drop would actually land on, for the jiggle: the thing itself, the

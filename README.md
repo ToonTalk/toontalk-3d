@@ -108,10 +108,15 @@ For the story behind the project, see [the write-up](https://docs.google.com/doc
   world's. Tap where you want it and it goes there. Nothing on screen is a text
   field, so a **⌨ button** on the holding card raises the keyboard; what it
   receives is turned back into key presses and handed to the ordinary typing
-  rules, so there is one set of rules and not two. The bottom row wraps to as
-  many lines as it needs, and **Full screen** at its end wins back the height
-  the browser's own bars take. A mouse plugged into the tablet takes the
-  following hand back the moment it moves.
+  rules, so there is one set of rules and not two — and since a phone keyboard
+  hands you its opinion of the word so far rather than letters, what changed in
+  the field is worked out by comparison, so a prediction rewriting a whole word
+  arrives as the backspaces and letters it really is. On a number the symbols a
+  touch keyboard actually offers mean what they look like: × multiplies,
+  ÷ divides, a real minus sign negates. The bottom row stays on one line
+  wherever one line fits and wraps when it cannot, and **⛶** at its end wins
+  back the height the browser's own bars take. A mouse plugged into the tablet
+  takes the following hand back the moment it moves.
 - **The workbench reshapes.** "Reshape table" reveals glowing corner handles:
   click one to carry that corner, move the pointer to stretch or shrink the
   top (legs follow), click again to set it. Anything left overboard by a
@@ -161,6 +166,20 @@ For the story behind the project, see [the write-up](https://docs.google.com/doc
   that exists rather than one a model imagines.
 
 ### The robots
+
+- **A robot remembers what you did, not what it left behind.** Typing "Ken " on
+  a pad is *adding* "Ken ", so a robot shown it goes on adding each round rather
+  than setting every pad to "Ken "; an operation typed on a number without
+  changing its digits is likewise its own step, so "make it minus" does not
+  become "make it -30". Anything that was not a plain addition — letters rubbed
+  out — is still remembered as the text it ended up with.
+- **The stand and the work spots behave alike while you train.** If a round
+  leaves the stand empty because its thing was carried off and combined with
+  something on a work spot, what is on the spot returns to the stand and the
+  next round finds it there. A robot has finished only when its stand is empty
+  *and* there is nothing to show for it — which is what vacuuming your own box
+  means. Work spots are cleared onto the table between runs rather than
+  emptied into nothing, so an answer left on one is never destroyed.
 
 - **A stack of miniature robots.** Set a mini on the table and drop something
   on it: it grows to full size, steps behind the bench, and takes what you
