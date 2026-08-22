@@ -259,6 +259,8 @@ Undo (Ctrl+Z or the button) unwinds moves, typing, joins, vacuums, erasures —
 including recorded steps mid-lesson. Mode boundaries clear the history.
 
 `robot-demo.html` — the earlier standalone pick-up-and-put-down demo.
+`index.html` redirects to `toontalk-3d.html`, so both the GitHub Pages root
+and a bare `node serve.js` land on the real app.
 
 Every sound effect is synthesised on the spot from oscillators and filtered
 noise — picks pop, drops thunk, combining rings, birds chirp, Dusty slurps,

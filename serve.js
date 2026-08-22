@@ -65,7 +65,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // static
-  const rel = decodeURIComponent(url.pathname === '/' ? '/robot-demo.html' : url.pathname);
+  const rel = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
   const file = path.join(ROOT, rel);
   if (!file.startsWith(ROOT)) {           // no climbing out of the served dir
     res.writeHead(403).end('forbidden');
