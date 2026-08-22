@@ -176,7 +176,9 @@ Update this file as decisions are made.
 
 - Original sensors are live pads in the notebook: mouse, keyboard, time,
   "my address" — **GAP** as a family (needed only when pictures/games
-  arrive).
+  arrive). **Designed 2026-08-22**: not as sensors at all — see
+  [BACKS.md](BACKS.md), where the family dissolves into birds, backs and
+  one suspension rule.
 - **The random source** — **DONE** (2026-08-19), as dice rather than the
   original's live sensor pad (0–999 frozen by dropping on a zero): a dice
   stack on the arc; drop a die on a number and it re-rolls to 1..faces (the
