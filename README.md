@@ -7,6 +7,8 @@ LLM-driven asset creation can carry a project like this.
 Nothing here tries to copy the original's artwork. The characters are new
 designs, generated from Blender Python scripts rather than modelled by hand.
 
+For the story behind the project, see [the write-up](https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing).
+
 ## What works today
 
 `toontalk-3d.html` — **ToonTalk 3D**, a programming-by-demonstration workshop
@@ -223,7 +225,9 @@ whole app is still one HTML file.
 
 ## Running it
 
-Needs any static server; the repo assumes port 8311.
+To use it unmodified, no setup needed: <https://toontalk.github.io/toontalk-3d/toontalk-3d.html>.
+
+To run it locally, it needs any static server; the repo assumes port 8311.
 
 ```bash
 node serve.js 8311
@@ -286,3 +290,7 @@ worth keeping back into the script.
 - The robot's scratch area is a row of discrete spots rather than free
   placement, and there is no arm IK — transfers to the copier's raised
   platform animate the object, not the arm.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
