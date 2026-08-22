@@ -5489,12 +5489,18 @@ const handPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 // of the two along the bottom. It is recomputed from that SCREEN point rather
 // than kept as a world one, so orbiting the camera can never lose it.
 let handParked = false;
+// Undo can hand something back to you, and when it does the pointer is sitting
+// on the Undo button -- so the thing was drawn down at the front edge of the
+// desk, which reads as "it moved somewhere odd" rather than "you are holding
+// it". It waits at the visible spot instead, until the pointer next moves over
+// the workshop and takes the lead again.
+let parkOnce = false;
 // Left of centre and a little low: clear of the title card at the top left,
 // the trained-actions panel at the top right, and the two along the bottom.
 const PARK_NDC = { x: -0.5, y: -0.22 };
 const _pk = { dir: new THREE.Vector3(), right: new THREE.Vector3(), up: new THREE.Vector3() };
 function parkHand() {
-  if (!handParked || !held || mode !== 'world') return;
+  if (!(handParked || parkOnce) || !held || mode !== 'world') return;
   // Fixed in the CAMERA's frame rather than the world's. Parking it on the
   // working plane was the obvious thing and the wrong one: the clamp that
   // keeps a carried thing over the bench dragged it wherever the camera
@@ -5517,7 +5523,7 @@ function moveHand(ev, hoverY = null) {
   if (!reachLocal) return;
   // The finger does not lead the hand -- except when it is dragging a corner
   // of the table, which is a drag and does follow.
-  if (handParked && grabbedCorner === null) return;
+  if ((handParked || parkOnce) && grabbedCorner === null) return;
   // Only just above working height: the higher this plane, the further the
   // carried thing drifts from whatever you clicked, since the camera looks in
   // at an angle. But a tall pile would swallow whatever you took off it, so
@@ -7234,7 +7240,11 @@ function undo() {
   if (e.heldBot) takeIntoHand(e.heldBot);
   else if (e.heldSpec) takeIntoHand(buildThing(e.heldSpec));
   renderProgram(); rebuildCondition(); refreshUI();
-  say('Undone.');
+  // Putting something down was two moves -- picking it up and setting it down
+  // -- so undoing it is two, and the step between them is you holding it. Say
+  // so: silence there looks like the thing wandered off on its own.
+  if (held) { parkOnce = true; parkHand(); say('Undone \u2014 it is back in your hand.'); }
+  else say('Undone.');
 }
 
 function resetWorld() {
@@ -8319,6 +8329,7 @@ function notePointerKind(ev) {
 }
 addEventListener('pointerdown', notePointerKind, true);
 renderer.domElement.addEventListener('pointermove', (ev) => {
+  parkOnce = false;              // the pointer is back over the workshop
   notePointerKind(ev);
   // what is under the pointer decides how high the hand rides, so resolve
   // first; resolve never looks at the hand (it skips whatever is held)

@@ -1,0 +1,931 @@
+<title>The Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,500;9..144,700;9..144,900&family=Newsreader:opsz,wght,ital@6..72,400,0;6..72,400,1;6..72,600,0&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper: #faf6ec;
+    --paper-2: #f2ebda;
+    --ink: #22282f;
+    --ink-soft: #55606d;
+    --ink-faint: #8b8879;
+    --rule: #ded3ba;
+    --card: #b02a1c;
+    --kraft: #a9743a;
+    --robin: #46a598;
+    --marty: #3f8f52;
+
+    --measure: 42rem;
+    --step-0: 1rem;
+    --step-1: 1.22rem;
+    --step-3: clamp(2.1rem, 5.6vw, 3rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171c24; --paper-2: #1e242e; --ink: #ece4d4; --ink-soft: #a3a99f;
+      --ink-faint: #737a72; --rule: #333b46; --card: #e2705d; --kraft: #cfa066;
+      --robin: #7fd3c6; --marty: #7cc98c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171c24; --paper-2: #1e242e; --ink: #ece4d4; --ink-soft: #a3a99f;
+    --ink-faint: #737a72; --rule: #333b46; --card: #e2705d; --kraft: #cfa066;
+    --robin: #7fd3c6; --marty: #7cc98c;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: Newsreader, Georgia, serif; font-size: var(--step-0);
+    line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 4.2rem 1.5rem 6rem; }
+
+  header { margin-bottom: 3rem; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--card); margin: 0 0 1.1rem;
+  }
+  h1 {
+    font-family: Fraunces, Georgia, serif;
+    font-variation-settings: "SOFT" 40, "WONK" 1, "opsz" 110;
+    font-weight: 900; font-size: var(--step-3); line-height: .98;
+    letter-spacing: -.02em; margin: 0; text-wrap: balance;
+  }
+  .standfirst {
+    font-size: var(--step-1); color: var(--ink-soft); max-width: 36ch;
+    margin: 1.1rem 0 0;
+  }
+  .meta {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .74rem;
+    color: var(--ink-faint); margin-top: 1.5rem; padding-top: .9rem;
+    border-top: 1px solid var(--rule); max-width: 36ch;
+  }
+
+  ol.log { list-style: none; margin: 0; padding: 0; counter-reset: n; }
+
+  li.day {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem .7rem;
+    margin: 3rem 0 .9rem; padding-bottom: .55rem;
+    border-bottom: 2px solid var(--card);
+  }
+  li.day:first-child { margin-top: 0; }
+  .day-date {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .74rem;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--card);
+    flex: 0 0 auto;
+  }
+  .day-title {
+    font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 1.28rem;
+    color: var(--ink); flex: 1 1 auto;
+  }
+  .day-blurb {
+    flex: 1 1 100%; font-size: .86rem; color: var(--ink-soft); font-style: italic;
+  }
+
+  .entry {
+    counter-increment: n;
+    display: grid; grid-template-columns: 2.4rem 1fr; gap: .2rem 1rem;
+    padding: 1.05rem 0; border-top: 1px solid var(--rule);
+  }
+  .entry:last-child { border-bottom: 1px solid var(--rule); }
+  .entry .n {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .74rem;
+    color: var(--ink-faint); padding-top: .2rem;
+  }
+  .entry .n::before { content: counter(n, decimal-leading-zero); }
+  .prompt {
+    margin: 0; font-style: italic; color: var(--ink);
+    font-size: .98rem; line-height: 1.48;
+    /* a pasted URL is one unbreakable word, and pushed the page sideways */
+    overflow-wrap: anywhere;
+  }
+  .summary {
+    margin: .5rem 0 0; font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .8rem; line-height: 1.5; color: var(--ink-soft);
+    overflow-wrap: anywhere;
+  }
+  .summary::before { content: "\2192  "; color: var(--robin); }
+  .summary:empty { display: none; }
+
+  footer.end {
+    margin-top: 3.5rem; padding-top: 1.4rem; border-top: 1px solid var(--rule);
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .74rem;
+    color: var(--ink-faint); line-height: 1.7;
+  }
+  footer.end a { color: var(--ink-soft); }
+  a { color: var(--card); text-underline-offset: .16em; }
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">ToonTalk 3D &middot; a working log</p>
+  <h1>The Ledger</h1>
+  <p class="standfirst">Every prompt of this conversation, in order, with what
+    it actually changed.</p>
+  <p class="meta">143 entries &middot; 16&ndash;22 August 2026</p>
+</header>
+
+<ol class="log">
+  <li class="day"><span class="day-date">16 Aug</span><span class="day-title">From a first-person 3D idea to nano-ToonTalk</span><span class="day-blurb">A robot, a stack of numbers, and training by demonstration.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">How big a task would it be to create a copy of https://github.com/ToonTalk/tt-wasm that provided a full first-person view 3D</p>
+    <p class="summary">Scoped a first-person 3D ToonTalk port; recommended a small draw-list prototype first.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Would option 2 be easier if we didn't try to capture the look of ToonTalk. There still would be trucks, vacuums, helicopters, robots, etc. but we would be free to come up with their design and aesthetics.</p>
+    <p class="summary">Estimated cost of an original-look port vs. a from-scratch aesthetic — roughly 1.5–2× for a much higher ceiling.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I've been reading about recent projects where LLMs use tools such as Blender to make 3D assets fairly quickly.  E.g.…</p>
+    <p class="summary">Proposed Blender-scripted assets as a cheap way to test the look before committing to a pipeline.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Yes let's make a robot. If it is acceptable then we can explore getting it to pick up and drop items.</p>
+    <p class="summary">Built the first robot model in Blender, ready for pick-up/drop animation.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">This looks good. Where are the files? How can I use the GUI?</p>
+    <p class="summary">Explained where the Blender files live and how to open/recolor the model in the GUI.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Very good start. Let's keep it this way for now and fine-tune later. let's see a web page where the robot picks up something and puts it somewhere else</p>
+    <p class="summary">Built the first web page: the robot picking an object up and setting it down.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Great. One idea to remember for much later is that the user could do some kinds of customization - e.g. change the color of things or choose among a few robot heads.
+For now let's aim at nano-ToonTalk. The robot is already in its…</p>
+    <p class="summary">Scoped “nano-ToonTalk”: numbers off a stack, training by demonstration, a way to exit and replay.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Great. Let's introduce boxes that can hold numbers and boxes. Let's have a special pedestal that when the user put a number or box on it the robot enters its thought bubble and can be trained</p>
+    <p class="summary">Added boxes that hold numbers/boxes, and a pillar that starts training when something is dropped on it.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I saw something that wasn't right. With a box with 2 numbers if one number is picked up and dropped on the other It didn't end up on top of the other number but after a short delay they were combined.  Or sometimes it shows up in…</p>
+    <p class="summary">Fixed combine-on-drop and hole-placement animations; clarified how training mode is entered.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">go ahead</p>
+    <p class="summary">(“go ahead”) — the robot now acts for real instead of resetting the world, and aborts with a clear message on mismatch.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">can you create a github repository for this project or should I? 
+Working but the robot to move something from a box to another hole in the same box doesn't need to walk to the center and back
+Let's introduce Dusty and a display…</p>
+    <p class="summary">Created the GitHub repo, trimmed a needless walk, added Dusty and a thought-bubble condition display.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+The thought bubble should be attached to the robot's head.
+When clicking "Run what it learned" and there is a mismatch then highlight the part(s) in the thought bubble that isn't matching.
+Let's add a duplicating machine…</p>
+    <p class="summary">Attached the thought bubble to the robot’s head, added mismatch highlighting, and a duplicating machine.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Working well. Can we add a speed control that supports a very fast speed. And the fastest speed you don't see the robot doing anything - just what is on the blue pilar change. Also let's move the vacuum and duplicator to other…</p>
+    <p class="summary">Added a speed control with an Instant mode, typed operators (+−×÷^), and shrinking-digit numbers.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+You should see the operator and the block should change color
+when the robot stops after performing its training due to a mismatch the mismatch should be highlight just as it when the run button is pushed for a second time.
+Why…</p>
+    <p class="summary">Fixed the operator badge/color, mismatch highlighting on replay, and a rule that a pass never ends mid-claw.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Let's have a way to save and load trained robots
+When holding a box and a number is typed the box should change to have that many holes.
+Why not make numbers like in ToonTalk? BigInts and when they are too big to display the…</p>
+    <p class="summary">Added save/load for trained robots, digit-typed box resizing, and BigInt numbers with shrinking digits.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Buttons shouldn't turn gray when you hover over them. 
+The duplicator should work when empty if you drop on the pillar top (the bottom of the duplicator).
+When you take a number from the stack it should disappear from the stop of…</p>
+    <p class="summary">Fixed hover-gray buttons, an always-on duplicator, and stack regrowth timing after an item is actually gone.</p>
+  </div></li>
+  <li class="day"><span class="day-date">17 Aug</span><span class="day-title">Full ToonTalk addressing</span><span class="day-blurb">The copier, teams of robots, scales, birds and nests, undo, save/load.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Give the app a favicon
+The stack growing when an item has been removed should happen after the top item has been removed.
+When a number is placed on another it should rest on top of the lower one briefly before being combined
+The…</p>
+    <p class="summary">Added a favicon and timing polish; the big change — the robot only acts inside its thought bubble, never for the user.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">While holding a number or box I can't set it down on a pillar (what is the motivation now for pillars instead of a workbench?).</p>
+    <p class="summary">Explained pillars vs. a free workbench, and the tradeoffs of going fully box-relative like real ToonTalk.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Let's go full ToonTalk - actions relative to the box only</p>
+    <p class="summary">Rewrote robot actions to be entirely relative to the box it was given, ToonTalk-style.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Why can't the duplicator have 2 surfaces: an upper platform where something is placed (and scanned) and the current lower surface where the duplicate appears. Wouldn't robots be able to work then?</p>
+    <p class="summary">Split the copier into two surfaces — a scan platform and a delivery tray — so robots can use it too.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Robots in the original could place things anywhere in their cloud as a temporary work area. These are automatically vacuumed up upon leaving the thought bubble. All that persists in the original is the box the robot was given.…</p>
+    <p class="summary">Gave robots a scratch work area and fixed a copier step-ordering bug that made runs abort early.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">The robot doesn't do anything during training when I click on a number on the rightmost pillar
+Also when the user clicks on the stack of numbers the number sometimes appears far from the stack while it should start somewhat above…</p>
+    <p class="summary">Fixed number-pickup drift and made vacuum-erase animate a rise from where the item actually lay.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Let's do that generalization - address things as (container, path)
+
+Anticipating having multiple robots I think there should be a stack of miniature robots. When a user places one on the table and then drops an object on them…</p>
+    <p class="summary">Generalized addressing to (container, path); added a stack of miniature robots and team-forming by drop.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">when I gave the robot a number it worked fine but then I thought to copy I should click on the duplicator and the robot would walk over there and place the number there and then in order to double would place the original and the…</p>
+    <p class="summary">Unified the copier’s two surfaces so the robot’s actions are ordinary takes/puts, no special wand step.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Regardless of where the user clicks on the duplicator (whether training or not) it should be placed on the upper platform
+When training is over I think the robot should leave the object on its main pillar
+The upper left message…</p>
+    <p class="summary">Fixed the copier’s drop targeting, restored the “holding” readout, and clarified Rounds is per-session.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Let's add tooltips to everything</p>
+    <p class="summary">Added tooltips across every clickable target in the workshop.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I don't think we need the "train again" button since you can always grab a fresh robot
+The vacuum should be able to remove objects in addition to generalizing robot's thought bubble conditions.
+Let's add a stack of scales -…</p>
+    <p class="summary">Removed “train again”, let Dusty remove objects outright, and added a stack of two-pan scales.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I saw a good message about a box with 2 holes not matching a 1-hole box but then the red indicator went away
+Erasing a box yielded a number with ? - we need something for erased boxes
+Also we need a way to join boxes - dropping…</p>
+    <p class="summary">Fixed box-erasure display, added left/right-sensitive box joining, and relocated Dusty under the bench.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+The tip for scale should refer to holes.
+We need a way to distinguish between -2 and subtract 2.  I think typing '-' to make negative numbers should be the default, but now to indicate subtraction?
+Let's add an undo button…</p>
+    <p class="summary">Fixed the scale tooltip, clarified negate-vs-subtract typing, and added Undo/Ctrl-Z.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">When I used dusty on a box with 2 holes I was able to erase the numbers inside but not the box itself - it became a ?-number instead.
+There should be a difference between dropping a box on the left or right side of another box in…</p>
+    <p class="summary">Added nests with hatching eggs and real bird delivery; removed the now-redundant “Forget training” button.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">The reset button says it clears away things but keeps the robots - that's confusing - maybe get rid of it too.
+The robot puts things on the lower level of the copier and then can't pick things off the upper level but instead they…</p>
+    <p class="summary">Removed the confusing Reset button; fixed the copier’s upper surface and nest/box-hole handling for birds.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+the first screenshot shows that I couldn't give the box to the untrained robot - I tried several times at different locations
+the second screenshot is just that the cursor (hand) was pointing to the nest while the robot was…</p>
+    <p class="summary">Investigated give-to-untrained-robot and hole-vs-desk drops; fixed the copier arm reading as too low.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I think any size box should be joinable with another since these are like arrays
+load worked</p>
+    <p class="summary">Confirmed any-size boxes can now join like arrays; confirmed Load works.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+a robot will sometimes put something down on a diagonal and when released it becomes parallel to the table instantly. Don't have any instant changes - a quick animation is better.
+should say a box with 128 holes in screenshot…</p>
+    <p class="summary">Smoothed instant snap-to-flat drops; fixed a big-box tooltip, scale-stacking offset, and file import.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+the robot instead of going to the boxes to get one suddenly has one when running
+A robot drops things at the center of a box and then it goes magically to the right hole - this is ok but would be better if it was dropped in the…</p>
+    <p class="summary">Added multi-face numbers (scientific, English, decimal) and fixed a fetch-from-stack “sudden appearance” bug.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+The hand is at right location and the tip says I can drop it on the robot's work pillar but clicks are ignored. I can drop it on the desk. If I picked up the robot, set it on the table and then gave the box to it everything…</p>
+    <p class="summary">Fixed robot-work-pillar drop targeting; added save/load to disk, repeating-decimal bars, stack regrow timing.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Newer items placed on a nest by a bird should be underneath what is already there - the bird should move the stack of things on the nest to the table, place the new item, and put the stack back on top. The user or a robot cannot…</p>
+    <p class="summary">Made deliveries land under the pile — the bird lifts it aside, tucks the new thing in, and stacks it back.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+📷
+I want to have a way to obtain a copy of the object that was originally given to the robot to start its training. In ToonTalk the Magic Wand set to 'o' does this. Maybe if a trained robot is lifted up and dropped then a…</p>
+    <p class="summary">Added a way to copy a robot’s original training object; gave each robot a growable row of work spots.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">While training a robot it couldn't grab the top of a stack on a nest - the user could when it was on the table.
+If a label is typed to a nest with an egg then the label is given to both the nest and the bird.</p>
+    <p class="summary">Fixed pile-top pickup during training; a label on a nest with an egg now names the hatched bird too.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I don't see any way to grab a copy from a robot's thought bubble.
+Use animation to show when the vacuum is active
+when a robot works on a nest that is covered its thought bubble should have the top item only as if there was a…</p>
+    <p class="summary">Enabled copying from inside a thought bubble; animated the vacuum; defined nest/bird copy-and-broadcast rules.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">An empty hole in a thought bubble should match anything in that hole</p>
+    <p class="summary">Made an empty condition hole match anything, and showed that permissiveness in the condition text.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+Why is enabling github pages failing?</p>
+    <p class="summary">Diagnosed a one-off GitHub Pages deploy failure — nothing to fix, just a re-run.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">If a robot is loaded while a robot is working or stopped then that robot should shrink and move to the desk and the loaded robot should appear behind the table. If a robot is paused on a nest it should stay behind the desk but…</p>
+    <p class="summary">Made loading a robot correctly shrink and park whichever robot was previously at the bench.</p>
+  </div></li>
+  <li class="day"><span class="day-date">18 Aug</span><span class="day-title">The notebook, rooms — then the manual</span><span class="day-blurb">Text pads, a growable table, recursive rooms, and the evening the project turned to read the real thing.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Here is a list of major enhancements:
+
+1. A stack of text pads similar to the original ToonTalk
+2. A single notebook on the table that includes a blank notebook. Should include the ability to drop a text pad on them to open to…</p>
+    <p class="summary">Scoped five big features: text pads, the notebook, a growable table, save/load-to-disk, recursive rooms.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">1. I think you need to study the original ToonTalk better - text pads were concatenated and dropping on the left or right edge determines the order. Here is the manual: https://toontalk.com/English/doc.htm - note that the full…</p>
+    <p class="summary">Read the ToonTalk manual per request; refined the text-pad/notebook/room designs against it.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Notebook statements confirmed. Notice the only way to remove a notebook (note there initially is only one but it contains a blank notebook) is to use Dusty on a notebook open to 2 blank pages.
+Go ahead</p>
+    <p class="summary">Confirmed the notebook’s two-blank-pages removal rule; began building the notebook.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Go ahead with the notebook and Ruby</p>
+    <p class="summary">Built the notebook and Ruby the eraser, with a real distinction between erasing and removing.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Go ahead with the growable table</p>
+    <p class="summary">Built the growable table with draggable corner handles that persist across reloads.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Go ahead with the recursive rooms</p>
+    <p class="summary">Built recursive rooms with transparent/opaque walls and a view-swapping door.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Ruby should work on objects on the table as well as in thought bubbles. When I used Ruby I saw Dusty animate
+Text pads disappear when dropped on the table or into a box hole. They work ok with robots. I think the text should…</p>
+    <p class="summary">Fixed Ruby on tabletop objects, text-pad legibility, a mini-robot undo gap, and added object textures.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+The tooltip for rooms is for boxes
+When loading a robot it becomes the active robot. But we need a way for a robot to pick up robots and place them in rooms (and more). I couldn’t put a room on the table.
+You should be able to…</p>
+    <p class="summary">Fixed the rooms tooltip, dropping robots/birds/nests onto the notebook, and Dusty/Ruby toggling by self-click.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+There is empty space on the right and the stack of rooms is clipped. I'm wonder if a better layout would be to center the table (and it should be larger initially) while the stack form a semi-circle behind the desk and robot…</p>
+    <p class="summary">Recentered the table with stacks arranged in a semicircle behind it, so the layout no longer clips.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+Dropping a number on an erased text pad didn't restore the text pad and changes its contents to the digits of the number.
+A robot in a notebook should be laying down and fit on the page with a small margin - not like the…</p>
+    <p class="summary">Fixed erased-pad restoration, laid robots flat in the notebook, and made a room auto-start on drop.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I'm unsure of whether when there is a mismatch that the object the robot was working on gets moved to the user's table. Why does it work that way?</p>
+    <p class="summary">Explained why a mismatch bounces the given object to the table, and proposed leaving it in place instead.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Yes change what happens to the object the robot is working on.
+A robot in the notebook should be shrunk down to fit on the page with a normal margin. Scales should also be laid down when in a notebook. 
+I couldn't combine 2…</p>
+    <p class="summary">Made a mismatch leave the object on the robot’s own desk; fixed notebook/room drop targeting.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Much better but the robot should be lower on the page instead of sticking out.
+When the room is transparent the tiny robot should follow the same speed that is set in the interface
+What are our options for adding sound effects?</p>
+    <p class="summary">Lowered the robot on notebook pages; synced mini-house robot speed to the interface; scoped sound effects.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Go ahead with the procedural sounds and a volume control including mute.
+Maybe other things have textures. The scales could be 2 types of metal, the nest twigs/straw/??, anything else?</p>
+    <p class="summary">Added procedural sound effects with volume/mute, and textures for scales, nests, the notebook, and rooms.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Even robots placed on the desk should displays their thought bubbles
+I put in the mini-room a robot that gives successively larger integers to the bird in the first hole. The second hole has the number that is incremented.…</p>
+    <p class="summary">Gave desk robots visible thought bubbles; fixed hand-height centering and undo losing a room’s inner world.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+📷
+@"C:\Users\toont\Downloads\natural_numbers.robot.json"
+The large number that changes and no bird delivery is still happening with the natural number generator in a small room - attaching the robot - perhaps the fact that…</p>
+    <p class="summary">Fixed edge-drop text-pad joining and the carrying-plane clamp on an expanded table; fixed pad-in-hole display.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+It should be possible to get a copy of the original item used in training a robot from its thought bubble even when it is miniaturized. 
+I should be able to put mini-robots in box holes
+In the first screenshot there is a…</p>
+    <p class="summary">Fixed a room’s drop-order deadlock and gave rooms two separate ways to be stopped.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I don't understand why bird's have any trouble finding its nest (or nests). Each nest can have a guid and a bird flies to the nest (or nests) with that guid.</p>
+    <p class="summary">Switched bird-to-nest matching to stable GUIDs instead of fragile references, closing several delivery bugs.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+@"C:\Users\toont\Downloads\box.thing (1).json"
+I was able to hold this box under the table (without trying to)
+I was able to put a room in a box then I could take it out again. But then when I tried another time I couldn't even…</p>
+    <p class="summary">Fixed a box-hole path bug, evened room-stack spacing, and confirmed a loaded box’s room worked as designed.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">You should be able to pick up a tower on top of a nest by grabbing it anywhere other than the top.
+Since these towers can get large let's truncate the middle with a bit of text saying how many objects are being elided when ever…</p>
+    <p class="summary">Added truncated “N more” piles for tall nest towers, and let you grab a tower from anywhere but the top.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+The placement of the message is too high
+Sorry I meant when you grab the tower you also pick up the nest at the bottom</p>
+    <p class="summary">Fixed the tower/nest grab to include the nest, message placement, and gave robots the same pile-grab rule.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+📷
+save world didn't do anything. I see many copies of the following in the console:
+256[.WebGL-0x58dc0016e000] GL_INVALID_VALUE: glCopySubTextureCHROMIUM: Offset overflows texture dimensions.
+My hand was centered on the box…</p>
+    <p class="summary">Fixed the workbench-vs-pad drop message, and stabilized in-flight birds surviving a world swap.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+when possibly about to drop an object into a mini-room the tooltip should briefly explain how rooms work not about toggling the roof
+Switching to opaque still produces the incorrect order on the nest. When transparent it…</p>
+    <p class="summary">Fixed a mini-room drop tooltip, in-flight bird disorder on opacity toggle, room-resume, and copy/paste.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+I pasted some emojis into a text pad - it worked but they are very faint. I think text including emojis should be fully opaque. Later we may introduce lots of settings so users can customize this.
+Let's have the bird when…</p>
+    <p class="summary">Made pasted emoji fully opaque, fixed an eraser-undo bug leaving a bird ghosted, laid robots flat in holes.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">@"C:\Users\toont\Downloads\workshop.world (2).json"
+I ran nat nums first transparent then opaque and it worked fine. But then I opened the door ran a cycle or two and then put everything back in the mini-room and the tab froze -…</p>
+    <p class="summary">Diagnosed and fixed a tab freeze from an infinite retry loop and redundant per-delivery GPU textures.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I don't see the bird's wings when flying. I see wings not really outstretched when the bird is resting.
+When I set rounds to 1000 I noticed a couple second pause. 10,000 and it did 2300 or so and then paused and then the browser…</p>
+    <p class="summary">Cut a heavy room’s per-cycle cost roughly in half by lazily painting numbers’ secondary faces.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I ran 1000 cycles 4 times (3 in a mini-house) but now the interface froze for about a minute doing 1000 more
+I didn't see anything coming from the chimney as it was running. I'm unclear how restart the house when…</p>
+    <p class="summary">Chunked long Instant-mode runs across frames and wrote the manual, with live interactive demos in it.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+📷
+the first screenshot is from Chrome and the when pasted into a text pad  (screenshot 2) it still seems faded.
+screenshot 3 shows something is wrong it was generated by an opaque house on instant - first 100 (that worked…</p>
+    <p class="summary">Fixed a stray click-tag bug, trimmed each manual demo to only what it teaches, and linked app ↔ manual.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+📷
+the controls  in screenshot 1 aren't needed in the manual unless the manual gives a simple robot example
+Why no numbers example and dropping 2 didn't work right
+Why not add an entry about the copier/duplicator - and let's…</p>
+    <p class="summary">Trimmed unneeded manual controls, added a numbers example, and fixed number-on-pad drop targeting.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+It got stuck after 40 cycles despite the 100 rounds and notice 2 birds got stuck on the roof - the app then froze
+I did a test where the nest was in a box hole and the bird didn't fly there. The nest in the box came from the…</p>
+    <p class="summary">Fixed egg-hatching inside box holes and a room round-limit stall; added a manual navigation section.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I’m wondering if I should have asked you to read the ToonTalk manual earlier. Clearly some misunderstandings would have been avoided but I wonder if some innovations in the 3D version wouldn’t have happened due to the copying of…</p>
+    <p class="summary">Discussed reading the real ToonTalk manual and C++ source, and scaling concerns for many-house programs.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">The example was a simple context free grammar used to generate a stream of random sentences (arriving on a nest). We would need to have a random number generator but otherwise we could program it in ToonTalk 3D. But several dozen…</p>
+    <p class="summary">Received a multi-house grammar example; began DIVERGENCE.md, the audit of gaps against real ToonTalk.</p>
+  </div></li>
+  <li class="day"><span class="day-date">19 Aug</span><span class="day-title">Removing bottling</span><span class="day-blurb">Worlds go live in one shared engine; a performance pass; doubly-recursive Fibonacci in seconds.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Your plans looks good, go ahead. % for modular division  will confuse students - what are some alternatives?</p>
+    <p class="summary">Approved the divergence-fixing plan; discussed alternatives to “%” for the mod operator.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">go ahead first the sentence generator and later the manual</p>
+    <p class="summary">Built the sentence generator; queued manual sections for dice, box-splitting, scales, robot-built rooms.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+I see the same sentence 4 times "the cat likes the frog." - dice have no tooltips and it is unclear how they are supposed to work - they are always showing 3
+When the house is transparent and the speed isn't instant I'm not…</p>
+    <p class="summary">Fixed duplicate-sentence and dice-tooltip issues; built the recursive Fibonacci and bank-account examples.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+📷
+In the manual there is no need for the robot's work areas (unless of course a robot is involved) and any stacks can be moved closer
+The text pad entry should also have the number stack so the user can explore what it…</p>
+    <p class="summary">Trimmed manual demos further; added the numbers stack to the text-pad lesson; noted mobile support for later.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Let's remember for later to introduce long-distance birds (maybe WebRTC is best for this?)
+Another thing for later is discuss is whether when multiple houses are running we could make it run multi-threaded
+Later we should discuss…</p>
+    <p class="summary">Recorded long-distance birds, multi-threaded houses, and sensor/media import as future work — no code this turn.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+Turning a robot red that can't proceed is fine but all the other robots shouldn't change
+When I picked a text pad off the nest stack all was well except the pad was behind the tower so unseen until moving it out from…</p>
+    <p class="summary">Fixed a stray-robot color bug, a pad hidden behind its pile, and added instruction pads to every example.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+@"C:\Users\toont\Documents\ToonTalk\divisiontester\My Programs\divisiontester.tt"
+when holding a text pad with more text than can fit in the message starting "holding" we need a way to easily see the entire text - do you have…</p>
+    <p class="summary">Read a real ToonTalk division-tester program; scoped the bank-account rework and a data-driven grammar.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">what is the status of removing bottling</p>
+    <p class="summary">Explained the status of removing world-bottling: still a plan, a real architectural rewrite, not yet started.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+Let's removing the bottling after fixing the following minor issues:
+duplicating a robot produced a full size robot instead of staying mini
+When I ran fib it ran for a while and the stopped - see screenshot (let's retest this…</p>
+    <p class="summary">Removed world-bottling — worlds now live and step through one shared interpreter instead of being serialized.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Go ahead. Also I'm curious if the code shrank or grew when you made this change?</p>
+    <p class="summary">Rewired bird delivery through one wake-up path; re-verified every example after the bottling removal.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+Now the robot is too tiny when working behind its work surface and the user's desk
+When a robot uses Dusty it seems to happen instantly - I don't see Dusty move - maybe it is too fast - how long should it take?
+Why does the…</p>
+    <p class="summary">Fixed tiny-robot scale at rooms, animated Dusty properly, and labelled the mini-house holding the user’s table.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+The nest label should not collide with its stack - maybe it should be displayed below the nest.
+second screenshot shows immediately after loading the bank account example - there is the orphaned thought bubble. Entering the…</p>
+    <p class="summary">Diagnosed the orphaned notebook thought-bubble and a rooms-overcharged-for-rounds performance issue.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">houses shouldn't have the small desk at all
+Are we still using bottles? "0.5–1.2 s per bottle for a single bank transaction"
+go ahead and do the performance pass</p>
+    <p class="summary">Removed the small desk from inside houses; ran a performance pass that sped Fibonacci roughly 60%.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+I loaded bank account, opened the door and here is what I saw. There is a desk in the small house. The items before entering the desk are no long accessible. And the robot's box is now on the table rather on the the robot's…</p>
+    <p class="summary">Fixed opaque rooms drawing no furniture, and labelled the outer world “your table” so nothing feels lost.</p>
+  </div></li>
+  <li class="day"><span class="day-date">20 Aug</span><span class="day-title">Ken's own programs, and Marty</span><span class="day-blurb">The account rebuilt as a message-serving object, then Marty the Martian built end to end.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">It isn't any better. What I want to do is use the 3 boxes, the bird, and the nest while watching the robot run in full size. So I should be able to enter the house and still have those objects on my desk. So I can give those…</p>
+    <p class="summary">Redesigned rooms so the user’s own desk stays reachable while a robot works full-size inside.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+@"C:\Users\toont\Documents\ToonTalk\divisiontester\My Programs\divisiontester.tt"
+bank working now. the robot and its work areas don't need to be as tiny as they are in the screenshot 
+Let's not have smoke when transparent…</p>
+    <p class="summary">Kept both bank examples; ported Ken’s original division-tester idiom; made a filled input auto-start the robot.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I don't understand "our robots can't do that, because typing is recorded as an absolute value and the amount is a wildcard — so this robot drops a "times −1" on it instead, which works whatever the amount turns out to be." - I…</p>
+    <p class="summary">Clarified the “times −1” subtraction idiom; re-verified all example worlds and updated the docs.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">@"C:\Users\toont\Documents\ToonTalk\divisiontester\My Programs\factorial.tt" @"C:\Users\toont\Documents\ToonTalk\divisiontester\My Programs\swap.tt" @"C:\Users\toont\Documents\ToonTalk\divisiontester\My Programs\append.tt"…</p>
+    <p class="summary">Ported five of Ken’s original ToonTalk programs (factorial, swap, append, reverse, n-to-1) into examples/.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Moving from holes to pans is the right move.
+The new bank account didn't include the bird and its nest wasn't in the first hole and the bird was missing. When I got a new nest and sent the first message and in the area where…</p>
+    <p class="summary">Investigated a missing-bird report (couldn’t reproduce); re-verified all eleven examples pass.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+The animation of the box when it is dropped on a robot on the desk currently is that the robot moves in place and then the box does (very quickly) - I think it should drift over to the robot's work platform as soon as it is…</p>
+    <p class="summary">Fixed a robot’s drop-onto-desk animation, and named two measurement mistakes that had cost real debugging time.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+📷
+account looks like the first screenshot now - it isn't working as I expect
+I put the spare nest in the first hole and gave the 3-hole box to the team (I think teams should line up one behind each other rather than side by…</p>
+    <p class="summary">Diagnosed a Rounds-limit-vs-message-count conflation, and a rapid double-Stop-click race.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+With the cursor on the box the contents are wiggling which indicates that a click would pick them up but instead a click correctly picks up the box
+why do we need the spare in the account example? When I gave the query…</p>
+    <p class="summary">Fixed box-vs-hole click precedence; couldn’t reproduce a repeated-sentence report; explained the spare nest.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">grammar world working now
+What is on our todo list? Have you been updating the manual?
+I'm also thinking of adding an AI-powered Marty the Martian. We can build a user provided API keys version and a Claude artifact that is…</p>
+    <p class="summary">Confirmed the grammar-world fix; reviewed the roadmap; scoped a keyless-artifact Marty the Martian.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I agree Marty shouldn't create programs but in addition to answering question he can demo the use of the different kinds of objects and tools.
+Can you create an artifact or do I need to upload something you create to claude.ai to…</p>
+    <p class="summary">Locked Marty to demoing rather than authoring; set the robot-matching rule; scoped five divergence fixes.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+scales with text are working but display poorly - see screenshot
+text pads and zero-hole boxes look too much alike - let's give boxes a texture unlike anything else
+And while we are at it let's make eggs robin egg blue
+
+I don't…</p>
+    <p class="summary">Fixed scale-with-text display, gave boxes a distinct texture, made eggs robin’s-egg blue (an sRGB bug).</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Let's do Marty now (and also fix dropping a team of robots on a zero-hole box - nothing happens now and tooltip is wrong)</p>
+    <p class="summary">Built the first working version of Marty the Martian; fixed team-onto-zero-hole-box.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Marty gives too much information all at once. Maybe there should be a "next" button or the like. E.g.
+how do birds work
+Birds carry things home to their nests — watch.
+Nests come with an egg.
+Set one down and the egg hatches into…</p>
+    <p class="summary">Added a stepwise Next/Stop demo runner, a mouth, and a Claude/ChatGPT/Gemini provider picker for Marty.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Let's add voice input and output options (speech input I think isn't currently permitted in artifacts)
+This wasn't good:
+Brain: ChatGPT (OpenAI) — it still needs its key.
+Key saved in this browser — now I can really talk.
+how me…</p>
+    <p class="summary">Added voice input/output for Marty; started having him hold demo props instead of the user.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Worked much better except Marty did everything from behind Mimi - he moved there and the numbers moved on their own. But then I asked:
+how can I see it as a decimal
+In this workshop, numbers like 1/5 stay exact — ToonTalk…</p>
+    <p class="summary">Moved Marty’s presenting spot so he’s visible and near his demo, instead of hidden behind Mimi.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Marty's voice doesn't sound very alien.
+Mary hold numbers but then they quickly move on their own to the desk. And I don't see him go to the stack to get the number.
+the following was working well until the last question 
+how can…</p>
+    <p class="summary">Gave Marty a properly alien, less-repetitive voice with a picker; his honest sorting answer was confirmed correct.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Yes, Marty did well on sorting but didn't seem to know that n-to-1 referred to the counting down example. When in a fresh test when I mentioned counting down it gave a good answer.
+I think the pauses in speaking is too annoying -…</p>
+    <p class="summary">Taught Marty each example’s file name, softened speech pauses, matched voice to browser language, moved him off the table.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Please create a web page describing the making of this app. Include how early efforts did not involve the ToonTalk manual and how things changed after you read it.
+I think Marty should float in the air to pick things up and place…</p>
+    <p class="summary">Wrote the making-of page; had Marty float to pick things up; added a powers demo so he stops mis-demoing addition.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Marty goes to the stack fine and gets an item but instead of turning around and taking the object to the desk the item flies to where it should go</p>
+    <p class="summary">Fixed Marty’s carried objects flying to position instead of moving with him, by pinning the shared hand.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">It showed 25+17 and it went to the stack, turned it to 25, came to the desk put 25 down, went to the stack, turned it to 17, and then stayed there and the number magically flew on top of the 25
+After fixing that make the artifact…</p>
+    <p class="summary">Verified the last “magic flight” fix, then built the packed single-file artifact version for testing.</p>
+  </div></li>
+  <li class="day"><span class="day-date">21 Aug</span><span class="day-title">A packed build, and pushing on the seams</span><span class="day-blurb">The artifact frame's limits, per-user notebooks, and a box grown to half a million holes.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">working fine except  when Marty runs underneath the desk his antennae poke through
+Regarding the artifact version I believe about 1MB is the maximum. I don't understand what you wrote earlier about inlining "The catch is the CSP:…</p>
+    <p class="summary">Fixed Marty’s antennae poking through the desk; clarified the artifact’s real size limits and inlining.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Marty's demo of using Mimi didn't involve putting things on the copier - they just appeared there</p>
+    <p class="summary">Routed the Mimi/Dusty/room/notebook demo steps through the same walk-to-target helper so nothing “just appears”.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">The voice reads "Brain: ChatGPT (OpenAI)." so turn these kinds of messages into a sentence</p>
+    <p class="summary">Changed “Brain: ChatGPT (OpenAI).” into a spoken sentence, “Switched to ChatGPT as my brain.”</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">When I tried to train a robot to take something from a copy of the notebook I see "The robot expected something in the right page of the notebook and found nothing." when something is very visible (a die). Then when I ran the…</p>
+    <p class="summary">Fixed notebook-copy training to address the exact notebook given; added per-user notebooks with sign-in.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+I couldn't undo removing something from my notebook
+I don't think Dusty should be able to vacuum up the user's notebook - he should refuse with a message
+The message area (the screenshot) should have a way to toggle whether it…</p>
+    <p class="summary">Fixed notebook undo, made Dusty refuse the user’s own notebook, added a speak toggle, wiggle-not-lift, sign-in bug.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">My computer rebooted and I don't see where to restart the 8311 server</p>
+    <p class="summary">Restarted the local dev server after a reboot.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Here is what the app looks like when I load it. Marty is barely visible and Dusty and Mimi are offscreen. Being close to the desk is good so maybe the 3 of them should be on the sides of the desk instead. Maybe Marty on the…</p>
+    <p class="summary">Moved Marty/Mimi/Dusty/Ruby beside the desk; fixed a walk-order race; updated the making-of page, favicon, links.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Can you make a web page that lists every prompt I submitted here and a very brief summary of your response please</p>
+    <p class="summary">Published a first version of this ledger — scoped, mistakenly, to only the current session.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I meant the entire conversation starting 6 days ago</p>
+    <p class="summary">Rebuilt the ledger to cover the entire six-day conversation — this page.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">can you find the exchange we had about the consequences of building for 3 days without reference to the manual or code of the original and reproduce it</p>
+    <p class="summary">Found and reproduced the 18 August exchange in full — the manual-as-arbiter answer, and the C++ reading that followed.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">At one point Ruby could erase a number in a thought bubble and then a second attempt to erase used to turn it into any object but it doesn't seem to work now</p>
+    <p class="summary">Ruby's second erase click was being swallowed while she was still flying home from the first; the click now lands.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+now when I trained a robot by giving him a number the robot becomes very small but is trainable.
+I trained a robot that duplicates what it is working on drops it on the original. It doubles numbers fine and doubles the number…</p>
+    <p class="summary">Rooms now scale their contents to fit, so a doubling box stops bursting the walls and dragging the house away.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+Here is a screenshot where I found the missing house on the floor and the box is very long. The box should have been scaled to fit in the house</p>
+    <p class="summary">Confirmed the house had not vanished — the box had grown wider than the room and carried it off.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">The robot doubling a box in a quickly made the interface very sluggish - changing the camera was updated every 1 or 2 seconds. When I saved the world it was 11MB. In a fresh instance I loaded the file and clicked on the door -…</p>
+    <p class="summary">A long box now draws only its first and last six holes: 500,000 holes went from a million scene objects to twenty.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+has 10/7 twice when the one on the side should be "1 3/7" (or maybe "1+3/7" - I'm unsure)</p>
+    <p class="summary">Wired up the mixed fraction, which had been written and connected to no face — the top now shows 1 3/7.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Updating the file format is fine. But for the future can we include version numbers in the files so changes won't break things</p>
+    <p class="summary">Stamped a format version on every saved file; a file from a newer build is now refused rather than half-read.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+also can you improve the line breaks in the attached</p>
+    <p class="summary">Stopped the word-wrap accepting a font size that had to split a word — “ten sevent/hs” became “ten / sevenths”.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">please update the Making Of doc</p>
+    <p class="summary">Added the “Half a million holes” chapter, with what each layer measured before and after.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">The ledger and making of had 117 entries several hours ago - we've done several more since. please update this</p>
+    <p class="summary">Rebuilt both: found the extractor had been missing every message sent mid-turn, and recounted.</p>
+  </div></li>
+  <li class="day"><span class="day-date">22 Aug</span><span class="day-title">The back of things, and a day on a tablet</span><span class="day-blurb">A design argued out before it was built, a licence, a keyless brain in Chrome — and then a tablet found six things wrong.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Other than sensors in ToonTalk the language has no possibility of concurrent side effects to the same entity. Many sensors both read (e.g. x position of a picture) and write (an update changes the picture’s position). At least…</p>
+    <p class="summary">Sensors are the one place ToonTalk allows concurrent side effects to the same thing, and they are not user-definable. Argued the case out rather than coding it.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Now I’m wondering if ordinary birds are all we need.
+Consider an imported image. Some user action (perhaps “flipping it over like in ToonTalk”) obtains a bird that can be given boxes such as [‘update’, ‘x’, 100], [‘query’, ‘y’,…</p>
+    <p class="summary">The resolution: ordinary birds are all we need. Sensors stop being primitives and become an idiom — a back you can flip to, a bird addressed to it, messages as boxes.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I agree with “This is, of course, ask-suspension from concurrent constraint programming: the bubble is an ask, live numbers are store variables, messages are tells.” except I’m sure what you mean by store variables.
+The robots…</p>
+    <p class="summary">Named the lineage honestly: ask-suspension from concurrent constraint programming, with the one real disanalogy — that store is monotonic and ours is stateful.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">All looks good - write the doc. I think inexact numbers should look slightly different
+You write "A back is a house with no walls..." - there may be multiple wall-less houses on the back</p>
+    <p class="summary">Wrote BACKS.md. Inexact numbers must look different on the block; a back is a tabletop that can hold several wall-less houses, not one house without walls.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Include an estimate for how much work this will be</p>
+    <p class="summary">Costed it: roughly six to nine working days, in the order semantics, then payoff.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I believe we didn't add a license to the repository. I happy with a permissive license so is MIT the best choice? If so can you add it please</p>
+    <p class="summary">MIT, and why not Apache-2.0 — no patent exposure to speak of here. LICENSE added.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">mention in README sounds good - no need for a badge
+And the readme should have a link to my post about this project: https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing</p>
+    <p class="summary">README gained a link to Ken's write-up and a License section. No badge.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Regarding the running it section suggest that those who want to run it unmodified use https://toontalk.github.io/toontalk-3d/toontalk-3d.html
+And I refreshed https://github.com/ToonTalk/toontalk-3d?tab=readme-ov-file but I don't…</p>
+    <p class="summary">Running It now points at the GitHub Pages copy for anyone who just wants to use it — and the earlier commit had never been made, which is why the link was missing.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">For those running on a version of Chrome that has Gemini Nano built in (I think all desktop versions) add the option of using it keyless for Marty.
+I think the default voice for Marty should be female when feasible.
+Also I think…</p>
+    <p class="summary">Gemini Nano as a keyless brain in Chrome, a woman's voice by default, and voice settings moved under the signed-in name so one person's choice stops being everyone's.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">All looks good. I'm unsure about .claude/launch.json - what is the harm in committing it?
+Provide feedback as Marty is thinking (especially since Gemini Nano is slow to load first time) Perhaps using the Marty 3d model to show he…</p>
+    <p class="summary">Marty shows he is thinking — dots over his antenna, a hot antenna light — and stopped walking to an empty corner of the table before every demonstration.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I tried the app on my tablet. All worked but you can't see what you are holding. I realize it can't follow like how it follows the mouse. Furthermore it wasn't clear how to type anything while holding something. Maybe you have a…</p>
+    <p class="summary">The tablet report. A finger cannot lead the hand, so the held thing parks where it can be seen; a hidden field gives the keyboard something to appear over.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Also the menu bar at the bottom should have a full screen toggle button</p>
+    <p class="summary">A full-screen toggle, which on a tablet is what wins back the height the browser takes.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷
+📷
+when there is room like in the screenshot the full screen button should be next to the undo button
+I don't see a tooltip for the speed
+Thinking a user may not know the difference between the robot's stand and work spot I…</p>
+    <p class="summary">Seven at once. The two that mattered: a robot that carried its work off the stand was told it had finished, and its answer deleted; and writing on a pad recorded the result rather than the writing.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I took the result from the robot's stand and placed it on the desk. Undo then moved it to the corner of the desk,  a second undo put it back on the stand.
+Have you been updating the making of and the ledger?</p>
+    <p class="summary">Undo was right and unreadable — it hands the thing back to you, but the pointer is on the Undo button, so it appeared at the desk's edge. It waits where you can see it now.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">also update "16 Aug — from the first-person-3D idea to nano-ToonTalk: a robot, a stack of numbers, training by demonstration
+17 Aug — full ToonTalk addressing, the copier, teams, scales, birds and nests, undo, save/load
+18 Aug —…</p>
+    <p class="summary">Brought the making-of and this ledger up to date, and gave the ledger a home in the repository instead of a temporary folder.</p>
+  </div></li>
+</ol>
+
+<footer class="end">
+  <p>ToonTalk 3D &mdash; <a href="https://github.com/ToonTalk/toontalk-3d">source on GitHub</a>.
+  Companion to <a href="making-of.html">the making-of page</a>.</p>
+</footer>
+
+</div>

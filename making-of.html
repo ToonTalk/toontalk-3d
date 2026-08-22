@@ -262,21 +262,22 @@
   <h1>Reading the manual</h1>
   <p class="standfirst">Six days, 119 commits and one 9,700-line file — and the
     day the project stopped guessing at ToonTalk and went and read it.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;21 August 2026</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;22 August 2026</p>
 </header>
 
 <dl class="ledger">
-  <div><dt>Built in</dt><dd>6 days</dd></div>
-  <div><dt>Commits</dt><dd>119</dd></div>
+  <div><dt>Built in</dt><dd>7 days</dd></div>
+  <div><dt>Commits</dt><dd>125</dd></div>
   <div><dt>The app</dt><dd>1 file</dd></div>
-  <div><dt>Lines</dt><dd>9,764</dd></div>
+  <div><dt>Lines</dt><dd>10,414</dd></div>
   <div><dt>Examples</dt><dd>11 worlds</dd></div>
 </dl>
 
 <p class="alsoby">Ken Kahn is writing about this project from the other side of
   the collaboration —
   <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">his
-  post is here</a>.</p>
+  post is here</a>. Every prompt of the conversation, in order, with what
+  each one changed, is in <a href="the-ledger.html">the ledger</a>.</p>
 
 <section>
   <div class="col">
@@ -566,6 +567,133 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
+
+<section>
+  <div class="col">
+    <div class="rail">22 Aug<br>f363405 &rarr; 5dad1bd</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">↻</span>
+        <h2>A design, and then a tablet</h2>
+      </div>
+      <p>The seventh day opened on the one gap in the list above that is not a
+        missing feature but a missing <em>idea</em>. ToonTalk has sensors — live
+        pads that both read and write a picture's x position — and they are the
+        single place the language allows two robots to interfere with the same
+        thing. Read x, compute, write x: each write is atomic, and the pair
+        still races. Worse, sensors are not user-definable. A child can build a
+        message interface on top of one, but only the substrate decides what
+        gets to <em>look</em> like a sensor, and the substrate speaks Cartesian.</p>
+      <p>The morning went on arguing rather than typing, and the answer was to
+        delete the feature. Every thing can be <b>flipped over</b>; its back is a
+        little tabletop where its behaviour lives, and flipping yields a
+        <b>bird addressed to it</b>. Messages are ordinary boxes with a selector
+        pad in front. A back handles one message at a time, so no-concurrent-
+        side-effects holds by construction rather than by a special rule for
+        sensors. A gauge stops being a kind of thing and becomes an idiom: an
+        ordinary number with a robot on its back keeping it current, and another
+        dozing on its event nest to push changes back. The system's own x and y
+        sensors become gauges the system happened to mint, from the same parts
+        anyone else gets.</p>
+      <p>One rule then swallows another. A robot whose match fails on a live
+        thing dozes on that thing's events — which is exactly the covered-nest
+        rule, generalised, so there is one rule where there were two. The
+        lineage is ask-suspension from concurrent constraint programming, and
+        the write-up says so, along with the disanalogy that matters: that store
+        is monotonic and this one is not, so instead of confluence the design
+        promises two smaller things it can actually keep.</p>
+      <p>None of it was built. It is <code>BACKS.md</code>, costed at six to
+        nine working days, in the order semantics-then-payoff. Writing the
+        design down and stopping is a choice this project had not made before.</p>
+
+      <h3>A licence, five days late</h3>
+      <p>Then the housekeeping: MIT, because Apache-2.0's patent grant buys
+        nothing here; a link to Ken's own account of the project; and a pointer
+        to the copy on GitHub Pages for anyone who only wants to use it. Ken
+        refreshed the repository page and the licence was not there — the files
+        had been written and never committed. A small lesson about what
+        “done” means, learned in public.</p>
+
+      <h3>A brain that needs no key</h3>
+      <p>Desktop Chrome carries a small Gemini inside it, and Marty can use it:
+        no key, no account, nothing typed leaving the machine — which makes it
+        the one brain a classroom can have without handing out a key. Two things
+        had to be got right. Chrome will only begin the multi-gigabyte download
+        from a real click, so the panel asks for it with a button of its own
+        rather than setting it off from a child's first question. And the model
+        is small: the manual is 22,500 characters and will not fit, so the
+        manual's sections are scored against the question and only the nearest
+        ones are sent.</p>
+      <p>Marty also stopped walking to an empty corner of the table before every
+        demonstration — a trip that had been justified by a comment explaining
+        why his props would otherwise land badly, when the code that places them
+        never used his position in the first place. And he shows he is thinking:
+        three dots circling over his antenna, because the little brain in Chrome
+        is slow to wake the first time and a still Martian reads as a hung page.</p>
+
+      <h3>The tablet</h3>
+      <p>Then Ken opened it on a tablet, and the whole interaction model came
+        apart in a way no desktop testing would ever have shown. A finger is not
+        a pointer: it is only anywhere at all while it is touching, and while it
+        is touching it covers the very thing it is over. What you were carrying
+        followed it, invisibly, to wherever you last tapped.</p>
+      <p>So on a touch screen the carried thing no longer follows. It waits at a
+        fixed spot on the screen where it can always be seen. The first attempt
+        parked it on the working plane, and the clamp that keeps a carried thing
+        over the bench dragged it around until it sat squarely behind a panel;
+        it is fixed in the <em>camera's</em> frame now, so orbiting turns it in
+        your hand rather than carrying it off. Nothing on screen is a text
+        field, so a hidden one gives the keyboard something to appear over, and
+        what it receives is turned back into key presses and handed to the
+        ordinary typing rules — one set of rules, not two.</p>
+      <p>That last part was wrong twice. A phone keyboard does not hand you
+        letters; it hands you its opinion of the word so far, over and over, and
+        revises it when it changes its mind. Reading each event as newly typed
+        turned <span class="mono">hello</span> into
+        <span class="mono">hhehelhellhello</span>. Nothing is read out of the
+        events now: what <em>changed</em> in the field is worked out by
+        comparison, so a prediction that rewrites a whole word arrives as the
+        backspaces and letters it really is.</p>
+
+      <h3>What a robot should remember</h3>
+      <p>The tablet session ended with a list of seven, and two of them were not
+        interface problems at all.</p>
+      <p>Ken trained a robot to double a number — copy the thing it was given,
+        combine the copy with the original — and did it by parking the copy on a
+        work spot and bringing the original over to it. Running it, he was told
+        the robot had <em>swept its own box away: finished, for good</em>, and
+        his answer was gone. Both halves were wrong. An empty stand had been
+        read as a robot announcing it was done, when it had merely put its work
+        down somewhere else; and the routine that clears the work spots between
+        runs <b>deleted</b> what was on them. An empty stand now reclaims from
+        the work spots first, and work spots are cleared onto the table.
+        Nothing in this workshop should make a thing cease to exist except
+        Dusty.</p>
+      <p>Then: a robot trained by typing “Ken ” on a blank pad turned every pad
+        it ever met into “Ken ”, where Ken expected it to keep adding. The
+        codebase already agreed with him in the next function along — there is a
+        comment there explaining that an operation typed on a number is its own
+        step, because a robot shown “make it minus” must not remember “make it
+        −30”. Writing on a pad had exactly the same shape and the opposite
+        treatment. It records the addition now, and the file format went to v3
+        so an older build refuses the file rather than replaying it wrongly.</p>
+
+      <h3>Right, and unreadable</h3>
+      <p>The last report of the day was the most interesting, because nothing
+        was broken. Take a result off the robot's stand, put it on the desk,
+        press Undo — and it appears at the corner of the desk. Press Undo again
+        and it returns to the stand. That is correct: putting something down is
+        two moves, so undoing it is two, and the step between them is you
+        holding it. But when you click Undo the pointer is on the Undo button,
+        and the invisible hand draws what it carries at the pointer — so the
+        thing was rendered low and near the front edge, which reads as
+        “it wandered off” rather than “you are holding it”. It waits at the
+        visible spot now, until the pointer next moves over the workshop, and
+        says so. Being right is not the same as being legible.</p>
+    </div>
+  </div>
+</section>
+
 <section>
   <div class="col">
     <div class="rail">How it worked</div>
@@ -623,10 +751,10 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
           <h4>Gaps still marked open</h4>
           <ul>
             <li>Operation-only pads: backspace the digits away and the bare operation remains.</li>
-            <li>Sensors — mouse, keyboard, time — the family that games are made of.</li>
+            <li>Sensors — mouse, keyboard, time — the family that games are made of. Designed on the seventh day (<code>BACKS.md</code>) and deliberately not built.</li>
             <li>Insertion-point editing in numbers and pads.</li>
             <li>ToonTalk's puzzle game, which is how the original taught itself to a child without a manual.</li>
-            <li>Somewhere to publish it that will run a live 3D scene, since the artifact frame will not.</li>
+            <li>Pictures, sounds and video as things you can hold — the reason the backs design exists, and the first thing it would buy.</li>
             <li>Matching a robot's thought against a box of half a million holes still walks every one — per action, not per frame, but it walks them.</li>
           </ul>
         </div>
