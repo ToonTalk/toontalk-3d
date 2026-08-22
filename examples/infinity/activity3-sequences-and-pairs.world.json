@@ -1,0 +1,448 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Add 1",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "wildNumber"
+      },
+      {
+       "kind": "anyBird"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "newNumber"
+     },
+     {
+      "type": "setValue",
+      "value": {
+       "n": "1",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "number",
+       "value": {
+        "n": "1",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "bird",
+       "nestId": 9221,
+       "nestGuid": "inf3-nat"
+      }
+     ]
+    },
+    "team": []
+   },
+   "x": -1.35,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "1",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9221,
+      "nestGuid": "inf3-nat",
+      "label": "Numbers"
+     }
+    ]
+   },
+   "x": -1.3,
+   "z": 1.8
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Squares",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9221,
+         "guid": "inf3-nat",
+         "hasEgg": false,
+         "pile": [],
+         "label": "In"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9222,
+         "nestGuid": "inf3-sq",
+         "label": "Out"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Squares",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "setOp",
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9221,
+         "guid": "inf3-nat",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9222,
+         "nestGuid": "inf3-sq"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": -0.35,
+   "z": 1.5
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Match Maker",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9222,
+         "guid": "inf3-sq",
+         "hasEgg": false,
+         "pile": [],
+         "label": "Input"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9223,
+         "nestGuid": "inf3-pairs",
+         "label": "Dances"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Match Maker",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "newBox"
+       },
+       {
+        "type": "setHoles",
+        "n": 2
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9222,
+         "guid": "inf3-sq",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9223,
+         "nestGuid": "inf3-pairs"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.6,
+   "z": 1.5
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9225,
+    "guid": "inf3-sq",
+    "hasEgg": false,
+    "pile": [],
+    "label": "the squares"
+   },
+   "x": 0.15,
+   "z": 2.2
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9223,
+    "guid": "inf3-pairs",
+    "hasEgg": false,
+    "pile": [],
+    "label": "dancing partners"
+   },
+   "x": 1.15,
+   "z": 2.2
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "ACTIVITY 3\nA variety of sequences\n\nSquares makes 1, 4, 9, 16, ...\n-- a sequence that leaves the\nnaturals far behind.\n\nMatch Maker pairs each term\nwith a natural number and\nhands out the box\n\n        [ n , term ]\n\nThat box is the dance: this\nnatural, with this term.\n\nNotice it does nothing clever.\nIt never looks at the numbers.\nANY sequence you can make one\nterm at a time can be paired\noff this way -- so any such\nsequence is countable, however\nfast it grows."
+   },
+   "x": -1.2,
+   "z": 2.4
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Rounds to 10, give the\n[1, Numbers] box to Add 1 and\npress Run.\n\nThe squares appear on their\nnest, and the pairs nest fills\nwith boxes: [1,1] [2,4] [3,9]\n[4,16] and so on.\n\nTry it with another sequence.\nTrain a robot of your own that\ntakes a number and gives back\nsomething else -- thirds, or\npowers of two -- and drop it\ninto the Squares room instead.\nMatch Maker will not notice."
+   },
+   "x": 0.25,
+   "z": 2.9
+  }
+ ],
+ "stations": {},
+ "active": null
+}

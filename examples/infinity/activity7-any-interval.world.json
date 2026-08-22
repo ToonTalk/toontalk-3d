@@ -1,0 +1,812 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "All Fractions",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "scaleTilt",
+       "tilt": "R"
+      },
+      {
+       "kind": "anyBird"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "newBox"
+     },
+     {
+      "type": "setHoles",
+      "n": 2
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "newNumber"
+     },
+     {
+      "type": "setValue",
+      "value": {
+       "n": "1",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "scale",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "2",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      {
+       "kind": "bird",
+       "nestId": 9261,
+       "nestGuid": "inf7-boxes"
+      }
+     ]
+    },
+    "team": [
+     {
+      "kind": "robot",
+      "name": "Next Denominator",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "scaleTilt",
+         "tilt": "="
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "set"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0,
+          0
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0,
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": []
+     }
+    ]
+   },
+   "x": -1.4,
+   "z": 1.25
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "scale",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "2",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ],
+      "label": "n over d"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9261,
+      "nestGuid": "inf7-boxes",
+      "label": "Fractions"
+     }
+    ]
+   },
+   "x": -1.3,
+   "z": 1.8
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Box to Number",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9261,
+         "guid": "inf7-boxes",
+         "hasEgg": false,
+         "pile": [],
+         "label": "In"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9262,
+         "nestGuid": "inf7-frac",
+         "label": "Out"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Box to Number",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "wildNumber"
+          }
+         ]
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "setOp",
+        "op": "/"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9261,
+         "guid": "inf7-boxes",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9262,
+         "nestGuid": "inf7-frac"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": -0.5,
+   "z": 1.45
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Doubler",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9262,
+         "guid": "inf7-frac",
+         "hasEgg": false,
+         "pile": [],
+         "label": "In"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9265,
+         "nestGuid": "inf7-two",
+         "label": "Out"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Doubler",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "2",
+         "d": "1"
+        },
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9262,
+         "guid": "inf7-frac",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9265,
+         "nestGuid": "inf7-two"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.2,
+   "z": 1.45
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Add 10",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9263,
+         "guid": "inf7-frac",
+         "hasEgg": false,
+         "pile": [],
+         "label": "In"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9266,
+         "nestGuid": "inf7-ten",
+         "label": "Out"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Add 10",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "10",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9263,
+         "guid": "inf7-frac",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9266,
+         "nestGuid": "inf7-ten"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.9,
+   "z": 1.45
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Halve",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9264,
+         "guid": "inf7-frac",
+         "hasEgg": false,
+         "pile": [],
+         "label": "In"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9267,
+         "nestGuid": "inf7-half",
+         "label": "Out"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Halve",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "2",
+         "d": "1"
+        },
+        "op": "/"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9264,
+         "guid": "inf7-frac",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9267,
+         "nestGuid": "inf7-half"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 1.6,
+   "z": 1.45
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9265,
+    "guid": "inf7-two",
+    "hasEgg": false,
+    "pile": [],
+    "label": "0 to 2"
+   },
+   "x": 0.2,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9266,
+    "guid": "inf7-ten",
+    "hasEgg": false,
+    "pile": [],
+    "label": "10 to 11"
+   },
+   "x": 0.9,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9267,
+    "guid": "inf7-half",
+    "hasEgg": false,
+    "pile": [],
+    "label": "0 to a half"
+   },
+   "x": 1.6,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "ACTIVITY 7\nRationals between any two\n\nAll Fractions makes every\nfraction between 0 and 1. Then\none arithmetic step each:\n\n  Doubler  x 2   -> 0 to 2\n  Add 10   + 10  -> 10 to 11\n  Halve    / 2   -> 0 to 1/2\n\nSame robot three times over,\nwith a different number\ndropped on the term.\n\nEvery output term came from\nexactly one input term, so no\nsequence is longer or shorter\nthan another. Doubling does\nnot thin them out; halving\ndoes not crowd them.\n\nSo any interval, however\nshort, holds a full copy of\nall of them. Pat is right."
+   },
+   "x": -1.25,
+   "z": 2.35
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Rounds to 20, give the\n[scale, Fractions] box to All\nFractions and press Run.\n\nFour rooms run at once. The\nthree nests fill at exactly the\nsame rate -- that is the whole\nargument, visible.\n\nJoe says doubling must lose\nsome numbers between 0 and 2,\nbecause it spreads them out.\nIs he right? Which number\nbetween 0 and 2 is missing?\n\nChange the 10 in Add 10 to any\nnumber you like: hold the\nnumber in its room and type."
+   },
+   "x": -0.1,
+   "z": 2.95
+  }
+ ],
+ "stations": {},
+ "active": null
+}

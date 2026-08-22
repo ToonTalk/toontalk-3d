@@ -10,6 +10,11 @@ in `My Programs`. Where the two systems differ the difference is named in the
 generator's header and in `DIVERGENCE.md`; otherwise they are move for move
 the originals.
 
+**[`infinity/`](infinity/)** is a set of its own: seven worlds porting the
+*Exploring Infinity* activities — countable sets, one robot at a time, from
+Galileo's evens to a queue holding every positive rational. Each runs from a
+single press of Run, with its pipeline dozing in glass rooms.
+
 ## sentence-generator.world.json
 
 A random-sentence factory — the first program to use the recursion-era pieces

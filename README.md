@@ -329,10 +329,13 @@ worth keeping back into the script.
 - Waiting robots resume only on deliveries; nothing else re-checks their
   condition, so filling the nest by hand does not wake one (give the thing
   to the bird instead).
-- Nothing reads a scale's tilt — it shows a comparison but cannot yet be
-  branched on.
+- Only one robot stands at the open bench, and a dozing one keeps that place
+  until it is picked up — so a pipeline of robots feeding each other has to be
+  run a stage at a time out in the open. Give each stage a **room** of its own
+  and they all run at once, which is what the `infinity/` examples do.
 - The condition cannot constrain a number's range, only match exactly or
-  wildcard.
+  wildcard. (A robot *can* branch on a scale's tilt, which is how the
+  `infinity/` examples decide when one number has caught another up.)
 - `^` takes integer exponents only, and results are refused past an estimated
   20000 digits so a runaway loop cannot lock the browser.
 - The robot's scratch area is a row of discrete spots rather than free

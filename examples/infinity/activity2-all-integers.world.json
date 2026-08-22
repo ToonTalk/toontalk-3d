@@ -1,0 +1,417 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Add 1",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "wildNumber"
+      },
+      {
+       "kind": "anyBird"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "newNumber"
+     },
+     {
+      "type": "setValue",
+      "value": {
+       "n": "1",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "number",
+       "value": {
+        "n": "1",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "bird",
+       "nestId": 9211,
+       "nestGuid": "inf2-nat"
+      }
+     ]
+    },
+    "team": []
+   },
+   "x": -1.35,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "1",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9211,
+      "nestGuid": "inf2-nat",
+      "label": "Numbers"
+     }
+    ]
+   },
+   "x": -1.3,
+   "z": 1.8
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Negator",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9211,
+         "guid": "inf2-nat",
+         "hasEgg": false,
+         "pile": [],
+         "label": "In"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9212,
+         "nestGuid": "inf2-neg",
+         "label": "Out"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Negator",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "-1",
+         "d": "1"
+        },
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9211,
+         "guid": "inf2-nat",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9212,
+         "nestGuid": "inf2-neg"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": -0.35,
+   "z": 1.5
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Merge",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9214,
+         "guid": "inf2-nat",
+         "hasEgg": false,
+         "pile": [],
+         "label": "positives"
+        },
+        {
+         "kind": "nest",
+         "id": 9212,
+         "guid": "inf2-neg",
+         "hasEgg": false,
+         "pile": [],
+         "label": "negatives"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9213,
+         "nestGuid": "inf2-all",
+         "label": "Out"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Merge",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wild"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9214,
+         "guid": "inf2-nat",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "nest",
+         "id": 9212,
+         "guid": "inf2-neg",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9213,
+         "nestGuid": "inf2-all"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.6,
+   "z": 1.5
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9213,
+    "guid": "inf2-all",
+    "hasEgg": false,
+    "pile": [],
+    "label": "all integers"
+   },
+   "x": 1.25,
+   "z": 2.2
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "ACTIVITY 2\nCombining sequences, part 1\n\nAdd 1 makes 1, 2, 3, ... and\nfeeds both rooms at once.\n\nNegator turns each into its\nnegative. Merge takes one from\neach nest in turn and hands\nthe result out.\n\nMerge keeps no count. It gives\naway what is on the first nest\nand then swaps the two nests\nover -- so next round it reads\nthe other. The swap IS the\nalternation.\n\nNeither side can run ahead, so\nevery integer arrives after a\nfinite wait. Countable."
+   },
+   "x": -1.2,
+   "z": 2.4
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Rounds to 12, give the\n[1, Numbers] box to Add 1 and\npress Run.\n\nMerge lags one behind Negator:\nit will not hand out a positive\nuntil the matching negative has\narrived. That is it being fair.\n\nThen ask: is there an integer\nthat never reaches the last\nnest, however long it runs?"
+   },
+   "x": 0.25,
+   "z": 2.85
+  }
+ ],
+ "stations": {},
+ "active": null
+}
