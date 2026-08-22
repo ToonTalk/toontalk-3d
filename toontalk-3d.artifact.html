@@ -441,6 +441,11 @@ pasted in; the key is kept only in this browser. Inside a Claude artifact he
 needs no key at all. Whichever he has, he also sees what is on your table when
 he answers, and the panel always says which one he is using right now.
 
+While he is working out an answer, three dots circle over his antenna and
+his antenna light runs hot and quick, and his panel says thinking — so
+a wait is never a wait on nothing. The brain built into Chrome is the slowest
+to answer the first time, because Chrome has to wake it.
+
 Whatever brain he has, Marty answers from this manual — the page you
 are reading is handed to him with every question, so what he tells you is what
 is written here rather than what a model imagines a workshop like this might
@@ -17983,7 +17988,7 @@ renderer.setAnimationLoop((now) => {
 // with no key at all; an Anthropic API key pasted into his panel talks to the
 // API directly (the key stays in this browser); with neither, a little
 // phrasebook still picks the right demonstration.
-let martyNode = null, martyT = 0, martyBusyDemo = false;
+let martyNode = null, martyT = 0, martyBusyDemo = false, martyThinking = false;
 function makeMarty() {
   const g = new THREE.Group();
   const green = new THREE.MeshStandardMaterial({ color: 0x53b86a, roughness: 0.55 });
@@ -18021,6 +18026,23 @@ function makeMarty() {
     new THREE.MeshStandardMaterial({ color: 0xffd24a, emissive: 0x8a6a10, emissiveIntensity: 0.7 }));
   bob.position.y = 0.87; g.add(bob);
   g.__antBob = bob;
+  // Thinking has to be visible from across the room, not just in his panel --
+  // the little brain inside Chrome can take many seconds the first time, and
+  // a child watching a still Martian assumes nothing is happening. Three dots
+  // circling over his antenna, in the manner of every thought bubble ever.
+  const think = new THREE.Group();
+  think.position.y = 1.0;
+  think.visible = false;
+  for (let i = 0; i < 3; i++) {
+    const dot = new THREE.Mesh(geo('SphereGeometry', 0.026, 10, 8),
+      new THREE.MeshStandardMaterial({ color: 0xdff3ff, emissive: 0x6fd2ff,
+        emissiveIntensity: 0.9, transparent: true, opacity: 0.8 }));
+    const a = (i / 3) * Math.PI * 2;
+    dot.position.set(Math.cos(a) * 0.09, 0, Math.sin(a) * 0.09);
+    think.add(dot);
+  }
+  g.add(think);
+  g.__think = think;
   g.traverse(o => setPick(o, { kind: 'marty' }));
   setPick(g, { kind: 'marty' });
   return g;
@@ -18076,7 +18098,22 @@ function advanceMarty(dt) {
   }
   martyLift += (martyLiftTarget - martyLift) * Math.min(1, dt * 9);
   martyNode.position.y = Math.abs(Math.sin(martyT * 2.4 * lively)) * 0.03 * lively + martyLift;
-  martyNode.__antBob.material.emissiveIntensity = 0.5 + 0.4 * Math.sin(martyT * 3);
+  // The antenna runs hot and fast while he thinks, and the dots go round.
+  martyNode.__antBob.material.emissiveIntensity = martyThinking
+    ? 1.2 + 0.9 * Math.sin(martyT * 9)
+    : 0.5 + 0.4 * Math.sin(martyT * 3);
+  const think = martyNode.__think;
+  if (think) {
+    think.visible = martyThinking;
+    if (martyThinking) {
+      think.rotation.y = martyT * 2.4;
+      think.children.forEach((dot, i) => {
+        const k = 0.5 + 0.5 * Math.sin(martyT * 4 - i * 0.8);
+        dot.scale.setScalar(0.55 + 0.75 * k);
+        dot.material.opacity = 0.3 + 0.7 * k;
+      });
+    }
+  }
   // What a demo picks up rides in MARTY'S hand, not on the visitor's cursor.
   // The hand itself is moved to him rather than the thing being re-parented:
   // re-parenting left the take-animation lerping toward a target in the wrong
@@ -18240,8 +18277,12 @@ const _mDusty = () => _mAtPos({ kind: 'dusty' }, dustyHome);
 async function _mBench(x, z) {
   // Everything he sets down goes along the NEAR edge of the table, within
   // reach of where he is standing -- across the table it looked like a toss.
-  const inward = martyNode && martyNode.position.x > 0 ? -1 : 1;
+  // Both the side things go down on and how far in they go come from the
+  // PRESENTATION SPOT, not from wherever he happens to be standing this
+  // second -- so one demonstration's props keep a stable home however much
+  // fetching he does between them.
   const anchor = martySpot ? martySpot.x : (martyNode ? martyNode.position.x : 0);
+  const inward = anchor > 0 ? -1 : 1;
   const spread = 0.35 + Math.min(0.5, Math.abs(x));
   const px = Math.max(BENCH.x0 + 0.25, Math.min(BENCH.x1 - 0.25, anchor + inward * spread));
   const pz = BENCH.z1 - 0.32;
@@ -18416,10 +18457,11 @@ async function runMartyDemo(id) {
   martyStopFlag = false;
   martyPendingDemo = null;
   martyCtl();
+  // Where this demonstration will be laid out. He does NOT walk here first:
+  // _mBench anchors every drop on this spot rather than on where he stands,
+  // so the trip was a detour to an empty patch of table before setting off
+  // for the stacks. He goes straight to whatever he needs first instead.
   martySpot = martySpotFor(demo);
-  // let him get there first, or his first props land wherever he happened to
-  // be as he walked past
-  await martyWalk(martySpot);
   const ctx = {};
   try {
     const steps = demo.steps;
@@ -18707,16 +18749,59 @@ function martyOffline(q) {
   return { say: 'Without a key I only know my demonstrations — ask me about: ' +
     Object.keys(MARTY_DEMOS).join(', ') + '. In a Claude artifact, or with an API key in my panel, I can really talk.', demo: null };
 }
+// While he is away thinking: the dots over his antenna (see advanceMarty), a
+// bubble that keeps its own counsel in the log, and a form that will not take
+// a second question on top of the first. The returned function undoes it all.
+function martyThinkingStart() {
+  martyThinking = true;
+  const form = document.getElementById('martyForm');
+  const input = document.getElementById('martyIn');
+  const ask = form?.querySelector('button');
+  if (input) { input.disabled = true; input.placeholder = 'Marty is thinking…'; }
+  if (ask) { ask.disabled = true; ask.style.opacity = 0.5; ask.style.cursor = 'default'; }
+  const log = document.getElementById('martyLog');
+  const line = document.createElement('div');
+  line.style.cssText = 'align-self:flex-start;background:#1d3a28;border-radius:10px 10px 10px 2px;'
+    + 'padding:5px 9px;max-width:85%;color:#9fd8b4;font-style:italic';
+  log?.appendChild(line);
+  // The model inside Chrome has to be read off disk the first time it is used,
+  // which is slow enough that a silent wait reads as a hang. Say so, but only
+  // once the wait is long enough to need explaining.
+  const local = martyProv() === 'nano' && !window.claude?.complete;
+  let n = 0;
+  const t0 = performance.now();
+  const tick = () => {
+    n = (n + 1) % 4;
+    const waited = performance.now() - t0;
+    line.textContent = 'thinking' + '.'.repeat(n)
+      + (waited > 6000
+        ? (local ? ' (the brain inside Chrome is slow to wake the first time)'
+                 : ' (still waiting on an answer)')
+        : '');
+    if (log) log.scrollTop = log.scrollHeight;
+  };
+  tick();
+  const iv = setInterval(tick, 400);
+  return () => {
+    martyThinking = false;
+    clearInterval(iv);
+    line.remove();
+    if (input) { input.disabled = false; input.placeholder = 'Ask, or “show me birds”…'; input.focus(); }
+    if (ask) { ask.disabled = false; ask.style.opacity = ''; ask.style.cursor = 'pointer'; }
+  };
+}
 async function askMarty(q) {
   window.speechSynthesis?.cancel();
   martySay(q, 'you');
   let reply = null;
+  const doneThinking = martyThinkingStart();
   try { reply = await martyThink(q); }
   catch (e) {
     // Sealed inside an artifact there is no way out at all, and no key will
     // ever help. Say so once and carry on with the phrasebook, which still
     // knows which demonstration to give.
     const sealed = e instanceof TypeError || /fetch|network|load failed/i.test(e.message || '');
+    doneThinking();                    // stop thinking before saying it went wrong
     // Chrome's own model is not somewhere to be reached, so a failure there is
     // never the network and never the key.
     martySay(martyProv() === 'nano' && !window.claude?.complete
@@ -18729,6 +18814,7 @@ async function askMarty(q) {
     martyToldOffline = true;
     reply = null;
   }
+  finally { doneThinking(); }
   let text = null, demo = null;
   if (reply == null) {
     const off = martyOffline(q);
@@ -19229,7 +19315,9 @@ window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_D
                    voice: martyVoiceObj, manualFor, nanoState,
                    get waiting() { return !!martyNextResolve; },
                    get running() { return martyBusyDemo; },
-                   get pos() { return martyNode.position.toArray().map(v => +v.toFixed(2)); } };
+                   get pos() { return martyNode.position.toArray().map(v => +v.toFixed(2)); },
+                   get going() { return martyTarget ? martyTarget.toArray().map(v => +v.toFixed(2)) : null; },
+                   get thinking() { return martyThinking; } };
 
 window.__nano = {
   THREE, scene, camera, renderer, stations,

@@ -141,7 +141,9 @@ For the story behind the project, see [the write-up](https://docs.google.com/doc
   phrasebook that picks the right demonstration, and the panel says so. Left
   alone he speaks in a woman's voice where the browser has one — the high
   pitch and the drift between sentences are what make him Martian, not which
-  voice it is.
+  voice it is. **While he thinks**, three dots circle over his antenna and its
+  light runs hot and fast, and the panel says so — the model inside Chrome is
+  slow to wake the first time, and a still Martian reads as a hung page.
   Whatever brain he has, **he answers from the manual**: `manual.html` is
   handed to him with every question (live when a server is serving it, from a
   copy embedded by `embed_manual.py` otherwise), so he describes the workshop
