@@ -96,7 +96,10 @@ For the story behind the project, see [the write-up](https://docs.google.com/doc
   the holes that hold something — which took one 500,000-hole box from 2.5 MB
   to 448 bytes.
 - **The message under the title can read itself aloud** — a speaker button
-  there turns it on and picks the voice, separately from Marty's.
+  there turns it on and picks the voice, separately from Marty's. Both voices
+  belong to whoever is signed in, not to the browser: like the notebook they
+  are kept under the name, so one person choosing a voice does not change it
+  for everybody else who uses the machine.
 - **The workbench reshapes.** "Reshape table" reveals glowing corner handles:
   click one to carry that corner, move the pointer to stretch or shrink the
   top (legs follow), click again to set it. Anything left overboard by a
@@ -124,11 +127,21 @@ For the story behind the project, see [the write-up](https://docs.google.com/doc
   anything about the workshop, or say *"show me birds"* and he walks over and
   demonstrates it on your table, one narrated step per click of **Next** — and
   when an answer of his suggests a demo, you get a *Show me* button, never a
-  surprise performance. He never builds programs — that part is yours. Pick a
-  brain in his panel — Claude, ChatGPT or Gemini, and the model — and paste that
-  provider's key (kept in this browser only); a published artifact is sealed and
-  cannot reach any of them, so there he only ever has the phrasebook. Without one, his replies are canned lines
-  from a phrasebook that picks the right demonstration, and the panel says so.
+  surprise performance. He never builds programs — that part is yours.
+  Pick a brain in his panel. **Gemini Nano** wants no key and no account:
+  desktop Chrome carries a small model inside it, nothing typed leaves the
+  machine, and the panel offers the one-off (multi-gigabyte) download with a
+  button of its own rather than starting it behind your back — which makes it
+  the one brain a classroom can have without handing out a key. Being small it
+  cannot hold the whole manual, so it is given the sections that score against
+  the question rather than all of it. Claude, ChatGPT and the full Gemini each
+  want that provider's key instead (kept in this browser only); a published
+  artifact is sealed and cannot reach any of them, so there he only ever has
+  the phrasebook. Without a brain, his replies are canned lines from a
+  phrasebook that picks the right demonstration, and the panel says so. Left
+  alone he speaks in a woman's voice where the browser has one — the high
+  pitch and the drift between sentences are what make him Martian, not which
+  voice it is.
   Whatever brain he has, **he answers from the manual**: `manual.html` is
   handed to him with every question (live when a server is serving it, from a
   copy embedded by `embed_manual.py` otherwise), so he describes the workshop

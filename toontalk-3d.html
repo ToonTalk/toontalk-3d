@@ -423,14 +423,26 @@ an answer of his suggests a demonstration, you get a Show me
 button rather than a surprise performance. He never builds programs for you —
 doing it yourself is the whole point.
 
-Marty thinks with whatever brain he has. Without a key his replies are
+Marty thinks with whatever brain he has. Without one his replies are
 canned lines from a phrasebook — he can pick the right demonstration, but
 he is not really answering. For real conversation open How Marty
-thinks in his panel and choose a brain — Claude, ChatGPT or Gemini, and
-which model — then paste that provider's API key; it is kept only in this
-browser, and he then also sees what is on your table when he answers. Inside a
-Claude artifact he needs no key at all. The panel always says which of these
-he is using right now.
+thinks in his panel and choose a brain.
+
+Gemini Nano is the easiest: desktop Chrome carries a small model
+inside it, so there is no key and no account — pick it and he can talk.
+The model is a download of gigabytes, so the panel asks for it with a button
+of its own rather than starting it behind your back; it happens once, wants a
+fair amount of free disk, and the panel says when it is ready. Nothing you
+type leaves the machine, which is what makes it the one brain a classroom can
+have without handing out a key. Being small, it cannot hold the whole manual at
+once, so he is handed the sections your question is about rather than all of
+them — he is likelier to say he is unsure than the larger brains are.
+
+The others — Claude, ChatGPT and the full Gemini — talk
+to their companies over the network, so each wants that provider's API key
+pasted in; the key is kept only in this browser. Inside a Claude artifact he
+needs no key at all. Whichever he has, he also sees what is on your table when
+he answers, and the panel always says which one he is using right now.
 
 Whatever brain he has, Marty answers from this manual — the page you
 are reading is handed to him with every question, so what he tells you is what
@@ -441,7 +453,13 @@ Marty can also speak and listen. The 🔊 button has him read his
 replies aloud, a little high and quick with a drift between sentences.
 How Marty thinks lets you pick which of your browser's voices he uses
 — the list puts the ones that speak your language first, since a voice meant
-for another language reads English with an accent. The 🎤 button lets you ask by voice, where the browser
+for another language reads English with an accent. Left alone he takes a
+woman's voice where your browser has one; the high pitch and the drift between
+sentences are what make him sound Martian, not which voice it is. That choice,
+and whether the messages under the title are read aloud, belong to
+whoever is signed in — like the notebook, they are kept under your
+name, so picking a voice does not change it for everybody else who uses this
+browser. The 🎤 button lets you ask by voice, where the browser
 offers a microphone — inside a Claude artifact it does not, so there the button
 simply is not shown.
 
@@ -1644,6 +1662,28 @@ const USER_KEY = 'tt3d.user';
 const USERS_KEY = 'tt3d.users';
 let currentUser = (localStorage.getItem(USER_KEY) || '').trim();
 const nbKey = () => (currentUser ? NB_KEY + '.' + currentUser : NB_KEY);
+// The notebook is not the only thing that belongs to a person rather than to
+// the browser: which voice reads to them, and whether anything is read aloud
+// at all, are theirs too. One visitor picking a voice used to change it for
+// everybody who shares the machine. These are kept the same way -- under the
+// name -- and are listed here so the first-sign-in adoption below covers them.
+const HINT_SAY = 'tt3d.hint-say';
+const HINT_VOICE = 'tt3d.hint-voice';
+const MARTY_VOICE = 'tt3d.marty-voice';
+const MARTY_VOICE_NAME = 'tt3d.marty-voice-name';
+const MINE_KEYS = [HINT_SAY, HINT_VOICE, MARTY_VOICE, MARTY_VOICE_NAME];
+const mineKey = (base) => (currentUser ? base + '.' + currentUser : base);
+const mineGet = (base) => localStorage.getItem(mineKey(base));
+// Assigned once the controls they refresh exist; no-ops before then, and in
+// the manual's little embedded workshops, which ask nobody's name at all.
+let sayRowRefresh = () => {};
+let martyVoiceRefresh = () => {};
+function mineSet(base, v) {
+  try {
+    if (v == null) localStorage.removeItem(mineKey(base));
+    else localStorage.setItem(mineKey(base), v);
+  } catch {}
+}
 const knownUsers = () => {
   try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
 };
@@ -1659,15 +1699,23 @@ function setUser(name) {
     // already had, rather than starting empty. Anyone after them starts with a
     // notebook of their own -- so the old one is adopted or dropped at that
     // first sign-in, never left lying about to be picked up by a later name.
-    const legacy = localStorage.getItem(NB_KEY);
-    if (currentUser && legacy) {
-      if (!known.length && !localStorage.getItem(nbKey())) {
-        localStorage.setItem(nbKey(), legacy);
+    // The same for their settings: adopted once, then gone, so a preference
+    // from before anybody signed in cannot keep leaking into new names.
+    if (currentUser) {
+      for (const base of [NB_KEY, ...MINE_KEYS]) {
+        const legacy = localStorage.getItem(base);
+        if (legacy == null) continue;
+        const mine = base === NB_KEY ? nbKey() : mineKey(base);
+        if (!known.length && localStorage.getItem(mine) == null) {
+          localStorage.setItem(mine, legacy);
+        }
+        localStorage.removeItem(base);
       }
-      localStorage.removeItem(NB_KEY);
     }
   } catch {}
   showWho();
+  sayRowRefresh();
+  martyVoiceRefresh();
 }
 const allNotebooks = [];
 // set when this browser's stored notebook was written by a newer build: it is
@@ -7224,16 +7272,16 @@ addEventListener('pointerdown', () => { attnHeld = false; }, true);
 // The messages under the title can be read aloud -- useful when your eyes are
 // on the table rather than on the card. Its own switch and its own voice: this
 // is the workshop talking, not Marty.
-const HINT_SAY = 'tt3d.hint-say';
-const HINT_VOICE = 'tt3d.hint-voice';
-let hintSayOn = localStorage.getItem(HINT_SAY) === '1';
+// (HINT_SAY and HINT_VOICE are declared with the other per-person settings,
+// up where the notebook learns whose it is.)
+let hintSayOn = mineGet(HINT_SAY) === '1';
 let hintLastSpoken = '';
 const pageLang = () => (navigator.language || 'en-US').slice(0, 2).toLowerCase();
 const voiceFitsPage = (v) => (v.lang || '').slice(0, 2).toLowerCase() === pageLang();
 function hintVoice() {
   const all = speechSynthesis.getVoices?.() || [];
   if (!all.length) return null;
-  const want = localStorage.getItem(HINT_VOICE);
+  const want = mineGet(HINT_VOICE);
   if (want) { const v = all.find(v2 => v2.name === want); if (v) return v; }
   const mine = all.filter(voiceFitsPage);
   return mine.find(v => v.default) ?? mine[0] ?? all[0];
@@ -9160,10 +9208,68 @@ async function martyManualText() {
   if (!martyManual) martyManual = document.getElementById('martyManual')?.textContent?.trim() || '';
   return martyManual;
 }
+// Desktop Chrome carries a small Gemini inside it (the Prompt API). No key, no
+// account, and nothing leaves the machine -- which is the one brain a school
+// can hand a class without handing out a key. The catch is its size: a context
+// of a few thousand tokens, where the manual alone is six thousand, so what it
+// is given has to be chosen rather than piled on. See manualFor below.
+const nanoAPI = () => (typeof LanguageModel !== 'undefined' ? LanguageModel
+  : window.ai?.languageModel ?? null);
+async function nanoState() {
+  const api = nanoAPI();
+  if (!api) return 'none';
+  try {
+    if (api.availability) return await api.availability();
+    // the older shape of the same question
+    const c = await api.capabilities?.();
+    return ({ readily: 'available', 'after-download': 'downloadable', no: 'unavailable' })
+      [c?.available] ?? 'unavailable';
+  } catch { return 'unavailable'; }
+}
+const NANO_MANUAL_BUDGET = 7000;
+// "you gave me more than I can hold", however this build of Chrome says it
+const nanoTooMuch = (e) => e?.name === 'QuotaExceededError'
+  || /quota|context|too (large|long)|token/i.test(e?.message || '');
+// The shape we parse, handed to the browser so it can hold the small model to
+// it -- left to itself it tends to answer in prose and lose the demo.
+const martyReplySchema = () => ({
+  type: 'object',
+  properties: { say: { type: 'string' },
+                demo: { enum: [...Object.keys(MARTY_DEMOS), null] } },
+  required: ['say'],
+  additionalProperties: false,
+});
+async function nanoThink(sys, q) {
+  const api = nanoAPI();
+  if (!api) return null;                      // no built-in model: phrasebook
+  const state = await nanoState();
+  if (state !== 'available') {
+    // Chrome starts the download only on a real click, and it is a big one --
+    // so it is asked for plainly in the panel, never set off by a question.
+    martySay(state === 'downloadable' || state === 'downloading'
+      ? 'Chrome has not fetched my brain yet — there is a button for it under “How Marty thinks”.'
+      : 'This machine cannot run the brain built into Chrome. Give me a key, or pick another brain.');
+    return null;
+  }
+  const session = await api.create({
+    initialPrompts: [{ role: 'system', content: sys },
+      ...martyHistory.slice(-2).map(m => ({ role: m.role, content: m.content }))],
+  });
+  try {
+    try { return await session.prompt(q, { responseConstraint: martyReplySchema() }); }
+    catch (e) {
+      // an older build with no constrained decoding, or a schema it dislikes
+      if (nanoTooMuch(e)) throw e;
+      return await session.prompt(q);
+    }
+  } finally { session.destroy?.(); }
+}
 const MARTY_PROVIDERS = {
   claude: { label: 'Claude', say: 'Claude', model: 'claude-sonnet-5' },
   openai: { label: 'ChatGPT (OpenAI)', say: 'ChatGPT', model: 'gpt-5' },
   gemini: { label: 'Gemini', say: 'Gemini', model: 'gemini-2.5-flash' },
+  nano: { label: 'Gemini Nano (in Chrome, no key)', say: 'the Gemini inside Chrome',
+          model: '', keyless: true },
 };
 const martyProv = () => localStorage.getItem('tt3d.marty-provider') || 'claude';
 const martyKeyOf = (p) => (localStorage.getItem('tt3d.marty-key.' + p)
@@ -9176,21 +9282,67 @@ function martyBrainText() {
   if (window.claude?.use) return 'his phrasebook — a published artifact is sealed and cannot call out, '
     + 'so no brain, and no key, can be reached from here. The demonstrations still work.';
   const p = martyProv();
+  if (p === 'nano') {
+    return nanoAPI()
+      ? 'the Gemini built into Chrome — no key, and nothing you type leaves this machine'
+      : 'his phrasebook — this browser has no built-in model. Desktop Chrome has one; '
+        + 'elsewhere he needs a key, or pick another brain below';
+  }
   return martyKeyOf(p) ? `${MARTY_PROVIDERS[p].label}, model ${martyModelOf(p)}`
     : 'his phrasebook only — replies are canned lines until you add a key';
 }
+// A brain with room for the whole manual gets the whole manual. One without --
+// the small model inside Chrome -- gets the sections the question is actually
+// about: the manual already arrives cut into "## " sections, and they are
+// scored on the words of the question. Crude, but it beats the alternative,
+// which is the first N characters and therefore always the introduction.
+function manualFor(manual, q, budget) {
+  if (!manual || manual.length <= budget) return manual;
+  const secs = manual.split(/\n(?=## )/).filter(s => s.trim());
+  const words = [...new Set(q.toLowerCase().match(/[a-z]{4,}/g) || [])];
+  const score = (s) => {
+    const t = s.toLowerCase();
+    return words.reduce((n, w) => n + t.split(w).length - 1, 0);
+  };
+  const ranked = secs.map((s, i) => ({ s, i, n: score(s) }))
+    .sort((a, b) => b.n - a.n || a.i - b.i);
+  const keep = [];
+  let used = 0;
+  for (const r of ranked) {
+    if (used + r.s.length + 1 > budget) continue;
+    keep.push(r);
+    used += r.s.length + 1;
+  }
+  if (!keep.length) return secs[0].slice(0, budget);
+  return keep.sort((a, b) => a.i - b.i).map(r => r.s).join('\n')
+    + '\n(Only the parts of the manual nearest this question are here; if the answer'
+    + ' is not among them, say you are not sure rather than guessing.)';
+}
 let martyHistory = [], martyToldOffline = false;
 async function martyThink(q) {
-  const manual = await martyManualText();
-  const sys = MARTY_SYSTEM
-    + (manual ? '\n\n=== THE MANUAL (authoritative; answer from it, and say you are unsure rather than inventing anything it does not say) ===\n'
-        + manual + '\n=== end of manual ===' : '')
-    + '\n\nOn the table right now:\n' + martyWorldText();
+  const prov = martyProv();
+  const nano = prov === 'nano' && !window.claude?.complete;
+  const whole = await martyManualText();
+  const sysAt = (budget) => {
+    const manual = manualFor(whole, q, budget);
+    return MARTY_SYSTEM
+      + (manual ? '\n\n=== THE MANUAL (authoritative; answer from it, and say you are unsure rather than inventing anything it does not say) ===\n'
+          + manual + '\n=== end of manual ===' : '')
+      + '\n\nOn the table right now:\n' + martyWorldText();
+  };
+  const sys = sysAt(nano ? NANO_MANUAL_BUDGET : Infinity);
   if (window.claude?.complete) {
     const lines = martyHistory.map(m => (m.role === 'user' ? 'Visitor: ' : 'Marty: ') + m.content).join('\n');
     return await window.claude.complete(sys + '\n\n' + lines + '\nVisitor: ' + q + '\nReply with ONLY the JSON object.');
   }
-  const prov = martyProv();
+  if (nano) {
+    try { return await nanoThink(sys, q); }
+    catch (e) {
+      // still more than it can hold: one more go with the manual cut right back
+      if (!nanoTooMuch(e)) throw e;
+      return await nanoThink(sysAt(Math.round(NANO_MANUAL_BUDGET / 3)), q);
+    }
+  }
   const key = martyKeyOf(prov);
   if (!key) return null;
   const model = martyModelOf(prov);
@@ -9263,7 +9415,12 @@ async function askMarty(q) {
     // ever help. Say so once and carry on with the phrasebook, which still
     // knows which demonstration to give.
     const sealed = e instanceof TypeError || /fetch|network|load failed/i.test(e.message || '');
-    martySay(sealed
+    // Chrome's own model is not somewhere to be reached, so a failure there is
+    // never the network and never the key.
+    martySay(martyProv() === 'nano' && !window.claude?.complete
+      ? 'The little brain inside Chrome would not answer — ' + (e.message || e.name)
+        + '. My phrasebook it is; the demonstrations are all still real.'
+      : sealed
       ? 'No signal reaches Mars from this page — it is sealed and cannot call out. '
         + 'My phrasebook it is, then; the demonstrations are all still real.'
       : 'I could not reach the mothership — ' + e.message + '. Check the key in my panel?');
@@ -9323,39 +9480,51 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<button style="background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer">Ask</button></form>'
   + '<details style="margin-top:8px;color:#9fb0c8"><summary style="cursor:pointer">How Marty thinks</summary>'
   + '<div id="martyMode" style="margin-top:6px;color:#cdd8e8"></div>'
-  + '<div style="margin-top:6px">Without a key (and outside a Claude artifact) his replies are <b>canned lines from a '
+  + '<div style="margin-top:6px">Without a brain (and outside a Claude artifact) his replies are <b>canned lines from a '
   + 'phrasebook</b> \u2014 he can pick the right demonstration, but he is not really answering. For real conversation, '
-  + 'choose a brain and paste its API key; the key is kept only in this browser. A <b>published artifact is sealed</b> '
-  + '— nothing can be reached from inside it, so there Marty always speaks from the phrasebook. His '
-  + 'demonstrations are the real workshop either way.</div>'
+  + 'choose one. <b>Gemini Nano</b> is built into desktop Chrome and wants <b>no key and no account</b> \u2014 Chrome '
+  + 'downloads it once, nothing you type leaves this machine, and being small he is given only the part of the '
+  + 'manual your question is about. The rest want an API key, kept only in this browser. A '
+  + '<b>published artifact is sealed</b> \u2014 nothing can be reached from inside it, so there Marty always '
+  + 'speaks from the phrasebook. His demonstrations are the real workshop either way.</div>'
   + '<div style="display:flex;gap:6px;margin-top:6px">'
   + '<select id="martyProv" style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
+  + '<option value="nano">Gemini Nano (in Chrome, no key)</option>'
   + '<option value="claude">Claude</option><option value="openai">ChatGPT (OpenAI)</option><option value="gemini">Gemini</option></select>'
   + '<input id="martyModel" placeholder="model" '
   + 'style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;min-width:0"></div>'
+  + '<div id="martyNano" style="margin-top:6px;display:none"></div>'
   + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
   + '<input id="martyKey" type="password" placeholder="API key\u2026" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '</details>';
 document.body.appendChild(martyUI);
-const MARTY_VOICE = 'tt3d.marty-voice';
-const MARTY_VOICE_NAME = 'tt3d.marty-voice-name';
-let martyVoiceOn = localStorage.getItem(MARTY_VOICE) === '1';
+// (MARTY_VOICE and MARTY_VOICE_NAME are declared with the other per-person
+// settings, up where the notebook learns whose it is.)
+let martyVoiceOn = mineGet(MARTY_VOICE) === '1';
 // He speaks the language of the page, so a voice for some other language is
 // not offered by default -- reading English aloud with a Greek voice was what
 // made him sound shrill and hurried, not the pitch.
 const martyLang = () => (navigator.language || 'en-US').slice(0, 2).toLowerCase();
 function martyVoiceFits(v) { return (v.lang || '').slice(0, 2).toLowerCase() === martyLang(); }
+// Nothing in the Web Speech API says which voice is a woman's, so this goes by
+// the names the platforms actually ship: Windows, macOS and iOS, Android and
+// Chrome OS. It only has to be right often enough to pick a default -- anyone
+// can override it in his panel, and a wrong guess costs a click.
+const MARTY_SHE = /(^|\W)(female|woman)|zira|aria|jenny|michelle|hazel|susan|sonia|libby|natasha|clara|catherine|samantha|victoria|karen|moira|tessa|fiona|alice|allison|\bava\b|\bemma\b|vicki|kathy|princess|nicky|zoe|serena|joana|luciana|milena|paulina|amelie|yuna|kyoko|google (us|uk) english/i;
 function martyVoiceObj() {
-  const want = localStorage.getItem(MARTY_VOICE_NAME);
+  const want = mineGet(MARTY_VOICE_NAME);
   const all = speechSynthesis.getVoices?.() || [];
   if (!all.length) return null;
   if (want) { const v = all.find(v2 => v2.name === want); if (v) return v; }
   const mine = all.filter(martyVoiceFits);
   const pool = mine.length ? mine : all;
-  // among voices that speak his words properly, the least ordinary one
-  return pool.find(v => /zarvox|trinoids|whisper|bells|boing|compact/i.test(v.name))
+  // A woman's voice by default, where the browser has one that speaks his
+  // language; the pitch and the drift are what make him sound Martian, not
+  // which voice it is. Failing that, the least ordinary one.
+  return pool.find(v => MARTY_SHE.test(v.name))
+    ?? pool.find(v => /zarvox|trinoids|whisper|bells|boing|compact/i.test(v.name))
     ?? pool.find(v => !v.default) ?? pool[0];
 }
 // A Martian is not quite of this world -- but chopping the line into phrases
@@ -9413,7 +9582,61 @@ function martyCtl(state) {
 }
 function martyModeLine() {
   const el = document.getElementById('martyMode');
-  if (el) el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
+  if (!el) return;
+  el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
+  martyNanoRow();
+  // Whether the built-in model is ready is only knowable by asking, and asking
+  // takes a moment -- so the line is written first and corrected if need be.
+  if (martyProv() !== 'nano' || window.claude?.complete || !nanoAPI()) return;
+  const said = el.textContent;
+  nanoState().then((s) => {
+    if (el.textContent !== said) return;                 // switched since
+    if (s === 'downloadable' || s === 'downloading') {
+      el.textContent = said + ' Chrome has not fetched it yet — the button below '
+        + 'starts a large download, which happens once.';
+    } else if (s !== 'available') {
+      el.textContent = 'Right now Marty is using: his phrasebook — Chrome has a built-in '
+        + 'model but it is not available on this machine (it asks for a good deal of free '
+        + 'disk and memory). Give him a key instead, or pick another brain below.';
+    }
+  }).catch(() => {});
+}
+// Chrome will not begin the download except from a real click, and it is a
+// download of gigabytes -- so it gets a button of its own, with the size said
+// out loud, rather than happening because a child asked a question.
+async function martyNanoRow() {
+  const el = document.getElementById('martyNano');
+  if (!el) return;
+  el.textContent = '';
+  el.style.display = 'none';
+  if (martyProv() !== 'nano' || window.claude?.complete || !nanoAPI()) return;
+  const s = await nanoState();
+  if (s !== 'downloadable' && s !== 'downloading') return;
+  const b = document.createElement('button');
+  b.textContent = 'Fetch his brain — a big download, once';
+  b.style.cssText = 'background:#2f6b43;border:none;border-radius:8px;color:#eafff0;'
+    + 'padding:6px 10px;cursor:pointer;font:inherit';
+  b.onclick = async () => {
+    b.disabled = true;
+    b.style.opacity = 0.6;
+    b.textContent = 'Fetching…';
+    try {
+      const ses = await nanoAPI().create({
+        monitor(m) {
+          m.addEventListener?.('downloadprogress', (e) => {
+            b.textContent = 'Fetching… ' + Math.round((e.loaded || 0) * 100) + '%';
+          });
+        },
+      });
+      ses.destroy?.();
+      martySay('My brain is here — ask me anything.');
+    } catch (e) {
+      martySay('Chrome would not fetch it — ' + (e.message || e.name));
+    }
+    martyModeLine();
+  };
+  el.appendChild(b);
+  el.style.display = '';
 }
 // The speaker button under the message, and the voice it reads with.
 function buildSayRow() {
@@ -9435,7 +9658,7 @@ function buildSayRow() {
       + mine.map(opt).join('')
       + (other.length ? '<optgroup label="Other languages">' + other.map(opt).join('')
           + '</optgroup>' : '');
-    sel.value = localStorage.getItem(HINT_VOICE) || '';
+    sel.value = mineGet(HINT_VOICE) || '';
   };
   const show = () => {
     btn.textContent = hintSayOn ? '\u{1F50A}' : '\u{1F508}';
@@ -9445,14 +9668,13 @@ function buildSayRow() {
   };
   btn.onclick = () => {
     hintSayOn = !hintSayOn;
-    localStorage.setItem(HINT_SAY, hintSayOn ? '1' : '0');
+    mineSet(HINT_SAY, hintSayOn ? '1' : '0');
     speechSynthesis?.cancel();
     show();
     if (hintSayOn) { fill(); hintLastSpoken = ''; hintSpeak($('hint').textContent); }
   };
   sel.onchange = () => {
-    if (sel.value) localStorage.setItem(HINT_VOICE, sel.value);
-    else localStorage.removeItem(HINT_VOICE);
+    mineSet(HINT_VOICE, sel.value || null);
     speechSynthesis?.cancel();
     hintLastSpoken = '';
     hintSpeak($('hint').textContent);
@@ -9461,6 +9683,8 @@ function buildSayRow() {
   fill();
   show();
   speechSynthesis?.addEventListener?.('voiceschanged', fill);
+  // Somebody else signing in brings out their voice settings, not this one's.
+  sayRowRefresh = () => { hintSayOn = mineGet(HINT_SAY) === '1'; fill(); show(); };
 }
 // Whose notebook is on the desk, shown in the title card and changeable there.
 function showWho() {
@@ -9570,7 +9794,7 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   if (!window.speechSynthesis) vb.style.display = 'none';
   vb.onclick = () => {
     martyVoiceOn = !martyVoiceOn;
-    localStorage.setItem(MARTY_VOICE, martyVoiceOn ? '1' : '0');
+    mineSet(MARTY_VOICE, martyVoiceOn ? '1' : '0');
     if (!martyVoiceOn) speechSynthesis.cancel();
     showV();
     martySay(martyVoiceOn ? 'I\u2019ll read my replies aloud now.' : 'Quiet mode.');
@@ -9581,10 +9805,10 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   const fillVoices = () => {
     const all = speechSynthesis.getVoices?.() || [];
     if (!all.length || !sel) return;
-    const cur = localStorage.getItem(MARTY_VOICE_NAME) || '';
+    const cur = mineGet(MARTY_VOICE_NAME) || '';
     const mine = all.filter(martyVoiceFits), other = all.filter(v => !martyVoiceFits(v));
     const opt = (v) => `<option value="${v.name.replace(/"/g, '')}">${v.name} (${v.lang})</option>`;
-    sel.innerHTML = '<option value="">Most alien one that speaks your language</option>'
+    sel.innerHTML = '<option value="">A woman’s voice in your language, if there is one</option>'
       + mine.map(opt).join('')
       + (other.length ? '<optgroup label="Other languages — these read English with an accent">'
           + other.map(opt).join('') + '</optgroup>' : '');
@@ -9594,15 +9818,22 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
     fillVoices();
     speechSynthesis.addEventListener?.('voiceschanged', fillVoices);
     sel.onchange = () => {
-      if (sel.value) localStorage.setItem(MARTY_VOICE_NAME, sel.value);
-      else localStorage.removeItem(MARTY_VOICE_NAME);
+      mineSet(MARTY_VOICE_NAME, sel.value || null);
       speechSynthesis.cancel();
       martyVoiceOn = true;
-      localStorage.setItem(MARTY_VOICE, '1');
+      mineSet(MARTY_VOICE, '1');
       showV();
       martySay('Greetings from the red planet!');
     };
   }
+  // A voice is one person's choice, not the browser's: signing somebody else
+  // in brings out theirs.
+  martyVoiceRefresh = () => {
+    martyVoiceOn = mineGet(MARTY_VOICE) === '1';
+    speechSynthesis?.cancel();
+    showV();
+    fillVoices();
+  };
   const mic = document.getElementById('martyMic');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR || window.claude?.complete) mic.style.display = 'none';
@@ -9633,18 +9864,31 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   const provEl = document.getElementById('martyProv');
   const modelEl = document.getElementById('martyModel');
   const keyEl = document.getElementById('martyKey');
+  // The built-in model is still offered when this browser has none -- so the
+  // panel can say why rather than quietly not mentioning it -- but it cannot
+  // be chosen there.
+  const nanoOpt = provEl.querySelector('option[value="nano"]');
+  if (nanoOpt && !nanoAPI()) {
+    nanoOpt.disabled = true;
+    nanoOpt.textContent = 'Gemini Nano \u2014 not in this browser';
+  }
   const showProv = () => {
     provEl.value = martyProv();
-    modelEl.value = martyModelOf(provEl.value);
-    keyEl.value = martyKeyOf(provEl.value);
+    const keyless = !!MARTY_PROVIDERS[provEl.value]?.keyless;
+    // nothing to type for a brain that is simply there
+    modelEl.style.display = keyless ? 'none' : '';
+    keyEl.style.display = keyless ? 'none' : '';
+    modelEl.value = keyless ? '' : martyModelOf(provEl.value);
+    keyEl.value = keyless ? '' : martyKeyOf(provEl.value);
     martyModeLine();
   };
   showProv();
   provEl.onchange = () => {
     localStorage.setItem('tt3d.marty-provider', provEl.value);
     showProv();
+    const keyless = !!MARTY_PROVIDERS[provEl.value]?.keyless;
     martySay('Switched to ' + MARTY_PROVIDERS[provEl.value].say + ' as my brain'
-      + (martyKeyOf(provEl.value) ? '.' : ' \u2014 it still needs its key.'));
+      + (keyless || martyKeyOf(provEl.value) ? '.' : ' \u2014 it still needs its key.'));
   };
   modelEl.onchange = () => {
     const v = modelEl.value.trim();
@@ -9680,6 +9924,7 @@ window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_D
                    world: martyWorldText, offline: martyOffline, offer: martyOfferDemo,
                    next: () => { if (martyNextResolve) { const r = martyNextResolve; martyNextResolve = null; r(); } },
                    stop: martyStopDemo, brain: martyBrainText,
+                   voice: martyVoiceObj, manualFor, nanoState,
                    get waiting() { return !!martyNextResolve; },
                    get running() { return martyBusyDemo; },
                    get pos() { return martyNode.position.toArray().map(v => +v.toFixed(2)); } };
