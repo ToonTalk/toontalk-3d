@@ -8533,6 +8533,24 @@ loadModel('robot_v4.glb', (gltf) => {
     hb.title = 'Open the manual — a guided tour with live workshops to try things in.';
     hb.onclick = () => window.open('manual.html', '_blank');
     sv.after(hb);
+    // A GitHub issue, pre-filled with what a report usually needs and none of
+    // what it doesn't -- no location, no account, nothing about the person
+    // filing it. Opens in a new tab so nothing here is lost; works from a
+    // file:// copy too, since navigating to an https: URL is not a fetch.
+    const rb = document.createElement('button');
+    rb.id = 'bugBtn';
+    rb.textContent = '\u{1F41E} Report a bug';
+    rb.title = 'Open a pre-filled bug report on GitHub (needs a free GitHub account to submit).';
+    rb.onclick = () => {
+      const body = 'What happened:\n\n\nWhat you expected instead:\n\n\n'
+        + '---\n<sub>' + navigator.userAgent + ' · '
+        + innerWidth + '×' + innerHeight + ' · ' + location.pathname.split('/').pop()
+        + '</sub>\n';
+      const url = 'https://github.com/ToonTalk/toontalk-3d/issues/new?labels=bug'
+        + '&body=' + encodeURIComponent(body);
+      window.open(url, '_blank', 'noopener');
+    };
+    hb.after(rb);
   }
 
   // things become pickable as they are created; simplest is to test everything

@@ -339,6 +339,18 @@ worth keeping back into the script.
   placement, and there is no arm IK — transfers to the copier's raised
   platform animate the object, not the arm.
 
+## Feedback
+
+**🐞 Report a bug**, in the bottom bar, opens a pre-filled GitHub issue —
+what happened, what you expected, and the browser/viewport that hit it
+attached automatically. Needs a free GitHub account to submit.
+
+Usage of the GitHub Pages copy shows up under the repository's own
+**Insights → Traffic** (a rolling 14 days, no setup). It cannot see a
+downloaded copy run from disk — that build fetches nothing at all, by
+design — so it undercounts anyone who saved the file rather than visiting
+the page.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
