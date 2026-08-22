@@ -53,8 +53,16 @@
   #library button { padding: 4px 9px; font-size: 12px; }
   #library option { background: #171b23; }
 
-  #bar { left: 50%; bottom: 16px; transform: translateX(-50%);
-         display: flex; align-items: center; gap: 8px; padding: 9px 10px; }
+  /* On a tablet held upright the row is wider than the screen, and its last
+     buttons -- undo, full screen -- were simply off the edge. The two bottom
+     cards live in one column now: the row wraps to as many lines as it needs
+     and the holding card rides on top of it, so no arithmetic anywhere has to
+     know how tall either of them turned out. */
+  #bottom { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            max-width: calc(100vw - 24px); }
+  #bar { position: static; display: flex; align-items: center; justify-content: center;
+         flex-wrap: wrap; max-width: 100%; gap: 8px; padding: 9px 10px; }
   button { font: inherit; font-size: 12.5px; color: var(--ink);
            background: rgba(255,255,255,.07); border: 1px solid var(--edge);
            border-radius: 8px; padding: 6px 11px; cursor: pointer; }
@@ -77,12 +85,20 @@
            border-radius: 8px; padding: 5px 7px; }
   select option { background: #171b23; }
 
-  #held { left: 50%; bottom: 74px; transform: translateX(-50%); padding: 7px 13px;
+  #held { position: static; max-width: 100%; padding: 7px 13px;
           display: none; align-items: center; gap: 9px; }
   #held.on { display: flex; }
   #held .v { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums;
              color: var(--accent); min-width: 24px; text-align: center; }
   #held .k { font-size: 11.5px; color: var(--dim); }
+  /* the keyboard is a touch screen's only way in; a machine with keys of its
+     own has no use for the button and does not show it */
+  #heldKeys { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
+  body.touching #heldKeys { display: block; }
+  #heldKeys.on { background: var(--accent); border-color: var(--accent); color: #06212e; }
+  #softKeys { position: fixed; left: 50%; bottom: 108px; width: 1px; height: 1px;
+              opacity: 0; border: 0; padding: 0; margin: 0; resize: none;
+              pointer-events: none; }
 
   #loading { position: fixed; inset: 0; display: grid; place-items: center;
              background: #12151b; z-index: 10; color: var(--dim); font-size: 13px;
@@ -122,10 +138,12 @@
   </div>
 </div>
 
+<div id="bottom">
 <div id="held" class="card" style="cursor:pointer"
-     title="What your invisible hand is carrying. It follows your pointer. Click to hold a text pad up and read it.">
+     title="What your invisible hand is carrying — it follows the mouse, and on a touch screen waits at one spot where you can see it. Click to hold a text pad up and read it.">
   <span class="k">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
+  <button id="heldKeys" title="Show the keyboard, to type on what you are holding">⌨</button>
 </div>
 
 <div id="bar" class="card">
@@ -150,6 +168,9 @@
   <span class="sep"></span>
   <button id="undoBtn"
     title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
+  <button id="fullBtn"
+    title="Fill the screen with the workshop. On a tablet this is what gets the browser's own bars out of the way.">⛶ Full screen</button>
+</div>
 </div>
 
 <script type="text/plain" id="martyManual">
@@ -167,6 +188,9 @@ Drag with the left mouse button held to orbit the camera around the
 workshop; scroll to zoom in and out (numbers show more digits and more
 of their faces up close); drag with the right button to slide sideways.
 On a touchpad: one-finger drag orbits, pinch zooms, two-finger drag slides.
+The same gestures work on a touch screen. Full screen at the end of the
+bottom row is worth pressing first on a tablet — it wins back the height the
+browser's own bars take, and asks to stay landscape while you are in it.
 
 Handling things
 You do everything with single clicks: click a thing to pick it up, and
@@ -177,6 +201,20 @@ Click a stack to take the top one.
 
 The wooden table in front is your workbench. Robots can never reach it —
 that is the point: what you build there is yours until you hand it over.
+
+On a screen you touch
+A finger is not a pointer: it is only anywhere at all while it is touching,
+and while it is touching it covers the very thing it is over. So on a touch
+screen what you are carrying does not follow your finger — it waits at one
+spot, left of centre and a little low, where you can always see it. Tap where
+you want it and it goes there, exactly as a click does. Turning the camera
+turns the thing in your hand rather than carrying it off the screen.
+
+Typing works there too, though nothing on the screen looks like a place to
+type: the ⌨ button on the holding card raises your keyboard, and
+what you type goes onto the thing in your hand — digits onto a number, letters
+onto a text pad or a name plaque, just as a real keyboard would. Press it again,
+or put the thing down, and the keyboard goes away.
 
 Everything in the manual's little windows below is the real
 workshop — click things, carry them, try it.
@@ -440,9 +478,9 @@ them — he is likelier to say he is unsure than the larger brains are.
 
 The others — Claude, ChatGPT and the full Gemini — talk
 to their companies over the network, so each wants that provider's API key
-pasted in; the key is kept only in this browser. Inside a Claude artifact he
-needs no key at all. Whichever he has, he also sees what is on your table when
-he answers, and the panel always says which one he is using right now.
+pasted in; the key is kept only in this browser, and a network is needed to
+reach them. Whichever he has, he also sees what is on your table when he
+answers, and the panel always says which one he is using right now.
 
 While he is working out an answer, three dots circle over his antenna and
 his antenna light runs hot and quick, and his panel says thinking — so
@@ -465,8 +503,7 @@ and whether the messages under the title are read aloud, belong to
 whoever is signed in — like the notebook, they are kept under your
 name, so picking a voice does not change it for everybody else who uses this
 browser. The 🎤 button lets you ask by voice, where the browser
-offers a microphone — inside a Claude artifact it does not, so there the button
-simply is not shown.
+offers a microphone — where it does not, the button simply is not shown.
 
 ## The notebook, saving and sharing
 
@@ -5411,8 +5448,42 @@ scene.add(handNode);
 scene.add(topCtx.root);
 scene.add(benchRoot);
 const handPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+// A finger is not a pointer: it is only somewhere while it is touching, and
+// while it is touching it is on top of whatever it is over. So on a touch
+// screen the hand does NOT follow -- it parks at a fixed place on the screen,
+// left of centre and low, which is clear of the cards at the top corners and
+// of the two along the bottom. It is recomputed from that SCREEN point rather
+// than kept as a world one, so orbiting the camera can never lose it.
+let handParked = false;
+// Left of centre and a little low: clear of the title card at the top left,
+// the trained-actions panel at the top right, and the two along the bottom.
+const PARK_NDC = { x: -0.5, y: -0.22 };
+const _pk = { dir: new THREE.Vector3(), right: new THREE.Vector3(), up: new THREE.Vector3() };
+function parkHand() {
+  if (!handParked || !held || mode !== 'world') return;
+  // Fixed in the CAMERA's frame rather than the world's. Parking it on the
+  // working plane was the obvious thing and the wrong one: the clamp that
+  // keeps a carried thing over the bench dragged it wherever the camera
+  // happened to look, in one case squarely behind a panel. Placed this way it
+  // sits at one spot on the screen whatever the camera does, and orbiting
+  // turns it in your hand rather than carrying it off.
+  const centre = new THREE.Vector3(0, BENCH_TOP, (BENCH.z0 + BENCH.z1) / 2);
+  const d = Math.max(1.2, camera.position.distanceTo(centre) * 0.7);
+  camera.getWorldDirection(_pk.dir);
+  _pk.right.crossVectors(_pk.dir, camera.up).normalize();
+  _pk.up.crossVectors(_pk.right, _pk.dir).normalize();
+  const h = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * d;
+  handNode.position.copy(camera.position)
+    .addScaledVector(_pk.dir, d)
+    .addScaledVector(_pk.right, PARK_NDC.x * h * camera.aspect)
+    .addScaledVector(_pk.up, PARK_NDC.y * h);
+  handNode.updateMatrixWorld();
+}
 function moveHand(ev, hoverY = null) {
   if (!reachLocal) return;
+  // The finger does not lead the hand -- except when it is dragging a corner
+  // of the table, which is a drag and does follow.
+  if (handParked && grabbedCorner === null) return;
   // Only just above working height: the higher this plane, the further the
   // carried thing drifts from whatever you clicked, since the camera looks in
   // at an angle. But a tall pile would swallow whatever you took off it, so
@@ -5469,6 +5540,7 @@ function takeIntoHand(obj) {
     // under the table
     obj.position.y -= Math.max(-0.35, Math.min(0.35, c0.y));
   }
+  parkHand();       // so it settles towards where it will actually wait
   enqueueNext(settleInto(obj, fromWorld, 0.24));
   refreshUI();      // the "holding" readout must track every pickup
 }
@@ -5507,6 +5579,103 @@ function placeReading() {
 }
 document.getElementById('held')
   .addEventListener('click', () => { if (held || reading) toggleReading(); });
+
+// --- filling the screen -----------------------------------------------------
+// A tablet gives most of its height to the browser's own bars, which leaves
+// the workshop a letterbox. iOS Safari on the phone has no Fullscreen API at
+// all, so where it is missing the button says nothing rather than lying.
+{
+  const btn = document.getElementById('fullBtn');
+  const can = !!(document.documentElement.requestFullscreen
+    || document.documentElement.webkitRequestFullscreen);
+  if (!can) btn.style.display = 'none';
+  const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const show = () => {
+    const on = isFull();
+    btn.textContent = on ? '⛶ Leave full screen' : '⛶ Full screen';
+    btn.classList.toggle('think', on);
+  };
+  btn.onclick = async () => {
+    try {
+      if (isFull()) await (document.exitFullscreen?.() ?? document.webkitExitFullscreen?.());
+      else {
+        const el = document.documentElement;
+        await (el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
+        // a tablet held upright gets a workshop barely wider than it is tall;
+        // asking to stay landscape is allowed only from a fullscreen gesture
+        try { await screen.orientation?.lock?.('landscape'); } catch {}
+      }
+    } catch (e) { say('The browser would not go full screen.'); }
+    show();
+  };
+  for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) {
+    document.addEventListener(ev, () => {
+      show();
+      if (!isFull()) { try { screen.orientation?.unlock?.(); } catch {} }
+    });
+  }
+  show();
+}
+
+// --- typing without keys ----------------------------------------------------
+// Everything you type here goes onto the thing in your hand, so there is no
+// text field anywhere for a tablet's keyboard to appear over. This is one,
+// invisible, whose only job is to be focused: what it receives is turned back
+// into key presses and dispatched at the window, where the ordinary typing
+// rules already live. One set of rules for both kinds of machine, not two.
+const softKeys = document.createElement('textarea');
+softKeys.id = 'softKeys';
+for (const [a, v] of [['autocapitalize', 'off'], ['autocorrect', 'off'],
+                      ['autocomplete', 'off'], ['spellcheck', 'false'],
+                      ['enterkeyhint', 'enter'], ['tabindex', '-1'],
+                      ['aria-label', 'Type on the thing you are holding']]) {
+  softKeys.setAttribute(a, v);
+}
+document.body.appendChild(softKeys);
+// Kept holding a few spaces: a keyboard over an EMPTY field may decline to
+// report backspace at all, having nothing it believes it can delete.
+const SOFT_PAD = '    ';
+function softReset() {
+  softKeys.value = SOFT_PAD;
+  try { softKeys.setSelectionRange(SOFT_PAD.length, SOFT_PAD.length); } catch {}
+}
+const asKey = (key) => window.dispatchEvent(
+  new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+// A real keyboard plugged into the tablet reports the key itself, and that
+// keydown reaches the window on its own; only then must the text event that
+// follows it be ignored, or every letter would arrive twice.
+let softPhysical = false;
+softKeys.addEventListener('keydown', (e) => {
+  softPhysical = e.keyCode !== 229 && !!e.key && e.key !== 'Unidentified';
+});
+softKeys.addEventListener('beforeinput', (e) => {
+  e.preventDefault();
+  softReset();
+  if (softPhysical) { softPhysical = false; return; }
+  const t = e.inputType || '';
+  if (t.startsWith('delete')) return asKey('Backspace');
+  if (t === 'insertLineBreak' || t === 'insertParagraph') return asKey('Enter');
+  for (const ch of (e.data || '')) asKey(ch);
+});
+softKeys.addEventListener('focus', softReset);
+softKeys.addEventListener('blur', () => showSoftKeys(false));
+let softOn = false;
+function showSoftKeys(on) {
+  softOn = on && !!held;
+  const btn = document.getElementById('heldKeys');
+  if (btn) btn.classList.toggle('on', softOn);
+  if (softOn) { softReset(); softKeys.focus({ preventScroll: true }); }
+  else if (document.activeElement === softKeys) softKeys.blur();
+}
+{
+  const btn = document.getElementById('heldKeys');
+  // the card itself lifts a text pad up to read; the button must not do that
+  btn.addEventListener('pointerdown', (e) => e.preventDefault());
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showSoftKeys(!softOn);
+  });
+}
 function noteHeld() {
   if (held) delete held.__faceBuf;     // typing on a die starts a fresh count
   valueAtPickup = held?.userData.value ?? null;
@@ -7430,6 +7599,7 @@ function refreshUI() {
 
   const showHeld = !!held && mode !== 'replay';
   $('held').classList.toggle('on', showHeld);
+  if (!showHeld && softOn) showSoftKeys(false);   // nothing to type on any more
   if (held) {
     const kind = held.userData.kind;
     $('heldVal').textContent = kind === 'number'
@@ -7494,10 +7664,10 @@ $('progMin').onclick = () => {
   }
   $('progMin').textContent = min ? '–' : '+';
 };
-// Published as a Claude artifact the page is sealed: it may not start a
-// download itself, and an <a download> click is simply ignored. The host will
-// do it, if asked through the downloads capability -- so ask first, and fall
-// back to the ordinary anchor everywhere else.
+// Some hosts seal the page and will not let it start a download of its own:
+// an <a download> click is simply ignored, and the host must be asked through
+// its downloads capability instead. So ask first where there is something to
+// ask, and fall back to the ordinary anchor everywhere else.
 async function saveFile(filename, text, note) {
   let host = null;
   try { host = (await window.claude?.use?.('downloads')) ?? null; } catch { host = null; }
@@ -8011,7 +8181,19 @@ addEventListener('pointerup', () => {
   if (grabbedCorner !== null) releaseCorner();
 });
 const tipEl = document.getElementById('tip');
+// Which it is decides everything above: a mouse or a stylus hovers and can
+// lead the hand, a finger cannot. Decided per event, so a tablet with a mouse
+// plugged in gets the following hand back the moment the mouse moves.
+function notePointerKind(ev) {
+  const touch = ev.pointerType === 'touch';
+  if (touch === handParked) return;
+  handParked = touch;
+  if (touch) parkHand();
+  document.body.classList.toggle('touching', touch);
+}
+addEventListener('pointerdown', notePointerKind, true);
 renderer.domElement.addEventListener('pointermove', (ev) => {
+  notePointerKind(ev);
   // what is under the pointer decides how high the hand rides, so resolve
   // first; resolve never looks at the hand (it skips whatever is held)
   const target = (!busy && mode !== 'replay') ? resolve(ev) : null;
@@ -8043,8 +8225,9 @@ addEventListener('resize', () => {
 // ---------------------------------------------------------------- load
 // Served as ordinary files, the models sit beside the page and are fetched.
 // A packed build (build_artifact.py) puts their bytes in __TT_MODELS instead
-// and they are parsed straight out of memory: a published artifact may not
-// fetch anything at all, not even from a data: URI of its own making.
+// and they are parsed straight out of memory, so the single file needs nothing
+// beside it and nothing from the network -- opened from disk a fetch of its own
+// making, data: URI and all, is refused as cross-origin.
 function loadModel(name, onLoad) {
   const loader = new GLTFLoader();
   const packed = window.__TT_MODELS?.[name];
@@ -8674,6 +8857,7 @@ renderer.setAnimationLoop((now) => {
     if (f.t >= 1) { scene.remove(f.m); flashes.splice(i, 1); }
   }
   orbit.update();
+  parkHand();          // orbiting must not carry the parked hand off-screen
   renderer.render(scene, camera);
 });
 
@@ -8682,10 +8866,10 @@ renderer.setAnimationLoop((now) => {
 // Marty explains and DEMONSTRATES -- he never writes programs for you. Ask a
 // question and he answers in a sentence or two; ask how something works and he
 // shows you, using the workshop exactly the way you do. He thinks three ways,
-// picked by what is available: inside a Claude artifact, window.claude answers
-// with no key at all; an Anthropic API key pasted into his panel talks to the
-// API directly (the key stays in this browser); with neither, a little
-// phrasebook still picks the right demonstration.
+// picked by what is available: the small Gemini built into Chrome answers with
+// no key at all and never leaves the machine; a provider's API key pasted into
+// his panel talks to that API directly (the key stays in this browser); with
+// neither, a little phrasebook still picks the right demonstration.
 let martyNode = null, martyT = 0, martyBusyDemo = false, martyThinking = false;
 function makeMarty() {
   const g = new THREE.Group();
@@ -9320,9 +9504,6 @@ const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
   || MARTY_PROVIDERS[p].model).trim();
 // What is behind Marty's eyes right now, in words the panel can show.
 function martyBrainText() {
-  if (window.claude?.complete) return 'the Claude artifact — no key needed';
-  if (window.claude?.use) return 'his phrasebook — a published artifact is sealed and cannot call out, '
-    + 'so no brain, and no key, can be reached from here. The demonstrations still work.';
   const p = martyProv();
   if (p === 'nano') {
     return nanoAPI()
@@ -9363,7 +9544,7 @@ function manualFor(manual, q, budget) {
 let martyHistory = [], martyToldOffline = false;
 async function martyThink(q) {
   const prov = martyProv();
-  const nano = prov === 'nano' && !window.claude?.complete;
+  const nano = prov === 'nano';
   const whole = await martyManualText();
   const sysAt = (budget) => {
     const manual = manualFor(whole, q, budget);
@@ -9373,10 +9554,6 @@ async function martyThink(q) {
       + '\n\nOn the table right now:\n' + martyWorldText();
   };
   const sys = sysAt(nano ? NANO_MANUAL_BUDGET : Infinity);
-  if (window.claude?.complete) {
-    const lines = martyHistory.map(m => (m.role === 'user' ? 'Visitor: ' : 'Marty: ') + m.content).join('\n');
-    return await window.claude.complete(sys + '\n\n' + lines + '\nVisitor: ' + q + '\nReply with ONLY the JSON object.');
-  }
   if (nano) {
     try { return await nanoThink(sys, q); }
     catch (e) {
@@ -9444,8 +9621,9 @@ function martyOffline(q) {
     [/notebook|file|save|library|page|look.?up/, 'notebook', 'The notebook is your library — and the robots’ too.'],
   ];
   for (const [re, demo, line] of table) if (re.test(t)) return { say: line, demo };
-  return { say: 'Without a key I only know my demonstrations — ask me about: ' +
-    Object.keys(MARTY_DEMOS).join(', ') + '. In a Claude artifact, or with an API key in my panel, I can really talk.', demo: null };
+  return { say: 'Without a brain I only know my demonstrations — ask me about: ' +
+    Object.keys(MARTY_DEMOS).join(', ')
+    + '. Give me one in my panel — the Gemini inside Chrome needs no key — and I can really talk.', demo: null };
 }
 // While he is away thinking: the dots over his antenna (see advanceMarty), a
 // bubble that keeps its own counsel in the log, and a form that will not take
@@ -9495,19 +9673,20 @@ async function askMarty(q) {
   const doneThinking = martyThinkingStart();
   try { reply = await martyThink(q); }
   catch (e) {
-    // Sealed inside an artifact there is no way out at all, and no key will
-    // ever help. Say so once and carry on with the phrasebook, which still
+    // A brain over the network can fail for want of a network as easily as for
+    // want of a key; say which, and carry on with the phrasebook, which still
     // knows which demonstration to give.
-    const sealed = e instanceof TypeError || /fetch|network|load failed/i.test(e.message || '');
+    const offline = e instanceof TypeError || /fetch|network|load failed/i.test(e.message || '');
     doneThinking();                    // stop thinking before saying it went wrong
     // Chrome's own model is not somewhere to be reached, so a failure there is
     // never the network and never the key.
-    martySay(martyProv() === 'nano' && !window.claude?.complete
+    martySay(martyProv() === 'nano'
       ? 'The little brain inside Chrome would not answer — ' + (e.message || e.name)
         + '. My phrasebook it is; the demonstrations are all still real.'
-      : sealed
-      ? 'No signal reaches Mars from this page — it is sealed and cannot call out. '
-        + 'My phrasebook it is, then; the demonstrations are all still real.'
+      : offline
+      ? 'No signal reaches Mars — nothing answered out there. My phrasebook it is, '
+        + 'then; the demonstrations are all still real. (The Gemini inside Chrome '
+        + 'needs no network at all, if you would rather not depend on one.)'
       : 'I could not reach the mothership — ' + e.message + '. Check the key in my panel?');
     martyToldOffline = true;
     reply = null;
@@ -9566,13 +9745,12 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<button style="background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer">Ask</button></form>'
   + '<details style="margin-top:8px;color:#9fb0c8"><summary style="cursor:pointer">How Marty thinks</summary>'
   + '<div id="martyMode" style="margin-top:6px;color:#cdd8e8"></div>'
-  + '<div style="margin-top:6px">Without a brain (and outside a Claude artifact) his replies are <b>canned lines from a '
+  + '<div style="margin-top:6px">Without a brain his replies are <b>canned lines from a '
   + 'phrasebook</b> \u2014 he can pick the right demonstration, but he is not really answering. For real conversation, '
-  + 'choose one. <b>Gemini Nano</b> is built into desktop Chrome and wants <b>no key and no account</b> \u2014 Chrome '
-  + 'downloads it once, nothing you type leaves this machine, and being small he is given only the part of the '
-  + 'manual your question is about. The rest want an API key, kept only in this browser. A '
-  + '<b>published artifact is sealed</b> \u2014 nothing can be reached from inside it, so there Marty always '
-  + 'speaks from the phrasebook. His demonstrations are the real workshop either way.</div>'
+  + 'choose one. <b>Gemini Nano</b> is built into desktop Chrome and wants <b>no key, no account and no network</b> '
+  + '\u2014 Chrome downloads it once, nothing you type leaves this machine, and being small he is given only the '
+  + 'part of the manual your question is about. The rest want an API key, kept only in this browser, and a '
+  + 'network to reach their company over. His demonstrations are the real workshop whichever he has.</div>'
   + '<div style="display:flex;gap:6px;margin-top:6px">'
   + '<select id="martyProv" style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
   + '<option value="nano">Gemini Nano (in Chrome, no key)</option>'
@@ -9673,7 +9851,7 @@ function martyModeLine() {
   martyNanoRow();
   // Whether the built-in model is ready is only knowable by asking, and asking
   // takes a moment -- so the line is written first and corrected if need be.
-  if (martyProv() !== 'nano' || window.claude?.complete || !nanoAPI()) return;
+  if (martyProv() !== 'nano' || !nanoAPI()) return;
   const said = el.textContent;
   nanoState().then((s) => {
     if (el.textContent !== said) return;                 // switched since
@@ -9695,7 +9873,7 @@ async function martyNanoRow() {
   if (!el) return;
   el.textContent = '';
   el.style.display = 'none';
-  if (martyProv() !== 'nano' || window.claude?.complete || !nanoAPI()) return;
+  if (martyProv() !== 'nano' || !nanoAPI()) return;
   const s = await nanoState();
   if (s !== 'downloadable' && s !== 'downloading') return;
   const b = document.createElement('button');
@@ -9885,8 +10063,8 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
     showV();
     martySay(martyVoiceOn ? 'I\u2019ll read my replies aloud now.' : 'Quiet mode.');
   };
-  // Dictation, where the browser offers it. Artifacts do not permit the
-  // microphone, so there the button simply is not shown.
+  // Dictation, where the browser offers it -- and where it does not, the
+  // button simply is not shown.
   const sel = document.getElementById('martyVoiceSel');
   const fillVoices = () => {
     const all = speechSynthesis.getVoices?.() || [];
@@ -9922,7 +10100,7 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   };
   const mic = document.getElementById('martyMic');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR || window.claude?.complete) mic.style.display = 'none';
+  if (!SR) mic.style.display = 'none';
   else {
     let listening = null;
     mic.onclick = () => {
@@ -10044,6 +10222,8 @@ window.__nano = {
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
   scratch() { return Object.values(stations).filter(s2 => s2.kind === 'scratch').map(s2 => s2.occupant); },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
+  parkHand,
+
   heldPos() { return held ? held.getWorldPosition(new THREE.Vector3()).toArray().map(n => +n.toFixed(2)) : null; },
   mine(path = []) { return thingAt({ c: 'given', path }); },
   at(c, path = []) { return thingAt({ c, path }); },

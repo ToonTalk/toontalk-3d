@@ -100,6 +100,18 @@ For the story behind the project, see [the write-up](https://docs.google.com/doc
   belong to whoever is signed in, not to the browser: like the notebook they
   are kept under the name, so one person choosing a voice does not change it
   for everybody else who uses the machine.
+- **It works on a tablet.** A finger is only anywhere while it is touching,
+  and covers what it touches, so a carried thing cannot follow one. On a touch
+  screen it **waits at a fixed spot on the screen** instead — left of centre and
+  a little low, clear of every panel — and stays there however the camera is
+  orbited, because the spot is fixed in the camera's frame rather than the
+  world's. Tap where you want it and it goes there. Nothing on screen is a text
+  field, so a **⌨ button** on the holding card raises the keyboard; what it
+  receives is turned back into key presses and handed to the ordinary typing
+  rules, so there is one set of rules and not two. The bottom row wraps to as
+  many lines as it needs, and **Full screen** at its end wins back the height
+  the browser's own bars take. A mouse plugged into the tablet takes the
+  following hand back the moment it moves.
 - **The workbench reshapes.** "Reshape table" reveals glowing corner handles:
   click one to carry that corner, move the pointer to stretch or shrink the
   top (legs follow), click again to set it. Anything left overboard by a
@@ -135,9 +147,8 @@ For the story behind the project, see [the write-up](https://docs.google.com/doc
   the one brain a classroom can have without handing out a key. Being small it
   cannot hold the whole manual, so it is given the sections that score against
   the question rather than all of it. Claude, ChatGPT and the full Gemini each
-  want that provider's key instead (kept in this browser only); a published
-  artifact is sealed and cannot reach any of them, so there he only ever has
-  the phrasebook. Without a brain, his replies are canned lines from a
+  want that provider's key instead (kept in this browser only), and a network
+  to reach their company over. Without a brain, his replies are canned lines from a
   phrasebook that picks the right demonstration, and the panel says so. Left
   alone he speaks in a woman's voice where the browser has one — the high
   pitch and the drift between sentences are what make him Martian, not which
@@ -269,14 +280,15 @@ it — hand it to somebody, put it on any static host, open it from disk. It is
 built from `toontalk-3d.html`, which stays the only source; every one of the
 eleven example worlds produces byte-identical results in the two.
 
-It does **not** run as a published claude.ai artifact. The frame there tolerates
-a full-screen three.js scene rendered once, but goes white — markup and all —
-as soon as this workshop's animation loop runs, however long the boot is
-delayed. Two smaller limits of that frame are worked around in the build:
-inline scripts over about a megabyte are dropped silently (so the bundle is
-split across several), and nothing may be fetched at all, not even a `data:`
-URI the page made itself (so the models are parsed out of memory instead).
-Marty, likewise, could only ever speak from his phrasebook inside one.
+Publishing it as a claude.ai artifact was tried and **abandoned**: that frame
+tolerates a full-screen three.js scene rendered once, but goes white — markup
+and all — as soon as this workshop's animation loop runs, however long the boot
+is delayed. Nothing in the app targets it any more. Two habits from the attempt
+were worth keeping and are still in the build, because they are what lets the
+single file work from a bare `file://` URL: the bundle is split across several
+inline scripts (one frame dropped anything over about a megabyte, silently), and
+the models are parsed out of memory rather than fetched, since a page opened
+from disk may not fetch even a `data:` URI of its own making.
 
 ## Assets
 
