@@ -74,13 +74,12 @@ ABOUT = ('ACTIVITY 4\nAll fractions between 0 and 1\n\n'
          'Denominator takes the turn.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 20, give the\n'
-       '[scale, Fractions] box to the\n'
-       'All Fractions robot and press\n'
-       'Run.\n\n'
-       'The scale pans are holes: open\n'
-       'the room and watch the numbers\n'
-       'in them climb.\n\n'
+       'Set Rounds to 20 and pull the\n'
+       'lever on the All Fractions\n'
+       'room.\n\n'
+       'The scale pans are holes: walk\n'
+       'in through the door and watch\n'
+       'the numbers in them climb.\n\n'
        'Then ask: does 2/4 appear? And\n'
        '1/2 as well? They are the same\n'
        'number written twice -- which\n'
@@ -91,9 +90,10 @@ RUN = ('TO RUN IT\n\n'
        'reaches 7/8?')
 
 bench = [
-    {'thing': allfractions, 'x': -1.35, 'z': 1.30},
-    {'thing': box(scale(num(1), num(2), label='n over d'),
-                  bird(*FRAC_B, label='Fractions')), 'x': -1.25, 'z': 1.85},
+    {'thing': room('All Fractions',
+                   box(scale(num(1), num(2), label='n over d'),
+                       bird(*FRAC_B, label='Fractions')),
+                   allfractions, dirty=False), 'x': -1.15, 'z': 1.50},
 
     {'thing': room('Box to Number',
                    box(nest(*FRAC_B, label='In'), bird(*NUMS, label='Out')),

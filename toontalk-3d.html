@@ -2753,8 +2753,12 @@ function tuckIntoNest(nest, thing) {
   steps.push(doNow(refreshUI));
   return steps;
 }
+// enqueue, NOT enqueueNext: two birds landing on one nest a moment apart put
+// their tucking animations in the queue one after the other, and a front
+// insertion would run the SECOND one first -- which reverses them in the pile,
+// because the pile order is decided by the order the tucks actually run.
 function deliverCopy(nest2, gift) {
-  enqueueNext(...tuckIntoNest(nest2, gift));
+  enqueue(...tuckIntoNest(nest2, gift));
   refreshUI();
   checkWaiting();
 }
@@ -2775,7 +2779,8 @@ function spawnCloneDelivery(bird, thing, nest2, from) {
     clone.removeFromParent();
     return;
   }
-  flights.push({ clone, gift, nest: nest2, nestGuid: nest2.userData.guid, from, t: 0, phase: 0 });
+  flights.push({ clone, gift, nest: nest2, nestGuid: nest2.userData.guid, from,
+                 t: 0, phase: 0, seq: flightSeq++ });
 }
 
 // The bird carries the gift home, drops it on the pile, and flies back to
@@ -2793,6 +2798,16 @@ const roomOf = (node) => {
 };
 let runOuterSpeed = 1;      // the speed the WATCHER set, while a house runs
 let crossFlights = 0;       // staggers letters leaving one house together
+// Every flight is numbered as it sets off, and lands only once every earlier
+// flight to the same nest has landed. Three things could otherwise reorder a
+// sequence in mid-air, and a sequence arriving out of order is not a sequence:
+// the stagger counter restarts with each slice of room work, so a later letter
+// could set off ahead of one still waiting; the flights are stepped from the
+// END of the list, so two landing on the same frame land backwards; and a room
+// frozen while the open world runs releases everything it has held at once.
+let flightSeq = 0;
+const flightHeldUp = (f) => flights.some(g => g !== f && g.phase === 0
+  && g.seq < f.seq && (g.nest === f.nest || g.nestGuid === f.nestGuid));
 // Part of the current world means the scene root is an ancestor -- a bare
 // parent check lies for things sitting inside detached containers.
 function inScene(o) {
@@ -2851,7 +2866,8 @@ function birdDeliver(bird) {
     courier.__flying = true;
     sfx('chirp');
     flights.push({ clone: courier, gift, nest, nestGuid: nest.userData.guid,
-                   from: from.clone(), t: -0.22 * crossFlights++, phase: 0 });
+                   from: from.clone(), t: -0.22 * crossFlights++, phase: 0,
+                   seq: flightSeq++ });
     refreshUI();
     return;
   }
@@ -4230,6 +4246,8 @@ function advanceWorldClocks(dt) {
         lerp(f.from.y, np.y + 0.3, e) + 0.45 * Math.sin(Math.PI * e),
         lerp(f.from.z, np.z, e));
       if (f.t >= 0.9) {
+        // hovering over the nest, waiting for the letters sent before it
+        if (flightHeldUp(f)) { f.t = 0.9; continue; }
         if (f.gift) {
           f.clone.remove(f.gift);
           deliverCopy(f.nest, f.gift);

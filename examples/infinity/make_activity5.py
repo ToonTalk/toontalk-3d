@@ -73,9 +73,9 @@ ABOUT = ('ACTIVITY 5\nRationals greater than 1\n\n'
          'dances with 2, 2/3 with 3/2.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 20, give the\n'
-       '[scale, Fractions] box to All\n'
-       'Fractions and press Run.\n\n'
+       'Set Rounds to 20 and pull the\n'
+       'lever on the All Fractions\n'
+       'room.\n\n'
        'Three rooms run at once: the\n'
        'boxes become fractions, and\n'
        'the fractions become their own\n'
@@ -92,9 +92,10 @@ RUN = ('TO RUN IT\n\n'
        "Sally's argument?")
 
 bench = [
-    {'thing': allfractions, 'x': -1.40, 'z': 1.30},
-    {'thing': box(scale(num(1), num(2), label='n over d'),
-                  bird(*BOXES, label='Fractions')), 'x': -1.30, 'z': 1.85},
+    {'thing': room('All Fractions',
+                   box(scale(num(1), num(2), label='n over d'),
+                       bird(*BOXES, label='Fractions')),
+                   allfractions, dirty=False), 'x': -1.15, 'z': 1.50},
 
     {'thing': room('Box to Number',
                    box(nest(*BOXES, label='In'), bird(*FRAC_D, label='Out')),

@@ -84,10 +84,10 @@ ABOUT = ('ACTIVITY 6\nAll the positive rationals\n\n'
          'and counted off.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 24, give the\n'
-       '[scale, Fractions] box to All\n'
-       'Fractions and press Run.\n\n'
-       'Four rooms wake in turn as the\n'
+       'Set Rounds to 24 and pull the\n'
+       'lever on the All Fractions\n'
+       'room.\n\n'
+       'Five rooms wake in turn as the\n'
        'first fraction reaches them.\n\n'
        'Merge lags: it will not hand\n'
        'out a fraction until the\n'
@@ -102,9 +102,10 @@ RUN = ('TO RUN IT\n\n'
        'the argument?')
 
 bench = [
-    {'thing': allfractions, 'x': -1.40, 'z': 1.25},
-    {'thing': box(scale(num(1), num(2), label='n over d'),
-                  bird(*BOXES, label='Fractions')), 'x': -1.30, 'z': 1.80},
+    {'thing': room('All Fractions',
+                   box(scale(num(1), num(2), label='n over d'),
+                       bird(*BOXES, label='Fractions')),
+                   allfractions, dirty=False), 'x': -1.20, 'z': 1.45},
 
     {'thing': room('Box to Number',
                    box(nest(*BOXES, label='In'), bird(*FRAC_D, label='Out')),

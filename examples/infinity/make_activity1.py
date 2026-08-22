@@ -66,21 +66,22 @@ ABOUT = ('ACTIVITY 1\nThe even numbers, two ways\n\n'
          'size of the other.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 12, give the\n'
-       '[1, Numbers] box to Add 1 and\n'
-       'press Run.\n\n'
-       'That is all. The two robots\n'
-       'in the rooms are already\n'
-       'dozing on their nests; every\n'
-       'number Add 1 makes wakes them\n'
-       'both through the roof.\n\n'
+       'Set Rounds to 12 and pull the\n'
+       'lever on the Add 1 room.\n\n'
+       'That is all. Every robot is\n'
+       'already in place; the three\n'
+       'rooms work at the same time,\n'
+       'each waking as the first\n'
+       'number reaches it.\n\n'
+       'Watch B and doubled fill at\n'
+       'the same rate.\n\n'
        'Then ask: is there an even\n'
        'number on B that is not on\n'
        'doubled? Will there ever be?')
 
 bench = [
-    {'thing': add1, 'x': -1.35, 'z': 1.30},
-    {'thing': box(num(1), bird(*NAT_D, label='Numbers')), 'x': -1.30, 'z': 1.80},
+    {'thing': room('Add 1', box(num(1), bird(*NAT_D, label='Numbers')),
+                   add1, dirty=False), 'x': -1.20, 'z': 1.50},
 
     {'thing': room('Doubler',
                    box(nest(*NAT_D, label='In'), bird(*EVEN, label='Out')),

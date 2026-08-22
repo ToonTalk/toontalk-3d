@@ -4,104 +4,113 @@
  "bench": [
   {
    "thing": {
-    "kind": "robot",
-    "name": "Add 1",
-    "condition": {
-     "kind": "box",
-     "holes": [
-      {
-       "kind": "wildNumber"
+    "kind": "room",
+    "label": "Add 1",
+    "opaque": false,
+    "dirty": false,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9201,
+         "nestGuid": "inf1-nat",
+         "label": "Numbers"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Add 1",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
       },
-      {
-       "kind": "anyBird"
-      }
-     ]
-    },
-    "program": [
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        1
-       ]
-      }
-     },
-     {
-      "type": "newNumber"
-     },
-     {
-      "type": "setValue",
-      "value": {
-       "n": "1",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
-      }
-     }
-    ],
-    "trainedOn": {
-     "kind": "box",
-     "holes": [
-      {
-       "kind": "number",
-       "value": {
-        "n": "1",
-        "d": "1"
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
        },
-       "op": "+"
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9201,
+         "nestGuid": "inf1-nat"
+        }
+       ]
       },
-      {
-       "kind": "bird",
-       "nestId": 9201,
-       "nestGuid": "inf1-nat"
-      }
-     ]
-    },
-    "team": []
-   },
-   "x": -1.35,
-   "z": 1.3
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "1",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "bird",
-      "nestId": 9201,
-      "nestGuid": "inf1-nat",
-      "label": "Numbers"
+      "team": []
      }
-    ]
+    }
    },
-   "x": -1.3,
-   "z": 1.8
+   "x": -1.2,
+   "z": 1.5
   },
   {
    "thing": {
@@ -426,7 +435,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nSet Rounds to 12, give the\n[1, Numbers] box to Add 1 and\npress Run.\n\nThat is all. The two robots\nin the rooms are already\ndozing on their nests; every\nnumber Add 1 makes wakes them\nboth through the roof.\n\nThen ask: is there an even\nnumber on B that is not on\ndoubled? Will there ever be?"
+    "text": "TO RUN IT\n\nSet Rounds to 12 and pull the\nlever on the Add 1 room.\n\nThat is all. Every robot is\nalready in place; the three\nrooms work at the same time,\neach waking as the first\nnumber reaches it.\n\nWatch B and doubled fill at\nthe same rate.\n\nThen ask: is there an even\nnumber on B that is not on\ndoubled? Will there ever be?"
    },
    "x": 0.2,
    "z": 2.8

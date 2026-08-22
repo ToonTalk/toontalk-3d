@@ -59,9 +59,9 @@ ABOUT = ('ACTIVITY 2\nCombining sequences, part 1\n\n'
          'finite wait. Countable.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 12, give the\n'
-       '[1, Numbers] box to Add 1 and\n'
-       'press Run.\n\n'
+       'Set Rounds to 12 and pull the\n'
+       'lever on the Add 1 room.\n\n'
+       'All three rooms run together.\n\n'
        'Merge lags one behind Negator:\n'
        'it will not hand out a positive\n'
        'until the matching negative has\n'
@@ -71,8 +71,8 @@ RUN = ('TO RUN IT\n\n'
        'nest, however long it runs?')
 
 bench = [
-    {'thing': add1, 'x': -1.35, 'z': 1.30},
-    {'thing': box(num(1), bird(*NAT_N, label='Numbers')), 'x': -1.30, 'z': 1.80},
+    {'thing': room('Add 1', box(num(1), bird(*NAT_N, label='Numbers')),
+                   add1, dirty=False), 'x': -1.25, 'z': 1.50},
 
     {'thing': room('Negator',
                    box(nest(*NAT_N, label='In'), bird(*NEG, label='Out')),

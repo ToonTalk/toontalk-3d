@@ -64,9 +64,8 @@ ABOUT = ('ACTIVITY 3\nA variety of sequences\n\n'
          'fast it grows.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 10, give the\n'
-       '[1, Numbers] box to Add 1 and\n'
-       'press Run.\n\n'
+       'Set Rounds to 10 and pull the\n'
+       'lever on the Add 1 room.\n\n'
        'The squares appear on their\n'
        'nest, and the pairs nest fills\n'
        'with boxes: [1,1] [2,4] [3,9]\n'
@@ -75,13 +74,13 @@ RUN = ('TO RUN IT\n\n'
        'Train a robot of your own that\n'
        'takes a number and gives back\n'
        'something else -- thirds, or\n'
-       'powers of two -- and drop it\n'
-       'into the Squares room instead.\n'
+       'powers of two -- and put it in\n'
+       'the Squares room instead.\n'
        'Match Maker will not notice.')
 
 bench = [
-    {'thing': add1, 'x': -1.35, 'z': 1.30},
-    {'thing': box(num(1), bird(*NAT, label='Numbers')), 'x': -1.30, 'z': 1.80},
+    {'thing': room('Add 1', box(num(1), bird(*NAT, label='Numbers')),
+                   add1, dirty=False), 'x': -1.25, 'z': 1.50},
 
     {'thing': room('Squares',
                    box(nest(*NAT, label='In'), bird(*SQ_M, label='Out')),

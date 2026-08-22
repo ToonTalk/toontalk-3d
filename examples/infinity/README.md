@@ -20,9 +20,9 @@ structural way described under *Rooms* below.
 | `activity6-all-rationals` | 6 | Merging to get all of them — the capstone |
 | `activity7-any-interval` | 7 | Scale and shift the unit interval; density |
 
-Each is self-contained: give the one box on the table to the one robot on the
-table, press **Run**, and everything else is already dozing in its room waiting
-to be woken. The two text pads say what it does and what to ask.
+Each is self-contained: set **Rounds**, pull the **lever** on the first room,
+and the whole pipeline runs. Everything else is already dozing in its own room
+waiting to be woken. The two text pads say what it does and what to ask.
 
 ## The robots
 
@@ -66,10 +66,16 @@ robot can stand at the open bench, and a robot dozing on an empty nest keeps
 that place until somebody picks it up — so a pipeline built in the open has to
 be run a stage at a time, by hand.
 
-So **every robot downstream of the source lives in its own room**. A room is a
+So **every robot lives in its own room**, the source included. A room is a
 workshop of its own: the robot inside dozes at its own desk, wakes when a bird
 delivers through the roof, and never competes for the bench outside. That is
-why one press of Run drives a five-room pipeline in Activity 6.
+why one pull of a lever drives a five-room pipeline in Activity 6.
+
+The source has to be in a room too, and that is not a nicety. Rooms only work
+at a quiet moment, and a robot running on the open bench holds the world busy
+for the whole of its run — so with the source out there the rooms stayed frozen
+until Run stopped, and then released everything they had held at once. Its
+lever is down when the world loads; pull it to start.
 
 The rooms are glass, so you can watch. Click a roof to make it solid and it
 runs at Instant speed instead; click the door to walk inside.

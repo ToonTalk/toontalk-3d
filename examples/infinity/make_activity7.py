@@ -89,9 +89,9 @@ ABOUT = ('ACTIVITY 7\nRationals between any two\n\n'
          'all of them. Pat is right.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 20, give the\n'
-       '[scale, Fractions] box to All\n'
-       'Fractions and press Run.\n\n'
+       'Set Rounds to 20 and pull the\n'
+       'lever on the All Fractions\n'
+       'room.\n\n'
        'Four rooms run at once. The\n'
        'three nests fill at exactly the\n'
        'same rate -- that is the whole\n'
@@ -102,13 +102,14 @@ RUN = ('TO RUN IT\n\n'
        'Is he right? Which number\n'
        'between 0 and 2 is missing?\n\n'
        'Change the 10 in Add 10 to any\n'
-       'number you like: hold the\n'
-       'number in its room and type.')
+       'number you like: walk into its\n'
+       'room and type on it.')
 
 bench = [
-    {'thing': allfractions, 'x': -1.40, 'z': 1.25},
-    {'thing': box(scale(num(1), num(2), label='n over d'),
-                  bird(*BOXES, label='Fractions')), 'x': -1.30, 'z': 1.80},
+    {'thing': room('All Fractions',
+                   box(scale(num(1), num(2), label='n over d'),
+                       bird(*BOXES, label='Fractions')),
+                   allfractions, dirty=False), 'x': -1.20, 'z': 1.45},
 
     {'thing': room('Box to Number',
                    box(nest(*BOXES, label='In'), bird(*F_A, label='Out')),
