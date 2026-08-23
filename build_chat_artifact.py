@@ -67,57 +67,112 @@ LOADER = r'''<script>
 // are asked for once, kept here afterwards, and handed to the app before it
 // starts. Everything below runs before the module, which waits on the promise
 // left in window.__TT_PACK_READY.
+//
+// Kept GZIPPED: the pack is 973 KB of base64 and an artifact's storage quota is
+// tight enough to refuse that; compressed it is about 412 KB. If the browser
+// refuses even so, that is not a failure -- the workshop runs perfectly well
+// having to ask again -- but the reader is told, rather than left to wonder
+// why it asks every time.
 (function () {
-  var KEY = 'tt3d.models.__FORMAT__';
+  var KEY = 'tt3d.models.__FORMAT__.gz';
+  var PACK_URL =
+    'https://raw.githubusercontent.com/ToonTalk/toontalk-3d/main/toontalk-3d-models.json';
   var el = document.getElementById('loading');
   var say = function (html) { if (el) el.innerHTML = html; };
+  var note = function (m) {
+    var e = document.getElementById('ttErr');
+    if (e) e.textContent = m;
+  };
 
-  function accept(text) {
+  var b64 = {
+    from: function (bytes) {
+      var s = '', CH = 0x8000;                 // apply() dies on a long array
+      for (var i = 0; i < bytes.length; i += CH) {
+        s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+      }
+      return btoa(s);
+    },
+    to: function (str) {
+      var bin = atob(str), out = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    },
+  };
+  var gzip = function (text) {
+    return new Response(new Blob([text]).stream()
+      .pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+  };
+  var gunzip = function (bytes) {
+    return new Response(new Blob([bytes]).stream()
+      .pipeThrough(new DecompressionStream('gzip'))).text();
+  };
+
+  function unpack(text) {
     var data = JSON.parse(text);
     if (!data || data.format !== '__FORMAT__' || !data.models) {
       throw new Error('that is not the ToonTalk 3D model pack');
     }
     window.__TT_MODELS = data.models;
-    // Kept so it is asked for once. A refusal here is not a failure -- the
-    // workshop runs perfectly well having to ask again next time -- so it is
-    // reported and stepped over rather than thrown.
-    try { localStorage.setItem(KEY, text); }
-    catch (e) { console.warn('models not kept in this browser:', e && e.message); }
     return data;
   }
 
   window.__TT_PACK_READY = new Promise(function (done) {
     var kept = null;
     try { kept = localStorage.getItem(KEY); } catch (e) {}
-    if (kept) {
-      try { accept(kept); say('Loading…'); return done(); }
-      catch (e) { try { localStorage.removeItem(KEY); } catch (e2) {} }
-    }
 
-    say(
-      '<div style="max-width:30rem;margin:0 auto;text-align:center;line-height:1.55">'
-      + '<div style="font-size:15px;color:#e6ecf7;margin-bottom:10px">'
-      + 'ToonTalk 3D needs its characters</div>'
-      + '<div style="margin-bottom:14px">Robby the robot and Dusty the vacuum are '
-      + 'about 700&nbsp;KB of 3D models — more than an artifact may carry. '
-      + 'Hand them over once and this browser will remember them.</div>'
-      + '<div style="margin-bottom:14px">Drop <span style="font-family:ui-monospace,monospace">'
-      + 'toontalk-3d-models.json</span> anywhere on this page, or</div>'
-      + '<button id="ttPick" style="font:inherit;font-size:13px;color:#eafff0;'
-      + 'background:#2f6b43;border:none;border-radius:8px;padding:8px 16px;'
-      + 'cursor:pointer">Choose the file…</button>'
-      + '<div id="ttErr" style="margin-top:12px;color:#f0b429;min-height:1.2em"></div>'
-      + '</div>');
-
-    var err = function (m) {
-      var e2 = document.getElementById('ttErr');
-      if (e2) e2.textContent = m;
+    var fresh = function () {
+      say(
+        '<div style="max-width:30rem;margin:0 auto;text-align:center;line-height:1.55">'
+        + '<div style="font-size:15px;color:#e6ecf7;margin-bottom:10px">'
+        + 'ToonTalk 3D needs its characters</div>'
+        + '<div style="margin-bottom:14px">Robby the robot and Dusty the vacuum are '
+        + 'about 700&nbsp;KB of 3D models — more than an artifact may carry. '
+        + 'Hand them over once and this browser will remember them.</div>'
+        + '<div style="margin-bottom:14px">Drop <a href="' + PACK_URL + '" '
+        + 'target="_blank" rel="noopener" style="color:#7fd3c6">'
+        + 'toontalk-3d-models.json</a> anywhere on this page, or</div>'
+        + '<button id="ttPick" style="font:inherit;font-size:13px;color:#eafff0;'
+        + 'background:#2f6b43;border:none;border-radius:8px;padding:8px 16px;'
+        + 'cursor:pointer">Choose the file…</button>'
+        + '<div id="ttErr" style="margin-top:12px;color:#f0b429;min-height:1.2em">'
+        + '</div>'
+        + '<div style="margin-top:18px;font-size:12px;color:#8b93a1">It comes '
+        + 'with the source, at<br>' + PACK_URL + '</div>'
+        + '</div>');
     };
+
+    var accept = function (text) {
+      unpack(text);                                   // throws if it is wrong
+      say('Loading…');
+      done();
+      // the keep happens after the app has what it needs, so a refusal here
+      // delays nothing
+      gzip(text)
+        .then(function (buf) {
+          localStorage.setItem(KEY, b64.from(new Uint8Array(buf)));
+        })
+        .catch(function (e) {
+          console.warn('models not kept in this browser:', e && e.message);
+        });
+    };
+
+    if (kept) {
+      gunzip(b64.to(kept))
+        .then(function (text) { unpack(text); say('Loading…'); done(); })
+        .catch(function () {
+          try { localStorage.removeItem(KEY); } catch (e) {}
+          fresh();
+        });
+      return;
+    }
+    fresh();
+
     var read = function (file) {
       if (!file) return;
-      err('Reading…');
-      file.text().then(function (t) { accept(t); say('Loading…'); done(); })
-        .catch(function (e2) { err(String(e2.message || e2)); });
+      note('Reading…');
+      file.text().then(accept).catch(function (e) {
+        note(String((e && e.message) || e));
+      });
     };
 
     // A dynamically created, never-attached input: a static hidden one never
