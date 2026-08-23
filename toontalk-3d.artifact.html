@@ -19000,7 +19000,14 @@ const martyReplySchema = () => ({
 // that sails past a status check and dies at JSON.parse. So everything that
 // can go wrong is caught and told apart here, and every one of them means the
 // same thing to the visitor: sign in on claude.ai, or give Marty a key.
-class HereTrouble extends Error {}
+// Two failures that look alike and are not. BLOCKED means the request never
+// left the page -- the frame's own security policy refused the host -- and no
+// amount of signing in will change that. REFUSED means it reached the server
+// and was turned away, which signing in does fix. Offering the same advice for
+// both would send half the people who see it on a pointless errand.
+class HereTrouble extends Error {
+  constructor(msg, kind) { super(msg); this.kind = kind; }
+}
 async function hereThink(sys, q) {
   let res;
   try {
@@ -19011,18 +19018,24 @@ async function hereThink(sys, q) {
         messages: [...martyHistory, { role: 'user', content: q }] }),
     });
   } catch {
-    throw new HereTrouble('nothing answered at all');
+    throw new HereTrouble('the call never left the page', 'blocked');
   }
-  if (res.status === 401 || res.status === 403) throw new HereTrouble('not signed in');
-  if (!res.ok) throw new HereTrouble('the mothership said ' + res.status);
+  if (res.status === 401 || res.status === 403) {
+    throw new HereTrouble('it wants somebody signed in', 'signedout');
+  }
+  if (!res.ok) throw new HereTrouble('the mothership said ' + res.status, 'server');
   const raw = await res.text();
-  if (!raw.trim()) throw new HereTrouble('an empty answer');
+  if (!raw.trim()) throw new HereTrouble('an empty answer', 'signedout');
   let data;
   try { data = JSON.parse(raw); }
-  catch { throw new HereTrouble('an answer that was not an answer'); }
-  if (data.error) throw new HereTrouble(data.error.message || 'refused');
+  // the signed-out shape: not an error status, not empty, and not JSON either
+  catch { throw new HereTrouble('an answer that was not an answer', 'signedout'); }
+  if (data.error) {
+    const m = data.error.message || 'refused';
+    throw new HereTrouble(m, /auth|credential|api key/i.test(m) ? 'signedout' : 'server');
+  }
   const out = (data.content || []).map(c => c.text || '').join('');
-  if (!out.trim()) throw new HereTrouble('an empty answer');
+  if (!out.trim()) throw new HereTrouble('an empty answer', 'signedout');
   return out;
 }
 async function nanoThink(sys, q) {
@@ -19064,7 +19077,16 @@ const MARTY_PROVIDERS = {
   here: { label: 'Claude \u2014 no key, in a Claude artifact', say: 'Claude, keylessly',
           model: 'claude-sonnet-5', keyless: true },
 };
-const martyProv = () => localStorage.getItem('tt3d.marty-provider') || 'claude';
+// Framed by somebody else's origin -- which is what a published artifact is,
+// and what the manual's own same-origin demo frames are not. Used only to pick
+// a sensible FIRST brain: inside an artifact the keyless route needs no setup
+// at all, while anywhere else it cannot work and a key is the honest default.
+const framedElsewhere = () => {
+  try { return window.self !== window.top && !window.top.location.origin; }
+  catch { return true; }               // reading it threw: a foreign top
+};
+const martyProv = () => localStorage.getItem('tt3d.marty-provider')
+  || (framedElsewhere() ? 'here' : 'claude');
 const martyKeyOf = (p) => (localStorage.getItem('tt3d.marty-key.' + p)
   ?? (p === 'claude' ? localStorage.getItem('tt3d.marty-key') : null) ?? '').trim();
 const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
@@ -19115,6 +19137,9 @@ function manualFor(manual, q, budget) {
     + ' is not among them, say you are not sure rather than guessing.)';
 }
 let martyHistory = [], martyToldOffline = false;
+// null, or 'blocked' | 'signedout' | 'server' -- what went wrong last time the
+// keyless route was tried, so the panel can offer the right way out
+let martyHereTrouble = null;
 async function martyThink(q) {
   const prov = martyProv();
   const nano = prov === 'nano';
@@ -19245,7 +19270,10 @@ async function askMarty(q) {
   martySay(q, 'you');
   let reply = null;
   const doneThinking = martyThinkingStart();
-  try { reply = await martyThink(q); }
+  try {
+    reply = await martyThink(q);
+    if (martyHereTrouble) { martyHereTrouble = null; martyModeLine(); }
+  }
   catch (e) {
     // A brain over the network can fail for want of a network as easily as for
     // want of a key; say which, and carry on with the phrasebook, which still
@@ -19254,11 +19282,17 @@ async function askMarty(q) {
     doneThinking();                    // stop thinking before saying it went wrong
     // Chrome's own model is not somewhere to be reached, so a failure there is
     // never the network and never the key.
+    if (e instanceof HereTrouble) { martyHereTrouble = e.kind; martyModeLine(); }
     martySay(e instanceof HereTrouble
-      ? 'No key was needed and none was the trouble \u2014 I got ' + e.message + '. '
-        + 'The keyless route borrows the claude.ai session of whoever is reading '
-        + 'this, so it wants you signed in there, in a published artifact. '
-        + 'Otherwise pick a brain with a key, or the Gemini inside Chrome.'
+      ? (e.kind === 'blocked'
+          ? 'The keyless route was stopped before it left the page \u2014 this frame\u2019s '
+            + 'own rules refuse to call out. Signing in would not help; nothing was '
+            + 'sent. Pick a brain with a key, or the Gemini inside Chrome.'
+          : e.kind === 'signedout'
+          ? 'The keyless route reached Claude and was turned away \u2014 ' + e.message + '. '
+            + 'It borrows the claude.ai session of whoever is reading this, so it '
+            + 'needs you signed in there.'
+          : 'Claude answered, but not with an answer \u2014 ' + e.message + '.')
       : martyProv() === 'nano'
       ? 'The little brain inside Chrome would not answer — ' + (e.message || e.name)
         + '. My phrasebook it is; the demonstrations are all still real.'
@@ -19341,6 +19375,7 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<input id="martyModel" placeholder="model" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '<div id="martyNano" style="margin-top:6px;display:none"></div>'
+  + '<div id="martyHere" style="margin-top:6px;display:none"></div>'
   + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
   + '<input id="martyKey" type="password" placeholder="API key\u2026" '
@@ -19432,6 +19467,7 @@ function martyModeLine() {
   if (!el) return;
   el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
   martyNanoRow();
+  martyHereRow();
   // Whether the built-in model is ready is only knowable by asking, and asking
   // takes a moment -- so the line is written first and corrected if need be.
   if (martyProv() !== 'nano' || !nanoAPI()) return;
@@ -19448,6 +19484,68 @@ function martyModeLine() {
     }
   }).catch(() => {});
 }
+// A way out of the keyless route's two failures, shown only when there IS one
+// -- and only offering the sign-in trip when signing in is what would fix it.
+// A refusal to leave the page is the frame's own policy, and no account
+// changes that.
+//
+// Note what the wording does NOT promise. Reloading the artifact reloads this
+// frame, not the page around it that carries the session, so somebody who
+// signs in elsewhere and reloads here sees no change at all. The button tries
+// the outer page first and the words fall back to the browser's own reload.
+function martyHereRow() {
+  const el = document.getElementById('martyHere');
+  if (!el) return;
+  el.textContent = '';
+  el.style.display = 'none';
+  if (martyProv() !== 'here' || !martyHereTrouble) return;
+  el.style.display = '';
+
+  const note = document.createElement('div');
+  note.style.cssText = 'color:#f0b429;margin-bottom:6px';
+  if (martyHereTrouble === 'blocked') {
+    note.textContent = 'This frame refuses to call out at all, so the keyless '
+      + 'route cannot work here. Signing in would not change it \u2014 choose '
+      + 'another brain above.';
+    el.appendChild(note);
+    return;                                   // no button: none would help
+  }
+  note.textContent = martyHereTrouble === 'signedout'
+    ? 'Claude turned the call away. This route borrows the claude.ai session of '
+      + 'whoever is reading, so it needs you signed in there.'
+    : 'Claude answered with an error. Trying again may be enough.';
+  el.appendChild(note);
+
+  if (martyHereTrouble !== 'signedout') return;
+
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+  const btn = document.createElement('button');
+  btn.textContent = 'Sign in to claude.ai';
+  btn.style.cssText = 'background:#2f6b43;border:none;border-radius:8px;color:#eafff0;'
+    + 'padding:6px 10px;cursor:pointer;font:inherit';
+  btn.onclick = () => window.open('https://claude.ai/login', '_blank', 'noopener');
+  const again = document.createElement('button');
+  again.textContent = 'Try again';
+  again.style.cssText = 'background:#2b3546;border:none;border-radius:8px;color:#cdd8e8;'
+    + 'padding:6px 10px;cursor:pointer;font:inherit';
+  again.onclick = () => {
+    martyHereTrouble = null;
+    martyToldOffline = false;
+    martyHereRow();
+    martySay('Trying the keyless route again\u2026');
+    askMarty('Say hello in one short sentence.');
+  };
+  row.append(btn, again);
+  el.appendChild(row);
+
+  const after = document.createElement('div');
+  after.style.cssText = 'margin-top:6px;color:#9fb0c8';
+  after.textContent = 'Signed in? Reload the whole page with the browser\u2019s own '
+    + 'reload button \u2014 reloading just this panel will not pick up the new session.';
+  el.appendChild(after);
+}
+
 // Chrome will not begin the download except from a real click, and it is a
 // download of gigabytes -- so it gets a button of its own, with the size said
 // out loud, rather than happening because a child asked a question.
