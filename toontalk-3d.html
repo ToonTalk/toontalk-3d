@@ -10505,10 +10505,10 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<button id="martyClose" title="Close" style="background:none;border:none;color:#9fb0c8;cursor:pointer;font-size:15px">\u2715</button></div>'
   + '<div id="martyLog" style="max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>'
   + '<div id="martyCtl" style="display:none;gap:6px;margin-bottom:8px"></div>'
-  + '<form id="martyForm" style="display:flex;gap:6px">'
+  + '<div id="martyForm" style="display:flex;gap:6px">'
   + '<input id="martyIn" autocomplete="off" placeholder="Ask, or \u201cshow me birds\u201d\u2026" '
   + 'style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit">'
-  + '<button style="background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer">Ask</button></form>'
+  + '<button type="button" id="martyAsk" style="background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer">Ask</button></div>'
   + '<details style="margin-top:8px;color:#9fb0c8"><summary style="cursor:pointer">How Marty thinks</summary>'
   + '<div id="martyMode" style="margin-top:6px;color:#cdd8e8"></div>'
   + '<div style="margin-top:6px">Without a brain his replies are <b>canned lines from a '
@@ -10804,7 +10804,7 @@ function askWho(switching = false) {
   veil.id = 'whoCard';
   veil.style.cssText = 'position:fixed;inset:0;z-index:60;display:grid;place-items:center;'
     + 'background:rgba(8,10,14,.72);backdrop-filter:blur(2px)';
-  const card = document.createElement('form');
+  const card = document.createElement('div');
   card.className = 'card';
   card.style.cssText = 'position:static;min-width:280px;max-width:92vw;display:flex;'
     + 'flex-direction:column;gap:8px';
@@ -10838,7 +10838,7 @@ function askWho(switching = false) {
     row.appendChild(no);
   }
   const ok = document.createElement('button');
-  ok.type = 'submit';
+  ok.type = 'button';
   ok.className = 'go';
   ok.textContent = switching ? 'Switch' : 'Start';
   row.appendChild(ok);
@@ -10847,8 +10847,7 @@ function askWho(switching = false) {
   document.body.appendChild(veil);
   input.focus();
   input.select();
-  card.onsubmit = (e) => {
-    e.preventDefault();
+  const accept = () => {
     const name = input.value.trim();
     if (!name) return input.focus();
     veil.remove();
@@ -10856,6 +10855,10 @@ function askWho(switching = false) {
     setUser(name);
     if (!same) swapNotebook();
   };
+  ok.onclick = accept;
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); accept(); }
+  });
   // keystrokes here are typing, not workshop commands
   for (const ev of ['keydown', 'keyup', 'keypress', 'pointerdown', 'click']) {
     veil.addEventListener(ev, (e) => e.stopPropagation());
@@ -10872,6 +10875,9 @@ function swapNotebook() {
   ensureMainNotebook();
   refreshUI();
 }
+// What the Ask button, the Enter key and the microphone all call. Not a form
+// submission: see the note in askWho.
+let martyAskNow = () => {};
 let martyGreeted = false;
 function toggleMartyPanel() {
   const on = martyUI.style.display === 'none';
@@ -10949,7 +10955,7 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
         const t = e.results[0]?.[0]?.transcript?.trim();
         if (t) {
           document.getElementById('martyIn').value = t;
-          document.getElementById('martyForm').requestSubmit();
+          martyAskNow();
         }
       };
       rec.onerror = (e) => { martySay('The microphone said: ' + (e.error || 'no')); };
@@ -10969,6 +10975,24 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   if (nanoOpt && !nanoAPI()) {
     nanoOpt.disabled = true;
     nanoOpt.textContent = 'Gemini Nano \u2014 not in this browser';
+  }
+  // Outside an artifact the keyless Claude is not a choice at all -- there is
+  // nothing to carry the call -- so it leaves the list rather than sitting in
+  // it as an option that always fails. A preference left over from a run that
+  // WAS in an artifact falls back to the ordinary keyed Claude.
+  //
+  // Two tests, not one. The hook decides whether the call can be MADE, and
+  // that is what picks the default. But an artifact whose runtime this build
+  // has not met would then hide the one brain worth offering there, so the
+  // option also stays whenever the page is served from the artifact host at
+  // all -- both runtimes are on claudeusercontent.com -- and explains itself
+  // if it fails.
+  const onArtifactHost = /(^|\.)claudeusercontent\.com$/.test(location.hostname);
+  if (!hasAiHook() && !onArtifactHost) {
+    provEl.querySelector('option[value="here"]')?.remove();
+    if (localStorage.getItem('tt3d.marty-provider') === 'here') {
+      localStorage.setItem('tt3d.marty-provider', 'claude');
+    }
   }
   const showProv = () => {
     provEl.value = martyProv();
@@ -10991,6 +11015,10 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
     martySay('Switched to ' + MARTY_PROVIDERS[provEl.value].say + ' as my brain'
       + (keyless || martyKeyOf(provEl.value) ? '.' : ' \u2014 it still needs its key.'));
   };
+  document.getElementById('martyAsk').onclick = () => martyAskNow();
+  document.getElementById('martyIn').addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); martyAskNow(); }
+  });
   modelEl.onchange = () => {
     const v = modelEl.value.trim();
     if (v) localStorage.setItem('tt3d.marty-model.' + provEl.value, v);
@@ -11005,8 +11033,7 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
     martyModeLine();
     martySay(v ? 'Key saved in this browser \u2014 now I can really talk.' : 'Key cleared \u2014 back to my phrasebook.');
   };
-  document.getElementById('martyForm').onsubmit = (ev) => {
-    ev.preventDefault();
+  martyAskNow = () => {
     const q = document.getElementById('martyIn').value.trim();
     if (!q) return;
     document.getElementById('martyIn').value = '';
