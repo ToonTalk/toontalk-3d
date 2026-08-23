@@ -10274,14 +10274,14 @@ const martyReplySchema = () => ({
 class HereTrouble extends Error {
   constructor(msg, kind) { super(msg); this.kind = kind; }
 }
-async function hereThink(sys, q) {
+async function hereThink(sys, q, history = null, cap = 900) {
   let res;
   try {
     res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: martyModelOf('here'), max_tokens: 900, system: sys,
-        messages: [...martyHistory, { role: 'user', content: q }] }),
+      body: JSON.stringify({ model: martyModelOf('here'), max_tokens: cap, system: sys,
+        messages: [...(history ?? martyHistory), { role: 'user', content: q }] }),
     });
   } catch {
     throw new HereTrouble('the call never left the page', 'blocked');
@@ -10828,10 +10828,47 @@ function martyHereRow() {
 
   const after = document.createElement('div');
   after.style.cssText = 'margin-top:6px;color:#9fb0c8';
-  after.textContent = 'Signed in? Reload the whole page with the browser\u2019s own '
-    + 'reload button \u2014 reloading just this panel will not pick up the new session.';
+  after.textContent = 'Sign in and come back to this tab \u2014 I check by myself when '
+    + 'you return. If I still cannot hear Claude, reload the whole page with the '
+    + 'browser\u2019s own reload button; reloading just this panel will not pick up '
+    + 'the new session.';
   el.appendChild(after);
 }
+
+// Signing in happens in ANOTHER tab, and coming back is the moment to find out
+// whether it worked. Ken signed in and the panel went on saying he had not,
+// until he reloaded -- which the advice below had told him to do, so he did.
+// The app can just look: on returning to the tab, if the keyless route is
+// sitting in the signed-out state, it quietly asks Claude for one word. If the
+// answer comes, the trouble clears itself and he is told; if it does not,
+// nothing is said, because nothing has changed.
+//
+// It is a real call with no history and a five-token ceiling, not a liveness
+// ping: a signed-out session answers SOMETHING, and only parsing it tells the
+// two apart (that is what hereThink's own classification is for).
+let hereProbing = false;
+async function hereRecheck() {
+  if (hereProbing) return false;
+  if (martyProv() !== 'here' || martyHereTrouble !== 'signedout') return false;
+  hereProbing = true;
+  try {
+    await hereThink('Answer with the single word: yes.', 'Are you there?', [], 5);
+  } catch {
+    return false;                          // still turned away: say nothing
+  } finally {
+    hereProbing = false;
+  }
+  martyHereTrouble = null;
+  martyToldOffline = false;
+  martyHereRow();
+  martyModeLine();
+  martySay('You\u2019re signed in now \u2014 I can hear Claude again. Ask me anything.');
+  return true;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') hereRecheck();
+});
+addEventListener('focus', () => hereRecheck());
 
 // Chrome will not begin the download except from a real click, and it is a
 // download of gigabytes -- so it gets a button of its own, with the size said
