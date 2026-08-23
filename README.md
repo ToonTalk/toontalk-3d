@@ -316,12 +316,42 @@ anything over about a megabyte, silently), and the models are parsed out of
 memory rather than fetched, since a page opened from disk may not fetch even a
 `data:` URI of its own making.
 
-Published there, Marty gains a brain that needs **no key and no account**:
-the messages endpoint answers keylessly, borrowing the claude.ai session of
-whoever is reading. It is the first option in his panel. A reader who is
-signed out is refused — not with a tidy 401 but with a body that is not JSON —
-so that case is caught by name and explained rather than reported as a model
-hiccup.
+### Two artifact runtimes, two builds
+
+"A claude.ai artifact" turns out to be two different places, and the workshop
+cannot be the same file in both.
+
+A **Claude Code artifact** — the frame you get from this tool — is roomy: the
+packed 2.3 MB build publishes and runs. Its `fetch` is the browser's own and a
+call to Anthropic is refused before it leaves, so Marty there needs a key like
+anywhere else. (`window.claude` does exist, but it is a capability kernel —
+`claude.use('downloads')` and such — with no completion in it.)
+
+A **chat artifact** — the kind made by uploading a file to claude.ai and asking
+Claude to copy it into an artifact — is the one that carries the keyless call:
+the messages endpoint answers, borrowing the claude.ai session of whoever is
+reading, so Marty gains a brain that needs **no key and no account** and it is
+the first option in his panel. A reader who is signed out is refused — not with
+a tidy 401 but with a body that is not JSON — so that case is caught by name and
+explained rather than reported as a model hiccup. But the publish size there is
+far tighter than 2.3 MB.
+
+```bash
+python build_chat_artifact.py
+```
+
+writes `toontalk-3d.chat.html` (about 500 KB) and `toontalk-3d-models.json`
+(about 1 MB). The small file is what goes to claude.ai. It sheds the two things
+that made the packed build large: three.js comes from `cdn.jsdelivr.net`, which
+the chat frame's content-security policy allows where `unpkg` — what the source
+uses — is not on the list; and the models are handed over by **the reader**,
+dropped on the page or chosen from a picker the first time, and kept in that
+browser afterwards. The idea is Ken's, from Comic Chat, where the same trick
+carries several megabytes of artwork into a frame that cannot fetch it.
+
+Nothing in the app knows the difference: `loadModel` already preferred a model
+in memory over a fetched one, so the loader only has to fill that in before the
+module starts.
 
 ## Assets
 

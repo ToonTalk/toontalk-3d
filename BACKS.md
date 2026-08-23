@@ -149,6 +149,69 @@ by nature (trig, non-integer powers); anything touching inexact is inexact.
   or an `≈` mark. The trailing ellipsis is already taken (digits that don't
   fit) and must not be overloaded.
 
+## Imported things, and one way in
+
+The workshop already takes things from outside: **Import file** and a drop on
+the page both accept a saved thing or a saved world. That door should widen to
+**any medium** rather than grow a second door beside it. Drop a `.png` and a
+picture lands in your hand; a `.glb` and a model does; an `.mp3`, a sound; a
+`.world.json`, the world it always did. One gesture, sorted by what arrived —
+and the file picker's `accept` list is then the honest statement of what the
+workshop can hold.
+
+That matters more than it sounds. A child who has learnt that *everything* is
+a thing you can hold, name, file in the notebook, put in a box, give to a bird
+and hand to a robot should not meet a second, separate mechanism the first time
+they want a photograph in their program.
+
+### Models
+
+A model is the case that pays for the whole design, because it is the first
+thing whose back has genuinely interesting verbs. It arrives as a `.glb` —
+the format the workshop's own characters already are — and becomes a thing:
+holdable, copyable, fileable, droppable into a box or a room.
+
+Its back carries a bird, and the messages are boxes with a selector pad:
+
+    [turn, y, 30]            a rotation, in degrees, about one axis
+    [move, x, 1.5]           the same shape as a picture's move
+    [scale, 2]               bigger, uniformly
+    [go to, x, 1, y, 0, z, 2]   somewhere, in one message
+    [play, "walk"]           an animation clip the file already carries
+    [stop]
+    [query, y, reply-bird]   as everywhere else: put a bird in and wait
+    [parts, reply-bird]      the named nodes, as a box of text pads
+
+Three notes on the shape of that list.
+
+**`play` is what a model has and a picture has not.** A `.glb` may carry
+animation clips by name, and naming one is the whole interface — no timeline,
+no keyframes. `[parts, reply-bird]` answers with the names inside the file, so
+a child can find out what a model will answer to by asking it, rather than
+being told.
+
+**Rotation needs an axis, and that is a hole, not a new kind.** `[turn, y, 30]`
+is the same selector-box idiom as everything else, and `y` is an ordinary text
+pad. Nothing here needs a new sort of thing to exist.
+
+**Gauges fall out unchanged.** A heading gauge for a model is the same idiom
+as for a picture: a live number kept current by a sync robot watching the
+model, made writable by a controller dozing on its event nest. The model's
+author exposes `turn` and `play`; whether anybody mints a gauge from them is
+somebody else's choice, later.
+
+The event nest on a model's back announces what a model can notice —
+`[dropped-on-top, bird]`, `[clicked, bird]`, `[finished, "walk"]` when a clip
+ends. That last one is what makes a sequence of animations expressible without
+a clock.
+
+### What this costs
+
+Import-by-medium and models are **+1–2 days** on top of the estimate below, and
+they depend on backs and live numbers being there first — the bird and the
+event nest are the whole interface, so there is nothing to build until those
+exist. Sounds share almost all of it: a sound is a model with fewer verbs.
+
 ## How much work
 
 Estimated at the pace this project has actually run (the engine/view split
@@ -192,6 +255,11 @@ epic. Natural order: 1–2 first (the semantics), 3 second (the payoff),
   a bird-to-a-robot is remote control. Doors deliberately not yet opened.
 - Keyboard focus.
 - The precision constant for inexact computation.
-- Pictures' full verb vocabulary.
+- Pictures' full verb vocabulary, and how far a model's differs from it.
+- Whether an imported model's own node names are worth exposing as things
+  in their own right (a robot could then hold an arm), or whether `parts`
+  answering with pads is enough.
+- What a dropped file that the workshop cannot read should do. Refusing it
+  is easy; saying what it *would* have taken is the kind thing.
 - What a live number shows before its first delivery.
 - The exact look of inexact numbers (that they look different is settled).

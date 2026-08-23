@@ -263,17 +263,17 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Seven days, 126 commits and one 10,400-line file — and
+  <p class="standfirst">Eight days, 136 commits and one 11,100-line file — and
     the day the project stopped guessing at ToonTalk and went and read it.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;22 August 2026</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;23 August 2026</p>
 </header>
 
 <dl class="ledger">
-  <div><dt>Built in</dt><dd>7 days</dd></div>
-  <div><dt>Commits</dt><dd>126</dd></div>
+  <div><dt>Built in</dt><dd>8 days</dd></div>
+  <div><dt>Commits</dt><dd>136</dd></div>
   <div><dt>The app</dt><dd>1 file</dd></div>
-  <div><dt>Lines</dt><dd>10,414</dd></div>
-  <div><dt>Examples</dt><dd>11 worlds</dd></div>
+  <div><dt>Lines</dt><dd>11,116</dd></div>
+  <div><dt>Examples</dt><dd>18 worlds</dd></div>
 </dl>
 
 <p class="alsoby">Ken Kahn is writing about this project from the other side of
@@ -581,7 +581,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
-    <div class="rail">22 Aug<br>f363405 &rarr; 5dad1bd</div>
+    <div class="rail">22 Aug<br>f363405 &rarr; 6645a44</div>
     <div class="body">
       <div class="head">
         <span class="badge k">↻</span>
@@ -701,6 +701,119 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         “it wandered off” rather than “you are holding it”. It waits at the
         visible spot now, until the pointer next moves over the workshop, and
         says so. Being right is not the same as being legible.</p>
+
+      <h3>Seven rooms, and forty couriers</h3>
+      <p>The day ended somewhere else entirely: Ken asked for the seven
+        <em>Exploring Infinity</em> activities from the WebAssembly ToonTalk —
+        the counting numbers, the evens, the squares, a list that maps another
+        list, one that filters, one that zips two together. Each is a robot that
+        takes the head of an endless list, does one thing to it, and hangs the
+        tail back on its own nest: a coroutine, written by demonstration.</p>
+      <p>Only one robot can stand at the open bench, so seven of them out in the
+        room would have to be run a stage at a time. Each got a <b>room</b> of
+        its own instead, and rooms all run at once. That immediately found a
+        real bug. A room may run forty rounds in a single slice, and each round
+        sends a bird — so forty couriers were in the air together, and they
+        landed in whatever order their flights happened to end, which is to say
+        backwards. The stacks came out
+        <span class="mono">2, 40, 38, …, 4</span>. Every bird now carries the
+        number of the flight it was sent on and waits its turn at the nest;
+        they land <span class="mono">2, 4, 6, …, 40</span>.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">23 Aug<br>190a28a &rarr; cd17b1f</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">↻</span>
+        <h2>Two kinds of artifact, and the faces of a number</h2>
+      </div>
+      <p>The eighth day opened with a correction from the person who would
+        know. A note had gone into the documentation saying that rooms only run
+        at a quiet moment — while nobody is dragging anything and no robot out
+        in the open is mid-step. Ken read it and said: that was not true of
+        houses in the original ToonTalk. It was not, and the restriction had
+        never been a design decision; it was a scheduling convenience that had
+        been written up as though it were a rule. It came out. Houses run while
+        you work, which is also what makes a switched-on house look switched on
+        rather than stalled.</p>
+
+      <h3>The frame is two frames</h3>
+      <p>Then a puzzle that had been mis-solved twice. Published as an artifact,
+        Marty could offer a brain that needs <em>no key and no account</em> —
+        the messages endpoint answers, borrowing the reader's own claude.ai
+        session. Except that it did not answer, and the app blamed the reader
+        for being signed out. Ken pointed at Comic Chat, where the same trick
+        works, and the difference turned out not to be the code at all: a
+        <b>chat artifact</b> and a <b>Claude Code artifact</b> are two different
+        frames. The keyless call lives in the first. The second has a
+        <span class="mono">window.claude</span> too, but it is a capability
+        kernel — downloads, storage — with no completion in it, which is exactly
+        why testing for the object's <em>presence</em> gave the wrong answer.
+        The route is chosen by the shape of what is on the page now, not by the
+        fact that something is.</p>
+      <p>Which leaves a size problem, because the packed build is 2.3&nbsp;MB
+        and a chat artifact will not take it. The answer is Ken's own, from
+        Comic Chat a month earlier: ask the reader for the assets. A third
+        build, <span class="mono">build_chat_artifact.py</span>, writes a
+        500&nbsp;KB file that takes three.js from a CDN the chat frame allows
+        and asks whoever opens it to drop the two models in, once, and keeps
+        them in that browser afterwards. Nothing inside the app knows the
+        difference — the model loader already preferred a model it had over one
+        it would have to fetch.</p>
+
+      <h3>Houses wear their names</h3>
+      <p>Then a batch from the infinity activities, all of them about being
+        able to <em>see</em>. The instructions name the houses and the names
+        were painted on the side, where you are not standing; they are on the
+        front now, above the door, in a larger hand, and the walls grew to make
+        room for them. Nest piles taller than a screen showed an ellipsis in
+        the middle, which was honest but fixed — you can walk the window up and
+        down the pile now and read any part of it.</p>
+      <p>And the request that turned into the day's real work: let the user
+        <b>turn what they are holding</b>, to see the other faces of a number.
+        Arrow keys, quarter turns, which is easy. What is not easy is that a
+        cube turned by quarters lands the face you asked for on its side or on
+        its head about half the time, and that is a poor reward for asking to
+        read it. So after every turn the thing rolls about the line of sight to
+        whichever quarter leaves the writing upright — found from the meshes
+        themselves, since the six faces are real planes and the one facing you
+        is the one whose normal points back at the camera. No table of
+        orientations to get wrong.</p>
+
+      <h3>What is on the bottom of a number</h3>
+      <p>Numbers had a blank face on the bottom, and Ken asked what might go
+        there — continued fractions, perhaps? It was the right suggestion, and
+        it took four rounds to draw properly. The list form
+        <span class="mono">[3; 7, 16]</span> is exact and tells a beginner
+        nothing; what a continued fraction <em>is</em> only shows in the
+        staircase, each term with the whole of the rest tucked under its own
+        bar. The first attempt drew the first term underneath the operation
+        badge. The second ran off the right edge and silently lost a term. The
+        third left the last denominator hanging off the side of its bar. Each
+        was measured against the rendered face rather than argued about — a
+        dump of which pixel rows have ink in them settles in one step what
+        looking at a screenshot does not.</p>
+      <p>The other faces came out of the same batch: a decimal expansion that
+        says how long it repeats (355/113 repeats after 112 digits, which is
+        why it looked as though it did not), a prime factorisation that stops
+        by <em>work done</em> rather than by size so it no longer goes blank on
+        a big number, and a message for 1 that says
+        <span class="mono">1 has no prime factors</span> rather than the
+        <span class="mono">no primes at all</span> that Ken thought a beginner
+        would read as an accusation.</p>
+
+      <h3>The small robot, at last</h3>
+      <p>A robot occasionally worked at its sleeping size, and it had resisted
+        two fixes across two days because both were aimed at the wrong world.
+        The check that catches a robot left small ran <em>after</em> stepping
+        out of the room it had been working in — out in the workshop, where the
+        robots inside a house are not reachable. It runs inside now, and Ken's
+        report was precise enough to say so: the robot in front was full size
+        and the one in the house was not.</p>
     </div>
   </div>
 </section>
@@ -782,7 +895,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 126 commits between 16 and 22
+  <p>Written from the repository's own history: 136 commits between 16 and 23
   August 2026, and the audit file they kept arguing with. Every prompt of the
   conversation is in <a href="the-ledger.html">the ledger</a>.</p>
   <p>Ken Kahn's own account of the project is

@@ -134,7 +134,7 @@
   <h1>The Ledger</h1>
   <p class="standfirst">Every prompt of this conversation, in full and in
     order, with what each one actually changed.</p>
-  <p class="meta">143 entries &middot; 16&ndash;22 August 2026</p>
+  <p class="meta">169 entries &middot; 16&ndash;23 August 2026</p>
 </header>
 
 <ol class="log">
@@ -656,7 +656,7 @@
     <p class="prompt">The ledger and making of had 117 entries several hours ago - we've done several more since. please update this</p>
     <p class="summary">Rebuilt both: found the extractor had been missing every message sent mid-turn, and recounted.</p>
   </div></li>
-  <li class="day"><span class="day-date">22 Aug</span><span class="day-title">The back of things, and a day on a tablet</span><span class="day-blurb">A design argued out before it was built, a licence, a keyless brain in Chrome — and then a tablet found six things wrong.</span></li>
+  <li class="day"><span class="day-date">22 Aug</span><span class="day-title">The back of things, and a day on a tablet</span><span class="day-blurb">A design argued out before it was built, a licence, a keyless brain in Chrome, a tablet that found six things wrong — and, late on, the infinity activities.</span></li>
   <li class="entry"><span class="n"></span><div>
     <p class="prompt">Other than sensors in ToonTalk the language has no possibility of concurrent side effects to the same entity. Many sensors both read (e.g. x position of a picture) and write (an update changes the picture’s position). At least sensor updates can be atomic.<br>A cleaner alternative is that a bird is associated with a picture’s x position and it can take messages to query or update the value. This is like actors and concurrent constraint programming which inspired ToonTalk’s computation model. It is also like how APIs work.<br>Sensors are much easier to use and understand. But they aren’t user definable. A user can build a message interface to a capability that bottoms out in sensors. For example, a Logo turtle can be defined to accept forward and turn messages but can’t be given a sensor interface. The sensor interface pushes towards Cartesian geometry over turtle geometry.<br>Do you have any ideas on how to have the best of both?</p>
     <p class="summary">Sensors are the one place ToonTalk allows concurrent side effects to the same thing, and they are not user-definable. Argued the case out rather than coding it.</p>
@@ -716,6 +716,111 @@
   <li class="entry"><span class="n"></span><div>
     <p class="prompt">also update<br><span class="cut">[the ledger's day list, pasted back for updating — 7 lines]</span></p>
     <p class="summary">Brought the making-of and this ledger up to date, and gave the ledger a home in the repository instead of a temporary folder.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Can you make the ledger have my entire prompts except when they include copy and paste from generated text or the console or the like</p>
+    <p class="summary">The ledger stopped quoting the first sentence of each prompt and started carrying every one whole — only pasted material is cut, and each cut says what it was and how long.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Making of starts with "Six days, 119 commits and one 9,700-line file " which is out-of-date. Just after it says 10,414 lines</p>
+    <p class="summary">Recounted the making-of's opening line, which had been claiming six days and 119 commits two days after that stopped being true.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Can you make an index.html that is an alias for toontalk-3d.html</p>
+    <p class="summary">An index.html that hands anybody arriving at the site's root the workshop itself.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Is there a way to receive bug reports from users of 3D ToonTalk? And to find out how often it is run?</p>
+    <p class="summary">A Report a bug button that opens a GitHub issue with the browser and the build already filled in — and, for how often it runs, GitHub's own Traffic tab rather than anything the app phones home about.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">sure</p>
+    <p class="summary">Wired both: the button, and a note on where the visit counts live.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I see a surprising number of clones - would these be AI agents doing it?</p>
+    <p class="summary">The clone count is almost certainly machines — CI, mirrors and crawlers clone; people who read the page do not.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Can you create a folder in examples that implements the examples from https://toontalk.github.io/tt-wasm/tt-wasm/build/infinity/index.html - Resort Infinity relies upon houses in a way that might be difficult to implement but the rest should work</p>
+    <p class="summary">examples/infinity: the seven Exploring Infinity activities, each robot in a room of its own so they all run at once. Resort Infinity is left out.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>for activity 1 I ran it a bit stopped ran it a bit more and stopped and the stacks are out of order in the screenshot. Also the house is switched off and can't be switched on so the numbers weren't appearing on the stacks until I clicked stop and then many quickly appeared</p>
+    <p class="summary">Two bugs from activity 1, both real. Couriers were arriving out of order because a slice could put forty of them in the air at once, and a room whose door you had opened was drawn as if switched off.</p>
+  </div></li>
+  <li class="day"><span class="day-date">23 Aug</span><span class="day-title">Two kinds of artifact, and the faces of a number</span><span class="day-blurb">Houses run while you work and wear their names; a keyless brain that turned out to depend on which frame you are in; and a number you can turn in your hand.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">why "Rooms only work at a quiet moment" - that wasn't true of houses in the original ToonTalk</p>
+    <p class="summary">He was right and the note was wrong: houses in the original ran while you worked. The rule that made rooms wait for a quiet moment came out, and DIVERGENCE.md gained the step.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">activity 1 is working fine even when I enter the door of the first house. I'll test the others soon.<br>As you can see in https://docs.google.com/document/d/1Dta9hKRzaGDGY1zTjz-_wPygdR3HacoYZlzMH-JMN2E/edit?tab=t.0 a month ago we dealt with the size limits and inability of Claude artifacts to fetch resources by asking the user to drop a zip file on the app at the start (it is then cached). Would that work for the 3D ToonTalk? If so can you also put this in your memory for future projects.</p>
+    <p class="summary">The Comic Chat trick — ask the reader to drop the assets in once and keep them — fits here too, and is now written down in memory for the next project.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷</p>
+    <p class="summary">The probe that overturned a settled belief: twenty thousand frames at a steady sixty a second, published as an artifact. The loop was never what broke.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>the artifact works fine<br>A minor problem I noticed is that because the provider width has increased with the addition of Gemini Nano the model name gets truncated<br>When the robot's actions are few it is ok that the save/load buttons are at the bottom but because of the possibility of long scripts I think the save/load buttons should be at the top? Or maybe folded into the menu bar at the bottom.<br>Maybe there should be 3 vertical dots at the end and move reshape table and report a bug there (any maybe others?)<br>So can we add the option to use Claude API keyless for Marty?</p>
+    <p class="summary">Four small things and one large: the provider list widened, the save and load buttons moved into the bottom row, a ⋮ took the rarely-used controls, and Marty gained a keyless Claude.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Is running in the artifact is keyless Claude the default?<br><span class="cut">[the app's own message, pasted back — 1 line]</span><br>I am logged in but for a user that isn't can't we provide a button to open a tab where they can log in?</p>
+    <p class="summary">Made keyless the default inside an artifact, and offered a sign-in link — but only where signing in is what is missing.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">But Claude keyless works in the comic chat artifact: https://claude.ai/public/artifacts/cc4d5dc2-f74d-4199-80e4-ca8d83024ba8 - can you read the source code?<br><br><span class="cut">[the keyless-call probe output, pasted — 18 lines]</span></p>
+    <p class="summary">Read the Comic Chat artifact and found the difference: it is a chat artifact, a different frame from this one, and the keyless call lives there.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Once we settle these issues let's wait until I've done testing before pushing changes.<br>The way the Comic Chat artifact was made is you produced an HTML file that I uploaded to claude.ai and prompt it to copy the file to an artifact.<br><br><span class="cut">[the runtime-hooks probe output, pasted — 14 lines]</span></p>
+    <p class="summary">Probed the frame properly rather than guessing from the presence of window.claude, which here is a capability kernel with no completion in it. The route is chosen by the shape of what is on the page.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>I'm confused - the toontalk-3d-artifact.html is too big for claude.ai so should I upload toontalk-3d.html to it?</p>
+    <p class="summary">The packed build is too big for a chat artifact — which is the whole reason the third build exists.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>Infinity activities are working.<br>Instructions refer to named houses which aren't visible (they are on the side of the house)<br>Maybe the walls should be taller so there is room for text on the front wall above the door.<br>Activity 4 gave me an idea for the list operation examples - add another team that converts lists to boxes for clarity so both forms of the result are inspectable<br>I like the "ellipsis" in nest stacks but wonder if there could be a user action that would move where it is so the user can explore any portion of the stack without having a too tall tower<br>the attached screenshot was how I was holding a house but couldn't set it down as normal but eventually could and don't know what was different - I can't reproduce this<br>Another user action should be to rotate what one is holding - it would be nice to rotate numbers and stacks of them to see other faces more easily. Do you have an idea what would be a good user action for this?</p>
+    <p class="summary">Houses wear their names on the front and the walls grew to make room; numbers can be turned in the hand; nest piles can be walked through; and the list examples gained a team that shows the answer as a box.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>clicking the ...n<br>run alongside<br>The rotation left and right is good - the up and down is weird - not sure how good it is and when clicked twice the stack is upside down but not very visible since at first it is under the table and then when moved out only a few elements are visible (see screenshot 2)</p>
+    <p class="summary">Rotating up and down left the thing on its head and half under the table. Kept the turn, added the fix: after every turn the thing rolls to whichever quarter leaves the writing upright.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I forgot to mention the text on the house should have a bigger font</p>
+    <p class="summary">A bigger font for the name on the house.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>The arrow keys for a number should always continue to work to keep rotating. Numbers currently have a blank face on the bottom - is there another representation that might make sense? continued fractions? something else?<br>I loaded reverse. It ran fine but there wasn't the house converting the stack to a box<br>And as I keep seeing occasionally the robot became small behind the desk as in the screenshot</p>
+    <p class="summary">The arrow keys keep turning a number however far it has gone, and the blank bottom face became the continued fraction — his suggestion, and the right one.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>📷<br>📷<br>📷<br>I think we can improve the holding message. Instead of "113 /" it should either be "÷ 113" or "divide by 113". The rest of message is fine for integers with the default + operator but if the user has already constructed a number with an operator it should list the other permitted operators and "say what it does" isn't needed - but if there is room it could mention the arrow keys.<br>The continued fraction representation should be more graphical (with nested horizontal lines indicating nested fractions like the screenshot from Wikipedia)<br>Screenshot 4 does the decimal expansion of 355/113 - doesn't it repeat?<br>"	7 — prime" is good but " 7 is prime" is better<br>the prime decomposition face is good but screenshot 5 shows it became blank for a large number<br>I worry that "1 — no primes at all" may be confusing to beginners</p>
+    <p class="summary">Six on the faces of a number: the holding message says ÷ 113 rather than 113 /, the continued fraction is drawn as a staircase of bars, the decimal says how long it repeats, and the factor face stopped going blank on a number too large to factor quickly.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">go ahead with list to box</p>
+    <p class="summary">Built the List-to-Box team, and gave it to every list example.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>The 3 dots are in the wrong place<br>Is there a way the user can see a face right side up? Upside down makes sense for rotation - maybe while holding a number and rotating it if the face in front of the user is upside down or rotated the cube is rotated automatically to make it easier to read<br>screenshot 2 shows a number that was wiggling when the mouse had moved to another screen</p>
+    <p class="summary">Turning a number now leaves the face you asked for the right way up — found from the meshes themselves rather than a table of orientations.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">when I ran reverse the robot in front was full size until the very end but the other robot worked while small - the list to box worked fine. When they finished both were small.</p>
+    <p class="summary">The robots that worked at sleeping size were inside houses, and the check for it ran in the world outside, where their names are not known.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>continued fraction is better but still not good</p>
+    <p class="summary">Measured the continued fraction against its own face rather than guessing at it: it had been starting under the operation badge and running off the right edge.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>43/30 is nearly perfect the 4 is unnecessarily offset 355/113 looks fine<br>Go ahead and commit after fixing this.<br>Let’s add to BACK.md the possibility of importing 3D models - you probably know better what the bird API would be like for them.<br>And since users can drop a saved object or world or load it via the import button, why not enhance those to support any kind of media?<br>Then generate an HTML for claude.ai to copy into an artifact</p>
+    <p class="summary">The last denominator centres under its bar. Then: 3D models in BACKS.md, one door for every kind of media, and a third build small enough for a chat artifact.</p>
   </div></li>
 </ol>
 
