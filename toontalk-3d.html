@@ -9022,11 +9022,23 @@ loadModel('robot_v4.glb', (gltf) => {
     sndRow.append(sb, sv);
     menu.appendChild(sndRow);
     refreshSnd();
+    // The single-file build travels alone: opened from disk or published as
+    // an artifact there is no manual.html or infinity.html sitting beside it,
+    // so a companion page is fetched from the site instead of a 404.
+    const companion = (page) => (location.protocol === 'file:'
+        || /claudeusercontent\.com$/.test(location.hostname))
+      ? 'https://toontalk.github.io/toontalk-3d/' + page : page;
+    const ib = document.createElement('button');
+    ib.id = 'infBtn';
+    ib.textContent = '\u267E\uFE0F Infinity activities';
+    ib.title = 'Seven guided activities on the sizes of infinite sets \u2014 build the robot teams yourself, with the finished worlds to peek at.';
+    ib.onclick = () => window.open(companion('infinity.html'), '_blank');
+    menu.appendChild(ib);
     const hb = document.createElement('button');
     hb.id = 'helpBtn';
     hb.textContent = 'Manual';
     hb.title = 'Open the manual — a guided tour with live workshops to try things in.';
-    hb.onclick = () => window.open('manual.html', '_blank');
+    hb.onclick = () => window.open(companion('manual.html'), '_blank');
     menu.appendChild(hb);
     // A GitHub issue, pre-filled with what a report usually needs and none of
     // what it doesn't -- no location, no account, nothing about the person
@@ -9082,6 +9094,23 @@ loadModel('robot_v4.glb', (gltf) => {
   worldReady = true;
   const demo = new URLSearchParams(location.search).get('demo');
   if (demo) setupDemo(demo);
+  // ?world=examples/infinity/... -- a bare relative path only, fetched from
+  // this same origin, so the activity sheets can put a finished world on the
+  // table without a download-and-import round trip.
+  const wantWorld = new URLSearchParams(location.search).get('world');
+  if (wantWorld && !/^[a-z]+:|^\/\/|\.\./i.test(wantWorld)) {
+    fetch(wantWorld, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(rec => {
+        if (!rec || rec.kind !== 'world') return;
+        const tooNew = fileTooNew(rec, 'workshop');
+        if (tooNew) return sayAttn(tooNew);
+        worldIn(rec);
+        loadedWorldName = wantWorld.split('/').pop();
+        say('Workshop loaded: ' + loadedWorldName);
+      })
+      .catch(() => {});
+  }
   frameScene();
   refreshLibrary();
   renderProgram(); refreshUI();
@@ -10065,6 +10094,101 @@ function martyWorldText() {
   if (b.length) lines.push('On the table: ' + b.join('; ') + '.');
   return lines.join('\n');
 }
+// === The Exploring Infinity activities ======================================
+// Opened from infinity.html the workshop knows which activity the learner is
+// on: ?activity=N at boot, and a message from the sheet when they turn to
+// another page (the sheet never reloads this frame -- the work is in here).
+// What changes is Marty: he is briefed with the activity's goal and asked to
+// play the researcher in the room, not the answer key.
+let activityN = +(new URLSearchParams(location.search).get('activity') || 0);
+addEventListener('message', (e) => {
+  if (e.origin !== location.origin) return;
+  if (e.data && e.data.tt3d === 'activity') activityN = +e.data.n || 0;
+});
+
+const ACTIVITY_PEDAGOGY = `
+=== ACTIVITY MODE ===
+The visitor is working through an "Exploring Infinity" activity sheet -- the
+cardinality of infinite sets, after Kahn's WebLabs sequence. You are the
+researcher in the room, not the answer key:
+- NEVER state the mathematical conclusion outright (never say flatly "the two
+  sets are the same size"). Lead with questions instead: "what came out on the
+  nest?", "would that ever stop?", "who is 3 dancing with?".
+- The tool of thought is the DANCING PARTNERS metaphor: two collections are
+  the same size when every member of each has exactly one partner in the
+  other. Pairing replaces counting; that is the whole method.
+- Ask "what would happen if the robots ran forever?" often -- the question the
+  entire sequence turns on.
+- Predict, test, generalise: before they run something, ask what they expect.
+- Stuck BUILDING is different from stuck THINKING. For building, give the one
+  smallest mechanical step from the manual, then hand the job back; the sheet
+  has fuller hints under "If you get stuck". For thinking, never resolve a
+  paradox for them -- name the two pulls and ask which they believe.
+- A finished world for this activity exists and the sheet can load it. If the
+  rooms of the finished world are already on the table, explain freely what is
+  there and how it works. If they are building their own, do not describe the
+  finished construction unasked.`;
+
+const ACTIVITY_BRIEFS = {
+  1: `Activity 1, "The even numbers, two ways". Goal: the evens -- a proper
+subset of the naturals -- put in one-to-one correspondence with all of them:
+Galileo's 1638 paradox. They build Add 1 (box [number, bird]: hand the bird a
+copy, add 1 -- the naturals forever), Doubler (box [nest, bird]: take the
+number, double it by dropping a x2 on it, give it away), and Split (box [nest,
+bird A, bird B]: hand the number to the bird in the middle hole, then SWAP the
+two birds -- the swap is the alternation, there is no counter). Doubler makes
+the evens out of EVERY natural; Split's B nest gets the evens out of every
+OTHER natural. The misconception to probe, never to correct outright: "using
+half the numbers must make a smaller set".`,
+  2: `Activity 2, "Combining sequences part 1". Goal: the integers are
+countable. Negator (box [nest, bird]: drop a -1x on each number) and Merge
+(box [nest, nest, bird]: give away the number on the FIRST nest, then swap the
+two nests -- and it dozes when the first nest is empty, so neither input runs
+ahead; the interleave is strictly fair). Probe: will every integer appear
+after finitely many steps? Where is 0 in the dance?`,
+  3: `Activity 3, "A variety of sequences". Goal: ANY sequence you can
+generate one term at a time is countable by construction. They invent their
+own sequences (Squares: copy the number, press *, drop it back on itself),
+then build Match Maker (box [nest, count, bird]: pack the two-hole box [count,
+term], hand it over, add 1 to count) -- the box IS the pairing, a dance card
+with the partners' names on it. Encourage invention: fractions in one,
+negatives in another, one fast, one slow.`,
+  4: `Activity 4, "All fractions between 0 and 1". Goal: you cannot list
+fractions in size order -- between any two there is another, so there is no
+first step -- but BY DENOMINATOR the walk reaches everything: 1/2, 1/3, 2/3,
+1/4... A team of two, and the branch is a SCALE weighing numerator against
+denominator: Next Numerator's condition is the scale tipping right (hand out
+the [n,d] box, numerator up one); when the scale BALANCES that condition stops
+matching and the team falls through to Next Denominator (numerator SET back to
+1, denominator up one). Nobody counts; the scale is the entire conditional.
+Duplicates -- 2/4 arriving as 1/2 -- are worth noticing and wondering about,
+not fixing here.`,
+  5: `Activity 5, "Rationals greater than 1". Goal: the lazy way wins. Every
+proper fraction a/b has a reciprocal b/a above 1, so ONE three-step robot --
+Divides 1: fresh 1, drop the incoming number on it with divide, hand out 1/n
+-- turns the whole of Activity 4's output into the other set, with the pairing
+already built in: 1/2 with 2, 2/3 with 3/2. Pat ("more numbers above 1 than in
+(0,1)") and Sally ("infinitely many unit intervals above 1") are for arguing
+with, not settling for them.`,
+  6: `Activity 6, "All the rationals" -- the capstone, built entirely of parts
+already made: All Fractions + Box to Number (activity 4) + Divides 1 (activity
+5) + Merge (activity 2). Five rooms, one lever. Out of the last nest comes a
+single sequence in which every positive rational arrives after finitely many
+steps -- and that is what countable MEANS. The wonder to keep alive: the
+rationals are dense, no rational has a next one, and yet here they are in a
+queue.`,
+  7: `Activity 7, "Rationals in any interval". Goal: density and scale. One
+arithmetic robot maps the fractions onto any interval without thinning or
+crowding -- x2 lands them in (0,2), +10 in (10,11), divide by 2 in (0,1/2) --
+because every output came from exactly one input. Joe's "doubling thins them
+out" is the misconception to probe. Any interval, however short, holds a full
+copy of the fractions.`,
+};
+const martyActivityText = () => {
+  const b = ACTIVITY_BRIEFS[activityN];
+  return b ? ACTIVITY_PEDAGOGY + '\n\nThe activity they are on now: ' + b : '';
+};
+
 const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits sets its value, the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), TEXT PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
 
 Rules for you:
@@ -10300,6 +10424,7 @@ async function martyThink(q) {
   const sysAt = (budget) => {
     const manual = manualFor(whole, q, budget);
     return MARTY_SYSTEM
+      + martyActivityText()
       + (manual ? '\n\n=== THE MANUAL (authoritative; answer from it, and say you are unsure rather than inventing anything it does not say) ===\n'
           + manual + '\n=== end of manual ===' : '')
       + '\n\nOn the table right now:\n' + martyWorldText();
@@ -11098,7 +11223,8 @@ window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_D
 
 window.__nano = {
   THREE, scene, camera, renderer, stations,
-  worldOut, worldIn, setThingLabel,
+  worldOut, worldIn, setThingLabel, martyActivityText,
+  get activityN() { return activityN; },
   get ready() { return worldReady; },
   get state() { return { mode, busy, program, queued: queue.length,
     held: held ? (held.userData.kind === 'number'

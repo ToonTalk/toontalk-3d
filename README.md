@@ -353,6 +353,27 @@ Nothing in the app knows the difference: `loadModel` already preferred a model
 in memory over a fetched one, so the loader only has to fill that in before the
 module starts.
 
+## The activity sheets
+
+```
+infinity.html
+```
+
+is a guided version of `examples/infinity/`: the seven *Exploring Infinity*
+activity sheets beside a live workshop, reachable from the app's ⋮ menu. The
+sheets pose the original sequence's challenges and leave the building to the
+learner — construction help sits folded under "If you get stuck", and each
+activity ends with a button that loads the finished world from
+`examples/infinity/` (armed twice, since it replaces the table).
+
+Turning a page never reloads the workshop pane — the learner's work is in
+there. Instead the sheet posts the activity number across, and the app feeds
+Marty a briefing: the activity's goal, what the robots look like, and a
+pedagogy — lead with questions, pairing over counting, never state the
+conclusion, smallest possible hint when they are stuck building. `?activity=N`
+does the same for a workshop opened on its own, and `?world=<relative path>`
+loads a world at boot (bare relative paths only; it is a same-origin fetch).
+
 ## Assets
 
 The `.py` files are the source of truth, **not** the `.blend` files: each one

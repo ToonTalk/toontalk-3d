@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exploring Infinity — ToonTalk 3D</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♾️</text></svg>">
+<style>
+  /* the workshop's own palette, so the two panes read as one program */
+  :root {
+    --ink: #eef1f6; --dim: #97a2b3; --panel: #151a22; --deep: #12151b;
+    --edge: rgba(255,255,255,.12); --accent: #ff7a5c; --go: #6ee7a8; --think: #7fd4ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; background: var(--deep);
+         color: var(--ink); font: 14px/1.55 "Segoe UI", system-ui, sans-serif; }
+
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+           padding: 8px 14px; background: var(--panel); border-bottom: 1px solid var(--edge); }
+  header h1 { font-size: 15px; font-weight: 650; margin: 0; }
+  header .sub { color: var(--dim); font-size: 12px; }
+  .spacer { flex: 1; }
+  a.plain { color: var(--dim); text-decoration: none; font-size: 12.5px; }
+  a.plain:hover { color: var(--ink); text-decoration: underline; }
+
+  /* Sheet | Workshop, for screens that cannot hold both */
+  .seg { display: none; border: 1px solid var(--edge); border-radius: 8px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 12.5px; color: var(--ink); background: #1c232e;
+                border: 0; padding: 5px 13px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--edge); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #1b0e08; font-weight: 600; }
+
+  main { flex: 1; display: flex; min-height: 0; }
+  nav { width: 232px; flex: none; overflow-y: auto; padding: 10px 8px 20px;
+        border-right: 1px solid var(--edge); background: var(--panel); }
+  nav h2 { font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+           letter-spacing: .08em; color: var(--dim); margin: 12px 6px 6px; }
+  nav h2:first-child { margin-top: 2px; }
+  .item { font: inherit; text-align: left; width: 100%; cursor: pointer; color: var(--ink);
+          background: #1a212b; border: 1px solid var(--edge); border-radius: 8px;
+          padding: 6px 9px; margin-bottom: 4px; display: block; }
+  .item:hover { border-color: rgba(255,255,255,.3); }
+  .item[aria-current="true"] { border-color: var(--accent); background: #232028; }
+  .item b { display: block; font-size: 13px; font-weight: 600; }
+  .item span { display: block; color: var(--dim); font-size: 11.5px; line-height: 1.35; margin-top: 1px; }
+
+  #sheetwrap { flex: 1.1; min-width: 0; overflow-y: auto; border-right: 1px solid var(--edge); }
+  #sheet { max-width: 46rem; margin: 0 auto; padding: 18px 22px 60px; }
+  #ttwrap { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--deep); }
+  #ttwrap .panehead { display: flex; align-items: center; gap: 8px; padding: 5px 10px;
+                      background: var(--panel); border-bottom: 1px solid var(--edge);
+                      font-size: 12px; color: var(--dim); }
+  iframe { flex: 1; width: 100%; border: 0; background: var(--deep); }
+
+  /* ---- the sheet itself -------------------------------------------------- */
+  section { display: none; }
+  section.on { display: block; }
+  #sheet h2 { font-size: 21px; margin: 8px 0 2px; line-height: 1.25; }
+  #sheet h2 .n { color: var(--accent); }
+  #sheet h3 { font-size: 15px; margin: 26px 0 6px; }
+  #sheet h3 .t { color: var(--dim); font-weight: 500; font-size: 12px; margin-right: 8px;
+                 text-transform: uppercase; letter-spacing: .06em; }
+  #sheet p, #sheet li { color: #cfd6e0; }
+  #sheet li { margin-bottom: 5px; }
+  #sheet code, .kbd { font-family: ui-monospace, Consolas, monospace; font-size: .93em;
+                      background: #202835; border-radius: 5px; padding: 1px 5px; }
+  .kbd { border: 1px solid var(--edge); border-bottom-width: 2px; }
+  .challenge { border: 1px solid var(--accent); border-radius: 10px; padding: 10px 14px;
+               margin: 14px 0 4px; background: rgba(255,122,92,.07); }
+  .challenge b { color: var(--accent); font-size: 11px; text-transform: uppercase;
+                 letter-spacing: .08em; display: block; margin-bottom: 3px; }
+  .think { border-left: 3px solid var(--think); padding: 2px 0 2px 14px; margin: 14px 0; }
+  .think b { color: var(--think); font-size: 11px; text-transform: uppercase;
+             letter-spacing: .08em; display: block; margin-bottom: 3px; }
+  .think p { margin: 5px 0; }
+  details.hint { margin: 10px 0; border: 1px solid var(--edge); border-radius: 9px;
+                 background: #171d26; }
+  details.hint summary { cursor: pointer; padding: 7px 12px; color: var(--go);
+                         font-size: 13px; user-select: none; }
+  details.hint[open] summary { border-bottom: 1px solid var(--edge); }
+  details.hint .body { padding: 8px 14px 10px; }
+  details.hint ol { margin: 4px 0; padding-left: 20px; }
+  .box-say { color: var(--dim); font-size: 13px; }
+  .marty { color: var(--go); }
+  .peek { margin-top: 30px; border-top: 1px dashed var(--edge); padding-top: 14px;
+          font-size: 13px; color: var(--dim); }
+  .peek button { font: inherit; font-size: 13px; color: #eafff0; background: #2f6b43;
+                 border: none; border-radius: 8px; padding: 6px 13px; cursor: pointer; }
+  .peek button.arm { background: #7a2f1c; }
+  .foot { margin-top: 34px; font-size: 12px; color: var(--dim);
+          border-top: 1px solid var(--edge); padding-top: 10px; }
+
+  #navBtn { display: none; font: inherit; font-size: 12.5px; color: var(--ink);
+            background: #1c232e; border: 1px solid var(--edge); border-radius: 8px;
+            padding: 5px 10px; cursor: pointer; }
+
+  /* one pane at a time when there is no room for two */
+  @media (max-width: 1080px) {
+    .seg { display: flex; }
+    body[data-pane="sheet"] #ttwrap { display: none; }
+    body[data-pane="sheet"] #sheetwrap { border-right: 0; }
+    body[data-pane="tt"] #sheetwrap, body[data-pane="tt"] nav { display: none; }
+  }
+  @media (max-width: 760px) {
+    nav { position: fixed; inset: 41px 0 0 0; width: auto; z-index: 5; display: none; }
+    nav.open { display: block; }
+    #navBtn { display: inline-block; }
+  }
+</style>
+</head>
+<body data-pane="sheet">
+
+<header>
+  <button id="navBtn">☰ Activities</button>
+  <h1>♾️ Exploring Infinity</h1>
+  <span class="sub">seven activities on the sizes of infinite sets</span>
+  <span class="spacer"></span>
+  <div class="seg" role="group" aria-label="Pane">
+    <button id="segSheet" aria-pressed="true">Sheet</button>
+    <button id="segTT" aria-pressed="false">Workshop</button>
+  </div>
+  <a class="plain" href="toontalk-3d.html">the workshop on its own →</a>
+</header>
+
+<main>
+<nav id="nav">
+  <h2>Start here</h2>
+  <button class="item" data-id="a0"><b>How these activities work</b>
+    <span>What you need to know before Activity&nbsp;1</span></button>
+  <h2>The seven activities</h2>
+  <button class="item" data-id="a1"><b>1 · The even numbers, two ways</b>
+    <span>A proper subset that is still the same size</span></button>
+  <button class="item" data-id="a2"><b>2 · Combining sequences — part 1</b>
+    <span>Making all the integers, and counting them</span></button>
+  <button class="item" data-id="a3"><b>3 · A variety of sequences</b>
+    <span>Every sequence you can build is countable</span></button>
+  <button class="item" data-id="a4"><b>4 · All fractions between 0 and 1</b>
+    <span>The obvious enumerations fail; this one works</span></button>
+  <button class="item" data-id="a5"><b>5 · Rationals greater than 1</b>
+    <span>Reciprocals — and a pairing falls out of it</span></button>
+  <button class="item" data-id="a6"><b>6 · Combining sequences — part 2</b>
+    <span>Merging to get all the rationals — the capstone</span></button>
+  <button class="item" data-id="a7"><b>7 · Rationals between any two numbers</b>
+    <span>Scale and shift the unit interval; density</span></button>
+</nav>
+
+<div id="sheetwrap"><div id="sheet">
+
+<!-- ======================================================= start here -->
+<section id="a0" class="on">
+  <h2>How these activities work</h2>
+  <p>These seven sessions are about a single question: <b>how do you compare the
+  sizes of collections that never end?</b> They follow the
+  <a class="plain" style="font-size:inherit" href="https://toontalk.github.io/tt-wasm/tt-wasm/build/infinity/index.html">Exploring
+  Infinity sequence</a> written for the original ToonTalk, rebuilt for this
+  workshop. You will build everything out of a few parts:</p>
+  <ul>
+    <li><b>Birds and nests.</b> Take a nest from its stack and set it down: the
+      egg hatches into a bird — a pair for life. Give the bird anything and she
+      flies it home to her nest. A sequence, here, is a nest that keeps
+      receiving numbers.</li>
+    <li><b>Robots.</b> Take a mini robot from its stack, set it on the table,
+      and drop a box on it: its thought bubble opens and you are teaching it.
+      Do the job <em>once</em>; it remembers the steps and repeats them as long
+      as what it is given still fits its thought.</li>
+    <li><b>Rooms.</b> A robot on the open bench blocks the bench. Give each
+      robot a <em>room</em> instead — drop the robot in, then its box — and pull
+      the lever: rooms all work at once, and birds fly through their roofs.
+      That is how you run a whole pipeline of robots together.</li>
+  </ul>
+  <div class="think"><b>The one big idea</b>
+    <p>Imagine a room full of dancers, everyone dancing with exactly one
+    partner. You can tell the two groups are the same size <em>without counting
+    either one</em>. That trick — pairing instead of counting — is the only way
+    to compare collections that never end, and every activity here turns on
+    it.</p></div>
+  <p><b>Work in the pane on the right</b> (or press <i>Workshop</i> above on a
+  small screen). Marty — the little green Martian by the table — has been told
+  which activity you are on: ask him anything, and he will nudge rather than
+  answer. Each activity also has a <span class="marty">finished world</span>
+  you can peek at when you are done — or stuck. Building your own first is the
+  whole point.</p>
+  <p class="box-say">Boxes are drawn here as <code>[ In | Out ]</code> — a box
+  with two holes, the first labelled In, the second Out. To give a hole a
+  label, write a text pad and drop it low on the front of the hole.</p>
+  <p>Start with <b>Activity 1</b>, on the left.</p>
+</section>
+
+<!-- ======================================================= activity 1 -->
+<section id="a1">
+  <h2><span class="n">Activity 1</span> · Computing the even numbers in two ways</h2>
+  <div class="challenge"><b>Challenge</b>
+    Can the same thing be made using <em>all</em> the numbers once — and also
+    using every <em>other</em> number once?</div>
+
+  <h3><span class="t">Task A</span>Doubling each term in a sequence</h3>
+  <p>Train a robot called <b>Doubler</b> that takes each number arriving on a
+  nest and gives a bird twice that number. Its box is
+  <code>[ In&nbsp;nest | Out&nbsp;bird ]</code>.</p>
+  <details class="hint"><summary>If you get stuck: training Doubler</summary>
+    <div class="body"><ol>
+      <li>Take a nest from its stack and set it down; wait for the egg to
+        hatch. Take a <em>second</em> nest and hatch it too — its bird is your
+        Out bird; its nest is where answers will land.</li>
+      <li>Take a box, and with it in hand press <span class="kbd">2</span> for
+        two holes. Put the <em>first</em> nest in the left hole and the second
+        nest's <em>bird</em> in the right hole.</li>
+      <li>The robot needs something to double while you teach it: drop a number
+        on the first nest's bird so a delivery is sitting on the nest.</li>
+      <li>Mini robot from its stack → set it on the table → drop the box on
+        it. The thought bubble opens.</li>
+      <li>Take the number off the nest and set it down on a free spot. Take a
+        fresh number from the stack, press <span class="kbd">2</span> then
+        <span class="kbd">*</span> — it is now a ×2 — and drop it on your
+        number. Doubled.</li>
+      <li>Pick the doubled number up and drop it on the bird. Click outside
+        the bubble to finish.</li>
+    </ol></div></details>
+  <p>Test it: give the In bird a number and watch the Out nest. Then a
+  different number. Clear the Out nest, then give the In bird 1, 2, 3, 4, 5.
+  What appears?</p>
+
+  <p>Now let's give Doubler <em>all</em> the natural numbers. We cannot type
+  them all in, so a robot will make them: <b>Add&nbsp;1</b>, whose box is
+  <code>[ number | Numbers&nbsp;bird ]</code>. Each round he hands the bird a
+  copy of his number, then adds 1 to it. Run him forever and the bird delivers
+  1, 2, 3, … forever.</p>
+  <details class="hint"><summary>If you get stuck: training Add 1</summary>
+    <div class="body"><ol>
+      <li>Box with two holes: a number set to <b>1</b> in the left hole, a
+        bird in the right (hatch a fresh nest; the nest is where the naturals
+        will arrive).</li>
+      <li>Drop the box on a fresh mini robot. In the bubble: take the number
+        out of the left hole and set it on <b>Mimi the copier's</b> top
+        platform. Click to take the copy from her tray, and drop the copy on
+        the bird.</li>
+      <li>Take the original back off Mimi and return it to the left hole.</li>
+      <li>Take a fresh <b>1</b> from the number stack and drop it on the
+        number in the left hole — dropping adds, so the count goes up.
+        Finish.</li>
+    </ol></div></details>
+  <p>Connect them: put the nest that receives Add&nbsp;1's numbers into
+  Doubler's In hole. Give each robot a room of its own (drop the robot into
+  the room, then its box through the roof), set <b>Rounds</b>, and pull the
+  levers.</p>
+  <div class="think"><b>Watch, then think</b>
+    <p>The first numbers coming out of Doubler — did you notice they are all
+    even? Will there <em>ever</em> be an odd one?</p></div>
+
+  <h3><span class="t">Task B</span>Removing every other term</h3>
+  <p>Train a robot called <b>Split</b> with the box
+  <code>[ Input&nbsp;nest | A&nbsp;bird | B&nbsp;bird ]</code>. As numbers
+  arrive, Split gives them <em>alternately</em> to bird A and bird B.</p>
+  <details class="hint"><summary>If you get stuck: Split needs no counter</summary>
+    <div class="body"><p>The trick: always give the number to the bird in the
+      <em>middle</em> hole — and then swap the two birds over, so next round
+      the other one is standing there.</p><ol>
+      <li>Take the number off the Input nest, drop it on the bird in hole
+        2 (the middle).</li>
+      <li>Take that bird out and set it on a free spot; move the bird from
+        hole 3 into hole 2; put the parked bird into hole 3. Finish.</li>
+    </ol><p>The swap <em>is</em> the alternation. There is no state anywhere
+      except where the two birds are standing.</p></div></details>
+  <p>Feed Split the same natural numbers (copy Add&nbsp;1's <em>nest</em> on
+  Mimi — a copied nest joins the flock, so both copies receive every
+  delivery). What kind of numbers end up on A's nest? On B's?</p>
+
+  <h3><span class="t">Task C</span>Two ways of making the same thing</h3>
+  <div class="think"><b>Think</b>
+    <p>If all the robots ran forever, would there be any difference between
+    the numbers on B's nest and the numbers on Doubler's Out nest?</p>
+    <p>If there is a difference — what is it? If there is none — how can they
+    be the same sequence, when Doubler uses <em>every</em> natural number and
+    Split sends only <em>half</em> of them to B?</p></div>
+
+  <h3><span class="t">Task D</span>Even numbers dancing with natural numbers</h3>
+  <p>If you saw a room full of children all dancing in pairs, could you tell —
+  <em>without counting</em> — that there were as many on one side as the
+  other? How would you convince someone?</p>
+  <p>Now imagine each number Add&nbsp;1 hands out begins dancing with the
+  number Doubler makes from it: 1 with 2, 2 with 4, 3 with 6, …</p>
+  <div class="think"><b>Think</b>
+    <p>If this went on forever, would every even number have a natural-number
+    partner? Would every natural number have an even partner? What does that
+    say about <em>how many</em> even numbers there are?</p>
+    <p>You may feel pulled both ways. So was Galileo, who wrote about exactly
+    this in 1638. One line of reasoning says the sequences pair up perfectly;
+    another says the evens are only half the naturals. Which do you believe —
+    and what would you say to the other side?</p></div>
+
+  <div class="peek">The finished world has all three robots in rooms, fed by
+    one Add&nbsp;1, with B's nest and Doubler's nest side by side so you can
+    watch them fill at the same rate.
+    <button class="load" data-world="examples/infinity/activity1-even-numbers.world.json">Peek at the finished world</button>
+    <span class="note"></span></div>
+</section>
+
+<!-- ======================================================= activity 2 -->
+<section id="a2">
+  <h2><span class="n">Activity 2</span> · Combining infinite sequences — part 1</h2>
+  <div class="challenge"><b>Claim</b>
+    Pat says there are <em>more</em> negative-and-positive whole numbers than
+    just positive ones. Is Pat right?</div>
+
+  <h3><span class="t">Task A</span>Negating each term</h3>
+  <p>Train <b>Negator</b>, box <code>[ In&nbsp;nest | Out&nbsp;bird ]</code>:
+  every number that arrives goes out with its sign flipped.</p>
+  <details class="hint"><summary>If you get stuck: training Negator</summary>
+    <div class="body"><p>Just like Doubler, but the number you drop on is
+      −1&nbsp;×: take a fresh number, press <span class="kbd">1</span>, then
+      <span class="kbd">-</span> to negate it, then <span class="kbd">*</span>
+      to make it a multiplier. Drop it on the incoming number, and give the
+      result to the bird.</p></div></details>
+  <p>Connect Negator to the naturals from your Add&nbsp;1 robot
+  (Activity&nbsp;1). Robots are connected by birds and nests.</p>
+  <div class="think"><b>Think</b>
+    <p>Will a positive number ever land on Negator's Out nest? Is there any
+    negative integer that would <em>never</em> arrive, if the robots ran
+    forever?</p></div>
+
+  <h3><span class="t">Task B</span>Turning two sequences into one</h3>
+  <p>Train <b>Merge</b>, box
+  <code>[ nest&nbsp;1 | nest&nbsp;2 | Out&nbsp;bird ]</code>: it turns two
+  sequences into one, taking numbers alternately — one from each.</p>
+  <details class="hint"><summary>If you get stuck: Merge is Split's twin</summary>
+    <div class="body"><p>Same trick as Split, on the other side: always take
+      from the <em>first</em> nest, then swap the two nests over.</p><ol>
+      <li>Take the number off nest 1, drop it on the bird.</li>
+      <li>Swap the two nests: nest 1 to a free spot, nest 2 into hole 1,
+        the parked nest into hole 2. Finish.</li>
+    </ol><p>One more thing worth noticing once it runs: when the first nest is
+      empty, Merge dozes rather than skipping ahead. Neither input can run in
+      front of the other — the interleave is strictly fair.</p></div></details>
+  <p>Give Merge the nest receiving the positive integers and the nest
+  receiving the negative ones.</p>
+  <div class="think"><b>Think</b>
+    <p>If Merge ran forever, would <em>every</em> integer come out? If any are
+    missing — what could you do about it?</p></div>
+
+  <h3><span class="t">Task C</span>Integers dancing with natural numbers</h3>
+  <div class="think"><b>Think</b>
+    <p>Merge's output contains every positive and every negative integer. Can
+    you see a way to get all the natural numbers dancing with all the
+    integers — every one with exactly one partner?</p>
+    <p>And what about 0 — who is <em>it</em> dancing with?</p></div>
+
+  <div class="peek">The finished world runs Add&nbsp;1 → Negator → Merge in
+    three rooms; the last nest fills 1, −1, 2, −2, 3, −3, …
+    <button class="load" data-world="examples/infinity/activity2-all-integers.world.json">Peek at the finished world</button>
+    <span class="note"></span></div>
+</section>
+
+<!-- ======================================================= activity 3 -->
+<section id="a3">
+  <h2><span class="n">Activity 3</span> · Generating different infinite sequences</h2>
+  <div class="challenge"><b>Challenge</b>
+    Do all infinite sequences have the same size? What could "the size of an
+    infinite sequence" even mean?</div>
+
+  <h3><span class="t">Task A</span>Invent three sequences of your own</h3>
+  <p>Train robots — reusing any you already have — to generate three infinite
+  sequences, each different. Some ideas from the original sheet:</p>
+  <ul>
+    <li>1, 4, 9, 16, 25, … <span class="box-say">(square each natural)</span></li>
+    <li>0.001, 0.002, 0.003, … <span class="box-say">(multiply each natural by 1/1000)</span></li>
+    <li>1, −1/3, 1/5, −1/7, … <span class="box-say">(reciprocal, alternating sign)</span></li>
+  </ul>
+  <p>Use fractions in at least one and negative numbers in another. Make one
+  grow slowly and one grow fast. Be inventive!</p>
+  <details class="hint"><summary>If you get stuck: Squares, and fractions</summary>
+    <div class="body"><p><b>Squares</b> — take the number off the nest, set it
+      down, copy it on Mimi, hold the copy and press
+      <span class="kbd">*</span>, drop it on the original: n&nbsp;×&nbsp;n.
+      Give the result to the bird.</p>
+      <p><b>A fraction</b> — there is no key for ½. Hold a fresh number, type
+      the <em>denominator</em>, press <span class="kbd">/</span>, and drop it
+      on a number: it divides. 1 with a ÷1000 dropped on it is exactly
+      1/1000, no rounding.</p></div></details>
+  <p>For each sequence, write down the first five numbers, describe it in
+  words, and say whether it contains any duplicates.</p>
+
+  <h3><span class="t">Task B</span>Swap sequences with someone else</h3>
+  <p>Save each sequence-making robot (<i>Save held thing</i> while holding
+  it), and trade files with a classmate — memory sticks, shared drives and
+  email all work. Import theirs with <i>Import file</i>, run them, and answer
+  the same three questions about each: first five numbers, a description in
+  words, any duplicates?</p>
+
+  <h3><span class="t">Task C</span>A dancing partner for every term</h3>
+  <p>Train <b>Match Maker</b>, box
+  <code>[ In&nbsp;nest | count | Dances&nbsp;bird ]</code>. When a number
+  arrives, Match Maker packs the little box
+  <code>[ count | number ]</code>, hands it to the bird, and counts up by one.
+  If the count is 5 and −20 arrives, the bird gets
+  <code>[ 5 | −20 ]</code>.</p>
+  <details class="hint"><summary>If you get stuck: training Match Maker</summary>
+    <div class="body"><ol>
+      <li>Take a fresh box, press <span class="kbd">2</span>, set it on a free
+        spot.</li>
+      <li>Copy the count (middle hole) on Mimi; put the copy in the little
+        box's first hole.</li>
+      <li>Take the number off the In nest; put it in the second hole.</li>
+      <li>Give the little box to the bird.</li>
+      <li>Fresh 1 from the stack, dropped on the count. Finish.</li>
+    </ol></div></details>
+  <p>Run Match Maker on your own sequences and on the ones you imported.</p>
+  <div class="think"><b>Think</b>
+    <p>If the robots ran forever, would every term of the sequence end up
+    dancing with a different natural number? Would every natural number get a
+    partner?</p></div>
+
+  <h3><span class="t">Task D</span>Do all infinite sequences have the same size?</h3>
+  <p>Write your team's answer — on paper or a text pad — to these five, then
+  argue it out with another team:</p>
+  <div class="think"><b>The questions</b>
+    <p>1. When can you say two infinite sequences have the same size?</p>
+    <p>2. Can you give two infinite sequences with <em>different</em> sizes?
+    If not, why not?</p>
+    <p>3. If a sequence repeats itself, might it have only finitely many
+    <em>different</em> terms? Example, or why not?</p>
+    <p>4. Can you describe sequences that <em>cannot</em> be programmed?</p>
+    <p>5. Are there infinite sequences with so many terms they cannot be
+    counted at all?</p></div>
+  <p class="box-say">Keep your answers — Activity 4 onward will test them.
+  (Question 5 is the deepest one; the original sequence reaches it in an
+  eighth activity, on Cantor's diagonal, not yet ported here.)</p>
+
+  <div class="peek">The finished world runs Squares into Match Maker: the
+    pairs nest fills with [1|1], [2|4], [3|9], … — the pairing made visible.
+    <button class="load" data-world="examples/infinity/activity3-sequences-and-pairs.world.json">Peek at the finished world</button>
+    <span class="note"></span></div>
+</section>
+
+<!-- ======================================================= activity 4 -->
+<section id="a4">
+  <h2><span class="n">Activity 4</span> · All the fractions between 0 and 1</h2>
+  <div class="challenge"><b>Challenge</b>
+    Can we generate <em>all</em> the proper fractions?</div>
+  <p>Try listing them in order of size first — in your head. What is the very
+  first fraction after 0? Whatever you name, a smaller one exists. There is no
+  first step to take. So this activity walks a different way: <b>by
+  denominator</b> — 1/2, then 1/3, 2/3, then 1/4, 2/4, 3/4, then 1/5, …</p>
+
+  <h3><span class="t">Task A</span>All the numerators for one denominator</h3>
+  <p>Train <b>Next Numerator</b>. Its box holds a <em>scale</em> weighing the
+  numerator (left pan) against the denominator (right pan), and a bird:
+  <code>[ scale | bird ]</code>. While the numerator is smaller the scale tips
+  right — and that tilt is the robot's condition. Each round it hands the bird
+  the little box <code>[ numerator | denominator ]</code> and adds 1 to the
+  numerator.</p>
+  <details class="hint"><summary>If you get stuck: training Next Numerator</summary>
+    <div class="body"><ol>
+      <li>Take a scale from its stack. Put a 1 in the left pan and a 2 in the
+        right — it tips right. Box with two holes: scale in the first, a bird
+        in the second.</li>
+      <li>Drop the box on a mini robot. In the bubble: fresh box, press
+        <span class="kbd">2</span>, set it down; copy the left-pan number on
+        Mimi into its first hole; copy the right-pan number into its second.</li>
+      <li>Give the little box to the bird.</li>
+      <li>Fresh 1 dropped on the left pan. Finish.</li>
+    </ol><p>A robot trained on a tipping scale remembers <em>the tilt</em>,
+      not the numbers — so it runs on any pair that leans that way, and stops
+      by itself the moment the pans balance.</p></div></details>
+  <p><b>Test:</b> put 1 and 100 on the scale and run. The robot should hand
+  over [1|100], [2|100], … [99|100] — and stop on its own at 99. Why does it
+  stop?</p>
+
+  <h3><span class="t">Task B</span>Predict, test, generalise</h3>
+  <div class="think"><b>Think</b>
+    <p><b>Predict</b>: what sequence comes out if the right pan starts at 89
+    instead? <b>Test</b>: try it. <b>Generalise</b>: explain, in one sentence,
+    what Next Numerator does for <em>any</em> starting pair.</p></div>
+
+  <h3><span class="t">Task C</span>And then the next denominator</h3>
+  <p>Train <b>Next Denominator</b> so the pair can go on forever: when the
+  numerator has caught the denominator up and the scale <em>balances</em>, set
+  the numerator back to 1 and take the denominator up one.</p>
+  <details class="hint"><summary>If you get stuck: the team, and the balance</summary>
+    <div class="body"><ol>
+      <li>Train it on the <em>balanced</em> scale (put equal numbers in the
+        pans first). Take a fresh 1 and, still holding it, type the word
+        <span class="kbd">set</span>; drop it on the left pan, and the pan is
+        <em>set</em> to 1 rather than added to. Then a fresh 1 dropped plainly
+        on the right pan: up one.</li>
+      <li>Drop Next Denominator on Next Numerator: they form a team. The team
+        tries its leader first; while the scale tips, Next Numerator runs, and
+        the moment it balances, Next Numerator no longer matches — so the
+        team falls through to Next Denominator.</li>
+    </ol><p>Nobody counts anything. The scale is the entire conditional, and
+      you can watch it tip.</p></div></details>
+  <p>Package the team in a room with its scale-and-bird box and run it. The
+  bird should deliver [1|2], [1|3], [2|3], [1|4], [2|4], [3|4], [1|5] …</p>
+  <div class="think"><b>Think</b>
+    <p>If the team ran forever, would the bird ever be given two <em>identical</em>
+    boxes? Would every proper fraction eventually be generated? How would you
+    convince a friend — or if you think not, name a fraction that never
+    comes.</p>
+    <p>Are any of the boxes <em>equivalent</em> to each other as fractions,
+    even though the numbers differ? Give a few examples.</p></div>
+
+  <h3><span class="t">Task D</span>From boxes to numbers — and the duplicates</h3>
+  <p>Train <b>Box to Number</b>, box <code>[ In&nbsp;nest | Out&nbsp;bird ]</code>,
+  which takes each <code>[a|b]</code> box and gives the bird the single number
+  a/b.</p>
+  <details class="hint"><summary>If you get stuck: division in place</summary>
+    <div class="body"><p>Take the little box off the nest and set it down.
+      Take the number out of its <em>second</em> hole, press
+      <span class="kbd">/</span> while holding it, and drop it on the number
+      in the first hole: b divides a, exactly — the result is the fraction
+      a/b. Give it to the bird, and let Dusty vacuum the emptied box
+      away.</p></div></details>
+  <p>Watch the numbers arrive: 1/2, 1/3, 2/3, 1/4, <b>1/2</b>, 3/4, … — there
+  is the duplicate, wearing its simplified face.</p>
+  <div class="think"><b>Think</b>
+    <p>The original activity loads a ready-made <i>No Copies</i> team here
+    that lets each fraction through only once. It is not ported yet — so
+    think it instead: what would a robot need to <em>remember</em> to know
+    that 2/4 has been seen before as 1/2? How could you build a memory out of
+    boxes? (This is a genuinely hard build — a good stretch challenge.)</p></div>
+
+  <h3><span class="t">Task E</span>Dancing with the fractions</h3>
+  <div class="think"><b>Think</b>
+    <p>Feed the fractions to Match Maker (Activity&nbsp;3). Do you think all
+    the fractions between 0 and 1 are countable? Write down how you would
+    convince a younger child. What does <em>countable</em> mean, in your own
+    words?</p></div>
+
+  <div class="peek">The finished world runs the All Fractions team into Box to
+    Number; the fractions nest fills by denominator, duplicates and all.
+    <button class="load" data-world="examples/infinity/activity4-all-fractions.world.json">Peek at the finished world</button>
+    <span class="note"></span></div>
+</section>
+
+<!-- ======================================================= activity 5 -->
+<section id="a5">
+  <h2><span class="n">Activity 5</span> · Rational numbers greater than 1</h2>
+  <div class="challenge"><b>Claim</b>
+    Pat says: there must be more numbers between 1 and infinity than between
+    0 and 1. Is Pat right?</div>
+
+  <h3><span class="t">Task A</span>Think before you build</h3>
+  <div class="think"><b>Think</b>
+    <p>One way to make every rational above 1 is to redo all of Activity 4
+    with the comparison the other way round. But there is a much lazier way.
+    Activity 4 made every fraction a/b with a smaller than b. What numbers do
+    you get from <em>b/a</em> instead?</p></div>
+
+  <h3><span class="t">Task B</span>One robot does it</h3>
+  <p>Train <b>Divides 1</b>, box <code>[ In&nbsp;nest | Out&nbsp;bird ]</code>:
+  it takes each number n and gives the bird 1/n — the reciprocal.</p>
+  <details class="hint"><summary>If you get stuck: training Divides 1</summary>
+    <div class="body"><p>Take a fresh 1 from the stack and set it down. Take
+      the incoming number off the nest, press <span class="kbd">/</span> while
+      holding it, and drop it on the 1: the 1 becomes 1/n. Give it to the
+      bird.</p></div></details>
+  <p>Feed it the fractions from Activity 4 and watch: 1/2 becomes 2, 2/3
+  becomes 3/2, 3/4 becomes 4/3 …</p>
+  <div class="think"><b>Think</b>
+    <p>Every fraction went in; what came out? Which numbers above 1 could
+    <em>never</em> appear? Notice you did not just make the new set — you made
+    it already holding hands with the old one: 1/2 with 2, 2/3 with 3/2. The
+    pairing came free. What does that say about Pat's claim?</p>
+    <p>Sally is still uneasy: "There must be as many rationals from 1 to 2 as
+    from 0 to 1. And from 2 to 3. And 3 to 4 — infinitely many intervals, each
+    as big as (0,1). So there must be infinitely times <em>more</em> rationals
+    above 1." Do you agree with Sally? Why, or why not?</p></div>
+
+  <div class="peek">The finished world runs All Fractions → Box to Number →
+    Divides 1: the fractions and their reciprocals land on nests side by side,
+    partner beside partner.
+    <button class="load" data-world="examples/infinity/activity5-above-one.world.json">Peek at the finished world</button>
+    <span class="note"></span></div>
+</section>
+
+<!-- ======================================================= activity 6 -->
+<section id="a6">
+  <h2><span class="n">Activity 6</span> · Combining infinite sequences — part 2</h2>
+  <div class="challenge"><b>Challenge</b>
+    Are <em>all</em> the rational numbers countable?</div>
+
+  <h3><span class="t">Task A</span>All the positive rationals</h3>
+  <p>This is the capstone, and there is nothing new to train — it is made
+  entirely of parts you already built:</p>
+  <ul>
+    <li><b>All Fractions</b> (Activity 4) — every fraction between 0 and 1</li>
+    <li><b>Box to Number</b> (Activity 4) — [a|b] as the number a/b</li>
+    <li><b>Divides 1</b> (Activity 5) — each one turned over: the rationals above 1</li>
+    <li><b>Merge</b> (Activity 2) — one from each side, in strict alternation</li>
+  </ul>
+  <p>Wire them with birds and nests, a room each, and run. Remember Mimi:
+  copying a <em>nest</em> makes a broadcast, so one stream of fractions can
+  feed Merge directly <em>and</em> feed Divides 1 at the same time.</p>
+  <div class="think"><b>Think</b>
+    <p>If everything ran forever, would the number 1 be in the merged
+    sequence? Would it be there more than once?</p></div>
+
+  <h3><span class="t">Task B</span>All the rationals</h3>
+  <p>Use Merge again, and a robot like Negator (Activity&nbsp;2), to produce
+  <em>all</em> the rationals — positive and negative.</p>
+  <div class="think"><b>Think</b>
+    <p>So: can the rational numbers be counted? The rationals are
+    <em>dense</em> — between any two there are infinitely many more, and no
+    rational has a "next one". And yet look at your last nest: there they all
+    are, in a queue, arriving one at a time, every single one after finitely
+    many steps. If you think that settles it, how would you convince someone?
+    If not, what is still missing?</p></div>
+
+  <div class="peek">The finished world is five rooms and one lever: All
+    Fractions → Box to Number → Divides 1 → Merge, every positive rational
+    on the last nest.
+    <button class="load" data-world="examples/infinity/activity6-all-rationals.world.json">Peek at the finished world</button>
+    <span class="note"></span></div>
+</section>
+
+<!-- ======================================================= activity 7 -->
+<section id="a7">
+  <h2><span class="n">Activity 7</span> · Rationals between any two numbers</h2>
+  <div class="challenge"><b>Claim</b>
+    Pat says: there are infinitely many rational numbers between <em>any</em>
+    two rationals — however close. Is Pat right?</div>
+
+  <h3><span class="t">Task A</span>Double every fraction</h3>
+  <p>Take the sequence of all fractions between 0 and 1 (Activity 4, through
+  Box to Number) and connect your <b>Doubler</b> from Activity 1.</p>
+  <div class="think"><b>Think</b>
+    <p>Where do all the doubled fractions land? Any number bigger than 2 in
+    the sequence? Any negative ones?</p>
+    <p>Joe says: "Some rationals between 0 and 2 must be missing, because
+    doubling <em>thins the numbers out</em>." Is he right? If so, name a
+    missing number. If not — what is wrong with "thinning"? (Every output
+    came from exactly one input…)</p>
+    <p>And the mirror question: if a robot <em>halved</em> a sequence with no
+    duplicates, could the result have duplicates?</p></div>
+
+  <h3><span class="t">Task B</span>Predict · test · generalise</h3>
+  <p>Train an <b>Add 10</b> robot — each incoming number plus 10 — and feed it
+  the fractions.</p>
+  <div class="think"><b>Think</b>
+    <p><b>Predict</b>: describe the sequence before you run it.
+    <b>Test</b>: run it. <b>Generalise</b>: what do you get multiplying by
+    1000 instead? By 0.5? By any number at all? Adding −0.5? What is the
+    recipe for landing all the fractions in <em>exactly</em> the interval you
+    want?</p></div>
+  <details class="hint"><summary>If you get stuck: Halve, without a fraction key</summary>
+    <div class="body"><p>To multiply by a half: take a fresh number, press
+      <span class="kbd">2</span> then <span class="kbd">/</span>, and drop it
+      on the incoming number — dividing by 2 <em>is</em> multiplying by ½,
+      exactly.</p></div></details>
+
+  <h3><span class="t">Task C</span>Any interval at all — the stretch challenge</h3>
+  <p>Train an <b>Interval</b> robot with box
+  <code>[ In&nbsp;nest | A | B | Out&nbsp;bird ]</code>: for each incoming
+  fraction x it computes A&nbsp;+&nbsp;(B&nbsp;−&nbsp;A)&nbsp;×&nbsp;x and
+  hands it out — every fraction between 0 and 1 relanded between A and B,
+  whatever A and B are.</p>
+  <div class="think"><b>Think</b>
+    <p>Between 10 and 10.001, then: how many rationals? Was Pat right?
+    However short the interval, what exactly lives inside it?</p></div>
+
+  <div class="peek">The finished world feeds one stream of fractions to three
+    rooms at once — ×2, +10, ÷2 — and the three nests fill between 0 and 2,
+    10 and 11, 0 and ½, all at the same rate.
+    <button class="load" data-world="examples/infinity/activity7-any-interval.world.json">Peek at the finished world</button>
+    <span class="note"></span></div>
+</section>
+
+<div class="foot">
+  After the mathematics of Cantor; activity sequence by Ken Kahn for the
+  WebLabs project (the version tested in Oxford and Bulgaria, 2005), from the
+  <a class="plain" style="font-size:inherit" href="https://toontalk.github.io/tt-wasm/tt-wasm/build/infinity/index.html">original
+  ToonTalk edition</a>. Activity 8 (Cantor's diagonal) and Resort Infinity are
+  not yet ported. The finished worlds live in
+  <code>examples/infinity/</code>.
+</div>
+
+</div></div>
+
+<div id="ttwrap">
+  <div class="panehead"><strong style="color:var(--ink)">The workshop</strong>
+    <span id="ttnote">— your work stays here while you turn the pages</span>
+    <span class="spacer"></span>
+    <a class="plain" id="bigLink" href="toontalk-3d.html" target="_blank">open big ↗</a></div>
+  <iframe id="tt" src="toontalk-3d.html?activity=1" allow="fullscreen"
+          allowfullscreen title="ToonTalk 3D workshop"></iframe>
+</div>
+</main>
+
+<script>
+// One sheet showing at a time; the workshop pane is NEVER reloaded by turning
+// a page -- the learner's work is in there. Only the peek buttons touch it.
+var current = 'a0';
+function show(id) {
+  current = id;
+  document.querySelectorAll('section').forEach(function (s) {
+    s.classList.toggle('on', s.id === id);
+  });
+  document.querySelectorAll('.item').forEach(function (b) {
+    b.setAttribute('aria-current', b.dataset.id === id ? 'true' : 'false');
+  });
+  document.getElementById('sheetwrap').scrollTop = 0;
+  var n = +id.slice(1) || 0;
+  // Marty is briefed live: the app listens for this and reads the goal and
+  // the pedagogy for activity n into his system prompt.
+  var tt = document.getElementById('tt');
+  try { tt.contentWindow.postMessage({ tt3d: 'activity', n: n }, location.origin); } catch (e) {}
+  document.getElementById('bigLink').href = 'toontalk-3d.html' + (n ? '?activity=' + n : '');
+  document.getElementById('nav').classList.remove('open');
+}
+document.querySelectorAll('.item').forEach(function (b) {
+  b.onclick = function () { show(b.dataset.id); };
+});
+show('a0');
+
+// Peek buttons: replacing the workshop is destructive, so the first press
+// arms and asks, the second (within 6 s) does it. confirm() is not used --
+// it silently no-ops in some frames.
+document.querySelectorAll('.peek .load').forEach(function (b) {
+  var t = null;
+  b.onclick = function () {
+    var note = b.parentElement.querySelector('.note');
+    if (!b.classList.contains('arm')) {
+      b.classList.add('arm');
+      b.dataset.was = b.textContent;
+      b.textContent = 'Replace the workshop with it?';
+      note.textContent = ' (whatever is on the table now will be lost — save first if it matters)';
+      t = setTimeout(function () {
+        b.classList.remove('arm'); b.textContent = b.dataset.was; note.textContent = '';
+      }, 6000);
+      return;
+    }
+    clearTimeout(t);
+    b.classList.remove('arm'); b.textContent = b.dataset.was;
+    note.textContent = ' — loaded.';
+    var n = +current.slice(1) || 0;
+    document.getElementById('tt').src =
+      'toontalk-3d.html?activity=' + n + '&world=' + encodeURIComponent(b.dataset.world);
+    document.body.dataset.pane = 'tt';
+    syncSeg();
+  };
+});
+
+// Sheet | Workshop on small screens
+function syncSeg() {
+  var p = document.body.dataset.pane;
+  document.getElementById('segSheet').setAttribute('aria-pressed', p === 'sheet');
+  document.getElementById('segTT').setAttribute('aria-pressed', p === 'tt');
+}
+document.getElementById('segSheet').onclick = function () {
+  document.body.dataset.pane = 'sheet'; syncSeg();
+};
+document.getElementById('segTT').onclick = function () {
+  document.body.dataset.pane = 'tt'; syncSeg();
+};
+document.getElementById('navBtn').onclick = function () {
+  document.getElementById('nav').classList.toggle('open');
+};
+</script>
+</body>
+</html>
