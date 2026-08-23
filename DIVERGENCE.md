@@ -231,3 +231,25 @@ one level of nesting).
    miniature world, not stand-ins. Measured: recursive fib(10) = 55 across
    109 nested houses in under 3 seconds; the old engine stalled for
    minutes on fib(6).
+
+3. *Houses stop being idle-time work* — **DONE 2026-08-23**. The live-world
+   engine of step 2 still only pointed itself at a room when the world outside
+   was completely still: no queue, no animation in flight, nothing held, not
+   replaying. So a robot running on the open bench froze every house on the
+   table for the whole of its run, and they all caught up the moment it
+   stopped. The original has no such rule — `default_duration` makes unwatched
+   work take zero time, but it never makes it *wait*.
+
+   The restriction turned out to be incidental, not structural. The context
+   swap saved almost everything the interpreter keeps per world, but not
+   `tCur` (how far into the current animation step this world is) or `held`
+   (what this world's hand is carrying) — so a house running mid-step would
+   have moved the outer step's clock and reached into the outer hand. With
+   those two stashed per world like the rest, the guard reduces to: not while
+   somebody is *training*, because a daydream is a paused world by definition
+   and the pickup notes a trained step is recorded from are not per-world.
+
+   Houses now run while you work and while each other work. Ken noticed the
+   old behaviour immediately — "that wasn't true of houses in the original
+   ToonTalk" — which it wasn't.
+

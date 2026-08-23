@@ -11307,6 +11307,13 @@ function stashCtx(ctx) {
   condDisplay = null;
   ctx.queue = queue.splice(0);
   ctx.current = current; current = null;
+  // How far into the current step we are, and what this world's hand holds.
+  // These two were the reason a house could only work while the world outside
+  // was standing still: leaving them shared meant a house running mid-step
+  // moved the outer step's clock and reached into the outer hand. Each world
+  // keeps its own now, and a house can work whenever it likes.
+  ctx.tCur = tCur; tCur = 0;
+  ctx.held = held; held = null;
   ctx.busy = busy; busy = false;
   ctx.pendingAfter = pendingAfter; pendingAfter = null;
   ctx.mode = mode; mode = 'world';
@@ -11337,6 +11344,8 @@ function loadCtx(ctx) {
   queue.length = 0;
   queue.push(...(ctx.queue ?? []));
   current = ctx.current ?? null;
+  tCur = ctx.tCur ?? 0;
+  held = ctx.held ?? null;
   busy = ctx.busy ?? false;
   pendingAfter = ctx.pendingAfter ?? null;
   mode = ctx.mode ?? 'world';
@@ -11774,8 +11783,17 @@ function advanceRetiring(dt) {
     r.node.rotation.y += dt * 2.2;
   }
 }
+// Houses in the original are never idle-time work: they run while you are
+// working, and while another house is working. Ours waited for the world
+// outside to be completely still, which meant a robot running on the bench
+// froze every house on the table until it stopped -- and then they all caught
+// up at once. The swap above is what makes the honest version safe.
+//
+// Training stays an exception, and should: a daydream is a world paused by
+// definition, and the notes taken when something is picked up -- which are
+// what a trained step is recorded from -- are not kept per world.
 function processDirtyRooms() {
-  if (roomWorkBusy || busy || held || mode !== 'world' || queue.length) return;
+  if (roomWorkBusy || mode === 'training') return;
   const spent = findDoneRoom();
   if (spent) retireRoom(spent);
   // A dozing robot must NOT stop the houses: it is usually waiting on an
@@ -13510,8 +13528,10 @@ function advanceWorldClocks(dt) {
   // would leave the world stuck in 'replay' with nothing to run, and no house
   // would ever work again. Nothing is happening, so call it settled.
   if (mode === 'replay' && !activeBot && !busy && !queue.length && !current) mode = 'world';
-  // dirty rooms run at the next quiet moment, wherever the ticks come from
-  if (!busy && !held && !queue.length && !current && mode === 'world') {
+  // Houses work whether or not the world outside is busy. This runs at the top
+  // of the tick, before the outer queue is touched, so a swap never happens
+  // in the middle of advancing a step.
+  {
     try { processDirtyRooms(); }
     catch (err) {
       console.error('room work failed:', err);

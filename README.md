@@ -332,7 +332,9 @@ worth keeping back into the script.
 - Only one robot stands at the open bench, and a dozing one keeps that place
   until it is picked up — so a pipeline of robots feeding each other has to be
   run a stage at a time out in the open. Give each stage a **room** of its own
-  and they all run at once, which is what the `infinity/` examples do.
+  and they all run at once, which is what the `infinity/` examples do. (Rooms
+  themselves run whenever there is work, including while you or another robot
+  are working — they are not idle-time.)
 - The condition cannot constrain a number's range, only match exactly or
   wildcard. (A robot *can* branch on a scale's tilt, which is how the
   `infinity/` examples decide when one number has caught another up.)

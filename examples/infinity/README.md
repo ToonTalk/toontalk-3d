@@ -59,23 +59,26 @@ through to *Next Denominator*, which sets the numerator back to 1 and takes the
 denominator up one. Nobody counts anything: the scale is the entire
 conditional, and you can watch it tip.
 
-## Rooms — the one structural difference
+## Rooms
 
 In the original, robots run concurrently as a matter of course. Here, only one
-robot can stand at the open bench, and a robot dozing on an empty nest keeps
-that place until somebody picks it up — so a pipeline built in the open has to
-be run a stage at a time, by hand.
+robot can stand at the **open bench**, and a robot dozing on an empty nest keeps
+that place until somebody picks it up — so a pipeline built in the open would
+have to be run a stage at a time, by hand.
 
 So **every robot lives in its own room**, the source included. A room is a
 workshop of its own: the robot inside dozes at its own desk, wakes when a bird
-delivers through the roof, and never competes for the bench outside. That is
-why one pull of a lever drives a five-room pipeline in Activity 6.
+delivers through the roof, and never competes for the bench outside. One pull
+of a lever then drives a five-room pipeline, as in Activity 6. The source
+room's lever is down when the world loads; pull it to start.
 
-The source has to be in a room too, and that is not a nicety. Rooms only work
-at a quiet moment, and a robot running on the open bench holds the world busy
-for the whole of its run — so with the source out there the rooms stayed frozen
-until Run stopped, and then released everything they had held at once. Its
-lever is down when the world loads; pull it to start.
+Building these was what turned up the fact that houses only worked while the
+world outside was completely still — so a robot running on the bench froze
+every house on the table until it stopped, and then they all caught up at once.
+That is fixed: houses now run while you work, and while each other works, as
+they always did in the original. Putting the source in a room as well is a
+choice rather than a workaround — it makes every stage the same kind of thing,
+and one lever starts all of them.
 
 The rooms are glass, so you can watch. Click a roof to make it solid and it
 runs at Instant speed instead; click the door to walk inside.
