@@ -19077,16 +19077,21 @@ const MARTY_PROVIDERS = {
   here: { label: 'Claude \u2014 no key, in a Claude artifact', say: 'Claude, keylessly',
           model: 'claude-sonnet-5', keyless: true },
 };
-// Framed by somebody else's origin -- which is what a published artifact is,
-// and what the manual's own same-origin demo frames are not. Used only to pick
-// a sensible FIRST brain: inside an artifact the keyless route needs no setup
-// at all, while anywhere else it cannot work and a key is the honest default.
-const framedElsewhere = () => {
-  try { return window.self !== window.top && !window.top.location.origin; }
-  catch { return true; }               // reading it threw: a foreign top
+// Being inside SOME frame is not enough to make the keyless route work, and
+// choosing it on that alone was wrong. Measured 2026-08-23: the Claude Code
+// artifact frame refuses a call to api.anthropic.com outright, while a
+// claude.ai CHAT artifact carries the same call happily. The difference is not
+// the policy on the wire -- neither frame lists that host in connect-src -- it
+// is that the chat runtime REPLACES fetch with something that proxies for the
+// page. So the question worth asking is whether such a hook is present, not
+// where the page happens to be sitting.
+const hasAiHook = () => {
+  if (window.claude) return true;
+  try { return !/\[native code\]/.test(Function.prototype.toString.call(window.fetch)); }
+  catch { return false; }
 };
 const martyProv = () => localStorage.getItem('tt3d.marty-provider')
-  || (framedElsewhere() ? 'here' : 'claude');
+  || (hasAiHook() ? 'here' : 'claude');
 const martyKeyOf = (p) => (localStorage.getItem('tt3d.marty-key.' + p)
   ?? (p === 'claude' ? localStorage.getItem('tt3d.marty-key') : null) ?? '').trim();
 const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
@@ -19095,9 +19100,12 @@ const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
 function martyBrainText() {
   const p = martyProv();
   if (p === 'here') {
-    return 'Claude with no key at all \u2014 borrowing the claude.ai session of '
-      + 'whoever is reading this. It only works inside a published artifact, '
-      + 'and only for a reader who is signed in';
+    return hasAiHook()
+      ? 'Claude with no key at all \u2014 borrowing the claude.ai session of '
+        + 'whoever is reading this'
+      : 'his phrasebook \u2014 nothing here can carry a call out for the page, '
+        + 'so the keyless route has nowhere to go. It works in a claude.ai '
+        + 'chat artifact; anywhere else, pick another brain';
   }
   if (p === 'nano') {
     return nanoAPI()
