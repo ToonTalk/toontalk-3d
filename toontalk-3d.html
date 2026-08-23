@@ -371,6 +371,13 @@ holding joins the pile below it, and the survivor answers to both names — so
 every bird of either nest goes on delivering, to here. That is how you rewire a
 program that is already running.
 
+A nest is a window, not a wall. A robot shown its job on a plain
+number will do the same job when it is handed a nest with a number on
+it: it recognises what is on top, and it reaches through to the delivery rather
+than carrying the whole nest off. A robot shown the job on a nest in the first
+place means the nest — which is how a robot can pick nests up and swap them
+about. It does again exactly what it was shown.
+
 ## Robots
 
 Take a mini robot from its stack, set it on the table, and drop something
@@ -4699,12 +4706,56 @@ const walkTargetForAt = (at) => () => {
 };
 
 // Take whatever the address names, into the claw.
-function actionTake(at) {
+// --- looking through a nest ------------------------------------------------
+// matchState already reads a covered nest as whatever is on top of it, so a
+// robot trained on a bare number is recognised by a box with a NEST of numbers
+// in that hole. Its steps have to reach the same way, or it picks the nest up
+// bodily and carries the whole mailbox off.
+//
+// Where it looks through is settled by WHAT IT WAS SHOWN, not by its thought.
+// The thought is the wrong signal and it took a regression to prove it: Merge's
+// first hole is "any number", which a nest matches by being seen through -- and
+// yet every one of Merge's steps means the nest itself, because a nest is what
+// stood there while it was trained. So the robot does again exactly what it was
+// shown: a hole it was shown a NEST in means the nest; a hole it was shown a
+// bare thing in means that thing, and if a nest has arrived there since, the
+// robot reaches through it to the delivery.
+//
+// Only while replaying, and only for what the robot was GIVEN: a work spot
+// holds whatever the robot itself put there, so a nest there is a nest. And a
+// robot with no record of its training does what it always did.
+let runTrained = null;
+function trainedAtPath(spec, path) {
+  let t = spec;
+  for (const i of path) {
+    if (!t || !t.holes) return undefined;
+    t = t.holes[i];
+  }
+  return t;
+}
+function looksThroughNest(trained, at) {
+  if (mode !== 'replay' || at.c !== 'given' || at.nest !== undefined) return false;
+  const t = trainedAtPath(trained, at.path);
+  return !!t && t.kind !== 'nest';
+}
+function actionTake(at, onNest) {
   const reach = at.c === 'in' ? POSE.reachHigh : POSE.reach;
+  // decided now rather than later: the thought is the running member's, and by
+  // the time this runs the next round may have named a different one
+  const window = looksThroughNest(runTrained, at);
   enqueue(walkTo(walkTargetForAt(at)));
   enqueue(armTo(reach, JAW_OPEN, 0.7));
   enqueue(doNow(() => {
-    const obj = thingAt(at);
+    let obj = thingAt(at);
+    if (window && obj?.userData.kind === 'nest') {
+      const pile = obj.userData.pile;
+      const top = pile.length ? pile[pile.length - 1] : null;
+      if (!top) {
+        return abort(`The robot expected something on the nest in ${holeName(at)} and found nothing.`);
+      }
+      onNest?.(obj);
+      obj = top;
+    }
     if (!obj) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
     detach(obj);
     held = obj;
@@ -4722,7 +4773,7 @@ function actionTake(at) {
 // Put what the robot holds at the address. A hole takes it (or combines);
 // a bare container places it (or combines with what sits there); placing on
 // the copier platform sets the machine going.
-function actionPut(at, side) {
+function actionPut(at, side, backTo) {
   if (at.c === 'notebook' && !mainNotebook()) {
     return enqueue(doNow(() => abort('There is no notebook here to file that in.')));
   }
@@ -4735,6 +4786,31 @@ function actionPut(at, side) {
     if (!dropped) return;
     const from = dropped.getWorldPosition(new THREE.Vector3());
     const fromQ = dropped.getWorldQuaternion(new THREE.Quaternion());
+    // the copier putting back what it lifted off a pile: not a delivery, so it
+    // goes back on TOP where it was, rather than being refused as one
+    const backNest = backTo?.();
+    if (backNest) {
+      backNest.add(dropped);
+      dropped.quaternion.identity();
+      dropped.scale.setScalar(1);
+      backNest.userData.pile.push(dropped);
+      restackNest(backNest);
+      enqueueNext(settleInto(dropped, from, 0.3, fromQ));
+      return refreshUI();
+    }
+    // `nest: true` means the top of the pile on the nest found there: the
+    // robot drops onto the delivery where it sits, exactly as you can. A bare
+    // thing standing where the nest was expected is what is meant instead --
+    // the same reading actionTake gives that flag.
+    if (at.nest) {
+      const host = thingAt({ c: at.c, path: at.path });
+      const targ = host?.userData.kind === 'nest'
+        ? (host.userData.pile[host.userData.pile.length - 1] ?? null) : host;
+      if (!targ) {
+        return abort(`The robot expected something on the nest in ${holeName(at)} and found nothing.`);
+      }
+      return combine({ occupant: targ }, dropped, false, from, side);
+    }
     if (at.path.length) {
       const hole = holeAt(at);
       if (!hole) return abort(`The robot expected ${holeName(at)} and there is no such hole.`);
@@ -4816,10 +4892,11 @@ function actionCopy(at) {
       abort('The copier is not empty — the robot could not use it.');
     }
   }));
-  actionTake(at);                              // fetch the original
+  let fromNest = null;                         // set if the take looked through
+  actionTake(at, (n) => { fromNest = n; });    // fetch the original
   actionPut({ c: 'in', path: [] });            // onto the platform: she scans it
   actionTake({ c: 'in', path: [] });           // the original back off the platform
-  actionPut(at);                               // and home to where it came from
+  actionPut(at, undefined, () => fromNest);    // and home to where it came from
   actionTake({ c: 'out', path: [] });          // the copy is what it carries away
   enqueue(doNow(refreshUI));
 }
@@ -5782,16 +5859,20 @@ function directRobot(target) {
     return go({ type: 'take', at: { c, path: [] } });
   }
   if (target.kind === 'thing' || target.kind === 'hole') {
-    // the top of a pile on a nest: the robot takes deliveries one at a time,
-    // exactly as the user does
-    if (!held && target.kind === 'thing') {
+    // A delivery sitting on a nest, which addrOf cannot name -- it walks box
+    // and scale holes only. The robot reaches it the way you do: taking the top
+    // one off, or dropping something onto it where it stands.
+    if (target.kind === 'thing') {
       const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
       if (pn) {
         const a = addrOf(pn);
         if (!a) return say('The robot can only touch what it was given and its own work area.');
         // the top delivery alone, or -- grabbing lower -- the nest itself
         const top = pn.userData.pile[pn.userData.pile.length - 1] === target.thing;
-        return go({ type: 'take', at: { c: a.c, path: a.path, nest: top } });
+        if (!held) return go({ type: 'take', at: { c: a.c, path: a.path, nest: top } });
+        if (!top) return say('Only the top of the pile can be reached — the rest are under it.');
+        const side = target.point ? sideOf(target.thing, target.point) : 'R';
+        return go({ type: 'put', at: { c: a.c, path: a.path, nest: true }, side });
       }
     }
     const at = target.kind === 'hole'
@@ -7639,7 +7720,7 @@ function runProgram() {
     flagMismatch(mismatchPaths(condition, specOf(given)));
     return sayAttn(members.length > 1
       ? 'No robot on the team recognises what it was given.'
-      : `It only runs when given ${condText(condition)} — the red parts don’t match. Wake Dusty and click a red part to vacuum it away, so anything fits there.`);
+      : `It only runs when given ${condText(condition)} — the red parts don’t match. Wake Ruby and click a red part to loosen it a step, or Dusty to take it away so anything fits there.`);
   }
   clearFlags();
   clearUndo();
@@ -7688,8 +7769,8 @@ function nextIteration() {
     finishRun();
     return sayAttn(alone
       ? (runCount
-        ? `Ran ${runCount}× — stopped: the red parts of its thought no longer match. Dusty can vacuum them away.`
-        : 'Nothing recognises what it was given — Dusty can vacuum the red parts of its thought.')
+        ? `Ran ${runCount}× — stopped: the red parts of its thought no longer match. Wake Ruby and click one to loosen it, or Dusty to take it away.`
+        : 'Nothing recognises what it was given — wake Ruby and click a red part of its thought to loosen it, or Dusty to take it away.')
       : (runCount
         ? `Ran ${runCount}× — stopped: no robot on the team recognises the box any more.`
         : 'No robot on the team recognises what it was given.'));
@@ -7701,6 +7782,7 @@ function nextIteration() {
   teamView = states.indexOf('yes');      // the panel follows whoever is running
   renderProgram();
   takeTheFloor(member);                  // and so does the floor
+  runTrained = member.trainedOn;         // what THIS member was shown, to read its steps by
   member.program.forEach((step, i) => {
     enqueue(doNow(() => highlight(i)));
     runStep(step);
