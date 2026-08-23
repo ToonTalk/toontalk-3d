@@ -204,6 +204,9 @@
   .panel li + li { margin-top: .6rem; }
 
   /* ---- the days: a stack, like the workshop's stacks ------------------ */
+  /* a paragraph that corrects an earlier one, days later */
+  .later { border-left: 2px solid var(--accent, #7fd4ff); padding-left: 1rem;
+           margin-left: 0; }
   .days { margin-top: 2rem; display: grid; gap: .75rem; }
   .day {
     display: grid; gap: .35rem 1.2rem; align-items: baseline;
@@ -487,15 +490,23 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         fetches nothing and runs from a disk, an email attachment or any static
         host. All eleven example worlds give byte-identical results in the
         packed build and the source, which is how it is checked.</p>
-      <p>It will not run as a published Claude artifact, and finding out why
-        took a morning of probe pages. That frame will render a full-screen
-        three.js scene <em>once</em> and hold it happily for as long as you
-        watch; it drops any inline script over about a megabyte without a word;
-        it refuses to fetch anything at all, including a
-        <span class="mono">data:</span> URL the page made itself. And the wall:
-        the moment this workshop's animation loop runs, the whole frame goes
-        white, markup and all, however long the start is delayed. A live
-        workshop is more than that frame will carry.</p>
+      <p>A morning of probe pages went on finding out what a published Claude
+        artifact will carry. That frame drops any inline script over about a
+        megabyte without a word; it refuses to fetch anything at all, including
+        a <span class="mono">data:</span> URL the page made itself. And then
+        the wall: the workshop went white in it, markup and all, the moment its
+        animation loop ran, at every boot delay tried. The conclusion written
+        down that evening was that a live workshop is more than the frame will
+        carry.</p>
+      <p class="later"><b>That conclusion was wrong</b>, and it stood for three
+        days. It came from one failing app and was generalised to
+        <em>the loop</em> — the part of the sentence that was never tested on
+        its own. On the seventh day a bare WebGL loop was published as an
+        artifact and ran twenty thousand frames at a steady sixty a second, for
+        six minutes, without dropping one. The packed 2.3&nbsp;MB workshop was
+        then published, and it runs. Whatever killed the first attempt was
+        narrower than the loop and has still never been isolated — the honest
+        record is that it is unknown, not that it is impossible.</p>
       <h3>Furniture, and who it belongs to</h3>
       <p>The rest of the day was the kind of correction only the person using
         it can make. Marty walked under the table with his antennae through the

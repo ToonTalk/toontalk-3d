@@ -30,7 +30,11 @@
     50% { background: rgba(127, 212, 255, 0.28); }
   }
 
-  #prog { top: 14px; right: 14px; width: 232px; max-height: 60vh; overflow: auto; }
+  #prog { top: 14px; right: 14px; width: 232px; max-height: 60vh;
+          display: flex; flex-direction: column; }
+  /* only the step list scrolls: Save and Import stay in view however long a
+     robot's program grows */
+  #steps { overflow: auto; min-height: 0; }
   #prog h2 { margin: 0 0 4px; font-size: 11px; letter-spacing: .09em;
              text-transform: uppercase; color: var(--dim); font-weight: 650; }
   #trainedOn { margin: 0 0 8px; font-size: 11.5px; color: var(--think); }
@@ -41,7 +45,7 @@
   #steps .n { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 14px; }
   #steps li.now { color: var(--go); }
   #steps .empty { color: var(--dim); font-style: italic; }
-  #library { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--edge); }
+  #library { margin-bottom: 10px; padding-bottom: 9px; border-bottom: 1px solid var(--edge); }
   #library .row { display: flex; gap: 5px; }
   #library .row + .row { margin-top: 5px; }
   #library input, #library select { flex: 1; min-width: 0; font: inherit; font-size: 12px;
@@ -62,7 +66,7 @@
      wrapping flex box asked for its shrink-to-fit width answers with the
      NARROWER wrapped layout, so the row broke in two while there was still
      half a screen of room beside it. */
-  #bar { position: static; display: flex; align-items: center; justify-content: center;
+  #bar { position: relative; display: flex; align-items: center; justify-content: center;
          flex-wrap: wrap; width: max-content; max-width: 100%;
          gap: 8px; padding: 9px 10px; }
   button { font: inherit; font-size: 12.5px; color: var(--ink);
@@ -98,6 +102,19 @@
   #heldKeys { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
   body.touching #heldKeys { display: block; }
   #heldKeys.on { background: var(--accent); border-color: var(--accent); color: #06212e; }
+  /* The row only has room for what is reached often. The rest lives behind
+     the three dots: the table's shape, the manual, sound, reporting a bug. */
+  #moreBtn { font-size: 16px; line-height: 1; padding: 4px 9px; }
+  #moreMenu { display: none; position: absolute; right: 0; bottom: calc(100% + 8px);
+              flex-direction: column; align-items: stretch; gap: 6px;
+              min-width: 190px; padding: 8px; z-index: 30;
+              background: var(--panel); border: 1px solid var(--edge);
+              border-radius: 12px; backdrop-filter: blur(8px);
+              box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+  #moreMenu.on { display: flex; }
+  #moreMenu button { text-align: left; }
+  #moreMenu .sndrow { display: flex; align-items: center; gap: 8px; }
+  #moreMenu .sndrow input { flex: 1; min-width: 0; }
   #softKeys { position: fixed; left: 50%; bottom: 108px; width: 1px; height: 1px;
               opacity: 0; border: 0; padding: 0; margin: 0; resize: none;
               pointer-events: none; }
@@ -132,12 +149,12 @@
     style="float:right;padding:0 8px;line-height:1.3;">–</button>
   <h2 title="What the active robot learned, step by step. Steps only ever name the robot's own things, never places on your bench.">Trained actions</h2>
   <p id="trainedOn" title="The robot's condition: what it must be given before it will run. Dusty can vacuum parts of it away."></p>
-  <ul id="steps"><li class="empty">not trained yet</li></ul>
   <div id="library">
     <div class="row"><button id="exportHeldBtn" title="Save whatever you are holding to a file — any thing: a box, a number, a robot, a nest.">Save held thing</button>
       <button id="exportWorldBtn" title="Save the whole workshop to a file.">Save world</button></div>
     <div class="row"><button id="importBtn" title="Open a saved file — a thing lands in your hand; a world replaces the workshop.">Import file</button></div>
   </div>
+  <ul id="steps"><li class="empty">not trained yet</li></ul>
 </div>
 
 <div id="bottom">
@@ -172,6 +189,8 @@
     title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
   <button id="fullBtn"
     title="Full screen — fill the screen with the workshop. On a tablet this is what gets the browser's own bars out of the way.">⛶</button>
+  <button id="moreBtn" title="More — the table, the manual, sound, and reporting a bug.">⋮</button>
+  <div id="moreMenu"></div>
 </div>
 </div>
 
@@ -17850,7 +17869,8 @@ loadModel('robot_v4.glb', (gltf) => {
     gb.id = 'growBtn';
     gb.title = 'Reshape the workbench \u2014 reveals corner handles; click one to carry it, click again to set the corner down.';
     gb.onclick = () => handleClick({ kind: 'growToggle' });
-    document.getElementById('dustyBtn').after(gb);
+    const menu = document.getElementById('moreMenu');
+    menu.appendChild(gb);
     const sb = document.createElement('button');
     sb.id = 'sndBtn';
     sb.title = 'Mute or unmute the sound effects.';
@@ -17858,21 +17878,24 @@ loadModel('robot_v4.glb', (gltf) => {
     sv.id = 'sndVol'; sv.type = 'range';
     sv.min = '0'; sv.max = '1'; sv.step = '0.05';
     sv.title = 'Sound volume.';
-    sv.style.width = '64px'; sv.style.verticalAlign = 'middle';
+    sv.style.minWidth = '64px'; sv.style.verticalAlign = 'middle';
     const refreshSnd = () => {
       sb.textContent = sndMuted ? '\u{1F507}' : '\u{1F50A}';
       sv.value = String(sndVol);
     };
     sb.onclick = () => { setVolume(sndVol, !sndMuted); refreshSnd(); if (!sndMuted) sfx('combine'); };
     sv.oninput = () => { setVolume(+sv.value, +sv.value === 0); refreshSnd(); sfx('combine'); };
-    gb.after(sb); sb.after(sv);
+    const sndRow = document.createElement('div');
+    sndRow.className = 'sndrow';
+    sndRow.append(sb, sv);
+    menu.appendChild(sndRow);
     refreshSnd();
     const hb = document.createElement('button');
     hb.id = 'helpBtn';
     hb.textContent = 'Manual';
     hb.title = 'Open the manual — a guided tour with live workshops to try things in.';
     hb.onclick = () => window.open('manual.html', '_blank');
-    sv.after(hb);
+    menu.appendChild(hb);
     // A GitHub issue, pre-filled with what a report usually needs and none of
     // what it doesn't -- no location, no account, nothing about the person
     // filing it. Opens in a new tab so nothing here is lost; works from a
@@ -17890,7 +17913,19 @@ loadModel('robot_v4.glb', (gltf) => {
         + '&body=' + encodeURIComponent(body);
       window.open(url, '_blank', 'noopener');
     };
-    hb.after(rb);
+    menu.appendChild(rb);
+
+    // The dots open it; anything else closes it. A click inside must not
+    // close it before the control it landed on has run.
+    const dots = document.getElementById('moreBtn');
+    const close = () => menu.classList.remove('on');
+    dots.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('on'); };
+    menu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (e.target.tagName === 'BUTTON') close();
+    });
+    addEventListener('pointerdown', (e) => { if (!menu.contains(e.target) && e.target !== dots) close(); });
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
   }
 
   // things become pickable as they are created; simplest is to test everything
@@ -18960,6 +18995,36 @@ const martyReplySchema = () => ({
   required: ['say'],
   additionalProperties: false,
 });
+// The keyless route. No key, no account -- and no clean failure either: a
+// signed-out reader is not refused with a tidy 401 but with a non-JSON body
+// that sails past a status check and dies at JSON.parse. So everything that
+// can go wrong is caught and told apart here, and every one of them means the
+// same thing to the visitor: sign in on claude.ai, or give Marty a key.
+class HereTrouble extends Error {}
+async function hereThink(sys, q) {
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: martyModelOf('here'), max_tokens: 900, system: sys,
+        messages: [...martyHistory, { role: 'user', content: q }] }),
+    });
+  } catch {
+    throw new HereTrouble('nothing answered at all');
+  }
+  if (res.status === 401 || res.status === 403) throw new HereTrouble('not signed in');
+  if (!res.ok) throw new HereTrouble('the mothership said ' + res.status);
+  const raw = await res.text();
+  if (!raw.trim()) throw new HereTrouble('an empty answer');
+  let data;
+  try { data = JSON.parse(raw); }
+  catch { throw new HereTrouble('an answer that was not an answer'); }
+  if (data.error) throw new HereTrouble(data.error.message || 'refused');
+  const out = (data.content || []).map(c => c.text || '').join('');
+  if (!out.trim()) throw new HereTrouble('an empty answer');
+  return out;
+}
 async function nanoThink(sys, q) {
   const api = nanoAPI();
   if (!api) return null;                      // no built-in model: phrasebook
@@ -18991,6 +19056,13 @@ const MARTY_PROVIDERS = {
   gemini: { label: 'Gemini', say: 'Gemini', model: 'gemini-2.5-flash' },
   nano: { label: 'Gemini Nano (in Chrome, no key)', say: 'the Gemini inside Chrome',
           model: '', keyless: true },
+  // Inside a published Claude artifact the messages endpoint answers WITHOUT a
+  // key: the page borrows the claude.ai session of whoever is reading it. That
+  // makes it the only brain that costs a visitor nothing to set up -- and the
+  // only one that fails for a reason they cannot see, since a signed-OUT
+  // reader gets refused. See martyHereFail for how that is told apart.
+  here: { label: 'Claude \u2014 no key, in a Claude artifact', say: 'Claude, keylessly',
+          model: 'claude-sonnet-5', keyless: true },
 };
 const martyProv = () => localStorage.getItem('tt3d.marty-provider') || 'claude';
 const martyKeyOf = (p) => (localStorage.getItem('tt3d.marty-key.' + p)
@@ -19000,6 +19072,11 @@ const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
 // What is behind Marty's eyes right now, in words the panel can show.
 function martyBrainText() {
   const p = martyProv();
+  if (p === 'here') {
+    return 'Claude with no key at all \u2014 borrowing the claude.ai session of '
+      + 'whoever is reading this. It only works inside a published artifact, '
+      + 'and only for a reader who is signed in';
+  }
   if (p === 'nano') {
     return nanoAPI()
       ? 'the Gemini built into Chrome — no key, and nothing you type leaves this machine'
@@ -19007,7 +19084,8 @@ function martyBrainText() {
         + 'elsewhere he needs a key, or pick another brain below';
   }
   return martyKeyOf(p) ? `${MARTY_PROVIDERS[p].label}, model ${martyModelOf(p)}`
-    : 'his phrasebook only — replies are canned lines until you add a key';
+    : 'his phrasebook only — replies are canned lines until you add a key. '
+      + 'The two brains at the top of the list need no key at all';
 }
 // A brain with room for the whole manual gets the whole manual. One without --
 // the small model inside Chrome -- gets the sections the question is actually
@@ -19049,6 +19127,7 @@ async function martyThink(q) {
       + '\n\nOn the table right now:\n' + martyWorldText();
   };
   const sys = sysAt(nano ? NANO_MANUAL_BUDGET : Infinity);
+  if (prov === 'here') return await hereThink(sys, q);
   if (nano) {
     try { return await nanoThink(sys, q); }
     catch (e) {
@@ -19175,7 +19254,12 @@ async function askMarty(q) {
     doneThinking();                    // stop thinking before saying it went wrong
     // Chrome's own model is not somewhere to be reached, so a failure there is
     // never the network and never the key.
-    martySay(martyProv() === 'nano'
+    martySay(e instanceof HereTrouble
+      ? 'No key was needed and none was the trouble \u2014 I got ' + e.message + '. '
+        + 'The keyless route borrows the claude.ai session of whoever is reading '
+        + 'this, so it wants you signed in there, in a published artifact. '
+        + 'Otherwise pick a brain with a key, or the Gemini inside Chrome.'
+      : martyProv() === 'nano'
       ? 'The little brain inside Chrome would not answer — ' + (e.message || e.name)
         + '. My phrasebook it is; the demonstrations are all still real.'
       : offline
@@ -19246,12 +19330,16 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '\u2014 Chrome downloads it once, nothing you type leaves this machine, and being small he is given only the '
   + 'part of the manual your question is about. The rest want an API key, kept only in this browser, and a '
   + 'network to reach their company over. His demonstrations are the real workshop whichever he has.</div>'
-  + '<div style="display:flex;gap:6px;margin-top:6px">'
-  + '<select id="martyProv" style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
-  + '<option value="nano">Gemini Nano (in Chrome, no key)</option>'
-  + '<option value="claude">Claude</option><option value="openai">ChatGPT (OpenAI)</option><option value="gemini">Gemini</option></select>'
+  // one control to a line: side by side, the longest provider name squeezed
+  // the model box down to a few letters
+  + '<select id="martyProv" style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit;box-sizing:border-box">'
+  + '<option value="here">Claude \u2014 no key, in a Claude artifact</option>'
+  + '<option value="nano">Gemini Nano \u2014 no key, in Chrome</option>'
+  + '<option value="claude">Claude \u2014 with an API key</option>'
+  + '<option value="openai">ChatGPT (OpenAI)</option>'
+  + '<option value="gemini">Gemini</option></select>'
   + '<input id="martyModel" placeholder="model" '
-  + 'style="flex:1;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;min-width:0"></div>'
+  + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '<div id="martyNano" style="margin-top:6px;display:none"></div>'
   + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
@@ -19633,11 +19721,14 @@ document.getElementById('martyClose').onclick = () => { martyUI.style.display = 
   }
   const showProv = () => {
     provEl.value = martyProv();
-    const keyless = !!MARTY_PROVIDERS[provEl.value]?.keyless;
-    // nothing to type for a brain that is simply there
-    modelEl.style.display = keyless ? 'none' : '';
+    const spec = MARTY_PROVIDERS[provEl.value] ?? {};
+    const keyless = !!spec.keyless;
+    // No key box for a brain that needs none -- but the keyless Claude still
+    // has a model worth naming, and the one inside Chrome does not.
+    const hasModel = !!spec.model;
+    modelEl.style.display = hasModel ? '' : 'none';
     keyEl.style.display = keyless ? 'none' : '';
-    modelEl.value = keyless ? '' : martyModelOf(provEl.value);
+    modelEl.value = hasModel ? martyModelOf(provEl.value) : '';
     keyEl.value = keyless ? '' : martyKeyOf(provEl.value);
     martyModeLine();
   };

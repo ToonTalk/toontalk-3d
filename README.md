@@ -301,15 +301,27 @@ it — hand it to somebody, put it on any static host, open it from disk. It is
 built from `toontalk-3d.html`, which stays the only source; every one of the
 eleven example worlds produces byte-identical results in the two.
 
-Publishing it as a claude.ai artifact was tried and **abandoned**: that frame
-tolerates a full-screen three.js scene rendered once, but goes white — markup
-and all — as soon as this workshop's animation loop runs, however long the boot
-is delayed. Nothing in the app targets it any more. Two habits from the attempt
-were worth keeping and are still in the build, because they are what lets the
-single file work from a bare `file://` URL: the bundle is split across several
-inline scripts (one frame dropped anything over about a megabyte, silently), and
-the models are parsed out of memory rather than fetched, since a page opened
-from disk may not fetch even a `data:` URI of its own making.
+**It runs as a published claude.ai artifact** (confirmed 23 August 2026). An
+earlier attempt was abandoned when the frame went white the moment the
+animation loop ran, and that was written up here as settled — wrongly. A plain
+WebGL loop published as an artifact ran twenty thousand frames at a steady 60/s
+without a stumble, and the packed 2.3 MB workshop then published and ran too.
+Whatever failed in the first attempt was narrower than "the loop" and was never
+isolated.
+
+Two habits from that attempt are still in the build and earn their place
+anyway, because they are what lets the single file work from a bare `file://`
+URL: the bundle is split across several inline scripts (one frame dropped
+anything over about a megabyte, silently), and the models are parsed out of
+memory rather than fetched, since a page opened from disk may not fetch even a
+`data:` URI of its own making.
+
+Published there, Marty gains a brain that needs **no key and no account**:
+the messages endpoint answers keylessly, borrowing the claude.ai session of
+whoever is reading. It is the first option in his panel. A reader who is
+signed out is refused — not with a tidy 401 but with a body that is not JSON —
+so that case is caught by name and explained rather than reported as a model
+hiccup.
 
 ## Assets
 
