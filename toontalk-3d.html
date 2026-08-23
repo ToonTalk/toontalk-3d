@@ -102,8 +102,11 @@
   #held .k { font-size: 11.5px; color: var(--dim); }
   /* the keyboard is a touch screen's only way in; a machine with keys of its
      own has no use for the button and does not show it */
-  #heldKeys { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
-  body.touching #heldKeys { display: block; }
+  #heldKeys, #heldTurn { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
+  body.touching #heldKeys, body.touching #heldTurn { display: block; }
+  /* the turn button is worth having with a mouse too -- the arrow keys are
+     not a thing anybody guesses */
+  #heldTurn { display: block; }
   #heldKeys.on { background: var(--accent); border-color: var(--accent); color: #06212e; }
   /* The row only has room for what is reached often. The rest lives behind
      the three dots: the table's shape, the manual, sound, reporting a bug. */
@@ -165,6 +168,7 @@
      title="What your invisible hand is carrying — it follows the mouse, and on a touch screen waits at one spot where you can see it. Click to hold a text pad up and read it.">
   <span class="k">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
+  <button id="heldTurn" title="Turn it over a quarter — the arrow keys do the same, and turn it the other way too.">⟳</button>
   <button id="heldKeys" title="Show the keyboard, to type on what you are holding">⌨</button>
 </div>
 
@@ -911,6 +915,18 @@ const OP_TELLS = {
   'set': 'Dropped on a number, this one replaces it, whatever it was.',
 };
 const OP_WORDS = { mod: 'mod', set: 'set' };
+// "113 /" put the operation after the number, where it reads as nothing at
+// all. An operation belongs in FRONT of what it acts on, and in the sign a
+// child would recognise.
+const OP_READS = {
+  '+': (n) => `add ${n}`,
+  '-': (n) => `subtract ${n}`,
+  '*': (n) => `\u00d7 ${n}`,
+  '/': (n) => `\u00f7 ${n}`,
+  '^': (n) => `to the power ${n}`,
+  'mod': (n) => `mod ${n}`,
+  'set': (n) => `set to ${n}`,
+};
 // Each operation gets its own colour and badge so what a number will *do* is
 // readable at a glance, not just from a small corner glyph.
 const OP_STYLE = {
@@ -1096,6 +1112,142 @@ function mixedText(v) {
   const q = n / v.d, r = n % v.d;
   return (neg ? '-' : '') + (q === 0n ? `${r}/${v.d}` : `${q} ${r}/${v.d}`);
 }
+// The sixth face shows the number TAKEN APART, which is the one thing the
+// other five do not do. Which way it comes apart depends on what it is: a
+// fraction has a continued fraction, a whole number has its primes. Both are
+// exact, both are finite, and neither is anything you could read off the
+// front.
+const SUPER = { '0': '\u2070', '1': '\u00b9', '2': '\u00b2', '3': '\u00b3',
+                '4': '\u2074', '5': '\u2075', '6': '\u2076', '7': '\u2077',
+                '8': '\u2078', '9': '\u2079' };
+const superscript = (n) => String(n).split('').map(d => SUPER[d] ?? d).join('');
+// floor division, which BigInt's / does not do for negatives: the leading term
+// of a continued fraction may be negative and every term after it must not be
+const bigFloorDiv = (a, b) => {
+  let q = a / b;
+  if (a % b !== 0n && (a < 0n) !== (b < 0n)) q -= 1n;
+  return q;
+};
+// [a0; a1, a2, ...] -- Euclid's algorithm, which terminates for every rational
+// and is fast however many digits it is given
+function contFracTerms(v, max = 5) {
+  let n = v.n, d = v.d;
+  if (d === 0n) return null;
+  const terms = [];
+  while (d !== 0n && terms.length < max) {
+    const a = bigFloorDiv(n, d);
+    terms.push(a.toString());
+    const r = n - a * d;
+    n = d; d = r;
+  }
+  return { terms, more: d !== 0n };
+}
+// Trial division, bounded by WORK rather than by the size of the number: the
+// old rule refused anything over a billion and left the face blank, which is
+// the one answer a face must never give. Now it always says something -- the
+// factors it found, and honestly that a big one is left over if the budget
+// ran out before the number did.
+const FACTOR_STEPS = 400000;
+function factorParts(n0) {
+  let n = n0 < 0n ? -n0 : n0;
+  if (n === 0n) return { special: 'zero' };
+  if (n === 1n) return { special: 'one' };
+  const parts = [];
+  let steps = 0;
+  for (let f = 2n; f * f <= n; f += (f === 2n ? 1n : 2n)) {
+    if (++steps > FACTOR_STEPS) {
+      return { parts, rest: n, neg: n0 < 0n, gaveUp: true };
+    }
+    let k = 0;
+    while (n % f === 0n) { n /= f; k++; }
+    if (k) parts.push(k === 1 ? f.toString() : f.toString() + superscript(k));
+  }
+  if (n > 1n) parts.push(n.toString());
+  return { parts, neg: n0 < 0n, prime: parts.length === 1 && n0 > 0n };
+}
+function factorText(n0) {
+  const r = factorParts(n0);
+  if (r.special === 'zero') return '0 has no prime factors';
+  if (r.special === 'one') return '1 has no prime factors';
+  const body = (r.neg ? '\u2212' : '') + r.parts.join(' \u00b7 ');
+  if (r.gaveUp) {
+    return (r.parts.length ? body + ' \u00b7 ' : '')
+      + 'a factor too big to find here';
+  }
+  return r.prime ? body + ' is prime' : body;
+}
+function apartText(v) {
+  if (!v) return null;
+  if (v.d === 1n) return factorText(v.n);
+  const cf = contFracTerms(v);
+  if (!cf) return null;
+  return cf.terms.length === 1 ? `[${cf.terms[0]}]`
+    : `[${cf.terms[0]}; ${cf.terms.slice(1).join(', ')}${cf.more ? ', \u2026' : ''}]`;
+}
+// Drawn the way it is written: a term, a plus, and a bar with 1 over it and
+// the whole of the rest underneath, stepping down and to the right. The list
+// form [3; 7, 16] is exact but tells a beginner nothing about what a continued
+// fraction IS; the staircase shows it.
+// Drawn the way it is written: a term, a plus, and a bar with 1 over it and
+// the whole of the rest underneath, stepping down and to the right. The list
+// form [3; 7, 16] is exact but tells a beginner nothing about what a continued
+// fraction IS; the staircase shows it.
+//
+// The numbers here were all measured against the face rather than guessed. It
+// starts BELOW the operation badge, which sits at (54,54) with a radius of 30
+// and swallowed the first term whole. Each level then steps by the width of
+// the term it just drew -- that is inherent, since the rest of the fraction
+// goes under its own bar -- so the shrink and the gaps are set as small as
+// stays readable, to buy a fourth level: [1; 2, 3, 4] is an honest four terms
+// and stopping at three to write dots would be a worse lie than shrinking.
+function drawContFrac(c, v, lod) {
+  const cf = contFracTerms(v, 4);
+  if (!cf) return;
+  const { terms, more } = cf;
+  // 232, not 228: the third bar of [1; 2, 3, 4] overshot by a pixel and a half
+  // and the whole storey was replaced by dots. The frame's ink stops at 234.
+  const RIGHT = 232, BOTTOM = 218;
+  let x = 34, y = 110, size = 44, underBar = 0;
+  const dots = (px, py, s) => {
+    c.textAlign = 'left';
+    c.font = `bold ${Math.round(Math.max(20, s))}px Georgia, serif`;
+    c.fillText('\u2026', Math.min(px, 200), py);
+    c.textAlign = 'center';
+  };
+  for (let i = 0; i < terms.length; i++) {
+    const last = i === terms.length - 1 && !more;
+    c.font = `bold ${Math.round(size)}px Georgia, serif`;
+    const head = terms[i] + (last ? '' : ' +');
+    // The final term is a denominator and belongs CENTRED under the bar above
+    // it, like any other. Left-aligned at the bar's edge it sat off to one
+    // side, reading as a stray digit rather than the bottom of the fraction.
+    if (last && underBar) {
+      c.textAlign = 'center';
+      c.fillText(head, x + underBar / 2, y);
+      return;
+    }
+    c.textAlign = 'left';
+    c.fillText(head, x, y);
+    if (last) { c.textAlign = 'center'; return; }
+    const bx = x + c.measureText(head).width + 4;
+    const barW = Math.max(30, size * 1.1);
+    // no room for another storey: say so where the next one would have stood
+    if (bx + barW > RIGHT) return dots(bx + 4, y, size);
+    c.textAlign = 'center';
+    c.font = `bold ${Math.round(size * 0.8)}px Georgia, serif`;
+    c.fillText('1', bx + barW / 2, y - size * 0.54);
+    c.lineWidth = Math.max(2, size * 0.075);
+    c.strokeStyle = c.fillStyle;
+    c.beginPath(); c.moveTo(bx, y + 2); c.lineTo(bx + barW, y + 2); c.stroke();
+    x = bx;
+    underBar = barW;
+    y += size * 0.95;
+    size *= 0.76;
+    if (size < 14 || y > BOTTOM) return dots(x + 4, Math.min(y, BOTTOM), size);
+  }
+  // every term drawn, and the fraction still goes on
+  dots(x + 4, Math.min(y, BOTTOM), size);
+}
 function groupText(n) {
   const neg = n < 0n, t = (neg ? -n : n).toString();
   return (neg ? '-' : '') + t.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -1133,6 +1285,20 @@ function decimalExpand(v, digits) {
 }
 // The decimal face: a repeating part that fits gets a bar drawn over it; an
 // expansion that outruns the face ends in an ellipsis instead.
+// How long the repeating part is, without expanding it: keep dividing and
+// watch for a remainder that has been seen before. Returns null when the
+// decimal stops, or when the cycle is longer than it is worth chasing.
+const REPEAT_LOOK = 20000;
+function repeatLength(v) {
+  let d = v.d;
+  if (d <= 1n) return null;
+  // a decimal terminates exactly when the denominator is only twos and fives
+  for (const f of [2n, 5n]) while (d % f === 0n) d /= f;
+  if (d === 1n) return null;
+  let r = 10n % d, k = 1;
+  while (r !== 1n && k <= REPEAT_LOOK) { r = (r * 10n) % d; k++; }
+  return r === 1n ? k : null;
+}
 function drawDecimal(c, v, lod) {
   const d = decimalExpand(v, 26 * lod);
   if (d.done && !d.rep) {
@@ -1157,8 +1323,19 @@ function drawDecimal(c, v, lod) {
       return;
     }
   }
+  // The cycle is too long to write out, let alone bar. An ellipsis alone says
+  // "there is more", which leaves the honest question -- does it repeat? -- for
+  // the reader to wonder about. So it says how long the repeat is instead.
+  const rl = repeatLength(v);
+  const body = `${d.int}.${d.pre}${d.rep}…`;
+  if (rl) {
+    drawWrapped(c, body, 132, 138, 178, 108);
+    c.font = 'bold 19px Georgia, serif';
+    c.fillText(`repeats every ${rl} digits`, 128, 214);
+    return;
+  }
   // a little lower and narrower than the other faces, to clear the op badge
-  drawWrapped(c, `${d.int}.${d.pre}${d.rep}…`, 132, 152, 178, 136);
+  drawWrapped(c, body, 132, 152, 178, 136);
 }
 // The scientific face: the mantissa's repeating part gets the same bar as the
 // decimal face when there is room, and an honest ellipsis when there is not.
@@ -1272,7 +1449,7 @@ function makeNumber(value, op = '+', lite = false) {
   // `lite` skips all meshes and canvases: the hidden middle of a tall pile
   // only needs its data. __materialize() builds the visuals on demand.
   let built = false;
-  let fMain, fBack, fSci, fAlt, fTop, shellMat, topMesh;
+  let fMain, fBack, fSci, fAlt, fBot, fTop, shellMat, topMesh;
   // out here rather than inside build(), because the top's mixed-fraction face
   // is made on demand the first time a value actually needs one
   const mkFace = () => {
@@ -1287,6 +1464,7 @@ function makeNumber(value, op = '+', lite = false) {
   // front and top show the value; the other faces show the same number written
   // other ways
   fMain = mkFace(); fBack = mkFace(); fSci = mkFace(); fAlt = mkFace();
+  fBot = mkFace();
 
   shellMat = new THREE.MeshStandardMaterial({ color: 0xefe2c6, roughness: 0.5 });
   const shell = new THREE.Mesh(cubeGeo, shellMat);
@@ -1308,6 +1486,7 @@ function makeNumber(value, op = '+', lite = false) {
   addFace(fBack.mat, 0, 0, -p, 0, Math.PI);           // back: words
   addFace(fSci.mat, -p, 0, 0, 0, -Math.PI / 2);       // left: scientific
   addFace(fAlt.mat, p, 0, 0, 0, Math.PI / 2);         // right: grouped / decimal
+  addFace(fBot.mat, 0, -p, 0, Math.PI / 2, 0);        // bottom: taken apart
   };
   Object.assign(g.userData, { id: nextId++, kind: 'number', op, width: CUBE, rest: CUBE / 2 });
   g.__lod = 1;
@@ -1401,7 +1580,7 @@ function makeNumber(value, op = '+', lite = false) {
     const v = g.userData.value;
     const lod = g.__lod;
     if (label != null || !v) {
-      [fBack, fSci, fAlt].forEach(f => paint(f, (c) => {
+      [fBack, fSci, fAlt, fBot].forEach(f => paint(f, (c) => {
         if (label != null) {
           c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
           c.fillText(label, 128, 140);
@@ -1415,6 +1594,11 @@ function makeNumber(value, op = '+', lite = false) {
     paint(fAlt, (c) => v.d === 1n
       ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
       : drawDecimal(c, v, lod));
+    paint(fBot, (c) => {
+      if (v.d !== 1n) return drawContFrac(c, v, lod);
+      const t = apartText(v);
+      if (t) drawWrapped(c, t, 128, 140, 200, 168);
+    });
   }
   g.__paintSecondary = () => { if (!built) return; paintSecondary(); g.__facesStale = false; };
 
@@ -2159,28 +2343,41 @@ function paintRoomLabel(room) {
   room.__labelPlates = [];
   const text = room.userData.label;
   if (!text) return;
-  const cv = document.createElement('canvas');
-  cv.width = 320; cv.height = 80;
-  const c = cv.getContext('2d');
-  c.clearRect(0, 0, 320, 80);
-  c.fillStyle = '#5a4632';
-  c.textAlign = 'center'; c.textBaseline = 'middle';
-  let px = 44;
-  c.font = `bold ${px}px Georgia, serif`;
-  while (px > 12 && c.measureText(text).width > 300) {
-    px = Math.floor(px * 0.88);
+  // one canvas per face shape, so the letters are as big as that face allows
+  const plateMat = (wm, hm) => {
+    const cv = document.createElement('canvas');
+    const H = 128;
+    cv.height = H;
+    cv.width = Math.max(64, Math.round(H * (wm / hm)));
+    const c = cv.getContext('2d');
+    c.clearRect(0, 0, cv.width, cv.height);
+    c.fillStyle = '#5a4632';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    // start at nearly the full height of the face and come down only as far
+    // as the width demands
+    let px = Math.floor(H * 0.78);
+    const room = cv.width * 0.94;
     c.font = `bold ${px}px Georgia, serif`;
-  }
-  c.fillText(text, 160, 42);
-  const tex = new THREE.CanvasTexture(cv);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+    while (px > 10 && c.measureText(text).width > room) {
+      px = Math.floor(px * 0.9);
+      c.font = `bold ${px}px Georgia, serif`;
+    }
+    c.fillText(text, cv.width / 2, H * 0.54);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 8;
+    return new THREE.MeshBasicMaterial({ map: tex, transparent: true });
+  };
+  // Front first: it is the side you are looking at when you go to work the
+  // house, and the band above the door exists for it.
   for (const sp of [
-    { p: [0, 0.15, -0.215], ry: Math.PI },
-    { p: [-0.265, 0.15, 0], ry: -Math.PI / 2 },
-    { p: [0.265, 0.15, 0], ry: Math.PI / 2 },
+    { p: [0, 0.288, 0.215], ry: 0, w: 0.23, h: 0.062 },
+    { p: [0, 0.18, -0.215], ry: Math.PI },
+    { p: [-0.265, 0.18, 0], ry: -Math.PI / 2 },
+    { p: [0.265, 0.18, 0], ry: Math.PI / 2 },
   ]) {
-    const plate = new THREE.Mesh(geo('PlaneGeometry', 0.34, 0.085), mat);
+    const w = sp.w ?? 0.34, h = sp.h ?? 0.085;
+    const plate = new THREE.Mesh(geo('PlaneGeometry', w, h), plateMat(w, h));
     plate.position.set(...sp.p);
     plate.rotation.y = sp.ry;
     room.add(plate);
@@ -2197,9 +2394,15 @@ function makeRoom(data = null) {
   floor.position.y = 0.015;
   floor.castShadow = true; floor.receiveShadow = true;
   g.add(floor);
-  const wall = (w, x, z, ry = 0) => {
-    const m = new THREE.Mesh(geo('BoxGeometry', w, 0.24, 0.02), wallMat);
-    m.position.set(x, 0.15, z);
+  // The walls stand higher than the door needs, so that the band above it can
+  // carry the house's name where somebody looking at the front will see it.
+  // They used to end just above the lintel, and a named house wore its name
+  // on the sides and the back only -- which is no use at all when the
+  // instructions say "pull the lever on the Add 1 room".
+  const WALL_H = 0.30, WALL_Y = 0.18, WALL_TOP = WALL_Y + WALL_H / 2;
+  const wall = (w, x, z, ry = 0, h = WALL_H, y = WALL_Y) => {
+    const m = new THREE.Mesh(geo('BoxGeometry', w, h, 0.02), wallMat);
+    m.position.set(x, y, z);
     m.rotation.y = ry;
     m.castShadow = true;
     g.add(m);
@@ -2209,6 +2412,8 @@ function makeRoom(data = null) {
   wall(0.42, 0.25, 0, Math.PI / 2);
   wall(0.17, -0.165, 0.2);              // front, split around the doorway
   wall(0.17, 0.165, 0.2);
+  const DOOR_TOP = 0.238;
+  wall(0.16, 0, 0.2, 0, WALL_TOP - DOOR_TOP, (WALL_TOP + DOOR_TOP) / 2);
   // an actual door: cream frame, wooden leaf, brass knob
   const door = new THREE.Group();
   const frame = new THREE.Mesh(geo('BoxGeometry', 0.175, 0.215, 0.018),
@@ -2229,14 +2434,14 @@ function makeRoom(data = null) {
   setPick(door, { kind: 'roomDoor', room: g });
   g.add(door);
   const roof = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.17, 4), roofMat);
-  roof.position.y = 0.355;
+  roof.position.y = WALL_TOP + 0.085;
   roof.rotation.y = Math.PI / 4;
   roof.castShadow = true;
   setPick(roof, { kind: 'roomRoof', room: g });
   g.add(roof);
   const chimney = new THREE.Mesh(geo('BoxGeometry', 0.055, 0.13, 0.055),
     new THREE.MeshStandardMaterial({ color: 0x8a5a4a, roughness: 0.8 }));
-  chimney.position.set(0.13, 0.42, -0.1);
+  chimney.position.set(0.13, WALL_TOP + 0.15, -0.1);
   setPick(chimney, { kind: 'roomRoof', room: g });
   g.add(chimney);
   g.__chimney = chimney;
@@ -2403,6 +2608,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
       }
       room.userData.stepRounds = (room.userData.stepRounds || 0) + Math.max(1, ran);
       cont = (more && room.userData.stepRounds < mi) || !!findDirtyRoom(true);
+      fixBotScales();            // this room's robots, while this room is the world
     } finally {
       popWorld();
     }
@@ -2419,6 +2625,7 @@ function runRoomWork(room, depth = 0, miOverride = null) {
     }
   }
   fitRoomContents(room);           // a round may have grown what's inside
+  fixBotScales();                  // and now the world outside, back again
   room.userData.dirty = cont;
   if (cont) room.__nextStep = performance.now() + (stepped ? 1100 / Math.max(0.25, spd) : 80);
   if (depth === 0) {
@@ -2684,49 +2891,103 @@ function nestSlots(pile) {
     return p;
   });
 }
+// How many of a long pile stand on the nest at once, and which of them.
+const PILE_SHOWN = 10;
+// The window is measured from the OLD end -- the top of the pile, the end you
+// take from -- so it does not slide about under you as new mail arrives at the
+// bottom. 0 means the oldest ten, which is what a nest showed before it could
+// be scrolled at all.
+function pileWindow(nest) {
+  const len = nest.userData.pile.length;
+  const most = Math.max(0, len - PILE_SHOWN);
+  const w = Math.min(nest.__pileFrom || 0, most);
+  nest.__pileFrom = w;
+  return { len, most, from: w };
+}
+// Clicking a plate walks the window a half-screenful that way, and stops at
+// the ends rather than wrapping -- wrapping in a list of a thousand is how you
+// lose your place.
+function scrollPile(nest, dir) {
+  const { most, from } = pileWindow(nest);
+  const step = Math.max(1, Math.floor(PILE_SHOWN / 2));
+  const next = Math.max(0, Math.min(most, from + dir * step));
+  if (next === from) {
+    return say(dir > 0 ? 'That is the newest of them already.'
+                       : 'That is the oldest of them already — the end you take from.');
+  }
+  nest.__pileFrom = next;
+  restackNest(nest);
+  sfx('type');
+  const w = pileWindow(nest);
+  const first = Math.max(1, w.len - w.from - PILE_SHOWN + 1);
+  say(`Showing ${first} to ${w.len - w.from} of ${w.len}, counting from the `
+    + 'newest at the bottom. Click a plate to walk through the rest.');
+}
+// A little sign on the pile, saying how many are folded away that way. Cached
+// per nest and per caption, since a hundred-round run must not mint a fresh GL
+// texture for every delivery.
+function pilePlate(nest, key, caption) {
+  const store = (nest.__plateCache ??= {});
+  let e = store[key];
+  if (!e) {
+    const cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 64;
+    e = store[key] = { cv, tex: new THREE.CanvasTexture(cv), caption: null };
+  }
+  if (e.caption !== caption) {
+    e.caption = caption;
+    const c = e.cv.getContext('2d');
+    c.fillStyle = '#141821'; c.fillRect(0, 0, 256, 64);
+    c.strokeStyle = '#9fd8ff'; c.lineWidth = 3; c.strokeRect(4, 4, 248, 56);
+    c.fillStyle = '#9fd8ff';
+    let px = 30;
+    c.font = `600 ${px}px Georgia, serif`;
+    while (px > 12 && c.measureText(caption).width > 236) {
+      px -= 2; c.font = `600 ${px}px Georgia, serif`;
+    }
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(caption, 128, 34);
+    e.tex.needsUpdate = true;
+  }
+  const plate = new THREE.Mesh(geo('PlaneGeometry', 0.3, 0.075),
+    new THREE.MeshBasicMaterial({ map: e.tex, toneMapped: false }));
+  return plate;
+}
 function restackNest(nest) {
   const pile = nest.userData.pile;
-  if (nest.__elide) { nest.__elide.removeFromParent(); nest.__elide = null; }
-  // more than ten deliveries: show the bottom and top few, and a little
-  // plate saying how many are folded away between them
-  const BOTTOM = 4, TOP = 4;
-  const elide = pile.length > 10;
-  const shown = elide ? pile.slice(0, BOTTOM).concat(pile.slice(-TOP)) : pile;
+  (nest.__elidePlates || []).forEach(pl => pl.removeFromParent());
+  nest.__elidePlates = [];
+  const { len, from } = pileWindow(nest);
+  // pile[0] is the NEWEST and stands at the bottom; the last is the oldest and
+  // stands on top. The window is counted from that old end, so with nothing
+  // scrolled the takeable one -- the top of the pile -- is the one you see.
+  const hi = len - from;
+  const lo = Math.max(0, hi - PILE_SHOWN);
+  const shown = pile.slice(lo, hi);
   const ys = nestSlots(shown);
   const GAP = 0.16;
+  const newerHidden = lo;                 // below the window, nearer the nest
+  const olderHidden = len - hi;           // above it, nearer the top
   pile.forEach((t) => { t.visible = false; });
   shown.forEach((t, i) => {
     t.visible = true;
     t.__materialize?.();
-    t.position.set(0, ys[i] + (elide && i >= BOTTOM ? GAP : 0), 0);
+    t.position.set(0, ys[i] + (newerHidden ? GAP : 0), 0);
     t.quaternion.identity();
   });
-  if (elide) {
-    // one cached canvas per nest: a 100-round run must not mint a fresh GL
-    // texture for every delivery
-    let ec = nest.__elideCv;
-    if (!ec) {
-      ec = nest.__elideCv = document.createElement('canvas');
-      ec.width = 256; ec.height = 64;
-      nest.__elideTex = new THREE.CanvasTexture(ec);
-    }
-    const n = pile.length - BOTTOM - TOP;
-    if (nest.__elideN !== n) {
-      nest.__elideN = n;
-      const c = ec.getContext('2d');
-      c.fillStyle = '#141821'; c.fillRect(0, 0, 256, 64);
-      c.strokeStyle = '#9fd8ff'; c.lineWidth = 3; c.strokeRect(4, 4, 248, 56);
-      c.fillStyle = '#9fd8ff';
-      c.font = '600 30px Georgia, serif';
-      c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText(`⋯ ${n} more ⋯`, 128, 34);
-      nest.__elideTex.needsUpdate = true;
-    }
-    const plate = new THREE.Mesh(geo('PlaneGeometry', 0.3, 0.075),
-      new THREE.MeshBasicMaterial({ map: nest.__elideTex, toneMapped: false }));
-    plate.position.set(0, (ys[BOTTOM - 1] + ys[BOTTOM] + GAP) / 2, 0.14);
-    nest.add(plate);
-    nest.__elide = plate;
+  if (newerHidden) {
+    const pl = pilePlate(nest, 'newer', `⋯ ${newerHidden} newer ⋯`);
+    pl.position.set(0, ys[0] - 0.09 + GAP, 0.14);
+    setPick(pl, { kind: 'pileScroll', nest, dir: 1 });
+    nest.add(pl);
+    nest.__elidePlates.push(pl);
+  }
+  if (olderHidden) {
+    const pl = pilePlate(nest, 'older', `⋯ ${olderHidden} older ⋯`);
+    pl.position.set(0, ys[ys.length - 1] + 0.11 + (newerHidden ? GAP : 0), 0.14);
+    setPick(pl, { kind: 'pileScroll', nest, dir: -1 });
+    nest.add(pl);
+    nest.__elidePlates.push(pl);
   }
 }
 // Clone deliveries run outside the step queue so a whole flock can fly at
@@ -4030,7 +4291,30 @@ let current = null, tCur = 0;
 // animation is queued), so this can never fight a robot on its way out.
 function dropQueue() {
   queue.length = 0; current = null; busy = false; pendingAfter = null;
-  if (activeBot?.node) activeBot.node.scale.setScalar(1);
+  fixBotScales();
+}
+// How big a robot is says what it is DOING: full size at work, WAIT_SCALE
+// while dozing over an empty nest. It is animated between the two, and an
+// animation thrown away never runs its end() -- which leaves a robot that has
+// been woken standing at the desk still the size it was asleep.
+//
+// This was got wrong once already. The first attempt restored bot.NODE.scale,
+// which is a different thing entirely -- the node carries miniature-ness, the
+// root carries the doze -- so it never touched what had shrunk, and the small
+// robot kept coming back.
+function fixBotScales() {
+  const seen = new Set();
+  const fix = (b) => {
+    if (!b || !b.root || seen.has(b)) return;
+    seen.add(b);
+    b.root.scale.setScalar(b.waiting ? WAIT_SCALE : 1);
+    b.team?.forEach(fix);
+  };
+  fix(activeBot);
+  waiters.forEach(fix);
+  for (const t of benchThings) {
+    if (t.userData?.kind === 'robot' && t.__bot) fix(t.__bot);
+  }
 }
 // A step that only moves a body -- a walk, an arm swing, a pause -- has
 // nothing to say to a world nobody is watching. Offstage those run to their
@@ -5051,6 +5335,12 @@ function handleClick(target) {
       });
     }
   }
+  // The plates on a long pile are not things: they are the way through it.
+  // They answer with a full hand too -- looking is not putting down.
+  if (target.kind === 'pileScroll') {
+    scrollPile(target.nest, target.dir);
+    return;
+  }
   if (target.kind === 'roomLever') {
     const room = target.room;
     if (stations.rooms?.cubes.includes(room)) {
@@ -5252,6 +5542,7 @@ function handleClick(target) {
 
 // In the workshop the user does everything themselves.
 function userClick(target) {
+  if (target.kind === 'pileScroll') { scrollPile(target.nest, target.dir); return; }
   const holdingBot = held?.userData.kind === 'robot';
   // rooms and notebooks take drops of anything, robots included
   if (target.kind === 'thing' && held
@@ -5624,7 +5915,12 @@ function takeIntoHand(obj) {
   handNode.add(obj);
   obj.position.set(0, 0, 0);
   obj.quaternion.identity();
-  obj.scale.setScalar(obj.userData.kind === 'robot' ? MINI : 1);
+  // A robot rides as a miniature, and a HOUSE rides smaller than life too:
+  // carried at full size it fills the view from the hand and hides the very
+  // table you are trying to put it back on -- clicks then pass through it to
+  // whatever is behind, which on a crowded bench is usually another house.
+  obj.scale.setScalar(obj.userData.kind === 'robot' ? MINI
+    : obj.userData.kind === 'room' ? 0.5 : 1);
   // centre on the hand by bounding box: birds, nests, scales and rooms have
   // their origin at the base and otherwise ride high above the pointer
   obj.updateMatrixWorld(true);
@@ -5795,8 +6091,16 @@ function showSoftKeys(on) {
     e.stopPropagation();
     showSoftKeys(!softOn);
   });
+  const turn = document.getElementById('heldTurn');
+  turn.addEventListener('pointerdown', (e) => e.preventDefault());
+  turn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // one button, so it goes one way; the arrows are there for the other
+    turnHeld('yaw', 1);
+  });
 }
 function noteHeld() {
+  heldYaw = 0; heldPitch = 0;          // whatever was turned before, this is new
   if (held) delete held.__faceBuf;     // typing on a die starts a fresh count
   valueAtPickup = held?.userData.value ?? null;
   opAtPickup = held?.userData.op ?? '+';
@@ -7585,7 +7889,8 @@ function wakeWaiter(bot) {
   // Rounds limit would stop it for no reason a child could see.
   runCount = 0;
   mode = 'replay'; busy = true;
-  enqueue({
+  if (speed === Infinity || offstage()) setBotScale(bot, 1);
+  else enqueue({
     dur: 0.4,
     update(t) { setBotScale(bot, lerp(WAIT_SCALE, 1, ease(t))); },
     end() { setBotScale(bot, 1); },
@@ -7782,7 +8087,8 @@ function refreshUI() {
   if (held) {
     const kind = held.userData.kind;
     $('heldVal').textContent = kind === 'number'
-      ? ratShort(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
+      ? (held.userData.op === '+' ? ratShort(held.userData.value)
+         : (OP_READS[held.userData.op] ?? ((n) => n))(ratShort(held.userData.value)))
       : kind === 'robot' ? (held.__bot.name ? `“${held.__bot.name}” the robot`
           : held.__bot.program.length ? 'a trained robot' : 'a robot')
       : kind === 'text' ? (held.userData.text
@@ -7798,7 +8104,17 @@ function refreshUI() {
       : kind === 'bird' ? (held.userData.label ? `the bird “${held.userData.label}”` : 'a bird')
       : kind === 'die' ? `a die (1 to ${held.userData.faces})`
       : `${held.userData.label ? `“${held.userData.label}” — ` : ''}a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
-    $('heldTip').textContent = kind === 'number' ? 'digits set it, − negates; * / ^ or the words “mod” and “set” say what it does'
+    // Once an operation is chosen, saying "say what it does" explains a thing
+    // the number is already showing. What is worth knowing then is what ELSE
+    // it could be -- and that the arrows turn it over.
+    const otherOps = () => ['+', '*', '/', '^']
+      .filter(o => o !== held.userData.op)
+      .join(' ') + (held.userData.op === 'mod' ? '' : ' mod')
+      + (held.userData.op === 'set' ? '' : ' set');
+    $('heldTip').textContent = kind === 'number'
+      ? (held.userData.op === '+'
+          ? 'digits set it, − negates; * / ^ or the words “mod” and “set” say what it does; arrows turn it'
+          : `digits set it, − negates; ${otherOps()} change what it does; arrows turn it`)
       : kind === 'robot' ? 'put it on the table, or on another robot'
       : kind === 'box' ? (held.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
@@ -7968,6 +8284,101 @@ $('undoBtn').onclick = () => { if (!busy && mode !== 'replay') undo(); };
 
 let bubbleTarget = 0, bubbleNow = 0;
 
+// A quarter turn at a time, because the faces of a number block are square to
+// each other: a free spin would leave the digits at an angle nine times out of
+// ten, and reading the back is the whole reason to turn one over. The turn is
+// how it is HELD, not what it is -- setting it down settles it upright again,
+// so nothing you file away comes back on its side.
+const QUARTER = Math.PI / 2;
+// Turning is kept as two counters rather than piled-up rotations, so that it
+// can be REASONED about: which way round it is, and how far it may go.
+let heldYaw = 0, heldPitch = 0;
+function applyHeldTurn() {
+  if (!held) return;
+  // Y outermost, so left and right always spin about the upright axis however
+  // far it happens to be tipped
+  held.quaternion.setFromEuler(
+    new THREE.Euler(heldPitch * QUARTER, heldYaw * QUARTER, 0, 'YXZ'));
+  uprightHeld();
+}
+// Turning a cube by quarters lands the face you asked for in front of you --
+// and quite often lands it on its side or on its head, which is a poor reward
+// for asking to read it. So after every turn the thing is rolled about the
+// line of sight by whichever quarter leaves the writing on the front face the
+// right way up.
+//
+// The face is found rather than derived: the six panes are real meshes, so the
+// one facing the camera is the one whose normal points back along the view,
+// and its "up" is its own local +Y. No table of orientations to get wrong.
+const _uv = {
+  n: new THREE.Vector3(), up: new THREE.Vector3(), view: new THREE.Vector3(),
+  camUp: new THREE.Vector3(), q: new THREE.Quaternion(), pq: new THREE.Quaternion(),
+  axis: new THREE.Vector3(),
+};
+function uprightHeld() {
+  if (!held || held.userData.kind !== 'number') return;
+  held.updateMatrixWorld(true);
+  camera.getWorldDirection(_uv.view);                       // away from the eye
+  _uv.camUp.set(0, 1, 0).applyQuaternion(camera.quaternion).normalize();
+
+  let face = null, facing = -2;
+  for (const ch of held.children) {
+    if (ch.geometry?.type !== 'PlaneGeometry') continue;    // the panes, not the shell
+    ch.getWorldQuaternion(_uv.q);
+    _uv.n.set(0, 0, 1).applyQuaternion(_uv.q);
+    const d = -_uv.n.dot(_uv.view);
+    if (d > facing) { facing = d; face = ch; }
+  }
+  if (!face) return;
+  face.getWorldQuaternion(_uv.q);
+  _uv.up.set(0, 1, 0).applyQuaternion(_uv.q);
+
+  // which quarter turn about the line of sight leaves that up pointing most
+  // nearly up on the screen
+  let best = 0, bestDot = -2;
+  const spin = new THREE.Quaternion();
+  const test = new THREE.Vector3();
+  for (let k = 0; k < 4; k++) {
+    spin.setFromAxisAngle(_uv.view, k * QUARTER);
+    test.copy(_uv.up).applyQuaternion(spin);
+    const d = test.dot(_uv.camUp);
+    if (d > bestDot) { bestDot = d; best = k; }
+  }
+  if (!best) return;
+
+  // the roll is about a line in the WORLD; premultiplying works in the
+  // parent's frame, so the axis is carried into it first
+  held.parent.getWorldQuaternion(_uv.pq);
+  _uv.axis.copy(_uv.view).applyQuaternion(_uv.pq.invert()).normalize();
+  held.quaternion.premultiply(
+    new THREE.Quaternion().setFromAxisAngle(_uv.axis, best * QUARTER));
+}
+// Spinning left and right is good for anything. TIPPING is not: a nest with a
+// pile on it went over on its head, half of it through the table and the rest
+// too far away to read. Only a number has anything to show up there -- its top
+// face repeats the value -- so only a number tips, and only by a quarter each
+// way, which reaches the top and the bottom and never lands upside down.
+function turnHeld(kind, dir) {
+  if (!held) return;
+  if (kind === 'pitch') {
+    if (held.userData.kind !== 'number') {
+      return say('Tipping only makes sense for a number, every face of which '
+        + 'says the value another way. Turn this one left and right instead.');
+    }
+    // A number is a cube with something written on all six sides, so it goes
+    // round and round; only a nest with a pile had any business being stopped.
+    heldPitch = ((heldPitch + dir) % 4 + 4) % 4;
+  } else {
+    heldYaw = ((heldYaw + dir) % 4 + 4) % 4;
+  }
+  applyHeldTurn();
+  sfx('type');
+  say(held.userData.kind === 'number'
+    ? 'Turning it — the faces say the same number other ways: words, a mixed '
+      + 'fraction, scientific notation, exact decimal.'
+    : 'Turning it round.');
+}
+
 addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
@@ -7975,6 +8386,16 @@ addEventListener('keydown', (e) => {
     return;
   }
   if (!held || busy || mode === 'replay') return;
+  // the arrows turn it, whatever it is, before any typing rule sees the key
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'
+      || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (e.key === 'ArrowLeft') turnHeld('yaw', 1);
+    else if (e.key === 'ArrowRight') turnHeld('yaw', -1);
+    else if (e.key === 'ArrowUp') turnHeld('pitch', -1);
+    else turnHeld('pitch', 1);
+    return;
+  }
   const labelKey = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
   // Ctrl/Cmd+C copies the text being edited, Ctrl/Cmd+V pastes onto its end
   const clip = (get, set) => {
@@ -8237,6 +8658,12 @@ function tipFor(t) {
   if (t.kind === 'exitDoor') {
     return 'The way out — click to step back to where you came from.';
   }
+  if (t.kind === 'pileScroll') {
+    return t.dir > 0
+      ? 'Deliveries newer than these — click to walk down towards the newest.'
+      : 'Deliveries older than these — click to walk up towards the oldest, '
+        + 'which is the one that can be taken.';
+  }
   if (t.kind === 'roomLever') {
     const r = t.room;
     return r?.userData.dirty
@@ -8407,7 +8834,14 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
     tipEl.style.display = 'none';
   }
 });
-renderer.domElement.addEventListener('pointerleave', () => { tipEl.style.display = 'none'; });
+// Leaving takes the highlight as well as the tip. Without this a thing went on
+// wiggling -- saying "a click lands here" -- while the pointer was away on
+// another screen entirely.
+renderer.domElement.addEventListener('pointerleave', () => {
+  tipEl.style.display = 'none';
+  setWiggle(null);
+});
+addEventListener('blur', () => { tipEl.style.display = 'none'; setWiggle(null); });
 renderer.domElement.addEventListener('click', (ev) => handleClick(resolve(ev)));
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -9783,8 +10217,21 @@ const MARTY_PROVIDERS = {
 // is that the chat runtime REPLACES fetch with something that proxies for the
 // page. So the question worth asking is whether such a hook is present, not
 // where the page happens to be sitting.
+// There are two artifact runtimes and only one of them can reach Claude.
+//
+//   A claude.ai CHAT artifact has a FLAT window.claude -- the one that used to
+//   carry .complete -- and its frame lets a keyless call through.
+//   A CLAUDE CODE artifact has window.claude.use(name), a capability kernel
+//   whose whole vocabulary is artifact / downloads / mcp / self. None of them
+//   is a completion, its fetch is the browser's own, and a call to Anthropic is
+//   a real request that the frame's policy refuses.
+//
+// So the presence of window.claude proves nothing; the SHAPE of it does. This
+// is the platform's own discriminator, from the runtime type definitions:
+// "Chat artifacts use a different, flat window.claude; neither use() nor these
+// namespaces exist there."
 const hasAiHook = () => {
-  if (window.claude) return true;
+  if (window.claude) return typeof window.claude.use !== 'function';
   try { return !/\[native code\]/.test(Function.prototype.toString.call(window.fetch)); }
   catch { return false; }
 };
@@ -10612,6 +11059,8 @@ window.__nano = {
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
   scratch() { return Object.values(stations).filter(s2 => s2.kind === 'scratch').map(s2 => s2.occupant); },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
+  scrollPile, apartText, repeatLength, factorText, drawContFrac,
+
   parkHand,
 
   heldPos() { return held ? held.getWorldPosition(new THREE.Vector3()).toArray().map(n => +n.toFixed(2)) : null; },

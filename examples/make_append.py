@@ -20,9 +20,14 @@
 # each link is passed on as soon as it exists. That is why the same two robots
 # work when List1 is still being computed somewhere else -- which is exactly
 # what reverse.world.json does with them.
-import json, io, os
+import json, io, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _listbox import list_to_box_room
 
 REP_ID, REP_GUID = 9701, 'append-answer'
+# a twin of the answer nest, so the converter reads its own copy of every link
+TWIN_ID = 9711
+BOXOUT_ID, BOXOUT_GUID = 9712, 'append-as-box'
 
 num = lambda n: {'kind': 'number', 'value': {'n': str(n), 'd': '1'}, 'op': '+'}
 txt = lambda t: {'kind': 'text', 'text': t}
@@ -79,6 +84,11 @@ world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': finish, 'x': -1.20, 'z': 1.30},
     {'thing': {'kind': 'nest', 'id': REP_ID, 'guid': REP_GUID, 'hasEgg': False,
                'pile': [], 'label': 'both lists'}, 'x': 1.15, 'z': 1.60},
+    {'thing': list_to_box_room(TWIN_ID, REP_GUID, BOXOUT_ID, BOXOUT_GUID),
+     'x': 0.35, 'z': 1.30},
+    {'thing': {'kind': 'nest', 'id': BOXOUT_ID, 'guid': BOXOUT_GUID,
+               'hasEgg': False, 'pile': [], 'label': 'the same, as a box'},
+     'x': 1.15, 'z': 2.20},
     {'thing': txt('APPEND\n\nA list is a pair:\n\n  [ first, the rest ]\n\n'
                   'and a box with NO holes is\nthe empty list. Here\n\n'
                   '  [1,[2,[]]]  and  [3,[4,[]]]\n\n'
@@ -91,6 +101,8 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'so the answer grows on the\nnest marked "both lists"\n'
                   'from the outside in.'),
      'x': -0.35, 'z': 2.15},
+    {'thing': txt('BOTH FORMS AT ONCE\n\nThe house reads the answer as\nit arrives and builds the same\nthing as a flat box.\n\nA list is easy to BUILD one\nlink at a time and hard to\nREAD: [1,[2,[3,[]]]] is a box\nholding a nest holding a box,\nthree deep. A box with three\nholes you can take in at a\nglance.\n\nIt never touches the original.\nIts nest is a twin of the\nanswer nest -- one nest in two\nplaces -- so both fill link by\nlink, side by side.'),
+     'x': 0.55, 'z': 2.60},
 ], 'stations': {}, 'active': None}
 
 out = os.path.join(os.path.dirname(__file__), 'append.world.json')

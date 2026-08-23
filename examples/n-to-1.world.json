@@ -227,6 +227,237 @@
   },
   {
    "thing": {
+    "kind": "room",
+    "label": "List to Box",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9611,
+         "guid": "n-to-1-answer",
+         "hasEgg": false,
+         "pile": [],
+         "label": "the list"
+        },
+        {
+         "kind": "box",
+         "holes": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 9612,
+         "nestGuid": "n-to-1-as-box",
+         "label": "as a box"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "List to Box",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": []
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": []
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": [
+       {
+        "kind": "robot",
+        "name": "Link",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "wild"
+            }
+           ]
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBird"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "newBox"
+         },
+         {
+          "type": "setHoles",
+          "n": 1
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          },
+          "side": "R"
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       }
+      ]
+     }
+    }
+   },
+   "x": 0.35,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9612,
+    "guid": "n-to-1-as-box",
+    "hasEgg": false,
+    "pile": [],
+    "label": "the same, as a box"
+   },
+   "x": 1.15,
+   "z": 2.15
+  },
+  {
+   "thing": {
     "kind": "text",
     "text": "COUNTING DOWN\n\nA list is a pair:\n\n  [ first, the rest ]\n\nand \"the rest\" is a nest --\nan answer that has not\narrived yet. The team hands\nthe list over one link at a\ntime and never holds all of\nit at once."
    },
@@ -240,6 +471,14 @@
    },
    "x": -0.35,
    "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "BOTH FORMS AT ONCE\n\nThe house reads the list as it\narrives and builds the same\nthing as a flat box.\n\nA list is easy to BUILD one\nlink at a time and hard to\nREAD: [1,[2,[3,[]]]] is a box\nholding a nest holding a box,\nthree deep. A box with three\nholes you can take in at a\nglance.\n\nIt never touches the original.\nIts nest is a twin of the\nanswer nest -- one nest in\ntwo places -- so both fill\nlink by link, side by side."
+   },
+   "x": 0.55,
+   "z": 2.55
   }
  ],
  "stations": {},

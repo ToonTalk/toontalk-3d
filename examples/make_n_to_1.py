@@ -21,10 +21,15 @@
 # Move for move the original, except that the original's finisher fetches a
 # bomb and blows up its own house; ours vacuums the box it was working on,
 # which ends the team for good and, in a house, folds the house away.
-import json, io, os
+import json, io, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _listbox import list_to_box_room
 
 N = 5
 NEST_ID, NEST_GUID = 9601, 'n-to-1-answer'
+# a twin of the answer nest, so the converter reads its own copy of every link
+TWIN_ID = 9611
+BOXOUT_ID, BOXOUT_GUID = 9612, 'n-to-1-as-box'
 
 num = lambda n: {'kind': 'number', 'value': {'n': str(n), 'd': '1'}, 'op': '+'}
 txt = lambda t: {'kind': 'text', 'text': t}
@@ -79,6 +84,11 @@ world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': finish, 'x': -1.20, 'z': 1.30},
     {'thing': {'kind': 'nest', 'id': NEST_ID, 'guid': NEST_GUID, 'hasEgg': False,
                'pile': [], 'label': 'the list'}, 'x': 1.15, 'z': 1.60},
+    {'thing': list_to_box_room(TWIN_ID, NEST_GUID, BOXOUT_ID, BOXOUT_GUID),
+     'x': 0.35, 'z': 1.35},
+    {'thing': {'kind': 'nest', 'id': BOXOUT_ID, 'guid': BOXOUT_GUID,
+               'hasEgg': False, 'pile': [], 'label': 'the same, as a box'},
+     'x': 1.15, 'z': 2.15},
     {'thing': txt('COUNTING DOWN\n\nA list is a pair:\n\n  [ first, the rest ]\n\n'
                   'and "the rest" is a nest --\nan answer that has not\n'
                   'arrived yet. The team hands\nthe list over one link at a\n'
@@ -90,6 +100,15 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'holes, which means the end.\n\n'
                   'Set Rounds high enough to\nreach it.'),
      'x': -0.35, 'z': 2.15},
+    {'thing': txt('BOTH FORMS AT ONCE\n\nThe house reads the list as it\n'
+                  'arrives and builds the same\nthing as a flat box.\n\n'
+                  'A list is easy to BUILD one\nlink at a time and hard to\n'
+                  'READ: [1,[2,[3,[]]]] is a box\nholding a nest holding a box,\n'
+                  'three deep. A box with three\nholes you can take in at a\nglance.\n\n'
+                  'It never touches the original.\nIts nest is a twin of the\n'
+                  'answer nest -- one nest in\ntwo places -- so both fill\n'
+                  'link by link, side by side.'),
+     'x': 0.55, 'z': 2.55},
 ], 'stations': {}, 'active': None}
 
 out = os.path.join(os.path.dirname(__file__), 'n-to-1.world.json')

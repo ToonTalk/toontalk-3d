@@ -24,9 +24,14 @@
 # append team from the notebook by writing its name on a pad (we carry a spare
 # in a hole, as fibonacci-recursive does), and the finisher blows up its own
 # house (ours vacuums the bird it has just answered, which stops it dead).
-import json, io, os
+import json, io, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _listbox import list_to_box_room
 
 REP_ID, REP_GUID = 9801, 'reverse-answer'
+# a twin of the answer nest, so the converter reads its own copy of every link
+TWIN_ID = 9811
+BOXOUT_ID, BOXOUT_GUID = 9812, 'reverse-as-box'
 
 num = lambda n: {'kind': 'number', 'value': {'n': str(n), 'd': '1'}, 'op': '+'}
 txt = lambda t: {'kind': 'text', 'text': t}
@@ -116,6 +121,11 @@ world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': finish, 'x': -1.25, 'z': 1.30},
     {'thing': {'kind': 'nest', 'id': REP_ID, 'guid': REP_GUID, 'hasEgg': False,
                'pile': [], 'label': 'reversed'}, 'x': 1.15, 'z': 1.60},
+    {'thing': list_to_box_room(TWIN_ID, REP_GUID, BOXOUT_ID, BOXOUT_GUID),
+     'x': 0.35, 'z': 1.30},
+    {'thing': {'kind': 'nest', 'id': BOXOUT_ID, 'guid': BOXOUT_GUID,
+               'hasEgg': False, 'pile': [], 'label': 'the same, as a box'},
+     'x': 1.15, 'z': 2.20},
     {'thing': txt('REVERSE\n\n  reverse [first, rest] =\n    reverse rest\n'
                   '      with [first] appended\n\nFor each link the robot\n'
                   'builds a box holding a nest,\na one-link list and the bird\n'
@@ -128,6 +138,8 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   '[3,[2,[1,[]]]] comes back on\nthe nest marked "reversed"\n'
                   '-- last link settled first.'),
      'x': -0.35, 'z': 2.15},
+    {'thing': txt('BOTH FORMS AT ONCE\n\nThe house reads the answer as\nit arrives and builds the same\nthing as a flat box.\n\nA list is easy to BUILD one\nlink at a time and hard to\nREAD: [1,[2,[3,[]]]] is a box\nholding a nest holding a box,\nthree deep. A box with three\nholes you can take in at a\nglance.\n\nIt never touches the original.\nIts nest is a twin of the\nanswer nest -- one nest in two\nplaces -- so both fill link by\nlink, side by side.'),
+     'x': 0.55, 'z': 2.60},
 ], 'stations': {}, 'active': None}
 
 out = os.path.join(os.path.dirname(__file__), 'reverse.world.json')
