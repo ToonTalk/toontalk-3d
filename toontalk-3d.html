@@ -102,11 +102,12 @@
   #held .k { font-size: 11.5px; color: var(--dim); }
   /* the keyboard is a touch screen's only way in; a machine with keys of its
      own has no use for the button and does not show it */
-  #heldKeys, #heldTurn { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
+  #heldKeys, #heldTurn, #heldPanel { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
   body.touching #heldKeys, body.touching #heldTurn { display: block; }
   /* the turn button is worth having with a mouse too -- the arrow keys are
-     not a thing anybody guesses */
-  #heldTurn { display: block; }
+     not a thing anybody guesses; the panel button is the door to the whole
+     panels feature, so it shows everywhere as well */
+  #heldTurn, #heldPanel { display: block; }
   #heldKeys.on { background: var(--accent); border-color: var(--accent); color: #06212e; }
   /* The row only has room for what is reached often. The rest lives behind
      the three dots: the table's shape, the manual, sound, reporting a bug. */
@@ -169,6 +170,7 @@
   <span class="k">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
   <button id="heldTurn" title="Turn it over a quarter — the arrow keys do the same, and turn it the other way too.">⟳</button>
+  <button id="heldPanel" title="Open its panel — the tray where its behaviour lives. Ctrl+P does the same.">⚙</button>
   <button id="heldKeys" title="Show the keyboard, to type on what you are holding">⌨</button>
 </div>
 
@@ -2096,7 +2098,7 @@ function saveNotebook(nb) {
   if (notebookLocked) return;      // do not overwrite what we could not read
   try {
     localStorage.setItem(nbKey(),
-      JSON.stringify({ v: FILE_V, pages: nb.userData.pages, page: nb.userData.page }));
+      JSON.stringify(stampV({ v: FILE_V, pages: nb.userData.pages, page: nb.userData.page })));
   } catch {}
 }
 // what a page's entry "says", for text-pad navigation
@@ -2505,6 +2507,144 @@ function renderRoomContents(room) {
   // by every world. What a house owns is its robot and its things, and those
   // hang inside it live, at toy scale.
 }
+// --- panels (Stage 1, PLAN.md) ---------------------------------------------
+// A panel is the place where a thing's behaviour lives. Open, it is a TRAY on
+// the bench -- internally a room (same userData shape, same __ctx machinery,
+// found by the same findDirtyRoom walk, run by the same runRoomWork) with no
+// walls, no door, no lever, and a knob that puts it away. Closed, it is a
+// world record in its owner's userData.panelWorld, carried everywhere the
+// owner goes by thingOut / thingIn / copyThing.
+//
+// Glue, both ways: tray.__owner is the thing, thing.__panelTray is the tray.
+// The tray cannot be picked up, vacuumed or serialized as a bench thing --
+// it is not a thing of its own, only a thing's panel, out for the moment.
+function panelName(owner) {
+  const ud = owner.userData;
+  if (ud.label) return '“' + ud.label + '”';
+  return { number: 'the number', text: 'the pad', box: 'the box',
+           scale: 'the scale', nest: 'the nest', bird: 'the bird',
+           robot: 'the robot', room: 'the room', die: 'the die',
+           notebook: 'the notebook' }[ud.kind] || 'the thing';
+}
+function makePanelTray(owner) {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(geo('BoxGeometry', 0.5, 0.024, 0.42),
+    new THREE.MeshStandardMaterial({ color: 0x77634a, roughness: 0.7,
+      map: (woodTex ??= woodTexture()) }));
+  base.position.y = 0.012;
+  base.castShadow = true; base.receiveShadow = true;
+  g.add(base);
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x55452f, roughness: 0.6 });
+  for (const [w, d, x, z] of [[0.5, 0.02, 0, -0.21], [0.5, 0.02, 0, 0.21],
+                              [0.02, 0.42, -0.25, 0], [0.02, 0.42, 0.25, 0]]) {
+    const r = new THREE.Mesh(geo('BoxGeometry', w, 0.034, d), rimMat);
+    r.position.set(x, 0.017, z);
+    g.add(r);
+  }
+  // the knob that folds it away, brass so it reads as a control
+  const stem = new THREE.Mesh(geo('CylinderGeometry', 0.008, 0.008, 0.03, 8),
+    new THREE.MeshStandardMaterial({ color: 0x8a7a55, roughness: 0.4, metalness: 0.6 }));
+  stem.position.set(0.225, 0.045, 0.185);
+  const knob = new THREE.Mesh(geo('SphereGeometry', 0.02, 12, 10),
+    new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.3, metalness: 0.8 }));
+  knob.position.set(0.225, 0.07, 0.185);
+  setPick(stem, { kind: 'panelClose', tray: g });
+  setPick(knob, { kind: 'panelClose', tray: g });
+  g.add(stem, knob);
+  // the label on the front rim, so a table of trays stays legible
+  {
+    const cv = document.createElement('canvas');
+    cv.width = 512; cv.height = 64;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#f0e6cf';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = 'bold 40px Georgia, serif';
+    const text = panelName(owner).replace(/“|”/g, '') + ' — panel';
+    c.fillText(text, 256, 34);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const plate = new THREE.Mesh(geo('PlaneGeometry', 0.34, 0.0425),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+    plate.position.set(0, 0.037, 0.2101);
+    g.add(plate);
+  }
+  const id = nextRoomId++;
+  g.userData = { kind: 'room', panel: true, rest: 0, width: 0.5,
+                 world: null, opaque: false, id, dirty: false };
+  g.__contents = [];
+  g.setOpaque = () => {};              // a panel has no walls to cloud
+  g.__owner = owner;
+  setPick(g, { kind: 'thing', thing: g });
+  return g;
+}
+function openHeldPanel() {
+  if (!held) return say('Hold the thing whose panel you want, then press ⚙.');
+  if (busy || mode !== 'world') return say('Wait for the work to finish first.');
+  const X = held;
+  if (X.userData.panel) return say('A panel has no panel of its own.');
+  if (X.userData.main && X.userData.kind === 'notebook') {
+    return say('Your own notebook is furniture — it has no panel.');
+  }
+  if (X.__panelTray) {
+    wobble(X.__panelTray);
+    return say('Its panel is already out — the tray on the table.');
+  }
+  clearUndo();                          // open/close is a boundary, like a door
+  const tray = makePanelTray(X);
+  // the closed record is kept until close overwrites it: the tray works on a
+  // copy, so nothing is lost if the tray is discarded rather than closed
+  tray.userData.world = X.userData.panelWorld
+    ? JSON.parse(JSON.stringify(X.userData.panelWorld)) : null;
+  X.__panelTray = tray;
+  putOnBench(tray, benchSpot());
+  if (tray.userData.world) hydrateRoom(tray);
+  sfx('grow');
+  const s0 = tray.scale.x;
+  tray.scale.setScalar(0.01);
+  enqueueNext({
+    dur: 0.4,
+    update(t) { tray.scale.setScalar(Math.max(0.01, s0 * ease(t))); },
+    end() { tray.scale.setScalar(s0); },
+  });
+  say(`${panelName(X)[0].toUpperCase() + panelName(X).slice(1)}’s panel — what you lay on it stays glued to the thing. The knob puts it away.`);
+  refreshUI();
+}
+function closePanelTray(tray) {
+  if (busy || mode !== 'world' || tray.__running || roomWorkBusy) {
+    return say('Wait for its work to finish first.');
+  }
+  clearUndo();
+  const X = tray.__owner;
+  const rec = tray.__ctx ? ctxToRec(tray) : tray.userData.world;
+  const empty = !rec || (!(rec.bench ?? []).length && !rec.active
+    && !Object.values(rec.stations ?? {}).some(Boolean));
+  if (X) {
+    X.userData.panelWorld = empty ? null : rec;
+    X.__panelTray = null;
+  }
+  detach(tray);
+  const at = tray.getWorldPosition(new THREE.Vector3());
+  scene.attach(tray);
+  tray.position.copy(at);
+  retiring.push({ node: tray, t: 0, s0: tray.scale.x });
+  sfx('shrink');
+  say(X && !empty ? 'The panel folds back inside — everything on it goes along.'
+                  : 'The panel folds away.');
+  refreshUI();
+}
+// A tray whose thing is gone -- vacuumed, mostly -- folds away by itself.
+function sweepOrphanTrays() {
+  for (const t of benchThings.slice()) {
+    if (!t.userData.panel || t.__running) continue;
+    const X = t.__owner;
+    if (X && X.parent) continue;
+    detach(t);
+    const at = t.getWorldPosition(new THREE.Vector3());
+    scene.attach(t);
+    t.position.copy(at);
+    retiring.push({ node: t, t: 0, s0: t.scale.x });
+  }
+}
 function roomDrop(room, dropped, refuse) {
   pushUndo();
   if (dropped.userData.kind === 'robot' && dropped.__bot === activeBot) {
@@ -2674,7 +2814,7 @@ function findDirtyRoom(ignoreCooldown = false) {
 // The same walk, looking for houses whose work is over.
 function findDoneRoom() {
   const ready = (t) => t.userData.kind === 'room' && t.userData.done
-    && !t.__running && !t.__retiring;
+    && !t.userData.panel && !t.__running && !t.__retiring;
   const walk = (t) => {
     if (!t) return null;
     if (ready(t)) return t;
@@ -3507,6 +3647,14 @@ function thingFromCond(c) {
 function copyThing(t) {
   const c = copyThingRaw(t);
   if (c && t?.userData?.erased) { c.userData.erased = true; applyErasedLook(c); }
+  // a copy gets an independent copy of the panel, contents and all -- open
+  // trays are read live, exactly as thingOut reads them
+  if (c && t) {
+    const tray = t.__panelTray;
+    const rec = tray ? (tray.__ctx ? ctxToRec(tray) : tray.userData.world)
+                     : t.userData?.panelWorld;
+    if (rec) c.userData.panelWorld = JSON.parse(JSON.stringify(rec));
+  }
   return c;
 }
 function copyThingRaw(t) {
@@ -5462,6 +5610,10 @@ function handleClick(target) {
     scrollPile(target.nest, target.dir);
     return;
   }
+  if (target.kind === 'panelClose') {
+    if (held) return say('Empty your hand first — the knob needs a click of its own.');
+    return closePanelTray(target.tray);
+  }
   if (target.kind === 'roomLever') {
     const room = target.room;
     if (stations.rooms?.cubes.includes(room)) {
@@ -5627,6 +5779,9 @@ function handleClick(target) {
           && stations[target.id].occupant ? stations[target.id].occupant
       : null;
     if (victim) {
+      if (victim.userData.panel) {
+        return say('The panel belongs to its thing — Dusty can only take the thing itself.');
+      }
       if (victim.userData.kind === 'room' && victim.userData.dirty) {
         victim.userData.dirty = false;
         return say('Dusty interrupts the room — its robot stops mid-task. Drop something on it to set it going again.');
@@ -5791,6 +5946,12 @@ function userClick(target) {
       const pn = allNests.find(n2 => n2.userData.pile.includes(target.thing));
       if (pn && pn.userData.pile[pn.userData.pile.length - 1] !== target.thing) {
         return userTake(pn);
+      }
+      // A panel belongs to its thing: the knob puts it away, nothing carries
+      // it off.
+      if (target.thing.userData.panel) {
+        wobble(target.thing);
+        return say('The panel belongs to its thing — the knob folds it away.');
       }
       // Picking your own notebook up put it in the way of its own corner tabs.
       // It is furniture: it wobbles where it stands and stays on the desk.
@@ -6222,6 +6383,12 @@ function showSoftKeys(on) {
     e.stopPropagation();
     // one button, so it goes one way; the arrows are there for the other
     turnHeld('yaw', 1);
+  });
+  const pnl = document.getElementById('heldPanel');
+  pnl.addEventListener('pointerdown', (e) => e.preventDefault());
+  pnl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openHeldPanel();
   });
 }
 function noteHeld() {
@@ -7357,19 +7524,35 @@ function botOut(bot) {
 //   v3  writing on a pad records {add} -- what was typed -- where it used to
 //       record {text}, the whole result. A v1/v2 robot still carries {text}
 //       and is still replayed as it always was, so old files are unchanged.
-const FILE_V = 3;
+const FILE_V = 3;        // what a world without panels is written as
+// v4 adds panels (Stage 1 of PLAN.md). Written only when a panel is actually
+// present, so everything a v3 build can run stays readable by it; READ_V is
+// what this build accepts.
+const READ_V = 4;
+function stampV(rec) {
+  rec.v = JSON.stringify(rec).includes('"panel":') ? READ_V : FILE_V;
+  return rec;
+}
 const SPARSE_FROM = 64;
 const fileV = (o) => (Number.isFinite(o?.v) ? o.v : 1);
 // Returns null when the file is readable, or a message saying why it is not.
 function fileTooNew(o, what = 'file') {
   const v = fileV(o);
-  return v > FILE_V
-    ? `That ${what} was saved by a newer ToonTalk 3D (format v${v}; this one reads up to v${FILE_V}). Update, and it will open.`
+  return v > READ_V
+    ? `That ${what} was saved by a newer ToonTalk 3D (format v${v}; this one reads up to v${READ_V}). Update, and it will open.`
     : null;
 }
 function thingOut(t) {
   const r = thingOutRaw(t);
   if (r && t?.userData?.erased) r.erased = true;
+  // the panel rides with its thing: the open tray's live world, or the
+  // closed record, whichever this thing has
+  if (r && t) {
+    const tray = t.__panelTray;
+    const panel = tray ? (tray.__ctx ? ctxToRec(tray) : tray.userData.world)
+                       : t.userData?.panelWorld;
+    if (panel) r.panel = panel;
+  }
   return r;
 }
 function thingOutRaw(t) {
@@ -7413,7 +7596,9 @@ function worldOut() {
   syncBot();
   // Snapshot the world's nodes BEFORE serialising anything: serialising a
   // room switches worlds, which swaps these very globals underfoot.
-  const bench = offstage() ? [] : benchThings.slice();
+  // open panel trays are not bench things of their own: each rides inside
+  // its owner's record (thingOut reads the live tray)
+  const bench = offstage() ? [] : benchThings.filter(t => !t.userData.panel);
   // dozing robots and their desks are not on the bench: save them as bench
   // things so nothing is lost (they wake benched rather than waiting)
   for (const b of [...waiters]) {
@@ -7426,13 +7611,13 @@ function worldOut() {
   const act = activeBot;
   const sts = {};
   for (const [id, occ] of stationNodes) sts[id] = thingOut(occ);
-  return {
+  return stampV({
     kind: 'world', v: FILE_V,
     bench: bench.map(t => ({ thing: thingOut(t),
       x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })),
     stations: sts,
     active: act ? botOut(act) : null,
-  };
+  });
 }
 function botIn(o) {
   const node = makeMiniRobot();
@@ -7448,6 +7633,7 @@ function botIn(o) {
 function thingIn(o, nests, birds) {
   const t = thingInRaw(o, nests, birds);
   if (t && o?.erased) { t.userData.erased = true; applyErasedLook(t); }
+  if (t && o?.panel) t.userData.panelWorld = o.panel;   // arrives closed
   return t;
 }
 function thingInRaw(o, nests, birds) {
@@ -7845,7 +8031,9 @@ function markRoomDone() {
   const room = curCtx?.room;
   if (!room || !room.userData) return;
   room.userData.dirty = false;
-  room.userData.done = true;
+  // a panel is not a disposable house: its robot finishing for good stops the
+  // work, but the tray -- and the thing it belongs to -- remain
+  if (!room.userData.panel) room.userData.done = true;
 }
 // A team takes turns in the open: the member that recognises the work walks
 // up to the desk and the one standing there steps back into the queue. The
@@ -8213,6 +8401,7 @@ function refreshUI() {
     $('rubyBtn').disabled = running || busy;
   }
 
+  sweepOrphanTrays();
   const showHeld = !!held && mode !== 'replay';
   $('held').classList.toggle('on', showHeld);
   if (!showHeld && softOn) showSoftKeys(false);   // nothing to type on any more
@@ -8515,6 +8704,12 @@ addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
     if (!busy && mode !== 'replay') undo();
+    return;
+  }
+  // Ctrl+P opens the held thing's panel (and never the print dialog)
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+    e.preventDefault();
+    if (mode !== 'replay') openHeldPanel();
     return;
   }
   if (!held || busy || mode === 'replay') return;
@@ -11408,6 +11603,8 @@ window.__nano = {
   erase(path) { dustyErase(path); },
   clickCond(path = []) { handleClick({ kind: 'cond', path }); },
   clickRaw(target) { handleClick(target); },
+  openHeldPanel,
+  panelOf(t) { return t.__panelTray ?? null; },
   get hatchN() { return hatching.length; },
   get st() {
     return { mode, busy, held: held?.userData.kind ?? null,
