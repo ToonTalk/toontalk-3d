@@ -290,6 +290,13 @@ toolbar opens `manual.html` — a guided handbook whose illustrations are live
 embedded workshops (the app itself in an iframe with a small canned scene), so
 every example can actually be tried.
 
+`tests/regress.html` is the regression gate (PLAN.md, ground rule 1): it
+drives nine example worlds in an iframe and requires their final dumps to be
+byte-identical to `tests/golden.json`. `?make=1` regenerates the goldens
+(via the capture sink below) -- copy `captures/golden.json` over
+`tests/golden.json` deliberately, in a commit that says why. `?app=` points
+the suite at another build, e.g. the v1 snapshot.
+
 `serve.js` also accepts `POST /capture`, which the pages use to write rendered
 frames to `captures/` — that is how the 3D work gets reviewed without a human
 having to eyeball every change.

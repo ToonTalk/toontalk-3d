@@ -46,13 +46,20 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/capture') {
     try {
       const body = await readBody(req);
-      const m = /^data:image\/(png|jpeg);base64,/.exec(body);
-      if (!m) throw new Error('expected a data:image/png|jpeg;base64 URL');
-      const ext = m[1] === 'jpeg' ? '.jpg' : '.png';
       const safe = (url.searchParams.get('name') || 'frame').replace(/[^\w.-]/g, '_');
       fs.mkdirSync(CAPTURES, { recursive: true });
-      const out = path.join(CAPTURES, safe + ext);
-      fs.writeFileSync(out, Buffer.from(body.slice(m[0].length), 'base64'));
+      let out;
+      const m = /^data:image\/(png|jpeg);base64,/.exec(body);
+      if (m) {
+        out = path.join(CAPTURES, safe + (m[1] === 'jpeg' ? '.jpg' : '.png'));
+        fs.writeFileSync(out, Buffer.from(body.slice(m[0].length), 'base64'));
+      } else {
+        // a JSON body: how the regression runner's make-goldens mode hands
+        // its dumps back (JSON.parse is the validation)
+        JSON.parse(body);
+        out = path.join(CAPTURES, safe + '.json');
+        fs.writeFileSync(out, body);
+      }
       console.log('captured', out);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, file: out }));

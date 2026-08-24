@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>tt3d regression suite</title>
+<style>
+  body { margin: 0; background: #12151b; color: #eef1f6;
+         font: 14px/1.5 ui-monospace, Consolas, monospace; }
+  #log { padding: 16px 20px; white-space: pre-wrap; }
+  .pass { color: #6ee7a8; }
+  .fail { color: #ff7a5c; }
+  .dim { color: #97a2b3; }
+  iframe { position: fixed; right: 8px; bottom: 8px; width: 420px; height: 260px;
+           border: 1px solid #333; opacity: 0.6; }
+  textarea { width: 96%; height: 200px; background: #0e1218; color: #cdd8e8;
+             border: 1px solid #3a4356; margin: 8px 20px; font: inherit; }
+</style>
+</head>
+<body>
+<div id="log">tt3d regression suite\n</div>
+<iframe id="app" src="../toontalk-3d.html?demo=1" title="app under test"></iframe>
+
+<script>
+// The nine-world regression gate (PLAN.md, ground rule 1), formalized from
+// the session harness that guarded the nest-window and tiny-robot fixes.
+//
+//   tests/regress.html            run the suite against tests/golden.json
+//   tests/regress.html?make=1     run and DISPLAY the dumps, to save as the
+//                                 new golden.json (deliberately manual: a
+//                                 golden should change on purpose, in a
+//                                 commit that says why)
+//   tests/regress.html?app=...    test a different build (default ../toontalk-3d.html)
+//
+// Every world is driven the same way the session harness drove it: loaded,
+// settled, Speed=Instant, Rounds=8, then either given its box/scale and its
+// robot clicked, or -- for the room worlds -- the first room's lever pulled.
+// The dump must be byte-identical to the golden. Worlds with dice are
+// excluded by construction (nothing here may be random).
+//
+// The verdict is written to document.title and window.__VERDICT so a headless
+// driver can read it without scraping the page.
+
+const WORLDS = [
+  { name: 'examples/n-to-1', drive: 'give' },
+  { name: 'examples/reverse', drive: 'give' },
+  { name: 'examples/append', drive: 'give' },
+  { name: 'examples/factorial', drive: 'give' },
+  { name: 'examples/swap', drive: 'give' },
+  { name: 'examples/infinity/activity1-even-numbers', drive: 'lever' },
+  { name: 'examples/infinity/activity2-all-integers', drive: 'lever' },
+  { name: 'examples/infinity/activity4-all-fractions', drive: 'lever' },
+  { name: 'examples/infinity/activity6-all-rationals', drive: 'lever' },
+];
+const ROUNDS = 8;
+
+const logEl = document.getElementById('log');
+const put = (line, cls) => {
+  const s = document.createElement('span');
+  s.textContent = line + '\n';
+  if (cls) s.className = cls;
+  logEl.appendChild(s);
+};
+
+const frame = document.getElementById('app');
+const appURL = new URLSearchParams(location.search).get('app');
+if (appURL) frame.src = appURL + (appURL.includes('?') ? '&' : '?') + 'demo=1';
+
+function ready(D) { return D && D.ready; }
+
+// settle in slices, yielding, so a heavy world cannot wedge the tab -- the
+// lesson of the first harness attempt, which froze the renderer for 30s
+async function slowSettle(D, cap) {
+  let n = 0;
+  while (n < cap) {
+    D.step(1 / 60, 400); n += 400;
+    if (!D.state.busy && !D.state.queued) break;
+    if (n % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+  return n;
+}
+
+async function runOne(D, spec) {
+  const w = await (await fetch('../' + spec.name + '.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.speed('inf'); D.rounds(ROUNDS);
+  const things = [];
+  for (let i = 0; i < 14; i++) { const t = D.bench(i); if (!t) break; things.push(t); }
+  if (spec.drive === 'lever') {
+    const src = things.find(t => t.userData.kind === 'room');
+    D.clickRaw({ kind: 'roomLever', room: src });
+  } else {
+    const arg = things.find(t => ['box', 'scale'].includes(t.userData.kind));
+    const bot = things.find(t => t.userData.kind === 'robot');
+    D.clickThing(arg); await slowSettle(D, 2000); D.clickBot(bot);
+  }
+  await slowSettle(D, 120000);
+  return JSON.stringify(D.dump());
+}
+
+(async () => {
+  // wait for the app to boot
+  for (let i = 0; i < 300; i++) {
+    if (ready(frame.contentWindow.__nano)) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  const D = frame.contentWindow.__nano;
+  if (!ready(D)) {
+    put('FAIL: the app never booted', 'fail');
+    document.title = 'FAIL';
+    window.__VERDICT = { ok: false, error: 'app never booted' };
+    return;
+  }
+  put('app booted: ' + frame.src, 'dim');
+
+  const make = new URLSearchParams(location.search).get('make');
+  const dumps = {};
+  for (const spec of WORLDS) {
+    const t0 = performance.now();
+    try {
+      dumps[spec.name] = await runOne(D, spec);
+      put(`ran  ${spec.name}  (${Math.round(performance.now() - t0)} ms)`, 'dim');
+    } catch (e) {
+      dumps[spec.name] = 'ERR ' + e.message;
+      put(`ERR  ${spec.name}  ${e.message}`, 'fail');
+    }
+  }
+
+  if (make) {
+    // hand the dumps to serve.js's capture sink, which writes
+    // captures/golden.json -- copy it to tests/golden.json on purpose,
+    // in a commit that says why the golden moved
+    let saved = false;
+    try {
+      const r = await fetch('/capture?name=golden', {
+        method: 'POST', body: JSON.stringify(dumps, null, 1) });
+      saved = r.ok;
+    } catch (e) {}
+    put(saved
+      ? '\nMAKE-GOLDENS MODE — wrote captures/golden.json; copy it to tests/golden.json'
+      : '\nMAKE-GOLDENS MODE — no capture sink; save the text below as tests/golden.json', 'dim');
+    if (!saved) {
+      const ta = document.createElement('textarea');
+      ta.value = JSON.stringify(dumps, null, 1);
+      document.body.appendChild(ta);
+    }
+    document.title = 'GOLDENS MADE';
+    window.__VERDICT = { ok: true, made: true, saved, dumps };
+    return;
+  }
+
+  let golden;
+  try { golden = await (await fetch('golden.json', { cache: 'no-store' })).json(); }
+  catch (e) {
+    put('FAIL: could not read tests/golden.json — run with ?make=1 first', 'fail');
+    document.title = 'FAIL';
+    window.__VERDICT = { ok: false, error: 'no golden.json' };
+    return;
+  }
+
+  const names = [...new Set([...Object.keys(golden), ...Object.keys(dumps)])];
+  const bad = [];
+  for (const n of names) {
+    if (golden[n] === dumps[n]) put(`PASS ${n}`, 'pass');
+    else { bad.push(n); put(`FAIL ${n}`, 'fail'); }
+  }
+  put('');
+  if (bad.length) {
+    put(`${bad.length}/${names.length} differ from golden`, 'fail');
+    for (const n of bad) {
+      put(`\n--- ${n} ---`, 'dim');
+      put('golden: ' + (golden[n] ?? '(missing)').slice(0, 400), 'dim');
+      put('now:    ' + (dumps[n] ?? '(missing)').slice(0, 400), 'dim');
+    }
+    document.title = 'FAIL';
+  } else {
+    put(`all ${names.length} byte-identical`, 'pass');
+    document.title = 'PASS';
+  }
+  window.__VERDICT = { ok: !bad.length, bad, dumps };
+})();
+</script>
+</body>
+</html>

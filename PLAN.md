@@ -174,6 +174,29 @@ making-of's payoff, and the first candidate for the export-to-web wish.
 | Precision constant | Stage 6 | — |
 | The look of inexact numbers | Stage 6 | — |
 
+## Who builds it
+
+Recorded 24 August, decided by task shape (and revisable per stage at any
+`/model` switch — stage boundaries make the change free):
+
+- **Stages 1, 2 and 6 — the strongest model, high effort.** Stage 1
+  touches the world-context machinery that produced the tiny-robot and
+  delivery-ordering bugs; Stage 2 is the deepest semantics in the epic;
+  Stage 6 promises determinism. These are the stages where mistakes are
+  architectural. (As of this writing that means Opus at high effort;
+  Fable's positioning is not yet established — if Ken's experience says
+  it is at that level, it can take these stages instead.)
+- **Stages 3, 4 and 5 — a fast model, medium effort.** Additive,
+  well-specified work with acceptance criteria already written; Stage 5's
+  twelve behaviours are repetitive construction where iteration speed
+  beats depth. Sonnet is the default; escalate any stage that fights
+  back.
+- The **regression gate is the model-insurance**: byte-identical dumps
+  before every commit catch a weaker model's mistakes mechanically. The
+  plan and BACKS.md are written so a fresh session of any model can pick
+  up a stage cold — the acceptance criteria are the contract, not the
+  conversation.
+
 ## Risks
 
 - **Suspension touches the scheduler.** `waiters`/`checkWaiting` grew the
