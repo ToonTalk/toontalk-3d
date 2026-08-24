@@ -11866,12 +11866,18 @@ function buildTrayShape(g, owner, pw, pd) {
   knob.position.set(hw - 0.025, 0.07, hd - 0.025);
   setPick(stem, { kind: 'panelClose', tray: g });
   setPick(knob, { kind: 'panelClose', tray: g });
-  // corner studs resize it: click one, then click where the corner should be
+  // corner studs resize it: click one, then click where the corner should be.
+  // Each visible stud stands inside a fat invisible post, because the stud
+  // alone was too small to hit -- clicks fell through to the tray.
   const studMat = new THREE.MeshStandardMaterial({ color: 0x6a7280, roughness: 0.4, metalness: 0.6 });
+  const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1]]) {
-    const stud = keep(new THREE.Mesh(geo('CylinderGeometry', 0.014, 0.017, 0.024, 10), studMat));
-    stud.position.set(sx * (hw - 0.022), 0.045, sz * (hd - 0.022));
+    const stud = keep(new THREE.Mesh(geo('CylinderGeometry', 0.02, 0.024, 0.036, 10), studMat));
+    stud.position.set(sx * (hw - 0.028), 0.05, sz * (hd - 0.028));
     setPick(stud, { kind: 'panelCorner', tray: g });
+    const hit = keep(new THREE.Mesh(geo('CylinderGeometry', 0.055, 0.055, 0.1, 8), hitMat));
+    hit.position.set(sx * (hw - 0.028), 0.06, sz * (hd - 0.028));
+    setPick(hit, { kind: 'panelCorner', tray: g });
   }
   // the label lies flat on the floor by the front rim, big enough to read
   {
@@ -11943,7 +11949,16 @@ function openHeldPanel() {
     return say('Your own notebook is furniture — it has no panel.');
   }
   if (X.__panelTray) {
-    wobble(X.__panelTray);
+    const tray = X.__panelTray;
+    if (tray.__closed) {
+      tray.visible = true;
+      tray.__closed = false;
+      sfx('grow');
+      wobble(tray);
+      say('The panel comes back out — still working away.');
+      return refreshUI();
+    }
+    wobble(tray);
     return say('Its panel is already out — the tray on the table.');
   }
   clearUndo();                          // open/close is a boundary, like a door
@@ -11974,6 +11989,17 @@ function closePanelTray(tray) {
   }
   clearUndo();
   const X = tray.__owner;
+  // A panel with work still in it does NOT freeze when it is put away: the
+  // tray turns invisible and stays on the bench, where the scheduler already
+  // finds it -- a house with its walls on, in effect. Only an idle panel is
+  // serialized back into its thing.
+  if (tray.__ctx && (tray.userData.dirty || roomHasWorker(tray))) {
+    tray.visible = false;
+    tray.__closed = true;
+    sfx('shrink');
+    say('The panel folds back inside — its robot keeps working there, out of sight.');
+    return refreshUI();
+  }
   const rec = tray.__ctx ? ctxToRec(tray) : tray.userData.world;
   const empty = !rec || (!(rec.bench ?? []).length && !rec.active
     && !Object.values(rec.stations ?? {}).some(Boolean));
@@ -15164,8 +15190,8 @@ function handleClick(target) {
   // A thing sits down inside its pocket, so a click meant for it can land on
   // the pocket instead. An occupied hole always means the thing in it.
   if (target.kind === 'hole') {
-    if (!target.box) return;
-    const occupant = target.box.userData.holes[target.index].thing;
+    if (!holesOf(target.box)) return;      // a stale target, or not a box at all
+    const occupant = target.box.userData.holes[target.index]?.thing;
     if (occupant) return handleClick({ kind: 'thing', thing: occupant });
   }
 
@@ -17348,7 +17374,7 @@ function enterTraining() {
   if (activeBot) {
     if (Math.abs(activeBot.node.scale.x - 1) > 0.01 || Math.abs(activeBot.root.scale.x - 1) > 0.01) {
       console.warn('tiny-robot corrected entering training:',
-        activeBot.node.scale.x, activeBot.root.scale.x);
+        activeBot.node.scale.x, activeBot.root.scale.x, new Error().stack);
     }
     activeBot.mini = false;
     activeBot.node.scale.setScalar(1);
@@ -17467,7 +17493,7 @@ function runProgram() {
   clearScratch();
   if (Math.abs(activeBot.node.scale.x - 1) > 0.01 || Math.abs(activeBot.root.scale.x - 1) > 0.01) {
     console.warn('tiny-robot corrected entering run:',
-      activeBot.node.scale.x, activeBot.root.scale.x);
+      activeBot.node.scale.x, activeBot.root.scale.x, new Error().stack);
   }
   activeBot.mini = false;
   activeBot.node.scale.setScalar(1);
@@ -18489,7 +18515,8 @@ function tipFor(t) {
     return 'Its little thought — click to take a copy of the very thing it was first shown.';
   }
   if (held && (t.kind === 'roomDoor' || t.kind === 'roomRoof'
-      || (t.kind === 'thing' && t.thing?.userData.kind === 'room'))) {
+      || (t.kind === 'thing' && t.thing?.userData.kind === 'room'
+          && !t.thing.userData.panel))) {
     return 'Drop to send that inside — it lands on the desk, and the room’s robot gets to work.';
   }
   if (t.kind === 'roomDoor') {
@@ -18559,7 +18586,9 @@ function tipFor(t) {
     if (ud.panel) {
       const who = t.thing.__owner ? panelName(t.thing.__owner) : 'its thing';
       return held
-        ? `Drop to put that on the panel — it stays glued to ${who}.`
+        ? (held.userData.kind === 'robot'
+          ? `Drop the robot on the panel — it works there, glued to ${who}.`
+          : `Drop to put that on the panel — it stays glued to ${who}.`)
         : `${who[0].toUpperCase()}${who.slice(1)}’s panel — whatever is laid here travels with the thing. `
           + 'Click to carry the tray elsewhere; the corner studs resize it; the knob folds it away.';
     }
@@ -20517,8 +20546,10 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<div id="martyHere" style="margin-top:6px;display:none"></div>'
   + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
+  + '<form style="display:contents" onsubmit="return false">'
   + '<input id="martyKey" type="password" placeholder="API key\u2026" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
+  + '</form>'
   + '</details>';
 document.body.appendChild(martyUI);
 // (MARTY_VOICE and MARTY_VOICE_NAME are declared with the other per-person
