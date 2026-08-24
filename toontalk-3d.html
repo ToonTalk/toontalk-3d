@@ -4183,6 +4183,20 @@ let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0, textAtPickup = nu
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
 let condDisplay = null, dusty = null, dustyActive = false, dustyHome = null;
+// Which of them is awake changes what an ordinary click DOES, and that state
+// lives on a button you may have looked away from minutes ago -- which is
+// exactly how a thing gets vacuumed, or a robot's thought loosened, by
+// accident. The cursor carries the reminder wherever the pointer goes next,
+// on the table or off it.
+function toolCursor(hex) {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26">'
+    + `<circle cx="13" cy="13" r="9" fill="none" stroke="${hex}" stroke-width="3"/>`
+    + '<circle cx="13" cy="13" r="9" fill="none" stroke="#0009" stroke-width="1"/>'
+    + `<circle cx="13" cy="13" r="2.6" fill="${hex}"/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 13 13, crosshair`;
+}
+const DUSTY_CURSOR = toolCursor('#e6584a');       // takes things away -- warm red
+const RUBY_CURSOR = toolCursor('#e0708a');        // loosens them -- Ruby's own pink
 let defaultStand = null;          // the middle desk, shared by whoever stands there
 let dustyT = 0, dustyBase = null;   // idle wobble while he is awake
 let ruby = null, rubyActive = false, rubyHome = null;
@@ -4206,6 +4220,9 @@ let ROBOT_BB = null;
 function robotBox() { return ROBOT_BB; }
 let activeBot = null;
 let nextBotId = 1;
+// Every bot that has ever existed, so fixBotScales can find and correct one
+// even while it belongs to nobody's list -- mid-grow, mid-swap, mid-shrink.
+const allBots = [];
 
 function makeBot(node) {
   const N = (n) => node.getObjectByName(n);
@@ -4216,11 +4233,13 @@ function makeBot(node) {
   // home, stand and waiting are filled in when it comes to the bench
   const bot = { id: nextBotId++, node, root: N('ROBOT_root') || node, parts,
                 program: [], condition: null, team: [],
-                home: null, stand: null, waiting: false, rounds: 0 };
+                home: null, stand: null, waiting: false, rounds: 0,
+                mini: true };        // fresh off the stack -- see fixBotScales
   node.userData.kind = 'robot';
   node.__bot = bot;   // expando, not userData: clone() JSON-copies userData and the record is circular
   node.userData.rest = 0;            // stands on its feet
   node.userData.width = 0.55;
+  allBots.push(bot);
   return bot;
 }
 function makeMiniRobot() {
@@ -4309,18 +4328,20 @@ function dropQueue() {
 // which is a different thing entirely -- the node carries miniature-ness, the
 // root carries the doze -- so it never touched what had shrunk, and the small
 // robot kept coming back.
+//
+// Both axes read from a flag (`waiting`, `mini`) rather than from where the
+// bot currently sits in some list -- a bot mid-transition (growing into
+// activation, swapping who has the floor, shrinking back to a mini) belongs to
+// NO list, exactly while it is most likely to be caught by an interruption.
+// The flag is set the moment a transition is DECIDED, before any animation
+// starts, so this sweep is always correcting toward the right answer even if
+// it runs mid-flight. allBots, not "whoever fixBotScales can currently see",
+// is what makes that reachable.
 function fixBotScales() {
-  const seen = new Set();
-  const fix = (b) => {
-    if (!b || !b.root || seen.has(b)) return;
-    seen.add(b);
+  for (const b of allBots) {
+    if (!b.root || !b.node) continue;
     b.root.scale.setScalar(b.waiting ? WAIT_SCALE : 1);
-    b.team?.forEach(fix);
-  };
-  fix(activeBot);
-  waiters.forEach(fix);
-  for (const t of benchThings) {
-    if (t.userData?.kind === 'robot' && t.__bot) fix(t.__bot);
+    b.node.scale.setScalar(b.mini ? MINI : 1);
   }
 }
 // A step that only moves a body -- a walk, an arm swing, a pause -- has
@@ -6284,6 +6305,8 @@ function giveToRobot() {
 function activateBot(bot, after) {
   clearUndo();
   busy = true;
+  bot.mini = false;                  // decided now, not when the tween ends
+  bot.team.forEach(m => { m.mini = true; });
   addMiniBubble(bot.node, null);   // the full-size bubble takes over
   detach(bot.node);
   WROOT.attach(bot.node);
@@ -6454,6 +6477,7 @@ function parkActiveAside() {
   renderProgram(); rebuildCondition();
   const node = bot.node;
   const from = node.getWorldPosition(new THREE.Vector3());
+  bot.mini = true;                   // decided now, not when the tween ends
   busy = true;
   enqueue({ dur: 0.5, update(t) { node.scale.setScalar(lerp(1, MINI, ease(t))); } });
   enqueue(doNow(() => {
@@ -6481,6 +6505,7 @@ function restoreLeaderBody(bot) {
 function miniaturizeActive() {
   if (!activeBot || busy || mode !== 'world') return;
   const bot = activeBot;
+  bot.mini = true;                   // decided now, not when the tween ends
   restoreLeaderBody(bot);
   hideTeam(bot);
   cancelWaiting(bot);
@@ -7805,6 +7830,8 @@ function markRoomDone() {
 function takeTheFloor(member) {
   if (member === bodyBot) return;
   const out = bodyBot;
+  member.mini = false;                // decided now, not when the tween ends
+  if (out) out.mini = true;
   const outIdx = roster().indexOf(out);      // the leader has a slot too
   const outSlot = outIdx >= 0 ? teamSlot(outIdx) : null;
   const inNode = member.node, inFrom = inNode.position.clone();
@@ -8904,7 +8931,9 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
   // teleports it to wherever the hand was last left
   if (mode === 'world') moveHand(ev, target?.point?.y ?? null);
   setWiggle(wiggleTargetOf(target));
-  renderer.domElement.style.cursor = target ? 'pointer' : '';
+  renderer.domElement.style.cursor = dustyActive ? DUSTY_CURSOR
+    : rubyActive ? RUBY_CURSOR
+    : target ? 'pointer' : '';
   const tip = tipFor(target);
   if (tip) {
     tipEl.textContent = tip;
@@ -11322,6 +11351,11 @@ window.__nano = {
   draw() { renderer.render(scene, camera); },
   pick(station, path = []) { handleClick({ kind: 'station', id: station }); if (path.length) throw new Error('use pickAt'); },
   click(station) { handleClick({ kind: 'station', id: station }); },
+  // Every bot ever made, and its two independent scales -- what caught the
+  // interrupted-mid-tween tiny-robot bug, and what would catch its return.
+  allBots() { return allBots.map(b => ({id: b.id, mini: b.mini, waiting: b.waiting,
+    nodeScale: +b.node.scale.x.toFixed(3), rootScale: +b.root.scale.x.toFixed(3)})); },
+  dropQueueNow() { dropQueue(); },   // simulate an animation thrown away mid-flight
   giveRobot() {
     const bot = activeBot ?? benchThings.find(t => t.userData.kind === 'robot')?.__bot;
     if (bot) handleClick({ kind: 'botThing', bot });
