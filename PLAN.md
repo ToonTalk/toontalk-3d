@@ -59,11 +59,9 @@ move with the mouse) read device nests and cannot be built without them.
   loads each example world headless, runs it at Instant with fixed
   rounds, dumps, and diffs against `tests/golden/*.json` — plus a
   make-goldens mode. This is the session harness, formalized.
-- **Decisions needed from Ken before Stage 1** (they block strings and
-  gestures): the release gesture — holding-card button is the
-  recommendation, a key as well is cheap — and the working **name**
-  (panel / workings / back), which appears in every tooltip the epic
-  writes.
+- **Decisions needed from Ken before Stage 1 — both made, 24 August:**
+  the release gesture is the **holding-card button plus a key**, and the
+  name is **panel**. Stage 1 is unblocked.
 
 ### Stage 1 — panels as places (1–2 days)
 
@@ -77,7 +75,7 @@ mounted world context without walls); persistence bumps `FILE_V` to 4.
 robot runs there; close it; save and reload round-trips; a v3 world still
 loads; suite green.
 
-### Stage 2 — birds, live numbers, suspension (~2 days)
+### Stage 2 — birds, live numbers, suspension (2–2.5 days)
 
 Opening a panel yields a **bird addressed to the thing**. Messages are
 boxes with a selector pad; the panel handles one at a time. Event nests
@@ -90,10 +88,16 @@ test-heavy, and the **bank-account example rebuilt on panels is the
 canary**: it already does request/reply with reply birds, so it must come
 out cleaner, not different.
 
+The **info notebook** ships here too (+ about half a day): every panel
+gets an ℹ️ button opening a notebook of live example boxes — copy one
+out, edit it, send it. Built-in kinds' notebooks are authored; user
+panels get an empty one the author fills by the ordinary filing gesture.
+
 *Acceptance:* a gauge built as an idiom (sync robot + controller); a
 badged `+10` delivered as fetch-and-add; two robots hammering the same
 live number cannot interleave a read-modify-write; an echo test showing a
-sync robot's own write does not wake itself; suite green.
+sync robot's own write does not wake itself; an example box copied from a
+number's info notebook, edited and delivered; suite green.
 
 ### Stage 3 — pads, generalized (2–3 days)
 
@@ -159,8 +163,8 @@ making-of's payoff, and the first candidate for the export-to-web wish.
 
 | Decision | Blocks | Recommendation on file |
 |---|---|---|
-| Release gesture | Stage 1 | holding-card button (+ a key) |
-| The name: panel / workings / back | Stage 1 strings | — |
+| Release gesture | Stage 1 | **decided:** holding-card button + a key |
+| The name | Stage 1 strings | **decided:** panel |
 | Binding rule: both directions? | Stage 5 | start with both, drop one if confusing |
 | Positional audio | Stage 3 | yes — from the thing |
 | Where made sounds are minted | Stage 3 | — |

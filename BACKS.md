@@ -45,10 +45,10 @@ an outside wall with a name painted on it. "Flip it over" would collide
 with the turning gesture that already exists (arrow keys, while holding),
 which shows you MORE faces of the thing, not a different kind of place.
 
-The replacement candidate: a **control panel**. Every thing has one; it
-starts out holding only the bird and the event nest, and the user adds
-working robots and wall-less houses to it. Some action while holding a
-thing releases its panel.
+The replacement: a **panel** — decided, 24 August. Every thing has one;
+it starts out holding only the bird and the event nest, and the user adds
+working robots and wall-less houses to it. The release gesture is also
+decided: a button on the holding card, plus a key.
 
 What survives this rename is: everything. The back was never geometrically
 a back — it was a place glued to its thing where behaviour lives. The
@@ -57,21 +57,17 @@ panel is the same place under an honest name; every semantic in this file
 word for word. What actually changes is the access gesture and the
 staging:
 
-- **The gesture.** Three candidates. A button on the *holding card* — the
-  card already carries the keyboard and the turning hints, so it is
-  discoverable, and it is the only candidate that works identically on a
-  tablet. A key, while holding. Or a **mechanic's bench**: one more
-  station in the arc, and setting a thing on it slides the panel out —
-  which gives the act a place, the way copying has Mimi, at the cost of
-  arc space and a walk. The holding-card button is the current favourite;
-  the bench could join later without conflict.
+- **The gesture — decided.** A button on the *holding card* (the card
+  already carries the keyboard and the turning hints, so it is
+  discoverable, and it works identically on a tablet), plus a key while
+  holding. The third candidate, a **mechanic's bench** in the arc, is not
+  ruled out — it could join later without conflict.
 - **The staging.** Released, the panel is a tray — set it down anywhere and
   work at it like a small bench. It stays glued to its thing: copy the
   thing and the panel copies, vacuum the thing and the panel goes too.
   Closing it snaps it back inside.
-- **The name.** Control panel, the workings, the service hatch — and the
-  verb is "open it up", which is what children say about machines. This
-  file keeps its name until the choice is built.
+- **The name — decided: "panel".** The verb is "open it up". This file
+  keeps its historical name; the app's strings say panel.
 
 ## Birds are the whole interface
 
@@ -93,6 +89,38 @@ modification never travels in pieces. The badges were built for arithmetic;
 they turn out to be the atomic-RMW message format. The sugar is limited to
 one argument — selector boxes are the general form — but a badged number
 displays its verb on its face, which is worth a lot at the table.
+
+## The info notebook: documentation you can copy
+
+How does anyone learn what boxes a bird will accept? The answer should not
+be a manual page about the workshop — it should be the workshop's own
+gesture. **A panel's documentation is a notebook**, and notebooks already
+have the right property: what you take from a page is a *copy*. So the
+docs are pages of **live example boxes** — take one out, edit the numbers,
+give it to the bird. Documentation that can be copied and run cannot rot,
+and cannot be misread, because the example IS the format.
+
+The page layout is Miki's, from the anima-gadgets notebook of 1999: pairs
+of pages, a text page on the left describing, the thing itself on the
+facing page. Here the left page says what the box does and the right page
+holds the example box; receive-pages (what the event nest will deliver)
+are marked as arriving rather than sendable.
+
+- **One button, not two.** The panel gets a single ℹ️ button opening the
+  thing's info notebook, with a title page for each direction — "what you
+  can send" (the bird) and "what it will tell you" (the nest). Two
+  buttons on a small tray is clutter; the directions are pages, not
+  places. (Open below if use proves otherwise.)
+- **Built-in kinds** get authored notebooks, written once.
+- **Imported models** get theirs *generated from the file*, exactly as the
+  API is: each clip a page with a ready `[play, "walk"]` box, each named
+  part a page with a `[turn, "LeftArm", y, 30]` box, the example names
+  being the model's real ones.
+- **User-built panels** get an empty info notebook that the author fills
+  by the ordinary gesture — file an example box in it. Documentation is
+  user-extensible with the same move as everything else, which also means
+  a child can document her own gadget the way the library documents
+  itself.
 
 ## Live numbers, and gauges as an idiom
 
@@ -168,6 +196,30 @@ event to every subscriber. These are read-only by construction: there is a
 nest to copy but no bird to be had — nothing may move the user's mouse.
 The observe/control split's first natural appearance.
 
+## Native panels: extending the workshop from JavaScript
+
+The Devices notebook is secretly the first instance of a general shape: a
+thing whose panel is implemented *in JavaScript* rather than in robots —
+events fed to a nest by code, messages to its bird handled by code. Ken's
+ask (24 August): a user who wants some browser API — speech, MIDI, the
+camera, geolocation, a gamepad — should be able to wrap it as something
+loadable into the workshop: at minimum a bird-and-nest to the API,
+ideally a full anima-gadget with an info notebook.
+
+The natural contract is small: a loaded module declares a name, a handler
+for boxes sent to its bird, and a way to post boxes to its nest — the
+same two directions every panel has. Everything else (what it looks like,
+its info notebook, behaviours built on top) is ordinary workshop material
+that ships alongside in the same file.
+
+Deliberately not designed yet: **the safety story**. Loading JavaScript
+is running JavaScript, and a file traded between children must not be a
+trap. Options run from honest scariness (a warning dialog naming what the
+module asked for) to real sandboxing (an iframe or worker with a message
+bridge, which the bird/nest shape happens to fit perfectly — a sandboxed
+native panel is just a panel whose messages cross a postMessage boundary).
+The bridge design makes this a candidate for AFTER the epic, not in it.
+
 ## Behaviours as things: anima-gadgets
 
 The Playground project (1999–2001) shipped ToonTalk's best answer to "how
@@ -216,6 +268,17 @@ robots that speak about "my thing" the way a robot already speaks about
   a sub-panel of the object's panel, and its controlled-object is
   re-assigned to the newcomer. Either direction of the gesture, same
   result.
+
+One warning in the 2000 write-up earns a design rule here. Copying a
+behaviour with the magic wand came with the caution to get "the entire
+purple rectangle shown" — because a behaviour was visually a *composite*
+(a carrier picture with graphics riding on it), and a wand aimed at a
+fragment copied artwork without the robots. The lesson: **a behaviour
+must be one thing.** Here a behaviour is a single pad whose panel holds
+its robots, so Mimi copies all of it or none of it; there must never be a
+way to take home half a gadget. (Sub-pads reopen exactly this trap —
+clicking a sub-pad naturally means the sub-pad — so a gadget's artwork
+should be *faces of one pad*, not loose sub-pads riding on it.)
 
 Self-demonstration then costs nothing, because it is not a demo mode: an
 unattached behaviour's "my thing" is *itself*, so a Bounce gadget set on
@@ -505,3 +568,10 @@ epic. Natural order: 1–2 first (the semantics), 3 second (the payoff),
 - Whether a behaviour's robots may also read the Devices notebook
   directly (move-with-mouse needs the mouse), or only their thing's own
   events.
+- Whether one info button serves both directions, or use shows that
+  send-docs and receive-docs want separate doors.
+- Whether generated model docs show every named node (a rigged model can
+  have hundreds) or a curated page per clip plus a parts index.
+- The native-panel safety story: warning dialog, or a postMessage
+  sandbox — and whether a native panel may be filed in a notebook and
+  travel inside a world file.
