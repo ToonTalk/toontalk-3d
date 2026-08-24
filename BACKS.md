@@ -1,7 +1,7 @@
 # The back of things
 
-**Status: designed, not built.** This is the spec settled in conversation
-(Ken Kahn and Claude, 21–22 August 2026). DIVERGENCE.md stays the audit of
+**Status: designed, not built; build plan in `PLAN.md`.** This is the
+spec settled in conversation (Ken Kahn and Claude, 21–24 August 2026). DIVERGENCE.md stays the audit of
 the original; this file is a design of our own — what replaces the
 original's sensor family, and why it is smaller than what it replaces.
 
@@ -427,8 +427,9 @@ file to `toontalk-3d-v1.html` and let `index.html` point at the snapshot
 until the epic settles — and keep developing in the canonical file, held
 honest by the byte-identical regression harness that already guards every
 commit. The snapshot never changes, so it costs nothing to maintain, and
-the canonical file keeps a single history. Decision deferred until
-building starts.
+the canonical file keeps a single history. **Decided 24 August** — the
+snapshot is taken, and the build order, checkpoints and ground rules live
+in `PLAN.md`.
 
 ## How much work
 
@@ -437,7 +438,7 @@ was a day; Marty was a day):
 
 1. **Backs as places** — flip gesture, the back as a mounted world context
    (the room machinery reused without the room), layout/labels,
-   save-format v3: **1–2 days**.
+   save-format v4 (v3 was taken by the pad-training fix): **1–2 days**.
 2. **Live numbers, events, suspension** — event nests, echo suppression,
    generalising mismatch-attribution to register waiters on live things
    (`mismatchPaths` already computes the failing paths): **~2 days**, the
