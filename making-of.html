@@ -263,16 +263,16 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Eight days, 136 commits and one 11,100-line file — and
+  <p class="standfirst">Nine days, 150 commits and one 11,600-line file — and
     the day the project stopped guessing at ToonTalk and went and read it.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;23 August 2026</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;24 August 2026</p>
 </header>
 
 <dl class="ledger">
-  <div><dt>Built in</dt><dd>8 days</dd></div>
-  <div><dt>Commits</dt><dd>136</dd></div>
+  <div><dt>Built in</dt><dd>9 days</dd></div>
+  <div><dt>Commits</dt><dd>150</dd></div>
   <div><dt>The app</dt><dd>1 file</dd></div>
-  <div><dt>Lines</dt><dd>11,116</dd></div>
+  <div><dt>Lines</dt><dd>11,642</dd></div>
   <div><dt>Examples</dt><dd>18 worlds</dd></div>
 </dl>
 
@@ -820,6 +820,73 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
+    <div class="rail">24 Aug<br>0a19b99 &rarr; 5e3dd49</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">↻</span>
+        <h2>The plan, and the first panel</h2>
+      </div>
+      <p>The ninth day divided cleanly into finishing, designing, and — for
+        the first time with a written plan in hand — building.</p>
+      <p>The finishing: the nest-as-window promise from day eight turned out
+        to cover only <em>taking</em>. Ken trained a robot the natural way —
+        drop a ×2 straight onto the 1, never lifting it out — and handed it a
+        nest: the ×2 was refused and the delivery went to the bird untouched.
+        The put side now reads the same <span class="mono">trainedOn</span>
+        signal the take side does. And the tiny robot, reported three times
+        and half-fixed twice, was closed the way the first half had been: a
+        flag stating what size the robot <em>should</em> be, set when a
+        transition is decided rather than when its animation finishes, plus a
+        registry of every robot ever made — because mid-transition a robot
+        belongs to no list, exactly when an interruption is most likely to
+        catch it. Reproduced stuck at scale 0.383, snapped back to 1.
+        Dusty and Ruby also put a ring on the cursor — his warm red, her pink
+        — because their dial changes what a click <em>does</em>, and that
+        state lived on a button you had looked away from.</p>
+      <h3>Three rounds of design</h3>
+      <p>Then BACKS.md tripled. Ken questioned the file's own title — in 2D
+        every thing has an unseen reverse side; here a number spends all six
+        faces and the back of a house is an outside wall — and the answer is
+        a <b>panel</b>, a place glued to its thing, with every semantic in
+        the design surviving the rename word for word. The flatness problem
+        for pictures got surveyed (billboards, cards, floating panels,
+        decals) and answered from inside the workshop: a picture is the same
+        tablet a text pad already is. Sounds arrived made and remade — the
+        badge gesture generalised, ×2 for double speed, ×(−1) for backwards.
+        And the anima-gadgets of the Playground project were read from their
+        own sources: <span class="mono">behave.tt</span> decoded, the IOE
+        catalogue transcribed whole, and Miki's 2000 write-up found, with its
+        warning about copying "the entire purple rectangle" turned into a
+        design rule — a behaviour must be one thing, so the copier takes all
+        of it or none.</p>
+      <h3>A plan, and a snapshot</h3>
+      <p>PLAN.md turned the design into six stages with acceptance criteria,
+        a decision table, a risk list, and a capstone: Pong, built only from
+        pads and library behaviours. The release got its protection the same
+        hour — <span class="mono">toontalk-3d-v1.html</span>, a byte-identical
+        snapshot that <span class="mono">index.html</span> now points at, so
+        the epic can proceed in the canonical file without touching anybody's
+        released app. The session-bound regression harness became
+        <span class="mono">tests/regress.html</span> with pinned goldens:
+        nine worlds, byte-identical or FAIL.</p>
+      <h3>Stage 1, the same evening</h3>
+      <p>And then panels stopped being a document. Every thing in the
+        workshop can now carry one: press the gear on the holding card (or
+        Ctrl+P) and a tray slides out — a room with no walls, run by the same
+        scheduler that runs houses, closed by a brass knob. What you lay on
+        it stays glued to the thing: saving carries it, filing carries it,
+        Mimi copies it independently, and a tray whose thing is vacuumed
+        folds away by itself. A trained robot laid on a number's panel ran
+        there and stopped on its own condition; the save stamped itself v4
+        only because a panel was actually in it; and the nine goldens came
+        through untouched. Stage 2 — the bird, the event nest, and the
+        deepest semantics in the epic — is next.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
     <div class="rail">How it worked</div>
     <div class="body">
       <div class="head">
@@ -895,7 +962,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 136 commits between 16 and 23
+  <p>Written from the repository's own history: 150 commits between 16 and 24
   August 2026, and the audit file they kept arguing with. Every prompt of the
   conversation is in <a href="the-ledger.html">the ledger</a>.</p>
   <p>Ken Kahn's own account of the project is
