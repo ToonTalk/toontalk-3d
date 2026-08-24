@@ -168,6 +168,65 @@ event to every subscriber. These are read-only by construction: there is a
 nest to copy but no bird to be had — nothing may move the user's mouse.
 The observe/control split's first natural appearance.
 
+## Behaviours as things: anima-gadgets
+
+The Playground project (1999–2001) shipped ToonTalk's best answer to "how
+does a child reuse behaviour without reading code": **anima-gadgets**.
+(Sources, read 24 August 2026: the library's own `behave.tt` notebook, the
+archived catalogue at the IOE, and the June 2000 write-up of how to use
+them.) An anima-gadget was a picture whose front carried a family of
+**behaviours** — purple rectangles — and which **demonstrated itself**: set
+it on the floor, switch it on, and watch what each behaviour does to it.
+"By observing the behaviour in action (or, with practice, simply by
+reading the image)" you find the one you want — the catalogue was legible
+by watching, not by reading. Each behaviour's back held the robots that
+did the work, plus text labels that **spoke when pointed at**. To use one:
+take the rectangle, flip your butterfly over, put the behaviour on its
+back. The butterfly is ready.
+
+The catalogue is worth keeping whole, as the target library. Start moving
+(up, right, down, left); movement shapes (ellipse, square, random); move
+with arrow keys, with shift-and-control, in diagonals; move with the
+mouse (up-and-down, left-and-right, both); move with the joystick; bounce
+off other things, bounce off edges, wrap at edges; jump and make a sound
+when touched, jump on click; stop at edges, stop at barriers; shoot on
+click, in four directions, on the trigger; I destroy anything that
+touches me, I destroy myself when touched (each with or without an
+animation); grow when touched, shrink when touched; change colour or
+picture when touched; make a sound on hit, on click, on any key; add
+numbers or letters together when they touch; scoring (send a message to
+the score when hit, add to the score, reset the score); make something
+appear on touch. And from `behave.tt` itself: bounce to stay on screen,
+jump and make sound on collision, tend towards a static goal, tend
+towards a moving goal, reverse on collision, a speed limit, broadcast
+position.
+
+Here a behaviour is an ordinary thing whose **panel carries robots** —
+robots that speak about "my thing" the way a robot already speaks about
+"hole 1 of what I was given". What makes reuse work is the binding rule
+(Ken's, 24 August):
+
+- **Panel on panel.** Place a control panel on a control panel, and the
+  inner panel's robots now control the *outer panel's object*. The
+  behaviour was written against its own thing; landing on the butterfly's
+  panel re-points that one reference at the butterfly. Nothing inside the
+  behaviour is edited — the binding is the only thing that moves.
+- **Object on a control.** Drop a whole object onto a behaviour and the
+  same wiring happens from the other side: the behaviour's panel becomes
+  a sub-panel of the object's panel, and its controlled-object is
+  re-assigned to the newcomer. Either direction of the gesture, same
+  result.
+
+Self-demonstration then costs nothing, because it is not a demo mode: an
+unattached behaviour's "my thing" is *itself*, so a Bounce gadget set on
+the table bounces, and a Grow-when-touched gadget grows when you touch
+it. The anima-gadgets house — a floor of gadgets, each doing its thing —
+is just a room of things whose bindings have not been given away yet.
+
+The speaking labels come almost free: the hint voice already exists and
+is already a per-user setting, so a control that says its name when
+pointed at is the same machinery aimed at a smaller target.
+
 ## Inexact numbers
 
 Trigonometry and non-integer powers arrive with pictures (rotation demands
@@ -234,6 +293,31 @@ video playing across the table is quieter than one in your hand. The
 alternative staging — a little TV prop with the video on its screen — buys
 charm at the cost of a new kind; a child who wants a TV can drop the video
 pad onto a model of one.
+
+### Pads, generalised
+
+The moment a pad can carry an image, "text pad" is the wrong name: they
+are **pads**, and writing was only ever one of the things you could put
+on one. (Ken, 24 August — the rename should reach the manual, the
+tooltips and Marty's briefing when this is built.)
+
+How an image gets onto a pad — three doors, none of them new machinery:
+
+- the pad's panel carries an **import button**, and
+- the panel **receives drops** — the one file-door of this section, scoped
+  to a single thing; and
+- **paste, while holding**: hold a pad, paste an image, and the image
+  covers the pad. Typing already routes to the held thing (that is how
+  tablets write on pads); paste is the same route carrying a picture.
+
+**Sub-pads.** A pad can hold pads, their coordinates **relative to the
+containing pad**. That is scene-building: Pong's field is a pad, the
+paddles and the ball are sub-pads, and each sub-pad's panel carries its
+behaviours. Move the field and the game moves with it; file the field in
+the notebook and the whole game is one entry. (The original's pictures
+nested exactly this way — a picture on a picture lived in the parent's
+frame.) The `position`, `width` and `height` messages then mean *within
+my parent*, which is also what the original meant by them.
 
 ### Sounds: files, made, and remade
 
@@ -332,6 +416,20 @@ exist. Sounds share almost all of it: a sound is a model with fewer
 verbs, and made-and-remade sounds ride gestures that already exist — the
 badge drop and the edge drop — for about another half day.
 
+## Where the work happens
+
+Ken's question, 24 August: should this be built under a new file name, so
+the released `toontalk-3d.html` is untouched? The cost to weigh is the
+fork: two 11,000-line files diverging across a week-long epic means every
+unrelated bug fix ports twice, by hand. The alternative that buys the
+same safety for nothing: **snapshot the release** — copy the current
+file to `toontalk-3d-v1.html` and let `index.html` point at the snapshot
+until the epic settles — and keep developing in the canonical file, held
+honest by the byte-identical regression harness that already guards every
+commit. The snapshot never changes, so it costs nothing to maintain, and
+the canonical file keeps a single history. Decision deferred until
+building starts.
+
 ## How much work
 
 Estimated at the pace this project has actually run (the engine/view split
@@ -345,15 +443,20 @@ was a day; Marty was a day):
    (`mismatchPaths` already computes the failing paths): **~2 days**, the
    smallest code and the deepest semantics — test-heavy.
 3. **Pictures** — import, a new thing kind, the verb vocabulary, back with
-   bird: **1–2 days**. Sounds, made and remade: **+1–1.5 days**. Video:
+   bird: **1–2 days**. Sub-pads (relative coordinates, scene-building):
+   **+half a day**. Sounds, made and remade: **+1–1.5 days**. Video:
    later.
-4. **Devices notebook** — **half a day to a day**.
-5. **Inexact numbers** — flag, contagion, fixed-precision trig/powers,
+4. **Behaviours / anima-gadgets** — the binding rule is small once panels
+   exist (**~1 day**); the library is the real work and grows forever —
+   the first dozen behaviours perhaps **1–2 days**, and they double as the
+   test suite for everything above them.
+5. **Devices notebook** — **half a day to a day**.
+6. **Inexact numbers** — flag, contagion, fixed-precision trig/powers,
    the visual marker: **1–2 days**.
 
-Total: **roughly 6–9 working days**, comparable to the rooms-and-engine
+Total: **roughly 8–12 working days**, comparable to the rooms-and-engine
 epic. Natural order: 1–2 first (the semantics), 3 second (the payoff),
-4–5 after.
+4 third (the library that makes it sing), 5–6 after.
 
 ## Alternatives considered
 
@@ -393,3 +496,11 @@ epic. Natural order: 1–2 first (the semantics), 3 second (the payoff),
 - Where made sounds are minted: a machine in the arc, or a page of the
   Devices notebook.
 - Whether `×(−1)` playing a sound backwards is delight or confusion.
+- Whether both directions of the gadget gesture ship (panel-on-panel and
+  object-on-control), or one is enough to start.
+- What an unattached behaviour's self-demonstration bumps into — does
+  Bounce bounce off the workshop's own furniture, or only off the edges
+  of the pad it sits on?
+- Whether a behaviour's robots may also read the Devices notebook
+  directly (move-with-mouse needs the mouse), or only their thing's own
+  events.
