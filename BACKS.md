@@ -34,6 +34,45 @@ glass by default.
 where a picture's behaviour went. We generalise the gesture to every kind
 that earns one.)
 
+## Is "the back" the right metaphor?
+
+Raised by Ken, 24 August, and the objection lands. Flipping suits a flat
+world: in 2D every thing is a sprite with an unseen reverse side, so "the
+back" names a real place that is really hidden. Here nothing has an unseen
+side left. A number is a cube whose six faces are all spoken for — the
+bottom face carries the continued fraction now — and the back of a house is
+an outside wall with a name painted on it. "Flip it over" would collide
+with the turning gesture that already exists (arrow keys, while holding),
+which shows you MORE faces of the thing, not a different kind of place.
+
+The replacement candidate: a **control panel**. Every thing has one; it
+starts out holding only the bird and the event nest, and the user adds
+working robots and wall-less houses to it. Some action while holding a
+thing releases its panel.
+
+What survives this rename is: everything. The back was never geometrically
+a back — it was a place glued to its thing where behaviour lives. The
+panel is the same place under an honest name; every semantic in this file
+(one message at a time, suspension, echoes, gauges as an idiom) transfers
+word for word. What actually changes is the access gesture and the
+staging:
+
+- **The gesture.** Three candidates. A button on the *holding card* — the
+  card already carries the keyboard and the turning hints, so it is
+  discoverable, and it is the only candidate that works identically on a
+  tablet. A key, while holding. Or a **mechanic's bench**: one more
+  station in the arc, and setting a thing on it slides the panel out —
+  which gives the act a place, the way copying has Mimi, at the cost of
+  arc space and a walk. The holding-card button is the current favourite;
+  the bench could join later without conflict.
+- **The staging.** Released, the panel is a tray — set it down anywhere and
+  work at it like a small bench. It stays glued to its thing: copy the
+  thing and the panel copies, vacuum the thing and the panel goes too.
+  Closing it snaps it back inside.
+- **The name.** Control panel, the workings, the service hatch — and the
+  verb is "open it up", which is what children say about machines. This
+  file keeps its name until the choice is built.
+
 ## Birds are the whole interface
 
 Flipping a thing yields a **bird addressed to it** — the capability to send
@@ -164,6 +203,64 @@ a thing you can hold, name, file in the notebook, put in a box, give to a bird
 and hand to a robot should not meet a second, separate mechanism the first time
 they want a photograph in their program.
 
+### Pictures, and the flatness problem
+
+A picture is two-dimensional and the workshop is not, and the awkwardness
+is real. The trade has four standard answers. **Billboards** (sprites): the
+image swivels to always face the camera — the particle-and-label trick,
+legible from anywhere, but a thing that turns to face you refuses to be a
+thing: it has no footprint, no edge, no side you can fail to see.
+**Cards**: a textured plane standing in the world like a poster or a
+painting — honest presence, but edge-on it vanishes to a line, and flat on
+a table it is unhittable from most camera angles. **Floating panels** (the
+VR answer, Quest and visionOS): a window hanging in space with a backing
+plate, which is a billboard wearing a suit. **Decals**: images projected
+onto surfaces — right for marks, wrong for things.
+
+The workshop has already answered this once, for text. A pad is not a
+plane; it is a **tablet** — flat but with thickness and an edge, lying on
+the table the way paper actually lies, picked up, and rolled upright in
+the hand by the turning gesture so it can be read. A picture is the same
+object with an image where the writing goes: a **photograph**. It lies
+flat, files in the notebook, sits in a box hole, weighs on a scale — it is
+exactly as awkward as a pad, which is to say the awkwardness is already
+solved and already familiar. Its verbs are the original's (position,
+width, height); its panel carries the bird they go to.
+
+**Video is a picture that plays.** The same tablet with `[play]`,
+`[pause]`, `[seek, 30]`, and `[finished]` on its event nest — a living
+photograph. The sound should come *from the pad*: positional audio, so a
+video playing across the table is quieter than one in your hand. The
+alternative staging — a little TV prop with the video on its screen — buys
+charm at the cost of a new kind; a child who wants a TV can drop the video
+pad onto a model of one.
+
+### Sounds: files, made, and remade
+
+A sound file becomes a block like anything else — its top face a waveform,
+since a sound has no look of its own. `[play]` by bird, or click it; its
+event nest says `[finished]`.
+
+Two more doors open at once, and neither needs a new mechanism:
+
+**Made sounds.** The workshop's own effects are synthesized — an
+oscillator and an envelope, not samples — so the machinery already exists.
+The child-facing mint is a box, `[frequency, duration, shape]`, handed
+over and answered with a sound block. A robot that builds such boxes and
+sends them is an instrument; a robot that computes the frequencies is a
+composer. (Where the mint lives — a machine in the arc, or a page of the
+Devices notebook — is open below.)
+
+**Remade sounds.** The badge gesture generalises to a new medium, which is
+the whole workshop bet in miniature. A `×2` dropped on a sound plays it at
+double speed; `×1/2` stretches it; `×(−1)` plays it backwards — negation
+reading naturally as time's arrow. Addition has no obvious meaning on a
+sound and is refused rather than invented. And the pads' own edge-drop
+carries over: drop a sound on the *edge* of another and they concatenate,
+first-then-second, exactly as "Toon" and "Talk" join — a melody is built
+the way a word is. Transformations that need parameters (echo, muffle,
+pitch without speed) are panel messages rather than badges.
+
 ### Models
 
 A model is the case that pays for the whole design, because it is the first
@@ -205,12 +302,35 @@ The event nest on a model's back announces what a model can notice —
 ends. That last one is what makes a sequence of animations expressible without
 a clock.
 
+**Movability is declared in the file, four ways.** A `.glb` carries a tree
+of **named nodes**, and every named part can be turned, moved and scaled on
+its own — this is how the workshop's own robot walks: its elbows and knees
+are just named nodes this code rotates. It may carry **skins**: skeletons
+of named joints that deform a mesh. It may carry **morph targets**: named
+sliders from 0 to 1 — a "smile", a "blink". And it may carry **animation
+clips**: canned motions with names. All four are data in the file, which
+means:
+
+**The bird API is generated by reading the file.** At import the workshop
+walks what actually arrived: clip names become the vocabulary of `[play,
+…]`, node and joint names become `[turn, "LeftArm", y, 30]`, morph names
+become `[set, "smile", 0.8]`, and `[parts, reply-bird]` answers with this
+model's own words rather than any fixed list. Two honest caveats. Names
+are whatever the author typed — a well-made model answers to "LeftArm", a
+careless one to "Cube.003" — so the panel should display the vocabulary it
+found, teaching the child what this model calls its own parts. And the
+format declares no limits: nothing in the file says an elbow bends only
+one way, so playing a clip is always safe but free posing can fold a model
+through itself. At-your-own-risk — which in a workshop is a feature.
+
 ### What this costs
 
 Import-by-medium and models are **+1–2 days** on top of the estimate below, and
 they depend on backs and live numbers being there first — the bird and the
 event nest are the whole interface, so there is nothing to build until those
-exist. Sounds share almost all of it: a sound is a model with fewer verbs.
+exist. Sounds share almost all of it: a sound is a model with fewer
+verbs, and made-and-remade sounds ride gestures that already exist — the
+badge drop and the edge drop — for about another half day.
 
 ## How much work
 
@@ -225,7 +345,8 @@ was a day; Marty was a day):
    (`mismatchPaths` already computes the failing paths): **~2 days**, the
    smallest code and the deepest semantics — test-heavy.
 3. **Pictures** — import, a new thing kind, the verb vocabulary, back with
-   bird: **1–2 days**. Sounds: **+1 day**. Video: later.
+   bird: **1–2 days**. Sounds, made and remade: **+1–1.5 days**. Video:
+   later.
 4. **Devices notebook** — **half a day to a day**.
 5. **Inexact numbers** — flag, contagion, fixed-precision trig/powers,
    the visual marker: **1–2 days**.
@@ -263,3 +384,12 @@ epic. Natural order: 1–2 first (the semantics), 3 second (the payoff),
   is easy; saying what it *would* have taken is the kind thing.
 - What a live number shows before its first delivery.
 - The exact look of inexact numbers (that they look different is settled).
+- The panel-release gesture: holding-card button, a key, a mechanic's
+  bench — or more than one of them.
+- The name itself: back, control panel, the workings — and whether this
+  file is renamed with it.
+- Whether sound in the world is positional (a video across the table is
+  quieter than one in your hand) or flat.
+- Where made sounds are minted: a machine in the arc, or a page of the
+  Devices notebook.
+- Whether `×(−1)` playing a sound backwards is delight or confusion.
