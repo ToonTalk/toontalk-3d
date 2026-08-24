@@ -11631,7 +11631,7 @@ function fitRoomContents(room) {
   const span = Math.max(size.x, size.z, 0.001);
   // never magnify a small room back up past its usual toy scale -- only ever
   // shrink further once content outgrows it
-  const factor = Math.min(1, ROOM_FIT / span);
+  const factor = Math.min(1, (room.userData.fit ?? ROOM_FIT) / span);
   r.scale.setScalar(MINI_WORLD * factor);
 }
 // Serialise a live world back into a record -- only when actually saving.
@@ -11828,56 +11828,111 @@ function panelName(owner) {
            robot: 'the robot', room: 'the room', die: 'the die',
            notebook: 'the notebook' }[ud.kind] || 'the thing';
 }
-function makePanelTray(owner) {
+function makePanelTray(owner, pw = 0.5, pd = 0.42) {
   const g = new THREE.Group();
-  const base = new THREE.Mesh(geo('BoxGeometry', 0.5, 0.024, 0.42),
-    new THREE.MeshStandardMaterial({ color: 0x77634a, roughness: 0.7,
-      map: (woodTex ??= woodTexture()) }));
-  base.position.y = 0.012;
-  base.castShadow = true; base.receiveShadow = true;
-  g.add(base);
-  const rimMat = new THREE.MeshStandardMaterial({ color: 0x55452f, roughness: 0.6 });
-  for (const [w, d, x, z] of [[0.5, 0.02, 0, -0.21], [0.5, 0.02, 0, 0.21],
-                              [0.02, 0.42, -0.25, 0], [0.02, 0.42, 0.25, 0]]) {
-    const r = new THREE.Mesh(geo('BoxGeometry', w, 0.034, d), rimMat);
-    r.position.set(x, 0.017, z);
-    g.add(r);
-  }
-  // the knob that folds it away, brass so it reads as a control
-  const stem = new THREE.Mesh(geo('CylinderGeometry', 0.008, 0.008, 0.03, 8),
-    new THREE.MeshStandardMaterial({ color: 0x8a7a55, roughness: 0.4, metalness: 0.6 }));
-  stem.position.set(0.225, 0.045, 0.185);
-  const knob = new THREE.Mesh(geo('SphereGeometry', 0.02, 12, 10),
-    new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.3, metalness: 0.8 }));
-  knob.position.set(0.225, 0.07, 0.185);
-  setPick(stem, { kind: 'panelClose', tray: g });
-  setPick(knob, { kind: 'panelClose', tray: g });
-  g.add(stem, knob);
-  // the label on the front rim, so a table of trays stays legible
-  {
-    const cv = document.createElement('canvas');
-    cv.width = 512; cv.height = 64;
-    const c = cv.getContext('2d');
-    c.fillStyle = '#f0e6cf';
-    c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.font = 'bold 40px Georgia, serif';
-    const text = panelName(owner).replace(/“|”/g, '') + ' — panel';
-    c.fillText(text, 256, 34);
-    const tex = new THREE.CanvasTexture(cv);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    const plate = new THREE.Mesh(geo('PlaneGeometry', 0.34, 0.0425),
-      new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
-    plate.position.set(0, 0.037, 0.2101);
-    g.add(plate);
-  }
+  buildTrayShape(g, owner, pw, pd);
   const id = nextRoomId++;
-  g.userData = { kind: 'room', panel: true, rest: 0, width: 0.5,
+  g.userData = { kind: 'room', panel: true, rest: 0, width: pw, pw, pd,
                  world: null, opaque: false, id, dirty: false };
   g.__contents = [];
   g.setOpaque = () => {};              // a panel has no walls to cloud
   g.__owner = owner;
   setPick(g, { kind: 'thing', thing: g });
   return g;
+}
+// The tray's furniture, built to size -- and rebuilt in place when a corner
+// stud resizes it.
+function buildTrayShape(g, owner, pw, pd) {
+  (g.__shape || []).forEach(o => o.removeFromParent());
+  g.__shape = [];
+  const keep = (o) => { g.__shape.push(o); g.add(o); return o; };
+  const hw = pw / 2, hd = pd / 2;
+  const base = keep(new THREE.Mesh(geo('BoxGeometry', pw, 0.024, pd),
+    new THREE.MeshStandardMaterial({ color: 0x77634a, roughness: 0.7,
+      map: (woodTex ??= woodTexture()) })));
+  base.position.y = 0.012;
+  base.castShadow = true; base.receiveShadow = true;
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x55452f, roughness: 0.6 });
+  for (const [w, d, x, z] of [[pw, 0.02, 0, -hd + 0.01], [pw, 0.02, 0, hd - 0.01],
+                              [0.02, pd, -hw + 0.01, 0], [0.02, pd, hw - 0.01, 0]]) {
+    keep(new THREE.Mesh(geo('BoxGeometry', w, 0.034, d), rimMat)).position.set(x, 0.017, z);
+  }
+  // the knob that folds it away, brass so it reads as a control
+  const brass = new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.3, metalness: 0.8 });
+  const stem = keep(new THREE.Mesh(geo('CylinderGeometry', 0.008, 0.008, 0.03, 8),
+    new THREE.MeshStandardMaterial({ color: 0x8a7a55, roughness: 0.4, metalness: 0.6 })));
+  stem.position.set(hw - 0.025, 0.045, hd - 0.025);
+  const knob = keep(new THREE.Mesh(geo('SphereGeometry', 0.02, 12, 10), brass));
+  knob.position.set(hw - 0.025, 0.07, hd - 0.025);
+  setPick(stem, { kind: 'panelClose', tray: g });
+  setPick(knob, { kind: 'panelClose', tray: g });
+  // corner studs resize it: click one, then click where the corner should be
+  const studMat = new THREE.MeshStandardMaterial({ color: 0x6a7280, roughness: 0.4, metalness: 0.6 });
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1]]) {
+    const stud = keep(new THREE.Mesh(geo('CylinderGeometry', 0.014, 0.017, 0.024, 10), studMat));
+    stud.position.set(sx * (hw - 0.022), 0.045, sz * (hd - 0.022));
+    setPick(stud, { kind: 'panelCorner', tray: g });
+  }
+  // the label lies flat on the floor by the front rim, big enough to read
+  {
+    const cv = document.createElement('canvas');
+    cv.width = 512; cv.height = 96;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#f6edd8';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    const text = panelName(owner).replace(/“|”/g, '') + ' — panel';
+    let px = 56;
+    c.font = `bold ${px}px Georgia, serif`;
+    while (px > 18 && c.measureText(text).width > 490) {
+      px = Math.floor(px * 0.9);
+      c.font = `bold ${px}px Georgia, serif`;
+    }
+    c.fillText(text, 256, 52);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const plate = keep(new THREE.Mesh(
+      geo('PlaneGeometry', Math.min(0.42, pw * 0.8), Math.min(0.42, pw * 0.8) * 96 / 512),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.9 })));
+    plate.rotation.x = -Math.PI / 2;
+    plate.position.set(0, 0.0252, hd - 0.075);
+  }
+}
+// Click a corner stud, then click the bench where that corner should reach;
+// the tray resizes about its centre. One pending resize at a time; any other
+// click forgets it.
+let panelResize = null;
+function resizeTrayTo(tray, point) {
+  const pw = Math.min(1.3, Math.max(0.34, Math.abs(point.x - tray.position.x) * 2));
+  const pd = Math.min(1.0, Math.max(0.3, Math.abs(point.z - tray.position.z) * 2));
+  tray.userData.pw = pw; tray.userData.pd = pd; tray.userData.width = pw;
+  buildTrayShape(tray, tray.__owner, pw, pd);
+  // the fit budget scales with the floor: ROOM_FIT was tuned for a 0.5 span
+  tray.userData.fit = ROOM_FIT * (Math.min(pw, pd * (0.5 / 0.42)) / 0.5);
+  if (tray.__ctx) fitRoomContents(tray);
+  sfx('grow');
+  refreshUI();
+}
+// Somewhere a tray actually fits: scan a coarse grid of the bench for the
+// spot least crowded by what is already there, trays especially.
+function freeTraySpot(tray) {
+  const hw = (tray.userData.pw ?? 0.5) / 2, hd = (tray.userData.pd ?? 0.42) / 2;
+  let best = null, bestScore = Infinity;
+  for (const z of [2.15, 2.55, 1.85]) {
+    for (const x of [0, -0.62, 0.62, -1.15, 1.15]) {
+      if (x - hw < BENCH.x0 || x + hw > BENCH.x1 || z - hd < BENCH.z0 || z + hd > BENCH.z1) continue;
+      let score = 0;
+      for (const o of benchThings) {
+        if (!o.parent) continue;
+        const ow = (o.userData.pw ?? o.userData.width ?? 0.3) / 2 + hw;
+        const od = (o.userData.pd ?? 0.3) / 2 + hd;
+        const dx = Math.abs(o.position.x - x), dz = Math.abs(o.position.z - z);
+        if (dx < ow && dz < od) score += (ow - dx) * (od - dz) * (o.userData.panel ? 4 : 1);
+      }
+      if (score < bestScore) { bestScore = score; best = { x, z }; }
+      if (score === 0) return best;
+    }
+  }
+  return best ?? benchSpot();
 }
 function openHeldPanel() {
   if (!held) return say('Hold the thing whose panel you want, then press ⚙.');
@@ -11892,13 +11947,15 @@ function openHeldPanel() {
     return say('Its panel is already out — the tray on the table.');
   }
   clearUndo();                          // open/close is a boundary, like a door
-  const tray = makePanelTray(X);
+  const size = X.userData.panelSize;
+  const tray = makePanelTray(X, size?.[0], size?.[1]);
+  if (size) tray.userData.fit = ROOM_FIT * (Math.min(size[0], size[1] * (0.5 / 0.42)) / 0.5);
   // the closed record is kept until close overwrites it: the tray works on a
   // copy, so nothing is lost if the tray is discarded rather than closed
   tray.userData.world = X.userData.panelWorld
     ? JSON.parse(JSON.stringify(X.userData.panelWorld)) : null;
   X.__panelTray = tray;
-  putOnBench(tray, benchSpot());
+  putOnBench(tray, freeTraySpot(tray));
   if (tray.userData.world) hydrateRoom(tray);
   sfx('grow');
   const s0 = tray.scale.x;
@@ -11922,6 +11979,8 @@ function closePanelTray(tray) {
     && !Object.values(rec.stations ?? {}).some(Boolean));
   if (X) {
     X.userData.panelWorld = empty ? null : rec;
+    X.userData.panelSize = (tray.userData.pw !== 0.5 || tray.userData.pd !== 0.42)
+      ? [tray.userData.pw, tray.userData.pd] : null;
     X.__panelTray = null;
   }
   detach(tray);
@@ -12875,19 +12934,30 @@ function specOf(thing) {
                      die: 'wildDie' }[kind] ?? 'wild',
              n: thing.userData.holes?.length };
   }
-  if (kind === 'number') return { kind: 'number', value: thing.userData.value, op: thing.userData.op };
-  if (kind === 'text') return { kind: 'text', text: thing.userData.text };
-  if (kind === 'die') return { kind: 'die', faces: thing.userData.faces };
+  // a panel rides in the spec as data (matching and condFromSpec never look
+  // at it; condOut for numbers rebuilds known fields, so it never reaches a
+  // saved condition) -- without this, anything rebuilt from a spec (undo, the
+  // training rewind) silently lost its panel
+  const withPanel = (sp) => {
+    const tray = thing.__panelTray;
+    const rec = tray ? (tray.__ctx ? ctxToRec(tray) : tray.userData.world)
+                     : thing.userData.panelWorld;
+    if (rec) sp.panelRec = JSON.parse(JSON.stringify(rec));
+    return sp;
+  };
+  if (kind === 'number') return withPanel({ kind: 'number', value: thing.userData.value, op: thing.userData.op });
+  if (kind === 'text') return withPanel({ kind: 'text', text: thing.userData.text });
+  if (kind === 'die') return withPanel({ kind: 'die', faces: thing.userData.faces });
   if (kind === 'scale') {
-    return { kind, label: thing.userData.label ?? undefined, tilt: scaleTilt(thing),
-             holes: thing.userData.holes.map(h => specOf(h.thing)) };
+    return withPanel({ kind, label: thing.userData.label ?? undefined, tilt: scaleTilt(thing),
+             holes: thing.userData.holes.map(h => specOf(h.thing)) });
   }
   // birds, nests and robots inside boxes go by reference: their identity (a
   // bird's pairing, a robot's training) has no data form
   if (kind === 'nest' || kind === 'bird' || kind === 'robot'
       || kind === 'notebook' || kind === 'room') return { kind: 'ref', node: thing };
-  return { kind, label: thing.userData.label ?? undefined,
-           holes: thing.userData.holes.map(h => specOf(h.thing)) };   // box or scale
+  return withPanel({ kind, label: thing.userData.label ?? undefined,
+           holes: thing.userData.holes.map(h => specOf(h.thing)) });   // box or scale
 }
 function buildThing(spec) {
   if (!spec) return null;
@@ -12902,9 +12972,13 @@ function buildThing(spec) {
     applyErasedLook(t);
     return t;
   }
-  if (spec.kind === 'number') return makeNumber(spec.value, spec.op);
-  if (spec.kind === 'text') return makeText(spec.text);
-  if (spec.kind === 'die') return makeDie(spec.faces);
+  const keepPanel = (t) => {
+    if (spec.panelRec) t.userData.panelWorld = JSON.parse(JSON.stringify(spec.panelRec));
+    return t;
+  };
+  if (spec.kind === 'number') return keepPanel(makeNumber(spec.value, spec.op));
+  if (spec.kind === 'text') return keepPanel(makeText(spec.text));
+  if (spec.kind === 'die') return keepPanel(makeDie(spec.faces));
   if (spec.kind === 'scaleTilt') {
     const t = makeScale();
     t.__tiltLock = spec.tilt;
@@ -12916,6 +12990,7 @@ function buildThing(spec) {
   const b = spec.kind === 'scale' ? makeScale() : makeBox(spec.holes.length);
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   if (spec.label) setThingLabel(b, spec.label);
+  if (spec.panelRec) b.userData.panelWorld = JSON.parse(JSON.stringify(spec.panelRec));
   return b;
 }
 // What a thought asks for, as a thing you can hold. A robot trained from a
@@ -14571,6 +14646,9 @@ function combine(slot, incoming, isHole, fromWorld, side) {
   };
   // Boxes join: dropping one box on another concatenates their holes, contents
   // and all, exactly as in ToonTalk.
+  if (incoming.userData.panel) {
+    return refuse('The panel goes back on the bench — it belongs to its thing.');
+  }
   if (target.userData.kind === 'room') {
     return roomDrop(target, incoming, refuse);
   }
@@ -14835,10 +14913,14 @@ function resolve(ev) {
     // it would otherwise intercept every click meant for what is behind it.
     if (held && isDescendantOf(h.object, held)) continue;
     // things inside a room's miniature world belong to that world -- walk in
-    // through the door to touch them
+    // through the door to touch them. A PANEL has no door: its world is open
+    // ground, so its things answer clicks directly.
     let inMini = false;
     for (let p = h.object; p; p = p.parent) {
-      if (p.name === 'worldRoot' && p.parent !== scene) { inMini = true; break; }
+      if (p.name === 'worldRoot' && p.parent !== scene) {
+        if (!p.parent?.userData?.panel) inMini = true;
+        break;
+      }
     }
     if (inMini) continue;
     let o = h.object;
@@ -14913,8 +14995,21 @@ function handleClick(target) {
     return;
   }
   if (target.kind === 'panelClose') {
+    panelResize = null;
     if (held) return say('Empty your hand first — the knob needs a click of its own.');
     return closePanelTray(target.tray);
+  }
+  if (target.kind === 'panelCorner') {
+    if (held) return say('Empty your hand first.');
+    panelResize = target.tray;
+    return say('Now click the bench where that corner should reach — the panel resizes around its middle.');
+  }
+  if (panelResize) {
+    const tray = panelResize; panelResize = null;
+    if (target.kind === 'bench' && target.point) {
+      return resizeTrayTo(tray, target.point);
+    }
+    // any other click just forgets the resize
   }
   if (target.kind === 'roomLever') {
     const room = target.room;
@@ -15033,7 +15128,17 @@ function handleClick(target) {
   if (target.kind === 'cond') {
     // Ruby erases (each click one step more general); Dusty removes outright,
     // leaving an empty hole that matches anything or nothing.
-    if (rubyActive) { dustyErase(target.path); return; }
+    if (rubyActive) {
+      // A box's shell hides behind what stands in its holes, so clicks land
+      // on the parts forever. Once the part under the pointer is already
+      // "anything", the next click means the thing AROUND it -- the ladder
+      // climbs: 3, any number, anything, then the box itself.
+      let path = target.path.slice();
+      const at = (p2) => { let c = condition; for (const i of p2) c = c?.holes?.[i]; return c; };
+      while (path.length && (!at(path) || at(path).kind === 'wild')) path = path.slice(0, -1);
+      dustyErase(path);
+      return;
+    }
     if (dustyActive) { removeCondAt(target.path); return; }
     {
       // reaching into the bubble empty-handed takes out a copy of the very
@@ -15118,9 +15223,65 @@ function handleClick(target) {
   return mode === 'training' ? directRobot(target) : userClick(target);
 }
 
+// Which panel tray, if any, a target belongs to -- reached through its
+// world root, whose parent is the tray itself.
+function trayOfTarget(t) {
+  const node = t.kind === 'thing' ? t.thing : t.kind === 'botThing' ? t.bot.node : null;
+  if (!node) return null;
+  const root = worldRootOf(node);
+  return root && root.parent?.userData?.panel ? root.parent : null;
+}
+// Take a thing OFF a panel into the outer hand: unhook it inside the panel's
+// own world, then hold it out here.
+function takeFromPanel(tray, node) {
+  hydrateRoom(tray);
+  pushWorld(tray);
+  try {
+    const bot = node.__bot;
+    if (bot && bot === activeBot) {
+      // the panel's working robot steps down before it is lifted out
+      cancelWaiting(bot);
+      syncBot();
+      returnGivenToTable();
+      clearScratch();
+      dropStand(bot.stand);
+      bot.stand = null; bot.home = HOME;
+      bot.root.position.set(0, 0, 0);
+      stations.stand = defaultStand;
+      activeBot = null; robot = null; root = null;
+      program = []; condition = null;
+      bot.mini = true;
+      node.scale.setScalar(MINI);
+      tray.userData.dirty = false;
+    } else if (bot) {
+      cancelWaiting(bot);
+    }
+    detach(node);
+    node.removeFromParent();
+  } finally {
+    popWorld();
+  }
+  takeIntoHand(node);
+  fitRoomContents(tray);
+  renderProgram(); rebuildCondition(); refreshUI();
+}
 // In the workshop the user does everything themselves.
 function userClick(target) {
   if (target.kind === 'pileScroll') { scrollPile(target.nest, target.dir); return; }
+  // things standing ON a panel: an empty hand takes them off it; a full hand
+  // means the panel itself, exactly as dropping on the tray does
+  {
+    const tray = trayOfTarget(target);
+    if (tray) {
+      if (tray.__running || roomWorkBusy) return say('Wait for its work to finish first.');
+      if (!held) {
+        const node = target.kind === 'botThing' ? target.bot.node : target.thing;
+        takeFromPanel(tray, node);
+        return;
+      }
+      return userClick({ kind: 'thing', thing: tray, point: target.point });
+    }
+  }
   const holdingBot = held?.userData.kind === 'robot';
   // rooms and notebooks take drops of anything, robots included
   if (target.kind === 'thing' && held
@@ -15146,6 +15307,7 @@ function userClick(target) {
     if (held) {
       // a bare robot forms teams instead; robots INSIDE boxes may be given,
       // so robots can carry robots into rooms
+      if (held.userData.panel) return say('The panel goes back on the bench — it belongs to its thing.');
       if (held.userData.kind === 'robot') return say('Robots don’t work on robots.');
       if (bot === activeBot) return giveToRobot();
       if (activeBot) {
@@ -15249,11 +15411,11 @@ function userClick(target) {
       if (pn && pn.userData.pile[pn.userData.pile.length - 1] !== target.thing) {
         return userTake(pn);
       }
-      // A panel belongs to its thing: the knob puts it away, nothing carries
-      // it off.
+      // A panel can be carried to a better spot on the bench -- but only the
+      // bench: it belongs to its thing, and only the knob puts it away.
       if (target.thing.userData.panel) {
-        wobble(target.thing);
-        return say('The panel belongs to its thing — the knob folds it away.');
+        userTake(target.thing);
+        return say('Set it down anywhere on the bench — the knob is what puts it away.');
       }
       // Picking your own notebook up put it in the way of its own corner tabs.
       // It is furniture: it wobbles where it stands and stays on the desk.
@@ -15308,7 +15470,14 @@ function userClick(target) {
     if (held.userData.kind === 'bird' || held.userData.kind === 'nest') {
       return say('Set it down on the bench.');
     }
-    if (kind === 'bird') return birdDeliver(target.thing);
+    if (kind === 'bird') {
+      if (held.userData.panel) {
+        const t = held; held = null;
+        putOnBench(t, freeTraySpot(t));
+        return sayAttn('The panel goes back on the bench — birds do not carry panels.');
+      }
+      return birdDeliver(target.thing);
+    }
     if (kind === 'nest') return say('Give it to the bird — deliveries go through her.');
     // clicking whatever sits on the copier while holding means "use the copier",
     // not "combine with the thing that happens to be lying there"
@@ -15718,6 +15887,11 @@ function userTake(thing) {
   }
 }
 function userPutInHole(hole) {
+  if (held?.userData.panel) {
+    const t = held; held = null;
+    putOnBench(t, freeTraySpot(t));
+    return sayAttn('The panel goes back on the bench — it belongs to its thing.');
+  }
   pushUndo();
   const dropped = held; held = null;
   // A robot watches what it was given: completing its shape sets it going,
@@ -16854,6 +17028,8 @@ function thingOut(t) {
     const panel = tray ? (tray.__ctx ? ctxToRec(tray) : tray.userData.world)
                        : t.userData?.panelWorld;
     if (panel) r.panel = panel;
+    const size = tray ? [tray.userData.pw, tray.userData.pd] : t.userData?.panelSize;
+    if (panel && size && (size[0] !== 0.5 || size[1] !== 0.42)) r.panelSize = size;
   }
   return r;
 }
@@ -16899,8 +17075,12 @@ function worldOut() {
   // Snapshot the world's nodes BEFORE serialising anything: serialising a
   // room switches worlds, which swaps these very globals underfoot.
   // open panel trays are not bench things of their own: each rides inside
-  // its owner's record (thingOut reads the live tray)
-  const bench = offstage() ? [] : benchThings.filter(t => !t.userData.panel);
+  // its owner's record (thingOut reads the live tray). And the MAIN notebook
+  // is furniture -- ensureMainNotebook recreates it per person, so saving it
+  // gave every loaded world a second book on top of the first.
+  const bench = offstage() ? []
+    : benchThings.filter(t => !t.userData.panel
+        && !(t.userData.kind === 'notebook' && t.userData.main));
   // dozing robots and their desks are not on the bench: save them as bench
   // things so nothing is lost (they wake benched rather than waiting)
   for (const b of [...waiters]) {
@@ -16935,7 +17115,10 @@ function botIn(o) {
 function thingIn(o, nests, birds) {
   const t = thingInRaw(o, nests, birds);
   if (t && o?.erased) { t.userData.erased = true; applyErasedLook(t); }
-  if (t && o?.panel) t.userData.panelWorld = o.panel;   // arrives closed
+  if (t && o?.panel) {
+    t.userData.panelWorld = o.panel;   // arrives closed
+    if (o.panelSize) t.userData.panelSize = o.panelSize;
+  }
   return t;
 }
 function thingInRaw(o, nests, birds) {
@@ -17053,6 +17236,9 @@ function worldIn(data) {
   nestGroupPending = [];
   const nests = new Map(), birds = [];
   (data.bench || []).forEach(b => {
+    // files saved before the fix carry the main notebook as a bench thing;
+    // an all-empty notebook holds nothing worth doubling the library for
+    if (b.thing?.kind === 'notebook' && (b.thing.pages || []).every(p2 => !p2)) return;
     const t = thingIn(b.thing, nests, birds);
     if (t) putOnBench(t, { x: b.x, z: b.z });
   });
@@ -17100,8 +17286,12 @@ function snapshotWorld() {
   // spec could not describe, and nothing in a daydream can touch them
   // rooms go by reference too: their worlds are live things a spec cannot
   // describe, so undo moves them about but does not rewind their insides
+  // panel-owners go by reference too: rebuilding one from a spec would leave
+  // its open tray orphaned (the sweep then folds it away mid-daydream). Bench
+  // things cannot change during a daydream -- robots cannot reach the table --
+  // so the reference is safe.
   snap.bench = benchThings.map(t =>
-    ['robot', 'nest', 'bird', 'room'].includes(t.userData.kind)
+    ['robot', 'nest', 'bird', 'room'].includes(t.userData.kind) || t.__panelTray
     ? { bot: t, at: { x: t.position.x, z: t.position.z } }
     : { spec: specOf(t), at: { x: t.position.x, z: t.position.z } });
   snap.piles = allNests.filter(n => n.parent)
@@ -17152,6 +17342,18 @@ function enterTraining() {
   if (activeBot) activeBot.trainedOn = thingOut(given);
   clearUndo();
   clearScratch();
+  // the robot at the desk is full size by definition; if some interrupted
+  // animation left it otherwise, put it right and leave a trace for the
+  // "random tiny robot" reports
+  if (activeBot) {
+    if (Math.abs(activeBot.node.scale.x - 1) > 0.01 || Math.abs(activeBot.root.scale.x - 1) > 0.01) {
+      console.warn('tiny-robot corrected entering training:',
+        activeBot.node.scale.x, activeBot.root.scale.x);
+    }
+    activeBot.mini = false;
+    activeBot.node.scale.setScalar(1);
+    activeBot.root.scale.setScalar(1);
+  }
   preTraining = snapshotWorld();     // the daydream must not disturb the world
   mode = 'training';
   program = [];
@@ -17263,6 +17465,13 @@ function runProgram() {
   // No world reset, but the robot's own area always starts empty so a replay
   // cannot depend on leftovers from a previous run.
   clearScratch();
+  if (Math.abs(activeBot.node.scale.x - 1) > 0.01 || Math.abs(activeBot.root.scale.x - 1) > 0.01) {
+    console.warn('tiny-robot corrected entering run:',
+      activeBot.node.scale.x, activeBot.root.scale.x);
+  }
+  activeBot.mini = false;
+  activeBot.node.scale.setScalar(1);
+  activeBot.root.scale.setScalar(1);
   mode = 'replay'; busy = true; runCount = 0;
   nextIteration();
   refreshUI();
@@ -17742,7 +17951,9 @@ function refreshUI() {
       : kind === 'box' ? (held.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
           : 'letters name it; drop it on a box to join')
-      : kind === 'room' ? 'set it down; drop a robot in, then things for it to work on'
+      : kind === 'room' ? (held.userData.panel
+          ? 'set it down anywhere on the bench — the knob folds it away'
+          : 'set it down; drop a robot in, then things for it to work on')
       : kind === 'notebook' ? 'set it down and drop things on its pages'
       : kind === 'text' ? 'type to write on it; drop it on a pad’s left or right edge to join'
       : kind === 'text' ? (reading ? 'click here to lower it; type to write on it'
@@ -18314,7 +18525,7 @@ function tipFor(t) {
       + (!held && activeBot?.trainedOn
           ? 'Click to take a copy of the very thing it was first shown. '
           : 'Red parts didn’t match. ')
-      + 'Dusty can vacuum any part into an anything.';
+      + 'Ruby loosens a part one step at a time; Dusty vacuums it into an anything.';
   }
   if (t.kind === 'botThing') {
     const bot = t.bot, trained = bot.program.length;
@@ -18337,8 +18548,27 @@ function tipFor(t) {
     }
     return 'A little robot, untrained — click to pick it up.';
   }
+  if (t.kind === 'panelClose') {
+    return 'The knob — click to fold the panel back inside its thing, everything on it included.';
+  }
+  if (t.kind === 'panelCorner') {
+    return 'A corner stud — click it, then click the bench where this corner should reach, to resize the panel.';
+  }
   if (t.kind === 'thing') {
     const ud = t.thing.userData;
+    if (ud.panel) {
+      const who = t.thing.__owner ? panelName(t.thing.__owner) : 'its thing';
+      return held
+        ? `Drop to put that on the panel — it stays glued to ${who}.`
+        : `${who[0].toUpperCase()}${who.slice(1)}’s panel — whatever is laid here travels with the thing. `
+          + 'Click to carry the tray elsewhere; the corner studs resize it; the knob folds it away.';
+    }
+    if (ud.kind === 'text' && !held) {
+      const words = (ud.text ?? '').trim();
+      return words
+        ? `A pad — “${words.length > 60 ? words.slice(0, 60) + '…' : words}”. Click to pick it up; type to write on it.`
+        : 'A blank pad — click to pick it up, then type to write on it.';
+    }
     if (ud.kind === 'number') {
       if (held?.userData.kind === 'number') {
         const o = held.userData.op, hv = ratShort(held.userData.value), tv = ratShort(ud.value);
@@ -20897,7 +21127,15 @@ window.__nano = {
   setOp(op) { if (held) { held.setOp(op); refreshUI(); } },
   speed(s) { speed = s === 'inf' ? Infinity : s; document.getElementById('speed').value = s; },
   rounds(n) { maxIter = n; document.getElementById('rounds').value = n; },
-  reset() { clearUndo(); if (mode === 'training') leaveTraining(false); resetWorld(); },
+  reset() {
+    clearUndo();
+    if (mode === 'training') leaveTraining(false);
+    // called mid-run this used to leave mode='replay' with nothing running --
+    // every later click then fell on deaf ears
+    mode = 'world'; busy = false; runCount = 0; stopRequested = false;
+    highlight(-1);
+    resetWorld();
+  },
   exit() { leaveTraining(); },
   run() { runProgram(); },
   dusty(on = true) { dustyActive = on; if (on) rubyActive = false; refreshUI(); },
