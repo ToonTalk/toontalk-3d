@@ -4970,7 +4970,19 @@ function actionPut(at, side, backTo) {
       const hole = holeAt(at);
       if (!hole) return abort(`The robot expected ${holeName(at)} and there is no such hole.`);
       if (hole.thing?.userData.kind === 'bird') { held = dropped; return birdDeliver(hole.thing); }
-      if (hole.thing) combine(hole, dropped, true, from, side);
+      // trained on a bare value here, handed a NEST instead: combine with the
+      // delivery sitting on top, exactly as dropping onto it by hand would --
+      // the mirror of actionTake's own reach-through, read from the same
+      // trainedOn signal since this step never recorded a nest to begin with
+      if (hole.thing?.userData.kind === 'nest' && looksThroughNest(runTrained, at)) {
+        const pile = hole.thing.userData.pile;
+        const targ = pile.length ? pile[pile.length - 1] : null;
+        if (!targ) {
+          return abort(`The robot expected something on the nest in ${holeName(at)} and found nothing.`);
+        }
+        combine({ thing: targ }, dropped, true, from, side);
+      }
+      else if (hole.thing) combine(hole, dropped, true, from, side);
       else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.3, fromQ)); }
     } else {
       const st = stationOf(at.c);
@@ -5209,10 +5221,21 @@ function replaceThing(target, made) {
   const hole = holeContaining(target);
   const st2 = Object.values(stations).find(s2 => s2.occupant === target);
   const bi = benchThings.indexOf(target);
+  // the top of a nest's pile is also "where target lived" -- a REPLACING
+  // combine (two boxes joining, a mould pouring out) onto a delivery must
+  // put the result back on the pile, not drop it loose on the floor
+  const nest = allNests.find(n => n.userData.pile[n.userData.pile.length - 1] === target);
   const at = { x: target.position.x, z: target.position.z };
   detach(target);
   target.removeFromParent();
   if (hole) putInHole(hole, made);
+  else if (nest) {
+    nest.add(made);
+    made.quaternion.identity();
+    made.scale.setScalar(1);
+    nest.userData.pile.push(made);
+    restackNest(nest);
+  }
   else if (st2) putOnStation(st2, made);
   else if (bi >= 0) putOnBench(made, at);
   else WROOT.add(made);
