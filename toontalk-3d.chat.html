@@ -2010,6 +2010,14 @@ function makeText(str) {
   pad.castShadow = true; pad.receiveShadow = true;
   g.add(pad);
   g.userData = { kind: 'text', text: '', rest: 0.0225, width: 0.34 };
+  // a pad with a lot to say can be made bigger (Ctrl+arrows while holding);
+  // the size is the pad's own, so it survives the hands that reset scale
+  g.setPadSize = (sz) => {
+    sz = Math.min(3, Math.max(1, Math.round(sz * 4) / 4));
+    g.userData.sz = sz === 1 ? undefined : sz;
+    pad.geometry = geo('BoxGeometry', 0.34 * sz, 0.045, 0.26 * sz);
+    g.userData.width = 0.34 * sz;
+  };
   g.setText = (t) => {
     g.userData.text = t;
     const c = cv.getContext('2d');
@@ -2961,10 +2969,10 @@ function buildTrayShape(g, owner, pw, pd) {
     c.fillText('i', 32, 36);
     const tex = new THREE.CanvasTexture(cv);
     tex.colorSpace = THREE.SRGBColorSpace;
-    const plaque = keep(new THREE.Mesh(geo('PlaneGeometry', 0.06, 0.06),
-      new THREE.MeshBasicMaterial({ map: tex, transparent: true })));
-    plaque.rotation.x = -Math.PI / 2;
-    plaque.position.set(hw - 0.09, 0.0255, hd - 0.055);
+    const plaque = keep(new THREE.Mesh(geo('PlaneGeometry', 0.08, 0.08),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide })));
+    plaque.rotation.x = -Math.PI / 5;          // stands up, leaning back a little
+    plaque.position.set(hw - 0.1, 0.062, hd - 0.045);
     setPick(plaque, { kind: 'panelInfo', tray: g });
     const hit = keep(new THREE.Mesh(geo('CylinderGeometry', 0.05, 0.05, 0.08, 8),
       new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })));
@@ -4100,10 +4108,16 @@ function specOf(thing) {
     const rec = tray ? (tray.__ctx ? ctxToRec(tray) : tray.userData.world)
                      : thing.userData.panelWorld;
     if (rec) sp.panelRec = JSON.parse(JSON.stringify(rec));
+    // identity travels too: a live thing with an EMPTY panel came back from a
+    // training rewind or an undo as a dead one (Ken's scale pan)
+    if (thing.userData.lid) {
+      sp.liveLid = thing.userData.lid;
+      sp.liveEvt = thing.userData.evtGuid;
+    }
     return sp;
   };
   if (kind === 'number') return withPanel({ kind: 'number', value: thing.userData.value, op: thing.userData.op });
-  if (kind === 'text') return withPanel({ kind: 'text', text: thing.userData.text });
+  if (kind === 'text') return withPanel({ kind: 'text', text: thing.userData.text, sz: thing.userData.sz });
   if (kind === 'die') return withPanel({ kind: 'die', faces: thing.userData.faces });
   if (kind === 'scale') {
     return withPanel({ kind, label: thing.userData.label ?? undefined, tilt: scaleTilt(thing),
@@ -4131,10 +4145,19 @@ function buildThing(spec) {
   }
   const keepPanel = (t) => {
     if (spec.panelRec) t.userData.panelWorld = JSON.parse(JSON.stringify(spec.panelRec));
+    if (spec.liveLid) {
+      t.userData.lid = spec.liveLid;
+      t.userData.evtGuid = spec.liveEvt;
+      liveReg.set(spec.liveLid, t);
+    }
     return t;
   };
   if (spec.kind === 'number') return keepPanel(makeNumber(spec.value, spec.op));
-  if (spec.kind === 'text') return keepPanel(makeText(spec.text));
+  if (spec.kind === 'text') {
+    const t = makeText(spec.text);
+    if (spec.sz) t.setPadSize(spec.sz);
+    return keepPanel(t);
+  }
   if (spec.kind === 'die') return keepPanel(makeDie(spec.faces));
   if (spec.kind === 'scaleTilt') {
     const t = makeScale();
@@ -4148,6 +4171,11 @@ function buildThing(spec) {
   spec.holes.forEach((s, i) => { if (s) putInHole(b.userData.holes[i], buildThing(s)); });
   if (spec.label) setThingLabel(b, spec.label);
   if (spec.panelRec) b.userData.panelWorld = JSON.parse(JSON.stringify(spec.panelRec));
+  if (spec.liveLid) {
+    b.userData.lid = spec.liveLid;
+    b.userData.evtGuid = spec.liveEvt;
+    liveReg.set(spec.liveLid, b);
+  }
   return b;
 }
 // What a thought asks for, as a thing you can hold. A robot trained from a
@@ -4220,7 +4248,7 @@ function copyThingRaw(t) {
   else
   if (ud.kind === 'number') c = makeNumber(ud.value, ud.op);
   else if (ud.kind === 'die') c = makeDie(ud.faces);
-  else if (ud.kind === 'text') c = makeText(ud.text);
+  else if (ud.kind === 'text') { c = makeText(ud.text); if (ud.sz) c.setPadSize(ud.sz); }
   else if (ud.kind === 'notebook') {
     c = makeNotebook({ pages: JSON.parse(JSON.stringify(ud.pages)), page: ud.page });
   }
@@ -4291,11 +4319,17 @@ function condFromSpec(sp) {
       : k === 'robot' ? robotCond(sp.node.__bot)
       : k === 'room' ? { kind: 'anyRoom' } : WILD;
   }
-  if (sp.kind === 'scale' && sp.tilt) return { kind: 'scaleTilt', tilt: sp.tilt };
+  // a scale's thought keeps its tilt AND its pans, exactly as a box keeps its
+  // holes -- the old tilt-only reading lives on in loaded scaleTilt conditions
+  if (sp.kind === 'scale' && sp.tilt) {
+    return { kind: 'scale', tilt: sp.tilt, holes: sp.holes.map(condFromSpec) };
+  }
   if (sp.kind === 'box' || sp.kind === 'scale') {
     return { kind: sp.kind, holes: sp.holes.map(condFromSpec) };
   }
-  return sp;
+  // a condition never stores a live reference -- nor a panel, nor an identity
+  const { panelRec, liveLid, liveEvt, ...pure } = sp;
+  return pure;
 }
 // Structure without values: what the robot's condition actually matches on.
 function shapeOf(spec) {
@@ -4365,6 +4399,7 @@ function matchState(cond, spec) {
   }
   if (cond.kind === 'box' || cond.kind === 'scale') {
     if (spec.kind !== cond.kind || spec.holes.length !== cond.holes.length) return 'no';
+    if (cond.tilt && spec.tilt !== cond.tilt) return 'no';
     let r = 'yes';
     for (let i = 0; i < cond.holes.length; i++) {
       const m = matchState(cond.holes[i], spec.holes[i]);
@@ -6243,7 +6278,19 @@ function handleClick(target) {
     } else if (roomHasWorker(room)) {
       room.userData.stepRounds = 0;
       room.userData.dirty = true;
-      say('The lever goes up — the robot inside gets to work.');
+      // a robot whose thought no longer matches will not actually run: say so,
+      // or the lever looks broken (the bank account, once its beam was level)
+      let stuck = false;
+      if (room.__ctx) {
+        const b = room.__ctx.activeBot, g2 = room.__ctx.standOcc;
+        if (b && b.program.length && g2
+            && ![b, ...b.team].some(m => ['yes', 'wait'].includes(matchState(m.condition, specOf(g2))))) {
+          stuck = true;
+        }
+      }
+      say(stuck
+        ? 'The lever goes up — but the robot no longer recognises what it holds (its thought mismatches). It will only wake if a delivery or a message changes that.'
+        : 'The lever goes up — the robot inside gets to work.');
     } else {
       say('Nothing to run: the room needs a robot and something on its desk.');
     }
@@ -7687,6 +7734,12 @@ function buildCondNode(cond, path, marks) {
   }
   else {
     g = cond.kind === 'scale' ? makeScale() : makeBox(cond.holes.length);
+    if (cond.kind === 'scale' && cond.tilt) {
+      g.__tiltLock = cond.tilt;
+      g.__pivot.rotation.z = cond.tilt === 'L' ? SCALE_TILT
+        : cond.tilt === 'R' ? -SCALE_TILT : 0;
+      g.__pans.forEach(p2 => { p2.rotation.z = -g.__pivot.rotation.z; });
+    }
     cond.holes.forEach((h, i) => {
       const child = buildCondNode(h, path.concat(i), marks);
       if (h) putInHole(g.userData.holes[i], child);
@@ -7778,7 +7831,9 @@ function condAnchor() {
 // pattern.
 function mismatchPaths(cond, spec, path = [], out = []) {
   if (matches(cond, spec)) return out;
-  if (cond?.kind === 'box' && spec?.kind === 'box' && cond.holes.length === spec.holes.length) {
+  if ((cond?.kind === 'box' || cond?.kind === 'scale') && spec?.kind === cond?.kind
+      && cond.holes.length === spec.holes.length
+      && !(cond.tilt && spec.tilt !== cond.tilt)) {
     cond.holes.forEach((c, i) => mismatchPaths(c, spec.holes[i], path.concat(i), out));
   } else {
     out.push(path);
@@ -8290,7 +8345,7 @@ function thingOutRaw(t) {
   if (!t) return null;
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
-  if (ud.kind === 'text') return { kind: 'text', text: ud.text };
+  if (ud.kind === 'text') return { kind: 'text', text: ud.text, sz: ud.sz };
   if (ud.kind === 'die') return { kind: 'die', faces: ud.faces };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
@@ -8386,7 +8441,7 @@ function thingInRaw(o, nests, birds) {
   if (!o) return null;
   let t = null;
   if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
-  else if (o.kind === 'text') t = makeText(o.text);
+  else if (o.kind === 'text') { t = makeText(o.text); if (o.sz) t.setPadSize(o.sz); }
   else if (o.kind === 'die') t = makeDie(o.faces);
   else if (o.kind === 'notebook') t = makeNotebook(o);
   else if (o.kind === 'room') t = makeRoom(o);
@@ -9264,7 +9319,7 @@ function refreshUI() {
           ? 'set it down anywhere on the bench — the knob folds it away'
           : 'set it down; drop a robot in, then things for it to work on')
       : kind === 'notebook' ? 'set it down and drop things on its pages'
-      : kind === 'text' ? 'type to write on it; drop it on a pad’s left or right edge to join'
+      : kind === 'text' ? 'type to write; Ctrl+↑↓ resizes it; Ctrl+C copies the words; drop on a pad’s edge to join'
       : kind === 'text' ? (reading ? 'click here to lower it; type to write on it'
           : 'click here to hold it up and read it; type to write on it')
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
@@ -9523,6 +9578,29 @@ function turnHeld(kind, dir) {
 }
 
 addEventListener('keydown', (e) => {
+  // Tab pages a long pad's tooltip while pointing at it
+  if (e.key === 'Tab' && !held && tipPager.node && tipPager.pages > 1
+      && tipEl.style.display === 'block') {
+    e.preventDefault();
+    tipPager.page++;
+    if (lastMoveEv) {
+      const t = resolve(lastMoveEv);
+      const tip = tipFor(t);
+      if (tip) tipEl.textContent = tip;
+    }
+    return;
+  }
+  // arrows turn a NOTEBOOK's pages while pointing at it, hands empty
+  if (!held && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
+      && mode === 'world' && !busy && lastMoveEv) {
+    const t = resolve(lastMoveEv);
+    const nb = t?.nb ?? (t?.kind === 'thing' && t.thing.userData.kind === 'notebook' ? t.thing : null);
+    if (nb) {
+      e.preventDefault();
+      notebookFlip(nb, e.key === 'ArrowLeft' ? -2 : 2);   // a spread at a time
+      return;
+    }
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
     if (!busy && mode !== 'replay') undo();
@@ -9539,6 +9617,13 @@ addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'
       || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
     e.preventDefault();
+    // Ctrl+up/down resizes a held pad -- everything plainer types on it
+    if ((e.ctrlKey || e.metaKey) && held.userData.kind === 'text'
+        && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      held.setPadSize((held.userData.sz ?? 1) + (e.key === 'ArrowUp' ? 0.25 : -0.25));
+      refreshUI();
+      return;
+    }
     if (e.key === 'ArrowLeft') turnHeld('yaw', 1);
     else if (e.key === 'ArrowRight') turnHeld('yaw', -1);
     else if (e.key === 'ArrowUp') turnHeld('pitch', -1);
@@ -9886,9 +9971,17 @@ function tipFor(t) {
     }
     if (ud.kind === 'text' && !held) {
       const words = (ud.text ?? '').trim();
-      return words
-        ? `A pad — “${words.length > 60 ? words.slice(0, 60) + '…' : words}”. Click to pick it up; type to write on it.`
-        : 'A blank pad — click to pick it up, then type to write on it.';
+      if (!words) return 'A blank pad — click to pick it up, then type to write on it.';
+      const PER = 600;
+      if (words.length <= PER) return `A pad — “${words}”. Click to pick it up; type to write on it.`;
+      // a long pad pages: Tab turns to the next part while you point at it
+      if (tipPager.node !== t.thing) { tipPager.node = t.thing; tipPager.page = 0; }
+      const pages = Math.ceil(words.length / PER);
+      tipPager.pages = pages;
+      const i = tipPager.page % pages;
+      return (i ? '…' : '') + words.slice(i * PER, (i + 1) * PER)
+        + (i < pages - 1 ? '…' : '')
+        + `\n— part ${i + 1} of ${pages}; press Tab for the next —`;
     }
     if (ud.kind === 'number') {
       if (held?.userData.kind === 'number') {
@@ -10008,6 +10101,8 @@ addEventListener('pointerdown', notePointerKind, true);
 // tooltip used to show the value at arrival forever. It re-reads a few times
 // a second now, from the same resolve the pointer path uses.
 let lastMoveEv = null;
+// a very long pad's tooltip is read in parts: Tab turns them
+const tipPager = { node: null, page: 0, pages: 1 };
 setInterval(() => {
   if (!lastMoveEv || document.hidden || busy || mode === 'replay') return;
   if (tipEl.style.display !== 'block') return;

@@ -53,16 +53,20 @@ ABOUT = ('THE ACCOUNT, ON A PANEL\n\n'
          'happen to land.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 5 and pull\n'
-       'both levers.\n\n'
-       'Tenner banks +10 five\n'
-       'times; Quarter banks +25\n'
-       'four times (its tally makes\n'
-       'the fifth round mismatch).\n\n'
+       'Pull both levers.\n\n'
+       'Tenner banks +10 while its\n'
+       'scale tips: five times.\n'
+       'Quarter banks +25 four\n'
+       'times. Each stops when its\n'
+       'beam comes level.\n\n'
        'The statement nest keeps\n'
-       'the history: every balance\n'
-       'the account has passed\n'
-       'through, newest underneath.')
+       'the history, newest\n'
+       'underneath.\n\n'
+       'A level beam is a robot\n'
+       'STOPPED -- its lever will\n'
+       'say so. To bank again, step\n'
+       'in through the door and set\n'
+       'the left pan back to 1.')
 
 bench = [
     {'thing': liveNum(100, BAL_LID, BAL_EVT), 'x': 0.0, 'z': 2.6},
