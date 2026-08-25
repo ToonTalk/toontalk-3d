@@ -1919,6 +1919,7 @@ function makeText(str) {
     const asp = g.userData.aspect ?? (0.26 / 0.34);
     pad.geometry = geo('BoxGeometry', 0.34 * sz, 0.045, 0.34 * sz * asp);
     g.userData.width = 0.34 * sz;
+    layoutSubPads(g);            // the scene spreads with its field
   };
   g.setText = (t) => {
     g.userData.text = t;
@@ -4260,6 +4261,12 @@ function copyThingRaw(t) {
     c = makeText(ud.text);
     if (ud.img) c.setImage(ud.img);
     if (ud.sz) c.setPadSize(ud.sz);
+    for (const sp of (t.__subs || [])) {
+      const cc = copyThing(sp);
+      if (!cc) continue;
+      cc.userData.at = { ...sp.userData.at };
+      addSubPad(c, cc, null);
+    }
   }
   else if (ud.kind === 'notebook') {
     c = makeNotebook({ pages: JSON.parse(JSON.stringify(ud.pages)), page: ud.page });
@@ -4490,6 +4497,7 @@ function eraseAt(cond, path) {
 
 // Unhook a thing from wherever it currently lives.
 function detach(thing) {
+  if (removeSubPad(thing)) return;          // it was riding on a pad
   const i = benchThings.indexOf(thing);
   if (i >= 0) { benchThings.splice(i, 1); return; }
   for (const n of allNests) {
@@ -5830,6 +5838,65 @@ function sideOf(target, point) {
   if (!point) return 'R';
   return target.worldToLocal(point.clone()).x < 0 ? 'L' : 'R';
 }
+// A pad has three zones: the two edges join words, as they always have, and
+// the MIDDLE takes a pad aboard as a sub-pad. Robots are unaffected -- their
+// recorded steps name L or R outright.
+function padZone(target, point) {
+  if (!point) return 'R';
+  const w = target.userData.width || 0.34;
+  // a fixed band at each edge rather than a third: a small pad is then mostly
+  // edge (joining words is what small pads are for) and a big field is mostly
+  // middle (so a scene can be laid out across all of it)
+  const band = Math.min(w / 3, 0.09);
+  const x = target.worldToLocal(point.clone()).x;
+  if (x < -(w / 2 - band)) return 'L';
+  if (x > (w / 2 - band)) return 'R';
+  return 'M';
+}
+// Where on its parent's face a sub-pad sits: u and v run -0.5..0.5, so the
+// arrangement survives the parent being resized.
+function padFaceSize(pad) {
+  const sz = pad.userData.sz ?? 1;
+  const asp = pad.userData.aspect ?? (0.26 / 0.34);
+  return { w: 0.34 * sz, d: 0.34 * sz * asp };
+}
+function placeSubPad(parent, child) {
+  const { w, d } = padFaceSize(parent);
+  const at = child.userData.at || { u: 0, v: 0 };
+  const top = 0.0225 * (parent.userData.sz ?? 1);
+  child.position.set(at.u * w, top + 0.024, at.v * d);
+  child.quaternion.identity();
+}
+function layoutSubPads(parent) {
+  (parent.__subs || []).forEach(c => placeSubPad(parent, c));
+}
+function addSubPad(parent, child, point) {
+  const { w, d } = padFaceSize(parent);
+  let u = 0, v = 0;
+  if (point) {
+    const l = parent.worldToLocal(point.clone());
+    u = Math.max(-0.45, Math.min(0.45, l.x / w));
+    v = Math.max(-0.45, Math.min(0.45, l.z / d));
+  }
+  child.userData.at = { u: +u.toFixed(3), v: +v.toFixed(3) };
+  (parent.__subs ??= []).push(child);
+  child.__padParent = parent;
+  parent.add(child);
+  // a sub-pad rides at three quarters, so a scene reads as scenery on a field
+  child.scale.setScalar(0.75);
+  placeSubPad(parent, child);
+  setPick(child, { kind: 'thing', thing: child });
+}
+function removeSubPad(child) {
+  const parent = child.__padParent;
+  if (!parent) return false;
+  const i = (parent.__subs || []).indexOf(child);
+  if (i >= 0) parent.__subs.splice(i, 1);
+  child.__padParent = null;
+  delete child.userData.at;
+  child.scale.setScalar(1);
+  return true;
+}
 // The perch-then-sink merge that numbers use, shared by text drops: the
 // arriving thing rests on the target for a beat, then sinks in and applies.
 function mergeOnto(incoming, fromWorld, target, apply) {
@@ -5887,7 +5954,7 @@ function replaceThing(target, made) {
   refreshUI();
   return made;
 }
-function combine(slot, incoming, isHole, fromWorld, side) {
+function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
   const target = isHole ? slot.thing : slot.occupant;
   // The old fallback parked refused things on a free pillar; pillars are gone,
   // so a refused thing lands on the bench instead of being lost.
@@ -5985,9 +6052,18 @@ function combine(slot, incoming, isHole, fromWorld, side) {
       say(`The holes, read straight through: “${word}”.`);
     });
   }
-  // Pads concatenate; the side of the drop decides the order, exactly as
-  // dropping "Talk" on the right of "Toon" makes "ToonTalk" in the original.
+  // Pads concatenate at the EDGES -- "Talk" on the right of "Toon" makes
+  // "ToonTalk", as in the original -- and take a pad aboard in the MIDDLE,
+  // which is how a scene is built out of one field and its pieces.
   if (target.userData.kind === 'text' && incoming.userData.kind === 'text') {
+    if (side === 'M') {
+      const at = dropPoint;
+      incoming.removeFromParent();
+      addSubPad(target, incoming, at);
+      sfx('drop');
+      say('It rides on the pad now — move the pad and it goes along.');
+      return refreshUI();
+    }
     const merged = side === 'L' ? incoming.userData.text + target.userData.text
                                 : target.userData.text + incoming.userData.text;
     return mergeOnto(incoming, fromWorld, target, () => target.setText(merged));
@@ -7225,10 +7301,12 @@ function userPutInHole(hole) {
 }
 function userDropOn(target, point) {
   pushUndo();
-  const side = sideOf(target, point);
+  // a pad dropped on a pad has three landing zones; everything else has two
+  const side = (target.userData.kind === 'text' && held?.userData.kind === 'text')
+    ? padZone(target, point) : sideOf(target, point);
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
-  combine({ occupant: target }, dropped, false, from, side);
+  combine({ occupant: target }, dropped, false, from, side, point);
   refreshUI();
 }
 function userPutOnBench(at) {
@@ -8384,7 +8462,13 @@ function thingOutRaw(t) {
   if (!t) return null;
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
-  if (ud.kind === 'text') return { kind: 'text', text: ud.text, sz: ud.sz, img: ud.img };
+  if (ud.kind === 'text') {
+    const r = { kind: 'text', text: ud.text, sz: ud.sz, img: ud.img };
+    if (t.__subs?.length) {
+      r.subs = t.__subs.map(c => ({ at: c.userData.at, thing: thingOut(c) }));
+    }
+    return r;
+  }
   if (ud.kind === 'die') return { kind: 'die', faces: ud.faces };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
@@ -8488,6 +8572,12 @@ function thingInRaw(o, nests, birds) {
     t = makeText(o.text);
     if (o.img) t.setImage(o.img);
     if (o.sz) t.setPadSize(o.sz);
+    for (const sp of (o.subs || [])) {
+      const c = thingIn(sp.thing, nests, birds);
+      if (!c) continue;
+      c.userData.at = sp.at;
+      addSubPad(t, c, null);
+    }
   }
   else if (o.kind === 'die') t = makeDie(o.faces);
   else if (o.kind === 'notebook') t = makeNotebook(o);
@@ -10034,6 +10124,15 @@ function tipFor(t) {
           : `Drop to put that on the panel — it stays glued to ${who}.`)
         : `${who[0].toUpperCase()}${who.slice(1)}’s panel — whatever is laid here travels with the thing. `
           + 'Click to carry it — the + and − on the holding card resize it — and the knob folds it away.';
+    }
+    if (ud.kind === 'text' && held?.userData.kind === 'text') {
+      const zone = padZone(t.thing, t.point);
+      return zone === 'M'
+        ? 'Drop it in the middle and it RIDES on this pad — move the pad and it goes along.'
+        : `Drop on the ${zone === 'L' ? 'left' : 'right'} edge to join the words — this side reads ${zone === 'L' ? 'first' : 'last'}.`;
+    }
+    if (ud.kind === 'text' && t.thing.__padParent && !held) {
+      return 'A pad riding on another — click to lift it off; it keeps its place until you do.';
     }
     if (ud.kind === 'text' && !held) {
       const words = (ud.text ?? '').trim();
