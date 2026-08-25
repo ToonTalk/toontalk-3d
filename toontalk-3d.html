@@ -2586,8 +2586,22 @@ function handleLiveMsg(X, msg) {
         msg.removeFromParent();
         return;
       }
+      if (word === 'listen') {
+        // subscribe: the reply bird is handed an event nest. A second pad may
+        // name a channel; a number has exactly one, its value.
+        const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
+        const chan = msg.userData.holes.slice(1).map(h => h.thing)
+          .find(t2 => t2?.userData.kind === 'text');
+        const cname = chan ? (chan.userData.text ?? '').trim().toLowerCase() : null;
+        msg.removeFromParent();
+        if (cname && cname !== 'value') {
+          return sayAttn(`A number has one channel — value. “${cname}” arrives with pictures.`);
+        }
+        if (rb) sendViaBird(rb, makeEventNest(X));
+        return;
+      }
       msg.removeFromParent();
-      return sayAttn(`Its panel does not know “${word ?? 'that'}” yet — a badged number, or [query | bird], is what a number answers.`);
+      return sayAttn(`Its panel does not know “${word ?? 'that'}” yet — a badged number, [query | bird], or [listen | bird] is what a number answers.`);
     }
     msg.removeFromParent();
     return sayAttn('A number answers badged numbers and [query | bird] boxes — that message is dropped.');
@@ -2650,6 +2664,17 @@ function giveToLiveBird(birdNode, X) {
   refreshUI();
 }
 
+// an event nest for a thing: it joins the thing's flock by guid, exactly as
+// a copied nest joins a flock. This is what [listen | bird] answers with.
+function makeEventNest(X) {
+  const n = makeNest();
+  n.userData.guid = X.userData.evtGuid;
+  n.__egg.removeFromParent();
+  n.userData.hasEgg = false;
+  setThingLabel(n, 'events');
+  return n;
+}
+
 // send something along a bird -- live or ordinary -- without a hand involved
 function sendViaBird(bird, thing) {
   if (bird.__liveTarget || bird.userData.liveId) {
@@ -2702,16 +2727,6 @@ function makePanelTray(owner, pw = 0.5, pd = 0.42) {
   setPick(perch, { kind: 'liveBirdPerch', tray: g });
   g.add(perch);
   g.__perchBird = perch;
-  const evt = makeNest();
-  evt.userData.guid = owner.userData.evtGuid;
-  evt.__egg.removeFromParent();
-  evt.userData.hasEgg = false;
-  setThingLabel(evt, 'events');
-  evt.scale.setScalar(0.8);
-  evt.traverse(o => setPick(o, { kind: 'liveNestPerch', tray: g }));
-  setPick(evt, { kind: 'liveNestPerch', tray: g });
-  g.add(evt);
-  g.__perchNest = evt;
   positionPerches(g);
   setPick(g, { kind: 'thing', thing: g });
   return g;
@@ -2722,7 +2737,6 @@ function positionPerches(g) {
     g.__perchBird.position.set(-hw + 0.07, 0.024, -hd + 0.09);
     g.__perchBird.rotation.y = 0.5;
   }
-  if (g.__perchNest) g.__perchNest.position.set(hw - 0.1, 0.024, -hd + 0.1);
 }
 // The tray's furniture, built to size -- and rebuilt in place when a corner
 // stud resizes it.
@@ -2922,7 +2936,6 @@ function closePanelTray(tray) {
       ? [tray.userData.pw, tray.userData.pd] : null;
     X.__panelTray = null;
   }
-  dropPerchNest(tray);
   detach(tray);
   const at = tray.getWorldPosition(new THREE.Vector3());
   scene.attach(tray);
@@ -2934,18 +2947,11 @@ function closePanelTray(tray) {
   refreshUI();
 }
 // A tray whose thing is gone -- vacuumed, mostly -- folds away by itself.
-function dropPerchNest(tray) {
-  const n = tray.__perchNest;
-  if (!n) return;
-  const i = allNests.indexOf(n);
-  if (i >= 0) allNests.splice(i, 1);
-}
 function sweepOrphanTrays() {
   for (const t of benchThings.slice()) {
     if (!t.userData.panel || t.__running) continue;
     const X = t.__owner;
     if (X && X.parent) continue;
-    dropPerchNest(t);
     detach(t);
     const at = t.getWorldPosition(new THREE.Vector3());
     scene.attach(t);
@@ -6024,17 +6030,6 @@ function handleClick(target) {
     }
     return giveToLiveBird(target.tray.__perchBird, owner);
   }
-  if (target.kind === 'liveNestPerch') {
-    const owner = target.tray.__owner;
-    if (busy || mode !== 'world') return say('Wait for the work to finish first.');
-    if (held) return say('The event nest only announces — give things to the bird on the other side.');
-    const c = copyThing(target.tray.__perchNest);
-    c.scale.setScalar(1);
-    c.traverse(o => { delete o.__pick; });
-    setPick(c, { kind: 'thing', thing: c });
-    takeIntoHand(c);
-    return say(`Its event nest — every change to ${panelName(owner)} lands here, on every copy.`);
-  }
   if (target.kind === 'panelCorner') {
     if (held) return say('Empty your hand first.');
     if (panelResize === target.tray) { panelResize = null; return say('That’s its size.'); }
@@ -8374,6 +8369,18 @@ function snapshotWorld() {
     : { spec: specOf(t), at: { x: t.position.x, z: t.position.z } });
   snap.piles = allNests.filter(n => n.parent)
     .map(n => ({ nest: n, items: n.userData.pile.map(specOf) }));
+  // live things ride snapshots by reference, so a delivery made in a daydream
+  // -- or before an undo -- changed them for real. Their values and unread
+  // messages are captured here and put back on restore: the bubble shows the
+  // delivery, and leaving rewinds it.
+  snap.liveVals = [];
+  const noteLive = (t) => {
+    if (t?.userData?.lid && t.userData.kind === 'number') {
+      snap.liveVals.push({ t, value: t.userData.value, q: (t.userData.msgQ ?? []).slice() });
+    }
+    holesOf(t)?.forEach(h => noteLive(h.thing));
+  };
+  benchThings.forEach(noteLive);
   // notebooks travel by reference, so their contents have to be remembered
   // separately -- otherwise undo hands back the same book, still altered
   snap.books = allNotebooks.filter(nb => nb.parent)
@@ -8401,6 +8408,10 @@ function restoreWorld(snap) {
     b.nb.userData.page = b.page;
     renderNotebook(b.nb);
     saveNotebook(b.nb);
+  });
+  (snap.liveVals || []).forEach(lv => {
+    lv.t.setValue(lv.value);
+    lv.t.userData.msgQ = lv.q.slice();
   });
   for (const st of Object.values(stations)) {
     if (st.kind === 'stack') continue;
@@ -9662,12 +9673,8 @@ function tipFor(t) {
   if (t.kind === 'liveBirdPerch') {
     const who = t.tray.__owner ? panelName(t.tray.__owner) : 'its thing';
     return held
-      ? `Give it to the bird — a badged number changes ${who} in one stroke; [query | bird] asks for the value.`
+      ? `Give it to the bird — a badged number changes ${who} in one stroke; [query | bird] asks for the value; [listen | bird] answers with its event nest.`
       : `${who[0].toUpperCase()}${who.slice(1)}’s own bird — click for a bird of your own that delivers straight to it.`;
-  }
-  if (t.kind === 'liveNestPerch') {
-    const who = t.tray.__owner ? panelName(t.tray.__owner) : 'its thing';
-    return `The event nest — every change to ${who} lands here. Click for a copy; a robot dozing on one wakes per change.`;
   }
   if (t.kind === 'panelClose') {
     return 'The knob — click to fold the panel back inside its thing, everything on it included.';

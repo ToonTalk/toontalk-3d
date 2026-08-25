@@ -124,6 +124,15 @@ are marked as arriving rather than sendable.
 
 ## Live numbers, and gauges as an idiom
 
+**Revised in building (Ken, 25 August): event nests are obtained, not
+furnished.** The panel carries only the thing's bird; `[listen |
+reply-bird]` given to the bird answers with an event nest — you subscribe,
+as with an event listener. The shape leaves room for specialized channels:
+an image's bird will take `[listen | position | reply-bird]`, and a number,
+having one channel, refuses any named one with a pointer to pictures. This
+also keeps a panel's face quiet: a thing that nobody listens to carries no
+nest filling with history.
+
 A number's back adds an **event nest** announcing what happens to it:
 `[dropped-on-top, bird-to-the-dropped-thing]`, and so on. A number with an
 inhabited back is a **live number**: a place with identity, whose current
