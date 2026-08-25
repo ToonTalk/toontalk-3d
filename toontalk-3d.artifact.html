@@ -321,7 +321,9 @@ reading "a". The number is spent saying which letter you meant.
 
 A number dropped on a pad rides on it, the way a pad dropped in the
 middle of another does: a score across a field, a count beside a picture. Move
-the pad and the number goes with it; a robot can change it where it sits.
+the pad and the number goes with it; a robot can change it where it sits. A
+riding number shows its value and nothing else — no operation badge
+and no frame — and is kept inside the edges of the pad it is on.
 (It used to shift the pad's first or last letter along the alphabet. That was
 ToonTalk's own idea and, on reflection, not a good one.)
 
@@ -346,8 +348,33 @@ naming example works.
 To caption a picture, hold it and type. Words written over a picture
 are drawn on a band across the foot of it so they can be read against whatever
 is behind them — that is where the labels in the album example come
-from, and there is nothing else to it. Backspace rubs the caption
-out again.
+from. Backspace rubs the caption out again.
+
+That band is a shortcut, not the only way. A label is an ordinary pad
+that has been told what to look like — grey paper, white writing, wide and
+short — and dropped in the middle of a picture, where it rides. See
+what a thing looks like: because it is data, a robot can be
+trained to make one.
+
+What a thing looks like
+How a pad or a number is painted is data, so it can be set, so a robot
+can set it. Send the thing's own bird a box:
+
+messagewhat it does
+[set | background | grey]the paper
+[set | colour | white]the writing (color spelled either way)
+[set | font | sans]one of serif, sans, mono, round
+[set | width | 2]pads only, in pad-widths
+[set | height | 1/3]pads only
+
+Any colour the browser knows by name works, and so does a #rrggbb
+of your own. A number takes background, colour and font; its size is its own.
+Every one of these is a real box on a page of the thing's info notebook
+(the ⓘ on its panel): take one out, write a different word on its last pad,
+and give it to the bird.
+
+So a grey label with white writing is four messages, and a robot shown those
+four messages can make one for every picture it meets.
 
 A pad on a pad
 Drop a pad on the middle of another pad and it rides there: move the
@@ -598,7 +625,8 @@ then take it off him and set it on the table.
 
 He keeps the last six things. Older ones fall out of the bag for good, which
 is what a vacuum is for. Undo also puts a thing straight back where it
-came from, and empties the bag.
+came from, and empties the bag. It works the same wherever he took it from —
+off the table, out of a box, or off a page of a notebook.
 
 ## Rooms
 
@@ -10970,6 +10998,9 @@ function makeNumber(value, op = '+', lite = false) {
   };
   Object.assign(g.userData, { id: nextId++, kind: 'number', op, width: CUBE, rest: CUBE / 2 });
   g.__lod = 1;
+  g.applyLook = () => { if (built) draw(); };
+  // riding on a pad, or back on the table
+  g.setBare = (on) => { g.__bare = !!on; if (built) draw(); };
 
   const paint = (face, fn) => {
     const lod = g.__lod, size = 256 * lod;
@@ -10986,30 +11017,42 @@ function makeNumber(value, op = '+', lite = false) {
     }
     const c = face.canvas.getContext('2d');
     c.setTransform(lod, 0, 0, lod, 0, 0);
-    const st = OP_STYLE[g.userData.op] || OP_STYLE['+'];
+    const st0 = OP_STYLE[g.userData.op] || OP_STYLE['+'];
+    const look = g.userData.look;
+    // Told what to look like, it looks like that; otherwise it looks like the
+    // operation it carries, which is what a number on the table is for.
+    const st = { ...st0, face: look?.bg ?? st0.face, ink: look?.ink ?? st0.ink,
+                 edge: look?.bg ? 'rgba(0,0,0,0.18)' : st0.edge };
     c.fillStyle = st.face; c.fillRect(0, 0, 256, 256);
-    c.strokeStyle = st.edge; c.lineWidth = 12; c.strokeRect(16, 16, 224, 224);
     c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillStyle = st.ink;
+    // BARE: riding on a pad it is a reading, not a tool. No operation badge
+    // and no coloured frame -- Ken wanted the score and not the machinery.
+    if (!g.__bare) {
+      c.strokeStyle = st.edge; c.lineWidth = 12; c.strokeRect(16, 16, 224, 224);
+    }
     fn(c, st);
-    c.beginPath(); c.arc(54, 54, 30, 0, Math.PI * 2);
-    c.fillStyle = st.ink; c.fill();
-    c.fillStyle = st.face;
-    c.font = `bold ${st.glyph.length > 1 ? 26 : 42}px Georgia, serif`;
-    c.fillText(st.glyph, 54, 57);
+    if (!g.__bare) {
+      c.beginPath(); c.arc(54, 54, 30, 0, Math.PI * 2);
+      c.fillStyle = st.ink; c.fill();
+      c.fillStyle = st.face;
+      c.font = lookFace(look, 'bold', st.glyph.length > 1 ? 26 : 42);
+      c.fillText(st.glyph, 54, 57);
+    }
     face.tex.needsUpdate = true;
   };
 
   function draw() {
     if (!built) return;
     const st0 = OP_STYLE[g.userData.op] || OP_STYLE['+'];
-    shellMat.color.setHex(st0.shell);
+    if (g.userData.look?.bg) shellMat.color.set(g.userData.look.bg);
+    else shellMat.color.setHex(st0.shell);
     const label = g.userData.label;
     const v = g.userData.value;
     const lod = g.__lod;
     paint(fMain, (c, st) => {
       if (label != null) {
-        c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
+        c.font = lookFace(g.userData.look, 'bold', fitFont(c, label, 176, 176));
         c.fillText(label, 128, 140);
       } else if (v && v.d === 1n) {
         drawNum(c, String(v.n), 128, 142, 190, 168, lod);
@@ -11553,6 +11596,65 @@ function setWings(bird, spread, flap) {
 }
 // A pad: a flat tablet of paper with writing on its top face. Typing
 // writes on a held pad; drops concatenate (see combine).
+// --- how a thing is painted, as data ---------------------------------------
+// A LOOK is { bg, ink, font, w, h }, all optional and all absent until set.
+// Fonts are words rather than stacks so a child can type one and a robot can
+// carry one on a pad.
+const LOOK_FONTS = {
+  serif: 'Georgia, "Times New Roman", serif',
+  sans: '"Trebuchet MS", "Segoe UI", system-ui, sans-serif',
+  mono: 'ui-monospace, Consolas, "Courier New", monospace',
+  round: '"Comic Sans MS", "Comic Neue", "Segoe Print", cursive',
+};
+const lookFace = (look, weight, px) =>
+  `${weight} ${px}px ${LOOK_FONTS[look?.font] || LOOK_FONTS.serif}`;
+// Is that a colour? Asked of the canvas rather than of a list, so every name
+// the browser knows works and nothing else does.
+let _ctest = null;
+function colourOK(w) {
+  _ctest ??= document.createElement('canvas').getContext('2d');
+  _ctest.fillStyle = '#000000';
+  _ctest.fillStyle = w;
+  const a = _ctest.fillStyle;
+  _ctest.fillStyle = '#ffffff';
+  _ctest.fillStyle = w;
+  return a === _ctest.fillStyle;
+}
+const LOOK_PROPS = {
+  background: 'bg', paper: 'bg',
+  colour: 'ink', color: 'ink', ink: 'ink',
+  font: 'font', width: 'w', height: 'h',
+};
+// Set one property of a thing's look, and say what happened. Returns a
+// sentence for the message machinery to report, or null if it does not apply.
+function setLookProp(X, prop, value) {
+  const key = LOOK_PROPS[prop];
+  if (!key) return null;
+  const kind = X.userData.kind;
+  if ((key === 'w' || key === 'h') && kind !== 'text') {
+    return `A ${kind} has the size it has \u2014 width and height are a pad's.`;
+  }
+  const look = (X.userData.look ??= {});
+  if (key === 'font') {
+    const f = String(value ?? '').trim().toLowerCase();
+    if (!LOOK_FONTS[f]) {
+      return `${LQ}${f}${RQ} is not one of the fonts \u2014 serif, sans, mono or round.`;
+    }
+    look.font = f === 'serif' ? undefined : f;
+  } else if (key === 'w' || key === 'h') {
+    const n = typeof value === 'number' ? value : NaN;
+    if (!(n > 0)) return 'Width and height want a number of pad-widths.';
+    look[key] = Math.min(6, Math.max(0.2, Math.round(n * 100) / 100));
+  } else {
+    const w = String(value ?? '').trim().toLowerCase();
+    if (!colourOK(w)) return `${LQ}${w}${RQ} is not a colour the workshop knows.`;
+    look[key] = w;
+  }
+  if (!look.font) delete look.font;
+  if (!Object.keys(look).length) delete X.userData.look;
+  X.applyLook?.();
+  return null;
+}
 function makeText(str) {
   const g = new THREE.Group();
   const cv = document.createElement('canvas');
@@ -11610,86 +11712,113 @@ function makeText(str) {
   g.setPadSize = (sz) => {
     sz = Math.min(3, Math.max(1, Math.round(sz * 4) / 4));
     g.userData.sz = sz === 1 ? undefined : sz;
-    // a picture keeps its own proportions; a written pad keeps the tablet's
-    const asp = g.userData.aspect ?? (0.26 / 0.34);
-    pad.geometry = geo('BoxGeometry', 0.34 * sz, 0.045, 0.34 * sz * asp);
-    g.userData.width = 0.34 * sz;
+    g.applyLook();
+  };
+  // Shape and canvas together: a pad told it is two wide and a third high is a
+  // LABEL, and its face has to be drawn at that shape or the writing on it
+  // comes out stretched. So the canvas follows the pad rather than being a
+  // fixed 512 by 384, and everything painted on it is said in fractions of W
+  // and H below.
+  g.applyLook = () => {
+    const sz = g.userData.sz ?? 1;
+    const look = g.userData.look;
+    // a picture keeps its own proportions; a written pad keeps the tablet's;
+    // and either can be overruled by saying so
+    const wU = look?.w ?? 1;
+    const hU = look?.h ?? (g.userData.aspect ?? (0.26 / 0.34));
+    const w = 0.34 * sz * wU, h = 0.34 * sz * hU;
+    pad.geometry = geo('BoxGeometry', w, 0.045, h);
+    g.userData.width = w;
+    const cw = 512, ch = Math.max(72, Math.min(1536, Math.round(cw * h / w)));
+    if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
     layoutSubPads(g);            // the scene spreads with its field
+    g.setText(g.userData.text ?? '');
   };
   g.setText = (t) => {
     g.userData.text = t;
     const c = cv.getContext('2d');
+    const W = cv.width, H = cv.height, M = Math.min(W, H);
+    const look = g.userData.look;
+    const paper = look?.bg ?? '#f7f1df';
+    const ink = look?.ink ?? '#1c2a52';
+    const edge = look?.bg ? 'rgba(0,0,0,0.22)' : '#c9bd9c';
     if (g.__sprite && g.__imgEl) {
       // no paper at all: the picture, at its own proportions, on nothing
-      c.clearRect(0, 0, 512, 384);
+      c.clearRect(0, 0, W, H);
       const im = g.__imgEl;
-      const sc = Math.min(512 / im.width, 384 / im.height);
+      const sc = Math.min(W / im.width, H / im.height);
       const w2 = im.width * sc, h2 = im.height * sc;
-      c.drawImage(im, (512 - w2) / 2, (384 - h2) / 2, w2, h2);
+      c.drawImage(im, (W - w2) / 2, (H - h2) / 2, w2, h2);
       if (t) {
         c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.font = 'bold 44px Georgia, serif';
-        c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,0.75)';
-        c.strokeText(t.split('\n')[0], 256, 340);
-        c.fillStyle = '#fff';
-        c.fillText(t.split('\n')[0], 256, 340);
+        c.font = lookFace(look, 'bold', M * 0.115);
+        c.lineWidth = M * 0.021; c.strokeStyle = 'rgba(0,0,0,0.75)';
+        c.strokeText(t.split('\n')[0], W / 2, H * 0.885);
+        c.fillStyle = look?.ink ?? '#fff';
+        c.fillText(t.split('\n')[0], W / 2, H * 0.885);
       }
       tex.needsUpdate = true;
       layoutSubPads(g);
       return;
     }
-    // paper: cream base flecked with faint fibres
-    c.fillStyle = '#f7f1df'; c.fillRect(0, 0, 512, 384);
-    let seed = 9;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 340; i++) {
-      c.fillStyle = rnd() > 0.5 ? 'rgba(180,166,130,0.16)' : 'rgba(255,255,255,0.5)';
-      c.fillRect(rnd() * 512, rnd() * 384, 1 + rnd() * 2.4, 0.8 + rnd() * 1.4);
+    // paper: the pad's own colour, cream unless it has been told otherwise,
+    // flecked with faint fibres while it is still paper
+    c.fillStyle = paper; c.fillRect(0, 0, W, H);
+    if (!look?.bg) {
+      let seed = 9;
+      const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i2 = 0; i2 < 340; i2++) {
+        c.fillStyle = rnd() > 0.5 ? 'rgba(180,166,130,0.16)' : 'rgba(255,255,255,0.5)';
+        c.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2.4, 0.8 + rnd() * 1.4);
+      }
     }
     // a picture covers the paper, letterboxed so nothing is cropped away
     if (g.__imgEl) {
       const im = g.__imgEl;
-      const sc = Math.min(512 / im.width, 384 / im.height);
+      const sc = Math.min(W / im.width, H / im.height);
       const w = im.width * sc, h = im.height * sc;
-      c.drawImage(im, (512 - w) / 2, (384 - h) / 2, w, h);
+      c.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
     }
-    c.strokeStyle = '#c9bd9c'; c.lineWidth = 3; c.strokeRect(8, 8, 496, 368);
+    c.strokeStyle = edge; c.lineWidth = M * 0.008;
+    c.strokeRect(M * 0.016, M * 0.016, W - M * 0.032, H - M * 0.032);
     c.textAlign = 'center'; c.textBaseline = 'middle';
     if (g.__imgEl && !t) {
       tex.needsUpdate = true;
       return;                       // a picture with nothing written on it
     }
     if (g.__imgEl) {
-      // words over a picture: a caption band, so the ink stays readable
-      const c2 = c;
-      c2.fillStyle = 'rgba(16,20,30,0.62)';
-      c2.fillRect(8, 292, 496, 84);
-      c2.fillStyle = '#f7f1df';
-      let px = 54;
-      c2.font = `600 ${px}px Georgia, serif`;
-      while (px > 14 && c2.measureText(t).width > 470) {
+      // Words over a picture sit on a band, so the ink stays readable. That is
+      // the same band you can now make yourself -- a pad with a background and
+      // a colour is a label, and this is one drawn in place.
+      c.fillStyle = look?.bg ?? 'rgba(16,20,30,0.62)';
+      c.fillRect(M * 0.016, H * 0.76, W - M * 0.032, H * 0.22);
+      c.fillStyle = look?.ink ?? '#f7f1df';
+      let px = M * 0.14;
+      c.font = lookFace(look, '600', px);
+      while (px > M * 0.036 && c.measureText(t).width > W * 0.92) {
         px = Math.floor(px * 0.9);
-        c2.font = `600 ${px}px Georgia, serif`;
+        c.font = lookFace(look, '600', px);
       }
-      c2.fillText(t, 256, 334);
+      c.fillText(t, W / 2, H * 0.87);
       tex.needsUpdate = true;
       return;
     }
     if (!t) {
-      c.fillStyle = '#c9bd9c';
-      c.font = 'italic 40px Georgia, serif';
-      c.fillText('(blank)', 256, 192);
+      c.fillStyle = look?.ink ?? '#c9bd9c';
+      c.font = lookFace(look, 'italic 400', M * 0.104);
+      c.fillText('(blank)', W / 2, H / 2);
     } else {
       // the largest type at which the wrapped text still fits the pad
-      c.fillStyle = '#1c2a52';
+      c.fillStyle = ink;
+      const room = W * 0.9, tall = H * 0.9;
       const fit = (px) => {
-        c.font = `400 ${px}px Georgia, serif`;
+        c.font = lookFace(look, '400', px);
         const lines = [];
         for (const para of t.split('\n')) {
           let line = '';
           for (const w of para.split(' ')) {
             const cand = line ? line + ' ' + w : w;
-            if (c.measureText(cand).width > 460 && line) { lines.push(line); line = w; }
+            if (c.measureText(cand).width > room && line) { lines.push(line); line = w; }
             else line = cand;
           }
           lines.push(line);
@@ -11697,15 +11826,16 @@ function makeText(str) {
         return { lines, h: lines.length * px * 1.18,
                  wide: Math.max(...lines.map(l => c.measureText(l).width)) };
       };
-      let px = 210, r = fit(px);
-      while (px > 16 && (r.h > 344 || r.wide > 460)) { px = Math.floor(px * 0.9); r = fit(px); }
-      c.font = `400 ${px}px Georgia, serif`;
-      const y0 = 192 - r.h / 2 + px * 0.62;
-      r.lines.forEach((ln, i) => c.fillText(ln, 256, y0 + i * px * 1.18, 470));
+      let px = Math.max(16, H * 0.55), r = fit(px);
+      while (px > 10 && (r.h > tall || r.wide > room)) { px = Math.floor(px * 0.9); r = fit(px); }
+      c.font = lookFace(look, '400', px);
+      const y0 = H / 2 - r.h / 2 + px * 0.62;
+      r.lines.forEach((ln, i2) => c.fillText(ln, W / 2, y0 + i2 * px * 1.18, room));
     }
     tex.needsUpdate = true;
   };
-  g.setText(str || '');
+  g.userData.text = str || '';
+  g.applyLook();          // shape, canvas and paint decided in one place
   setPick(g, { kind: 'thing', thing: g });
   return g;
 }
@@ -12375,8 +12505,34 @@ function pumpLive(X) {
     }
   } finally { X.__pumping = false; }
 }
+// [set | property | value] -- the one message every thing understands, since
+// every thing is painted somehow. Returns true if it dealt with the message.
+function lookMsg(X, msg) {
+  if (msg.userData.kind !== 'box') return false;
+  const hole = (i) => msg.userData.holes[i]?.thing ?? null;
+  const word = (t2) => t2?.userData.kind === 'text' ? (t2.userData.text ?? '').trim().toLowerCase() : null;
+  if (word(hole(0)) !== 'set') return false;
+  const prop = word(hole(1));
+  if (!prop || !(prop in LOOK_PROPS)) return false;
+  const v = hole(2);
+  const value = v?.userData.kind === 'number'
+    ? Number(v.userData.value.n) / Number(v.userData.value.d)
+    : word(v);
+  // said back the way it was written: a third is "1/3", not 0.3333333333
+  const shown = v?.userData.kind === 'number' ? ratShort(v.userData.value) : value;
+  msg.removeFromParent();
+  if (value == null) {
+    sayAttn(`[set | ${prop} | ...] wants a third hole saying what to set it to.`);
+    return true;
+  }
+  const complaint = setLookProp(X, prop, value);
+  if (complaint) sayAttn(complaint);
+  else say(`${panelName(X)[0].toUpperCase()}${panelName(X).slice(1)}: ${prop} is ${shown} now.`);
+  return true;
+}
 function handleLiveMsg(X, msg) {
   const mk = msg.userData.kind;
+  if (lookMsg(X, msg)) return;
   if (X.userData.kind === 'number') {
     if (mk === 'number') {
       // the badge travels whole: fetch-and-add in a single message
@@ -12426,9 +12582,15 @@ function handleLiveMsg(X, msg) {
     if (word === 'stop') { stopSound(X); return; }
     return sayAttn('A sound answers [play] and [stop].');
   }
+  if (X.userData.kind === 'text') {
+    msg.removeFromParent();
+    return sayAttn('A pad answers [set | background | grey], [set | colour | white], '
+      + '[set | font | sans] and [set | width | 2] / [set | height | 1/3] '
+      + '— its info notebook has them ready to take out.');
+  }
   // other kinds find their vocabularies with pictures (Stage 3)
   msg.removeFromParent();
-  sayAttn('Only numbers and sounds answer messages so far — the rest of the vocabulary arrives with pictures.');
+  sayAttn('Only numbers, pads and sounds answer messages so far — the rest of the vocabulary arrives with behaviours.');
 }
 // A change announces itself: the new value lands on every nest of the flock.
 function emitLiveEvent(X) {
@@ -12587,6 +12749,27 @@ const INFO_PAGES = {
     { kind: 'text', text: 'WHAT IT WILL TELL YOU\n\nEach change arrives on\nthe event nest as the\nnew value, once \u2014 an\nupdate that changes\nnothing is swallowed\n(the echo rule).' },
   ],
 };
+// A pad's own vocabulary. The whole of it is [set | property | value], which
+// is why a LABEL -- grey paper, white writing, wide and short -- is not a
+// feature but four messages, and a robot can be shown how to make one.
+INFO_PAGES.text = [
+  { kind: 'text', text: 'WHAT A PAD LOOKS LIKE\n\nis data, so it can be set,\nso a robot can set it.\n\nSend its bird\n[set | property | value].\n\nTake the box opposite,\nwrite another colour on\nits last pad, and give it\nto the bird.' },
+  { kind: 'box', holeLabels: ['what to do', 'which', 'to what'],
+    holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'background' },
+            { kind: 'text', text: 'grey' }] },
+  { kind: 'text', text: 'THE INK\n\n[set | colour | white]\n\n\u201ccolor\u201d spelled the other\nway works too.\n\nAny colour the browser\nknows by name, or a\n#rrggbb of your own.' },
+  { kind: 'box', holeLabels: ['what to do', 'which', 'to what'],
+    holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'colour' },
+            { kind: 'text', text: 'white' }] },
+  { kind: 'text', text: 'THE LETTERING\n\n[set | font | sans]\n\nFour to choose from:\nserif, sans, mono, round.\n\nNumbers take background,\ncolour and font as well.' },
+  { kind: 'box', holeLabels: ['what to do', 'which', 'to what'],
+    holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'font' },
+            { kind: 'text', text: 'sans' }] },
+  { kind: 'text', text: 'THE SHAPE\n\n[set | width | 2]\n[set | height | 1/3]\n\nin pad-widths. A wide,\nshort pad in grey with\nwhite writing is a LABEL\n\u2014 drop one in the middle\nof a picture and it rides\nthere.' },
+  { kind: 'box', holeLabels: ['what to do', 'which', 'to what'],
+    holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'height' },
+            { kind: 'number', value: { n: '1', d: '3' }, op: '+' }] },
+];
 INFO_PAGES.sound = [
   { kind: 'text', text: 'WHAT YOU CAN SEND\n\n[play] to its bird plays\nit; [stop] stops it.\n\nSPACE plays whatever is\nin your hand or under\nthe pointer; \u201c.\u201d stops it.' },
   { kind: 'box', holeLabels: ['what to do'], holes: [{ kind: 'text', text: 'play' }] },
@@ -12663,6 +12846,21 @@ function sendViaBird(bird, thing) {
 // What is filed on a page, in words. A page holds the saved record rather
 // than a thing, so this reads the record -- and it is why pointing at an
 // entry used to say nothing at all.
+// A pad's words, whole if they fit and paged with Tab if they do not. Used
+// for a pad on the table and for one filed on a notebook page, because they
+// are the same pad and reading it is the same act.
+const TIP_PER = 600;
+function padTip(words, node) {
+  if (!words) return 'a blank pad';
+  if (words.length <= TIP_PER) return `A pad “${words}”`;
+  if (tipPager.node !== node) { tipPager.node = node; tipPager.page = 0; }
+  const pages = Math.ceil(words.length / TIP_PER);
+  tipPager.pages = pages;
+  const i = tipPager.page % pages;
+  return (i ? '\u2026' : '') + words.slice(i * TIP_PER, (i + 1) * TIP_PER)
+    + (i < pages - 1 ? '\u2026' : '')
+    + `\n— part ${i + 1} of ${pages}; press Tab for the next —`;
+}
 function pageWords(rec) {
   if (!rec) return 'nothing';
   if (rec.label) return '\u201c' + rec.label + '\u201d';
@@ -15799,12 +15997,24 @@ const SUB_FLAT = 0.07;               // x 0.045 of pad = about 3mm at full size
 function placeSubPad(parent, child) {
   const { w, d } = padFaceSize(parent);
   const at = child.userData.at || { u: 0, v: 0 };
+  // Three quarters of its own size, but never wider than the field it is on:
+  // a number on a small pad used to hang off the corner.
+  const own = child.userData.width || 0.3;
+  const sc = Math.min(0.75, (w * 0.86) / own);
+  child.scale.set(sc, SUB_FLAT, sc);
+  // ...and kept inside the edges, allowing for how much of it there is. u and
+  // v were clamped as POINTS, so half of a thing sat outside the pad.
+  const halfU = Math.min(0.45, (own * sc / 2) / w);
+  const ownD = own * ((child.userData.aspect ?? 1));
+  const halfV = Math.min(0.45, (ownD * sc / 2) / d);
+  const u = Math.max(-(0.5 - halfU), Math.min(0.5 - halfU, at.u));
+  const v = Math.max(-(0.5 - halfV), Math.min(0.5 - halfV, at.v));
   // A pad grows in x and z; its THICKNESS never changes, so its top face is at
   // 0.0225 however big it is. Scaling this with sz left a sprite floating a
   // finger's width over a large field.
   const top = 0.0225;
   // it SITS on the field now rather than hovering a slab's height above it
-  child.position.set(at.u * w, top + 0.045 * SUB_FLAT * 0.75 + 0.002, at.v * d);
+  child.position.set(u * w, top + 0.045 * SUB_FLAT * sc + 0.002, v * d);
   child.quaternion.identity();
 }
 function layoutSubPads(parent) {
@@ -15826,8 +16036,8 @@ function addSubPad(parent, child, point) {
   // a field -- and it lies FLAT. On the table a thing is a solid you pick up;
   // on a field it is painted there, and a slab standing proud of the field is
   // no use as the ball in a game of Pong or as a score across the top of one.
-  child.scale.set(0.75, SUB_FLAT, 0.75);
   child.setSprite?.(true);
+  child.setBare?.(true);          // a number riding is a reading, not a tool
   placeSubPad(parent, child);
   setPick(child, { kind: 'thing', thing: child });
 }
@@ -15840,6 +16050,7 @@ function removeSubPad(child) {
   delete child.userData.at;
   child.scale.setScalar(1);          // off the field it is a slab again
   child.setSprite?.(false);
+  child.setBare?.(false);
   return true;
 }
 // The perch-then-sink merge that numbers use, shared by text drops: the
@@ -16523,6 +16734,11 @@ function runRefusal(target) {
         dur: 0,
         end() {
           nb.userData.pages[slot] = null;
+          // renderNotebook throws away every node it drew last time, and by
+          // now this one is sitting in Dusty's bag -- so forgetting it here is
+          // what stops the notebook reaching in and taking it off his head.
+          const k = (nb.__slotNodes || []).indexOf(shown);
+          if (k >= 0) nb.__slotNodes.splice(k, 1);
           renderNotebook(nb);
           saveNotebook(nb);
           say('Dusty took that page’s entry.');
@@ -18694,9 +18910,13 @@ function thingOut(t) {
 function thingOutRaw(t) {
   if (!t) return null;
   const ud = t.userData;
-  if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
+  if (ud.kind === 'number') {
+    return { kind: 'number', value: ratOut(ud.value), op: ud.op,
+             look: ud.look ? { ...ud.look } : undefined };
+  }
   if (ud.kind === 'text') {
-    const r = { kind: 'text', text: ud.text, sz: ud.sz, img: ud.img };
+    const r = { kind: 'text', text: ud.text, sz: ud.sz, img: ud.img,
+                look: ud.look ? { ...ud.look } : undefined };
     if (t.__subs?.length) {
       r.subs = t.__subs.map(c => ({ at: c.userData.at, thing: thingOut(c) }));
     }
@@ -18805,9 +19025,15 @@ function thingIn(o, nests, birds) {
 function thingInRaw(o, nests, birds) {
   if (!o) return null;
   let t = null;
-  if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
+  if (o.kind === 'number') {
+    t = makeNumber(ratIn(o.value), o.op);
+    if (o.look) { t.userData.look = { ...o.look }; t.applyLook(); }
+  }
   else if (o.kind === 'text') {
     t = makeText(o.text);
+    // applied, not just remembered: shape and canvas are decided in applyLook,
+    // so a saved label came back the right colours at the wrong size without it
+    if (o.look) { t.userData.look = { ...o.look }; t.applyLook(); }
     if (o.img) t.setImage(o.img);
     if (o.sz) t.setPadSize(o.sz);
     for (const sp of (o.subs || [])) {
@@ -20369,8 +20595,16 @@ function tipFor(t) {
     }
     const what = pageWords(entry);
     if (dustyActive && !TIP) return `Dusty takes ${what} off page ${t.slot + 1}.`;
-    if (TIP) return `Page ${t.slot + 1} already holds ${what} \u2014 drop yours to replace it.`;
-    return `Page ${t.slot + 1} \u2014 ${what}. Click to take a COPY out; the page keeps its own.`;
+    if (TIP) return `Page ${t.slot + 1} already holds ${what} — drop yours to replace it.`;
+    // A pad filed on a page is still a pad, and reading it is the whole
+    // reason to point at it -- so it gets the same tooltip it gets on the
+    // table, paging and all, rather than a name with an ellipsis in it.
+    if (entry.kind === 'text' && !entry.img) {
+      const node = (t.nb.__slotNodes || [])[t.slot - t.nb.userData.page] ?? t.nb;
+      return `Page ${t.slot + 1} — ` + padTip(entry.text ?? '', node)
+        + '\nClick to take a COPY out; the page keeps its own.';
+    }
+    return `Page ${t.slot + 1} — ${what}. Click to take a COPY out; the page keeps its own.`;
   }
   if (t.kind === 'nbFlip') {
     return t.dir < 0 ? 'Back a spread \u2014 the \u2190 key does the same.'
@@ -20453,8 +20687,16 @@ function tipFor(t) {
         && Math.abs(t.point.x - t2.position.x) < 0.45 && Math.abs(t.point.z - t2.position.z) < 0.36);
       if (near) return 'Drop to join the pads — this side decides the order.';
     }
-    return TIP ? 'Your workbench — click to put that down.'
-                : 'Your workbench — build here. Robots cannot reach it.';
+    if (TIP) return 'Your workbench — click to put that down.';
+    // The bench is where YOUR things live: what you take from a stack, what
+    // a bird brings you, what you are part-way through building. Saying so
+    // is more use than the bare name. And the note about robots only means
+    // anything once there IS a robot about -- before that it answers a
+    // question nobody has asked.
+    const anyBot = activeBot || benchThings.some(t2 => t2.userData.kind === 'robot');
+    return 'Your workbench — what you take from a stack, what a bird brings you, and '
+      + 'whatever you are part-way through building all live here, and are saved with the workshop.'
+      + (anyBot ? ' A robot cannot reach it: it works at its own desk, and is handed things.' : '');
   }
   if (t.kind === 'dustyBag') {
     const top = dustyBag[dustyBag.length - 1];
@@ -20595,16 +20837,7 @@ function tipFor(t) {
             + 'a picture are drawn on a band so they can be read. Ctrl with the arrows resizes it.';
       }
       if (!words) return 'A blank pad — click to pick it up, then type to write on it.';
-      const PER = 600;
-      if (words.length <= PER) return `A pad — “${words}”\n— click to pick it up; type to write on it.`;
-      // a long pad pages: Tab turns to the next part while you point at it
-      if (tipPager.node !== t.thing) { tipPager.node = t.thing; tipPager.page = 0; }
-      const pages = Math.ceil(words.length / PER);
-      tipPager.pages = pages;
-      const i = tipPager.page % pages;
-      return (i ? '…' : '') + words.slice(i * PER, (i + 1) * PER)
-        + (i < pages - 1 ? '…' : '')
-        + `\n— part ${i + 1} of ${pages}; press Tab for the next —`;
+      return padTip(words, t.thing) + '\n— click to pick it up; type to write on it.';
     }
     if (ud.kind === 'number') {
       if (TIP?.userData.kind === 'number') {

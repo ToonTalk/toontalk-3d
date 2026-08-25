@@ -584,3 +584,36 @@ epic. Natural order: 1–2 first (the semantics), 3 second (the payoff),
 - The native-panel safety story: warning dialog, or a postMessage
   sandbox — and whether a native panel may be filed in a notebook and
   travel inside a world file.
+
+## The look of a thing, as data
+
+*Added 25 Aug, at Ken's insistence that captioning a picture by typing on it
+"feels too special purpose".*
+
+How a pad or a number is painted is not a property of the app, it is a
+property of the thing, and it is ordinary data:
+
+```
+[set | background | grey]     the paper           pad, number
+[set | colour     | white]    the writing         pad, number
+[set | font       | sans]     serif sans mono round
+[set | width      | 2]        in pad-widths       pad
+[set | height     | 1/3]      likewise            pad
+```
+
+sent to the thing's own bird, in the same grammar as `[query | bird]` and
+`[listen | bird]`. Each one is a real box on a page of the thing's info
+notebook.
+
+The consequence is the point. A LABEL — grey paper, white writing, wide and
+short — stops being a feature and becomes four messages, which means a robot
+can be trained to make one, which means a program can label every picture it
+meets. That is the difference between a workshop that has captions and a
+workshop in which captions can be *built*.
+
+**Still to come.** Alignment and padding; a border colour and width of its
+own; a `[query | look | bird]` so a robot can read a thing's appearance as
+well as write it; the same treatment for boxes, scales and sounds (a sound's
+waveform screen is already a canvas that could take a colour). And the harder
+one: a picture pad's image as a settable property, so a robot can put a
+picture on a pad it was handed rather than only on one it was shown.

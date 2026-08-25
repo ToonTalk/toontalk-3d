@@ -27,6 +27,10 @@
   }
   nav a { color: var(--red); text-decoration: none; margin: 0 10px; white-space: nowrap; }
   nav a:hover { text-decoration: underline; }
+  table { border-collapse: collapse; margin: 1em 0; font-size: 0.96em; }
+  th, td { border: 1px solid #d8cfba; padding: 5px 10px; text-align: left; vertical-align: top; }
+  th { background: #f2ead8; font-weight: 600; }
+  td code { white-space: nowrap; }
   main { max-width: 780px; margin: 0 auto; padding: 10px 18px 80px; }
   h2 {
     color: var(--red); font-size: 26px; margin: 46px 0 8px;
@@ -69,6 +73,7 @@
   <a href="#basics">Basics</a>
   <a href="#numbers">Numbers</a>
   <a href="#pads">Pads</a>
+  <a href="#look">Looks</a>
   <a href="#sounds">Sounds</a>
   <a href="#boxes">Boxes</a>
   <a href="#dice">Dice</a>
@@ -177,7 +182,9 @@ and that number chooses a letter — "Talk" dropped on a <b>2</b> leaves a pad
 reading "a". The number is spent saying which letter you meant.</p>
 <p><b>A number dropped on a pad rides on it</b>, the way a pad dropped in the
 middle of another does: a score across a field, a count beside a picture. Move
-the pad and the number goes with it; a robot can change it where it sits.
+the pad and the number goes with it; a robot can change it where it sits. A
+riding number shows its <em>value</em> and nothing else — no operation badge
+and no frame — and is kept inside the edges of the pad it is on.
 (It used to shift the pad's first or last letter along the alphabet. That was
 ToonTalk's own idea and, on reflection, not a good one.)</p>
 <div class="try">
@@ -202,8 +209,31 @@ particular picture wakes for that picture and no other, which is how the
 <p><b>To caption a picture, hold it and type.</b> Words written over a picture
 are drawn on a band across the foot of it so they can be read against whatever
 is behind them — that is where the labels in the <em>album</em> example come
-from, and there is nothing else to it. <kbd>Backspace</kbd> rubs the caption
-out again.</p>
+from. <kbd>Backspace</kbd> rubs the caption out again.</p>
+<p>That band is a shortcut, not the only way. A <b>label</b> is an ordinary pad
+that has been told what to look like — grey paper, white writing, wide and
+short — and dropped in the middle of a picture, where it rides. See
+<a href="#look">what a thing looks like</a>: because it is data, a robot can be
+trained to make one.</p>
+
+<h3 id="look">What a thing looks like</h3>
+<p>How a pad or a number is painted is <b>data</b>, so it can be set, so a robot
+can set it. Send the thing's own bird a box:</p>
+<table>
+<tr><th>message</th><th>what it does</th></tr>
+<tr><td><code>[set | background | grey]</code></td><td>the paper</td></tr>
+<tr><td><code>[set | colour | white]</code></td><td>the writing (<em>color</em> spelled either way)</td></tr>
+<tr><td><code>[set | font | sans]</code></td><td>one of <em>serif</em>, <em>sans</em>, <em>mono</em>, <em>round</em></td></tr>
+<tr><td><code>[set | width | 2]</code></td><td>pads only, in pad-widths</td></tr>
+<tr><td><code>[set | height | 1/3]</code></td><td>pads only</td></tr>
+</table>
+<p>Any colour the browser knows by name works, and so does a <code>#rrggbb</code>
+of your own. A number takes background, colour and font; its size is its own.
+Every one of these is a real box on a page of the thing's <b>info notebook</b>
+(the ⓘ on its panel): take one out, write a different word on its last pad,
+and give it to the bird.</p>
+<p>So a grey label with white writing is four messages, and a robot shown those
+four messages can make one for every picture it meets.</p>
 
 <h3>A pad on a pad</h3>
 <p>Drop a pad on the middle of another pad and it <b>rides</b> there: move the
@@ -442,7 +472,8 @@ one piece out of a scene to look at it on its own — point him at the piece,
 then take it off him and set it on the table.</p>
 <p>He keeps the last six things. Older ones fall out of the bag for good, which
 is what a vacuum is for. <b>Undo</b> also puts a thing straight back where it
-came from, and empties the bag.</p>
+came from, and empties the bag. It works the same wherever he took it from —
+off the table, out of a box, or off a page of a notebook.</p>
 
 <h2 id="rooms">Rooms</h2>
 <p>Rooms are little houses that each hold <b>an entire workshop</b>. Drop a
