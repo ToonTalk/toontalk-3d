@@ -102,12 +102,35 @@ PICTURES = [
 BY_NAME = dict(PICTURES)
 
 
-def pic(name, caption='', sz=None):
-    """A picture pad. Words and picture live on the same pad, so a caption is
-    not a second thing -- it is what the pad says."""
-    p = {'kind': 'text', 'text': caption, 'img': BY_NAME[name]}
+# A LABEL is an ordinary pad that has been told what to look like: grey paper,
+# white writing, wide and short. Nothing here is a caption feature -- it is the
+# appearance API, which is exactly what a robot would send:
+#
+#   [set | background | #3a3f47]   [set | colour | white]
+#   [set | font       | sans]      [set | height | 0.26]
+LABEL_LOOK = {'bg': '#3a3f47', 'ink': 'white', 'font': 'sans', 'h': 0.26}
+
+
+def label(text, **over):
+    look = dict(LABEL_LOOK)
+    look.update(over)
+    return {'kind': 'text', 'text': text, 'look': look}
+
+
+def pic(name, caption='', sz=None, at=(0, 0.38)):
+    """A picture pad, with its caption RIDING on it as a label.
+
+    The caption used to be the pad's own writing, drawn on a band the app put
+    there. Ken was right that that is too special-purpose: a label is a pad
+    with a look, and riding on a picture is what any pad does in the middle of
+    another. So the album's labels are now the same thing anybody can build --
+    and Dusty takes the label off without taking the picture."""
+    p = {'kind': 'text', 'text': '', 'img': BY_NAME[name]}
     if sz:
         p['sz'] = sz
+    if caption:
+        p['subs'] = [{'at': {'u': at[0], 'v': at[1]},
+                      'thing': label(caption)}]
     return p
 
 

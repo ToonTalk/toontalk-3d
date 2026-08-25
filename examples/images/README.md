@@ -7,12 +7,25 @@ Each lays its instructions on the table as ordinary pads.
 words on, with an image on its face. So a picture copies, files into a
 notebook, goes in a box, joins other pads, is vacuumed by Dusty, and is
 recognised by a robot's thought — all of it behaviour that already existed and
-that nobody wrote again for pictures. The words and the image live on the *one*
-pad, so a caption is not a second thing.
+that nobody wrote again for pictures. Words and image can share the one pad, and
+a pad can carry other pads riding on it.
 
 Drag an image file onto the page and it lands as a pad **where you dropped
 it**; drop it on a pad that is already there and the picture covers that pad
 instead.
+
+**Captions are labels, not a caption feature.** Where a picture here carries a
+word, that word is a second pad *riding* on the picture: grey paper, white
+writing, wide and short, made with the appearance API and nothing else —
+
+```
+[set | background | #3a3f47]   [set | colour | white]
+[set | font       | sans]      [set | height | 0.26]
+```
+
+sent to the pad's own bird. So a robot can build one, Dusty can take the label
+off without taking the picture, and you can pick the label up and read it on
+its own. `label()` in `_img.py` is the same four properties as data.
 
 ## pictures.world.json
 

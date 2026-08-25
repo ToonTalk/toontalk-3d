@@ -81,12 +81,17 @@ WHY = ('THEN TRY THIS\n\n'
        'the team wakes, and the name\n'
        'arrives. The program is a\n'
        'SERVICE, not a run.\n\n'
-       'Now write a word on one of\n'
+       'Now write a word ON one of\n'
        'the spares before you send\n'
        'it. Nobody wakes -- a pad\'s\n'
        'words are part of what it is,\n'
-       'so a captioned circle is not\n'
-       'the circle they know.')
+       'so a written-on circle is not\n'
+       'the circle they know.\n\n'
+       'A LABEL riding on one is a\n'
+       'different matter: it is a\n'
+       'second pad sitting on the\n'
+       'first, and the picture under\n'
+       'it is unchanged -- they wake.')
 
 spare_bird = bird(SEEN, 'img-seen', 'pictures')
 

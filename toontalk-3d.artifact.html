@@ -11691,9 +11691,12 @@ function makeText(str) {
   // a data URL, so it saves, copies and files exactly as the words do; the
   // words stay where they are, drawn over it, so a captioned picture is one
   // ordinary pad.
-  g.setImage = (src) => {
+  g.setImage = (src, retry = false) => {
     g.userData.img = src || undefined;
+    if (!retry) g.__imgTried = 0;    // a retry must not re-arm itself
     if (!src) { g.__imgEl = null; g.setText(g.userData.text || ''); return; }
+    g.__imgEl = null;
+    g.setText(g.userData.text || '');       // "a picture on its way" meanwhile
     const im = new Image();
     im.onload = () => {
       g.__imgEl = im;
@@ -11704,7 +11707,15 @@ function makeText(str) {
       g.setPadSize(g.userData.sz ?? 1);
       g.setText(g.userData.text || '');
     };
-    im.onerror = () => { g.__imgEl = null; };
+    im.onerror = () => {
+      // A pad that cannot show its picture must not go on claiming to have
+      // one: the tooltip would say "a picture captioned ..." over a blank
+      // face, which is exactly how a broken pad hides.
+      g.__imgEl = null;
+      g.userData.img = undefined;
+      g.setText(g.userData.text || '');
+      sayAttn('That picture could not be read \u2014 the pad is blank again.');
+    };
     im.src = src;
   };
   // a pad with a lot to say can be made bigger (Ctrl+arrows while holding);
@@ -11806,7 +11817,16 @@ function makeText(str) {
     if (!t) {
       c.fillStyle = look?.ink ?? '#c9bd9c';
       c.font = lookFace(look, 'italic 400', M * 0.104);
-      c.fillText('(blank)', W / 2, H / 2);
+      // A pad that HAS a picture but has not got it yet is not blank, and
+      // saying so was the whole of how a stuck one looked like an empty one.
+      // Asking for it again costs nothing when it is only late, and rescues a
+      // pad whose load was lost -- whatever lost it.
+      if (g.userData.img) {
+        c.fillText('(a picture, on its way)', W / 2, H / 2);
+        if ((g.__imgTried ?? 0) < 1) { g.__imgTried = 1; setTimeout(() => g.setImage(g.userData.img, true), 0); }
+      } else {
+        c.fillText('(blank)', W / 2, H / 2);
+      }
     } else {
       // the largest type at which the wrapped text still fits the pad
       c.fillStyle = ink;
@@ -14313,6 +14333,8 @@ function copyThingRaw(t) {
   else if (ud.kind === 'sound') c = makeSound(ud.sound);
   else if (ud.kind === 'text') {
     c = makeText(ud.text);
+    // the colours come too: a copied label used to come back as plain paper
+    if (ud.look) { c.userData.look = { ...ud.look }; c.applyLook(); }
     if (ud.img) c.setImage(ud.img);
     if (ud.sz) c.setPadSize(ud.sz);
     for (const sp of (t.__subs || [])) {
@@ -16022,13 +16044,18 @@ function layoutSubPads(parent) {
 }
 function addSubPad(parent, child, point) {
   const { w, d } = padFaceSize(parent);
-  let u = 0, v = 0;
-  if (point) {
-    const l = parent.worldToLocal(point.clone());
-    u = Math.max(-0.45, Math.min(0.45, l.x / w));
-    v = Math.max(-0.45, Math.min(0.45, l.z / d));
+  // Where it lands: under the pointer if there is one, otherwise wherever it
+  // already says it belongs -- a thing rebuilt from a saved world arrives
+  // carrying its place, and this used to throw that away and centre it.
+  if (point || !child.userData.at) {
+    let u = 0, v = 0;
+    if (point) {
+      const l = parent.worldToLocal(point.clone());
+      u = Math.max(-0.45, Math.min(0.45, l.x / w));
+      v = Math.max(-0.45, Math.min(0.45, l.z / d));
+    }
+    child.userData.at = { u: +u.toFixed(3), v: +v.toFixed(3) };
   }
-  child.userData.at = { u: +u.toFixed(3), v: +v.toFixed(3) };
   (parent.__subs ??= []).push(child);
   child.__padParent = parent;
   parent.add(child);
