@@ -1,0 +1,339 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "100",
+     "d": "1"
+    },
+    "op": "+",
+    "lid": "L910",
+    "evt": "evt-L910-account",
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {},
+     "active": null
+    }
+   },
+   "x": 0.0,
+   "z": 2.6
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9310,
+    "guid": "evt-L910-account",
+    "hasEgg": false,
+    "pile": [],
+    "label": "statement"
+   },
+   "x": 0.75,
+   "z": 2.6
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Tenner",
+    "opaque": false,
+    "dirty": false,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "scale",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "6",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "label": "deposit",
+         "liveId": "L910"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Tenner",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "scaleTilt",
+         "tilt": "R"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "10",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0,
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "scale",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "6",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": -0.75,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Quarter",
+    "opaque": false,
+    "dirty": false,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "scale",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "label": "deposit",
+         "liveId": "L910"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Quarter",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "scaleTilt",
+         "tilt": "R"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "25",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0,
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "scale",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.75,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THE ACCOUNT, ON A PANEL\n\nThe balance is a LIVE\nnumber. The old teller\nrobot is gone: depositing\nis a +badge to its bird,\nreading is [query | bird],\nwatching is [listen | bird].\n\nTwo rooms deposit at once.\nEach badge is applied whole\n-- no interleaving can tear\na deposit -- so 100, plus\nfive 10s, plus four 25s, is\n250 however the rounds\nhappen to land."
+   },
+   "x": -1.6,
+   "z": 1.8
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Rounds to 5 and pull\nboth levers.\n\nTenner banks +10 five\ntimes; Quarter banks +25\nfour times (its tally makes\nthe fifth round mismatch).\n\nThe statement nest keeps\nthe history: every balance\nthe account has passed\nthrough, newest underneath."
+   },
+   "x": 1.7,
+   "z": 1.9
+  }
+ ],
+ "stations": {},
+ "active": null
+}

@@ -1,0 +1,260 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "5",
+     "d": "1"
+    },
+    "op": "+",
+    "lid": "L901",
+    "evt": "evt-L901-gauge",
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {},
+     "active": null
+    }
+   },
+   "x": -0.9,
+   "z": 2.55
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "5",
+     "d": "1"
+    },
+    "op": "+",
+    "lid": "L902",
+    "evt": "evt-L902-gauge",
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {},
+     "active": null
+    }
+   },
+   "x": 0.9,
+   "z": 2.55
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Sync",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9301,
+         "guid": "evt-L901-gauge",
+         "hasEgg": false,
+         "pile": [],
+         "label": "A's events"
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "label": "to B",
+         "liveId": "L902"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Sync",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "setOp",
+        "op": "set"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "L902"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": -0.45,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "Control",
+    "opaque": false,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9302,
+         "guid": "evt-L902-gauge",
+         "hasEgg": false,
+         "pile": [],
+         "label": "B's events"
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "label": "to A",
+         "liveId": "L901"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Control",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "setOp",
+        "op": "set"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "L901"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.45,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THE GAUGE\n\nA and B are live numbers.\n\nSync dozes on A's events;\neach change flies to B\nwearing a set badge. Control\ndoes the same the other way.\n\nChange EITHER -- drop a\nnumber on it, or send its\nbird a badge -- and the\nother follows.\n\nThe echo rule is why this\nring does not ring forever:\na set that changes nothing\nis swallowed, so the circle\nstops after one lap."
+   },
+   "x": -1.55,
+   "z": 1.7
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nPull both levers up.\n\nDrop a +3 on A. Watch B\nfollow. Drop a \u00d72 on B.\nWatch A follow.\n\nThe events nests keep the\nhistory: every value each\nnumber has passed through,\nnewest underneath."
+   },
+   "x": 1.55,
+   "z": 1.7
+  }
+ ],
+ "stations": {},
+ "active": null
+}

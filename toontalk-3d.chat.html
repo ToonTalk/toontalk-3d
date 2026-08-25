@@ -2798,6 +2798,30 @@ function giveToLiveBird(birdNode, X) {
   refreshUI();
 }
 
+// --- the info notebook: documentation you can copy --------------------------
+// Miki's layout from the 1999 anima-gadgets notebook: a text page on the
+// left describing, the example itself on the facing page. Every example is a
+// real thing -- take it out, edit it, send it -- so the docs cannot rot.
+const INFO_PAGES = {
+  number: [
+    { kind: 'text', text: 'WHAT YOU CAN SEND\nGive these to its bird.\n\nA badged number is the\noperation, applied whole\nin one stroke: +10 adds,\n\u00d72 scales, set 50 writes.\n\nTry the one opposite \u2192' },
+    { kind: 'number', value: { n: '10', d: '1' }, op: '+' },
+    { kind: 'text', text: '[query | bird]\n\nThe current value flies\nto that bird.\n\nTake the box opposite\nand put a bird of your\nown in the empty hole.' },
+    { kind: 'box', holes: [{ kind: 'text', text: 'query' }, null] },
+    { kind: 'text', text: '[listen | bird]\n\nAnswers with its EVENT\nNEST: every change lands\nthere, newest underneath\n\u2014 a history. A robot\ndozing on it wakes per\nchange.' },
+    { kind: 'box', holes: [{ kind: 'text', text: 'listen' }, null] },
+    { kind: 'text', text: 'WHAT IT WILL TELL YOU\n\nEach change arrives on\nthe event nest as the\nnew value, once \u2014 an\nupdate that changes\nnothing is swallowed\n(the echo rule).' },
+  ],
+};
+function infoNotebookFor(owner) {
+  const pages = INFO_PAGES[owner.userData.kind]?.slice() ?? [
+    { kind: 'text', text: 'Its bird has no vocabulary\nyet \u2014 that arrives with\npictures and behaviours.\n\nIts panel is still a place:\nlay robots and their boxes\non it and they work there,\nglued to the thing.' },
+  ];
+  const nb = makeNotebook({ pages, page: 0 });
+  setThingLabel(nb, panelName(owner).replace(/\u201c|\u201d/g, '') + ' \u2014 info');
+  return nb;
+}
+
 // an event nest for a thing: it joins the thing's flock by guid, exactly as
 // a copied nest joins a flock. This is what [listen | bird] answers with.
 function makeEventNest(X) {
@@ -2923,6 +2947,29 @@ function buildTrayShape(g, owner, pw, pd) {
     setPick(lever, { kind: 'roomLever', room: g });
     keep(lever);
     g.__lever = armPivot;
+  }
+  // the info plaque: a fresh copy of the thing's documentation, on request
+  {
+    const cv = document.createElement('canvas');
+    cv.width = 64; cv.height = 64;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#2f6b8a';
+    c.beginPath(); c.arc(32, 32, 28, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#eaf4fb';
+    c.font = 'bold italic 42px Georgia, serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('i', 32, 36);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const plaque = keep(new THREE.Mesh(geo('PlaneGeometry', 0.06, 0.06),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true })));
+    plaque.rotation.x = -Math.PI / 2;
+    plaque.position.set(hw - 0.09, 0.0255, hd - 0.055);
+    setPick(plaque, { kind: 'panelInfo', tray: g });
+    const hit = keep(new THREE.Mesh(geo('CylinderGeometry', 0.05, 0.05, 0.08, 8),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })));
+    hit.position.set(hw - 0.09, 0.05, hd - 0.055);
+    setPick(hit, { kind: 'panelInfo', tray: g });
   }
   // corner studs resize it: click one, then click where the corner should be.
   // Each visible stud stands inside a fat invisible post, because the stud
@@ -6163,6 +6210,13 @@ function handleClick(target) {
       return say(`A bird to ${panelName(owner)} — whatever she is given goes straight to it.`);
     }
     return giveToLiveBird(target.tray.__perchBird, owner);
+  }
+  if (target.kind === 'panelInfo') {
+    if (busy || mode !== 'world') return say('Wait for the work to finish first.');
+    if (held) return say('Empty your hand first — the notebook arrives in it.');
+    const owner = target.tray.__owner;
+    takeIntoHand(infoNotebookFor(owner));
+    return say(`${panelName(owner)[0].toUpperCase() + panelName(owner).slice(1)}’s info notebook — a fresh copy. The examples are real: take one off a page, edit it, give it to the bird.`);
   }
   if (target.kind === 'panelCorner') {
     if (held) return say('Empty your hand first.');
@@ -9809,6 +9863,9 @@ function tipFor(t) {
     return held
       ? `Give it to the bird — a badged number changes ${who} in one stroke; [query | bird] asks for the value; [listen | bird] answers with its event nest.`
       : `${who[0].toUpperCase()}${who.slice(1)}’s own bird — click for a bird of your own that delivers straight to it.`;
+  }
+  if (t.kind === 'panelInfo') {
+    return 'The ℹ plaque — click for the thing’s info notebook: what its bird takes and what its events tell, as live examples you copy out and send.';
   }
   if (t.kind === 'panelClose') {
     return 'The knob — click to fold the panel back inside its thing, everything on it included.';
