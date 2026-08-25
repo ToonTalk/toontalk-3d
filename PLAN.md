@@ -54,7 +54,7 @@ move with the mouse) read device nests and cannot be built without them.
 ### Stage 0 — scaffolding (~half a day)
 
 - Snapshot taken; `index.html` re-pointed; README names both URLs.
-  *(Done with the commit that added this file.)*
+  *(Done with the commit that added this file. Stage 1 done 24 Aug.)*
 - The regression harness becomes a repo file: `tests/` with a runner that
   loads each example world headless, runs it at Instant with fixed
   rounds, dumps, and diffs against `tests/golden/*.json` — plus a
@@ -75,7 +75,12 @@ mounted world context without walls); persistence bumps `FILE_V` to 4.
 robot runs there; close it; save and reload round-trips; a v3 world still
 loads; suite green.
 
-### Stage 2 — birds, live numbers, suspension (2–2.5 days)
+### Stage 2 — birds, live numbers, suspension (2–2.5 days) — **done 25 Aug**
+
+*(Built with one design revision, recorded in BACKS.md: event nests are
+obtained by `[listen | reply-bird]` rather than furnished on the tray.
+Every acceptance item below ran; the gauge and the live account joined
+the suite as goldens ten and eleven.)*
 
 Opening a panel yields a **bird addressed to the thing**. Messages are
 boxes with a selector pad; the panel handles one at a time. Event nests

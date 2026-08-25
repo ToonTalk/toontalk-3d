@@ -134,7 +134,7 @@
   <h1>The Ledger</h1>
   <p class="standfirst">Every prompt of this conversation, in full and in
     order, with what each one actually changed.</p>
-  <p class="meta">181 entries &middot; 16&ndash;24 August 2026</p>
+  <p class="meta">190 entries &middot; 16&ndash;25 August 2026</p>
 </header>
 
 <ol class="log">
@@ -838,7 +838,7 @@
     <p class="prompt">The message " stopped: the red parts of its thought no longer match. Dusty can vacuum them away." should mention Mimi the eraser too - probably first<br>I think it should be possible when training a robot with something on a nest to be able to drop an object on the object that is on the top of the nest - it doesn't allow it and a message appears saying what kinds of things robots can interact with<br>Also if a robot is trained to manipulate an object then if given a box with that object on a nest it should perform the same operations. Critically if it picks up that object it does not pick up the nest with the object (that is the current behavior).</p>
     <p class="summary">Ruby (not Mimi — she is the copier) now leads the advice when a thought stops matching; training can drop onto a delivery sitting on a nest; and a robot trained on a bare value reaches THROUGH a nest that arrives instead — with trainedOn, not the thought, as the signal, which a failed first attempt proved.</p>
   </div></li>
-  <li class="day"><span class="day-date">24 Aug</span><span class="day-title">The plan, and the first panel</span><span class="day-blurb">The nest window finished, the tiny robot closed for real — then three rounds of design, a plan with a snapshot to protect the release, and by evening every thing in the workshop could carry a panel.</span></li>
+  <li class="day"><span class="day-date">24 Aug</span><span class="day-title">The plan, and the first panel</span><span class="day-blurb">The nest window finished, the tiny robot closed for real — then three rounds of design, a plan with a snapshot to protect the release, and by evening every thing in the workshop could carry a panel — which found eight bugs before bedtime.</span></li>
   <li class="entry"><span class="n"></span><div>
     <p class="prompt">I trained a robot on [1 | bird] to drop x2 on the 1 and then give the result to the bird. When I ran with a nest with 1 on top instead of the 1 it dropped the x2 on the 1 which resulted in the x2 going to a work spot and the unchanged 1 on the nest being given to the bird<br>In one of my tests the robot being trained was tiny.<br>I find that I make mistakes forgetting to turn off Ruby or Dusty. Is there a way for the cursor to change when either of them is active?</p>
     <p class="summary">Three more: the put side of the nest window (drop x2 straight onto a nested delivery), the tiny robot closed for real — a mini flag set when a transition is decided plus a registry of every robot ever made — and a ring cursor in Dusty's red or Ruby's pink while either is awake.</p>
@@ -870,6 +870,43 @@
   <li class="entry"><span class="n"></span><div>
     <p class="prompt">sure record it and start with the first stage</p>
     <p class="summary">And the epic began. Stage 0: the harness became tests/regress.html with pinned goldens. Stage 1, same day: every thing can carry a panel — a tray on the bench, a room with no walls — opened by the gear on the holding card, glued through saving, filing and Mimi, closed by its brass knob. All nine acceptance checks passed.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>📷<br>📷<br>@"C:\Users\toont\Downloads\workshop.world (9).json"<br>No tooltips for pads or panels. Both pointing to and holding something<br>I trained a robot and when I clicked to stop training an unrelated panel disappeared.<br>I can't pick up panels. Nor can I pick up items dropped on a panel.  I should be able to resize them.<br>Panels overlap is odd ways and the text is placed at a location that makes it hard to read (see screenshot)<br>Once again I got a tiny robot by dropping a number on a fresh robot (screenshot 2). But seems to happen randomly.<br>screenshot 3 - Ruby can't erase the box in the robot's thought bubble.<br>Import doesn't work - an example world file attached<br>Notebook has page turning buttons duplicated (screenshot 4)</p>
+    <p class="summary">Ken's first panel test found eight. The doubled notebook arrows and the dead import were one bug (every save wrote the main notebook into the file); the disappearing panel was the training rewind rebuilding things from specs that knew nothing of panels; and Ruby could not erase a box because its shell hides behind its own contents — the erase ladder climbs now.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>panel resize handles aren't accessible - trying to use them just picks up the panel<br><br><span class="cut">[the console warnings, pasted — 3 lines]</span><br><br>tooltip for dropping the robot incorrect (screenshot 1)<br><br>save world and load worked<br><br>robot worked on panel when visible. But I returned the panel to its owner, switched from 1 to instant and then back to 1 and the robot had only run 2 rounds.</p>
+    <p class="summary">Round two: a closed panel FROZE its robot — it closes live now, invisible on the bench where the scheduler already finds it, measured 81 rounds at closing and 1281 a few seconds later. Plus hittable studs and the tiny-robot trap learning to log its stack.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>The tooltip says I pointing to the corner stud but nothing happens when I try to drag it. But while trying at one point I did manage to resize but unsure what was different<br><br>It is not clear how to activate the robot on a panel - I did it but also some attempts did nothing. I was able verify that the robot ran at instant speed inside an object.<br><br>screenshot 2 shows when I added a second robot to the panel one of the robots became extremely tiny (probably the one that was there already - I should have named them)<br><br>I managed to resize a panel but nothing happened and then it resized - no gradual change<br><br>When I pick up an object from the panel it appears a good distance away (maybe the robot's work area) and flies to the cursor.</p>
+    <p class="summary">Round three: resize follows the pointer (he tried to drag — the click-then-click was unguessable), panels grew the same lever a house has, a second robot JOINS the team instead of shrinking to a fortieth of life, and taken things rise from where they stood.</p>
+  </div></li>
+  <li class="day"><span class="day-date">25 Aug</span><span class="day-title">The wiggle, and birds become the interface</span><span class="day-blurb">The three-day tiny robot fell to one stack trace — it was the hover wiggle all along. Then Stage 2 whole: badges applied in one stroke, [listen | bird], dozing on live mismatches, the gauge, and the account that needs no teller.</span></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>screenshot 1 shows pointing to a number being updated by the robot and it is working fine. the tooltip shows the current value but is updated only if the mouse is moved - if the thing being point to is changing then a few times a second the tooltip should be updated<br>Yes let's move on to the next stage</p>
+    <p class="summary">The tooltip re-reads itself while a robot changes what you point at, and Ken said: on to Stage 2.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">A tiny robot being trained:<br><span class="cut">[the tiny-robot stack trace, pasted — 9 lines]</span></p>
+    <p class="summary">The stack trace that ended three days of hunting: the tiny robot was the HOVER WIGGLE, capturing a mini's scale when the pointer arrived and stamping it back on the grown robot — every tablet tap a motionless pointer. The wiggle defers to the truth now.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>📷<br>📷<br>The robot correctly stopped since the pad wasn't blank. The issue is that nothing was red to indicate a mismatch. Also when a text pad has text the angle of view in the thought bubble makes it impossible to read. Maybe in a thought bubble text pads should be rotated to become readable. This is an issue for boxes as well (screenshot 3).</p>
+    <p class="summary">A mismatched pad never turned red — flagMismatch skipped every multi-material mesh, and a pad is exactly that. And pads in thought bubbles stand up like cards on an easel, in boxes and on pans too.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>I trained a robot with a box with a number and a bird to the number to increment the number and give a copy to the bird. The bird's number updated appropriately. I don't understand why the number's nest ended up copies of its value at different times.<br><br>It is hard to toggle the switch on houses when the house is wiggling. Make them wiggle much less. Panels as well.<br><br>I think birds and nests connected to an object should have tooltips that indicate this</p>
+    <p class="summary">The tower of numbers was the event nest doing its job — a change log — but the confusion earned labels and tooltips: live birds and event nests say whose they are, and houses barely wiggle now.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I'm thinking the event nest should not be on panels by default. Like event listeners in JavaScript you need to send a message to obtain one. So [listen | reply-bird] given to an object's bird would give the reply-bird the event nest. I think we want to support specialized event nests. So an image bird might be given [listen | position | reply-bird] to obtain a nest that receives position updates.<br><br>When I trained a robot to give a number's bird another number it flew to its number and updated it.  When we are in the thought bubble of a robot we are seeing its "imagination". So any changes it makes to the external world should be restored after leaving the thought bubble.</p>
+    <p class="summary">Two design corrections. Event nests are OBTAINED, not furnished: [listen | reply-bird] subscribes, with room for channels like [listen | position | bird]. And the thought bubble is imagination again — a live delivery made in training showed, then rewound.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">working - go ahead with the next parts</p>
+    <p class="summary">Stage 2 landed whole. The info notebook (an i-plaque, Miki's layout, the +10 copied off a page, edited to +7, delivered — 5 became 12); the gauge ringing one lap and stopping on the echo rule; and the account whose teller is simply gone — two rooms depositing at once onto a live balance that lands on exactly 250. Eleven goldens.</p>
   </div></li>
 </ol>
 

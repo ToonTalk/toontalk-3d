@@ -263,17 +263,17 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Nine days, 150 commits and one 11,600-line file — and
+  <p class="standfirst">Ten days, 160 commits and one 12,400-line file — and
     the day the project stopped guessing at ToonTalk and went and read it.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;24 August 2026</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;25 August 2026</p>
 </header>
 
 <dl class="ledger">
-  <div><dt>Built in</dt><dd>9 days</dd></div>
-  <div><dt>Commits</dt><dd>150</dd></div>
+  <div><dt>Built in</dt><dd>10 days</dd></div>
+  <div><dt>Commits</dt><dd>160</dd></div>
   <div><dt>The app</dt><dd>1 file</dd></div>
-  <div><dt>Lines</dt><dd>11,642</dd></div>
-  <div><dt>Examples</dt><dd>18 worlds</dd></div>
+  <div><dt>Lines</dt><dd>12,399</dd></div>
+  <div><dt>Examples</dt><dd>20 worlds</dd></div>
 </dl>
 
 <p class="alsoby">Ken Kahn is writing about this project from the other side of
@@ -887,6 +887,63 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
+    <div class="rail">25 Aug<br>40adb90 &rarr; ea5a83d</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">↻</span>
+        <h2>The wiggle, and birds become the interface</h2>
+      </div>
+      <p>The tenth day opened with a solved mystery. Ken pasted one console
+        line — the tiny-robot trap firing with a stack trace — and the number
+        in it, <span class="mono">0.24095</span>, confessed everything:
+        MINI × 1.004 is the <em>hover wiggle's</em> own arithmetic. The wiggle
+        captures a thing's scale when the pointer arrives and restores it when
+        the pointer leaves — so dropping something on a mini robot and never
+        moving the pointer, which is every tablet tap, stamped the mini scale
+        back onto the robot that had just grown to the desk. Three days of
+        "random" was just "did the pointer sit still". The wiggle defers to
+        the truth now, and the trap has not fired since.</p>
+      <h3>Stage 2, whole</h3>
+      <p>Then the epic's deepest stage was built and finished in the day. A
+        thing with a panel is <b>live</b>: its tray carries a bird addressed
+        to the thing itself, and a badged number given to that bird is the
+        operation applied whole — <span class="mono">+10</span> is
+        fetch-and-add in one indivisible message, which is why two depositor
+        rooms hammering one balance cannot tear a deposit.
+        <span class="mono">[query | bird]</span> flies the value out;
+        <span class="mono">[listen | bird]</span> — Ken's design, replacing
+        the event nest that first sat on every panel unasked — answers with
+        an event nest, the way an event listener subscribes. An update that
+        changes nothing is not an event; the back swallows it.</p>
+      <p>And the suspension rule generalised: a robot whose mismatch is
+        pinned on a live thing dozes on its events instead of stopping red.
+        The covered-nest rule turned out to be this rule in disguise, exactly
+        as the design document had claimed on paper.</p>
+      <p>Ken's testing bent the build twice more in passing: the thought
+        bubble had stopped being imagination — a live delivery made during
+        training was real, and now shows and then rewinds — and a mismatched
+        text pad had never once turned red, because the flag code skipped
+        every multi-material mesh and a pad is exactly that.</p>
+      <h3>The gauge, and the account without its teller</h3>
+      <p>The stage closed on its two promised demonstrations. The gauge:
+        two live numbers, a Sync room and a Control room forwarding
+        set-badges each way — drop +3 on either and both read 8, drop ×2 and
+        both read 16, and the ring stops after one lap because of the echo
+        rule, watched working. And the bank account rebuilt as the canary:
+        the balance is a live number and the old teller robot is simply
+        gone — deposit is a badge, reading is a query, watching is a listen.
+        Two rooms deposited at once and the balance landed on exactly 250.
+        The info notebook arrived the same hour: an ⓘ plaque on every tray
+        hands over documentation in Miki's 1999 layout, where the examples
+        are real things — the +10 was copied off page two, edited to +7,
+        and delivered. Documentation that can be copied and run cannot
+        rot.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
     <div class="rail">How it worked</div>
     <div class="body">
       <div class="head">
@@ -962,7 +1019,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 150 commits between 16 and 24
+  <p>Written from the repository's own history: 160 commits between 16 and 25
   August 2026, and the audit file they kept arguing with. Every prompt of the
   conversation is in <a href="the-ledger.html">the ledger</a>.</p>
   <p>Ken Kahn's own account of the project is
