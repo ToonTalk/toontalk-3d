@@ -1775,6 +1775,127 @@ function makeNumber(value, op = '+', lite = false) {
 // The random source. Drop a die on a number and the number re-rolls to a
 // random 1..faces (the die is spent in the throw, like any dropped pad);
 // drop a whole number on a die to set how many faces it has.
+// --- sounds -----------------------------------------------------------------
+// A sound is a list of SEGMENTS, each either a made tone or a recording, plus
+// a rate and a direction. Every transformation rewrites that list; nothing
+// about playing needs to know how the list was built.
+const SHAPES = ['sine', 'square', 'sawtooth', 'triangle'];
+const soundEmpty = (snd) => !snd?.segs?.length;
+function soundSeconds(snd) {
+  if (!snd?.segs?.length) return 0;
+  const total = snd.segs.reduce((n, sg) => n + (sg.d ?? sg.dur ?? 0.4), 0);
+  return total / Math.abs(snd.rate || 1);
+}
+const decoded = new Map();          // src -> AudioBuffer, decoded once
+function playSound(node) {
+  const snd = node.userData.sound;
+  if (soundEmpty(snd)) { say('That sound is silent \u2014 give it a [frequency, duration, shape] box, or a recording.'); return; }
+  const ac = audio(); if (!ac) return;
+  const rate = Math.abs(snd.rate || 1) || 1;
+  const back = !!snd.reversed;
+  const segs = back ? snd.segs.slice().reverse() : snd.segs;
+  let at = 0;
+  for (const sg of segs) {
+    if (sg.src) {
+      const buf = decoded.get(sg.src);
+      if (buf) {
+        const src = ac.createBufferSource();
+        src.buffer = back ? reversedBuffer(ac, sg.src, buf) : buf;
+        src.playbackRate.value = rate;
+        const g = ac.createGain();
+        g.gain.value = 0.9;
+        src.connect(g); g.connect(sndGain);
+        src.start(ac.currentTime + at);
+        (node.__playing ??= []).push(src);
+        at += buf.duration / rate;
+      }
+      continue;
+    }
+    tone((sg.f ?? 440) * (back ? 1 : 1), (sg.d ?? 0.4) / rate,
+         { type: sg.shape || 'sine', at, gain: 0.28 });
+    at += (sg.d ?? 0.4) / rate;
+  }
+  flash(node.getWorldPosition(new THREE.Vector3()));
+}
+const revCache = new Map();
+function reversedBuffer(ac, key, buf) {
+  if (revCache.has(key)) return revCache.get(key);
+  const out = ac.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+  for (let ch = 0; ch < buf.numberOfChannels; ch++) {
+    const a = buf.getChannelData(ch), b = out.getChannelData(ch);
+    for (let i = 0, n = buf.length; i < n; i++) b[i] = a[n - 1 - i];
+  }
+  revCache.set(key, out);
+  return out;
+}
+function stopSound(node) {
+  (node.__playing || []).forEach(s2 => { try { s2.stop(); } catch {} });
+  node.__playing = [];
+}
+function loadSoundSrc(src) {
+  if (decoded.has(src)) return Promise.resolve(decoded.get(src));
+  const ac = audio();
+  if (!ac) return Promise.resolve(null);
+  return fetch(src).then(r => r.arrayBuffer())
+    .then(ab => ac.decodeAudioData(ab))
+    .then(buf => { decoded.set(src, buf); return buf; })
+    .catch(() => null);
+}
+function makeSound(sound = null) {
+  const g = new THREE.Group();
+  const W = 0.3, H = 0.13, D = 0.2;
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 224;
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6,
+    emissive: 0xffffff, emissiveIntensity: 0.22, emissiveMap: tex });
+  const side = new THREE.MeshStandardMaterial({ color: 0x2f3a4a, roughness: 0.7 });
+  const body = new THREE.Mesh(geo('BoxGeometry', W, H, D),
+    [side, side, face, side, side, side]);
+  body.castShadow = true; body.receiveShadow = true;
+  g.add(body);
+  g.userData = { kind: 'sound', width: W, rest: H / 2,
+                 sound: sound ? JSON.parse(JSON.stringify(sound)) : { segs: [], rate: 1 } };
+  // the face is a waveform, since a sound has no look of its own: silence is
+  // a flat line, a tone a wave of its own pitch, a recording a rough envelope
+  g.paintSound = () => {
+    const snd = g.userData.sound;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#151b25'; c.fillRect(0, 0, 512, 224);
+    c.strokeStyle = '#33405a'; c.lineWidth = 3; c.strokeRect(6, 6, 500, 212);
+    c.strokeStyle = soundEmpty(snd) ? '#4a5872' : '#6ee7a8';
+    c.lineWidth = 5;
+    c.beginPath();
+    if (soundEmpty(snd)) {
+      c.moveTo(24, 112); c.lineTo(488, 112);
+    } else {
+      const n = snd.segs.length;
+      for (let x = 0; x <= 464; x++) {
+        const u = x / 464;
+        const sg = snd.segs[Math.min(n - 1, Math.floor(u * n))];
+        const cycles = sg.src ? 9 : Math.max(1.5, Math.min(14, (sg.f ?? 440) / 90));
+        const env = sg.src ? (0.55 + 0.45 * Math.sin(u * 37)) : 1;
+        const y = 112 - Math.sin(u * cycles * Math.PI * 2 * n) * 70 * env;
+        if (!x) c.moveTo(24 + x, y); else c.lineTo(24 + x, y);
+      }
+    }
+    c.stroke();
+    if (snd.reversed) {
+      c.fillStyle = '#ffd27a'; c.font = 'bold 34px Georgia, serif';
+      c.textAlign = 'right'; c.fillText('\u25c0 back', 486, 40);
+    }
+    if ((snd.rate || 1) !== 1) {
+      c.fillStyle = '#9fd8ff'; c.font = 'bold 34px Georgia, serif';
+      c.textAlign = 'left'; c.fillText('\u00d7' + ratShort(rat(Math.round((snd.rate) * 100), 100)), 26, 40);
+    }
+    tex.needsUpdate = true;
+  };
+  g.paintSound();
+  (g.userData.sound.segs || []).forEach(sg => { if (sg.src) loadSoundSrc(sg.src); });
+  setPick(g, { kind: 'thing', thing: g });
+  return g;
+}
 function makeDie(faces = 6) {
   const g = new THREE.Group();
   const size = 0.19;
@@ -2812,9 +2933,18 @@ function handleLiveMsg(X, msg) {
     msg.removeFromParent();
     return sayAttn('A number answers badged numbers and [query | bird] boxes — that message is dropped.');
   }
+  if (X.userData.kind === 'sound') {
+    const word = mk === 'box'
+      ? (X2 => X2?.userData.kind === 'text' ? (X2.userData.text || '').trim().toLowerCase() : null)(msg.userData.holes[0]?.thing)
+      : mk === 'text' ? (msg.userData.text || '').trim().toLowerCase() : null;
+    msg.removeFromParent();
+    if (word === 'play') { playSound(X); return; }
+    if (word === 'stop') { stopSound(X); return; }
+    return sayAttn('A sound answers [play] and [stop].');
+  }
   // other kinds find their vocabularies with pictures (Stage 3)
   msg.removeFromParent();
-  sayAttn('Only numbers answer messages so far — the rest of the vocabulary arrives with pictures.');
+  sayAttn('Only numbers and sounds answer messages so far — the rest of the vocabulary arrives with pictures.');
 }
 // A change announces itself: the new value lands on every nest of the flock.
 function emitLiveEvent(X) {
@@ -2877,6 +3007,23 @@ function giveToLiveBird(birdNode, X) {
 function readMediaFile(file, forThing) {
   if (!file) return;
   const name = (file.name || '').toLowerCase();
+  if (/^audio\//.test(file.type) || /\.(mp3|wav|ogg|m4a|aac|flac)$/.test(name)) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const src = fr.result;
+      loadSoundSrc(src).then(() => {
+        const target = forThing?.userData.kind === 'sound' ? forThing : makeSound();
+        target.userData.sound = { segs: [{ src }], rate: 1 };
+        target.paintSound();
+        if (target !== forThing) putOnBench(target, benchSpot());
+        say('The recording is on a sound \u2014 click it to hear it.');
+        playSound(target);
+        refreshUI();
+      });
+    };
+    fr.readAsDataURL(file);
+    return;
+  }
   if (/^image\//.test(file.type) || /\.(png|jpe?g|gif|webp|svg)$/.test(name)) {
     const fr = new FileReader();
     fr.onload = () => {
@@ -2911,7 +3058,7 @@ function trayUnderPointer(ev) {
 function pickMediaFor(forThing) {
   const inp = document.createElement('input');
   inp.type = 'file';
-  inp.accept = 'image/*,.json,.world.json';
+  inp.accept = 'image/*,audio/*,.json,.world.json';
   inp.onchange = () => readMediaFile(inp.files?.[0], forThing);
   inp.click();
 }
@@ -2931,6 +3078,17 @@ const INFO_PAGES = {
     { kind: 'text', text: 'WHAT IT WILL TELL YOU\n\nEach change arrives on\nthe event nest as the\nnew value, once \u2014 an\nupdate that changes\nnothing is swallowed\n(the echo rule).' },
   ],
 };
+INFO_PAGES.sound = [
+  { kind: 'text', text: 'WHAT YOU CAN SEND\n\n[play] to its bird plays\nit; [stop] stops it.\n\nOr just click the sound\nitself to hear it.' },
+  { kind: 'box', holes: [{ kind: 'text', text: 'play' }] },
+  { kind: 'text', text: 'MAKING ONE\n\nDrop this box on a silent\nsound and it becomes a\n440 hertz sine for half a\nsecond.\n\nChange the numbers; try\nsquare, sawtooth or\ntriangle in the third\nhole.' },
+  { kind: 'box', holes: [{ kind: 'number', value: { n: '440', d: '1' }, op: '+' },
+                         { kind: 'number', value: { n: '1', d: '2' }, op: '+' },
+                         { kind: 'text', text: 'sine' }] },
+  { kind: 'text', text: 'REMAKING ONE\n\nA \u00d72 dropped on a sound\nplays it twice as fast; a\n\u00d7\u00bd stretches it; a \u00d7-1\nplays it BACKWARDS.\n\nAdding to a sound means\nnothing, and is refused.' },
+  { kind: 'number', value: { n: '2', d: '1' }, op: '*' },
+  { kind: 'text', text: 'JOINING THEM\n\nDrop a sound on another\nsound\u2019s edge and they play\none after the other \u2014 the\nsame gesture that joins\ntwo pads into a word.\n\nA melody is built the way\na sentence is.' },
+];
 function infoNotebookFor(owner) {
   const pages = INFO_PAGES[owner.userData.kind]?.slice() ?? [
     { kind: 'text', text: 'Its bird has no vocabulary\nyet \u2014 that arrives with\npictures and behaviours.\n\nIts panel is still a place:\nlay robots and their boxes\non it and they work there,\nglued to the thing.' },
@@ -4256,6 +4414,7 @@ function specOf(thing) {
   if (kind === 'text') return withPanel({ kind: 'text', text: thing.userData.text,
                                          sz: thing.userData.sz, img: thing.userData.img });
   if (kind === 'die') return withPanel({ kind: 'die', faces: thing.userData.faces });
+  if (kind === 'sound') return withPanel({ kind: 'sound', sound: thing.userData.sound });
   if (kind === 'scale') {
     return withPanel({ kind, label: thing.userData.label ?? undefined, tilt: scaleTilt(thing),
              holes: thing.userData.holes.map(h => specOf(h.thing)) });
@@ -4298,6 +4457,7 @@ function buildThing(spec) {
     return keepPanel(t);
   }
   if (spec.kind === 'die') return keepPanel(makeDie(spec.faces));
+  if (spec.kind === 'sound') return keepPanel(makeSound(spec.sound));
   if (spec.kind === 'scaleTilt') {
     const t = makeScale();
     t.__tiltLock = spec.tilt;
@@ -4391,6 +4551,7 @@ function copyThingRaw(t) {
   else
   if (ud.kind === 'number') c = makeNumber(ud.value, ud.op);
   else if (ud.kind === 'die') c = makeDie(ud.faces);
+  else if (ud.kind === 'sound') c = makeSound(ud.sound);
   else if (ud.kind === 'text') {
     c = makeText(ud.text);
     if (ud.img) c.setImage(ud.img);
@@ -4543,6 +4704,10 @@ function matchState(cond, spec) {
   if (cond.kind === 'die') {
     return spec.kind === 'die' && spec.faces === cond.faces ? 'yes' : 'no';
   }
+  if (cond.kind === 'sound') {
+    return spec.kind === 'sound'
+      && JSON.stringify(spec.sound) === JSON.stringify(cond.sound) ? 'yes' : 'no';
+  }
   if (cond.kind === 'text') {
     return spec.kind === 'text' && spec.text === cond.text
       && (cond.img ?? null) === (spec.img ?? null) ? 'yes' : 'no';
@@ -4587,6 +4752,10 @@ function condText(c) {
       : `a scale tipping ${c.tilt === 'L' ? 'left' : 'right'}`;
   }
   if (c.kind === 'die') return `a die of ${c.faces} faces`;
+  if (c.kind === 'sound') {
+    return soundEmpty(c.sound) ? 'a silent sound'
+      : `a sound of ${c.sound.segs.length} part${c.sound.segs.length > 1 ? 's' : ''}`;
+  }
   if (c.kind === 'number') {
     return `the number ${ratShort(c.value)}` + (c.op === '+' ? '' : ` (${c.op})`);
   }
@@ -4778,6 +4947,7 @@ const STATION_DEFS = [
     { id: 'nests',   label: 'the nest stack',   kind: 'stack' },
     { id: 'scales',  label: 'the scale stack',  kind: 'stack' },
     { id: 'dice',    label: 'the dice stack',   kind: 'stack' },
+    { id: 'sounds',  label: 'the sound stack',  kind: 'stack' },
     { id: 'minis',   label: 'the robot stack',  kind: 'stack' },
     { id: 'numbers', label: 'the number stack', kind: 'stack' },
     { id: 'boxes',   label: 'the box stack',    kind: 'stack' },
@@ -4965,6 +5135,7 @@ function refillStack(st, animate = false) {
             : st.id === 'rooms' ? makeRoom()
             : st.id === 'nests' ? makeNest()
             : st.id === 'dice' ? makeDie()
+            : st.id === 'sounds' ? makeSound()
             : makeBox();
     scene.add(t);
     setPick(t, { kind: 'station', id: st.id });
@@ -5608,6 +5779,7 @@ function actionNew(kind) {
   const st = stations[kind === 'box' ? 'boxes' : kind === 'scale' ? 'scales'
                     : kind === 'text' ? 'texts' : kind === 'nest' ? 'nests'
                     : kind === 'room' ? 'rooms' : kind === 'die' ? 'dice'
+                    : kind === 'sound' ? 'sounds'
                     : 'numbers'];
   enqueue(walkTo(() => standForPoint(st.point)));
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
@@ -6136,6 +6308,54 @@ function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
   }
   if (target.userData.kind === 'bird' || target.userData.kind === 'nest') {
     return refuse('Give things to the bird herself — she delivers to her nest.');
+  }
+  // a sound is MADE by a [frequency, duration, shape] box...
+  if (target.userData.kind === 'sound' && incoming.userData.kind === 'box') {
+    const h = incoming.userData.holes.map(x => x.thing);
+    const f = h[0]?.userData.kind === 'number' ? Number(h[0].userData.value.n) / Number(h[0].userData.value.d) : null;
+    const d = h[1]?.userData.kind === 'number' ? Number(h[1].userData.value.n) / Number(h[1].userData.value.d) : 0.4;
+    const shapeTxt = h[2]?.userData.kind === 'text' ? (h[2].userData.text || '').trim().toLowerCase() : '';
+    if (!f || !(f > 0)) {
+      return refuse('A made sound wants [frequency, duration, shape] \u2014 a number of hertz in the first hole.');
+    }
+    const shape = SHAPES.includes(shapeTxt) ? shapeTxt : 'sine';
+    return mergeOnto(incoming, fromWorld, target, () => {
+      target.userData.sound = { segs: [{ f, d: Math.min(6, Math.max(0.05, d)), shape }], rate: 1 };
+      target.paintSound();
+      playSound(target);
+      say(`A ${Math.round(f)} hertz ${shape} for ${d} seconds \u2014 listen.`);
+    });
+  }
+  // ...REMADE by a badge...
+  if (target.userData.kind === 'sound' && incoming.userData.kind === 'number') {
+    const op = incoming.userData.op;
+    const v = Number(incoming.userData.value.n) / Number(incoming.userData.value.d);
+    if (op !== '*' && op !== 'set') {
+      return refuse('A sound answers \u00d7 and set \u2014 adding to a sound has no meaning. Type * on the number first.');
+    }
+    if (op === 'set') return refuse('Set a sound with a [frequency, duration, shape] box, not a bare number.');
+    if (!v) return refuse('Multiplying a sound by nothing would leave nothing.');
+    return mergeOnto(incoming, fromWorld, target, () => {
+      const snd = target.userData.sound;
+      if (v < 0) snd.reversed = !snd.reversed;      // time's arrow
+      snd.rate = Math.min(8, Math.max(0.125, (snd.rate || 1) * Math.abs(v)));
+      target.paintSound();
+      playSound(target);
+      say(v < 0 ? 'Backwards \u2014 listen.' : `\u00d7${Math.abs(v)} \u2014 listen.`);
+    });
+  }
+  // ...and JOINED at the edges, exactly as pads are
+  if (target.userData.kind === 'sound' && incoming.userData.kind === 'sound') {
+    return mergeOnto(incoming, fromWorld, target, () => {
+      const a = target.userData.sound, b = incoming.userData.sound;
+      const flat = (snd) => (snd.reversed ? snd.segs.slice().reverse() : snd.segs)
+        .map(sg => ({ ...sg, d: (sg.d ?? 0.4) / Math.abs(snd.rate || 1) }));
+      const segs = side === 'L' ? flat(b).concat(flat(a)) : flat(a).concat(flat(b));
+      target.userData.sound = { segs, rate: 1 };
+      target.paintSound();
+      playSound(target);
+      say(`One sound of ${segs.length} parts \u2014 listen.`);
+    });
   }
   if (target.userData.kind === 'box' && incoming.userData.kind === 'box') {
     return joinBoxes(target, incoming, refuse, side);
@@ -6928,6 +7148,9 @@ function userClick(target) {
         return say('Your notebook stays on the desk. Its first page holds a blank '
           + 'one — take a copy of that if you want a notebook to carry about.');
       }
+      // a sound plays as it comes into your hand: one gesture, and it stays
+      // pickable like everything else (click-to-play alone made it unliftable)
+      if (kind === 'sound') playSound(target.thing);
       return userTake(target.thing);
     }
     if (target.thing === held) return;
@@ -8604,6 +8827,7 @@ function thingOutRaw(t) {
     return r;
   }
   if (ud.kind === 'die') return { kind: 'die', faces: ud.faces };
+  if (ud.kind === 'sound') return { kind: 'sound', sound: ud.sound };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
                                    opaque: ud.opaque,
@@ -8714,6 +8938,7 @@ function thingInRaw(o, nests, birds) {
     }
   }
   else if (o.kind === 'die') t = makeDie(o.faces);
+  else if (o.kind === 'sound') t = makeSound(o.sound);
   else if (o.kind === 'notebook') t = makeNotebook(o);
   else if (o.kind === 'room') t = makeRoom(o);
   else if (o.kind === 'robot') t = botIn(o);
@@ -9570,6 +9795,8 @@ function refreshUI() {
           : held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
       : kind === 'bird' ? (held.userData.label ? `the bird “${held.userData.label}”` : 'a bird')
       : kind === 'die' ? `a die (1 to ${held.userData.faces})`
+      : kind === 'sound' ? (soundEmpty(held.userData.sound) ? 'a silent sound'
+          : `a sound of ${soundSeconds(held.userData.sound).toFixed(1)}s`)
       : `${held.userData.label ? `“${held.userData.label}” — ` : ''}a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
     // Once an operation is chosen, saying "say what it does" explains a thing
     // the number is already showing. What is worth knowing then is what ELSE
@@ -9595,6 +9822,7 @@ function refreshUI() {
           : 'click here to hold it up and read it; type to write on it')
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
       : kind === 'die' ? 'type how many faces it should have; drop it on a number to re-roll that number'
+      : kind === 'sound' ? 'drop a [frequency, duration, shape] box on it to make it sing; ×2 speeds it, ×-1 reverses it'
       : 'put it down on the bench';
   }
   if (hintTimer || attnHeld) return;
@@ -10129,6 +10357,9 @@ function tipFor(t) {
       if (t.id === 'nests') return training
         ? 'Click to have the robot take a fresh nest.'
         : 'The nest stack — each nest holds an egg. Set one on the table and watch.';
+      if (t.id === 'sounds') return training
+        ? 'Click to have the robot take a fresh sound.'
+        : 'The sound stack \u2014 each comes off silent. Drop a [frequency, duration, shape] box on one to make it sing, or a recording from a file.';
       if (t.id === 'dice') return training
         ? 'Click to have the robot take a die.'
         : 'The dice stack — drop a die on a number to re-roll it 1 up to its faces; drop a whole number on a die to set its faces.';
@@ -10258,6 +10489,12 @@ function tipFor(t) {
           : `Drop to put that on the panel — it stays glued to ${who}.`)
         : `${who[0].toUpperCase()}${who.slice(1)}’s panel — whatever is laid here travels with the thing. `
           + 'Click to carry it — the + and − on the holding card resize it — and the knob folds it away.';
+    }
+    if (ud.kind === 'sound' && !held) {
+      const n = t.thing.userData.sound?.segs?.length ?? 0;
+      return n
+        ? `A sound \u2014 ${soundSeconds(t.thing.userData.sound).toFixed(1)}s. Click to hear it and pick it up; drop a \u00d72 on it to speed it up, a \u00d7-1 to play it backwards, another sound on its edge to join them.`
+        : 'A silent sound \u2014 give it a [frequency, duration, shape] box, or drop a recording on it. Click to pick it up.';
     }
     if (ud.kind === 'text' && held?.userData.kind === 'text') {
       const zone = padZone(t.thing, t.point);
