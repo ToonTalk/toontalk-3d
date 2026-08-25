@@ -4718,11 +4718,18 @@ function fastForward(maxSteps = 100000, sliceMs = 14) {
 // The thing under the pointer while your hand is full jiggles, so you can
 // see what a drop would land on -- even down inside a box.
 let wiggle = null;
+// What a node's scale OUGHT to be, independent of any animation that has
+// borrowed it. For robots the mini flag is the authority -- trusting the
+// scale captured at hover time is what kept stamping 0.24 back onto a robot
+// that had grown to the desk under a motionless pointer (every tablet tap).
+function wiggleBase(w) {
+  return w.node.__bot ? (w.node.__bot.mini ? MINI : 1) : w.s;
+}
 function setWiggle(node) {
   if (wiggle?.node === node) return;
   if (wiggle) {
     wiggle.node.rotation.y = wiggle.ry;
-    wiggle.node.scale.setScalar(wiggle.s);
+    wiggle.node.scale.setScalar(wiggleBase(wiggle));
     wiggle = null;
   }
   if (!node || !node.parent) return;
@@ -4749,6 +4756,13 @@ function advanceWobbles(dt) {
 function advanceWiggle(dt) {
   if (!wiggle) return;
   if (!wiggle.node.parent) return setWiggle(null);
+  // a robot that grew (or shrank) under the pointer: follow the truth, and
+  // stop wiggling a robot that is busy being the one at the desk
+  if (wiggle.node.__bot) {
+    const want = wiggleBase(wiggle);
+    if (want !== wiggle.s) { wiggle.s = want; wiggle.node.scale.setScalar(want); }
+    if (!wiggle.node.__bot.mini) { setWiggle(null); return; }
+  }
   wiggle.t += dt;
   wiggle.node.rotation.y = wiggle.ry + Math.sin(wiggle.t * 15) * 0.10;
   wiggle.node.scale.setScalar(wiggle.s * (1 + 0.035 * Math.abs(Math.sin(wiggle.t * 15))));
@@ -9443,7 +9457,20 @@ function notePointerKind(ev) {
   document.body.classList.toggle('touching', touch);
 }
 addEventListener('pointerdown', notePointerKind, true);
+// While the pointer rests on something whose value a robot is changing, the
+// tooltip used to show the value at arrival forever. It re-reads a few times
+// a second now, from the same resolve the pointer path uses.
+let lastMoveEv = null;
+setInterval(() => {
+  if (!lastMoveEv || document.hidden || busy || mode === 'replay') return;
+  if (tipEl.style.display !== 'block') return;
+  const target = resolve(lastMoveEv);
+  const tip = tipFor(target);
+  if (tip) tipEl.textContent = tip;
+  else { tipEl.style.display = 'none'; }
+}, 300);
 renderer.domElement.addEventListener('pointermove', (ev) => {
+  lastMoveEv = { clientX: ev.clientX, clientY: ev.clientY };
   parkOnce = false;              // the pointer is back over the workshop
   notePointerKind(ev);
   // what is under the pointer decides how high the hand rides, so resolve
@@ -11293,7 +11320,7 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
   + '<form style="display:contents" onsubmit="return false">'
-  + '<input id="martyKey" type="password" placeholder="API key\u2026" '
+  + '<input id="martyKey" type="password" autocomplete="new-password" placeholder="API key\u2026" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '</form>'
   + '</details>';
