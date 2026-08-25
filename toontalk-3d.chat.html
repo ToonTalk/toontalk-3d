@@ -172,7 +172,7 @@
 
 <!-- outside #bottom: its transform would capture our fixed positioning -->
 <div id="held" class="card" style="cursor:pointer"
-     title="What your invisible hand is carrying — it follows the mouse, and on a touch screen waits at one spot where you can see it. Click to hold a text pad up and read it.">
+     title="What your invisible hand is carrying — it follows the mouse, and on a touch screen waits at one spot where you can see it. Click to hold a pad up and read it.">
   <span class="k">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
   <button id="heldTurn" title="Turn it over a quarter — the arrow keys do the same, and turn it the other way too.">⟳</button>
@@ -235,7 +235,7 @@ Handling things
 You do everything with single clicks: click a thing to pick it up, and
 it follows your pointer; click where you want it to set it down. The row of dark
 pedestals in a semicircle behind the robot's work area are stacks — endless
-supplies of numbers, text pads, boxes, scales, nests, rooms and little robots.
+supplies of numbers, pads, boxes, scales, nests, rooms and little robots.
 Click a stack to take the top one.
 
 The wooden table in front is your workbench. Robots can never reach it —
@@ -252,7 +252,7 @@ turns the thing in your hand rather than carrying it off the screen.
 Typing works there too, though nothing on the screen looks like a place to
 type: the ⌨ button on the holding card raises your keyboard, and
 what you type goes onto the thing in your hand — digits onto a number, letters
-onto a text pad or a name plaque, just as a real keyboard would. Press it again,
+onto a pad or a name plaque, just as a real keyboard would. Press it again,
 or put the thing down, and the keyboard goes away. A tablet's keyboard offers
 the real symbols where a typewriter offered stand-ins, so on a number
 × multiplies, ÷ divides and a proper minus sign negates,
@@ -287,9 +287,9 @@ a mod 5 on 17 and 2 remains. Type set
 and it simply replaces whatever it lands on. The letters need not be typed
 cleanly: as soon as the last few you typed spell a name, the number takes it.
 
-## Text pads
+## Pads
 
-Text pads are paper for words. Type on a held pad to write (Enter
+Pads are paper for words. Type on a held pad to write (Enter
 for a new line, Ctrl+V pastes). Drop one pad on
 the left edge of another and it reads first; on the right edge
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
@@ -572,7 +572,7 @@ offers a microphone — where it does not, the button simply is not shown.
 
 The notebook on your table is a two-page spread. Drop anything on a blank
 page to file it; click a filed entry to take out a copy (the page
-keeps its own). Drop a written text pad on a full page to open the first page
+keeps its own). Drop a written pad on a full page to open the first page
 mentioning that text; a whole number jumps to that page number. Only Dusty can
 remove an entry (and Undo puts it back). He will not vacuum your own
 notebook at all, and clicking it makes it wobble where it stands rather than
@@ -623,7 +623,7 @@ n-to-1 (the counting-down one), append and
 reverse.
 
 The sentence factory (sentence-generator.world.json). A glass room called the Scriptorium holds a team
-of twenty robots that roll dice to pick words, join text pads into sentences,
+of twenty robots that roll dice to pick words, join pads into sentences,
 and hand each one to a bird who flies it out to a nest on your table. Pull the
 room's lever and the nest fills with lines like "the frog dreams of the
 witch." Every mechanism in it is one from this manual: dice for the choice,
@@ -2007,7 +2007,7 @@ function setWings(bird, spread, flap) {
     w.pivot.rotation.z = -w.sgn * (spread * 1.15 + flap);
   }
 }
-// A text pad: a flat tablet of paper with writing on its top face. Typing
+// A pad: a flat tablet of paper with writing on its top face. Typing
 // writes on a held pad; drops concatenate (see combine).
 function makeText(str) {
   const g = new THREE.Group();
@@ -2024,12 +2024,34 @@ function makeText(str) {
   pad.castShadow = true; pad.receiveShadow = true;
   g.add(pad);
   g.userData = { kind: 'text', text: '', rest: 0.0225, width: 0.34 };
+  // A pad's face can carry a PICTURE as well as words (Stage 3). The image is
+  // a data URL, so it saves, copies and files exactly as the words do; the
+  // words stay where they are, drawn over it, so a captioned picture is one
+  // ordinary pad.
+  g.setImage = (src) => {
+    g.userData.img = src || undefined;
+    if (!src) { g.__imgEl = null; g.setText(g.userData.text || ''); return; }
+    const im = new Image();
+    im.onload = () => {
+      g.__imgEl = im;
+      // the pad takes the picture's shape, within reason, so photographs are
+      // not squeezed into a landscape tablet
+      const r = im.height / Math.max(1, im.width);
+      g.userData.aspect = Math.min(2, Math.max(0.4, r));
+      g.setPadSize(g.userData.sz ?? 1);
+      g.setText(g.userData.text || '');
+    };
+    im.onerror = () => { g.__imgEl = null; };
+    im.src = src;
+  };
   // a pad with a lot to say can be made bigger (Ctrl+arrows while holding);
   // the size is the pad's own, so it survives the hands that reset scale
   g.setPadSize = (sz) => {
     sz = Math.min(3, Math.max(1, Math.round(sz * 4) / 4));
     g.userData.sz = sz === 1 ? undefined : sz;
-    pad.geometry = geo('BoxGeometry', 0.34 * sz, 0.045, 0.26 * sz);
+    // a picture keeps its own proportions; a written pad keeps the tablet's
+    const asp = g.userData.aspect ?? (0.26 / 0.34);
+    pad.geometry = geo('BoxGeometry', 0.34 * sz, 0.045, 0.34 * sz * asp);
     g.userData.width = 0.34 * sz;
   };
   g.setText = (t) => {
@@ -2043,8 +2065,35 @@ function makeText(str) {
       c.fillStyle = rnd() > 0.5 ? 'rgba(180,166,130,0.16)' : 'rgba(255,255,255,0.5)';
       c.fillRect(rnd() * 512, rnd() * 384, 1 + rnd() * 2.4, 0.8 + rnd() * 1.4);
     }
+    // a picture covers the paper, letterboxed so nothing is cropped away
+    if (g.__imgEl) {
+      const im = g.__imgEl;
+      const sc = Math.min(512 / im.width, 384 / im.height);
+      const w = im.width * sc, h = im.height * sc;
+      c.drawImage(im, (512 - w) / 2, (384 - h) / 2, w, h);
+    }
     c.strokeStyle = '#c9bd9c'; c.lineWidth = 3; c.strokeRect(8, 8, 496, 368);
     c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (g.__imgEl && !t) {
+      tex.needsUpdate = true;
+      return;                       // a picture with nothing written on it
+    }
+    if (g.__imgEl) {
+      // words over a picture: a caption band, so the ink stays readable
+      const c2 = c;
+      c2.fillStyle = 'rgba(16,20,30,0.62)';
+      c2.fillRect(8, 292, 496, 84);
+      c2.fillStyle = '#f7f1df';
+      let px = 54;
+      c2.font = `600 ${px}px Georgia, serif`;
+      while (px > 14 && c2.measureText(t).width > 470) {
+        px = Math.floor(px * 0.9);
+        c2.font = `600 ${px}px Georgia, serif`;
+      }
+      c2.fillText(t, 256, 334);
+      tex.needsUpdate = true;
+      return;
+    }
     if (!t) {
       c.fillStyle = '#c9bd9c';
       c.font = 'italic 40px Georgia, serif';
@@ -2820,6 +2869,52 @@ function giveToLiveBird(birdNode, X) {
   refreshUI();
 }
 
+// --- media, arriving --------------------------------------------------------
+// One door for every medium (BACKS.md): what a file IS decides what happens to
+// it. A picture covers the pad whose panel took it; a saved thing or world is
+// what it always was.
+function readMediaFile(file, forThing) {
+  if (!file) return;
+  const name = (file.name || '').toLowerCase();
+  if (/^image\//.test(file.type) || /\.(png|jpe?g|gif|webp|svg)$/.test(name)) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      if (forThing?.setImage) {
+        forThing.setImage(fr.result);
+        say(`The picture covers ${panelName(forThing)}.`);
+      } else {
+        const pad = makeText('');
+        pad.setImage(fr.result);
+        putOnBench(pad, benchSpot());
+        say('The picture arrives on a pad of its own.');
+      }
+      refreshUI();
+    };
+    fr.readAsDataURL(file);
+    return;
+  }
+  importRobotFile(file);          // a saved thing or world, as ever
+}
+// A file picker of its own, scoped to one thing. Created and clicked without
+// being attached: a static hidden input never opens a picker in an app's own
+// web view (the artifact field notes).
+// Where a dropped file landed: an open tray under the pointer means its
+// thing, so a picture dropped on a pad's panel covers that pad.
+function trayUnderPointer(ev) {
+  const t = resolve({ clientX: ev.clientX, clientY: ev.clientY });
+  const node = t?.kind === 'thing' ? t.thing : null;
+  if (node?.userData.panel) return node.__owner;
+  const tray = t ? trayOfTarget(t) : null;
+  return tray?.__owner ?? null;
+}
+function pickMediaFor(forThing) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*,.json,.world.json';
+  inp.onchange = () => readMediaFile(inp.files?.[0], forThing);
+  inp.click();
+}
+
 // --- the info notebook: documentation you can copy --------------------------
 // Miki's layout from the 1999 anima-gadgets notebook: a text page on the
 // left describing, the example itself on the facing page. Every example is a
@@ -2969,6 +3064,29 @@ function buildTrayShape(g, owner, pw, pd) {
     setPick(lever, { kind: 'roomLever', room: g });
     keep(lever);
     g.__lever = armPivot;
+  }
+  // the import plaque: a picture for this pad, from a file
+  if (owner.userData.kind === 'text') {
+    const cv = document.createElement('canvas');
+    cv.width = 64; cv.height = 64;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#6b4f8a';
+    c.beginPath(); c.arc(32, 32, 28, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#f0e6fb';
+    c.font = 'bold 30px Georgia, serif';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('\u2191', 32, 34);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const plaque = keep(new THREE.Mesh(geo('PlaneGeometry', 0.08, 0.08),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide })));
+    plaque.rotation.x = -Math.PI / 5;
+    plaque.position.set(hw - 0.2, 0.062, hd - 0.045);
+    setPick(plaque, { kind: 'panelImport', tray: g });
+    const hit = keep(new THREE.Mesh(geo('CylinderGeometry', 0.05, 0.05, 0.08, 8),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })));
+    hit.position.set(hw - 0.2, 0.05, hd - 0.045);
+    setPick(hit, { kind: 'panelImport', tray: g });
   }
   // the info plaque: a fresh copy of the thing's documentation, on request
   {
@@ -4134,7 +4252,8 @@ function specOf(thing) {
     return sp;
   };
   if (kind === 'number') return withPanel({ kind: 'number', value: thing.userData.value, op: thing.userData.op });
-  if (kind === 'text') return withPanel({ kind: 'text', text: thing.userData.text, sz: thing.userData.sz });
+  if (kind === 'text') return withPanel({ kind: 'text', text: thing.userData.text,
+                                         sz: thing.userData.sz, img: thing.userData.img });
   if (kind === 'die') return withPanel({ kind: 'die', faces: thing.userData.faces });
   if (kind === 'scale') {
     return withPanel({ kind, label: thing.userData.label ?? undefined, tilt: scaleTilt(thing),
@@ -4173,6 +4292,7 @@ function buildThing(spec) {
   if (spec.kind === 'number') return keepPanel(makeNumber(spec.value, spec.op));
   if (spec.kind === 'text') {
     const t = makeText(spec.text);
+    if (spec.img) t.setImage(spec.img);
     if (spec.sz) t.setPadSize(spec.sz);
     return keepPanel(t);
   }
@@ -4270,7 +4390,11 @@ function copyThingRaw(t) {
   else
   if (ud.kind === 'number') c = makeNumber(ud.value, ud.op);
   else if (ud.kind === 'die') c = makeDie(ud.faces);
-  else if (ud.kind === 'text') { c = makeText(ud.text); if (ud.sz) c.setPadSize(ud.sz); }
+  else if (ud.kind === 'text') {
+    c = makeText(ud.text);
+    if (ud.img) c.setImage(ud.img);
+    if (ud.sz) c.setPadSize(ud.sz);
+  }
   else if (ud.kind === 'notebook') {
     c = makeNotebook({ pages: JSON.parse(JSON.stringify(ud.pages)), page: ud.page });
   }
@@ -4413,7 +4537,8 @@ function matchState(cond, spec) {
     return spec.kind === 'die' && spec.faces === cond.faces ? 'yes' : 'no';
   }
   if (cond.kind === 'text') {
-    return spec.kind === 'text' && spec.text === cond.text ? 'yes' : 'no';
+    return spec.kind === 'text' && spec.text === cond.text
+      && (cond.img ?? null) === (spec.img ?? null) ? 'yes' : 'no';
   }
   if (cond.kind === 'number') {
     return spec.kind === 'number' && ratEq(spec.value, cond.value) && spec.op === cond.op
@@ -4641,7 +4766,7 @@ const HELPERS = {
 const STATION_DEFS = [
   ...[
     { id: 'rooms',   label: 'the room stack',   kind: 'stack' },
-    { id: 'texts',   label: 'the text stack',   kind: 'stack' },
+    { id: 'texts',   label: 'the pad stack',   kind: 'stack' },
     { id: 'nests',   label: 'the nest stack',   kind: 'stack' },
     { id: 'scales',  label: 'the scale stack',  kind: 'stack' },
     { id: 'dice',    label: 'the dice stack',   kind: 'stack' },
@@ -5212,9 +5337,10 @@ function setWiggle(node) {
     wiggle = null;
   }
   if (!node || !node.parent) return;
-  // a house or a panel barely stirs: the full wiggle moved the lever right
-  // out from under the pointer that was trying to click it
-  const amp = node.userData?.kind === 'room' ? 0.12 : 1;
+  // Everything barely stirs. At full strength the shake moved whatever it was
+  // acknowledging out from under the pointer aimed at it -- worst on a house,
+  // whose lever swam away, but true of a number in a box hole too.
+  const amp = node.userData?.kind === 'room' ? 0.12 : 0.22;
   wiggle = { node, ry: node.rotation.y, s: node.scale.x, t: 0, amp };
 }
 // A short shake, for "no": the same motion the pointer-hover wiggle uses, but
@@ -5993,7 +6119,7 @@ function combine(slot, incoming, isHole, fromWorld, side) {
       say(`The holes, read straight through: “${word}”.`);
     });
   }
-  // Text pads concatenate; the side of the drop decides the order, exactly as
+  // Pads concatenate; the side of the drop decides the order, exactly as
   // dropping "Talk" on the right of "Toon" makes "ToonTalk" in the original.
   if (target.userData.kind === 'text' && incoming.userData.kind === 'text') {
     const merged = side === 'L' ? incoming.userData.text + target.userData.text
@@ -6278,6 +6404,11 @@ function handleClick(target) {
       return say(`A bird to ${panelName(owner)} — whatever she is given goes straight to it.`);
     }
     return giveToLiveBird(target.tray.__perchBird, owner);
+  }
+  if (target.kind === 'panelImport') {
+    if (busy || mode !== 'world') return say('Wait for the work to finish first.');
+    if (held) return say('Empty your hand first.');
+    return pickMediaFor(target.tray.__owner);
   }
   if (target.kind === 'panelInfo') {
     if (busy || mode !== 'world') return say('Wait for the work to finish first.');
@@ -7012,7 +7143,7 @@ function toggleReading() {
     refreshUI();
     return;
   }
-  if (held?.userData.kind !== 'text') return say('Hold a text pad to read it.');
+  if (held?.userData.kind !== 'text') return say('Hold a pad to read it.');
   reading = { node: held, scale: held.scale.x };
   refreshUI();
 }
@@ -7149,7 +7280,7 @@ function showSoftKeys(on) {
 }
 {
   const btn = document.getElementById('heldKeys');
-  // the card itself lifts a text pad up to read; the button must not do that
+  // the card itself lifts a pad up to read; the button must not do that
   btn.addEventListener('pointerdown', (e) => e.preventDefault());
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -8040,7 +8171,7 @@ function unErase(thing) {
 }
 function eraseThingInPlace(thing) {
   const k = thing.userData.kind;
-  if (!ERASE_NAME[k]) return say('Ruby only erases numbers, text pads, boxes and scales.');
+  if (!ERASE_NAME[k]) return say('Ruby only erases numbers, pads, boxes and scales.');
   if (thing.userData.erased) return say('Already erased — Dusty can remove it, or Undo brings it back.');
   pushUndo();
   busy = true;
@@ -8387,7 +8518,7 @@ function thingOutRaw(t) {
   if (!t) return null;
   const ud = t.userData;
   if (ud.kind === 'number') return { kind: 'number', value: ratOut(ud.value), op: ud.op };
-  if (ud.kind === 'text') return { kind: 'text', text: ud.text, sz: ud.sz };
+  if (ud.kind === 'text') return { kind: 'text', text: ud.text, sz: ud.sz, img: ud.img };
   if (ud.kind === 'die') return { kind: 'die', faces: ud.faces };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
@@ -8487,7 +8618,11 @@ function thingInRaw(o, nests, birds) {
   if (!o) return null;
   let t = null;
   if (o.kind === 'number') t = makeNumber(ratIn(o.value), o.op);
-  else if (o.kind === 'text') { t = makeText(o.text); if (o.sz) t.setPadSize(o.sz); }
+  else if (o.kind === 'text') {
+    t = makeText(o.text);
+    if (o.img) t.setImage(o.img);
+    if (o.sz) t.setPadSize(o.sz);
+  }
   else if (o.kind === 'die') t = makeDie(o.faces);
   else if (o.kind === 'notebook') t = makeNotebook(o);
   else if (o.kind === 'room') t = makeRoom(o);
@@ -9233,7 +9368,7 @@ function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
        : s.type === 'newScale' ? 'take a new scale'
-       : s.type === 'newText' ? 'take a new text pad'
+       : s.type === 'newText' ? 'take a new pad'
        : s.type === 'newNest' ? 'take a new nest'
        : s.type === 'newRoom' ? 'take a new room'
        : s.type === 'newDie' ? 'take a new die'
@@ -9335,7 +9470,7 @@ function refreshUI() {
           : held.__bot.program.length ? 'a trained robot' : 'a robot')
       : kind === 'text' ? (held.userData.text
           ? `a pad: “${held.userData.text.length > 24 ? held.userData.text.slice(0, 24) + '…' : held.userData.text}”`
-          : 'a blank text pad')
+          : 'a blank pad')
       : kind === 'room' ? ((held.__ctx || held.userData.world) ? 'a room with things inside' : 'an empty room')
       : kind === 'notebook' ? 'a notebook'
       : kind === 'scale' ? 'a scale'
@@ -9502,12 +9637,15 @@ async function importRobotFile(file) {
     sayAttn('Could not import that file: ' + e.message);
   }
 }
-// dropping a .robot.json anywhere on the page imports it too
+// One door for every medium: a file dropped anywhere on the page is sorted by
+// what it IS -- a picture onto the pad whose tray it landed on (or a pad of
+// its own), a saved thing or world as ever.
 addEventListener('dragover', (e) => e.preventDefault());
 addEventListener('drop', (e) => {
   e.preventDefault();
-  const f = [...(e.dataTransfer?.files || [])].find(f2 => /\.json$/i.test(f2.name));
-  if (f) importRobotFile(f);
+  const f = [...(e.dataTransfer?.files || [])][0];
+  if (!f) return;
+  readMediaFile(f, trayUnderPointer(e));
 });
 $('exportWorldBtn').onclick = () => {
   if (busy || mode !== 'world') return say('Leave the thought bubble first.');
@@ -9685,9 +9823,26 @@ addEventListener('keydown', (e) => {
       e.preventDefault(); return true;
     }
     if (k2 === 'v') {
-      navigator.clipboard.readText().then(txt => {
+      // an IMAGE on the clipboard covers a held pad; text is appended as ever
+      const pasteText = () => navigator.clipboard.readText().then(txt => {
         if (txt) { pushUndo(); set((get() || '') + txt.replace(/\r/g, '')); refreshUI(); }
       }).catch(() => {});
+      if (held?.userData.kind === 'text' && navigator.clipboard?.read) {
+        navigator.clipboard.read().then(items => {
+          for (const it of items) {
+            const type = it.types.find(t2 => t2.startsWith('image/'));
+            if (type) {
+              it.getType(type).then(blob => {
+                const fr = new FileReader();
+                fr.onload = () => { held.setImage(fr.result); say('The picture covers the pad.'); refreshUI(); };
+                fr.readAsDataURL(blob);
+              });
+              return;
+            }
+          }
+          pasteText();
+        }).catch(pasteText);
+      } else pasteText();
       e.preventDefault(); return true;
     }
     return false;
@@ -9756,7 +9911,7 @@ addEventListener('keydown', (e) => {
   const v = held.userData.value;
   // A tablet's keyboard offers the SYMBOLS -- ×, ÷, a real minus sign -- where a
   // typewriter offered ASCII stand-ins, and a child reaching for × means
-  // multiply. Only numbers read keys this way: × typed onto a text pad is the
+  // multiply. Only numbers read keys this way: × typed onto a pad is the
   // character ×, and must stay that.
   const key = NUM_KEY_ALIAS[e.key] ?? e.key;
   if (/^[0-9]$/.test(key)) {
@@ -9879,8 +10034,8 @@ function tipFor(t) {
         ? 'Click to have the robot take a fresh room.'
         : 'The room stack — each holds a whole workshop. Drop a robot in, then things for it to work on; click its door to step inside.';
       if (t.id === 'texts') return training
-        ? 'Click to have the robot take a fresh text pad.'
-        : 'The text stack — take a blank pad and type on it.';
+        ? 'Click to have the robot take a fresh pad.'
+        : 'The pad stack — take a blank pad and type on it.';
       if (t.id === 'nests') return training
         ? 'Click to have the robot take a fresh nest.'
         : 'The nest stack — each nest holds an egg. Set one on the table and watch.';
@@ -9993,6 +10148,9 @@ function tipFor(t) {
     return held
       ? `Give it to the bird — a badged number changes ${who} in one stroke; [query | bird] asks for the value; [listen | bird] answers with its event nest.`
       : `${who[0].toUpperCase()}${who.slice(1)}’s own bird — click for a bird of your own that delivers straight to it.`;
+  }
+  if (t.kind === 'panelImport') {
+    return 'Import — click for a picture from a file; it covers the pad. Dropping a picture on this tray does the same, and so does pasting one while you hold it.';
   }
   if (t.kind === 'panelInfo') {
     return 'The ℹ plaque — click for the thing’s info notebook: what its bird takes and what its events tell, as live examples you copy out and send.';
@@ -10589,7 +10747,7 @@ function metalTexture(base, streak) {
   });
 }
 // Boxes had the pale flat colour of paper, which made a box with no holes and
-// a text pad twins. Kraft board with its corrugations showing belongs to
+// a pad twins. Kraft board with its corrugations showing belongs to
 // nothing else in the workshop.
 function crateTexture() {
   const tex = speckTexture(128, '#a9743a', null, 300, (c, rnd, w) => {
@@ -11266,8 +11424,8 @@ const MARTY_DEMOS = {
     { say: '126 squared — 15876, exactly. − negates, / divides, and the words “mod” and “set” work the same way.',
       do: (c) => _mOn(c.a) },
   ] },
-  pads: { blurb: 'text pads: write, join words', near: 'texts', steps: [
-    { say: 'Text pads are paper for words.', do: () => _mSt('texts') },
+  pads: { blurb: 'pads: write, join words', near: 'texts', steps: [
+    { say: 'Pads are paper for words.', do: () => _mSt('texts') },
     { say: 'Type on a held pad to write on it.', do: () => { held?.setText?.('Toon'); refreshUI(); } },
     { do: () => _mBench(-0.5, 1.55) },
     { do: (c) => { c.p = _mLast(); return _mSt('texts'); } },
@@ -11560,7 +11718,7 @@ const martyActivityText = () => {
   return b ? ACTIVITY_PEDAGOGY + '\n\nThe activity they are on now: ' + b : '';
 };
 
-const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits sets its value, the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), TEXT PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
+const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits sets its value, the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
 
 Rules for you:
 - The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
@@ -11857,7 +12015,7 @@ function martyOffline(q) {
   const table = [
     [/fraction|\bhalf\b|third|quarter|divide|\d\s*\/\s*\d/, 'fractions', 'Every number here is an exact fraction — let me make one.'],
     [/number|add|subtract|multiply|math|mod\b|remainder/, 'numbers', 'Numbers are blocks you type on — let me show you.'],
-    [/pad|text|word|write|letter|sentence/, 'pads', 'Words live on text pads — watch.'],
+    [/pad|text|word|write|letter|sentence/, 'pads', 'Words live on pads — watch.'],
     [/\bbox|hole|mould|mold|split|join/, 'boxes', 'Boxes are how things are kept together — like this.'],
     [/dice|die\b|random|roll/, 'dice', 'Dice are the workshop’s way of choosing at random.'],
     [/scale|weigh|compare|balance|bigger|larger/, 'scales', 'A scale compares by leaning — look.'],
