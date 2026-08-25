@@ -1849,12 +1849,21 @@ function makeSound(sound = null) {
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6,
-    emissive: 0xffffff, emissiveIntensity: 0.22, emissiveMap: tex });
-  const side = new THREE.MeshStandardMaterial({ color: 0x2f3a4a, roughness: 0.7 });
+    emissive: 0xffffff, emissiveIntensity: 0.28, emissiveMap: tex });
+  // A cream cabinet, not a dark slab: on the dark pedestals of the arc the
+  // slate ones were nearly invisible, and read as more furniture.
+  const side = new THREE.MeshStandardMaterial({ color: 0xe6d8bb, roughness: 0.75 });
   const body = new THREE.Mesh(geo('BoxGeometry', W, H, D),
     [side, side, face, side, side, side]);
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
+  // two brass feet, so it stands like an instrument
+  const brass = new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.35, metalness: 0.75 });
+  for (const dx of [-W / 2 + 0.04, W / 2 - 0.04]) {
+    const foot = new THREE.Mesh(geo('CylinderGeometry', 0.016, 0.02, 0.016, 10), brass);
+    foot.position.set(dx, -H / 2 + 0.008, D / 2 - 0.05);
+    g.add(foot);
+  }
   g.userData = { kind: 'sound', width: W, rest: H / 2,
                  sound: sound ? JSON.parse(JSON.stringify(sound)) : { segs: [], rate: 1 } };
   // the face is a waveform, since a sound has no look of its own: silence is
@@ -1862,32 +1871,34 @@ function makeSound(sound = null) {
   g.paintSound = () => {
     const snd = g.userData.sound;
     const c = cv.getContext('2d');
-    c.fillStyle = '#151b25'; c.fillRect(0, 0, 512, 224);
-    c.strokeStyle = '#33405a'; c.lineWidth = 3; c.strokeRect(6, 6, 500, 212);
+    c.fillStyle = '#efe3c6'; c.fillRect(0, 0, 512, 224);      // the cabinet
+    c.fillStyle = '#141a24'; c.fillRect(26, 26, 460, 172);    // the screen
+    c.strokeStyle = '#c9a227'; c.lineWidth = 5;
+    c.strokeRect(26, 26, 460, 172);                           // its brass frame
     c.strokeStyle = soundEmpty(snd) ? '#4a5872' : '#6ee7a8';
     c.lineWidth = 5;
     c.beginPath();
     if (soundEmpty(snd)) {
-      c.moveTo(24, 112); c.lineTo(488, 112);
+      c.moveTo(44, 112); c.lineTo(468, 112);
     } else {
       const n = snd.segs.length;
-      for (let x = 0; x <= 464; x++) {
-        const u = x / 464;
+      for (let x = 0; x <= 424; x++) {
+        const u = x / 424;
         const sg = snd.segs[Math.min(n - 1, Math.floor(u * n))];
         const cycles = sg.src ? 9 : Math.max(1.5, Math.min(14, (sg.f ?? 440) / 90));
         const env = sg.src ? (0.55 + 0.45 * Math.sin(u * 37)) : 1;
-        const y = 112 - Math.sin(u * cycles * Math.PI * 2 * n) * 70 * env;
-        if (!x) c.moveTo(24 + x, y); else c.lineTo(24 + x, y);
+        const y = 112 - Math.sin(u * cycles * Math.PI * 2 * n) * 62 * env;
+        if (!x) c.moveTo(44 + x, y); else c.lineTo(44 + x, y);
       }
     }
     c.stroke();
     if (snd.reversed) {
-      c.fillStyle = '#ffd27a'; c.font = 'bold 34px Georgia, serif';
-      c.textAlign = 'right'; c.fillText('\u25c0 back', 486, 40);
+      c.fillStyle = '#ffd27a'; c.font = 'bold 30px Georgia, serif';
+      c.textAlign = 'right'; c.fillText('\u25c0 back', 470, 56);
     }
     if ((snd.rate || 1) !== 1) {
-      c.fillStyle = '#9fd8ff'; c.font = 'bold 34px Georgia, serif';
-      c.textAlign = 'left'; c.fillText('\u00d7' + ratShort(rat(Math.round((snd.rate) * 100), 100)), 26, 40);
+      c.fillStyle = '#9fd8ff'; c.font = 'bold 30px Georgia, serif';
+      c.textAlign = 'left'; c.fillText('\u00d7' + ratShort(rat(Math.round((snd.rate) * 100), 100)), 44, 56);
     }
     tex.needsUpdate = true;
   };
@@ -2469,6 +2480,19 @@ function notebookFlip(nb, dir) {
 function notebookDrop(nb, incoming, side, refuse) {
   const ud = nb.userData;
   const slot = ud.page + (side === 'L' ? 0 : 1);
+  // Home again: taken from a page and unaltered, it belongs on that page --
+  // whichever half of the book it is dropped on.
+  const home = incoming.__nbHome;
+  if (home && home.nb === nb && JSON.stringify(thingOut(incoming)) === home.sig) {
+    pushUndo();
+    incoming.removeFromParent();
+    ud.pages[home.slot] = JSON.parse(home.sig);
+    ud.page = home.slot - (home.slot % 2);
+    renderNotebook(nb);
+    saveNotebook(nb);
+    say(`Back on page ${home.slot + 1}, where it came from.`);
+    return refreshUI();
+  }
   const file = (i) => {
     pushUndo();
     const rec = thingOut(incoming);
@@ -3072,19 +3096,21 @@ const INFO_PAGES = {
     { kind: 'text', text: 'WHAT YOU CAN SEND\nGive these to its bird.\n\nA badged number is the\noperation, applied whole\nin one stroke: +10 adds,\n\u00d72 scales, set 50 writes.\n\nTry the one opposite \u2192' },
     { kind: 'number', value: { n: '10', d: '1' }, op: '+' },
     { kind: 'text', text: '[query | bird]\n\nThe current value is\ngiven to that bird, and\nshe delivers it to her\nnest.\n\nTake the box opposite\nand put a bird of your\nown in the empty hole.' },
-    { kind: 'box', holes: [{ kind: 'text', text: 'query' }, null] },
+    { kind: 'box', holes: [{ kind: 'text', text: 'query', label: 'what to do' },
+                         { kind: 'text', text: '', label: 'your bird here' }] },
     { kind: 'text', text: '[listen | bird]\n\nAnswers with its EVENT\nNEST: every change lands\nthere, newest underneath\n\u2014 a history. A robot\ndozing on it wakes per\nchange.' },
-    { kind: 'box', holes: [{ kind: 'text', text: 'listen' }, null] },
+    { kind: 'box', holes: [{ kind: 'text', text: 'listen', label: 'what to do' },
+                         { kind: 'text', text: '', label: 'your bird here' }] },
     { kind: 'text', text: 'WHAT IT WILL TELL YOU\n\nEach change arrives on\nthe event nest as the\nnew value, once \u2014 an\nupdate that changes\nnothing is swallowed\n(the echo rule).' },
   ],
 };
 INFO_PAGES.sound = [
   { kind: 'text', text: 'WHAT YOU CAN SEND\n\n[play] to its bird plays\nit; [stop] stops it.\n\nOr just click the sound\nitself to hear it.' },
-  { kind: 'box', holes: [{ kind: 'text', text: 'play' }] },
+  { kind: 'box', holes: [{ kind: 'text', text: 'play', label: 'what to do' }] },
   { kind: 'text', text: 'MAKING ONE\n\nDrop this box on a silent\nsound and it becomes a\n440 hertz sine for half a\nsecond.\n\nChange the numbers; try\nsquare, sawtooth or\ntriangle in the third\nhole.' },
-  { kind: 'box', holes: [{ kind: 'number', value: { n: '440', d: '1' }, op: '+' },
-                         { kind: 'number', value: { n: '1', d: '2' }, op: '+' },
-                         { kind: 'text', text: 'sine' }] },
+  { kind: 'box', holes: [{ kind: 'number', value: { n: '440', d: '1' }, op: '+', label: 'frequency' },
+                         { kind: 'number', value: { n: '1', d: '2' }, op: '+', label: 'seconds' },
+                         { kind: 'text', text: 'sine', label: 'shape' }] },
   { kind: 'text', text: 'REMAKING ONE\n\nA \u00d72 dropped on a sound\nplays it twice as fast; a\n\u00d7\u00bd stretches it; a \u00d7-1\nplays it BACKWARDS.\n\nAdding to a sound means\nnothing, and is refused.' },
   { kind: 'number', value: { n: '2', d: '1' }, op: '*' },
   { kind: 'text', text: 'JOINING THEM\n\nDrop a sound on another\nsound\u2019s edge and they play\none after the other \u2014 the\nsame gesture that joins\ntwo pads into a word.\n\nA melody is built the way\na sentence is.' },
@@ -3141,7 +3167,7 @@ function panelName(owner) {
   return { number: 'the number', text: 'the pad', box: 'the box',
            scale: 'the scale', nest: 'the nest', bird: 'the bird',
            robot: 'the robot', room: 'the room', die: 'the die',
-           notebook: 'the notebook' }[ud.kind] || 'the thing';
+           sound: 'the sound', notebook: 'the notebook' }[ud.kind] || 'the thing';
 }
 function makePanelTray(owner, pw = 0.5, pd = 0.42) {
   const g = new THREE.Group();
@@ -6545,7 +6571,11 @@ function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
   sfx('combine');
   WROOT.attach(incoming);
   const dest = target.getWorldPosition(new THREE.Vector3());
-  const base = isHole ? fitScale(target, slot) : 1;
+  // the fit belongs to the HOLE the target sits in, however this drop was
+  // aimed: dropping straight onto a number inside a box used to reset it to
+  // full size, and the result stood proud of its pocket
+  const inHole = isHole ? slot : holeContaining(target);
+  const base = inHole ? fitScale(target, inHole) : 1;
   // Rest on top of the number it landed on for a beat before merging, rather
   // than the two occupying the same spot.
   const tScale = new THREE.Vector3(), iScale = new THREE.Vector3();
@@ -6797,6 +6827,10 @@ function handleClick(target) {
     pushUndo();
     let t = buildFromRec(nb.userData.pages[slot]);
     if (!t) return;
+    // where it came from, and what it looked like leaving: dropped back on the
+    // notebook unchanged, it goes home to this page rather than hunting for a
+    // free one
+    t.__nbHome = { nb, slot, sig: JSON.stringify(nb.userData.pages[slot]) };
     // a lone nest comes out with a fresh egg (it hatches when set down); a
     // lone bird conjures herself a fresh nest beside the notebook
     if (t.userData.kind === 'nest' && !t.userData.hasEgg && !t.userData.pile.length) {
@@ -7455,10 +7489,19 @@ function placeReading() {
   const at = camera.position.clone().addScaledVector(dir, 0.62);
   node.parent.updateMatrixWorld();
   node.position.copy(node.parent.worldToLocal(at.clone()));
-  // the writing is on the pad's top face, so its +Y must point at the camera
-  const m = new THREE.Matrix4().lookAt(at, camera.position, camera.up);
-  const q = new THREE.Quaternion().setFromRotationMatrix(m)
-    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2));
+  // Built outright rather than composed: the writing is on the pad's +Y face,
+  // so +Y points AT the camera, and the page's own up (its local -Z) runs up
+  // the screen. A lookAt plus a quarter turn got the facing roughly right and
+  // the up-vector wrong, which is how the words came out on their heads.
+  const toCam = camera.position.clone().sub(at).normalize();
+  const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+  // the part of the screen's up that is square to the page
+  const up = camUp.clone().addScaledVector(toCam, -camUp.dot(toCam)).normalize();
+  const yAxis = toCam;                       // the written face, at the eye
+  const zAxis = up.clone().negate();         // page-up is local -Z
+  const xAxis = new THREE.Vector3().crossVectors(yAxis, zAxis).normalize();
+  const q = new THREE.Quaternion().setFromRotationMatrix(
+    new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis));
   const pq = new THREE.Quaternion();
   node.parent.getWorldQuaternion(pq);
   node.quaternion.copy(pq.invert().multiply(q));
@@ -7466,6 +7509,13 @@ function placeReading() {
 }
 document.getElementById('held')
   .addEventListener('click', () => { if (held || reading) toggleReading(); });
+// Held up to read, ANY click puts it down again -- hunting for the one control
+// that dismisses it is not a thing anybody should have to learn.
+addEventListener('pointerdown', (e) => {
+  if (!reading) return;
+  if (document.getElementById('held')?.contains(e.target)) return;   // its own card
+  toggleReading();
+}, true);
 
 // --- filling the screen -----------------------------------------------------
 // A tablet gives most of its height to the browser's own bars, which leaves
@@ -10093,13 +10143,13 @@ addEventListener('keydown', (e) => {
     return;
   }
   // arrows turn a NOTEBOOK's pages while pointing at it, hands empty
-  if (!held && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
+  if (!held && ['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(e.key)
       && mode === 'world' && !busy && lastMoveEv) {
     const t = resolve(lastMoveEv);
     const nb = t?.nb ?? (t?.kind === 'thing' && t.thing.userData.kind === 'notebook' ? t.thing : null);
     if (nb) {
       e.preventDefault();
-      notebookFlip(nb, e.key === 'ArrowLeft' ? -2 : 2);   // a spread at a time
+      notebookFlip(nb, (e.key === 'ArrowLeft' || e.key === 'PageUp') ? -2 : 2);
       return;
     }
   }
@@ -10490,6 +10540,12 @@ function tipFor(t) {
         : `${who[0].toUpperCase()}${who.slice(1)}’s panel — whatever is laid here travels with the thing. `
           + 'Click to carry it — the + and − on the holding card resize it — and the knob folds it away.';
     }
+    if (ud.kind === 'notebook' && !held) {
+      const filled = (ud.pages || []).filter(Boolean).length;
+      return `${ud.main ? 'Your notebook' : 'A notebook'} — ${filled} thing${filled === 1 ? '' : 's'} filed, `
+        + `open at pages ${ud.page + 1}–${ud.page + 2}. The ← and → keys turn the pages while you point at it; `
+        + 'the corner tabs do too. Drop something on a page to file it.';
+    }
     if (ud.kind === 'sound' && !held) {
       const n = t.thing.userData.sound?.segs?.length ?? 0;
       return n
@@ -10651,6 +10707,13 @@ setInterval(() => {
 // thing simply stays where it is. Parking it somewhere else was a lurch, and
 // following the pointer up into the sky dragged it to the back of the arc.
 let pointerOff = false;
+// A click on the world takes the keyboard back from whatever control had it:
+// after touching Speed or Rounds, the arrows belonged to that control and the
+// workshop's own arrow keys did nothing, with no sign of why.
+renderer.domElement.addEventListener('pointerdown', () => {
+  const a = document.activeElement;
+  if (a && a !== document.body && typeof a.blur === 'function') a.blur();
+});
 renderer.domElement.addEventListener('pointerleave', () => { pointerOff = true; });
 renderer.domElement.addEventListener('pointerenter', () => { pointerOff = false; });
 renderer.domElement.addEventListener('pointermove', (ev) => {
