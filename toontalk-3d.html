@@ -2642,7 +2642,7 @@ function emitLiveEvent(X) {
 function tuckInstant(nest, thing) {
   nest.add(thing);
   thing.quaternion.identity();
-  thing.scale.setScalar(thing.userData.sz ?? 1);
+  thing.scale.setScalar(thing.userData.kind === 'text' ? 1 : (thing.userData.sz ?? 1));
   nest.userData.pile.unshift(thing);
   restackNest(nest);
   nestReceived(nest);
@@ -4405,7 +4405,10 @@ function putOnBench(thing, at) {
     if (spot) return putOnStation(spot, thing);
   }
   benchRoot.add(thing);
-  thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI : (thing.userData.sz ?? 1));
+  // a pad's size lives in its geometry (setPadSize), so its node stays at 1 --
+  // scaling both squared the size at every put-down
+  thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI
+    : thing.userData.kind === 'text' ? 1 : (thing.userData.sz ?? 1));
   thing.quaternion.identity();
   const half = (thing.userData.width || 0.3) / 2 + 0.05;
   const spot = clearBenchSpot(thing,
@@ -6830,7 +6833,8 @@ function takeIntoHand(obj) {
   // table you are trying to put it back on -- clicks then pass through it to
   // whatever is behind, which on a crowded bench is usually another house.
   obj.scale.setScalar(obj.userData.kind === 'robot' ? MINI
-    : obj.userData.kind === 'room' ? 0.5 : (obj.userData.sz ?? 1));
+    : obj.userData.kind === 'room' ? 0.5
+    : obj.userData.kind === 'text' ? 1 : (obj.userData.sz ?? 1));
   // centre on the hand by bounding box: birds, nests, scales and rooms have
   // their origin at the base and otherwise ride high above the pointer
   obj.updateMatrixWorld(true);
@@ -9999,6 +10003,9 @@ setInterval(() => {
   if (tip) tipEl.textContent = tip;
   else { tipEl.style.display = 'none'; }
 }, 300);
+renderer.domElement.addEventListener('pointerleave', () => {
+  if (held && mode === 'world') { parkOnce = true; parkHand(); }
+});
 renderer.domElement.addEventListener('pointermove', (ev) => {
   lastMoveEv = { clientX: ev.clientX, clientY: ev.clientY };
   parkOnce = false;              // the pointer is back over the workshop
