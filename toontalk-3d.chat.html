@@ -14,7 +14,10 @@
   html, body { height: 100%; margin: 0; }
   body { background: #12151b; color: var(--ink);
          font: 14px/1.5 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
-  #app { position: fixed; inset: 0; }
+  /* The world ends above the bottom bar rather than running under it: a bar
+     floating over the table stole every drop aimed at the wood beneath it,
+     and the carried thing had to dodge the pointer on its way there. */
+  #app { position: fixed; left: 0; right: 0; top: 0; bottom: var(--barh, 0px); }
   canvas { display: block; }
 
   .card { position: fixed; background: var(--panel); border: 1px solid var(--edge);
@@ -856,16 +859,21 @@ const shortAngle = (a, b) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a));
 // ---------------------------------------------------------------- renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
+const appEl = document.getElementById('app');
+// the canvas is not the window: its own box is what every screen-to-world
+// calculation must read
+const viewW = () => appEl.clientWidth || innerWidth;
+const viewH = () => appEl.clientHeight || innerHeight;
+renderer.setSize(viewW(), viewH());
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;   // PCFSoft is deprecated in r185
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.32;
-document.getElementById('app').appendChild(renderer.domElement);
+appEl.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x141821);
-const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.05, 200);
+const camera = new THREE.PerspectiveCamera(40, viewW() / viewH(), 0.05, 200);
 camera.position.set(0.40, 3.05, 5.45);
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enableDamping = true; orbit.dampingFactor = 0.06;
@@ -6164,7 +6172,9 @@ function flash(pos) {
 
 // ---------------------------------------------------------------- interaction
 function resolve(ev) {
-  const ndc = new THREE.Vector2((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
+  const r = renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1,
+                                -((ev.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   // things created earlier in this same tick still have stale world matrices,
   // and the raycaster works off those
@@ -6915,7 +6925,7 @@ function parkHand() {
   handNode.updateMatrixWorld();
 }
 function moveHand(ev, hoverY = null) {
-  if (!reachLocal) return;
+  if (!reachLocal || pointerOff) return;
   // The finger does not lead the hand -- except when it is dragging a corner
   // of the table, which is a drag and does follow.
   if ((handParked || parkOnce) && grabbedCorner === null) return;
@@ -6926,7 +6936,9 @@ function moveHand(ev, hoverY = null) {
   const base = reachLocal.y + 0.15;
   handPlane.constant = -Math.min(base + 2.4,
     Math.max(base, hoverY == null ? base : hoverY + 0.07));
-  const ndc = new THREE.Vector2((ev.clientX / innerWidth) * 2 - 1, -(ev.clientY / innerHeight) * 2 + 1);
+  const r = renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1,
+                                -((ev.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
   const hit = ray.ray.intersectPlane(handPlane, new THREE.Vector3());
   if (hit) {
@@ -6939,6 +6951,10 @@ function moveHand(ev, hoverY = null) {
     const xMax = wide ? 4.2 : Math.max(3.2, BENCH.x1 + 0.3);
     const xMin = wide ? -3.2 : Math.min(-3.2, BENCH.x0 - 0.3);
     const zMax = wide ? 3.4 : Math.max(2.4, BENCH.z1 + 0.25);
+    // Well outside the working area -- the pointer up in the sky, heading for
+    // a card at the top of the screen -- means "not aiming at anything": leave
+    // the carried thing where it is instead of dragging it to the clamp edge.
+    if (!wide && (hit.z < -1.4 || hit.x > xMax + 1 || hit.x < xMin - 1)) return;
     hit.x = Math.min(xMax, Math.max(xMin, hit.x));
     hit.z = Math.min(zMax, Math.max(-0.6, hit.z));
     handNode.position.copy(hit);
@@ -10137,9 +10153,12 @@ setInterval(() => {
   if (tip) tipEl.textContent = tip;
   else { tipEl.style.display = 'none'; }
 }, 300);
-renderer.domElement.addEventListener('pointerleave', () => {
-  if (held && mode === 'world') { parkOnce = true; parkHand(); }
-});
+// Off the canvas -- onto the holding card, the bar, anywhere -- the carried
+// thing simply stays where it is. Parking it somewhere else was a lurch, and
+// following the pointer up into the sky dragged it to the back of the arc.
+let pointerOff = false;
+renderer.domElement.addEventListener('pointerleave', () => { pointerOff = true; });
+renderer.domElement.addEventListener('pointerenter', () => { pointerOff = false; });
 renderer.domElement.addEventListener('pointermove', (ev) => {
   lastMoveEv = { clientX: ev.clientX, clientY: ev.clientY };
   parkOnce = false;              // the pointer is back over the workshop
@@ -10174,12 +10193,28 @@ renderer.domElement.addEventListener('pointerleave', () => {
 });
 addEventListener('blur', () => { tipEl.style.display = 'none'; setWiggle(null); });
 renderer.domElement.addEventListener('click', (ev) => handleClick(resolve(ev)));
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
+// How tall the bottom bar is right now -- it wraps to more rows on a narrow
+// screen, so it is measured rather than guessed, and the world's floor rises
+// to meet it.
+function fitViewport() {
+  const bottom = document.getElementById('bottom');
+  // never more than a third of the window: in a small frame (the manual's
+  // embedded workshops, the test harness) the bar is most of the screen, and
+  // a canvas of no height renders nothing at all
+  const raw = bottom ? Math.ceil(bottom.getBoundingClientRect().height) + 26 : 0;
+  const h = Math.min(raw, Math.round(innerHeight / 3));
+  document.documentElement.style.setProperty('--barh', h + 'px');
+  camera.aspect = viewW() / viewH();
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-  frameScene();
-});
+  renderer.setSize(viewW(), viewH());
+}
+addEventListener('resize', () => { fitViewport(); frameScene(); });
+// the row rewraps as its contents change (a robot's name, a wrapped button),
+// so the strip follows it
+if (window.ResizeObserver) {
+  new ResizeObserver(() => fitViewport()).observe(document.getElementById('bottom'));
+}
+fitViewport();
 
 // ---------------------------------------------------------------- load
 // Served as ordinary files, the models sit beside the page and are fetched.
