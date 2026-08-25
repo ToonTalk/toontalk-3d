@@ -11824,6 +11824,15 @@ function ensureLive(X) {
   liveReg.set(X.userData.lid, X);
   return X.userData.lid;
 }
+// the thing an event nest announces for, found by its guid
+function evtOwnerOf(nest) {
+  const guid = nest.userData.guid;
+  if (!guid || !String(guid).startsWith('evt-')) return null;
+  for (const X of liveReg.values()) {
+    if (X.userData.evtGuid === guid && (X.parent || X === held || holeContaining(X))) return X;
+  }
+  return null;
+}
 function liveOwnerOf(bird) {
   if (bird.__liveTarget?.parent || bird.__liveTarget === held) return bird.__liveTarget;
   const X = liveReg.get(bird.userData.liveId);
@@ -11999,6 +12008,7 @@ function makePanelTray(owner, pw = 0.5, pd = 0.42) {
   evt.userData.guid = owner.userData.evtGuid;
   evt.__egg.removeFromParent();
   evt.userData.hasEgg = false;
+  setThingLabel(evt, 'events');
   evt.scale.setScalar(0.8);
   evt.traverse(o => setPick(o, { kind: 'liveNestPerch', tray: g }));
   setPick(evt, { kind: 'liveNestPerch', tray: g });
@@ -14251,7 +14261,10 @@ function setWiggle(node) {
     wiggle = null;
   }
   if (!node || !node.parent) return;
-  wiggle = { node, ry: node.rotation.y, s: node.scale.x, t: 0 };
+  // a house or a panel barely stirs: the full wiggle moved the lever right
+  // out from under the pointer that was trying to click it
+  const amp = node.userData?.kind === 'room' ? 0.12 : 1;
+  wiggle = { node, ry: node.rotation.y, s: node.scale.x, t: 0, amp };
 }
 // A short shake, for "no": the same motion the pointer-hover wiggle uses, but
 // it runs itself out and puts the thing back exactly as it was.
@@ -14282,8 +14295,9 @@ function advanceWiggle(dt) {
     if (!wiggle.node.__bot.mini) { setWiggle(null); return; }
   }
   wiggle.t += dt;
-  wiggle.node.rotation.y = wiggle.ry + Math.sin(wiggle.t * 15) * 0.10;
-  wiggle.node.scale.setScalar(wiggle.s * (1 + 0.035 * Math.abs(Math.sin(wiggle.t * 15))));
+  const amp = wiggle.amp ?? 1;
+  wiggle.node.rotation.y = wiggle.ry + Math.sin(wiggle.t * 15) * 0.10 * amp;
+  wiggle.node.scale.setScalar(wiggle.s * (1 + 0.035 * amp * Math.abs(Math.sin(wiggle.t * 15))));
 }
 // An egg becomes a bird. A bird hatched among a robot's own things lands on
 // its work spot, where the robot can reach her; anywhere else she goes on the
@@ -19033,11 +19047,23 @@ function tipFor(t) {
       }
     }
     if (ud.kind === 'nest') {
+      const owner = evtOwnerOf(t.thing);
+      if (owner) {
+        const who = panelName(owner);
+        return `${who[0].toUpperCase()}${who.slice(1)}’s event nest — every change lands here, newest underneath: a history of its values. A robot dozing on it wakes per change.`;
+      }
       if (ud.hasEgg) return 'A nest with an egg — set it on the table and watch.';
       if (ud.pile.length) return `A nest with ${ud.pile.length} deliver${ud.pile.length > 1 ? 'ies' : 'y'} — the top is the oldest; click to take it.`;
       return 'An empty nest — its bird delivers here.';
     }
     if (ud.kind === 'bird') {
+      if (t.thing.__liveTarget || ud.liveId) {
+        const owner = liveOwnerOf(t.thing);
+        const who = owner ? panelName(owner) : 'a thing that is gone';
+        return held
+          ? `Give it to the bird — it goes straight to ${who}: a badged number changes it in one stroke.`
+          : `A bird to ${who} — whatever she is given is delivered to it, one message at a time.`;
+      }
       return held ? 'Give it to the bird — she flies it home to her nest.'
                   : 'A bird — drop something on her to send it to her nest, or click to pick her up.';
     }
