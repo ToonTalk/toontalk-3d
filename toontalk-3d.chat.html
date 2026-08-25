@@ -165,7 +165,8 @@
   <div id="library">
     <div class="row"><button id="exportHeldBtn" title="Save whatever you are holding to a file — any thing: a box, a number, a robot, a nest.">Save held thing</button>
       <button id="exportWorldBtn" title="Save the whole workshop to a file.">Save world</button></div>
-    <div class="row"><button id="importBtn" title="Open a file — a picture or a text file arrives as a pad, a sound on a speaker, a saved thing in your hand, a saved world replaces the workshop. Dropping a file on the page does the same.">Import file</button></div>
+    <div class="row"><button id="importBtn" title="Open a file — a picture or a text file arrives as a pad, a sound on a speaker, a saved thing in your hand, a saved world replaces the workshop. Dropping a file on the page does the same.">Import file</button>
+      <button id="devicesBtn" title="A notebook of the workshop's own senses: nests that receive every key press, every move of the pointer, every click. Take one off a page and give it to a robot.">Devices</button></div>
   </div>
   <ul id="steps"><li class="empty">not trained yet</li></ul>
 </div>
@@ -675,6 +676,39 @@ word list or a grammar can be written elsewhere and brought in;
 - a saved thing — it arrives in your hand;
 
 - a saved world — it replaces the workshop.
+
+## Devices
+
+The workshop has senses of its own, and they are nests. Press
+Devices in the ⋮ menu and a notebook arrives in your hand; take a
+nest off one of its pages and it is already wired up.
+
+nestwhat lands on itit keeps
+keyboarda pad naming the key — a,
+B, 7, Enter, ArrowLeft, and a space for the
+space barthe last 40
+pointer[across | away], where the
+pointer is on the table, in the table's own steps1 — a position
+is a reading, not a history
+pointer pressdown or
+upthe last 8
+
+Nothing new had to be invented for this. A robot facing a bare nest
+dozes — that has been true since the first list — so a robot given
+a keyboard nest wakes once per key press and waits in between. Waiting for
+input is not a feature; it is what dozing already was.
+
+They are read-only, by construction rather than by permission. Each
+arrives with no egg, so no bird can ever be had from it — and a bird is the
+only way anything is ever put on a nest. Nothing you build can write to the
+keyboard.
+
+Sharing a name is joining a flock, so a second nest taken out of the notebook
+receives the same mail: two robots can watch one keyboard, and a world saved
+with a device nest in it comes back wired up.
+
+Try it: load devices/keys from the examples,
+set Rounds to 500, give the box to the Scribe, and type.
 
 ## Marty the Martian
 
@@ -3658,6 +3692,94 @@ function infoNotebookFor(owner) {
   return nb;
 }
 
+// --- the devices ----------------------------------------------------------
+// The workshop's own senses. Each is a guid; any nest wearing that guid gets
+// the mail, which is how a copy taken off a notebook page is already wired up.
+const DEV_KEYS = 'dev-keyboard';
+const DEV_POINT = 'dev-pointer';
+const DEV_PRESS = 'dev-press';
+// A sensor that nobody is listening to costs nothing: with no nest wearing the
+// guid there is no delivery, no pile and no wake-up.
+function devDeliver(guid, make, cap) {
+  const nests = allNestsByGuid(guid);
+  if (!nests.length) return;
+  for (const n of nests) {
+    tuckInstant(n, make());
+    // A pile that only grows is a leak, and a sensor left running for an hour
+    // would be a big one. The OLDEST goes -- what has just happened is worth
+    // more than what happened a minute ago.
+    const pile = n.userData.pile;
+    while (pile.length > cap) {
+      const old = pile.pop();
+      old.removeFromParent();
+    }
+    if (pile.length) restackNest(n);
+  }
+}
+// The pointer, in the table's own steps, so a robot reading it can put
+// something down where you are pointing.
+let devLastPoint = null, devPointAt = 0;
+const _devPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const _devHit = new THREE.Vector3();
+function devPointerMove(ev) {
+  if (!allNestsByGuid(DEV_POINT).length) return;
+  const now = performance.now();
+  if (now - devPointAt < 90) return;            // ten a second is plenty
+  const r = renderer.domElement.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1,
+                                      -((ev.clientY - r.top) / r.height) * 2 + 1), camera);
+  _devPlane.constant = -(reachLocal ? reachLocal.y : BENCH_TOP);
+  if (!ray.ray.intersectPlane(_devPlane, _devHit)) return;
+  const x = Math.round(_devHit.x * 100) / 100, z = Math.round(_devHit.z * 100) / 100;
+  // the echo rule again: a position that has not changed is not news
+  if (devLastPoint && devLastPoint.x === x && devLastPoint.z === z) return;
+  devLastPoint = { x, z };
+  devPointAt = now;
+  devDeliver(DEV_POINT, () => {
+    const b = makeBox(2);
+    b.userData.holeLabels = ['across', 'away'];
+    paintHoleLabels(b);
+    putInHole(b.userData.holes[0], makeNumber(rat(BigInt(Math.round(x * 100)), 100n)));
+    putInHole(b.userData.holes[1], makeNumber(rat(BigInt(Math.round(z * 100)), 100n)));
+    return b;
+  }, 1);                                        // a reading, not a history
+}
+// Every key, as it is pressed -- including the ones the workshop itself uses,
+// because a keyboard sensor that only saw the leftovers would be a puzzle.
+function devKey(ev) {
+  if (ev.repeat) return;
+  // ev.key IS the character for a printable key and a WORD for the rest --
+  // "a", "B", "7", " ", "Enter", "ArrowLeft". Sent as it stands, including
+  // the space, so that joining the keys onto a pad spells what you typed;
+  // renaming the space to "space" made the pile easier to read and the
+  // device useless for the one thing it is obviously for.
+  devDeliver(DEV_KEYS, () => makeText(ev.key), 40);
+}
+function devPress(down) {
+  devDeliver(DEV_PRESS, () => makeText(down ? 'down' : 'up'), 8);
+}
+// One nest of each, made fresh: a device nest has NO EGG, so no bird can be
+// had from it, so nothing can be sent to it. Read-only by construction.
+function makeDeviceNest(guid, label) {
+  const n = makeNest();
+  n.userData.guid = guid;
+  n.userData.dev = true;
+  n.__egg.removeFromParent();
+  n.userData.hasEgg = false;
+  setThingLabel(n, label);
+  return n;
+}
+const DEVICE_PAGES = () => [
+  { kind: 'text', text: 'THE DEVICES\n\nThese nests are the\nworkshop\u2019s own senses.\n\nTake one off a page and it\nis wired up: what happens\nlands on it.\n\nA robot facing a bare nest\ndozes, so a robot given one\nof these wakes when the\nthing it watches happens.' },
+  { kind: 'text', text: 'READ ONLY\n\nEach arrives with no egg,\nso no bird can be had from\nit \u2014 and a bird is the only\nway anything is ever put on\na nest.\n\nNothing you build can write\nto the keyboard.' },
+  { kind: 'text', text: 'THE KEYBOARD\n\nOne pad per key press,\nnewest underneath. It says\nwhat the key is called:\na, B, 7, Enter, ArrowLeft,\nspace.\n\nIt keeps the last forty.' },
+  { kind: 'nest', id: 9801, guid: DEV_KEYS, hasEgg: false, dev: true, label: 'keyboard', pile: [] },
+  { kind: 'text', text: 'THE POINTER\n\n[across | away] in the\ntable\u2019s own steps, so a\nrobot reading it can put\nsomething down where you\nare pointing.\n\nThe LATEST only: a position\nis a reading, not a history.' },
+  { kind: 'nest', id: 9802, guid: DEV_POINT, hasEgg: false, dev: true, label: 'pointer', pile: [] },
+  { kind: 'text', text: 'THE PRESS\n\n\u201cdown\u201d when the button\ngoes down, \u201cup\u201d when it\ncomes up.\n\nTogether with the pointer\nthat is enough to know\nwhere something was\ngrabbed.' },
+  { kind: 'nest', id: 9803, guid: DEV_PRESS, hasEgg: false, dev: true, label: 'pointer press', pile: [] },
+];
+
 // an event nest for a thing: it joins the thing's flock by guid, exactly as
 // a copied nest joins a flock. This is what [listen | bird] answers with.
 function makeEventNest(X) {
@@ -5193,6 +5315,7 @@ function copyThingRaw(t) {
   else if (ud.kind === 'nest') {
     c = makeNest();
     c.userData.guid = ud.guid;         // sharing the guid IS joining the flock
+    if (ud.dev) c.userData.dev = true;
     c.__egg.removeFromParent();
     c.userData.hasEgg = false;
     const g = (t.__group ??= [t]);
@@ -7625,9 +7748,13 @@ function runRefusal(target) {
     // notebook unchanged, it goes home to this page rather than hunting for a
     // free one
     t.__nbHome = { nb, slot, sig: JSON.stringify(nb.userData.pages[slot]) };
-    // a lone nest comes out with a fresh egg (it hatches when set down); a
-    // lone bird conjures herself a fresh nest beside the notebook
-    if (t.userData.kind === 'nest' && !t.userData.hasEgg && !t.userData.pile.length) {
+    // A lone nest comes out with a fresh egg (it hatches when set down); a
+    // lone bird conjures herself a fresh nest beside the notebook. A DEVICE
+    // nest is exempt: it is an empty eggless nest too, and replacing it with a
+    // fresh one would cost it the guid the workshop delivers to -- which is
+    // the whole of what makes it a device.
+    if (t.userData.kind === 'nest' && !t.userData.dev
+        && !t.userData.hasEgg && !t.userData.pile.length) {
       const fresh = makeNest();
       if (t.userData.label) setThingLabel(fresh, t.userData.label);
       t = fresh;
@@ -9790,6 +9917,7 @@ function thingOutRaw(t) {
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
     return { kind: 'nest', id: ud.id, guid: ud.guid, hasEgg: !!ud.hasEgg,
+      dev: ud.dev || undefined,
       label: ud.label ?? undefined,
       aliases: ud.aliases?.length ? ud.aliases.slice() : undefined,
       pile: ud.pile.map(thingOut) };
@@ -9926,6 +10054,7 @@ function thingInRaw(o, nests, birds) {
       nextId = Math.max(nextId, o.id + 1);
     }
     if (o.guid) t.userData.guid = o.guid;
+    if (o.dev) t.userData.dev = true;         // one of the workshop's senses
     if (o.aliases?.length) t.userData.aliases = o.aliases.slice();
     if (nestGroupPending && o.group) nestGroupPending.push({ node: t, ids: o.group });
   } else if (o.kind === 'bird') {
@@ -10948,6 +11077,15 @@ $('exportHeldBtn').onclick = () => {
   saveFile(`${base}.thing.json`, JSON.stringify(rec),
            `Saved what you are holding as “${base}.thing.json”.`);
 };
+$('devicesBtn').onclick = () => {
+  if (held) return say('Empty your hand first \u2014 the notebook arrives in it.');
+  if (mode === 'training') return say('Leave the thought bubble first.');
+  const nb = makeNotebook({ pages: DEVICE_PAGES(), page: 0 });
+  setThingLabel(nb, 'devices');
+  takeIntoHand(nb);
+  say('The Devices notebook \u2014 take a nest off a page and it is already wired up. '
+    + 'Give one to a robot and it wakes when that device does something.');
+};
 $('importBtn').onclick = () => {
   // A hidden <input type=file> that sits in the page never opens a picker in
   // the Claude app's web view. A fresh one, never attached, does.
@@ -11812,6 +11950,13 @@ function notePointerKind(ev) {
   document.body.classList.toggle('touching', touch);
 }
 addEventListener('pointerdown', notePointerKind, true);
+// The workshop's senses, fed from the real events in the capture phase so a
+// device nest sees what happened whoever else acts on it. Each of these does
+// nothing at all while no nest is wearing its guid.
+addEventListener('keydown', devKey, true);
+renderer.domElement.addEventListener('pointermove', devPointerMove, true);
+renderer.domElement.addEventListener('pointerdown', () => devPress(true), true);
+addEventListener('pointerup', () => devPress(false), true);
 // While the pointer rests on something whose value a robot is changing, the
 // tooltip used to show the value at arrival forever. It re-reads a few times
 // a second now, from the same resolve the pointer path uses.

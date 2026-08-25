@@ -1,0 +1,156 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Watcher",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "anyBox"
+      },
+      {
+       "kind": "wild"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "vacuum",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ],
+       "nest": true
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "nest",
+       "id": 9821,
+       "guid": "dev-pointer",
+       "hasEgg": false,
+       "dev": true,
+       "label": "pointer",
+       "pile": []
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ]
+      }
+     ]
+    },
+    "team": []
+   },
+   "x": -1.45,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "nest",
+      "id": 9821,
+      "guid": "dev-pointer",
+      "hasEgg": false,
+      "dev": true,
+      "label": "pointer",
+      "pile": []
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ]
+     }
+    ]
+   },
+   "x": -0.7,
+   "z": 1.32
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "POINTER\n\nThe pointer nest holds one\nthing: [across | away], in\nthe table's own steps.\n\nA position is a reading, not\na history, so each new one\nreplaces the last instead of\npiling up.\n\nThe Watcher keeps the\ncurrent one in a hole where\nyou can see it."
+   },
+   "x": -1.45,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Rounds to 2000 and give\nthe work box to the Watcher.\n\nNow move the pointer over the\ntable. The two numbers in the\nsecond hole follow it.\n\nIts three steps are: sweep\nthe old reading away, take\nwhat is on the nest, put it\nin the hole. Nothing about\nthe pointer is built in -- it\nis a box arriving as mail."
+   },
+   "x": -0.75,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WHAT IT IS FOR\n\nAnything that reads a number\ncan read this one: a scale\ncan weigh it, a robot can\ncompare it, a bird can carry\nit into a house.\n\nZero across is the middle of\nthe table; away grows towards\nyou. So the numbers are worth\nwatching as you move -- they\nare the table's own\ncoordinates, not the screen's."
+   },
+   "x": -0.05,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

@@ -134,7 +134,7 @@ startling). And a notebook's **spine** is a grip of its own: it picks up
 the book rather than what is on its pages, and it is the one hold Dusty
 accepts on a notebook that still has entries in it.
 
-### Stage 4 — the Devices notebook (half a day to a day)
+### Stage 4 — the Devices notebook (half a day to a day) — **done 25 Aug**
 
 Event nests for mouse and keyboard, copied out of a Devices notebook;
 read-only by construction (a nest to copy, no bird to be had). Placed
@@ -142,6 +142,18 @@ before behaviours because move-with-arrows and move-with-mouse read it.
 
 *Acceptance:* a robot dozing on a keyboard nest wakes per keypress; a
 mouse-position gauge; suite green.
+
+*Met.* `examples/devices/keys` -- the Scribe joins each key onto a pad and
+reads "Hello Ken!" after ten dispatched key events -- and
+`examples/devices/pointer`, whose two numbers tracked three pointer positions
+in table coordinates. Suite green at 13.
+
+Two things fell out that were not in the plan. The nests are read-only
+**by construction**: each arrives with no egg, and a bird is the only way
+anything is ever put on a nest, so there is no rule to enforce. And a device
+nest had to be exempted from the notebook's "a lone eggless nest comes out
+fresh" rule, which was replacing it with a new nest and costing it the guid
+that makes it a device at all.
 
 ### Stage 5 — behaviours: anima-gadgets (2–3 days)
 

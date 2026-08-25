@@ -29,6 +29,12 @@ what a sound is and how one is made, remade and joined; and what a picture is,
 which is a pad. Each ends with a program -- a robot that sings a queue of
 numbers, and a team of robots that recognise pictures by looking at them.
 
+**[`devices/`](devices/)** is the workshop's own senses: nests that receive
+every key press and every move of the pointer. `keys` is a robot that types
+what you type; `pointer` is a gauge that follows your hand. Neither needed any
+new machinery -- a robot facing a bare nest already dozes, so a key press is
+mail.
+
 **[`infinity/`](infinity/)** is a set of its own: seven worlds porting the
 *Exploring Infinity* activities — countable sets, one robot at a time, from
 Galileo's evens to a queue holding every positive rational. Each runs from a
