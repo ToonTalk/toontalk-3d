@@ -177,6 +177,7 @@
   <span class="k" id="heldTip">type digits to change it</span>
   <button id="heldTurn" title="Turn it over a quarter — the arrow keys do the same, and turn it the other way too.">⟳</button>
   <button id="heldPanel" title="Open its panel — the tray where its behaviour lives. Ctrl+P does the same.">⚙</button>
+  <button id="heldBack" title="Put it back exactly where you picked it up. Ctrl+B does the same.">↩</button>
   <button id="heldPlus" title="Bigger — the size is the thing’s own and is saved with it. Ctrl+↑ does the same.">+</button>
   <button id="heldMinus" title="Smaller. Ctrl+↓ does the same.">−</button>
   <button id="heldKeys" title="Show the keyboard, to type on what you are holding">⌨</button>
@@ -240,6 +241,21 @@ Click a stack to take the top one.
 
 The wooden table in front is your workbench. Robots can never reach it —
 that is the point: what you build there is yours until you hand it over.
+
+While a robot is working
+The table stays yours. A running robot has its own hands — you can see
+what it is carrying in its claw — so you can go on picking things up,
+putting them down, joining them, taking from the stacks and turning notebook
+pages while it works away behind the desk. What is refused is its own area:
+its desk, its work spots, the copier, its thought bubble, and giving anything
+to another robot or setting one going. Point at one of those mid-run and it
+says so.
+
+Anything you pick up remembers where it came from. The ↩ button
+on the holding card (or Ctrl+B) puts it back exactly
+there — the spot on the table, or the hole in the box. Aiming at the gap
+it left does not work and never could: with the thing gone, the same point on
+the screen is somewhere further back.
 
 On a screen you touch
 A finger is not a pointer: it is only anywhere at all while it is touching,
@@ -324,6 +340,14 @@ a second thing — and a robot's thought compares both. A robot trained on a
 particular picture wakes for that picture and no other, which is how the
 naming example works.
 
+A pad on a pad
+Drop a pad on the middle of another pad and it rides there: move the
+big one and the small one goes along, keeping its place on the face. A pad
+riding on another is flat — a picture painted on the field rather than a
+card lying on it — and if it carries a picture and no words it keeps only
+the picture, transparent wherever the picture is. That is what makes one usable
+as the ball in a game.
+
 ## Sounds
 
 A sound is a little speaker lying face-up on the table — a walnut
@@ -358,6 +382,13 @@ Try it: take a sound from its stack, take a box and
 put 440, 1/2 and the word "square" in its three holes, and drop the box
 on the sound. Then press Space over it, and drop a
 ×−1 on it.
+
+Naming a thing
+Hold a box, a bird, a nest, a house, a scale, a sound or a notebook and type:
+the letters become a name on a little plaque. Backspace rubs it out,
+and rubbing out the last letter takes the plaque away. A plaque is never wider
+than the thing it belongs to, so a row of named things in a box stays readable
+rather than overlapping.
 
 ## Boxes and scales
 
@@ -505,6 +536,20 @@ spot — whatever is on the spot comes back to the stand at the end of the round
 and the next round finds it there. A robot has only really finished when its
 stand is empty and it has nothing to show for it, which happens when
 it vacuums its own box away on purpose.
+
+How a team takes turns
+Drop one trained robot on another and they form a team. Whatever you
+hand a member is handed to the leader, and each round the team is tried
+in order: a robot steps up, its thought appears over its head, and if
+what it is holding does not fit, the parts that do not fit turn red, it shakes
+its head, and it goes to the back of the queue while the next one tries. The
+first one whose thought fits does the work. If none of them fits they all
+queue up and the run stops, with the leader's thought back over the leader and
+its red parts showing — something Ruby can loosen.
+
+One rule follows from the queue: the first robot to doze stops the
+team. A robot facing a bare nest waits, and the team waits with it rather
+than stepping around it to somebody further down the line.
 
 ## Mimi the copier
 
@@ -2311,6 +2356,23 @@ function makeText(str) {
   pad.castShadow = true; pad.receiveShadow = true;
   g.add(pad);
   g.userData = { kind: 'text', text: '', rest: 0.0225, width: 0.34 };
+  // A pad lying ON another pad is a sprite: the picture and nothing else. On
+  // the table a pad is paper you can see and pick up, so it keeps its cream
+  // body and its printed border -- but the ball in a game of Pong cannot be a
+  // card with a ball drawn on it. alphaTest rather than blending, so a field
+  // full of sprites needs no sorting and casts no half-shadows.
+  g.setSprite = (on) => {
+    g.__sprite = !!on;
+    mat.transparent = !!on;
+    mat.alphaTest = on ? 0.5 : 0;
+    mat.needsUpdate = true;
+    side.transparent = !!on;
+    side.opacity = on ? 0 : 1;
+    side.depthWrite = !on;
+    side.needsUpdate = true;
+    pad.castShadow = !on;
+    g.setText(g.userData.text || '');
+  };
   // A pad's face can carry a PICTURE as well as words (Stage 3). The image is
   // a data URL, so it saves, copies and files exactly as the words do; the
   // words stay where they are, drawn over it, so a captioned picture is one
@@ -2345,6 +2407,25 @@ function makeText(str) {
   g.setText = (t) => {
     g.userData.text = t;
     const c = cv.getContext('2d');
+    if (g.__sprite && g.__imgEl) {
+      // no paper at all: the picture, at its own proportions, on nothing
+      c.clearRect(0, 0, 512, 384);
+      const im = g.__imgEl;
+      const sc = Math.min(512 / im.width, 384 / im.height);
+      const w2 = im.width * sc, h2 = im.height * sc;
+      c.drawImage(im, (512 - w2) / 2, (384 - h2) / 2, w2, h2);
+      if (t) {
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = 'bold 44px Georgia, serif';
+        c.lineWidth = 8; c.strokeStyle = 'rgba(0,0,0,0.75)';
+        c.strokeText(t.split('\n')[0], 256, 340);
+        c.fillStyle = '#fff';
+        c.fillText(t.split('\n')[0], 256, 340);
+      }
+      tex.needsUpdate = true;
+      layoutSubPads(g);
+      return;
+    }
     // paper: cream base flecked with faint fibres
     c.fillStyle = '#f7f1df'; c.fillRect(0, 0, 512, 384);
     let seed = 9;
@@ -2736,6 +2817,7 @@ function stashCtx(ctx) {
   // keeps its own now, and a house can work whenever it likes.
   ctx.tCur = tCur; tCur = 0;
   ctx.held = held; held = null;
+  ctx.clawHeld = clawHeld; clawHeld = null;
   ctx.busy = busy; busy = false;
   ctx.pendingAfter = pendingAfter; pendingAfter = null;
   ctx.mode = mode; mode = 'world';
@@ -2768,6 +2850,7 @@ function loadCtx(ctx) {
   current = ctx.current ?? null;
   tCur = ctx.tCur ?? 0;
   held = ctx.held ?? null;
+  clawHeld = ctx.clawHeld ?? null;
   busy = ctx.busy ?? false;
   pendingAfter = ctx.pendingAfter ?? null;
   mode = ctx.mode ?? 'world';
@@ -3528,10 +3611,11 @@ function freeTraySpot(tray) {
 // their floor, most things by a size of their own that rides in userData and
 // survives saving, filing, Mimi and the training rewind.
 function resizeHeld(dir) {
-  if (!held) return say('Hold the thing you want to resize.');
-  const ud = held.userData;
+  const HAND = inHand();
+  if (!HAND) return say('Hold the thing you want to resize.');
+  const ud = HAND.userData;
   if (ud.kind === 'text') {
-    held.setPadSize((ud.sz ?? 1) + dir * 0.25);
+    HAND.setPadSize((ud.sz ?? 1) + dir * 0.25);
     return refreshUI();
   }
   if (ud.panel) {
@@ -3539,10 +3623,10 @@ function resizeHeld(dir) {
     ud.pw = Math.min(1.3, Math.max(0.34, Math.round((ud.pw ?? 0.5) * f * 25) / 25));
     ud.pd = Math.min(1.0, Math.max(0.3, Math.round((ud.pd ?? 0.42) * f * 25) / 25));
     ud.width = ud.pw;
-    buildTrayShape(held, held.__owner, ud.pw, ud.pd);
-    positionPerches(held);
+    buildTrayShape(HAND, HAND.__owner, ud.pw, ud.pd);
+    positionPerches(HAND);
     ud.fit = PANEL_FIT * (Math.min(ud.pw, ud.pd * (0.5 / 0.42)) / 0.5);
-    if (held.__ctx) fitRoomContents(held);
+    if (HAND.__ctx) fitRoomContents(HAND);
     return refreshUI();
   }
   if (ud.kind === 'robot') return say('Robots come in one size — they grow when they work.');
@@ -3550,13 +3634,14 @@ function resizeHeld(dir) {
   if (ud.kind === 'notebook') return say('Notebooks keep their size.');
   const sz = Math.min(3, Math.max(0.5, (ud.sz ?? 1) + dir * 0.25));
   ud.sz = sz === 1 ? undefined : sz;
-  held.scale.setScalar(sz);
+  HAND.scale.setScalar(sz);
   refreshUI();
 }
 function openHeldPanel() {
-  if (!held) return say('Hold the thing whose panel you want, then press ⚙.');
-  if (busy || mode !== 'world') return say('Wait for the work to finish first.');
-  const X = held;
+  const HAND = inHand();
+  if (!HAND) return say('Hold the thing whose panel you want, then press ⚙.');
+  if (mode === 'training') return say('Leave the thought bubble first.');
+  const X = HAND;
   if (X.userData.panel) return say('A panel has no panel of its own.');
   if (X.userData.main && X.userData.kind === 'notebook') {
     return say('Your own notebook is furniture — it has no panel.');
@@ -4296,11 +4381,11 @@ function findNestById(id) {
 function allNestsByGuid(guid) {
   return guid ? allNests.filter(n2 => nestAnswersTo(n2, guid) && inScene(n2)) : [];
 }
-function birdDeliver(bird) {
+function birdDeliver(bird, carried, fromClaw = false) {
   // a bird addressed to a THING: the robot's gift goes to the owner whole
   if (bird.__liveTarget || bird.userData.liveId) {
+    const gift = carried;
     const X = liveOwnerOf(bird);
-    const gift = held; held = null;
     if (!gift) return;
     if (!X) { putOnBench(gift, benchSpot()); return say('The thing that bird belongs to is gone.'); }
     gift.removeFromParent();
@@ -4313,9 +4398,10 @@ function birdDeliver(bird) {
       ?? findNestById(bird.__nestId);
   }
   if (!nest || !inScene(nest)) {
-    const thing = held; held = null;
-    // in a background world there is no hand to take it back into
-    if (thing && worldStack.length) { putOnBench(thing, benchSpot()); return; }
+    const thing = carried;
+    // in a background world, and in the robot's claw, there is no hand to take
+    // it back into: it goes down on the table instead
+    if (thing && (fromClaw || worldStack.length)) { putOnBench(thing, benchSpot()); return; }
     if (thing) takeIntoHand(thing);
     return say('Her nest is gone — she has nowhere to take it.');
   }
@@ -4326,8 +4412,8 @@ function birdDeliver(bird) {
   const nestWatched = nestRoot ? nestRoot.parent === scene : inScene(nest);
   const birdRoot = worldRootOf(bird);
   const birdWatched = birdRoot ? birdRoot.parent === scene : inScene(bird);
-  if (held && nestWatched && !birdWatched && runOuterSpeed !== Infinity) {
-    const gift = held; held = null;
+  if (carried && nestWatched && !birdWatched && runOuterSpeed !== Infinity) {
+    const gift = carried;
     const house = roomOf(bird);
     const from = (house ?? bird).getWorldPosition(new THREE.Vector3());
     if (house) from.y += 0.22;
@@ -4350,7 +4436,7 @@ function birdDeliver(bird) {
   clearUndo();                // deliveries change a pile no snapshot describes
   busy = true;
   sfx('chirp');
-  const thing = held; held = null;
+  const thing = carried;
   // copied nests: the bird copies herself and the gift, one clone per copy.
   // Only she returns; the clones deliver and fly away, never to be seen again.
   const others = allNestsByGuid(bird.userData.nestGuid).filter(n2 => n2 !== nest);
@@ -5015,18 +5101,50 @@ function eraseAt(cond, path) {
 }
 
 // Unhook a thing from wherever it currently lives.
+// Detaching is the one funnel every removal goes through, and while it runs
+// it is the only code that still knows where the thing WAS. So it writes that
+// down: __from is what "put it back" puts it back into. (Reading it afterwards
+// cannot work -- by then the hole's thing is already null.)
 function detach(thing) {
+  thing.__from = null;
   if (removeSubPad(thing)) return;          // it was riding on a pad
   const i = benchThings.indexOf(thing);
-  if (i >= 0) { benchThings.splice(i, 1); return; }
+  if (i >= 0) {
+    thing.__from = { kind: 'bench', x: thing.position.x, z: thing.position.z };
+    benchThings.splice(i, 1);
+    return;
+  }
   for (const n of allNests) {
     const pi = n.userData.pile.indexOf(thing);
     if (pi >= 0) { n.userData.pile.splice(pi, 1); restackNest(n); return; }
   }
-  for (const st of Object.values(stations)) if (st.occupant === thing) { st.occupant = null; return; }
+  for (const st of Object.values(stations)) if (st.occupant === thing) {
+    thing.__from = { kind: 'station', st };
+    st.occupant = null;
+    return;
+  }
   for (const st of allStands) if (st.occupant === thing) { st.occupant = null; return; }
-  const hole = holeContaining(thing);
-  if (hole) hole.thing = null;
+  const owner = holeOwnerOf(thing);
+  if (owner) {
+    thing.__from = { kind: 'hole', box: owner.box, hole: owner.hole };
+    owner.hole.thing = null;
+  }
+}
+// holeContaining answers WHICH hole; putting something back also needs to know
+// whose box that hole is, so that a box since vacuumed away is not a place to
+// put anything back into.
+function holeOwnerOf(thing) {
+  let found = null;
+  const walk = (node) => {
+    const hs = holesOf(node);
+    if (!hs || found) return;
+    for (const h of hs) {
+      if (h.thing === thing) { found = { box: node, hole: h }; return; }
+      walk(h.thing);
+    }
+  };
+  roots().forEach(walk);
+  return found;
 }
 // The bench takes things anywhere on its surface -- it is a work surface, not
 // an address.
@@ -5055,11 +5173,13 @@ function clearBenchSpot(thing, x, z) {
   }
   return { x, z };
 }
-function putOnBench(thing, at) {
+function putOnBench(thing, at, byUser = false) {
   // The table is the user's. A robot -- or a house running offstage -- that
   // needs to set something down uses a free work spot instead; robots can
-  // never reach your table.
-  if (offstage() || (busy && mode === 'replay')) {
+  // never reach your table. Which hand is doing the putting is now said
+  // outright: before the claw was split off, "a run is happening" WAS "the
+  // robot is doing it", and your own drops were swept on to its desk.
+  if (!byUser && (offstage() || (busy && mode === 'replay'))) {
     const spot = Object.values(stations).find(s2 => s2.kind === 'scratch' && !s2.occupant)
       ?? ensureScratchStation(scratchObjs.length, true);
     if (spot) return putOnStation(spot, thing);
@@ -5102,8 +5222,17 @@ function putInHole(hole, thing) {
   thing.quaternion.identity();
   const s = fitScale(thing, hole);
   thing.scale.setScalar(s);
-  // its name plaque is a label, not part of the thing: it stays legible
-  if (thing.__labelNode && s > 0.01) thing.__labelNode.scale.setScalar(1 / s);
+  // Its name plaque is a label, not part of the thing, so it resists the
+  // hole's shrinking -- but only as far as the hole is WIDE. Undoing the
+  // scale outright gave every plaque its full 0.3, and three of those over a
+  // row of 0.15 holes overlapped two deep: coplanar quads, so which one you
+  // were pointing at flickered as the pointer moved.
+  if (thing.__labelNode && s > 0.01) {
+    const room = (hole.w ?? 0.2) + 0.032;                 // the hole's pitch
+    const base = thing.__labelNode.geometry.parameters.width || 0.3;
+    // the width it ENDS UP with is base x s x scale, and that is what must fit
+    thing.__labelNode.scale.setScalar(Math.min(1, (room * 0.94) / base) / s);
+  }
   // A nest is a shallow ring with nothing under it: left at the pocket floor
   // it disappears into the shadow and the hole reads as empty. It sits on the
   // rim instead, where you can see it -- and see what lands on it.
@@ -5130,8 +5259,11 @@ function putInHole(hole, thing) {
   // there -- a pad floated up over a pocket ends up in the beam.
   if (thing.userData.kind === 'text') {
     thing.position.y += hole.pan ? 0.009 : 0.062;
-  } else if (['box', 'scale', 'notebook', 'room'].includes(thing.userData.kind)) {
-    // containers perch on the rim rather than sinking below it
+  } else if (['box', 'scale', 'notebook', 'room', 'sound'].includes(thing.userData.kind)) {
+    // Containers perch on the rim rather than sinking below it -- and so does
+    // a sound, which is a shallow box too. Sunk in the pocket its black baffle
+    // was indistinguishable from the shadow, so a hole holding a sound read as
+    // an empty hole.
     thing.position.y += hole.pan ? 0.009 : 0.05;
   }
   hole.thing = thing;
@@ -5470,6 +5602,14 @@ function standForPoint(p) {
 
 // ---------------------------------------------------------------- state
 let held = null, mode = 'world', program = [], busy = false;
+// What the ROBOT is carrying, which is not what you are carrying. The two are
+// separate nodes in the scene already -- its grip, and your handNode -- and
+// giving them separate names is the whole of what lets the workshop stay
+// usable while a robot is working behind the desk.
+let clawHeld = null;
+// The one place they blur: while you are TRAINING, you direct and the robot
+// performs, so the thing being typed on is in its claw and not in your hand.
+const inHand = () => (mode === 'training' ? clawHeld : held);
 let valueAtPickup = null, opAtPickup = '+', holesAtPickup = 0, textAtPickup = null;
 let condition = null;      // what it must be given before it will run
 let preTraining = null;    // world snapshot taken when the daydream began
@@ -6003,9 +6143,9 @@ function actionNew(kind) {
   enqueue(armTo(POSE.reach, JAW_OPEN, 0.6));
   enqueue(doNow(() => {
     const made = st.cubes.pop();
-    held = made;
+    clawHeld = made;
     setPick(made, { kind: 'thing', thing: made });
-    noteHeld();
+    noteHeld(made);          // the CLAW's, whatever your own hand is doing
     grip.attach(made);
     enqueueNext(graspSettle(made));
   }));
@@ -6090,12 +6230,12 @@ function actionTake(at, onNest) {
     }
     if (!obj) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
     detach(obj);
-    held = obj;
-    setPick(held, { kind: 'thing', thing: held });
-    noteHeld();
-    grip.attach(held);
+    clawHeld = obj;
+    setPick(clawHeld, { kind: 'thing', thing: clawHeld });
+    noteHeld(obj);           // the CLAW's, whatever your own hand is doing
+    grip.attach(clawHeld);
     // fetching from the raised platform is a long reach -- let it be seen
-    enqueueNext(graspSettle(held, at.c === 'in' ? 0.5 : 0.2));
+    enqueueNext(graspSettle(clawHeld, at.c === 'in' ? 0.5 : 0.2));
   }));
   enqueue(armTo(reach, JAW_CLOSED, 0.35));
   enqueue(armTo(POSE.carry, JAW_CLOSED, 0.6));
@@ -6114,7 +6254,7 @@ function actionPut(at, side, backTo) {
   enqueue(armTo(reach, JAW_CLOSED, 0.6));
   enqueue(armTo(reach, JAW_OPEN, 0.35));
   enqueue(doNow(() => {
-    const dropped = held; held = null;
+    const dropped = clawHeld; clawHeld = null;
     if (!dropped) return;
     const from = dropped.getWorldPosition(new THREE.Vector3());
     const fromQ = dropped.getWorldQuaternion(new THREE.Quaternion());
@@ -6146,7 +6286,7 @@ function actionPut(at, side, backTo) {
     if (at.path.length) {
       const hole = holeAt(at);
       if (!hole) return abort(`The robot expected ${holeName(at)} and there is no such hole.`);
-      if (hole.thing?.userData.kind === 'bird') { held = dropped; return birdDeliver(hole.thing); }
+      if (hole.thing?.userData.kind === 'bird') return birdDeliver(hole.thing, dropped, true);
       // trained on a bare value here, handed a NEST instead: combine with the
       // delivery sitting on top, exactly as dropping onto it by hand would --
       // the mirror of actionTake's own reach-through, read from the same
@@ -6163,7 +6303,7 @@ function actionPut(at, side, backTo) {
       else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.3, fromQ)); }
     } else {
       const st = stationOf(at.c);
-      if (st.occupant?.userData.kind === 'bird') { held = dropped; return birdDeliver(st.occupant); }
+      if (st.occupant?.userData.kind === 'bird') return birdDeliver(st.occupant, dropped, true);
       if (st.occupant) combine(st, dropped, false, from, side);
       else {
         putOnStation(st, dropped);
@@ -6249,9 +6389,9 @@ function actionCopy(at) {
 // reshaped, since hole width depends on the count. Shrinking splits the box
 // like an array: the excess holes fall away as a box of their own -- onto the
 // bench when you do it, onto a free work spot when the robot does.
-function resizeHeldBox(n) {
+function resizeHeldBox(n, claw = false) {
   n = Math.max(0, Math.min(MAX_HOLES, n));
-  const old = held;
+  const old = claw ? clawHeld : held;
   const oldHoles = old.userData.holes;
   if (n === oldHoles.length) return;
   // Occupied excess holes fall away as a box of their own; excess holes that
@@ -6284,7 +6424,7 @@ function resizeHeldBox(n) {
   nb.scale.copy(old.scale);
   parent.add(nb);
   parent.remove(old);
-  held = nb;
+  if (claw) clawHeld = nb; else held = nb;
   refreshUI();
 }
 
@@ -6384,11 +6524,17 @@ function padFaceSize(pad) {
   const asp = pad.userData.aspect ?? (0.26 / 0.34);
   return { w: 0.34 * sz, d: 0.34 * sz * asp };
 }
+// Flat enough to be paint and thick enough not to fight the field it is on.
+const SUB_FLAT = 0.07;               // x 0.045 of pad = about 3mm at full size
 function placeSubPad(parent, child) {
   const { w, d } = padFaceSize(parent);
   const at = child.userData.at || { u: 0, v: 0 };
-  const top = 0.0225 * (parent.userData.sz ?? 1);
-  child.position.set(at.u * w, top + 0.024, at.v * d);
+  // A pad grows in x and z; its THICKNESS never changes, so its top face is at
+  // 0.0225 however big it is. Scaling this with sz left a sprite floating a
+  // finger's width over a large field.
+  const top = 0.0225;
+  // it SITS on the field now rather than hovering a slab's height above it
+  child.position.set(at.u * w, top + 0.045 * SUB_FLAT * 0.75 + 0.002, at.v * d);
   child.quaternion.identity();
 }
 function layoutSubPads(parent) {
@@ -6406,8 +6552,12 @@ function addSubPad(parent, child, point) {
   (parent.__subs ??= []).push(child);
   child.__padParent = parent;
   parent.add(child);
-  // a sub-pad rides at three quarters, so a scene reads as scenery on a field
-  child.scale.setScalar(0.75);
+  // A sub-pad rides at three quarters, so a scene reads as scenery on a field
+  // -- and it lies FLAT. A pad on the table is a slab of paper you can pick
+  // up; a pad on another pad is a picture painted on it, and a slab standing
+  // proud of the field is no use as the ball in a game of Pong.
+  child.scale.set(0.75, SUB_FLAT, 0.75);
+  child.setSprite?.(true);
   placeSubPad(parent, child);
   setPick(child, { kind: 'thing', thing: child });
 }
@@ -6418,7 +6568,8 @@ function removeSubPad(child) {
   if (i >= 0) parent.__subs.splice(i, 1);
   child.__padParent = null;
   delete child.userData.at;
-  child.scale.setScalar(1);
+  child.scale.setScalar(1);          // off the field it is a slab again
+  child.setSprite?.(false);
   return true;
 }
 // The perch-then-sink merge that numbers use, shared by text drops: the
@@ -6824,9 +6975,17 @@ function resolve(ev) {
   // and the raycaster works off those
   scene.updateMatrixWorld();
   for (const h of ray.intersectObjects(pickables, true)) {
+    // three.js stopped skipping invisible objects years ago, so anything
+    // switched off is still SOLID to the ray. The way out of a house lives at
+    // the left of the floor with visible=false while you are on the open
+    // table, and it was quietly taking clicks and tooltips out there -- next
+    // to Marty, who reacted to a pointer that never reached him.
+    if (!visibleUp(h.object)) continue;
     // What you are carrying rides under the pointer (or sits in the claw), so
     // it would otherwise intercept every click meant for what is behind it.
     if (held && isDescendantOf(h.object, held)) continue;
+    // and what the ROBOT is carrying is its business, not yours
+    if (clawHeld && isDescendantOf(h.object, clawHeld)) continue;
     // things inside a room's miniature world belong to that world -- walk in
     // through the door to touch them. A PANEL has no door: its world is open
     // ground, so its things answer clicks directly.
@@ -6855,6 +7014,10 @@ function resolve(ev) {
     return { ...o.__pick, point: h.point.clone() };
   }
   return null;
+}
+function visibleUp(node) {
+  for (let p = node; p; p = p.parent) if (p.visible === false) return false;
+  return true;
 }
 function isDescendantOf(node, ancestor) {
   for (let p = node; p; p = p.parent) if (p === ancestor) return true;
@@ -6885,8 +7048,15 @@ function handleClick(target) {
   // back to back -- rather than being silently dropped as though nothing was
   // clicked. That silent drop is what made "click again to generalize
   // further" seem to stop working once erasing grew an animation.
+  if (condShow && target.kind === 'cond' && (rubyActive || dustyActive)) {
+    return sayAttn('That is another robot\u2019s thought, borrowed while the team takes turns \u2014 stop the run to change a thought.');
+  }
   const eraseContinuation = busy && target.kind === 'cond' && (rubyActive || dustyActive);
-  if ((busy && !eraseContinuation) || mode === 'replay') return;
+  if ((busy && !eraseContinuation) || mode === 'replay') {
+    const no = runRefusal(target);
+    if (no) { if (no !== true) sayAttn(no); return; }
+    // otherwise: your side of the workshop, and it stays yours
+  }
 
   if (target.kind === 'roomRoof' || target.kind === 'roomDoor') {
     const room = target.room;
@@ -6903,7 +7073,53 @@ function handleClick(target) {
       });
     }
   }
-  // The plates on a long pile are not things: they are the way through it.
+  // While a robot runs, WHERE you clicked decides whether the click lands.
+// Its own area is its desk, its work spots, the copier, its thought, its team
+// and whatever is in its claw; the rest of the table is yours. Returns null to
+// allow, a sentence to refuse with, or true to refuse in silence.
+function inRobotArea(node) {
+  if (!node) return false;
+  if (clawHeld && isDescendantOf(node, clawHeld)) return true;
+  for (const st of Object.values(stations)) {
+    if (st.kind === 'stack') continue;                 // the stacks are stock
+    if (st.occupant && isDescendantOf(node, st.occupant)) return true;
+  }
+  for (const st of allStands) {
+    if (st.occupant && isDescendantOf(node, st.occupant)) return true;
+  }
+  return false;
+}
+function runRefusal(target) {
+  // training is its own world and stays frozen: there is one hand there, and
+  // it is the robot's
+  if (mode === 'training') return true;
+  switch (target.kind) {
+    case 'botThing':
+      return 'That robot is busy while this one works \u2014 stop the run to give it something or teach it.';
+    case 'cond':
+    case 'miniCond':
+      return 'A thought cannot be changed mid-run \u2014 stop the robot first.';
+    case 'exitDoor':
+      return 'Not while a robot is working in here \u2014 stop it, or let it finish.';
+    case 'roomLever':
+      return 'One robot at a time \u2014 stop this one before setting another going.';
+    case 'station': {
+      const st = stations[target.id];
+      if (st && st.kind !== 'stack') {
+        return 'That is the robot\u2019s own area while it works \u2014 the table is yours.';
+      }
+      return null;                                     // the stacks give out as ever
+    }
+    case 'thing':
+    case 'hole':
+      return inRobotArea(target.thing ?? target.box)
+        ? 'The robot is working on that \u2014 wait, or stop it.'
+        : null;
+    default:
+      return null;
+  }
+}
+// The plates on a long pile are not things: they are the way through it.
   // They answer with a full hand too -- looking is not putting down.
   if (target.kind === 'pileScroll') {
     scrollPile(target.nest, target.dir);
@@ -6924,12 +7140,12 @@ function handleClick(target) {
     return giveToLiveBird(target.tray.__perchBird, owner);
   }
   if (target.kind === 'panelImport') {
-    if (busy || mode !== 'world') return say('Wait for the work to finish first.');
+    if (mode === 'training') return say('Leave the thought bubble first.');
     if (held) return say('Empty your hand first.');
     return pickMediaFor(target.tray.__owner);
   }
   if (target.kind === 'panelInfo') {
-    if (busy || mode !== 'world') return say('Wait for the work to finish first.');
+    if (mode === 'training') return say('Leave the thought bubble first.');
     if (held) return say('Empty your hand first — the notebook arrives in it.');
     const owner = target.tray.__owner;
     takeIntoHand(infoNotebookFor(owner));
@@ -7466,7 +7682,7 @@ function userClick(target) {
       if (target.thing.__liveTarget || target.thing.userData.liveId) {
         return giveToLiveBird(target.thing, liveOwnerOf(target.thing));
       }
-      return birdDeliver(target.thing);
+      { const gift = held; held = null; return birdDeliver(target.thing, gift); }
     }
     if (kind === 'nest') return say('Give it to the bird — deliveries go through her.');
     // clicking whatever sits on the copier while holding means "use the copier",
@@ -7494,7 +7710,7 @@ function userClick(target) {
 function directRobot(target) {
   const st = target.kind === 'station' ? stations[target.id] : null;
   if (st?.kind === 'stack') {
-    if (held) return say('It is already holding something.');
+    if (clawHeld) return say('It is already holding something.');
     if (st.id === 'minis') return say('It cannot make robots.');
     return go({ type: st.id === 'boxes' ? 'newBox' : st.id === 'scales' ? 'newScale'
               : st.id === 'texts' ? 'newText' : st.id === 'nests' ? 'newNest'
@@ -7506,7 +7722,7 @@ function directRobot(target) {
   // it walks over and sets it on the platform; empty-clawed, it takes the copy
   // from the tray, or failing that the original back off the platform.
   if (c === 'in' || c === 'out') {
-    if (held) {
+    if (clawHeld) {
       if (stations.copyIn.occupant) return say('Take the original off the platform first.');
       if (stations.copyOut.occupant) return say('The tray still has a copy in it.');
       return go({ type: 'put', at: { c: 'in', path: [] } });
@@ -7517,7 +7733,7 @@ function directRobot(target) {
     return go({ type: 'take', at: { c: prefer, path: [] } });
   }
   if (c) {
-    if (held) {
+    if (clawHeld) {
       if (st.occupant?.userData.kind === 'box') return say('Click one of its holes.');
       return go({ type: 'put', at: { c, path: [] } });
     }
@@ -7535,7 +7751,7 @@ function directRobot(target) {
         if (!a) return say('The robot can only touch what it was given and its own work area.');
         // the top delivery alone, or -- grabbing lower -- the nest itself
         const top = pn.userData.pile[pn.userData.pile.length - 1] === target.thing;
-        if (!held) return go({ type: 'take', at: { c: a.c, path: a.path, nest: top } });
+        if (!clawHeld) return go({ type: 'take', at: { c: a.c, path: a.path, nest: top } });
         if (!top) return say('Only the top of the pile can be reached — the rest are under it.');
         const side = target.point ? sideOf(target.thing, target.point) : 'R';
         return go({ type: 'put', at: { c: a.c, path: a.path, nest: true }, side });
@@ -7546,11 +7762,11 @@ function directRobot(target) {
       : addrOf(target.thing);
     if (!at) return say('The robot can only touch what it was given and its own work area.');
     // a click on whatever sits on the copier means "use the machine" here too
-    if (held && (at.c === 'in' || at.c === 'out') && !at.path.length) {
+    if (clawHeld && (at.c === 'in' || at.c === 'out') && !at.path.length) {
       return directRobot({ kind: 'station', id: 'copyIn' });
     }
-    // held box aimed at a box's contents means the box (see userClick)
-    if (held?.userData.kind === 'box' && target.kind === 'thing'
+    // clawHeld box aimed at a box's contents means the box (see userClick)
+    if (clawHeld?.userData.kind === 'box' && target.kind === 'thing'
         && target.thing.userData.kind !== 'box' && at.path.length) {
       const parent = thingAt({ c: at.c, path: at.path.slice(0, -1) });
       if (parent?.userData.kind === 'box') {
@@ -7558,7 +7774,7 @@ function directRobot(target) {
         return go({ type: 'put', at: { c: at.c, path: at.path.slice(0, -1) }, side });
       }
     }
-    if (held) {
+    if (clawHeld) {
       const side = target.kind === 'thing' && target.point
         ? sideOf(target.thing, target.point) : 'R';
       return go({ type: 'put', at, side });
@@ -7595,7 +7811,7 @@ let parkOnce = false;
 const PARK_NDC = { x: -0.5, y: -0.22 };
 const _pk = { dir: new THREE.Vector3(), right: new THREE.Vector3(), up: new THREE.Vector3() };
 function parkHand() {
-  if (!(handParked || parkOnce) || !held || mode !== 'world') return;
+  if (!(handParked || parkOnce) || !held) return;
   // Fixed in the CAMERA's frame rather than the world's. Parking it on the
   // working plane was the obvious thing and the wrong one: the clamp that
   // keeps a carried thing over the bench dragged it wherever the camera
@@ -7695,21 +7911,23 @@ function takeIntoHand(obj) {
 // read, and goes back to the hand when you are done.
 let reading = null;
 function toggleReading() {
+  const HAND = inHand();
   if (reading) {
     const r = reading; reading = null;
     r.node.scale.setScalar(r.scale);
-    if (r.node === held) { r.node.position.set(0, 0, 0); r.node.quaternion.identity(); }
+    if (r.node === HAND) { r.node.position.set(0, 0, 0); r.node.quaternion.identity(); }
     refreshUI();
     return;
   }
-  if (held?.userData.kind !== 'text') return say('Hold a pad to read it.');
-  reading = { node: held, scale: held.scale.x };
+  if (HAND?.userData.kind !== 'text') return say('Hold a pad to read it.');
+  reading = { node: HAND, scale: HAND.scale.x };
   refreshUI();
 }
 function placeReading() {
+  const HAND = inHand();
   if (!reading) return;
   const node = reading.node;
-  if (node !== held || !node.parent) { reading = null; return; }
+  if (node !== HAND || !node.parent) { reading = null; return; }
   const dir = new THREE.Vector3();
   camera.getWorldDirection(dir);
   const at = camera.position.clone().addScaledVector(dir, 0.62);
@@ -7734,7 +7952,7 @@ function placeReading() {
   node.scale.setScalar(1.5);
 }
 document.getElementById('held')
-  .addEventListener('click', () => { if (held || reading) toggleReading(); });
+  .addEventListener('click', () => { if (inHand() || reading) toggleReading(); });
 // Held up to read, ANY click puts it down again -- hunting for the one control
 // that dismisses it is not a thing anybody should have to learn.
 addEventListener('pointerdown', (e) => {
@@ -7847,7 +8065,7 @@ softKeys.addEventListener('focus', softReset);
 softKeys.addEventListener('blur', () => showSoftKeys(false));
 let softOn = false;
 function showSoftKeys(on) {
-  softOn = on && !!held;
+  softOn = on && !!inHand();
   const btn = document.getElementById('heldKeys');
   if (btn) btn.classList.toggle('on', softOn);
   if (softOn) { softReset(); softKeys.focus({ preventScroll: true }); }
@@ -7874,19 +8092,53 @@ function showSoftKeys(on) {
     e.stopPropagation();
     openHeldPanel();
   });
+  const back = document.getElementById('heldBack');
+  back.addEventListener('pointerdown', (e) => e.preventDefault());
+  back.addEventListener('click', (e) => { e.stopPropagation(); putBackHeld(); });
   for (const [id, dir] of [['heldPlus', 1], ['heldMinus', -1]]) {
     const b = document.getElementById(id);
     b.addEventListener('pointerdown', (e) => e.preventDefault());
     b.addEventListener('click', (e) => { e.stopPropagation(); resizeHeld(dir); });
   }
 }
-function noteHeld() {
+// Is the place it came from still free? A hole somebody else has filled, or
+// a desk now occupied, is not somewhere it can go back to -- and saying so is
+// better than putting it back on top of whatever arrived meanwhile.
+function backSpotFree(from) {
+  if (!from) return false;
+  if (from.kind === 'bench') return true;
+  if (from.kind === 'hole') return !!from.box.parent && !from.hole.thing;
+  if (from.kind === 'station') return !from.st.occupant;
+  return false;
+}
+function putBackHeld() {
+  if (!held) return say('Your hand is empty.');
+  const from = held.__from;
+  if (!from) return say('It did not come from anywhere \u2014 put it down where you like.');
+  if (!backSpotFree(from)) {
+    return sayAttn(from.kind === 'hole'
+      ? 'That hole is not empty any more \u2014 something else is in it.'
+      : 'Where it came from is taken now.');
+  }
+  pushUndo();
+  const t = held; held = null;
+  const world = t.getWorldPosition(new THREE.Vector3());
+  const q = t.getWorldQuaternion(new THREE.Quaternion());
+  if (from.kind === 'bench') putOnBench(t, { x: from.x, z: from.z }, true);
+  else if (from.kind === 'hole') putInHole(from.hole, t);
+  else putOnStation(from.st, t);
+  enqueueNext(settleInto(t, world, 0.3, q));
+  sfx('drop');
+  say('Back where it was.');
+  refreshUI();
+}
+function noteHeld(t = inHand()) {
   heldYaw = 0; heldPitch = 0;          // whatever was turned before, this is new
-  if (held) delete held.__faceBuf;     // typing on a die starts a fresh count
-  valueAtPickup = held?.userData.value ?? null;
-  opAtPickup = held?.userData.op ?? '+';
-  holesAtPickup = held?.userData.holes?.length ?? 0;
-  textAtPickup = held?.userData.text ?? null;
+  if (t) delete t.__faceBuf;           // typing on a die starts a fresh count
+  valueAtPickup = t?.userData.value ?? null;
+  opAtPickup = t?.userData.op ?? '+';
+  holesAtPickup = t?.userData.holes?.length ?? 0;
+  textAtPickup = t?.userData.text ?? null;
 }
 
 // --- the user acting directly (no robot involved) --------------------------
@@ -7947,7 +8199,7 @@ function userPutOnBench(at) {
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
   sfx('drop');
-  putOnBench(dropped, at);
+  putOnBench(dropped, at, true);
   enqueueNext(settleInto(dropped, from));
   if (dropped.userData.kind === 'nest' && dropped.userData.hasEgg) {
     hatching.push({ nest: dropped, t: 0 });
@@ -8299,16 +8551,16 @@ function go(step) {
   pushUndo();
   busy = true;
   // typing is recorded as its own step, just before whatever it applies to
-  if (step.type === 'put' && held && held.userData.kind === 'number') {
-    const v = held.userData.value, o = held.userData.op;
+  if (step.type === 'put' && clawHeld && clawHeld.userData.kind === 'number') {
+    const v = clawHeld.userData.value, o = clawHeld.userData.op;
     // Typing digits fixes a value; typing only an operation must NOT, or a
     // robot shown "take 30, make it minus" would remember "make it -30" and
     // be useless on any other amount. The operation alone is a step of its own.
     if (!ratEq(v, valueAtPickup)) record({ type: 'setValue', value: v, op: o });
     else if (o !== opAtPickup) record({ type: 'setOp', op: o });
   }
-  if (step.type === 'put' && held && held.userData.kind === 'box') {
-    const n = held.userData.holes.length;
+  if (step.type === 'put' && clawHeld && clawHeld.userData.kind === 'box') {
+    const n = clawHeld.userData.holes.length;
     if (n !== holesAtPickup) record({ type: 'setHoles', n });
   }
   // Writing on a pad is a step too -- without it a robot could fetch a blank
@@ -8320,9 +8572,9 @@ function go(step) {
   // robot must remember what you DID, not what it happened to leave behind.)
   // Anything that is not a pure addition -- backspacing, replacing -- is still
   // remembered as the text it ended up with.
-  if (step.type === 'put' && held && held.userData.kind === 'text'
-      && (held.userData.text ?? '') !== (textAtPickup ?? '')) {
-    const was = textAtPickup ?? '', now = held.userData.text ?? '';
+  if (step.type === 'put' && clawHeld && clawHeld.userData.kind === 'text'
+      && (clawHeld.userData.text ?? '') !== (textAtPickup ?? '')) {
+    const was = textAtPickup ?? '', now = clawHeld.userData.text ?? '';
     if (now.startsWith(was)) record({ type: 'setText', add: now.slice(was.length) });
     else record({ type: 'setText', text: now });
   }
@@ -8343,31 +8595,31 @@ function runStep(step) {
   else if (step.type === 'put') actionPut(step.at, step.side);
   else if (step.type === 'vacuum') actionVacuum(step.at);
   else if (step.type === 'setHoles') {
-    enqueue({ dur: 0.3, start() { if (held?.userData.kind === 'box') resizeHeldBox(step.n); } });
+    enqueue({ dur: 0.3, start() { if (clawHeld?.userData.kind === 'box') resizeHeldBox(step.n, true); } });
   } else if (step.type === 'setOp') {
     enqueue({
       dur: 0.35,
-      start() { if (held?.setOp) { held.setOp(step.op); flash(held.getWorldPosition(new THREE.Vector3())); } },
-      update(t) { if (held) held.scale.setScalar(1 + 0.2 * Math.sin(Math.PI * t)); },
-      end() { if (held) held.scale.setScalar(1); refreshUI(); },
+      start() { if (clawHeld?.setOp) { clawHeld.setOp(step.op); flash(clawHeld.getWorldPosition(new THREE.Vector3())); } },
+      update(t) { if (clawHeld) clawHeld.scale.setScalar(1 + 0.2 * Math.sin(Math.PI * t)); },
+      end() { if (clawHeld) clawHeld.scale.setScalar(1); refreshUI(); },
     });
   } else if (step.type === 'setText') {
     enqueue({
       dur: 0.35,
       start() {
-        if (!held?.setText) return;
-        held.setText(step.add != null ? (held.userData.text ?? '') + step.add : step.text);
-        flash(held.getWorldPosition(new THREE.Vector3()));
+        if (!clawHeld?.setText) return;
+        clawHeld.setText(step.add != null ? (clawHeld.userData.text ?? '') + step.add : step.text);
+        flash(clawHeld.getWorldPosition(new THREE.Vector3()));
       },
-      update(t) { if (held) held.scale.setScalar(1 + 0.15 * Math.sin(Math.PI * t)); },
-      end() { if (held) held.scale.setScalar(1); refreshUI(); },
+      update(t) { if (clawHeld) clawHeld.scale.setScalar(1 + 0.15 * Math.sin(Math.PI * t)); },
+      end() { if (clawHeld) clawHeld.scale.setScalar(1); refreshUI(); },
     });
   } else if (step.type === 'setValue') {
     enqueue({
       dur: 0.4,
-      start() { if (held) { held.setValue(step.value, step.op); flash(held.getWorldPosition(new THREE.Vector3())); } },
-      update(t) { if (held) held.scale.setScalar(1 + 0.26 * Math.sin(Math.PI * t)); },
-      end() { if (held) held.scale.setScalar(1); refreshUI(); },
+      start() { if (clawHeld) { clawHeld.setValue(step.value, step.op); flash(clawHeld.getWorldPosition(new THREE.Vector3())); } },
+      update(t) { if (clawHeld) clawHeld.scale.setScalar(1 + 0.26 * Math.sin(Math.PI * t)); },
+      end() { if (clawHeld) clawHeld.scale.setScalar(1); refreshUI(); },
     });
   }
 }
@@ -8531,12 +8783,23 @@ function tiltPadsForReading(root) {
     if (o.userData?.kind === 'text') o.rotation.x = -1.15;
   });
 }
+// While a team takes turns, the bubble over the floor belongs to whoever is
+// standing there -- not for ever to the leader. condShow is that borrowed
+// thought; it is null everywhere else, and while it is set the bubble is a
+// read-only view (Ruby and Dusty edit the LEADER's thought, and would
+// otherwise write a follower's condition into the leader).
+let condShow = null;
+function showThoughtOf(bot) {
+  condShow = bot && bot !== activeBot ? bot.condition : null;
+  rebuildCondition();
+}
 function rebuildCondition() {
   clearFlags();      // the marks live on nodes about to be destroyed
   if (condDisplay) { condDisplay.removeFromParent(); condDisplay = null; }
-  if (!condition) { refreshUI(); return; }
+  const showing = condShow ?? condition;
+  if (!showing) { refreshUI(); return; }
   const marks = [];
-  const inner = buildCondNode(condition, [], marks);
+  const inner = buildCondNode(showing, [], marks);
   tiltPadsForReading(inner);
   ghostify(inner);
   // picks are assigned after a clean sweep, so number/hole picks from the
@@ -9279,6 +9542,7 @@ function clearWorld() {
   // must never sweep the user's table while it clears its own domain.
   if (!offstage()) {
     if (held) { held.removeFromParent(); held = null; }
+    if (clawHeld) { clawHeld.removeFromParent(); clawHeld = null; }
     benchThings.slice().forEach(t => t.removeFromParent());
     benchThings.length = 0;
     hatching.length = 0;
@@ -9414,6 +9678,7 @@ function restoreWorld(snap) {
   dropQueue();
   // removeFromParent, not scene.remove: while held its parent is the claw
   if (held) { held.removeFromParent(); held = null; }
+  if (clawHeld) { clawHeld.removeFromParent(); clawHeld = null; }
   benchThings.forEach(t => t.removeFromParent());
   benchThings.length = 0;
   (snap.bench || []).forEach(b => {
@@ -9552,6 +9817,7 @@ function resetWorld() {
   }
   // removeFromParent, not scene.remove: while held its parent is the claw
   if (held) { held.removeFromParent(); held = null; }
+  if (clawHeld) { clawHeld.removeFromParent(); clawHeld = null; }
   parkRobot();
   dropQueue();
   refreshUI();
@@ -9615,9 +9881,15 @@ function nextIteration() {
   const given = specOf(stations.stand.occupant);
   const members = [activeBot, ...activeBot.team];
   const states = members.map(m => matchState(m.condition, given));
-  const member = members[states.indexOf('yes')];
+  // Tried IN ORDER, and a sleeper is not stepped around: the first member that
+  // dozes stops the whole team until it wakes.
+  let pick = -1;
+  for (let i = 0; i < states.length; i++) {
+    if (states[i] === 'yes') { pick = i; break; }
+    if (states[i] === 'wait') return enterWaiting();
+  }
+  const member = pick >= 0 ? members[pick] : null;
   if (!member) {
-    if (states.includes('wait')) return enterWaiting();
     if (stations.stand.occupant && liveMismatch(members, stations.stand.occupant)) {
       return enterWaiting();
     }
@@ -9630,32 +9902,75 @@ function nextIteration() {
         ? `Ran ${runCount}× — then swept its own box away: finished, for good.`
         : 'It swept its own box away — finished.');
     }
-    // Only a lone robot has red parts to show: for a team nothing is flagged,
-    // so pointing at red parts that are not there would be nonsense.
     const alone = members.length === 1;
-    if (alone) flagMismatch(mismatchPaths(condition, given));
-    finishRun();
-    return sayAttn(alone
-      ? (runCount
-        ? `Ran ${runCount}× — stopped: the red parts of its thought no longer match. Wake Ruby and click one to loosen it, or Dusty to take it away.`
-        : 'Nothing recognises what it was given — wake Ruby and click a red part of its thought to loosen it, or Dusty to take it away.')
-      : (runCount
-        ? `Ran ${runCount}× — stopped: no robot on the team recognises the box any more.`
-        : 'No robot on the team recognises what it was given.'));
+    // The leader's thought is the one you can reach, so it is the one that
+    // ends up marked -- for a team as much as for a lone robot. Leaving a
+    // team unmarked meant a stop nobody could act on.
+    const done = () => {
+      finishRun();
+      flagMismatch(mismatchPaths(condition, given));
+      sayAttn(alone
+        ? (runCount
+          ? `Ran ${runCount}× — stopped: the red parts of its thought no longer match. Wake Ruby and click one to loosen it, or Dusty to take it away.`
+          : 'Nothing recognises what it was given — wake Ruby and click a red part of its thought to loosen it, or Dusty to take it away.')
+        : (runCount
+          ? `Ran ${runCount}× — stopped: every robot on the team looked, and none of them recognises the box. The leader’s thought is back, with what does not fit in red.`
+          : 'Every robot on the team looked, and none of them recognises what it was given. The leader’s thought is back, with what does not fit in red.'));
+    };
+    // watched failing, one after another, before it says so
+    if (!alone && !offstage() && speed !== Infinity) {
+      showTriedAndFailed(members, states, -1, given);
+      enqueue({ __visual: true, dur: 0, end: done });
+      return;
+    }
+    return done();
   }
   if (runCount >= maxIter) {
     return finishRun(`Stopped after ${maxIter} rounds — the “Rounds” limit, not its condition.`);
   }
   runCount++;
-  teamView = states.indexOf('yes');      // the panel follows whoever is running
-  renderProgram();
-  takeTheFloor(member);                  // and so does the floor
+  showTriedAndFailed(members, states, pick, given);
+  takeTheFloor(member);                  // the floor follows whoever is running
+  // queued, not called: the panel must not jump to the winner while the
+  // robots in front of it are still being seen to fail
+  enqueue({
+    __visual: true,
+    dur: 0,
+    end() { teamView = pick; renderProgram(); showThoughtOf(member); },
+  });
   runTrained = member.trainedOn;         // what THIS member was shown, to read its steps by
   member.program.forEach((step, i) => {
     enqueue(doNow(() => highlight(i)));
     runStep(step);
   });
   enqueue(pause(0.25), doNow(nextIteration));
+}
+// Each robot in front of the winner steps up, shows why it cannot help, and
+// goes to the back. Offstage -- inside a closed house, or at Instant -- there
+// is nobody to watch, so nothing is queued at all.
+function showTriedAndFailed(members, states, upTo, given) {
+  if (offstage() || speed === Infinity) return;
+  const last = upTo < 0 ? members.length : upTo;
+  for (let i = 0; i < last; i++) {
+    const m = members[i];
+    takeTheFloor(m);
+    enqueue({
+      __visual: true,
+      dur: 0.34,
+      start() {
+        teamView = i;
+        renderProgram();
+        showThoughtOf(m);
+        flagMismatch(mismatchPaths(m.condition, given));
+        say(`${m.name ? `\u201c${m.name}\u201d` : `Robot ${i + 1}`} looks, and it is not what it is waiting for.`);
+      },
+      update(t) {
+        // a shake of the head: no
+        if (m.node) m.node.rotation.y = 0.13 * Math.sin(t * Math.PI * 5);
+      },
+      end() { if (m.node) m.node.rotation.y = 0; clearFlags(); },
+    });
+  }
 }
 // A robot that has swept its own box away is done, and so is the house it was
 // working in: an empty house with nobody to work for is dead, and dead houses
@@ -9733,8 +10048,8 @@ function benchSpot() {
            z: (BENCH.z0 + BENCH.z1) / 2 + (((i * 7) % 3) - 1) * 0.16 };
 }
 function stowHeld() {
-  if (!held) return;
-  const t = held; held = null;
+  if (!clawHeld) return;
+  const t = clawHeld; clawHeld = null;
   const from = t.getWorldPosition(new THREE.Vector3());
   const fromQ = t.getWorldQuaternion(new THREE.Quaternion());
   const stand = stations.stand;
@@ -9745,6 +10060,7 @@ function stowHeld() {
 function finishRun(msg) {
   highlight(-1);
   mode = 'world';
+  condShow = null;          // the bubble belongs to the leader again
   stowHeld();
   if (activeBot && bodyBot !== activeBot) {
     restoreLeaderBody(activeBot);
@@ -9755,6 +10071,7 @@ function finishRun(msg) {
   // stops; loosen a red part or raise Rounds and it can go again. It returns
   // to the table only when the robot itself leaves the bench.
   parkRobot();
+  rebuildCondition();       // and shows the leader's own thought
   renderProgram();          // back to the lead robot's own list
   if (msg) sayAttn(msg);    // how a run ended replaces whatever stood there
   refreshUI();
@@ -10044,7 +10361,7 @@ function refreshUI() {
   $('undoBtn').disabled = running || busy || !undoStack.length || undoStack[undoStack.length - 1].mode !== mode;
   $('dustyBtn').textContent = dustyActive ? 'Dusty: awake' : 'Dusty: asleep';
   $('dustyBtn').classList.toggle('think', dustyActive);
-  $('dustyBtn').disabled = running || busy || !dusty;
+  $('dustyBtn').disabled = !dusty || (busy && mode === 'training');
   if ($('growBtn')) {
     $('growBtn').textContent = resizeMode ? 'Table: reshaping' : 'Reshape table';
     $('growBtn').classList.toggle('think', resizeMode);
@@ -10053,51 +10370,64 @@ function refreshUI() {
   if ($('rubyBtn')) {
     $('rubyBtn').textContent = rubyActive ? 'Ruby: awake' : 'Ruby: asleep';
     $('rubyBtn').classList.toggle('think', rubyActive);
-    $('rubyBtn').disabled = running || busy;
+    $('rubyBtn').disabled = busy && mode === 'training';
   }
 
   sweepOrphanTrays();
-  const showHeld = !!held && mode !== 'replay';
+  // Whichever hand is in play: yours in the workshop and during a run --
+  // where carrying something about while the robot works is now allowed --
+  // and the claw while you are training, since that is what you are typing on.
+  const HAND = inHand();
+  const showHeld = !!HAND;
   $('held').classList.toggle('on', showHeld);
   if (!showHeld && softOn) showSoftKeys(false);   // nothing to type on any more
-  if (held) {
-    const kind = held.userData.kind;
+  if (HAND) {
+    const kind = HAND.userData.kind;
     $('heldVal').textContent = kind === 'number'
-      ? (held.userData.op === '+' ? ratShort(held.userData.value)
-         : (OP_READS[held.userData.op] ?? ((n) => n))(ratShort(held.userData.value)))
-      : kind === 'robot' ? (held.__bot.name ? `“${held.__bot.name}” the robot`
-          : held.__bot.program.length ? 'a trained robot' : 'a robot')
-      : kind === 'text' ? (held.userData.text
-          ? `a pad: “${held.userData.text.length > 24 ? held.userData.text.slice(0, 24) + '…' : held.userData.text}”`
+      ? (HAND.userData.op === '+' ? ratShort(HAND.userData.value)
+         : (OP_READS[HAND.userData.op] ?? ((n) => n))(ratShort(HAND.userData.value)))
+      : kind === 'robot' ? (HAND.__bot.name ? `“${HAND.__bot.name}” the robot`
+          : HAND.__bot.program.length ? 'a trained robot' : 'a robot')
+      : kind === 'text' ? (HAND.userData.text
+          ? `a pad: “${HAND.userData.text.length > 24 ? HAND.userData.text.slice(0, 24) + '…' : HAND.userData.text}”`
           : 'a blank pad')
-      : kind === 'room' ? ((held.__ctx || held.userData.world) ? 'a room with things inside' : 'an empty room')
+      : kind === 'room' ? ((HAND.__ctx || HAND.userData.world) ? 'a room with things inside' : 'an empty room')
       : kind === 'notebook' ? 'a notebook'
       : kind === 'scale' ? 'a scale'
-      : kind === 'nest' ? (held.userData.pile.length
-          ? `a nest with ${held.userData.pile.length} deliver${held.userData.pile.length > 1 ? 'ies' : 'y'}`
-          : held.userData.label ? `the nest “${held.userData.label}”`
-          : held.userData.hasEgg ? 'a nest with an egg' : 'a nest')
-      : kind === 'bird' ? (held.userData.label ? `the bird “${held.userData.label}”` : 'a bird')
-      : kind === 'die' ? `a die (1 to ${held.userData.faces})`
-      : kind === 'sound' ? (soundEmpty(held.userData.sound) ? 'a silent sound'
-          : `a sound of ${soundSeconds(held.userData.sound).toFixed(1)}s`)
-      : `${held.userData.label ? `“${held.userData.label}” — ` : ''}a box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}`;
+      : kind === 'nest' ? (HAND.userData.pile.length
+          ? `a nest with ${HAND.userData.pile.length} deliver${HAND.userData.pile.length > 1 ? 'ies' : 'y'}`
+          : HAND.userData.label ? `the nest “${HAND.userData.label}”`
+          : HAND.userData.hasEgg ? 'a nest with an egg' : 'a nest')
+      : kind === 'bird' ? (HAND.userData.label ? `the bird “${HAND.userData.label}”` : 'a bird')
+      : kind === 'die' ? `a die (1 to ${HAND.userData.faces})`
+      : kind === 'sound' ? (soundEmpty(HAND.userData.sound) ? 'a silent sound'
+          : `a sound of ${soundSeconds(HAND.userData.sound).toFixed(1)}s`)
+      : `${HAND.userData.label ? `“${HAND.userData.label}” — ` : ''}a box with ${HAND.userData.holes.length} hole${HAND.userData.holes.length > 1 ? 's' : ''}`;
+    const backBtn = $('heldBack');
+    if (backBtn) {
+      const ok = backSpotFree(HAND.__from);
+      backBtn.disabled = !ok;
+      backBtn.title = !HAND.__from
+        ? 'It came from a stack, so there is nowhere to put it back'
+        : ok ? 'Put it back exactly where you picked it up. Ctrl+B does the same.'
+             : 'Where it came from is taken now';
+    }
     // Once an operation is chosen, saying "say what it does" explains a thing
     // the number is already showing. What is worth knowing then is what ELSE
     // it could be -- and that the arrows turn it over.
     const otherOps = () => ['+', '*', '/', '^']
-      .filter(o => o !== held.userData.op)
-      .join(' ') + (held.userData.op === 'mod' ? '' : ' mod')
-      + (held.userData.op === 'set' ? '' : ' set');
+      .filter(o => o !== HAND.userData.op)
+      .join(' ') + (HAND.userData.op === 'mod' ? '' : ' mod')
+      + (HAND.userData.op === 'set' ? '' : ' set');
     $('heldTip').textContent = kind === 'number'
-      ? (held.userData.op === '+'
+      ? (HAND.userData.op === '+'
           ? 'digits set it, − negates; * / ^ or the words “mod” and “set” say what it does; arrows turn it'
           : `digits set it, − negates; ${otherOps()} change what it does; arrows turn it`)
       : kind === 'robot' ? 'put it on the table, or on another robot'
-      : kind === 'box' ? (held.userData.holes.length <= 9
+      : kind === 'box' ? (HAND.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
           : 'letters name it; drop it on a box to join')
-      : kind === 'room' ? (held.userData.panel
+      : kind === 'room' ? (HAND.userData.panel
           ? 'set it down anywhere on the bench — the knob folds it away'
           : 'set it down; drop a robot in, then things for it to work on')
       : kind === 'notebook' ? 'set it down and drop things on its pages'
@@ -10110,10 +10440,10 @@ function refreshUI() {
       : 'put it down on the bench';
   }
   if (hintTimer || attnHeld) return;
-  const holdingBot = held?.userData.kind === 'robot';
+  const holdingBot = HAND?.userData.kind === 'robot';
   $('hint').textContent =
     mode === 'replay' ? 'Watching it repeat what it learned…' :
-    training ? (held ? 'Tell it where to put that — its own things, or the copier.'
+    training ? (HAND ? 'Tell it where to put that — its own things, or the copier.'
                      : 'Direct it on its own things, a stack for a new one, or the copier. Every move is remembered.') :
     holdingBot ? 'Set the little robot on the table, or drop it on another robot to team up.' :
     held ? (activeBot ? (program.length ? 'Click the robot to give it this to work on, or the bench to put it down.'
@@ -10281,10 +10611,11 @@ const QUARTER = Math.PI / 2;
 // can be REASONED about: which way round it is, and how far it may go.
 let heldYaw = 0, heldPitch = 0;
 function applyHeldTurn() {
-  if (!held) return;
+  const HAND = inHand();
+  if (!HAND) return;
   // Y outermost, so left and right always spin about the upright axis however
   // far it happens to be tipped
-  held.quaternion.setFromEuler(
+  HAND.quaternion.setFromEuler(
     new THREE.Euler(heldPitch * QUARTER, heldYaw * QUARTER, 0, 'YXZ'));
   uprightHeld();
 }
@@ -10303,13 +10634,14 @@ const _uv = {
   axis: new THREE.Vector3(),
 };
 function uprightHeld() {
-  if (!held || held.userData.kind !== 'number') return;
-  held.updateMatrixWorld(true);
+  const HAND = inHand();
+  if (!HAND || HAND.userData.kind !== 'number') return;
+  HAND.updateMatrixWorld(true);
   camera.getWorldDirection(_uv.view);                       // away from the eye
   _uv.camUp.set(0, 1, 0).applyQuaternion(camera.quaternion).normalize();
 
   let face = null, facing = -2;
-  for (const ch of held.children) {
+  for (const ch of HAND.children) {
     if (ch.geometry?.type !== 'PlaneGeometry') continue;    // the panes, not the shell
     ch.getWorldQuaternion(_uv.q);
     _uv.n.set(0, 0, 1).applyQuaternion(_uv.q);
@@ -10335,9 +10667,9 @@ function uprightHeld() {
 
   // the roll is about a line in the WORLD; premultiplying works in the
   // parent's frame, so the axis is carried into it first
-  held.parent.getWorldQuaternion(_uv.pq);
+  HAND.parent.getWorldQuaternion(_uv.pq);
   _uv.axis.copy(_uv.view).applyQuaternion(_uv.pq.invert()).normalize();
-  held.quaternion.premultiply(
+  HAND.quaternion.premultiply(
     new THREE.Quaternion().setFromAxisAngle(_uv.axis, best * QUARTER));
 }
 // Spinning left and right is good for anything. TIPPING is not: a nest with a
@@ -10346,9 +10678,10 @@ function uprightHeld() {
 // face repeats the value -- so only a number tips, and only by a quarter each
 // way, which reaches the top and the bottom and never lands upside down.
 function turnHeld(kind, dir) {
-  if (!held) return;
+  const HAND = inHand();
+  if (!HAND) return;
   if (kind === 'pitch') {
-    if (held.userData.kind !== 'number') {
+    if (HAND.userData.kind !== 'number') {
       return say('Tipping only makes sense for a number, every face of which '
         + 'says the value another way. Turn this one left and right instead.');
     }
@@ -10360,7 +10693,7 @@ function turnHeld(kind, dir) {
   }
   applyHeldTurn();
   sfx('type');
-  say(held.userData.kind === 'number'
+  say(HAND.userData.kind === 'number'
     ? 'Turning it — the faces say the same number other ways: words, a mixed '
       + 'fraction, scientific notation, exact decimal.'
     : 'Turning it round.');
@@ -10429,18 +10762,31 @@ addEventListener('keydown', (e) => {
       }
     }
   }
+  // Ctrl+B puts what you are holding back where you picked it up
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+    e.preventDefault();
+    if (mode !== 'replay') putBackHeld();
+    return;
+  }
   // Ctrl+P opens the held thing's panel (and never the print dialog)
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
     e.preventDefault();
     if (mode !== 'replay') openHeldPanel();
     return;
   }
-  if (!held || busy || mode === 'replay') return;
+  // From here on, everything acts on WHAT IS IN A HAND -- yours in the
+  // workshop, the robot's claw while you are training it, since there you
+  // direct and it performs. During a run this is your own hand, and typing on
+  // what you are carrying is one of the things you may now do while a robot
+  // works behind the desk.
+  const H = inHand();
+  if (!H) return;
+  if (busy && mode === 'training') return;
   // the arrows turn it, whatever it is, before any typing rule sees the key
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight'
       || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
     e.preventDefault();
-    // Ctrl+up/down resizes whatever is held -- the card's + and − buttons
+    // Ctrl+up/down resizes whatever is H -- the card's + and − buttons
     // are the same thing for fingers
     if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       resizeHeld(e.key === 'ArrowUp' ? 1 : -1);
@@ -10462,18 +10808,18 @@ addEventListener('keydown', (e) => {
       e.preventDefault(); return true;
     }
     if (k2 === 'v') {
-      // an IMAGE on the clipboard covers a held pad; text is appended as ever
+      // an IMAGE on the clipboard covers a H pad; text is appended as ever
       const pasteText = () => navigator.clipboard.readText().then(txt => {
         if (txt) { pushUndo(); set((get() || '') + txt.replace(/\r/g, '')); refreshUI(); }
       }).catch(() => {});
-      if (held?.userData.kind === 'text' && navigator.clipboard?.read) {
+      if (H?.userData.kind === 'text' && navigator.clipboard?.read) {
         navigator.clipboard.read().then(items => {
           for (const it of items) {
             const type = it.types.find(t2 => t2.startsWith('image/'));
             if (type) {
               it.getType(type).then(blob => {
                 const fr = new FileReader();
-                fr.onload = () => { held.setImage(fr.result); say('The picture covers the pad.'); refreshUI(); };
+                fr.onload = () => { H.setImage(fr.result); say('The picture covers the pad.'); refreshUI(); };
                 fr.readAsDataURL(blob);
               });
               return;
@@ -10486,9 +10832,9 @@ addEventListener('keydown', (e) => {
     }
     return false;
   };
-  if (held.userData.kind === 'robot') {
+  if (H.userData.kind === 'robot') {
     // typing names the robot in your hand; the name shows on its chest
-    const bot = held.__bot;
+    const bot = H.__bot;
     if (clip(() => bot.name, t2 => { bot.name = t2 || null; paintBotName(bot); })) return;
     if (e.key === 'Backspace') bot.name = (bot.name || '').slice(0, -1);
     else if (labelKey) bot.name = (bot.name || '') + e.key;
@@ -10501,53 +10847,59 @@ addEventListener('keydown', (e) => {
     return;
   }
   const editLabel = () => {
-    if (clip(() => held.userData.label, t2 => setThingLabel(held, t2))) return;
+    if (clip(() => H.userData.label, t2 => setThingLabel(H, t2))) return;
     if (e.key === 'Backspace') {
-      if (held.userData.label) { pushUndo(); setThingLabel(held, held.userData.label.slice(0, -1)); }
+      if (H.userData.label) { pushUndo(); setThingLabel(H, H.userData.label.slice(0, -1)); }
       e.preventDefault(); refreshUI(); return;
     }
-    if (labelKey) { pushUndo(); setThingLabel(held, (held.userData.label || '') + e.key); refreshUI(); }
+    if (labelKey) { pushUndo(); setThingLabel(H, (H.userData.label || '') + e.key); refreshUI(); }
   };
-  if (held.userData.kind === 'text') {
-    if (clip(() => held.userData.text, t2 => held.setText(t2))) return;
-    if (e.key === 'Backspace') { pushUndo(); held.setText(held.userData.text.slice(0, -1)); e.preventDefault(); }
-    else if (e.key === 'Enter') { pushUndo(); held.setText(held.userData.text + '\n'); }
-    else if (labelKey) { pushUndo(); held.setText(held.userData.text + e.key); sfx('type'); }
+  if (H.userData.kind === 'text') {
+    if (clip(() => H.userData.text, t2 => H.setText(t2))) return;
+    if (e.key === 'Backspace') { pushUndo(); H.setText(H.userData.text.slice(0, -1)); e.preventDefault(); }
+    else if (e.key === 'Enter') { pushUndo(); H.setText(H.userData.text + '\n'); }
+    else if (labelKey) { pushUndo(); H.setText(H.userData.text + e.key); sfx('type'); }
     refreshUI();
     return;
   }
-  if (held.userData.kind === 'die') {
+  if (H.userData.kind === 'die') {
     if (/^[0-9]$/.test(e.key)) {
       pushUndo();
-      held.__faceBuf = ((held.__faceBuf ?? '') + e.key).slice(0, 7);
-      const n = Math.max(1, Math.min(1000000, +held.__faceBuf));
-      held.setFaces(n);
+      H.__faceBuf = ((H.__faceBuf ?? '') + e.key).slice(0, 7);
+      const n = Math.max(1, Math.min(1000000, +H.__faceBuf));
+      H.setFaces(n);
       say(`A die of ${n} face${n > 1 ? 's' : ''}.`);
       return refreshUI();
     }
     if (e.key === 'Backspace') {
       pushUndo();
-      held.__faceBuf = (held.__faceBuf ?? String(held.userData.faces)).slice(0, -1);
-      held.setFaces(Math.max(1, +held.__faceBuf || 1));
+      H.__faceBuf = (H.__faceBuf ?? String(H.userData.faces)).slice(0, -1);
+      H.setFaces(Math.max(1, +H.__faceBuf || 1));
       e.preventDefault();
       return refreshUI();
     }
     return;
   }
-  if (held.userData.kind === 'box') {
+  if (H.userData.kind === 'box') {
     if (/^[0-9]$/.test(e.key)) {
       pushUndo();
       resizeHeldBox(+e.key);
-      say(`A box with ${held.userData.holes.length} hole${held.userData.holes.length > 1 ? 's' : ''}.`);
+      say(`A box with ${H.userData.holes.length} hole${H.userData.holes.length > 1 ? 's' : ''}.`);
       return;
     }
     if (!/^[0-9]$/.test(e.key)) editLabel();   // digits mean holes; letters name it
     return;
   }
-  if (held.userData.kind === 'bird' || held.userData.kind === 'nest'
-      || held.userData.kind === 'room') { editLabel(); return; }
-  if (held.userData.kind !== 'number') return;
-  const v = held.userData.value;
+  // Anything with no other use for the keyboard can be NAMED with it, and
+  // the name rubbed out again with Backspace. Sounds, scales and notebooks
+  // were left out, so a world could hand you a sound called "the tune" that
+  // you could neither rename nor clear.
+  if (['bird', 'nest', 'room', 'sound', 'scale', 'notebook'].includes(H.userData.kind)) {
+    editLabel();
+    return;
+  }
+  if (H.userData.kind !== 'number') return;
+  const v = H.userData.value;
   // A tablet's keyboard offers the SYMBOLS -- ×, ÷, a real minus sign -- where a
   // typewriter offered ASCII stand-ins, and a child reaching for × means
   // multiply. Only numbers read keys this way: × typed onto a pad is the
@@ -10559,23 +10911,23 @@ addEventListener('keydown', (e) => {
     pushUndo();
     const sign = v.n < 0n ? -1n : 1n;
     const mag = v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;
-    held.setValue(rat(sign * (mag * 10n + BigInt(key))));
+    H.setValue(rat(sign * (mag * 10n + BigInt(key))));
     sfx('type');
     refreshUI();
   } else if (key === 'Backspace') {
     pushUndo();
-    held.setValue(v.d === 1n ? rat(v.n / 10n) : rat(0));
+    H.setValue(v.d === 1n ? rat(v.n / 10n) : rat(0));
     refreshUI(); e.preventDefault();
   } else if (key === '-') {
     // minus makes the number negative -- and adding a negative IS subtraction,
     // so there is no separate subtract operation to type any more
     pushUndo();
-    held.setValue(rat(-v.n, v.d));
+    H.setValue(rat(-v.n, v.d));
     say(v.n > 0n ? 'Negative now — dropping it on a number subtracts.' : 'Positive again.');
     refreshUI();
   } else if (['+', '*', '/', '^'].includes(key)) {
     pushUndo();
-    held.setOp(key);
+    H.setOp(key);
     opWord = '';
     say(OP_TELLS[key]);
     refreshUI();
@@ -10587,7 +10939,7 @@ addEventListener('keydown', (e) => {
     const name = Object.keys(OP_WORDS).find(w => opWord.endsWith(w));
     if (name) {
       pushUndo();
-      held.setOp(name);
+      H.setOp(name);
       opWord = '';
       say(OP_TELLS[name]);
       refreshUI();
@@ -10618,12 +10970,13 @@ function wiggleTargetOf(t) {
   if (t.kind === 'cond') return condNodeAt(t.path);
   if (t.kind === 'miniCond') return t.bot?.node?.__miniBubble ?? null;
   if (t.kind === 'thing') {
-    if (t.thing === held) return null;
+    if (t.thing === inHand()) return null;
     // aimed at a box: the hole the drop would land in answers, not the shell
     // Only while you are carrying something does a hole answer for the box: a
     // drop lands in a hole, but a CLICK picks up the whole box, so an empty
     // hand must make the box itself jiggle.
-    if (held && held.userData.kind !== 'box' && holesOf(t.thing)) {
+    const H2 = inHand();
+    if (H2 && H2.userData.kind !== 'box' && holesOf(t.thing)) {
       const h = holeUnder(t.thing, t.point);
       if (h) return h.thing ?? h.pocket;
     }
@@ -10636,16 +10989,17 @@ function wiggleTargetOf(t) {
   if (t.kind === 'botThing') return t.bot?.node ?? null;
   if (t.kind === 'station') {
     const st = t.st ?? stations[t.id];
-    return st?.occupant && st.occupant !== held ? st.occupant : null;
+    return st?.occupant && st.occupant !== inHand() ? st.occupant : null;
   }
   return null;
 }
 function tipFor(t) {
-  if (!t || mode === 'replay') return null;
+  if (!t) return null;
+  const TIP = inHand();
   const training = mode === 'training';
   if (t.kind === 'nbSpine') {
     const ud = t.nb.userData;
-    if (held) return 'The spine \u2014 empty your hand to pick the notebook up by it.';
+    if (TIP) return 'The spine \u2014 empty your hand to pick the notebook up by it.';
     if (dustyActive) {
       return ud.main
         ? 'Your own notebook stays \u2014 point Dusty at an entry on a page instead.'
@@ -10653,22 +11007,22 @@ function tipFor(t) {
     }
     return 'The spine \u2014 click to pick up the notebook itself, not what is on its pages.';
   }
-  if (dustyActive && !held && (t.kind === 'thing'
+  if (dustyActive && !TIP && (t.kind === 'thing'
       || (t.kind === 'botThing' && t.bot !== activeBot))) {
     return t.kind === 'botThing'
       ? 'Dusty will vacuum this robot away — training and all, gone for good.'
       : training ? 'Dusty vacuums it — the robot learns this as a step.'
                  : 'Dusty will vacuum this away.';
   }
-  if (t.kind === 'thing' && held?.userData.kind === 'text'
+  if (t.kind === 'thing' && TIP?.userData.kind === 'text'
       && t.thing?.userData.kind === 'text') {
     return 'Drop to join the pads — left edge reads first, right edge last.';
   }
-  if (held?.userData.kind === 'number'
+  if (TIP?.userData.kind === 'number'
       && ((t.kind === 'thing' && t.thing?.userData.kind === 'text')
         || (t.kind === 'bench' && t.point && benchThings.some(t2 => t2.userData.kind === 'text'
             && Math.abs(t.point.x - t2.position.x) < 0.45 && Math.abs(t.point.z - t2.position.z) < 0.36)))) {
-    return held.userData.erased ? 'Drop to restore the pad?'
+    return TIP.userData.erased ? 'Drop to restore the pad?'
       : 'Drop on the pad — left of its centre shifts the FIRST letter, right shifts the LAST; a blank pad takes the digits.';
   }
   if (t.kind === 'station') {
@@ -10702,25 +11056,25 @@ function tipFor(t) {
     }
     if (st.kind === 'copyIn' || st.kind === 'copyOut') {
       const who = training ? 'the robot' : 'you';
-      return held ? `Mimi the copier — click to have ${who} set that on the platform; a copy drops into the tray.`
+      return TIP ? `Mimi the copier — click to have ${who} set that on the platform; a copy drops into the tray.`
         : stations.copyOut.occupant ? 'Mimi the copier — click to take the copy from the tray.'
         : stations.copyIn.occupant ? 'Mimi the copier — click to take the original back.'
         : 'Mimi the copier — put something on her platform and an exact copy drops into the tray.';
     }
     if (st.kind === 'stand') {
-      return held && activeBot ? 'The robot’s stand — click to give that to the robot.'
+      return TIP && activeBot ? 'The robot’s stand — click to give that to the robot.'
         : 'The robot’s stand — whatever it is given sits here while it works.';
     }
     if (st.kind === 'scratch') return `${st.label[0].toUpperCase()}${st.label.slice(1)} — the robot’s own work spot, swept clean when it finishes.`;
     return null;
   }
   if (t.kind === 'bench') {
-    if (held?.userData.kind === 'text' && t.point) {
-      const near = benchThings.find(t2 => t2 !== held && t2.userData.kind === 'text'
+    if (TIP?.userData.kind === 'text' && t.point) {
+      const near = benchThings.find(t2 => t2 !== TIP && t2.userData.kind === 'text'
         && Math.abs(t.point.x - t2.position.x) < 0.45 && Math.abs(t.point.z - t2.position.z) < 0.36);
       if (near) return 'Drop to join the pads — this side decides the order.';
     }
-    return held ? 'Your workbench — click to put that down.'
+    return TIP ? 'Your workbench — click to put that down.'
                 : 'Your workbench — build here. Robots cannot reach it.';
   }
   if (t.kind === 'marty') {
@@ -10734,7 +11088,7 @@ function tipFor(t) {
   if (t.kind === 'miniCond') {
     return 'Its little thought — click to take a copy of the very thing it was first shown.';
   }
-  if (held && (t.kind === 'roomDoor' || t.kind === 'roomRoof'
+  if (TIP && (t.kind === 'roomDoor' || t.kind === 'roomRoof'
       || (t.kind === 'thing' && t.thing?.userData.kind === 'room'
           && !t.thing.userData.panel))) {
     return 'Drop to send that inside — it lands on the desk, and the room’s robot gets to work.';
@@ -10769,7 +11123,7 @@ function tipFor(t) {
   }
   if (t.kind === 'cond') {
     return 'The robot’s thought: the shape it must be given before it will run. '
-      + (!held && activeBot?.trainedOn
+      + (!TIP && activeBot?.trainedOn
           ? 'Click to take a copy of the very thing it was first shown. '
           : 'Red parts didn’t match. ')
       + 'Ruby loosens a part one step at a time; Dusty vacuums it into an anything.';
@@ -10779,14 +11133,14 @@ function tipFor(t) {
     const teamNote = bot.team.length ? ` It leads a team of ${bot.team.length + 1}.` : '';
     const who = bot.name ? `“${bot.name}”` : 'The robot';
     if (bot === activeBot) {
-      return held
+      return TIP
         ? (trained ? 'Click to give it that to work on.' : 'Click to give it that — that starts its training.')
         : `${who} at the bench${trained ? ` (${trained} steps trained).` : ' — untrained.'} Click to shrink it into your hand.${teamNote}`;
     }
-    if (held?.userData.kind === 'robot') {
+    if (TIP?.userData.kind === 'robot') {
       return 'Drop to form a team — each pass, the first member that recognises the thing runs.';
     }
-    if (held) return activeBot ? 'Another robot is already at the bench.'
+    if (TIP) return activeBot ? 'Another robot is already at the bench.'
       : 'Drop that on it: it wakes, grows, and takes it — training if it is untrained.';
     if (trained) {
       const lines = bot.program.slice(0, 8).map((st2, i) => `${i + 1}. ${describe(st2)}`);
@@ -10797,7 +11151,7 @@ function tipFor(t) {
   }
   if (t.kind === 'liveBirdPerch') {
     const who = t.tray.__owner ? panelName(t.tray.__owner) : 'its thing';
-    return held
+    return TIP
       ? `Give it to the bird — a badged number changes ${who} in one stroke; [query | bird] asks for the value; [listen | bird] answers with its event nest.`
       : `${who[0].toUpperCase()}${who.slice(1)}’s own bird — click for a bird of your own that delivers straight to it.`;
   }
@@ -10814,35 +11168,35 @@ function tipFor(t) {
     const ud = t.thing.userData;
     if (ud.panel) {
       const who = t.thing.__owner ? panelName(t.thing.__owner) : 'its thing';
-      return held
-        ? (held.userData.kind === 'robot'
+      return TIP
+        ? (TIP.userData.kind === 'robot'
           ? `Drop the robot on the panel — it works there, glued to ${who}.`
           : `Drop to put that on the panel — it stays glued to ${who}.`)
         : `${who[0].toUpperCase()}${who.slice(1)}’s panel — whatever is laid here travels with the thing. `
           + 'Click to carry it — the + and − on the holding card resize it — and the knob folds it away.';
     }
-    if (ud.kind === 'notebook' && !held) {
+    if (ud.kind === 'notebook' && !TIP) {
       const filled = (ud.pages || []).filter(Boolean).length;
       return `${ud.main ? 'Your notebook' : 'A notebook'} — ${filled} thing${filled === 1 ? '' : 's'} filed, `
         + `open at pages ${ud.page + 1}–${ud.page + 2}. The ← and → keys turn the pages while you point at it; `
         + 'the corner tabs do too. Drop something on a page to file it.';
     }
-    if (ud.kind === 'sound' && !held) {
+    if (ud.kind === 'sound' && !TIP) {
       const n = t.thing.userData.sound?.segs?.length ?? 0;
       return n
         ? `A sound \u2014 ${soundSeconds(t.thing.userData.sound).toFixed(1)}s. Press SPACE to play it, \u201c.\u201d to stop; click to pick it up. Drop a \u00d72 on it to speed it up, a \u00d7-1 to play it backwards, another sound on its edge to join them.`
         : 'A silent sound \u2014 give it a [frequency, duration, shape] box, or drop a recording on it. Click to pick it up.';
     }
-    if (ud.kind === 'text' && held?.userData.kind === 'text') {
+    if (ud.kind === 'text' && TIP?.userData.kind === 'text') {
       const zone = padZone(t.thing, t.point);
       return zone === 'M'
         ? 'Drop it in the middle and it RIDES on this pad — move the pad and it goes along.'
         : `Drop on the ${zone === 'L' ? 'left' : 'right'} edge to join the words — this side reads ${zone === 'L' ? 'first' : 'last'}.`;
     }
-    if (ud.kind === 'text' && t.thing.__padParent && !held) {
+    if (ud.kind === 'text' && t.thing.__padParent && !TIP) {
       return 'A pad riding on another — click to lift it off; it keeps its place until you do.';
     }
-    if (ud.kind === 'text' && !held) {
+    if (ud.kind === 'text' && !TIP) {
       const words = (ud.text ?? '').trim();
       if (!words) return 'A blank pad — click to pick it up, then type to write on it.';
       const PER = 600;
@@ -10857,19 +11211,19 @@ function tipFor(t) {
         + `\n— part ${i + 1} of ${pages}; press Tab for the next —`;
     }
     if (ud.kind === 'number') {
-      if (held?.userData.kind === 'number') {
-        const o = held.userData.op, hv = ratShort(held.userData.value), tv = ratShort(ud.value);
+      if (TIP?.userData.kind === 'number') {
+        const o = TIP.userData.op, hv = ratShort(TIP.userData.value), tv = ratShort(ud.value);
         return 'Drop to ' + (o === '+' ? `add ${hv} to ${tv}` : o === '-' ? `subtract ${hv} from ${tv}`
           : o === '*' ? `multiply ${tv} by ${hv}` : o === '/' ? `divide ${tv} by ${hv}`
           : o === 'mod' ? `leave what is left of ${tv} after taking ${hv}s away`
           : o === 'set' ? `make ${tv} into ${hv}`
           : `raise ${tv} to the power ${hv}`) + '.';
       }
-      if (held?.userData.kind === 'die') {
-        return `Drop the die to re-roll this number — it becomes anything from 1 to ${held.userData.faces}.`;
+      if (TIP?.userData.kind === 'die') {
+        return `Drop the die to re-roll this number — it becomes anything from 1 to ${TIP.userData.faces}.`;
       }
-      if (held?.userData.kind === 'text') {
-        const chars = [...(held.userData.text ?? '')];
+      if (TIP?.userData.kind === 'text') {
+        const chars = [...(TIP.userData.text ?? '')];
         if (!chars.length) return 'That pad is blank — write on it first.';
         const v = ud.value;
         return (v.d === 1n && v.n >= 1n && v.n <= BigInt(chars.length))
@@ -10886,7 +11240,7 @@ function tipFor(t) {
       return `${ratShort(ud.value)}${mixed} — dropped on a number, it ${OPW[ud.op]} it. Click to pick it up; then type digits or + − * / ^.`;
     }
     if (ud.kind === 'box') {
-      if (held?.userData.kind === 'robot') {
+      if (TIP?.userData.kind === 'robot') {
         if (!ud.holes.length) {
           return 'A box with no holes is a mould — drop the team on it and it comes apart, one robot to a hole.';
         }
@@ -10896,15 +11250,15 @@ function tipFor(t) {
           : 'Every hole is taken — empty one first.';
       }
       return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — a hole holds anything: numbers, pads, boxes, even a robot.`
-        + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
+        + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     if (ud.kind === 'scale') {
       return 'A scale — put a number in each of its two holes and it tips toward the larger.'
-        + (held ? ' Click a hole to fill it.' : ' Click to pick it up.');
+        + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     if (ud.kind === 'text') {
       const txt = ud.text ?? '';
-      if (!held && txt.length > 24) {
+      if (!TIP && txt.length > 24) {
         return txt.length > 700 ? txt.slice(0, 700) + '…' : txt;
       }
     }
@@ -10922,11 +11276,11 @@ function tipFor(t) {
       if (t.thing.__liveTarget || ud.liveId) {
         const owner = liveOwnerOf(t.thing);
         const who = owner ? panelName(owner) : 'a thing that is gone';
-        return held
+        return TIP
           ? `Give it to the bird — it goes straight to ${who}: a badged number changes it in one stroke.`
           : `A bird to ${who} — whatever she is given is delivered to it, one message at a time.`;
       }
-      return held ? 'Give it to the bird — she flies it home to her nest.'
+      return TIP ? 'Give it to the bird — she flies it home to her nest.'
                   : 'A bird — drop something on her to send it to her nest, or click to pick her up.';
     }
     if (ud.kind === 'die') {
@@ -10941,14 +11295,14 @@ function tipFor(t) {
       : occ.userData.kind === 'number' ? `holds ${ratText(occ.userData.value)}`
       : `holds a ${occ.userData.label || occ.userData.kind}`;
     return `${pan ? 'Pan' : 'Hole'} ${t.index + 1} — ${what}.`
-      + (held && !occ ? ' Click to put that in.' : '');
+      + (TIP && !occ ? ' Click to put that in.' : '');
   }
   return null;
 }
 
 // corner handles are dragged, not click-carried -- with the camera pinned
 renderer.domElement.addEventListener('pointerdown', (ev) => {
-  if (!resizeMode || grabbedCorner !== null || held) return;
+  if (!resizeMode || grabbedCorner !== null || TIP) return;
   const t = resolve(ev);
   if (t?.kind === 'benchHandle') {
     grabbedCorner = t.corner;
@@ -13445,10 +13799,16 @@ window.__nano = {
   worldOut, worldIn, setThingLabel, martyActivityText,
   get activityN() { return activityN; },
   get ready() { return worldReady; },
-  get state() { return { mode, busy, program, queued: queue.length,
-    held: held ? (held.userData.kind === 'number'
-      ? ratText(held.userData.value) + (held.userData.op === '+' ? '' : ` ${held.userData.op}`)
-      : held.userData.kind) : null }; },
+  get state() {
+    const say1 = (t) => !t ? null
+      : t.userData.kind === 'number'
+        ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
+        : t.userData.kind;
+    // held is whichever hand is in play (the claw while training); claw is
+    // always the robot's, so a test can watch the two independently
+    return { mode, busy, program, queued: queue.length,
+             held: say1(inHand()), hand: say1(held), claw: say1(clawHeld) };
+  },
   get active() { return activeBot ? { id: activeBot.id, steps: activeBot.program.length,
     team: activeBot.team.length } : null; },
   benchBots() { return benchThings.filter(t => t.userData.kind === 'robot'); },
