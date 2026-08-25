@@ -7640,6 +7640,7 @@ function addMiniBubble(node, cond) {
   if (!cond) return;
   const g = new THREE.Group();
   const inner = buildCondNode(cond, [], []);
+  tiltPadsForReading(inner);
   ghostify(inner);
   inner.traverse(o => { delete o.__pick; });
   inner.scale.setScalar(0.5);
@@ -7659,12 +7660,21 @@ function addMiniBubble(node, cond) {
   node.add(g);
   node.__miniBubble = g;
 }
+// A pad lies flat, which on the table is right and in a bubble is edge-on
+// gibberish. In a thought every pad -- bare, in a box hole, on a pan --
+// stands up like a card on an easel.
+function tiltPadsForReading(root) {
+  root.traverse(o => {
+    if (o.userData?.kind === 'text') o.rotation.x = -1.15;
+  });
+}
 function rebuildCondition() {
   clearFlags();      // the marks live on nodes about to be destroyed
   if (condDisplay) { condDisplay.removeFromParent(); condDisplay = null; }
   if (!condition) { refreshUI(); return; }
   const marks = [];
   const inner = buildCondNode(condition, [], marks);
+  tiltPadsForReading(inner);
   ghostify(inner);
   // picks are assigned after a clean sweep, so number/hole picks from the
   // ordinary constructors can't shadow the condition's own targets
@@ -7715,8 +7725,12 @@ function mismatchPaths(cond, spec, path = [], out = []) {
 let flagged = [], flagTime = 0;
 function clearFlags() {
   for (const f of flagged) {
-    f.m.emissive.copy(f.emissive);
-    f.m.emissiveIntensity = f.intensity;
+    if (f.emissive) {
+      f.m.emissive.copy(f.emissive);
+      f.m.emissiveIntensity = f.intensity;
+    } else if (f.color) {
+      f.m.color.copy(f.color);
+    }
   }
   flagged = [];
 }
@@ -7724,11 +7738,20 @@ function flagMismatch(paths) {
   clearFlags();
   for (const p of paths) {
     condNodeAt(p)?.traverse(o => {
-      if (!o.isMesh || !o.material?.emissive) return;
-      flagged.push({ m: o.material, emissive: o.material.emissive.clone(),
-                     intensity: o.material.emissiveIntensity });
-      o.material.emissive.setHex(0xff3b2f);
-      o.material.toneMapped = false;
+      if (!o.isMesh || !o.material) return;
+      // a pad is ONE mesh with six materials -- reading .emissive off the
+      // array is undefined, which is why a mismatched pad never turned red
+      for (const m of (Array.isArray(o.material) ? o.material : [o.material])) {
+        if (m.emissive) {
+          flagged.push({ m, emissive: m.emissive.clone(), intensity: m.emissiveIntensity });
+          m.emissive.setHex(0xff3b2f);
+          m.toneMapped = false;
+        } else if (m.color) {
+          // no emissive channel: tint the color itself
+          flagged.push({ m, color: m.color.clone() });
+          m.color.setHex(0xff6b5f);
+        }
+      }
     });
   }
   flagTime = 0;
@@ -10569,7 +10592,7 @@ renderer.setAnimationLoop((now) => {
     if (flagged.length) {
       flagTime += dt;
       const pulse = 0.7 + 0.9 * Math.abs(Math.sin(flagTime * 5));
-      for (const f of flagged) f.m.emissiveIntensity = pulse;
+      for (const f of flagged) if (f.emissive) f.m.emissiveIntensity = pulse;
     }
   }
   // numbers near the camera redraw with more digits and a finer canvas
