@@ -1,0 +1,200 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "sound",
+    "sound": {
+     "segs": [
+      {
+       "f": 262,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 330,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 392,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 523,
+       "d": 0.34,
+       "shape": "sine"
+      }
+     ],
+     "rate": 1
+    },
+    "label": "as made"
+   },
+   "x": -1.5,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "sound",
+    "sound": {
+     "segs": [
+      {
+       "f": 262,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 330,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 392,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 523,
+       "d": 0.34,
+       "shape": "sine"
+      }
+     ],
+     "rate": 1
+    },
+    "label": "faster"
+   },
+   "x": -1.0,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "sound",
+    "sound": {
+     "segs": [
+      {
+       "f": 262,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 330,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 392,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 523,
+       "d": 0.34,
+       "shape": "sine"
+      }
+     ],
+     "rate": 1
+    },
+    "label": "slower"
+   },
+   "x": -0.5,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "sound",
+    "sound": {
+     "segs": [
+      {
+       "f": 262,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 330,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 392,
+       "d": 0.22,
+       "shape": "sine"
+      },
+      {
+       "f": 523,
+       "d": 0.34,
+       "shape": "sine"
+      }
+     ],
+     "rate": 1
+    },
+    "label": "backwards"
+   },
+   "x": 0.0,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "2",
+     "d": "1"
+    },
+    "op": "*"
+   },
+   "x": -1.0,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "1",
+     "d": "2"
+    },
+    "op": "*"
+   },
+   "x": -0.5,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "-1",
+     "d": "1"
+    },
+    "op": "*"
+   },
+   "x": 0.0,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "REMAKING A SOUND\n\nDrop a number on a sound\nand it is remade.\n\nx2 plays it twice as fast\n-- an octave up, and half\nas long. x1/2 stretches it\nthe other way.\n\nx-1 plays it BACKWARDS.\nNothing was written for\nthat: it is the same minus\nsign that makes a number\nsubtract, on a thing whose\naxis is time."
+   },
+   "x": -1.45,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO TRY IT\n\nPress SPACE over the first\nspeaker to hear the phrase.\n\nDrop the x2 on the second,\nthe x1/2 on the third, the\nx-1 on the fourth. Each\nplays as it changes, and\nthe screen shows what it\nhas become.\n\nThey stack: drop the x-1 on\nthe one you already sped\nup."
+   },
+   "x": -0.75,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WHAT IS REFUSED\n\nTry dropping a +2 on a\nsound. It comes back with\n\"adding to a sound has no\nmeaning\" -- type * on the\nnumber first.\n\nA thing is allowed to say\nno. Refusing a message you\nhave no reading for is the\nhonest answer, and it is\nhow you learn what a kind\nunderstands."
+   },
+   "x": -0.05,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

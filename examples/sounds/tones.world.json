@@ -1,0 +1,145 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "box",
+    "holeLabels": [
+     "frequency",
+     "seconds",
+     "shape"
+    ],
+    "holes": [
+     {
+      "kind": "number",
+      "value": {
+       "n": "440",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "1",
+       "d": "2"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "text",
+      "text": "sine"
+     }
+    ]
+   },
+   "x": -1.5,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "sound",
+    "sound": {
+     "segs": [],
+     "rate": 1
+    }
+   },
+   "x": -0.9,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "sound",
+    "sound": {
+     "segs": [
+      {
+       "f": 440,
+       "d": 0.6,
+       "shape": "sine"
+      }
+     ],
+     "rate": 1
+    },
+    "label": "sine"
+   },
+   "x": -0.4,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "sound",
+    "sound": {
+     "segs": [
+      {
+       "f": 440,
+       "d": 0.6,
+       "shape": "square"
+      }
+     ],
+     "rate": 1
+    },
+    "label": "square"
+   },
+   "x": 0.1,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "sine"
+   },
+   "x": -1.5,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "square"
+   },
+   "x": -1.05,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "sawtooth"
+   },
+   "x": -0.6,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "triangle"
+   },
+   "x": -0.15,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "MAKING A SOUND\n\nA sound starts silent -- a\nflat line on its screen.\n\nDrop the [frequency,\nseconds, shape] box on one\nand it sings: the number is\nhertz, the fraction is how\nlong, the pad is which of\nthe four waveshapes.\n\nThe waveform on the screen\nis what it will sound like."
+   },
+   "x": -1.45,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO TRY IT\n\nPress SPACE with a sound in\nyour hand, or under the\npointer, to play it; \".\" to\nstop it.\n\nDrop the box on the silent\nspeaker. Then pick the box\nup again, type a different\nnumber on its frequency,\nswap a shape pad into its\nthird hole, and drop it on\nthe next one.\n\nEvery sound here was made\nexactly this way."
+   },
+   "x": -0.75,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THE FOUR SHAPES\n\nSame pitch, same length --\nfour different instruments.\nA sine is a whistle, a\nsquare a game console, a\nsawtooth a brass section, a\ntriangle something between\na flute and a bell.\n\nAnything else in that hole\nis read as \"sine\"."
+   },
+   "x": -0.05,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

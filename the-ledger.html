@@ -134,7 +134,7 @@
   <h1>The Ledger</h1>
   <p class="standfirst">Every prompt of this conversation, in full and in
     order, with what each one actually changed.</p>
-  <p class="meta">190 entries &middot; 16&ndash;25 August 2026</p>
+  <p class="meta">199 entries &middot; 16&ndash;25 August 2026</p>
 </header>
 
 <ol class="log">
@@ -907,6 +907,42 @@
   <li class="entry"><span class="n"></span><div>
     <p class="prompt">working - go ahead with the next parts</p>
     <p class="summary">Stage 2 landed whole. The info notebook (an i-plaque, Miki's layout, the +10 copied off a page, edited to +7, delivered — 5 became 12); the gauge ringing one lap and stopping on the echo rule; and the account whose teller is simply gone — two rooms depositing at once onto a live balance that lands on exactly 250. Eleven goldens.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>Pads with lots of text are very hard to read. They should be resizable and the text should scale.<br><br>Control-c to copy what is held should be part of the tooltip<br><br>the info button is hard to see against the panel<br><br>When I trained a robot on a scale where one of the numbers was live after finishing and stopping the number was no longer live.<br><br>Thought bubble matching for scales should include what is in the pans<br><br>left and right arrow keys should change the pages when pointing to a notebook<br><br>I tried the live bank account and it worked but then it stopped working. Neither switch did anything.</p>
+    <p class="summary">Seven at once. Pads grew a size of their own (Ctrl+arrows, the text scaling with the tablet), the info plaque got a rim it could be seen against, and the live number survived training — the rewind had been stripping its lid. Scale thoughts read their pans. And the account had stopped because a closed panel took its robot with it.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">I intended to erase a number in a pan in a thought bubble and accidentally erased the entire scale. There is no visual clue as to what will be erased.<br><br>When a scale cannot determine which is 'heavier' (e.g. a number and a text) it should tip up and down and not match any other scale<br><br>The generic advice at the end of the text pad should start after a blank line<br><br>It should say the current value is given to that bird to deliver to its nest.<br><br>📷<br>Screenshot 2 shows the 'holding …' message that prevents a mouse click — maybe it should also move to the top<br><br>While control-upper arrow works that is not kid-friendly. Why not when anything is held the menu for rotation and obtaining the panel has options for bigger and smaller. The size handles on panels can go away then.</p>
+    <p class="summary">Ruby now outlines exactly what she will take before she takes it. An undecidable scale rocks and matches nothing, which is the honest answer. And the holding card moved out of the way and grew bigger/smaller buttons, so the panel's corner studs could go.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Holding panel is broken and at the wrong place</p>
+    <p class="summary">The holding card lived inside #bottom, whose transform captures fixed positioning — so 'fixed' meant fixed to a bar that moves. It is a child of the body now.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">📷<br>The problem is that the held item is far back when its size is changed. Screenshot 1 shows it before, 2 after making it bigger. And then when dropped (screenshot 3) it grows even bigger which is clearly wrong.</p>
+    <p class="summary">A pad's size lives in its geometry, and the hand was applying it a second time as a node scale — so every put-down squared it. Text pads are out of the node-scale path entirely now.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Does the bottom menu bar need to be part of the world - it too prevents drops. And held items move to an odd place when the cursor is over that menu bar. Or maybe it should also move to the top so it is out of the way</p>
+    <p class="summary">The bar left the world: a reserved strip below the canvas, with the NDC computed from the canvas rect rather than the window, so nothing you hold lurches when the pointer crosses it.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">go ahead with stage 3. By the way maybe everything should wiggle less - like houses and panels</p>
+    <p class="summary">Stage 3 opened, and everything that wiggles wiggles a third as much.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">when I click on the ... in the holding panel I see the full thing upside down. It isn't obvious that clicking it again dismisses it. Why not any click dismisses it?<br><br>You should be able to return anything to the notebook page it came from if it wasn't altered.<br><br>I thought left and right arrow keys was another way to flip notebook pages - doesn't seem to work<br><br>Boxes for built in messages should have labels for the holes<br><br>When I dropped 2 on 1/2 in the box it didn't change size to fit<br><br>The speakers don't look good and are too close in color to the pedestals.<br><br>I can't obtain a panel for a sound object</p>
+    <p class="summary">The held thing reads upright because its basis is built outright now rather than composed from a lookAt and a quarter turn. The arrows did work — a focused Speed control had been eating them silently, and a click on the world takes the keyboard back. Message boxes wear labelled holes, and the speakers left the pedestals' colour behind.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">sounds are a bit better but too much like other things. Maybe a bit like the photo I pasted (but don't copy it)<br>📷<br>When I dropped a 2 and the 1/2 the number blocks became their labels<br>And why is the shape label smaller than the other labels<br>When I clicked to return a panel to its object it animated away but it should animate towards its object as it shrinks<br>Dusty should be able to vacuum up a notebook if the click is on the spine.<br>Dusty can vacuum away a page but it doesn't animate when doing so<br>I dropped a WAV file and it works fine. It shouldn't play just because I picked it up. Maybe we should intro the ToonTalk convention that the space bar turns things on. Should work for houses and panels too. In ToonTalk '.' stopped them since it is often called 'stop'.<br>Let's start a folder under examples for sounds.<br>When importing media they appear in the center of the desk rather than where they were dropped.<br>The info notebook for a recorded sound still suggests sending freq, sec, shape which doesn't make sense for recorded sounds<br>When I dropped a box on panel it became very tiny</p>
+    <p class="summary">Ten, and the two that mattered most were conventions. SPACE turns on what is in your hand or under the pointer and “.” stops it — so picking a sound up no longer startles you by playing it. And the speaker became a walnut cabinet with a black baffle, because what says 'speaker' before any colour does is a wooden box with a dark face. Hole labels are the box's own plaques now (they had been overwriting the numbers' faces), a returning panel folds toward the thing it belongs to, Dusty flies to a page before clearing it, media lands where you dropped it, a recording's notebook stops offering a recipe it cannot use, and a box dropped on a panel is three times the size it was.</p>
+  </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">And another folder of examples for images</p>
+    <p class="summary">Two folders, six worlds, and two of them joined the gate. sounds/: tones (where a sound comes from), transforms (×−1 reverses it — the same minus sign that makes a number subtract, on a thing whose axis is time), melody (a robot that sings a queue of numbers, C major, a note a round). images/: pictures, album, and naming — six robots that dispatch on the PICTURE in their thought, which needed no new machinery at all, only the fact that a picture is a pad. The suite is thirteen worlds.</p>
   </div></li>
 </ol>
 

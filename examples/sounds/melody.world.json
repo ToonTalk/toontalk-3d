@@ -1,0 +1,311 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "nest",
+      "id": 9601,
+      "guid": "snd-melody",
+      "hasEgg": false,
+      "pile": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "523",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "494",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "440",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "392",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "349",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "330",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "294",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "262",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ],
+      "label": "pitches"
+     },
+     {
+      "kind": "sound",
+      "sound": {
+       "segs": [],
+       "rate": 1
+      },
+      "label": "the tune"
+     },
+     {
+      "kind": "sound",
+      "sound": {
+       "segs": [],
+       "rate": 1
+      },
+      "label": "blank"
+     },
+     {
+      "kind": "box",
+      "holeLabels": [
+       "frequency",
+       "seconds",
+       "shape"
+      ],
+      "holes": [
+       null,
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "4"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "text",
+        "text": "sine"
+       }
+      ]
+     }
+    ]
+   },
+   "x": -0.7,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Singer",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "wildNumber"
+      },
+      {
+       "kind": "wild"
+      },
+      {
+       "kind": "wild"
+      },
+      {
+       "kind": "wild"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s1",
+       "path": []
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ],
+       "nest": true
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s1",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "s1",
+       "path": []
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "nest",
+       "id": 9601,
+       "guid": "snd-melody",
+       "hasEgg": false,
+       "pile": []
+      },
+      {
+       "kind": "sound",
+       "sound": {
+        "segs": [],
+        "rate": 1
+       }
+      },
+      {
+       "kind": "sound",
+       "sound": {
+        "segs": [],
+        "rate": 1
+       }
+      },
+      {
+       "kind": "box",
+       "holeLabels": [
+        "frequency",
+        "seconds",
+        "shape"
+       ],
+       "holes": [
+        null,
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "4"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "text",
+         "text": "sine"
+        }
+       ]
+      }
+     ]
+    },
+    "team": []
+   },
+   "x": -1.5,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "MELODY\n\nThe Singer is handed\n[pitches, the tune, a blank\nsound, a recipe].\n\nEach round it copies the\nblank and the recipe, takes\nthe next pitch off the nest,\ndrops it into the recipe's\nEMPTY frequency hole, drops\nthe recipe on the copy to\nmake it sing, and joins the\nresult onto the right edge\nof the tune.\n\nIt knows no notes. Its\nthought is \"any number\"."
+   },
+   "x": -1.45,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Rounds to 8 and give the\nwork box to the Singer.\n\nThe tune plays as it grows,\na note longer each round --\nthat is not a demonstration\nmode, it is the same \"listen\nto what you just made\" that\nhappens when you drop a\nsound on a sound by hand.\n\nPress SPACE over the tune\nafterwards to hear it whole,\n\".\" to stop it."
+   },
+   "x": -0.75,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THEN CHANGE IT\n\nWrite \"square\" over \"sine\"\nin the recipe and run it\nagain: same tune, new\ninstrument.\n\nType other numbers onto the\npitches, or drop more on the\nnest: a different tune, same\nrobot.\n\nAnd drop a x-1 on the\nfinished tune to hear the\nwhole scale run backwards."
+   },
+   "x": -0.05,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

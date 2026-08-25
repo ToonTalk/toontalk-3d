@@ -310,6 +310,55 @@ Try it: pick up "Talk" and drop it on the right edge
 of "Toon". Take a 1 from the number stack, type 2, and drop it on a
 pad's left edge to shift a letter — or drop a pad on it to pick out letter 2.
 
+Pictures
+A pad's face can carry a picture as well as words. Drag an image file
+on to the page and it lands as a pad where you dropped it; drop it on
+a pad that is already there and the picture covers that pad instead. A picture
+pad is a pad in every other way — it copies, files in the notebook, goes in
+a box, joins other pads, and Dusty takes it away. Hold one and press
+Ctrl with the arrow keys to make it bigger or smaller; a picture
+keeps its own proportions rather than being squeezed into the tablet's.
+
+The words and the picture live on the one pad, so a caption is not
+a second thing — and a robot's thought compares both. A robot trained on a
+particular picture wakes for that picture and no other, which is how the
+naming example works.
+
+## Sounds
+
+A sound is a little speaker lying face-up on the table — a walnut
+cabinet with a black baffle, a woofer, a tweeter, and a screen showing the
+waveform it holds. It arrives silent: a flat line.
+
+Making one. Drop a
+[frequency, seconds, shape] box on a sound and it sings: the
+number is hertz, the fraction is how long, the pad is one of sine,
+square, sawtooth or triangle (anything else reads as
+sine). Or drag an audio file on to the page — .wav,
+.mp3, .ogg, .m4a, .flac,
+.aac — and the recording arrives on a speaker of its own.
+
+Remaking one. A sound answers × and set, and
+refuses + — adding to a sound has no meaning. A ×2
+dropped on it plays it twice as fast, a ×1/2 stretches it,
+and a ×−1 plays it backwards: the same minus sign
+that makes a number subtract, on a thing whose axis happens to be time.
+
+Joining them. Drop a sound on another sound's edge and they play one
+after the other — the same gesture that joins two pads into a word. A
+recording and a made tone join just as happily.
+
+Turning things on and off
+Press Space to turn on whatever is in your hand, or whatever the
+pointer is over; press . to stop it. A sound plays and stops; a
+house or a panel sets its robot working and stops it. (Space still types a
+space while you are writing on a pad.) Picking a sound up does not play it.
+
+Try it: take a sound from its stack, take a box and
+put 440, 1/2 and the word "square" in its three holes, and drop the box
+on the sound. Then press Space over it, and drop a
+×−1 on it.
+
 ## Boxes and scales
 
 Boxes have holes, and holes hold anything — numbers, pads, nests, other
@@ -576,8 +625,14 @@ keeps its own). Drop a written pad on a full page to open the first page
 mentioning that text; a whole number jumps to that page number. Only Dusty can
 remove an entry (and Undo puts it back). He will not vacuum your own
 notebook at all, and clicking it makes it wobble where it stands rather than
-lifting it — so its corner tabs stay within reach. Any other notebook goes when
-open at two blank pages.
+lifting it — so its corner tabs stay within reach.
+
+The spine is a grip of its own: click the leather binding and you
+pick up the notebook itself rather than what is lying on its pages. That is
+also the one hold Dusty accepts on a notebook that still has entries in it —
+point him anywhere else and he asks for two blank pages first.
+The <- and -> keys turn the pages while you point
+at a notebook, and so do the gold corner tabs.
 The first page holds a blank notebook — copy it out to make more. The desk
 notebook remembers everything between visits, and it is furniture: it
 stays where it is when you load somebody else's world, because it is your
@@ -621,6 +676,16 @@ fibonacci-recursive, bank-account, grammar,
 account (Sally's), swap, factorial,
 n-to-1 (the counting-down one), append and
 reverse.
+
+Three more folders hold sets of their own. infinity/ is
+the seven Exploring Infinity activities.
+sounds/ is tones (where a sound comes from),
+transforms (×2, ×1/2 and ×−1) and
+melody, a robot that knows no notes singing a queue of numbers into a
+C major scale, a note a round. images/ is
+pictures, album (a notebook with pictures on its pages), and
+naming — six robots whose thoughts hold six pictures, so the
+dispatch is the matching and there is no table of names anywhere.
 
 The sentence factory (sentence-generator.world.json). A glass room called the Scriptorium holds a team
 of twenty robots that roll dice to pick words, join pads into sentences,
@@ -867,6 +932,7 @@ function tone(freq, dur, { type = 'sine', at = 0, slide = 0, gain = 0.25 } = {})
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   o.connect(g); g.connect(sndGain);
   o.start(t0); o.stop(t0 + dur + 0.02);
+  return o;                       // so a sound can be told to stop early
 }
 function noiseFx(dur, { at = 0, from = 800, to = 300, q = 1.2, gain = 0.3 } = {}) {
   const ac = audio(); if (!ac) return;
@@ -1654,6 +1720,7 @@ function soundSeconds(snd) {
 }
 const decoded = new Map();          // src -> AudioBuffer, decoded once
 function playSound(node) {
+  stopSound(node);                // pressing space again restarts it, not stacks it
   const snd = node.userData.sound;
   if (soundEmpty(snd)) { say('That sound is silent \u2014 give it a [frequency, duration, shape] box, or a recording.'); return; }
   const ac = audio(); if (!ac) return;
@@ -1677,8 +1744,9 @@ function playSound(node) {
       }
       continue;
     }
-    tone((sg.f ?? 440) * (back ? 1 : 1), (sg.d ?? 0.4) / rate,
+    const osc = tone((sg.f ?? 440) * (back ? 1 : 1), (sg.d ?? 0.4) / rate,
          { type: sg.shape || 'sine', at, gain: 0.28 });
+    if (osc) (node.__playing ??= []).push(osc);
     at += (sg.d ?? 0.4) / rate;
   }
   flash(node.getWorldPosition(new THREE.Vector3()));
@@ -1698,6 +1766,9 @@ function stopSound(node) {
   (node.__playing || []).forEach(s2 => { try { s2.stop(); } catch {} });
   node.__playing = [];
 }
+// is anything of this sound still sounding? (a finished source is harmless to
+// stop, so this is only for what we SAY, never for whether we stop)
+function soundPlaying(node) { return (node.__playing || []).length > 0; }
 function loadSoundSrc(src) {
   if (decoded.has(src)) return Promise.resolve(decoded.get(src));
   const ac = audio();
@@ -1714,22 +1785,43 @@ function makeSound(sound = null) {
   cv.width = 512; cv.height = 224;
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6,
-    emissive: 0xffffff, emissiveIntensity: 0.28, emissiveMap: tex });
-  // A cream cabinet, not a dark slab: on the dark pedestals of the arc the
-  // slate ones were nearly invisible, and read as more furniture.
-  const side = new THREE.MeshStandardMaterial({ color: 0xe6d8bb, roughness: 0.75 });
+  const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55,
+    emissive: 0xffffff, emissiveIntensity: 0.18, emissiveMap: tex });
+  // A little bookshelf speaker, lying face-up on the table. What says
+  // "speaker" before any label does is a WOODEN BOX WITH A BLACK BAFFLE, and
+  // nothing else in the workshop is that: the boxes are pink, the houses
+  // cream, the pedestals bare charcoal, the table pale pine. The rose cabinet
+  // it wore before had only traded one near-miss (the pedestals) for another
+  // (the box stack).
+  const side = new THREE.MeshStandardMaterial({ color: 0x6b4630, roughness: 0.66 });
   const body = new THREE.Mesh(geo('BoxGeometry', W, H, D),
     [side, side, face, side, side, side]);
   body.castShadow = true; body.receiveShadow = true;
   g.add(body);
-  // two brass feet, so it stands like an instrument
+  // the cone itself, actually recessed, so it reads as a speaker at a glance
+  const coneMat = new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.8 });
+  // the face texture and these are placed by the SAME rule, so the dust cap
+  // sits in its own woofer instead of beside it: canvas (px, py) on the top
+  // face is ((px/512 - 0.5) * W, (py/224 - 0.5) * D)
+  const onFace = (px, py) => [(px / 512 - 0.5) * W, (py / 224 - 0.5) * D];
+  const [wx, wz] = onFace(300, 112);              // the woofer, as painted
+  const [tx, tz] = onFace(112, 52);               // the tweeter, as painted
+  const cone = new THREE.Mesh(geo('CylinderGeometry', 0.062, 0.05, 0.012, 24), coneMat);
+  cone.position.set(wx, H / 2 - 0.004, wz);
+  g.add(cone);
+  const dust = new THREE.Mesh(geo('SphereGeometry', 0.022, 14, 10), coneMat);
+  dust.position.set(wx, H / 2 + 0.004, wz);
+  dust.scale.y = 0.5;
+  g.add(dust);
+  const tweeter = new THREE.Mesh(geo('CylinderGeometry', 0.022, 0.02, 0.01, 16), coneMat);
+  tweeter.position.set(tx, H / 2 - 0.003, tz);
+  g.add(tweeter);
+  // and its volume knob, on the cabinet's side
   const brass = new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.35, metalness: 0.75 });
-  for (const dx of [-W / 2 + 0.04, W / 2 - 0.04]) {
-    const foot = new THREE.Mesh(geo('CylinderGeometry', 0.016, 0.02, 0.016, 10), brass);
-    foot.position.set(dx, -H / 2 + 0.008, D / 2 - 0.05);
-    g.add(foot);
-  }
+  const knob = new THREE.Mesh(geo('CylinderGeometry', 0.014, 0.014, 0.014, 12), brass);
+  knob.rotation.z = Math.PI / 2;
+  knob.position.set(W / 2 - 0.002, 0, -0.05);
+  g.add(knob);
   g.userData = { kind: 'sound', width: W, rest: H / 2,
                  sound: sound ? JSON.parse(JSON.stringify(sound)) : { segs: [], rate: 1 } };
   // the face is a waveform, since a sound has no look of its own: silence is
@@ -1737,34 +1829,59 @@ function makeSound(sound = null) {
   g.paintSound = () => {
     const snd = g.userData.sound;
     const c = cv.getContext('2d');
-    c.fillStyle = '#efe3c6'; c.fillRect(0, 0, 512, 224);      // the cabinet
-    c.fillStyle = '#141a24'; c.fillRect(26, 26, 460, 172);    // the screen
-    c.strokeStyle = '#c9a227'; c.lineWidth = 5;
-    c.strokeRect(26, 26, 460, 172);                           // its brass frame
+    c.fillStyle = '#6b4630'; c.fillRect(0, 0, 512, 224);       // the cabinet
+    // grain, so the wood is wood and not a flat brown
+    c.strokeStyle = 'rgba(40,24,14,0.30)'; c.lineWidth = 2;
+    for (let i = 0; i < 14; i++) {
+      const y = 8 + i * 15.5;
+      c.beginPath(); c.moveTo(0, y);
+      c.bezierCurveTo(160, y - 5, 340, y + 6, 512, y - 2);
+      c.stroke();
+    }
+    c.fillStyle = '#14171d'; c.fillRect(22, 14, 468, 196);     // the black baffle
+    c.strokeStyle = 'rgba(255,255,255,0.10)'; c.lineWidth = 2;
+    c.strokeRect(22, 14, 468, 196);
+    // the woofer's surround and cone, drawn under the real one
+    c.fillStyle = '#3b414c';
+    c.beginPath(); c.ellipse(300, 112, 104, 92, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#20242c';
+    c.beginPath(); c.ellipse(300, 112, 84, 76, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#454c58'; c.lineWidth = 3;
+    for (const r2 of [64, 46, 30]) {
+      c.beginPath(); c.ellipse(300, 112, r2, r2 * 0.93, 0, 0, Math.PI * 2); c.stroke();
+    }
+    // the tweeter, up in the corner
+    c.fillStyle = '#3b414c';
+    c.beginPath(); c.ellipse(112, 52, 40, 37, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#20242c';
+    c.beginPath(); c.ellipse(112, 52, 26, 24, 0, 0, Math.PI * 2); c.fill();
+    // and the little screen where the waveform lives
+    c.fillStyle = '#0a1016'; c.fillRect(38, 120, 152, 60);
+    c.strokeStyle = '#c9a227'; c.lineWidth = 3; c.strokeRect(38, 120, 152, 60);
     c.strokeStyle = soundEmpty(snd) ? '#4a5872' : '#6ee7a8';
-    c.lineWidth = 5;
+    c.lineWidth = 3;
     c.beginPath();
     if (soundEmpty(snd)) {
-      c.moveTo(44, 112); c.lineTo(468, 112);
+      c.moveTo(46, 150); c.lineTo(182, 150);
     } else {
       const n = snd.segs.length;
-      for (let x = 0; x <= 424; x++) {
-        const u = x / 424;
+      for (let x = 0; x <= 148; x++) {
+        const u = x / 148;
         const sg = snd.segs[Math.min(n - 1, Math.floor(u * n))];
         const cycles = sg.src ? 9 : Math.max(1.5, Math.min(14, (sg.f ?? 440) / 90));
         const env = sg.src ? (0.55 + 0.45 * Math.sin(u * 37)) : 1;
-        const y = 112 - Math.sin(u * cycles * Math.PI * 2 * n) * 62 * env;
-        if (!x) c.moveTo(44 + x, y); else c.lineTo(44 + x, y);
+        const y = 150 - Math.sin(u * cycles * Math.PI * 2 * n) * 22 * env;
+        if (!x) c.moveTo(46 + x, y); else c.lineTo(46 + x, y);
       }
     }
     c.stroke();
     if (snd.reversed) {
-      c.fillStyle = '#ffd27a'; c.font = 'bold 30px Georgia, serif';
-      c.textAlign = 'right'; c.fillText('\u25c0 back', 470, 56);
+      c.fillStyle = '#ffd27a'; c.font = 'bold 20px Georgia, serif';
+      c.textAlign = 'left'; c.fillText('\u25c0 back', 40, 204);
     }
     if ((snd.rate || 1) !== 1) {
-      c.fillStyle = '#9fd8ff'; c.font = 'bold 30px Georgia, serif';
-      c.textAlign = 'left'; c.fillText('\u00d7' + ratShort(rat(Math.round((snd.rate) * 100), 100)), 44, 56);
+      c.fillStyle = '#9fd8ff'; c.font = 'bold 20px Georgia, serif';
+      c.textAlign = 'left'; c.fillText('\u00d7' + ratShort(rat(Math.round((snd.rate) * 100), 100)), 132, 204);
     }
     tex.needsUpdate = true;
   };
@@ -1832,6 +1949,44 @@ function makeDie(faces = 6) {
 
 // A little wooden name-plaque stuck on the thing itself. Typing letters while
 // holding a bird, nest or box writes one.
+// A box may name its own holes. The plaques are the BOX's, so every one is
+// the same size however small the thing standing in that hole has been
+// scaled to fit -- and a number keeps its own face, which taking a label
+// used to overwrite with the word.
+function paintHoleLabels(box) {
+  (box.__holeLabels || []).forEach(n => n.removeFromParent());
+  box.__holeLabels = [];
+  const names = box.userData.holeLabels;
+  if (!names?.length) return;
+  const drawn = box.userData.drawn ?? box.userData.holes;
+  names.forEach((name, i) => {
+    if (!name || !drawn[i]) return;
+    const cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 64;
+    const c = cv.getContext('2d');
+    c.fillStyle = '#f6eed9'; c.fillRect(0, 0, 256, 64);
+    c.strokeStyle = '#8a6a3b'; c.lineWidth = 5; c.strokeRect(2, 2, 252, 60);
+    c.fillStyle = '#3b2f1d';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    let px = 40;
+    c.font = `bold ${px}px Georgia, serif`;
+    while (px > 10 && c.measureText(name).width > 232) {
+      px = Math.floor(px * 0.88);
+      c.font = `bold ${px}px Georgia, serif`;
+    }
+    c.fillText(name, 128, 34);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const w = Math.min(0.2, (box.userData.holeW ?? 0.2) * 1.02);
+    const plate = new THREE.Mesh(geo('PlaneGeometry', w, w / 4),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+    plate.rotation.x = -Math.PI / 2;
+    const a = drawn[i].anchor.position;
+    plate.position.set(a.x, 0.041, a.z + (box.userData.holeW ?? 0.2) / 2 + w / 8 + 0.012);
+    box.add(plate);
+    box.__holeLabels.push(plate);
+  });
+}
 function setThingLabel(thing, text) {
   thing.userData.label = text || null;
   if (thing.userData.kind === 'room') return paintRoomLabel(thing);
@@ -2223,6 +2378,7 @@ function makeNotebook(rec = null) {
   const spine = new THREE.Mesh(geo('BoxGeometry', 0.02, 0.055, 0.52),
     new THREE.MeshStandardMaterial({ color: 0x4a120c, roughness: 0.6 }));
   spine.position.y = 0.03;
+  setPick(spine, { kind: 'nbSpine', nb: g });
   g.add(spine);
   for (const [sx, dir] of [[-1, -2], [1, 2]]) {
     const tab = new THREE.Mesh(geo('CylinderGeometry', 0.045, 0.045, 0.02, 3),
@@ -2416,6 +2572,11 @@ const emptyWorldRec = () => ({ kind: 'world', v: FILE_V, bench: [], stations: {}
 // Big enough to watch: a house holds only its robot, its given and its work
 // spots now, so the miniature can be nearly as tall as the room itself.
 const MINI_WORLD = 0.11;
+// A panel is a tray at your elbow, not a house across the table: what you lay
+// on it should read at something like its own size. At house scale a dropped
+// box came out a fortieth of life.
+const PANEL_WORLD = 0.34;
+const worldScaleOf = (room) => (room.userData.panel ? PANEL_WORLD : MINI_WORLD);
 function stashCtx(ctx) {
   ctx.occ = {};
   for (const [id, st] of Object.entries(stations)) {
@@ -2516,7 +2677,7 @@ function hydrateRoom(room) {
 }
 function mountRoomWorld(room) {
   const r = room.__ctx.root;
-  r.scale.setScalar(MINI_WORLD);
+  r.scale.setScalar(worldScaleOf(room));
   r.position.set(0, 0.034, -0.02);
   room.add(r);
   fitRoomContents(room);
@@ -2535,6 +2696,10 @@ function mountRoomWorld(room) {
 // floor implies once MINI_WORLD is undone, so an ordinary scene -- robot
 // plus whatever it was given -- passes through untouched.
 const ROOM_FIT = 3.2;
+// the same budget in a panel's own units: its floor is the same 0.5 across,
+// but its world is mounted three times larger, so the content it can hold
+// before it must shrink is that much smaller
+const PANEL_FIT = ROOM_FIT * (MINI_WORLD / PANEL_WORLD);
 function fitRoomContents(room) {
   const r = room.__ctx?.root;
   if (!r || !r.children.length) return;
@@ -2547,7 +2712,7 @@ function fitRoomContents(room) {
   // never magnify a small room back up past its usual toy scale -- only ever
   // shrink further once content outgrows it
   const factor = Math.min(1, (room.userData.fit ?? ROOM_FIT) / span);
-  r.scale.setScalar(MINI_WORLD * factor);
+  r.scale.setScalar(worldScaleOf(room) * factor);
 }
 // Serialise a live world back into a record -- only when actually saving.
 function ctxToRec(room) {
@@ -2894,7 +3059,8 @@ function giveToLiveBird(birdNode, X) {
 // One door for every medium (BACKS.md): what a file IS decides what happens to
 // it. A picture covers the pad whose panel took it; a saved thing or world is
 // what it always was.
-function readMediaFile(file, forThing) {
+function readMediaFile(file, forThing, at) {
+  const land = (t) => putOnBench(t, at ?? benchSpot());
   if (!file) return;
   const name = (file.name || '').toLowerCase();
   if (/^audio\//.test(file.type) || /\.(mp3|wav|ogg|m4a|aac|flac)$/.test(name)) {
@@ -2905,8 +3071,8 @@ function readMediaFile(file, forThing) {
         const target = forThing?.userData.kind === 'sound' ? forThing : makeSound();
         target.userData.sound = { segs: [{ src }], rate: 1 };
         target.paintSound();
-        if (target !== forThing) putOnBench(target, benchSpot());
-        say('The recording is on a sound \u2014 click it to hear it.');
+        if (target !== forThing) land(target);
+        say('The recording is on a sound \u2014 SPACE plays it, \u201c.\u201d stops it.');
         playSound(target);
         refreshUI();
       });
@@ -2923,7 +3089,7 @@ function readMediaFile(file, forThing) {
       } else {
         const pad = makeText('');
         pad.setImage(fr.result);
-        putOnBench(pad, benchSpot());
+        land(pad);
         say('The picture arrives on a pad of its own.');
       }
       refreshUI();
@@ -2962,26 +3128,42 @@ const INFO_PAGES = {
     { kind: 'text', text: 'WHAT YOU CAN SEND\nGive these to its bird.\n\nA badged number is the\noperation, applied whole\nin one stroke: +10 adds,\n\u00d72 scales, set 50 writes.\n\nTry the one opposite \u2192' },
     { kind: 'number', value: { n: '10', d: '1' }, op: '+' },
     { kind: 'text', text: '[query | bird]\n\nThe current value is\ngiven to that bird, and\nshe delivers it to her\nnest.\n\nTake the box opposite\nand put a bird of your\nown in the empty hole.' },
-    { kind: 'box', holes: [{ kind: 'text', text: 'query', label: 'what to do' },
-                         { kind: 'text', text: '', label: 'your bird here' }] },
+    { kind: 'box', holeLabels: ['what to do', 'your bird here'],
+    holes: [{ kind: 'text', text: 'query' }, null] },
     { kind: 'text', text: '[listen | bird]\n\nAnswers with its EVENT\nNEST: every change lands\nthere, newest underneath\n\u2014 a history. A robot\ndozing on it wakes per\nchange.' },
-    { kind: 'box', holes: [{ kind: 'text', text: 'listen', label: 'what to do' },
-                         { kind: 'text', text: '', label: 'your bird here' }] },
+    { kind: 'box', holeLabels: ['what to do', 'your bird here'],
+    holes: [{ kind: 'text', text: 'listen' }, null] },
     { kind: 'text', text: 'WHAT IT WILL TELL YOU\n\nEach change arrives on\nthe event nest as the\nnew value, once \u2014 an\nupdate that changes\nnothing is swallowed\n(the echo rule).' },
   ],
 };
 INFO_PAGES.sound = [
-  { kind: 'text', text: 'WHAT YOU CAN SEND\n\n[play] to its bird plays\nit; [stop] stops it.\n\nOr just click the sound\nitself to hear it.' },
-  { kind: 'box', holes: [{ kind: 'text', text: 'play', label: 'what to do' }] },
+  { kind: 'text', text: 'WHAT YOU CAN SEND\n\n[play] to its bird plays\nit; [stop] stops it.\n\nSPACE plays whatever is\nin your hand or under\nthe pointer; \u201c.\u201d stops it.' },
+  { kind: 'box', holeLabels: ['what to do'], holes: [{ kind: 'text', text: 'play' }] },
   { kind: 'text', text: 'MAKING ONE\n\nDrop this box on a silent\nsound and it becomes a\n440 hertz sine for half a\nsecond.\n\nChange the numbers; try\nsquare, sawtooth or\ntriangle in the third\nhole.' },
-  { kind: 'box', holes: [{ kind: 'number', value: { n: '440', d: '1' }, op: '+', label: 'frequency' },
-                         { kind: 'number', value: { n: '1', d: '2' }, op: '+', label: 'seconds' },
-                         { kind: 'text', text: 'sine', label: 'shape' }] },
+  { kind: 'box', holeLabels: ['frequency', 'seconds', 'shape'],
+    holes: [{ kind: 'number', value: { n: '440', d: '1' }, op: '+' },
+            { kind: 'number', value: { n: '1', d: '2' }, op: '+' },
+            { kind: 'text', text: 'sine' }] },
   { kind: 'text', text: 'REMAKING ONE\n\nA \u00d72 dropped on a sound\nplays it twice as fast; a\n\u00d7\u00bd stretches it; a \u00d7-1\nplays it BACKWARDS.\n\nAdding to a sound means\nnothing, and is refused.' },
   { kind: 'number', value: { n: '2', d: '1' }, op: '*' },
   { kind: 'text', text: 'JOINING THEM\n\nDrop a sound on another\nsound\u2019s edge and they play\none after the other \u2014 the\nsame gesture that joins\ntwo pads into a word.\n\nA melody is built the way\na sentence is.' },
 ];
+const SOUND_RECORDED_PAGES = [
+  { kind: 'text', text: 'A RECORDED SOUND\n\nSPACE plays it, \u201c.\u201d stops\nit \u2014 in your hand or under\nthe pointer.\n\n[play] and [stop] to its\nbird do the same.' },
+  { kind: 'box', holeLabels: ['what to do'], holes: [{ kind: 'text', text: 'play' }] },
+  { kind: 'text', text: 'REMAKING IT\n\nA \u00d72 dropped on it plays\nit twice as fast; a \u00d7\u00bd\nstretches it; a \u00d7-1 plays\nit BACKWARDS, sample by\nsample.\n\nAdding to a sound means\nnothing, and is refused.' },
+  { kind: 'number', value: { n: '2', d: '1' }, op: '*' },
+  { kind: 'text', text: 'JOINING THEM\n\nDrop a sound on another\nsound\u2019s edge and they play\none after the other \u2014 the\nsame gesture that joins\ntwo pads into a word.\n\nA recording and a made\ntone join just as happily.' },
+];
 function infoNotebookFor(owner) {
+  // a recording is not remade by a [frequency, duration, shape] box, so its
+  // notebook does not offer one
+  if (owner.userData.kind === 'sound'
+      && (owner.userData.sound?.segs || []).some(sg => sg.src)) {
+    const nb = makeNotebook({ pages: SOUND_RECORDED_PAGES.slice(), page: 0 });
+    setThingLabel(nb, panelName(owner).replace(/\u201c|\u201d/g, '') + ' \u2014 info');
+    return nb;
+  }
   const pages = INFO_PAGES[owner.userData.kind]?.slice() ?? [
     { kind: 'text', text: 'Its bird has no vocabulary\nyet \u2014 that arrives with\npictures and behaviours.\n\nIts panel is still a place:\nlay robots and their boxes\non it and they work there,\nglued to the thing.' },
   ];
@@ -3225,7 +3407,7 @@ function resizeHeld(dir) {
     ud.width = ud.pw;
     buildTrayShape(held, held.__owner, ud.pw, ud.pd);
     positionPerches(held);
-    ud.fit = ROOM_FIT * (Math.min(ud.pw, ud.pd * (0.5 / 0.42)) / 0.5);
+    ud.fit = PANEL_FIT * (Math.min(ud.pw, ud.pd * (0.5 / 0.42)) / 0.5);
     if (held.__ctx) fitRoomContents(held);
     return refreshUI();
   }
@@ -3261,7 +3443,7 @@ function openHeldPanel() {
   clearUndo();                          // open/close is a boundary, like a door
   const size = X.userData.panelSize;
   const tray = makePanelTray(X, size?.[0], size?.[1]);
-  if (size) tray.userData.fit = ROOM_FIT * (Math.min(size[0], size[1] * (0.5 / 0.42)) / 0.5);
+  tray.userData.fit = PANEL_FIT * (size ? Math.min(size[0], size[1] * (0.5 / 0.42)) / 0.5 : 1);
   // the closed record is kept until close overwrites it: the tray works on a
   // copy, so nothing is lost if the tray is discarded rather than closed
   tray.userData.world = X.userData.panelWorld
@@ -3310,7 +3492,10 @@ function closePanelTray(tray) {
   const at = tray.getWorldPosition(new THREE.Vector3());
   scene.attach(tray);
   tray.position.copy(at);
-  retiring.push({ node: tray, t: 0, s0: tray.scale.x });
+  // it folds back INTO its thing: shrinking on the spot read as the panel
+  // floating away, when what it is doing is going home
+  const home = X && X.parent ? X.getWorldPosition(new THREE.Vector3()) : null;
+  retiring.push({ node: tray, t: 0, s0: tray.scale.x, from: at.clone(), to: home });
   sfx('shrink');
   say(X && !empty ? 'The panel folds back inside — everything on it goes along.'
                   : 'The panel folds away.');
@@ -3547,8 +3732,13 @@ function advanceRetiring(dt) {
     if (r.t >= 1) { r.node.removeFromParent(); retiring.splice(i, 1); continue; }
     const e = ease(r.t);
     r.node.scale.setScalar(r.s0 * (1 - e));
-    r.node.position.y += dt * 0.35;
-    r.node.rotation.y += dt * 2.2;
+    if (r.to) {
+      r.node.position.lerpVectors(r.from, r.to, e);      // home to its thing
+      r.node.rotation.y += dt * 1.1;
+    } else {
+      r.node.position.y += dt * 0.35;
+      r.node.rotation.y += dt * 2.2;
+    }
   }
 }
 // Houses in the original are never idle-time work: they run while you are
@@ -4778,6 +4968,8 @@ function putInHole(hole, thing) {
   thing.quaternion.identity();
   const s = fitScale(thing, hole);
   thing.scale.setScalar(s);
+  // its name plaque is a label, not part of the thing: it stays legible
+  if (thing.__labelNode && s > 0.01) thing.__labelNode.scale.setScalar(1 / s);
   // A nest is a shallow ring with nothing under it: left at the pocket floor
   // it disappears into the shadow and the hole reads as empty. It sits on the
   // rim instead, where you can see it -- and see what lands on it.
@@ -6668,15 +6860,50 @@ function handleClick(target) {
     if (held) return say('Empty your hand to flip pages.');
     return notebookFlip(target.nb, target.dir);
   }
+  // The spine is the notebook ITSELF: a page hands you the entry lying on it,
+  // but the leather binding is the book. That is the one grip Dusty accepts on
+  // a full notebook -- he otherwise insists on two blank pages, which left a
+  // notebook you had filled with no way to be thrown away at all.
+  if (target.kind === 'nbSpine') {
+    const nb = target.nb;
+    if (mode === 'world' && !held) {
+      if (dustyActive) {
+        if (nb.userData.main) {
+          wobble(nb);
+          return sayAttn('Dusty leaves your notebook alone \u2014 it is yours, and it stays on '
+            + 'the desk. He will take an entry off a page if you point him at one.');
+        }
+        pushUndo();
+        return dustySuck(() => nb);
+      }
+      return userTake(nb);
+    }
+    target = { ...target, kind: 'thing', thing: nb };   // otherwise: a thing
+  }
   if (target.kind === 'nbItem') {
     const nb = target.nb, slot = target.slot;
     if (dustyActive && !held) {
       pushUndo();
-      nb.userData.pages[slot] = null;
-      renderNotebook(nb);
-      saveNotebook(nb);
-      say('Dusty removed that page’s entry.');
-      return refreshUI();
+      // he flies over and takes it, as he does everywhere else: the entry used
+      // to vanish with no sign that Dusty was the one who did it
+      const shown = (nb.__slotNodes || [])[slot - nb.userData.page] ?? null;
+      if (!shown) {
+        nb.userData.pages[slot] = null;
+        renderNotebook(nb); saveNotebook(nb);
+        return refreshUI();
+      }
+      dustySuck(() => shown);
+      enqueue({
+        dur: 0,
+        end() {
+          nb.userData.pages[slot] = null;
+          renderNotebook(nb);
+          saveNotebook(nb);
+          say('Dusty took that page’s entry.');
+          refreshUI();
+        },
+      });
+      return;
     }
     if (held) return say('Your hand is full.');
     if (mode === 'training') {
@@ -7048,9 +7275,8 @@ function userClick(target) {
         return say('Your notebook stays on the desk. Its first page holds a blank '
           + 'one — take a copy of that if you want a notebook to carry about.');
       }
-      // a sound plays as it comes into your hand: one gesture, and it stays
-      // pickable like everything else (click-to-play alone made it unliftable)
-      if (kind === 'sound') playSound(target.thing);
+      // Picking a sound up does NOT play it -- that was startling. Space
+      // plays whatever is in your hand or under the pointer; "." stops it.
       return userTake(target.thing);
     }
     if (target.thing === held) return;
@@ -8764,6 +8990,10 @@ function thingOutRaw(t) {
   // ones that hold something. Short boxes keep the plain array, which is
   // easier to read and is what every file written before v2 contains.
   const holes = ud.holes;
+  if (ud.kind === 'box' && ud.holeLabels?.length) {
+    return { kind: ud.kind, label: ud.label ?? undefined, holeLabels: ud.holeLabels,
+             holes: holes.map(h => thingOut(h.thing)) };
+  }
   if (ud.kind === 'box' && holes.length > SPARSE_FROM) {
     const at = {};
     for (let i = 0; i < holes.length; i++) {
@@ -8899,6 +9129,10 @@ function thingInRaw(o, nests, birds) {
     });
   }
   if (o.label) setThingLabel(t, o.label);
+  if (o.holeLabels && t.userData.kind === 'box') {
+    t.userData.holeLabels = o.holeLabels;
+    paintHoleLabels(t);
+  }
   return t;
 }
 function clearWorld() {
@@ -9738,7 +9972,7 @@ function refreshUI() {
           : 'click here to hold it up and read it; type to write on it')
       : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
       : kind === 'die' ? 'type how many faces it should have; drop it on a number to re-roll that number'
-      : kind === 'sound' ? 'drop a [frequency, duration, shape] box on it to make it sing; ×2 speeds it, ×-1 reverses it'
+      : kind === 'sound' ? 'SPACE plays it, “.” stops it; a [frequency, duration, shape] box makes it sing; ×2 speeds it'
       : 'put it down on the bench';
   }
   if (hintTimer || attnHeld) return;
@@ -9879,7 +10113,10 @@ addEventListener('drop', (e) => {
   e.preventDefault();
   const f = [...(e.dataTransfer?.files || [])][0];
   if (!f) return;
-  readMediaFile(f, trayUnderPointer(e));
+  // where it was let go of, not the middle of the bench
+  const hit = resolve({ clientX: e.clientX, clientY: e.clientY });
+  const at = hit?.point ? { x: hit.point.x, z: hit.point.z } : null;
+  readMediaFile(f, trayUnderPointer(e), at);
 });
 $('exportWorldBtn').onclick = () => {
   if (busy || mode !== 'world') return say('Leave the thought bubble first.');
@@ -10023,6 +10260,40 @@ addEventListener('keydown', (e) => {
     e.preventDefault();
     if (!busy && mode !== 'replay') undo();
     return;
+  }
+  // ToonTalk's own convention, brought over: SPACE turns a thing on and "."
+  // stops it -- the thing in your hand if there is one, otherwise whatever the
+  // pointer is over. A sound plays, a house or a panel sets its robot going.
+  if ((e.key === ' ' || e.key === '.') && !e.ctrlKey && !e.metaKey && !e.altKey
+      && mode !== 'replay') {
+    const on = e.key === ' ';
+    let node = held;
+    if (!node && lastMoveEv) {
+      const t = resolve(lastMoveEv);
+      node = t?.kind === 'thing' ? t.thing
+        : t?.kind === 'roomLever' || t?.kind === 'roomRoof' || t?.kind === 'roomDoor' ? t.room
+        : null;
+    }
+    // typing on a held pad or a name still wins: space is a letter there
+    const typing = held && ['text', 'robot', 'bird', 'nest', 'box', 'scale'].includes(held.userData.kind);
+    if (node && !(typing && e.key === ' ' && held === node && node.userData.kind !== 'sound')) {
+      const k = node.userData.kind;
+      if (k === 'sound') {
+        e.preventDefault();
+        const was = soundPlaying(node);
+        if (on) playSound(node); else stopSound(node);
+        return say(on ? 'Playing.' : was ? 'Stopped.' : 'It was not sounding.');
+      }
+      if (k === 'room') {
+        e.preventDefault();
+        if (!on) { node.userData.dirty = false; return say('Stopped \u2014 its robot rests.'); }
+        if (!roomHasWorker(node)) return say('Nothing to run yet: it needs a robot and something to work on.');
+        node.userData.stepRounds = 0;
+        node.userData.dirty = true;
+        return say(node.userData.panel ? 'The panel\u2019s robot gets to work.'
+                                       : 'The robot inside gets to work.');
+      }
+    }
   }
   // Ctrl+P opens the held thing's panel (and never the print dialog)
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
@@ -10238,6 +10509,16 @@ function wiggleTargetOf(t) {
 function tipFor(t) {
   if (!t || mode === 'replay') return null;
   const training = mode === 'training';
+  if (t.kind === 'nbSpine') {
+    const ud = t.nb.userData;
+    if (held) return 'The spine \u2014 empty your hand to pick the notebook up by it.';
+    if (dustyActive) {
+      return ud.main
+        ? 'Your own notebook stays \u2014 point Dusty at an entry on a page instead.'
+        : 'The spine \u2014 Dusty takes the whole notebook by it, entries and all.';
+    }
+    return 'The spine \u2014 click to pick up the notebook itself, not what is on its pages.';
+  }
   if (dustyActive && !held && (t.kind === 'thing'
       || (t.kind === 'botThing' && t.bot !== activeBot))) {
     return t.kind === 'botThing'
@@ -10339,9 +10620,9 @@ function tipFor(t) {
   if (t.kind === 'roomLever') {
     const r = t.room;
     return r?.userData.dirty
-      ? 'The switch, up — the robot inside is working. Click to stop it.'
+      ? 'The switch, up — the robot inside is working. Click to stop it, or press “.”.'
       : (roomHasWorker(r)
-         ? 'The switch, down — click to set the robot inside working, up to the Rounds limit.'
+         ? 'The switch, down — click to set the robot inside working, up to the Rounds limit. SPACE does the same.'
          : 'The switch — nothing to run yet: the room needs a robot and something on its desk.');
   }
   if (t.kind === 'roomRoof') {
@@ -10415,7 +10696,7 @@ function tipFor(t) {
     if (ud.kind === 'sound' && !held) {
       const n = t.thing.userData.sound?.segs?.length ?? 0;
       return n
-        ? `A sound \u2014 ${soundSeconds(t.thing.userData.sound).toFixed(1)}s. Click to hear it and pick it up; drop a \u00d72 on it to speed it up, a \u00d7-1 to play it backwards, another sound on its edge to join them.`
+        ? `A sound \u2014 ${soundSeconds(t.thing.userData.sound).toFixed(1)}s. Press SPACE to play it, \u201c.\u201d to stop; click to pick it up. Drop a \u00d72 on it to speed it up, a \u00d7-1 to play it backwards, another sound on its edge to join them.`
         : 'A silent sound \u2014 give it a [frequency, duration, shape] box, or drop a recording on it. Click to pick it up.';
     }
     if (ud.kind === 'text' && held?.userData.kind === 'text') {
@@ -13017,6 +13298,14 @@ window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_D
                    get going() { return martyTarget ? martyTarget.toArray().map(v => +v.toFixed(2)) : null; },
                    get thinking() { return martyThinking; } };
 
+// A picture is a data URL of some kilobytes; a golden wants to know only
+// WHICH picture, and to notice if it changes. Length plus a cheap rolling hash
+// is enough for both and stays one short token.
+function picDigest(src) {
+  let h = 0;
+  for (let i = 0; i < src.length; i++) h = (h * 31 + src.charCodeAt(i)) | 0;
+  return src.length + ':' + (h >>> 0).toString(36);
+}
 window.__nano = {
   THREE, scene, camera, renderer, stations,
   worldOut, worldIn, setThingLabel, martyActivityText,
@@ -13101,7 +13390,14 @@ window.__nano = {
       : t.userData.kind === 'number'
         ? ratText(t.userData.value) + (t.userData.op === '+' ? '' : ` ${t.userData.op}`)
       : t.userData.kind === 'robot' ? 'robot'
-      : t.userData.kind === 'text' ? { text: t.userData.text }
+      : t.userData.kind === 'text'
+        ? (t.userData.img ? { text: t.userData.text, pic: picDigest(t.userData.img) }
+                          : { text: t.userData.text })
+      : t.userData.kind === 'sound'
+        ? { sound: t.userData.sound.segs.map(sg => sg.src ? 'recording'
+                                                  : [sg.f, sg.d, sg.shape]),
+            rate: t.userData.sound.rate ?? 1,
+            back: !!t.userData.sound.reversed }
       : t.userData.kind === 'notebook' ? { notebook: t.userData.pages.length }
       : t.userData.kind === 'room' ? { room: { has: !!(t.__ctx || t.userData.world), dirty: !!t.userData.dirty } }
       : t.userData.kind === 'bird' ? 'bird'

@@ -104,7 +104,7 @@ live number cannot interleave a read-modify-write; an echo test showing a
 sync robot's own write does not wake itself; an example box copied from a
 number's info notebook, edited and delivered; suite green.
 
-### Stage 3 — pads, generalized (2–3 days)
+### Stage 3 — pads, generalized (2–3 days) — **done 25 Aug**
 
 - **The rename**, first and as its own commit: "text pad" becomes **pad**
   in every string, the manual, tooltips and Marty's briefing — grep-audited.
@@ -119,6 +119,20 @@ number's info notebook, edited and delivered; suite green.
 *Acceptance:* a photograph lies on the table, files in the notebook, sits
 in a box; a butterfly sub-pad rides its field pad; a made sound plays and
 two sounds concatenate by edge-drop; suite green plus new goldens.
+
+*Met.* All of it, and two example folders that stand as the acceptance test:
+`examples/sounds/` (tones, transforms, melody) and `examples/images/`
+(pictures, naming, album). `melody` and `naming` joined the gate, which is
+now **13 worlds** — the first two that assert on media. `naming` is the
+one worth reading: six robots dispatch on the PICTURE in their thought,
+which needed no new machinery, only the fact that a picture is a pad.
+
+Two conventions arrived with them. **Space turns a thing on and "." stops
+it** — the thing in your hand, or the one under the pointer — which is
+ToonTalk's own, and which replaced "picking a sound up plays it" (Ken:
+startling). And a notebook's **spine** is a grip of its own: it picks up
+the book rather than what is on its pages, and it is the one hold Dusty
+accepts on a notebook that still has entries in it.
 
 ### Stage 4 — the Devices notebook (half a day to a day)
 

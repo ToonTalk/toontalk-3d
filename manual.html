@@ -69,6 +69,7 @@
   <a href="#basics">Basics</a>
   <a href="#numbers">Numbers</a>
   <a href="#pads">Pads</a>
+  <a href="#sounds">Sounds</a>
   <a href="#boxes">Boxes</a>
   <a href="#dice">Dice</a>
   <a href="#birds">Birds &amp; nests</a>
@@ -165,6 +166,52 @@ reading "a". The number is spent saying which letter you meant.</p>
   of "Toon". Take a 1 from the number stack, type <kbd>2</kbd>, and drop it on a
   pad's left edge to shift a letter — or drop a pad on it to pick out letter 2.</div>
   <iframe loading="lazy" src="toontalk-3d.html?demo=pads"></iframe>
+</div>
+
+<h3>Pictures</h3>
+<p>A pad's face can carry a <b>picture</b> as well as words. Drag an image file
+on to the page and it lands as a pad <em>where you dropped it</em>; drop it on
+a pad that is already there and the picture covers that pad instead. A picture
+pad is a pad in every other way — it copies, files in the notebook, goes in
+a box, joins other pads, and Dusty takes it away. Hold one and press
+<kbd>Ctrl</kbd> with the arrow keys to make it bigger or smaller; a picture
+keeps its own proportions rather than being squeezed into the tablet's.</p>
+<p>The words and the picture live on the <em>one</em> pad, so a caption is not
+a second thing — and a robot's thought compares both. A robot trained on a
+particular picture wakes for that picture and no other, which is how the
+<em>naming</em> example works.</p>
+
+<h2 id="sounds">Sounds</h2>
+<p>A sound is a little speaker lying face-up on the table — a walnut
+cabinet with a black baffle, a woofer, a tweeter, and a screen showing the
+waveform it holds. It arrives <b>silent</b>: a flat line.</p>
+<p><b>Making one.</b> Drop a
+<code>[frequency, seconds, shape]</code> box on a sound and it sings: the
+number is hertz, the fraction is how long, the pad is one of <em>sine</em>,
+<em>square</em>, <em>sawtooth</em> or <em>triangle</em> (anything else reads as
+sine). Or drag an audio file on to the page — <code>.wav</code>,
+<code>.mp3</code>, <code>.ogg</code>, <code>.m4a</code>, <code>.flac</code>,
+<code>.aac</code> — and the recording arrives on a speaker of its own.</p>
+<p><b>Remaking one.</b> A sound answers <b>&times;</b> and <b>set</b>, and
+refuses <b>+</b> — adding to a sound has no meaning. A <b>&times;2</b>
+dropped on it plays it twice as fast, a <b>&times;&frac12;</b> stretches it,
+and a <b>&times;&minus;1</b> plays it <em>backwards</em>: the same minus sign
+that makes a number subtract, on a thing whose axis happens to be time.</p>
+<p><b>Joining them.</b> Drop a sound on another sound's edge and they play one
+after the other — the same gesture that joins two pads into a word. A
+recording and a made tone join just as happily.</p>
+
+<h3 id="onoff">Turning things on and off</h3>
+<p>Press <kbd>Space</kbd> to turn on whatever is in your hand, or whatever the
+pointer is over; press <kbd>.</kbd> to stop it. A sound plays and stops; a
+house or a panel sets its robot working and stops it. (Space still types a
+space while you are writing on a pad.) Picking a sound up does not play it.</p>
+<div class="try">
+  <div class="cap"><b>Try it:</b> take a sound from its stack, take a box and
+  put 440, &frac12; and the word "square" in its three holes, and drop the box
+  on the sound. Then press <kbd>Space</kbd> over it, and drop a
+  <b>&times;&minus;1</b> on it.</div>
+  <iframe loading="lazy" src="toontalk-3d.html?demo=1"></iframe>
 </div>
 
 <h2 id="boxes">Boxes and scales</h2>
@@ -417,8 +464,13 @@ keeps its own). Drop a written pad on a full page to open the first page
 mentioning that text; a whole number jumps to that page number. Only Dusty can
 remove an entry (and <b>Undo</b> puts it back). He will not vacuum your own
 notebook at all, and clicking it makes it wobble where it stands rather than
-lifting it — so its corner tabs stay within reach. Any other notebook goes when
-open at two blank pages.
+lifting it — so its corner tabs stay within reach.</p>
+<p>The <b>spine</b> is a grip of its own: click the leather binding and you
+pick up the notebook itself rather than what is lying on its pages. That is
+also the one hold Dusty accepts on a notebook that still has entries in it —
+point him anywhere else and he asks for two blank pages first.
+The <kbd>&larr;</kbd> and <kbd>&rarr;</kbd> keys turn the pages while you point
+at a notebook, and so do the gold corner tabs.
 The first page holds a blank notebook — copy it out to make more. The desk
 notebook remembers everything between visits, and it is <b>furniture</b>: it
 stays where it is when you load somebody else's world, because it is your
@@ -456,6 +508,15 @@ when asking Marty: <em>sentence-generator</em>, <em>fibonacci</em> and
 <em>account</em> (Sally's), <em>swap</em>, <em>factorial</em>,
 <em>n-to-1</em> (the counting-down one), <em>append</em> and
 <em>reverse</em>.</p>
+<p>Three more folders hold sets of their own. <b><code>infinity/</code></b> is
+the seven <em>Exploring Infinity</em> activities.
+<b><code>sounds/</code></b> is <em>tones</em> (where a sound comes from),
+<em>transforms</em> (&times;2, &times;&frac12; and &times;&minus;1) and
+<em>melody</em>, a robot that knows no notes singing a queue of numbers into a
+C major scale, a note a round. <b><code>images/</code></b> is
+<em>pictures</em>, <em>album</em> (a notebook with pictures on its pages), and
+<em>naming</em> — six robots whose thoughts hold six pictures, so the
+dispatch is the matching and there is no table of names anywhere.</p>
 <p><b>The sentence factory</b> (<code>sentence-generator.world.json</code>). A glass room called the Scriptorium holds a team
 of twenty robots that roll dice to pick words, join pads into sentences,
 and hand each one to a bird who flies it out to a nest on your table. Pull the
