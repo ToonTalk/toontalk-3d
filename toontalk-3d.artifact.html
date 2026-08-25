@@ -164,7 +164,7 @@
   <ul id="steps"><li class="empty">not trained yet</li></ul>
 </div>
 
-<div id="bottom">
+<!-- outside #bottom: its transform would capture our fixed positioning -->
 <div id="held" class="card" style="cursor:pointer"
      title="What your invisible hand is carrying — it follows the mouse, and on a touch screen waits at one spot where you can see it. Click to hold a text pad up and read it.">
   <span class="k">holding</span><span class="v" id="heldVal">–</span>
@@ -176,6 +176,7 @@
   <button id="heldKeys" title="Show the keyboard, to type on what you are holding">⌨</button>
 </div>
 
+<div id="bottom">
 <div id="bar" class="card">
   <button id="exitBtn" class="think" style="display:none"
     title="End the lesson. The daydream rewinds; the robot keeps only what it learned.">Leave thought bubble</button>
