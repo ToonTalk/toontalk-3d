@@ -165,7 +165,7 @@
   <div id="library">
     <div class="row"><button id="exportHeldBtn" title="Save whatever you are holding to a file — any thing: a box, a number, a robot, a nest.">Save held thing</button>
       <button id="exportWorldBtn" title="Save the whole workshop to a file.">Save world</button></div>
-    <div class="row"><button id="importBtn" title="Open a saved file — a thing lands in your hand; a world replaces the workshop.">Import file</button></div>
+    <div class="row"><button id="importBtn" title="Open a file — a picture or a text file arrives as a pad, a sound on a speaker, a saved thing in your hand, a saved world replaces the workshop. Dropping a file on the page does the same.">Import file</button></div>
   </div>
   <ul id="steps"><li class="empty">not trained yet</li></ul>
 </div>
@@ -322,6 +322,12 @@ The other way round picks letters out: drop a pad on a whole number
 and that number chooses a letter — "Talk" dropped on a 2 leaves a pad
 reading "a". The number is spent saying which letter you meant.
 
+A number dropped on a pad rides on it, the way a pad dropped in the
+middle of another does: a score across a field, a count beside a picture. Move
+the pad and the number goes with it; a robot can change it where it sits.
+(It used to shift the pad's first or last letter along the alphabet. That was
+ToonTalk's own idea and, on reflection, not a good one.)
+
 Try it: pick up "Talk" and drop it on the right edge
 of "Toon". Take a 1 from the number stack, type 2, and drop it on a
 pad's left edge to shift a letter — or drop a pad on it to pick out letter 2.
@@ -339,6 +345,12 @@ The words and the picture live on the one pad, so a caption is not
 a second thing — and a robot's thought compares both. A robot trained on a
 particular picture wakes for that picture and no other, which is how the
 naming example works.
+
+To caption a picture, hold it and type. Words written over a picture
+are drawn on a band across the foot of it so they can be read against whatever
+is behind them — that is where the labels in the album example come
+from, and there is nothing else to it. Backspace rubs the caption
+out again.
 
 A pad on a pad
 Drop a pad on the middle of another pad and it rides there: move the
@@ -551,6 +563,9 @@ One rule follows from the queue: the first robot to doze stops the
 team. A robot facing a bare nest waits, and the team waits with it rather
 than stepping around it to somebody further down the line.
 
+The ones waiting stand in a row well behind the desk, at doll size, so the
+robot at the desk is always the one doing the work.
+
 ## Mimi the copier
 
 The tall machine at the right end of the arc is Mimi the copier. Set
@@ -578,6 +593,16 @@ anything. She also erases real things in place: an erased number
 stands for any number, which is how you build a robot's expectations by hand.
 Waking one settles the other, and whoever is awake fidgets.
 
+Dusty’s bag
+What Dusty swallows is not gone at once: it rides on his head, where
+you can see it. Click it and it comes back into your hand. That is how you take
+one piece out of a scene to look at it on its own — point him at the piece,
+then take it off him and set it on the table.
+
+He keeps the last six things. Older ones fall out of the bag for good, which
+is what a vacuum is for. Undo also puts a thing straight back where it
+came from, and empties the bag.
+
 ## Rooms
 
 Rooms are little houses that each hold an entire workshop. Drop a
@@ -603,6 +628,25 @@ rooms work as well, all the way down.
 
 Try it: drop the mini robot on the room, then the 4.
 Click the roof to make the walls glass. Click the door to step inside.
+
+Bringing files in
+Import file in the ⋮ menu, and dropping a file anywhere on the
+page, are the same door. What arrives depends on what the file is:
+
+- a picture — a pad with the picture on its face, where you dropped
+it; drop it on a pad that is already there and it covers that one instead;
+
+- a sound (.wav, .mp3, .ogg,
+.m4a, .flac, .aac) — a speaker
+holding the recording;
+
+- a text file (.txt, .md, .csv)
+— a pad with the writing on it, sized to suit how much there is. A poem, a
+word list or a grammar can be written elsewhere and brought in;
+
+- a saved thing — it arrives in your hand;
+
+- a saved world — it replaces the workshop.
 
 ## Marty the Martian
 
@@ -3143,7 +3187,8 @@ function giveToLiveBird(birdNode, X) {
 // it. A picture covers the pad whose panel took it; a saved thing or world is
 // what it always was.
 function readMediaFile(file, forThing, at) {
-  const land = (t) => putOnBench(t, at ?? benchSpot());
+  // a file YOU dropped lands on YOUR table, even while a robot is working
+  const land = (t) => putOnBench(t, at ?? benchSpot(), true);
   if (!file) return;
   const name = (file.name || '').toLowerCase();
   if (/^audio\//.test(file.type) || /\.(mp3|wav|ogg|m4a|aac|flac)$/.test(name)) {
@@ -3180,6 +3225,27 @@ function readMediaFile(file, forThing, at) {
     fr.readAsDataURL(file);
     return;
   }
+  // A plain text file is a PAD with the writing on it -- a poem, a word list,
+  // a grammar -- so a world can be started from something written elsewhere.
+  if (/^text\//.test(file.type) || /\.(txt|md|csv)$/.test(name)) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const words = String(fr.result || '').replace(/\r\n?/g, '\n');
+      if (forThing?.userData.kind === 'text') {
+        forThing.setText(words);
+        say(`${panelName(forThing)[0].toUpperCase() + panelName(forThing).slice(1)} now reads what was in the file.`);
+      } else {
+        const pad = makeText(words);
+        // a long file wants a bigger tablet, within reason
+        pad.setPadSize(words.length > 400 ? 2.5 : words.length > 120 ? 1.75 : 1);
+        land(pad);
+        say(`\u201c${file.name}\u201d arrives as a pad \u2014 hold it and press Ctrl with the arrows to resize it.`);
+      }
+      refreshUI();
+    };
+    fr.readAsText(file);
+    return;
+  }
   importRobotFile(file);          // a saved thing or world, as ever
 }
 // A file picker of its own, scoped to one thing. Created and clicked without
@@ -3197,7 +3263,7 @@ function trayUnderPointer(ev) {
 function pickMediaFor(forThing) {
   const inp = document.createElement('input');
   inp.type = 'file';
-  inp.accept = 'image/*,audio/*,.json,.world.json';
+  inp.accept = 'image/*,audio/*,text/plain,.json,.txt,.md,.csv';
   inp.onchange = () => readMediaFile(inp.files?.[0], forThing);
   inp.click();
 }
@@ -3292,6 +3358,31 @@ function sendViaBird(bird, thing) {
 // Glue, both ways: tray.__owner is the thing, thing.__panelTray is the tray.
 // The tray cannot be picked up, vacuumed or serialized as a bench thing --
 // it is not a thing of its own, only a thing's panel, out for the moment.
+// What is filed on a page, in words. A page holds the saved record rather
+// than a thing, so this reads the record -- and it is why pointing at an
+// entry used to say nothing at all.
+function pageWords(rec) {
+  if (!rec) return 'nothing';
+  if (rec.label) return '\u201c' + rec.label + '\u201d';
+  switch (rec.kind) {
+    case 'number': return `the number ${rec.value ? ratText(ratIn(rec.value)) : '?'}`;
+    case 'text': return rec.img
+      ? (rec.text ? `a picture captioned \u201c${rec.text}\u201d` : 'a picture')
+      : (rec.text ? `a pad: \u201c${rec.text.length > 28 ? rec.text.slice(0, 28) + '\u2026' : rec.text}\u201d`
+                  : 'a blank pad');
+    case 'robot': return rec.name ? `the robot \u201c${rec.name}\u201d`
+      : (rec.program || []).length ? 'a trained robot' : 'an untrained robot';
+    case 'box': return `a box of ${(rec.holes || []).length || rec.n || 0} holes`;
+    case 'scale': return 'a scale';
+    case 'nest': return 'a nest';
+    case 'bird': return 'a bird';
+    case 'die': return `a die (1 to ${rec.faces})`;
+    case 'sound': return 'a sound';
+    case 'room': return 'a room';
+    case 'notebook': return 'a notebook';
+    default: return 'something';
+  }
+}
 function panelName(owner) {
   const ud = owner.userData;
   if (ud.label) return '“' + ud.label + '”';
@@ -5566,10 +5657,16 @@ const roster = () => (activeBot ? [activeBot, ...activeBot.team] : []);
 // three is a tidy row and a team of twenty is a small crowd.
 function teamSlot(i, bot = activeBot) {
   const h = homeFor(bot);
-  const perFile = 6;                       // a long team folds into more files
-  const back = i % perFile, file = Math.floor(i / perFile);
-  return new THREE.Vector3(h.pos.x + file * 0.45, 0,
-                           h.pos.z - 0.5 - back * 0.34);
+  const perRow = 6;                        // a long team folds into more rows
+  const along = i % perRow, row = Math.floor(i / perRow);
+  // A ROW behind the desk rather than a column stretching away from it. A
+  // column vanished behind whoever was working (and, past a couple of places,
+  // walked into the furniture); a row stands where you can count it, well
+  // back and at doll size, so the one at the desk is unmistakably the one
+  // working. Ken saw two robots the same size side by side -- that was the
+  // stale-decision bug above, but the layout was not helping either.
+  return new THREE.Vector3(h.pos.x + (along - (perRow - 1) / 2) * 0.38, 0,
+                           h.pos.z - 0.66 - row * 0.42);
 }
 // Show the team standing by, each with its own thought over its head.
 function layoutTeam() {
@@ -5729,14 +5826,18 @@ let wiggle = null;
 // borrowed it. For robots the mini flag is the authority -- trusting the
 // scale captured at hover time is what kept stamping 0.24 back onto a robot
 // that had grown to the desk under a motionless pointer (every tablet tap).
+// A robot's size is owned elsewhere and is always uniform; everything else
+// keeps the scale it already had -- and a pad riding on a pad is FLAT, so
+// setScalar was standing it up into a slab every time the pointer crossed it.
+const _wb = new THREE.Vector3();
 function wiggleBase(w) {
-  return w.node.__bot ? (w.node.__bot.mini ? MINI : 1) : w.s;
+  return w.node.__bot ? _wb.setScalar(w.node.__bot.mini ? MINI : 1) : w.sv;
 }
 function setWiggle(node) {
   if (wiggle?.node === node) return;
   if (wiggle) {
     wiggle.node.rotation.y = wiggle.ry;
-    wiggle.node.scale.setScalar(wiggleBase(wiggle));
+    wiggle.node.scale.copy(wiggleBase(wiggle));
     wiggle = null;
   }
   if (!node || !node.parent) return;
@@ -5744,7 +5845,7 @@ function setWiggle(node) {
   // acknowledging out from under the pointer aimed at it -- worst on a house,
   // whose lever swam away, but true of a number in a box hole too.
   const amp = node.userData?.kind === 'room' ? 0.12 : 0.22;
-  wiggle = { node, ry: node.rotation.y, s: node.scale.x, t: 0, amp };
+  wiggle = { node, ry: node.rotation.y, sv: node.scale.clone(), t: 0, amp };
 }
 // A short shake, for "no": the same motion the pointer-hover wiggle uses, but
 // it runs itself out and puts the thing back exactly as it was.
@@ -5771,13 +5872,14 @@ function advanceWiggle(dt) {
   // stop wiggling a robot that is busy being the one at the desk
   if (wiggle.node.__bot) {
     const want = wiggleBase(wiggle);
-    if (want !== wiggle.s) { wiggle.s = want; wiggle.node.scale.setScalar(want); }
+    if (want.x !== wiggle.sv.x) { wiggle.sv.copy(want); wiggle.node.scale.copy(want); }
     if (!wiggle.node.__bot.mini) { setWiggle(null); return; }
   }
   wiggle.t += dt;
   const amp = wiggle.amp ?? 1;
   wiggle.node.rotation.y = wiggle.ry + Math.sin(wiggle.t * 15) * 0.10 * amp;
-  wiggle.node.scale.setScalar(wiggle.s * (1 + 0.035 * amp * Math.abs(Math.sin(wiggle.t * 15))));
+  wiggle.node.scale.copy(wiggle.sv)
+    .multiplyScalar(1 + 0.035 * amp * Math.abs(Math.sin(wiggle.t * 15)));
 }
 // An egg becomes a bird. A bird hatched among a robot's own things lands on
 // its work spot, where the robot can reach her; anywhere else she goes on the
@@ -6418,10 +6520,10 @@ function addSubPad(parent, child, point) {
   (parent.__subs ??= []).push(child);
   child.__padParent = parent;
   parent.add(child);
-  // A sub-pad rides at three quarters, so a scene reads as scenery on a field
-  // -- and it lies FLAT. A pad on the table is a slab of paper you can pick
-  // up; a pad on another pad is a picture painted on it, and a slab standing
-  // proud of the field is no use as the ball in a game of Pong.
+  // Whatever rides does so at three quarters, so a scene reads as scenery on
+  // a field -- and it lies FLAT. On the table a thing is a solid you pick up;
+  // on a field it is painted there, and a slab standing proud of the field is
+  // no use as the ball in a game of Pong or as a score across the top of one.
   child.scale.set(0.75, SUB_FLAT, 0.75);
   child.setSprite?.(true);
   placeSubPad(parent, child);
@@ -6668,25 +6770,24 @@ function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
   }
   if (target.userData.kind === 'text' && incoming.userData.kind === 'number') {
     const v = incoming.userData.value;
-    // a number restores an erased pad, writing its digits on it
+    // A number restores an ERASED pad, writing its digits on it. That is
+    // Ruby's business -- an erased pad is a hole in a thought -- and it is the
+    // one conversion that survives.
     if (target.userData.erased) {
       return mergeOnto(incoming, fromWorld, target, () => {
         unErase(target);
         target.setText(ratText(v));
       });
     }
-    // a number on a blank pad writes itself out as text
-    if (target.userData.text === '') {
-      return mergeOnto(incoming, fromWorld, target, () => target.setText(ratText(v)));
-    }
-    if (v.d !== 1n) return refuse('Only a whole number can shift letters.');
-    // ...on a written pad it shifts the first or last letter along the alphabet
-    return mergeOnto(incoming, fromWorld, target, () => {
-      const txt = target.userData.text;
-      const i = side === 'L' ? 0 : txt.length - 1;
-      const code = ((BigInt(txt.charCodeAt(i)) + v.n) % 65536n + 65536n) % 65536n;
-      target.setText(txt.slice(0, i) + String.fromCharCode(Number(code)) + txt.slice(i + 1));
-    });
+    // Otherwise it RIDES, exactly as a pad does: a score on a field, a number
+    // beside a picture. It used to shift the pad's first or last letter along
+    // the alphabet, which was ToonTalk's own idea and, as Ken put it, probably
+    // a bad one -- and it stood in the way of the useful thing.
+    incoming.removeFromParent();
+    addSubPad(target, incoming, dropPoint);
+    sfx('drop');
+    say('It rides on the pad now \u2014 move the pad and it goes along.');
+    return refreshUI();
   }
   // the die re-rolls the number it lands on: a random 1..faces
   if (target.userData.kind === 'number' && incoming.userData.kind === 'die') {
@@ -6907,6 +7008,13 @@ function handleClick(target) {
                      : 'Ruby settles down.');
     }
     return refreshUI();
+  }
+  // The bag needs no button and no key: what is in it is a thing you can see,
+  // and a thing you can see is a thing you click to pick up.
+  if (target.kind === 'dustyBag') {
+    if (held) return say('Empty your hand first \u2014 it comes back into it.');
+    if (mode === 'training') return say('Leave the thought bubble first.');
+    return takeFromDusty();
   }
   if (target.kind === 'marty') { toggleMartyPanel(); return; }
   // A second click on the thought while Ruby (or Dusty) is still flying home
@@ -8055,6 +8163,7 @@ function userDropOn(target, point) {
   // a pad dropped on a pad has three landing zones; everything else has two
   const side = (target.userData.kind === 'text' && held?.userData.kind === 'text')
     ? padZone(target, point) : sideOf(target, point);
+  // (a number on a pad ignores the zone entirely: it rides wherever it lands)
   const dropped = held; held = null;
   const from = dropped.getWorldPosition(new THREE.Vector3());
   combine({ occupant: target }, dropped, false, from, side, point);
@@ -8905,6 +9014,70 @@ function eraseThingInPlace(thing) {
 
 // Dusty removes things too: fly to the victim, suck it into the nozzle, fly
 // home. `getVictim` resolves at flight time so replays find the current thing.
+// What Dusty has swallowed, newest last, riding on his back where you can
+// see it. Six is plenty: a vacuum that never lets go is a cupboard.
+const dustyBag = [];
+const DUSTY_BAG_MAX = 6;
+let dustyBagNode = null;
+function ensureDustyBag() {
+  if (dustyBagNode || !dusty) return dustyBagNode;
+  dustyBagNode = new THREE.Group();
+  // Just clear of the top of his dome, which measures 0.47 -- so what he is
+  // carrying rides on his head where it can be seen and pointed at.
+  dustyBagNode.position.set(0, 0.49, 0);
+  dusty.add(dustyBagNode);
+  return dustyBagNode;
+}
+function stowInDusty(t) {
+  if (!t) return;
+  t.removeFromParent();
+  dustyBag.push(t);
+  while (dustyBag.length > DUSTY_BAG_MAX) {
+    // the oldest is gone for good -- he is a vacuum, not a cupboard
+    const old = dustyBag.shift();
+    old.removeFromParent();
+  }
+  layoutDustyBag();
+}
+function layoutDustyBag() {
+  const bag = ensureDustyBag();
+  if (!bag) return;
+  [...bag.children].forEach(c => c.removeFromParent());
+  // only the top one is shown, and it is the one you can take: a stack of six
+  // things over his head would hide him and each other
+  const top = dustyBag[dustyBag.length - 1];
+  if (!top) return refreshUI();
+  bag.add(top);
+  top.quaternion.identity();
+  const sc = top.userData.kind === 'robot' ? MINI * 0.9 : 0.42;
+  top.scale.setScalar(sc);
+  // rest is how far a thing's middle sits above whatever it is standing on --
+  // the same number the bench uses, so it sits on his head rather than in it
+  top.position.set(0, (top.userData.rest ?? 0.05) * sc, 0);
+  setPick(top, { kind: 'dustyBag' });
+  refreshUI();
+}
+function takeFromDusty() {
+  const t = dustyBag.pop();
+  if (!t) return say('Dusty is empty.');
+  t.removeFromParent();
+  WROOT.add(t);
+  t.scale.setScalar(1);
+  const at = dusty ? dusty.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.5, 0))
+                   : new THREE.Vector3(0, 1, 0);
+  t.position.copy(WROOT.worldToLocal(at.clone()));
+  setPick(t, t.userData.kind === 'robot' ? { kind: 'botThing', bot: t.__bot }
+                                         : { kind: 'thing', thing: t });
+  takeIntoHand(t);
+  layoutDustyBag();
+  return say(dustyBag.length
+    ? `Back out of the bag \u2014 ${dustyBag.length} more in there.`
+    : 'Back out of the bag \u2014 that was the last of it.');
+}
+function emptyDustyBag() {
+  dustyBag.splice(0).forEach(t => t.removeFromParent());
+  layoutDustyBag();
+}
 function dustySuck(getVictim) {
   if (!dusty) return;
   busy = true;
@@ -8948,13 +9121,9 @@ function dustySuck(getVictim) {
       dusty.position.z = dest.z - 0.04 * Math.sin(Math.PI * t * 4);
     },
     end() {
-      if (victim) {
-        if (victim.userData.kind === 'nest') {
-          victim.userData.pile.forEach(t => t.removeFromParent());
-          victim.userData.pile.length = 0;
-        }
-        victim.removeFromParent();
-      }
+      // Into the bag rather than into nothing, so it can come back out: a
+      // nest keeps its pile, since the whole nest is what he took.
+      if (victim) stowInDusty(victim);
       refreshUI();
     },
   });
@@ -9430,6 +9599,11 @@ function clearWorld() {
   }
   stations.stand = defaultStand;
   program = []; condition = null;
+  // A team run borrows a member's thought into the bubble. Clearing the
+  // leader's condition is not enough: the borrowed one outlived the world it
+  // came from, and hung over the new one with no robot under it.
+  condShow = null;
+  emptyDustyBag();       // what he swallowed belonged to the old world
   // sweep strays: anything scene-level that no registry owns (a bird caught
   // mid-flight when the worlds swapped, for instance) must not leak through
   const keep = new Set();
@@ -9542,6 +9716,7 @@ function snapshotWorld() {
 }
 function restoreWorld(snap) {
   dropQueue();
+  emptyDustyBag();      // undo puts things back on the table, not in his bag
   // removeFromParent, not scene.remove: while held its parent is the claw
   if (held) { held.removeFromParent(); held = null; }
   if (clawHeld) { clawHeld.removeFromParent(); clawHeld = null; }
@@ -9854,30 +10029,47 @@ function markRoomDone() {
 // up to the desk and the one standing there steps back into the queue. The
 // leader is still the robot you gave the work to -- only the body changes.
 function takeTheFloor(member) {
-  if (member === bodyBot) return;
-  const out = bodyBot;
-  member.mini = false;                // decided now, not when the tween ends
-  if (out) out.mini = true;
-  const outIdx = roster().indexOf(out);      // the leader has a slot too
-  const outSlot = outIdx >= 0 ? teamSlot(outIdx) : null;
-  const inNode = member.node, inFrom = inNode.position.clone();
-  if (inNode.parent !== WROOT) WROOT.add(inNode);
   // Inside a house nobody is watching the walk, but the swap must still HAPPEN:
   // skipping it left the member doing the work at doll size, which is what you
   // then found when you opened the door.
   if (offstage()) {
-    if (out) parkInQueue(out);
-    inNode.scale.setScalar(1);
-    inNode.position.set(0, 0, 0);
-    inNode.rotation.y = 0;
+    if (member === bodyBot) return;
+    const out0 = bodyBot;
+    member.mini = false;
+    if (out0) { out0.mini = true; parkInQueue(out0); }
+    const n0 = member.node;
+    if (n0.parent !== WROOT) WROOT.add(n0);
+    n0.scale.setScalar(1);
+    n0.position.set(0, 0, 0);
+    n0.rotation.y = 0;
     bindBody(member);
     parkRobot();
     return;
   }
-  addMiniBubble(inNode, null);            // the big bubble speaks for it now
+  // EVERYTHING here is decided in start(), when this swap's own turn comes --
+  // not when it is queued. A round of a team now queues several of these one
+  // after another (each robot that tries and fails steps up and steps back),
+  // and deciding at call time meant every one of them was computed against
+  // the same stale "who is standing there", so two robots ended up full size
+  // on one spot.
+  let out = null, outSlot = null, inNode = null, inFrom = null, skip = false;
   enqueue({
     dur: 0.45,
+    start() {
+      skip = member === bodyBot;
+      if (skip) { this.dur = 0.0001; return; }
+      out = bodyBot;
+      member.mini = false;
+      if (out) out.mini = true;
+      const outIdx = roster().indexOf(out);    // the leader has a slot too
+      outSlot = outIdx >= 0 ? teamSlot(outIdx) : null;
+      inNode = member.node;
+      if (inNode.parent !== WROOT) WROOT.add(inNode);
+      inFrom = inNode.position.clone();
+      addMiniBubble(inNode, null);          // the big bubble speaks for it now
+    },
     update(t) {
+      if (skip) return;
       const e = ease(t);
       inNode.scale.setScalar(lerp(MINI, 1, e));
       inNode.position.lerpVectors(inFrom, ZERO3, e);
@@ -9887,6 +10079,7 @@ function takeTheFloor(member) {
       }
     },
     end() {
+      if (skip) return;
       inNode.scale.setScalar(1);
       inNode.position.set(0, 0, 0);
       if (out && outSlot) {
@@ -10373,8 +10566,10 @@ $('importBtn').onclick = () => {
   // the Claude app's web view. A fresh one, never attached, does.
   const inp = document.createElement('input');
   inp.type = 'file';
-  inp.accept = '.json,application/json';
-  inp.onchange = () => { const f = inp.files?.[0]; if (f) importRobotFile(f); };
+  // The same door dropping a file on the page goes through: a picture, a
+  // recording, a text file or a saved thing, sorted by what it IS.
+  inp.accept = 'image/*,audio/*,text/plain,.json,.txt,.md,.csv';
+  inp.onchange = () => { const f = inp.files?.[0]; if (f) readMediaFile(f, null); };
   inp.click();
 };
 async function importRobotFile(file) {
@@ -10863,6 +11058,22 @@ function tipFor(t) {
   if (!t) return null;
   const TIP = inHand();
   const training = mode === 'training';
+  if (t.kind === 'nbItem') {
+    const nb = t.nb, entry = nb.userData.pages[t.slot];
+    const side = t.slot % 2 ? 'right' : 'left';
+    if (!entry) {
+      return TIP ? `Drop it on the ${side} page to file a copy here.`
+        : `Page ${t.slot + 1}, blank \u2014 drop something on it to file a copy.`;
+    }
+    const what = pageWords(entry);
+    if (dustyActive && !TIP) return `Dusty takes ${what} off page ${t.slot + 1}.`;
+    if (TIP) return `Page ${t.slot + 1} already holds ${what} \u2014 drop yours to replace it.`;
+    return `Page ${t.slot + 1} \u2014 ${what}. Click to take a COPY out; the page keeps its own.`;
+  }
+  if (t.kind === 'nbFlip') {
+    return t.dir < 0 ? 'Back a spread \u2014 the \u2190 key does the same.'
+                     : 'On a spread \u2014 the \u2192 key does the same.';
+  }
   if (t.kind === 'nbSpine') {
     const ud = t.nb.userData;
     if (TIP) return 'The spine \u2014 empty your hand to pick the notebook up by it.';
@@ -10889,7 +11100,7 @@ function tipFor(t) {
         || (t.kind === 'bench' && t.point && benchThings.some(t2 => t2.userData.kind === 'text'
             && Math.abs(t.point.x - t2.position.x) < 0.45 && Math.abs(t.point.z - t2.position.z) < 0.36)))) {
     return TIP.userData.erased ? 'Drop to restore the pad?'
-      : 'Drop on the pad — left of its centre shifts the FIRST letter, right shifts the LAST; a blank pad takes the digits.';
+      : 'Drop it on the pad and it rides there — a score on a field, or a number beside a picture. Move the pad and it goes along.';
   }
   if (t.kind === 'station') {
     const st = stations[t.id];
@@ -10942,6 +11153,13 @@ function tipFor(t) {
     }
     return TIP ? 'Your workbench — click to put that down.'
                 : 'Your workbench — build here. Robots cannot reach it.';
+  }
+  if (t.kind === 'dustyBag') {
+    const top = dustyBag[dustyBag.length - 1];
+    const more = dustyBag.length > 1 ? ` \u2014 ${dustyBag.length - 1} more underneath` : '';
+    return TIP
+      ? 'Empty your hand first, then click to take it back.'
+      : `In Dusty\u2019s bag: ${top ? panelName(top) : 'nothing'}${more}. Click to take it back into your hand.`;
   }
   if (t.kind === 'marty') {
     return 'Marty the Martian — ask him anything about the workshop, or for a demonstration. Click to talk.';
@@ -11064,6 +11282,16 @@ function tipFor(t) {
     }
     if (ud.kind === 'text' && !TIP) {
       const words = (ud.text ?? '').trim();
+      // A picture is a pad, and its caption is the pad's own writing on a
+      // band over the picture -- not a second thing riding on it. Nobody
+      // could be expected to guess that, so the picture says it.
+      if (ud.img) {
+        return words
+          ? `A picture captioned “${words}” — the caption is the PAD’s own writing. `
+            + 'Click to pick it up, then type to change it (Backspace rubs it out).'
+          : 'A picture — click to pick it up, then TYPE to caption it: words written over '
+            + 'a picture are drawn on a band so they can be read. Ctrl with the arrows resizes it.';
+      }
       if (!words) return 'A blank pad — click to pick it up, then type to write on it.';
       const PER = 600;
       if (words.length <= PER) return `A pad — “${words}”\n— click to pick it up; type to write on it.`;
@@ -11168,7 +11396,7 @@ function tipFor(t) {
 
 // corner handles are dragged, not click-carried -- with the camera pinned
 renderer.domElement.addEventListener('pointerdown', (ev) => {
-  if (!resizeMode || grabbedCorner !== null || TIP) return;
+  if (!resizeMode || grabbedCorner !== null || held) return;
   const t = resolve(ev);
   if (t?.kind === 'benchHandle') {
     grabbedCorner = t.corner;

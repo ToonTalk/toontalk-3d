@@ -1040,6 +1040,45 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         — and three.js stopped skipping invisible objects for raycasting
         years ago, so it had been solid to every click and every tooltip, right
         where Marty stands. One line: things you cannot see answer nothing.</p>
+      <h3>What Dusty is carrying</h3>
+      <p>Ken put a problem down with the answer he did not want attached:
+        “Dusty can remove subpictures but it doesn’t have a way to
+        spit out what it has sucked up. I’m reluctant to add a button on
+        Dusty and have keyboard shortcuts but I can’t think of good
+        alternatives.” The alternative turned out not to be a control.
+        What he swallows rides <em>on his head</em>, at doll size, where you
+        can see it — and the workshop already knows what to do with a
+        thing you can see: you click it and it is in your hand. Nothing new to
+        learn, nothing new on the screen, and the ToonTalk move Ken was after
+        (take one piece out of a scene and look at it on its own) is two
+        clicks. He keeps the last six; older ones fall out of the bag, because
+        a vacuum that never lets go is a cupboard.</p>
+      <h3>A bug hiding inside a good animation</h3>
+      <p>“Triangle isn’t running but is in the way of the robot who is
+        to the right of him.” Two robots, the same size, at one desk. The
+        layout was not helping, but underneath it was a real fault, and one the
+        previous round had introduced: <span class="mono">takeTheFloor</span>
+        decided everything the moment it was called — who is standing
+        there, which slot the outgoing one goes to, where it starts from —
+        and the new try-and-fail queue calls it five times in a row before any
+        of them plays. So every swap in the round was computed against the same
+        stale answer. It decides in <span class="mono">start()</span> now, when
+        its own turn comes, and the ones waiting stand in a row well behind the
+        desk at doll size.</p>
+      <h3>Two answers instead of two fixes</h3>
+      <p>Ken assumed the hearts in the album were subpictures, and reported
+        that Dusty swallowed the whole card. He does not: pointed at a real
+        subpicture he takes exactly that, and only that one wiggles — both
+        already true, and both worth checking rather than assuming. The album’s
+        hearts are not subpictures. They are ordinary pads with a picture on the
+        face and <em>the pad’s own writing</em> across the foot, drawn on a
+        band so it can be read against whatever is behind it. Which is also the
+        answer to his last question, the one about how to make one: hold it and
+        type. Nobody could be expected to guess that, so a picture says it now
+        when you point at one.</p>
+      <p>One thing the wiggle really was getting wrong, found while checking:
+        it rescaled uniformly, which stood a flat sub-pad back up into a slab
+        every time the pointer crossed it.</p>
     </div>
   </div>
 </section>
