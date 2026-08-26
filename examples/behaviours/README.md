@@ -51,6 +51,16 @@ build.
 
 Regenerate with `python make_library.py`.
 
+**Switching one on folds its panel away.** The robots keep working out of
+sight, which is the state a panel already had for a house with work still in
+it — six gadgets going at once would otherwise fill the table with trays.
+Open a gadget's panel (hold it and press the ⚙ on the holding card) to watch
+its robots at work.
+
+**Speed.** A gadget runs a whole robot round per move, so at 1× a step is a
+walk across the desk. **Instant** is the speed to watch these at; 8× is a
+slideshow of the same thing.
+
 ## The three worked examples
 
 `library` folds the robots away on panels, which is what makes a gadget usable.

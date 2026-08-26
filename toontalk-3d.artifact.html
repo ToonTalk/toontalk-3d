@@ -12945,9 +12945,11 @@ let devLastPoint = null, devPointAt = 0;
 const _devPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const _devHit = new THREE.Vector3();
 function devPointerMove(ev) {
-  if (!allNestsByGuid(DEV_POINT).length) return;
+  // the gate BEFORE the lookup: a mouse moves sixty times a second and this
+  // was paying for a nest scan fifty of those times to throw it away
   const now = performance.now();
   if (now - devPointAt < 90) return;            // ten a second is plenty
+  if (!allNestsByGuid(DEV_POINT).length) return;
   const r = renderer.domElement.getBoundingClientRect();
   ray.setFromCamera(new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1,
                                       -((ev.clientY - r.top) / r.height) * 2 + 1), camera);
@@ -13121,8 +13123,12 @@ function releaseGadget(g) {
 const touching = new Set();
 const _tb1 = new THREE.Box3(), _tb2 = new THREE.Box3();
 let touchAt = 0;
+// The cheap question first: is ANY nest anywhere listening for a touch? In a
+// world where nothing ever has, that is one pass over the nests and no more.
+// Asking it per thing meant things x nests x parent-depth, sixteen a second.
+const anyTouchNest = () =>
+  allNests.some(n2 => typeof n2.userData.guid === 'string' && n2.userData.guid.endsWith('#touch'));
 function touchWatchers() {
-  // only things whose touch channel somebody is listening to
   const out = [];
   for (const t of benchThings) {
     if (!t.userData.evtGuid) continue;
@@ -13133,6 +13139,7 @@ function touchWatchers() {
 function sweepTouches(now) {
   if (now - touchAt < 60) return;              // sixteen a second is plenty
   touchAt = now;
+  if (!anyTouchNest()) { if (touching.size) touching.clear(); return; }
   const watchers = touchWatchers();
   if (!watchers.length) { if (touching.size) touching.clear(); return; }
   const others = benchThings.filter(t => t.parent);
@@ -13226,7 +13233,21 @@ function placeMsg(X, msg) {
     return true;
   }
   if (!here) {
-    sayAttn(`${panelName(X)} is not standing on the table, so it has no place of its own.`);
+    // "not on the table" is true and useless. WHICH of the other places it is
+    // in is what tells you what to do about it.
+    const where = X === held ? 'in your hand'
+      : clawHeld === X ? 'in the robot\u2019s claw'
+      : holeContaining(X) ? 'in a hole of something, where its place belongs to the box'
+      : Object.values(stations).some(st => st.occupant === X) ? 'on the robot\u2019s own desk'
+      : X.parent && X.parent !== benchRoot ? 'somewhere other than the table \u2014 in a house, on a nest, or on a pad'
+      : 'nowhere in the world at the moment';
+    sayAttn(`${panelName(X)} is ${where}, so it has no place of its own to move. `
+      + 'Put it on the table and it will have one.');
+    // and the detail a bug report needs, which a sentence cannot carry
+    const chain = [];
+    for (let q = X; q && chain.length < 6; q = q.parent) chain.push(q.name || q.userData?.kind || q.type);
+    console.warn('no place to move:', panelName(X), 'parent chain', chain.join(' < '),
+                 'mode', mode, 'busy', busy, 'speed', speed);
     return true;
   }
   if (verb === 'query') {
@@ -13570,10 +13591,10 @@ function openHeldPanel() {
 }
 // The tray itself, built and set on the table. Asked for by the panel button
 // and by switching a behaviour on, which are the same act from two sides.
-function bringOutPanel(X) {
+function bringOutPanel(X, folded = false) {
   if (X.__panelTray) {
     const tray0 = X.__panelTray;
-    if (tray0.__closed) { tray0.visible = true; tray0.__closed = false; }
+    if (tray0.__closed && !folded) { tray0.visible = true; tray0.__closed = false; }
     return tray0;
   }
   const size = X.userData.panelSize;
@@ -13586,6 +13607,15 @@ function bringOutPanel(X) {
   X.__panelTray = tray;
   putOnBench(tray, freeTraySpot(tray));
   if (tray.userData.world) hydrateRoom(tray);
+  // A behaviour switched on wants its robots WORKING, not on display: the
+  // tray is made and left folded, the state a panel already has for "its
+  // robot keeps working there, out of sight". Six gadgets going at once
+  // would otherwise fill the table with trays.
+  if (folded) {
+    tray.visible = false;
+    tray.__closed = true;
+    return tray;
+  }
   sfx('grow');
   const s0 = tray.scale.x;
   tray.scale.setScalar(0.01);
@@ -20848,7 +20878,7 @@ addEventListener('keydown', (e) => {
       // the same lever a house has, reached through the thing itself.
       if (isGadget(node)) {
         e.preventDefault();
-        const tray = bringOutPanel(node);
+        const tray = bringOutPanel(node, true);   // working, not on display
         if (!tray) return say('That behaviour has no panel yet.');
         if (!on) { tray.userData.dirty = false; return say('Stopped \u2014 its robots rest.'); }
         if (!roomHasWorker(tray)) {
@@ -20857,8 +20887,9 @@ addEventListener('keydown', (e) => {
         tray.userData.stepRounds = 0;
         tray.userData.dirty = true;
         const boundTo = node.userData.boundTo && liveReg.get(node.userData.boundTo);
-        return say(boundTo ? `Off it goes, on ${panelName(boundTo)}.`
-                           : 'Off it goes \u2014 on itself, since nobody has given it anything else to work on.');
+        return say((boundTo ? `Off it goes, on ${panelName(boundTo)}.`
+                            : 'Off it goes \u2014 on itself, since nobody has given it anything else to work on.')
+          + ' Its robots work out of sight; open its panel to watch them.');
       }
       if (k === 'room') {
         e.preventDefault();
