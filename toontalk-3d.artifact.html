@@ -11574,7 +11574,7 @@ function makeBox(n = HOLES) {
   const D = n === 0 ? 0.16 : holeW + 0.07;
   const H = n === 0 ? 0.05 : 0.11;
   const woodMat = new THREE.MeshStandardMaterial({ roughness: 0.78,
-    map: (crateTex ??= crateTexture()) });
+    map: (crateTex ??= sharedTex(crateTexture())) });
   const base = new THREE.Mesh(geo('BoxGeometry', W, H, D), woodMat);
   base.castShadow = true; base.receiveShadow = true;
   g.add(base);
@@ -12024,7 +12024,7 @@ function makeNotebook(rec = null) {
   const g = new THREE.Group();
   const cover = new THREE.Mesh(geo('BoxGeometry', 0.86, 0.035, 0.56),
     new THREE.MeshStandardMaterial({ roughness: 0.55,
-      map: (leatherTex ??= leatherTexture()) }));
+      map: (leatherTex ??= sharedTex(leatherTexture())) }));
   cover.position.y = 0.0175;
   cover.castShadow = true; cover.receiveShadow = true;
   g.add(cover);
@@ -12440,7 +12440,7 @@ function paintRoomLabel(room) {
 function makeRoom(data = null) {
   const g = new THREE.Group();
   const wallMat = new THREE.MeshStandardMaterial({ roughness: 0.85, transparent: true,
-    map: (stuccoTex ??= stuccoTexture()) });
+    map: (stuccoTex ??= sharedTex(stuccoTexture())) });
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x8a2f1d, roughness: 0.7, transparent: true });
   const floor = new THREE.Mesh(geo('BoxGeometry', 0.5, 0.03, 0.42),
     new THREE.MeshStandardMaterial({ color: 0x6b5636, roughness: 0.75 }));
@@ -12475,7 +12475,7 @@ function makeRoom(data = null) {
   door.add(frame);
   const leaf = new THREE.Mesh(geo('BoxGeometry', 0.14, 0.19, 0.024),
     new THREE.MeshStandardMaterial({ color: 0x8a5a2c, roughness: 0.55,
-      map: (woodTex ??= woodTexture()) }));
+      map: (woodTex ??= sharedTex(woodTexture())) }));
   leaf.position.y = 0.098;
   door.add(leaf);
   const knob = new THREE.Mesh(geo('SphereGeometry', 0.013, 10, 8),
@@ -12507,7 +12507,7 @@ function makeRoom(data = null) {
   armPivot.position.set(0.012, 0, 0);
   const arm = new THREE.Mesh(geo('BoxGeometry', 0.016, 0.11, 0.02),
     new THREE.MeshStandardMaterial({ color: 0x8a5a2c, roughness: 0.5,
-      map: (woodTex ??= woodTexture()) }));
+      map: (woodTex ??= sharedTex(woodTexture())) }));
   arm.position.y = 0.05;
   armPivot.add(arm);
   const knobL = new THREE.Mesh(geo('SphereGeometry', 0.017, 10, 8),
@@ -12935,6 +12935,7 @@ function devDeliver(guid, make, cap) {
     while (pile.length > cap) {
       const old = pile.pop();
       old.removeFromParent();
+      disposeThing(old);
     }
     if (pile.length) restackNest(n);
   }
@@ -13028,9 +13029,37 @@ function emitChannel(X, chan, make, cap) {
   for (const n of nests) {
     tuckInstant(n, make());
     const pile = n.userData.pile;
-    while (pile.length > cap) pile.pop().removeFromParent();
+    while (pile.length > cap) {
+      const old = pile.pop();
+      old.removeFromParent();
+      disposeThing(old);          // it is gone for good; let go of its canvases
+    }
     if (pile.length) restackNest(n);
   }
+}
+
+// Let go of the GPU. A thing the workshop is throwing away for good -- a
+// sensor reading replaced a tenth of a second later, the oldest thing to fall
+// out of Dusty's bag -- has painted canvases uploaded as textures, and
+// removeFromParent does not release them. Measured at thirteen textures per
+// pointer reading, never falling: about a hundred and forty a second.
+//
+// Geometry is never disposed here: geo() hands out ONE of each shape for the
+// whole world. Nor are the shared maps -- the wood, the leather, the straw.
+function disposeThing(t) {
+  if (!t) return;
+  t.traverse(o => {
+    if (!o.isMesh && !o.isSprite) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) {
+      if (!m || m.__shared) continue;
+      for (const k of ['map', 'emissiveMap', 'alphaMap', 'bumpMap', 'roughnessMap']) {
+        const tex = m[k];
+        if (tex && !tex.__shared) tex.dispose();
+      }
+      m.dispose();
+    }
+  });
 }
 
 // --- behaviours, and what binding one means --------------------------------
@@ -13397,7 +13426,7 @@ function buildTrayShape(g, owner, pw, pd) {
   const hw = pw / 2, hd = pd / 2;
   const base = keep(new THREE.Mesh(geo('BoxGeometry', pw, 0.024, pd),
     new THREE.MeshStandardMaterial({ color: 0x77634a, roughness: 0.7,
-      map: (woodTex ??= woodTexture()) })));
+      map: (woodTex ??= sharedTex(woodTexture())) })));
   base.position.y = 0.012;
   base.castShadow = true; base.receiveShadow = true;
   const rimMat = new THREE.MeshStandardMaterial({ color: 0x55452f, roughness: 0.6 });
@@ -13425,7 +13454,7 @@ function buildTrayShape(g, owner, pw, pd) {
     armPivot.position.set(0.01, 0, 0);
     const arm = new THREE.Mesh(geo('BoxGeometry', 0.013, 0.085, 0.016),
       new THREE.MeshStandardMaterial({ color: 0x8a5a2c, roughness: 0.5,
-        map: (woodTex ??= woodTexture()) }));
+        map: (woodTex ??= sharedTex(woodTexture())) }));
     arm.position.y = 0.04;
     armPivot.add(arm);
     const knobL = new THREE.Mesh(geo('SphereGeometry', 0.014, 10, 8),
@@ -13748,12 +13777,15 @@ const ROOM_DEPTH_MAX = 12;
 // deep the recursion; whatever is still dirty resumes on the next tick.
 const ROOM_WORK_SLICE = 1200;
 let roomWorkT0 = 0;
-function runRoomWork(room, depth = 0, miOverride = null) {
+function runRoomWork(room, depth = 0, miOverride = null, chunkMax = null) {
   if (depth === 0 && roomWorkBusy) return;
   if (depth === 0) roomWorkT0 = performance.now();
   if (depth > ROOM_DEPTH_MAX) return;
   if (depth > 0 && performance.now() - roomWorkT0 > ROOM_WORK_SLICE) return;
   hydrateRoom(room);
+  // marked HERE, not in the caller: a nested find must not be able to give a
+  // sibling a second turn in the same frame
+  room.__frame = roomFrame;
   room.__running = true;
   if (depth === 0) roomWorkBusy = true;
   window.__rrw = (window.__rrw || 0) + 1;
@@ -13768,7 +13800,14 @@ function runRoomWork(room, depth = 0, miOverride = null) {
     try {
       speed = Infinity;
       drainQueue(60);
-      const chunk = stepped ? 1 : Math.max(1, Math.min(40, mi - (room.userData.stepRounds || 0)));
+      // A house is a batch worker: forty rounds a turn and a pause. A PANEL is
+      // a ticker -- one round a turn, wherever it is reached from. That last
+      // part is the whole fix: the bench is global, so a running panel finds
+      // its SIBLINGS on the table and runs them as if they were inside it, and
+      // a forty-round batch three deep is five seconds in one frame.
+      const chunk = room.userData.panel ? 1
+        : (chunkMax ?? (stepped ? 1
+           : Math.max(1, Math.min(40, mi - (room.userData.stepRounds || 0)))));
       maxIter = chunk;
       let ran = 0;
       if (activeBot && program.length && stations.stand.occupant && !activeBot.waiting) {
@@ -13778,8 +13817,12 @@ function runRoomWork(room, depth = 0, miOverride = null) {
       }
       checkWaiting();                     // a delivery may have woken a dozing robot
       drainQueue();
-      // houses inside this house work too, live all the way down
-      if (depth < ROOM_DEPTH_MAX) {
+      // Houses inside this house work too, live all the way down -- but a
+      // PANEL does not go looking. The bench is global, so from inside a
+      // panel's world this loop finds the OTHER behaviours sitting on the
+      // table and runs them as if they were its own, three deep and outside
+      // the frame budget. A behaviour drives itself and nothing else.
+      if (depth < ROOM_DEPTH_MAX && !room.userData.panel) {
         for (let g = 0; g < 50; g++) {
           if (performance.now() - roomWorkT0 > ROOM_WORK_SLICE) break;
           const r2 = findDirtyRoom(true);
@@ -13817,12 +13860,24 @@ function runRoomWork(room, depth = 0, miOverride = null) {
       sayAttn('The room\u2019s work was taking too long \u2014 it has been paused. Pull its lever to try again.');
     }
   }
-  fitRoomContents(room);           // a round may have grown what's inside
+  // A round may have grown what is inside -- but a behaviour takes a round
+  // every frame and almost never grows anything, so it is re-fitted every
+  // eighth round rather than every one.
+  if (!room.userData.panel || ((room.userData.stepRounds || 0) & 7) === 0) {
+    fitRoomContents(room);
+  }
   fixBotScales();                  // and now the world outside, back again
   room.userData.dirty = cont;
-  if (cont) room.__nextStep = performance.now() + (stepped ? 1100 / Math.max(0.25, spd) : 80);
+  // a ticker has no cooldown: its whole job is to run again next frame
+  if (cont) {
+    room.__nextStep = room.userData.panel ? 0
+      : performance.now() + (stepped ? 1100 / Math.max(0.25, spd) : 80);
+  }
   if (depth === 0) {
-    refreshUI();
+    // Rebuilding the side panel is the most expensive thing in a room's turn,
+    // and a ticker takes a turn every frame. Coalesced: the flag is spent in
+    // processDirtyRooms, at most eight times a second.
+    if (room.userData.panel) roomUIDue = true; else refreshUI();
     // the swap back rebuilt nothing, but a robot HERE may have been dozing
     // over one of this room's answers
     if (!busy && mode === 'world') checkWaiting();
@@ -13833,8 +13888,14 @@ function runRoomWork(room, depth = 0, miOverride = null) {
 function findDirtyRoom(ignoreCooldown = false) {
   // a house whose turn is on the stack right now must not be found again --
   // the bench is global, so a running house can see itself from inside
+  // ignoreCooldown is the INNER search -- a house working through its own
+  // houses, which must be free to come back to one it has already run this
+  // frame. The frame gate belongs to the outer scheduler only; putting it
+  // here stopped the infinity pipelines mid-round.
   const ready = (t) => t.userData.kind === 'room' && t.userData.dirty && !t.__running
-    && (ignoreCooldown || !t.__nextStep || performance.now() >= t.__nextStep);
+    && (ignoreCooldown
+        || (t.__frame !== roomFrame
+            && (!t.__nextStep || performance.now() >= t.__nextStep)));
   const walk = (t) => {
     if (!t) return null;
     if (ready(t)) return t;
@@ -13914,6 +13975,7 @@ function advanceRetiring(dt) {
 // Training stays an exception, and should: a daydream is a world paused by
 // definition, and the notes taken when something is picked up -- which are
 // what a trained step is recorded from -- are not kept per world.
+let roomFrame = 0, roomUIDue = false, roomUIAt = 0;
 function processDirtyRooms() {
   if (roomWorkBusy || mode === 'training') return;
   const spent = findDoneRoom();
@@ -13921,6 +13983,30 @@ function processDirtyRooms() {
   // A dozing robot must NOT stop the houses: it is usually waiting on an
   // answer from one of them. Its vigil is re-derived after the swap back.
   if (allStands.length > 1) return;                   // several robots aside: not yet
+  roomFrame++;
+  // Behaviours first, and they share a slice of the frame rather than each
+  // taking a whole one. Least-recently-run leads, so whoever is squeezed out
+  // by the budget is first in the queue next frame -- which is what stops one
+  // gadget starving the others, and what "some of them stopped when I turned
+  // another on" actually was.
+  const panels = [];
+  for (const t of benchThings) {
+    if (t.userData?.panel && t.userData.dirty && !t.__running) panels.push(t);
+  }
+  if (panels.length) {
+    panels.sort((a, b) => (a.__frame || 0) - (b.__frame || 0));
+    const t0 = performance.now();
+    for (const room of panels) {
+      runRoomWork(room);
+      if (performance.now() - t0 > 8) break;      // the frame is not theirs to eat
+    }
+    if (roomUIDue && performance.now() - roomUIAt > 120) {
+      roomUIDue = false;
+      roomUIAt = performance.now();
+      refreshUI();
+    }
+    return;
+  }
   const room = findDirtyRoom();
   if (room) runRoomWork(room);
 }
@@ -14010,7 +14096,7 @@ function leaveRoom() {
 function makeNest() {
   const g = new THREE.Group();
   const straw = new THREE.MeshStandardMaterial({ roughness: 0.95,
-    map: (strawTex ??= strawTexture()) });
+    map: (strawTex ??= sharedTex(strawTexture())) });
   const rim = new THREE.Mesh(geo('TorusGeometry', 0.13, 0.045, 12, 24), straw);
   rim.rotation.x = Math.PI / 2;
   rim.position.y = 0.075;
@@ -14022,7 +14108,7 @@ function makeNest() {
   g.add(bowl);
   const egg = new THREE.Mesh(geo('SphereGeometry', 0.068, 20, 14),
     new THREE.MeshStandardMaterial({ roughness: 0.55,
-      map: (eggTex ??= eggTexture()) }));
+      map: (eggTex ??= sharedTex(eggTexture())) }));
   egg.scale.set(1, 1.25, 1);
   egg.position.y = 0.13;
   egg.castShadow = true;
@@ -14468,10 +14554,10 @@ function makeScale() {
   // two metals, as a good instrument deserves: brushed steel for the frame,
   // warm brass for the pans and trimmings
   const steel = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.9,
-    map: (steelTex ??= metalTexture('#7d828c', '255,255,255')) });
+    map: (steelTex ??= sharedTex(metalTexture('#7d828c', '255,255,255'))) });
   const dark = new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.8,
     color: 0xc89448,
-    map: (brassTex ??= metalTexture('#9a5f1e', '60,35,10')) });
+    map: (brassTex ??= sharedTex(metalTexture('#9a5f1e', '60,35,10'))) });
   const foot = new THREE.Mesh(geo('CylinderGeometry', 0.075, 0.095, 0.03, 24), dark);
   foot.position.y = 0.015; foot.castShadow = true; foot.receiveShadow = true;
   g.add(foot);
@@ -15314,7 +15400,7 @@ function makeMiniDesk(topY, w, d, topColor) {
   const g = new THREE.Group();
   const top = new THREE.Mesh(geo('BoxGeometry', w, 0.035, d),
     new THREE.MeshStandardMaterial({ color: topColor, roughness: 0.55,
-      map: (woodTex ??= woodTexture()) }));
+      map: (woodTex ??= sharedTex(woodTexture())) }));
   top.position.y = topY - 0.0175;
   top.castShadow = true; top.receiveShadow = true;
   g.add(top);
@@ -19072,6 +19158,7 @@ function stowInDusty(t) {
     // the oldest is gone for good -- he is a vacuum, not a cupboard
     const old = dustyBag.shift();
     old.removeFromParent();
+    disposeThing(old);
   }
   layoutDustyBag();
 }
@@ -19111,7 +19198,7 @@ function takeFromDusty() {
     : 'Back out of the bag \u2014 that was the last of it.');
 }
 function emptyDustyBag() {
-  dustyBag.splice(0).forEach(t => t.removeFromParent());
+  dustyBag.splice(0).forEach(t => { t.removeFromParent(); disposeThing(t); });
   layoutDustyBag();
 }
 function dustySuck(getVictim) {
@@ -19944,7 +20031,11 @@ function runProgram() {
   // No world reset, but the robot's own area always starts empty so a replay
   // cannot depend on leftovers from a previous run.
   clearScratch();
-  if (Math.abs(activeBot.node.scale.x - 1) > 0.01 || Math.abs(activeBot.root.scale.x - 1) > 0.01) {
+  if ((Math.abs(activeBot.node.scale.x - 1) > 0.01 || Math.abs(activeBot.root.scale.x - 1) > 0.01)
+      && !activeBot.__warned) {
+    // once per robot: a panel's robot enters a run every frame, and this was
+    // a stack trace sixty times a second
+    activeBot.__warned = true;
     console.warn('tiny-robot corrected entering run:',
       activeBot.node.scale.x, activeBot.root.scale.x, new Error().stack);
   }
@@ -21724,7 +21815,7 @@ loadModel('robot_v4.glb', (gltf) => {
     g.add(frame);
     const leaf = new THREE.Mesh(geo('BoxGeometry', 0.5, 1.44, 0.08),
       new THREE.MeshStandardMaterial({ color: 0x6b3f1d, roughness: 0.6,
-        map: (woodTex ??= woodTexture()) }));
+        map: (woodTex ??= sharedTex(woodTexture())) }));
     leaf.position.set(0, 0.75, 0.03);
     g.add(leaf);
     const knob = new THREE.Mesh(geo('SphereGeometry', 0.045, 12, 10),
@@ -21953,8 +22044,11 @@ let resizeMode = false, grabbedCorner = null;
 // corners: 0 = (x0,z0)  1 = (x1,z0)  2 = (x0,z1)  3 = (x1,z1)
 const cornerOf = (i) => new THREE.Vector3(i % 2 ? BENCH.x1 : BENCH.x0, BENCH_TOP,
                                           i < 2 ? BENCH.z0 : BENCH.z1);
+// One of each for the whole world. They are marked so that disposing a thing
+// can never take the wood out from under every other wooden thing.
 let woodTex = null, steelTex = null, brassTex = null, strawTex = null,
     leatherTex = null, stuccoTex = null, crateTex = null, eggTex = null;
+function sharedTex(t) { if (t) t.__shared = true; return t; }
 // small canvas painters, one per material family
 function speckTexture(w, base, marks, n, mk) {
   const cv = document.createElement('canvas');
@@ -22058,7 +22152,7 @@ function buildBench() {
   benchParts.length = 0;
   const w = BENCH.x1 - BENCH.x0, d = BENCH.z1 - BENCH.z0;
   const cx = (BENCH.x0 + BENCH.x1) / 2, cz = (BENCH.z0 + BENCH.z1) / 2;
-  woodTex ??= woodTexture();
+  woodTex ??= sharedTex(woodTexture());
   woodTex.repeat.set(Math.max(1, w / 1.3), Math.max(1, d / 1.3));
   const topMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.72 });
   const top = new THREE.Mesh(geo('BoxGeometry', w, 0.07, d), topMat);
