@@ -74,6 +74,8 @@
   <a href="#numbers">Numbers</a>
   <a href="#pads">Pads</a>
   <a href="#look">Looks</a>
+  <a href="#where">Places</a>
+  <a href="#behaviours">Behaviours</a>
   <a href="#devices">Devices</a>
   <a href="#sounds">Sounds</a>
   <a href="#boxes">Boxes</a>
@@ -516,6 +518,51 @@ word list or a grammar can be written elsewhere and brought in;</li>
 <li>a <b>saved thing</b> — it arrives in your hand;</li>
 <li>a <b>saved world</b> — it replaces the workshop.</li>
 </ul>
+
+<h2 id="where">Where a thing is</h2>
+<p>A thing standing on the table has a <b>place</b>, and its place is data like
+everything else. Send its bird:</p>
+<table>
+<tr><th>message</th><th>what it does</th></tr>
+<tr><td><code>[set | across | 1/2]</code></td><td>put it there. Zero
+across is the middle of the table; <em>away</em> grows towards you</td></tr>
+<tr><td><code>[set | away | 2]</code></td><td></td></tr>
+<tr><td><code>[set | position | [across | away]]</code></td>
+<td>both at once, as a box — the same box the <a href="#devices">pointer
+device</a> delivers</td></tr>
+<tr><td><code>[move | across | 1/60]</code></td><td>from where it is
+now, rather than to a place</td></tr>
+<tr><td><code>[query | position | bird]</code></td><td>tell that bird
+where it is</td></tr>
+</table>
+<p>And three things to doze on:</p>
+<table>
+<tr><th>channel</th><th>the nest holds</th></tr>
+<tr><td><code>[listen | position | bird]</code></td><td>the latest
+<code>[across | away]</code></td></tr>
+<tr><td><code>[listen | edge | bird]</code></td><td>one pad saying
+which edge of the table it is against — <em>left</em>, <em>right</em>,
+<em>near</em>, <em>far</em> — or <em>none</em>. A <b>reading</b>, so it is
+never empty</td></tr>
+<tr><td><code>[listen | touch | bird]</code></td><td>a live bird to
+whatever has just run into it</td></tr>
+</table>
+
+<h2 id="behaviours">Behaviours</h2>
+<p>A <b>behaviour</b> is a pad whose panel carries robots, and those robots
+speak about <em>my thing</em> through a live bird. Load
+<em>behaviours/library</em> from the examples for a shelf of them.</p>
+<p>To use one: <b>drop it on your thing</b>, then press <kbd>Space</kbd> on it.
+<kbd>.</kbd> stops it, and waking <b>Ruby</b> and clicking it lets go again.
+Binding is not editing — nothing inside the behaviour changes except which
+thing its bird is addressed to.</p>
+<p>Set one down on its own and switch it on and it does its thing <em>to
+itself</em>. That is not a demonstration mode: <em>my thing</em> means itself
+until somebody has said otherwise, so the shelf is legible by watching.</p>
+<p>Nothing in a behaviour is built in. Open its panel and you will find
+ordinary robots sending the messages above. <em>Bouncing</em> is three robots
+that differ only in the word they expect from the <em>edge</em> reading, and
+flipping the step is a <b>&times;&minus;1</b> dropped on a number.</p>
 
 <h2 id="devices">Devices</h2>
 <p>The workshop has senses of its own, and they are <b>nests</b>. Press

@@ -1,0 +1,398 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "text",
+    "text": "*",
+    "look": {
+     "bg": "#1b2233",
+     "ink": "#ffd23f",
+     "font": "sans"
+    },
+    "lid": "L9511",
+    "evt": "evt-L9511"
+   },
+   "x": -1.3,
+   "z": 1.2
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "at the left",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "anyBird"
+      },
+      {
+       "kind": "anyBox"
+      },
+      {
+       "kind": "text",
+       "text": "left"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "newNumber"
+     },
+     {
+      "type": "setValue",
+      "value": {
+       "n": "-1",
+       "d": "1"
+      },
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "bird",
+       "nestId": 0,
+       "nestGuid": null,
+       "liveId": "L9511"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "move"
+        },
+        {
+         "kind": "text",
+         "text": "across"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "40"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      {
+       "kind": "nest",
+       "id": 9512,
+       "guid": "evt-L9511#edge",
+       "hasEgg": false,
+       "label": "edge",
+       "pile": [
+        {
+         "kind": "text",
+         "text": "left"
+        }
+       ]
+      }
+     ]
+    },
+    "team": [
+     {
+      "kind": "robot",
+      "name": "at the right",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "text",
+         "text": "right"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "-1",
+         "d": "1"
+        },
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "L9511"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "across"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "40"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9512,
+         "guid": "evt-L9511#edge",
+         "hasEgg": false,
+         "label": "edge",
+         "pile": [
+          {
+           "kind": "text",
+           "text": "right"
+          }
+         ]
+        }
+       ]
+      },
+      "team": []
+     },
+     {
+      "kind": "robot",
+      "name": "moving",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "wildText"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "L9511"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "across"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "40"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9512,
+         "guid": "evt-L9511#edge",
+         "hasEgg": false,
+         "label": "edge",
+         "pile": [
+          {
+           "kind": "text",
+           "text": "none"
+          }
+         ]
+        }
+       ]
+      },
+      "team": []
+     }
+    ]
+   },
+   "x": -1.45,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "bird",
+      "nestId": 0,
+      "nestGuid": null,
+      "liveId": "L9511",
+      "label": "my thing"
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "text",
+        "text": "move"
+       },
+       {
+        "kind": "text",
+        "text": "across"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "40"
+        },
+        "op": "+"
+       }
+      ]
+     },
+     {
+      "kind": "nest",
+      "id": 9512,
+      "guid": "evt-L9511#edge",
+      "hasEgg": false,
+      "label": "edge",
+      "pile": [
+       {
+        "kind": "text",
+        "text": "none"
+       }
+      ]
+     }
+    ]
+   },
+   "x": -0.45,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "BOUNCING\n\n[my thing, a step, the edge]\n\nThe edge is a READING: one\npad saying which edge the\nstar is against, or \"none\".\n\nThree robots, in order,\ndiffering only in the word\nthey expect:\n\n  left    flip, then move\n  right   flip, then move\n  any     move"
+   },
+   "x": -1.45,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Rounds to 2000, Speed to\n8x, and give the work box to\nthe team leader.\n\nThe star runs to the right\nedge, turns round, runs back,\nturns again, and keeps going.\n\nWatch the team take turns:\nthe two turners look and step\naside all the way across, and\ntake the floor at the edge."
+   },
+   "x": -0.75,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WHY A READING\n\nAn event would leave the nest\nempty most of the time -- and\na team member facing a bare\nnest dozes, which stops the\nwhole team, including the one\ndoing the moving.\n\nA reading is never empty, so\nevery member can be decided\nevery round.\n\nFlipping the step is a x-1\ndropped on a number. Nothing\nhere is about bouncing."
+   },
+   "x": -0.05,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

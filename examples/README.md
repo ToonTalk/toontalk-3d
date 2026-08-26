@@ -29,6 +29,12 @@ what a sound is and how one is made, remade and joined; and what a picture is,
 which is a pad. Each ends with a program -- a robot that sings a queue of
 numbers, and a team of robots that recognise pictures by looking at them.
 
+**[`behaviours/`](behaviours/)** is the anima-gadgets: behaviours you can lift
+off a shelf and drop on your own thing. Each is one pad whose panel carries the
+robots; binding one re-points a single bird and changes nothing else, and an
+unbound one demonstrates itself because "my thing" means itself until somebody
+says otherwise.
+
 **[`devices/`](devices/)** is the workshop's own senses: nests that receive
 every key press and every move of the pointer. `keys` is a robot that types
 what you type; `pointer` is a gauge that follows your hand. Neither needed any

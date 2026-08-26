@@ -155,7 +155,7 @@ nest had to be exempted from the notebook's "a lone eggless nest comes out
 fresh" rule, which was replacing it with a new nest and costing it the guid
 that makes it a device at all.
 
-### Stage 5 — behaviours: anima-gadgets (2–3 days)
+### Stage 5 — behaviours: anima-gadgets (2–3 days) — **part done 26 Aug**
 
 The binding rule (both directions unless Stage 1 experience says one is
 enough): panel-on-panel re-points the inner robots at the outer panel's
@@ -173,6 +173,27 @@ score when hit.
 *Acceptance:* butterfly + move-with-mouse + bounce-off-edges is a playable
 toy, assembled with no training; each library behaviour demonstrates
 itself when set down alone; suite green.
+
+*Met, with the library short.* A star + the `bouncing` gadget dropped on it +
+SPACE ran to 1.24, turned, ran to −1.17 and turned again, with no training
+anywhere. Self-demonstration falls out of the binding rather than being built:
+an unbound gadget's bird points at the gadget. Suite green at 13.
+
+**Six of the twelve** are on the shelf: moving right, moving left, bouncing,
+wrapping at the edges, following the pointer, moving with the arrow keys. The
+other six — grow and shrink when touched, make a sound on hit, reverse on
+collision, a speed limit, send a message to the score — all want either a
+SIZE message (a thing's `sz` is not yet sayable) or arithmetic on what the
+`touch` channel hands over. The `touch` channel itself is built and delivers a
+live bird to whatever ran into a thing.
+
+Two things came out differently from the plan. The binding is **one
+direction** so far — a behaviour dropped on a thing — rather than the
+two-way panel-on-panel gesture; the second direction is a placement question,
+and the binding underneath it is the same call. And the EDGE had to be a
+*reading* rather than an event, because a team member facing an empty nest
+dozes and a dozing member stops the team — so an edge event would have
+stopped the very robot doing the moving. Readings are never empty.
 
 ### Stage 6 — inexact numbers (1–2 days)
 

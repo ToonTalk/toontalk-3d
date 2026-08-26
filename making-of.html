@@ -1154,6 +1154,56 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
+    <div class="rail">26 August</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">✿</span>
+        <h2>Behaviours you can pick up</h2>
+      </div>
+      <p>The Playground project shipped ToonTalk’s best answer to <em>how
+        does a child reuse behaviour without reading code</em>: anima-gadgets,
+        a picture whose front carried behaviours as purple rectangles. You took
+        one, flipped your butterfly over, and put it on the butterfly’s
+        back. The butterfly was ready.</p>
+      <p>Reproducing that needed one thing first. A behaviour moves things, so
+        <strong>where a thing is</strong> had to be sayable — and it joins
+        the appearance API in the same grammar, on the same bird:
+        <span class="mono">[set | across | 1/2]</span>,
+        <span class="mono">[move | position | [dx|dz]]</span>,
+        <span class="mono">[query | position | bird]</span>, and three channels
+        to doze on: position, edge, and touch, which hands you a live bird to
+        whatever has just run into you.</p>
+      <p>Then a behaviour is a pad whose panel carries robots that talk about
+        <em>my thing</em> through a live bird, and <strong>binding is not
+        editing</strong>. Drop the gadget on a butterfly and exactly one kind of
+        thing changes: which thing that bird is addressed to. Nothing inside is
+        rewritten — not a step, not a thought. The bouncing gadget reports
+        eight references re-pointed and nothing else touched.</p>
+      <p>Self-demonstration then costs nothing, and that is the part worth
+        pausing on. It is not a demo mode: an unbound gadget’s bird points
+        at the gadget itself, because <em>my thing</em> means itself until
+        somebody says otherwise. Set one down, press space, and it does its
+        thing to itself. A shelf of gadgets each doing its own thing is a
+        catalogue you read by watching, which is exactly what the 1999 write-up
+        described.</p>
+      <h3>The edge had to be a reading</h3>
+      <p>The obvious design for bouncing is a robot that moves and another that
+        watches for an edge. It cannot be written. A team is tried in order and
+        <em>the first member to doze stops the team</em> — Ken’s own
+        rule, from two rounds ago — so a watcher facing an empty nest would
+        stop the mover for ever. So the edge is not an event: it is a
+        <strong>reading</strong>, one pad saying which edge the thing is against
+        or “none”, never empty. And then the bouncer is three robots
+        that differ only in the word they expect, none of which can doze.</p>
+      <p>The acceptance ran with no training anywhere: a star on the table, the
+        bouncing gadget dropped on it, space. Out to 1.24, turn, back to
+        −1.17, turn again.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
     <div class="rail">How it worked</div>
     <div class="body">
       <div class="head">

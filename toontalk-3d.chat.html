@@ -677,6 +677,55 @@ word list or a grammar can be written elsewhere and brought in;
 
 - a saved world — it replaces the workshop.
 
+## Where a thing is
+
+A thing standing on the table has a place, and its place is data like
+everything else. Send its bird:
+
+messagewhat it does
+[set | across | 1/2]put it there. Zero
+across is the middle of the table; away grows towards you
+[set | away | 2]
+[set | position | [across | away]]
+both at once, as a box — the same box the pointer
+device delivers
+[move | across | 1/60]from where it is
+now, rather than to a place
+[query | position | bird]tell that bird
+where it is
+
+And three things to doze on:
+
+channelthe nest holds
+[listen | position | bird]the latest
+[across | away]
+[listen | edge | bird]one pad saying
+which edge of the table it is against — left, right,
+near, far — or none. A reading, so it is
+never empty
+[listen | touch | bird]a live bird to
+whatever has just run into it
+
+## Behaviours
+
+A behaviour is a pad whose panel carries robots, and those robots
+speak about my thing through a live bird. Load
+behaviours/library from the examples for a shelf of them.
+
+To use one: drop it on your thing, then press Space on it.
+. stops it, and waking Ruby and clicking it lets go again.
+Binding is not editing — nothing inside the behaviour changes except which
+thing its bird is addressed to.
+
+Set one down on its own and switch it on and it does its thing to
+itself. That is not a demonstration mode: my thing means itself
+until somebody has said otherwise, so the shelf is legible by watching.
+
+Nothing in a behaviour is built in. Open its panel and you will find
+ordinary robots sending the messages above. Bouncing is three robots
+that differ only in the word they expect from the edge reading, and
+flipping the step is a ×−1 dropped on a number.
+
 ## Devices
 
 The workshop has senses of its own, and they are nests. Press
@@ -3353,8 +3402,10 @@ function ensureLive(X) {
 function evtOwnerOf(nest) {
   const guid = nest.userData.guid;
   if (!guid || !String(guid).startsWith('evt-')) return null;
+  // a channel nest wears the thing's guid with the channel after a hash
+  const base = String(guid).split('#')[0];
   for (const X of liveReg.values()) {
-    if (X.userData.evtGuid === guid && (X.parent || X === held || holeContaining(X))) return X;
+    if (X.userData.evtGuid === base && (X.parent || X === held || holeContaining(X))) return X;
   }
   return null;
 }
@@ -3418,6 +3469,7 @@ function lookMsg(X, msg) {
 }
 function handleLiveMsg(X, msg) {
   const mk = msg.userData.kind;
+  if (placeMsg(X, msg)) return;
   if (lookMsg(X, msg)) return;
   if (X.userData.kind === 'number') {
     if (mk === 'number') {
@@ -3447,10 +3499,13 @@ function handleLiveMsg(X, msg) {
           .find(t2 => t2?.userData.kind === 'text');
         const cname = chan ? (chan.userData.text ?? '').trim().toLowerCase() : null;
         msg.removeFromParent();
+        // position, edge and touch are answered above by placeMsg, for every
+        // kind; what is left here is a number's own one
         if (cname && cname !== 'value') {
-          return sayAttn(`A number has one channel — value. “${cname}” arrives with pictures.`);
+          return sayAttn(`A number's own channel is its VALUE — “${cname}” is not one it has. `
+            + 'Every thing on the table also has position, edge and touch.');
         }
-        if (rb) sendViaBird(rb, makeEventNest(X));
+        if (rb) sendViaBird(rb, makeEventNest(X, 'value'));
         return;
       }
       msg.removeFromParent();
@@ -3782,13 +3837,256 @@ const DEVICE_PAGES = () => [
 
 // an event nest for a thing: it joins the thing's flock by guid, exactly as
 // a copied nest joins a flock. This is what [listen | bird] answers with.
-function makeEventNest(X) {
+// One event guid per thing per CHANNEL. The value channel keeps the plain
+// guid, so every world saved before channels existed still wires up.
+const chanGuid = (X, chan) =>
+  (!chan || chan === 'value') ? X.userData.evtGuid : X.userData.evtGuid + '#' + chan;
+function makeEventNest(X, chan) {
   const n = makeNest();
-  n.userData.guid = X.userData.evtGuid;
+  n.userData.guid = chanGuid(X, chan);
   n.__egg.removeFromParent();
   n.userData.hasEgg = false;
-  setThingLabel(n, 'events');
+  setThingLabel(n, chan && chan !== 'value' ? chan : 'events');
   return n;
+}
+// Deliver on a channel, keeping the pile short: a channel nobody is listening
+// to costs nothing, and one that is listened to must not grow for ever.
+function emitChannel(X, chan, make, cap) {
+  if (!X.userData.evtGuid) return;
+  const nests = allNestsByGuid(chanGuid(X, chan));
+  if (!nests.length) return;
+  for (const n of nests) {
+    tuckInstant(n, make());
+    const pile = n.userData.pile;
+    while (pile.length > cap) pile.pop().removeFromParent();
+    if (pile.length) restackNest(n);
+  }
+}
+
+// --- behaviours, and what binding one means --------------------------------
+// A gadget is a thing whose panel carries robots that speak about "my thing".
+// Nothing marks it out but saying so, because a gadget must be ONE thing --
+// the 2000 write-up's warning about copying "the entire purple rectangle",
+// where a wand aimed at a fragment took the artwork and left the robots.
+const isGadget = (t) => !!t?.userData?.gadget;
+// Walk a saved world and re-address everything that spoke about `from` so it
+// speaks about `to` instead. Birds carry a liveId; channel nests carry the
+// thing's event guid with the channel after a hash. Those two are the whole
+// of the binding -- no robot, no step and no thought is touched.
+function rebindRec(rec, from, to) {
+  let n = 0;
+  const walk = (o) => {
+    if (Array.isArray(o)) { o.forEach(walk); return; }
+    if (!o || typeof o !== 'object') return;
+    if (o.liveId === from.lid) { o.liveId = to.lid; n++; }
+    if (typeof o.guid === 'string' && o.guid.startsWith(from.evt)) {
+      o.guid = to.evt + o.guid.slice(from.evt.length);
+      n++;
+    }
+    for (const k of Object.keys(o)) if (k !== 'liveId' && k !== 'guid') walk(o[k]);
+  };
+  walk(rec);
+  return n;
+}
+// The gadget's panel, as a record, wherever it happens to be living: out on
+// the table as a hydrated tray, folded away as JSON, or not there at all.
+function gadgetRec(g) {
+  const tray = g.__panelTray;
+  if (tray && tray.__ctx) return { rec: ctxToRec(tray), tray };
+  if (tray) return { rec: tray.userData.world, tray };
+  return { rec: g.userData.panelWorld, tray: null };
+}
+function bindGadget(g, target) {
+  if (g === target) return say('That is what it already controls.');
+  ensureLive(g);
+  ensureLive(target);
+  const from = { lid: g.userData.lid, evt: g.userData.evtGuid };
+  const to = { lid: target.userData.lid, evt: target.userData.evtGuid };
+  const { rec, tray } = gadgetRec(g);
+  if (!rec) {
+    return sayAttn(`${panelName(g)} has nothing on its panel to bind \u2014 a behaviour is a thing whose PANEL carries the robots.`);
+  }
+  const moved = rebindRec(rec, from, to);
+  if (!moved) {
+    return sayAttn('Nothing on that panel speaks about "my thing", so there is nothing to re-point.');
+  }
+  // written back where it came from, and the tray rebuilt from it so what you
+  // can see is what it now says
+  if (tray) {
+    if (tray.__ctx) { stashCtx(tray.__ctx); tray.__ctx = null; }
+    tray.userData.world = rec;
+    hydrateRoom(tray);
+  } else {
+    g.userData.panelWorld = rec;
+  }
+  g.userData.boundTo = to.lid;
+  clearUndo();
+  refreshUI();
+  return sayAttn(`${panelName(g)[0].toUpperCase()}${panelName(g).slice(1)} now works on ${panelName(target)} `
+    + `\u2014 ${moved} reference${moved === 1 ? '' : 's'} re-pointed, and nothing else changed. Press SPACE on it to set it going.`);
+}
+function releaseGadget(g) {
+  const to = { lid: ensureLive(g), evt: g.userData.evtGuid };
+  const boundLid = g.userData.boundTo;
+  const X = boundLid && liveReg.get(boundLid);
+  if (!X) { g.userData.boundTo = null; return say('It already works on itself.'); }
+  const { rec, tray } = gadgetRec(g);
+  if (!rec) return say('Nothing on its panel to release.');
+  rebindRec(rec, { lid: X.userData.lid, evt: X.userData.evtGuid }, to);
+  if (tray) {
+    if (tray.__ctx) { stashCtx(tray.__ctx); tray.__ctx = null; }
+    tray.userData.world = rec;
+    hydrateRoom(tray);
+  } else {
+    g.userData.panelWorld = rec;
+  }
+  g.userData.boundTo = null;
+  clearUndo();
+  refreshUI();
+  return sayAttn(`${panelName(g)[0].toUpperCase()}${panelName(g).slice(1)} works on itself again `
+    + '\u2014 which is how a behaviour demonstrates itself: "my thing" with nobody else named.');
+}
+
+// --- what has just run into it ---------------------------------------------
+// Edge-triggered: the pair is remembered while they overlap, so a touch is
+// announced once when it happens rather than every frame it goes on happening.
+const touching = new Set();
+const _tb1 = new THREE.Box3(), _tb2 = new THREE.Box3();
+let touchAt = 0;
+function touchWatchers() {
+  // only things whose touch channel somebody is listening to
+  const out = [];
+  for (const t of benchThings) {
+    if (!t.userData.evtGuid) continue;
+    if (allNestsByGuid(chanGuid(t, 'touch')).length) out.push(t);
+  }
+  return out;
+}
+function sweepTouches(now) {
+  if (now - touchAt < 60) return;              // sixteen a second is plenty
+  touchAt = now;
+  const watchers = touchWatchers();
+  if (!watchers.length) { if (touching.size) touching.clear(); return; }
+  const others = benchThings.filter(t => t.parent);
+  const seen = new Set();
+  for (const a of watchers) {
+    if (!a.parent) continue;
+    _tb1.setFromObject(a);
+    for (const b of others) {
+      if (b === a) continue;
+      _tb2.setFromObject(b);
+      if (!_tb1.intersectsBox(_tb2)) continue;
+      const key = a.uuid + '|' + b.uuid;
+      seen.add(key);
+      if (touching.has(key)) continue;         // still touching, not news
+      touching.add(key);
+      ensureLive(b);
+      emitChannel(a, 'touch', () => makeLiveBird(b), 4);
+    }
+  }
+  // a pair that has come apart may touch again
+  for (const key of [...touching]) if (!seen.has(key)) touching.delete(key);
+}
+
+// --- where a thing is ------------------------------------------------------
+// Only a thing standing on the TABLE has a place of its own. In a hole, on a
+// nest or in a robot's claw it is somewhere by belonging to something else,
+// and moving it would be a question about that other thing.
+function thingPlace(X) {
+  // The parent, not the current world's bench list: a behaviour runs inside
+  // its own panel, where benchThings is that panel's, and the thing it moves
+  // is out here on the shared table. Asking the scene graph is the question
+  // that means the same in every world.
+  return X.parent === benchRoot ? { x: X.position.x, z: X.position.z } : null;
+}
+function placeBox(x, z) {
+  const b = makeBox(2);
+  b.userData.holeLabels = ['across', 'away'];
+  paintHoleLabels(b);
+  putInHole(b.userData.holes[0], makeNumber(rat(BigInt(Math.round(x * 1000)), 1000n)));
+  putInHole(b.userData.holes[1], makeNumber(rat(BigInt(Math.round(z * 1000)), 1000n)));
+  return b;
+}
+// Moving a thing, and saying so. The table has edges: a move that runs into
+// one stops there and announces WHICH one, which is the whole of what "bounce
+// off the edges" and "wrap at the edges" need to know.
+let posLast = new WeakMap();
+let edgeLast = new WeakMap();
+function placeThing(X, x, z) {
+  const half = (X.userData.width || 0.3) / 2;
+  const x0 = BENCH.x0 + half, x1 = BENCH.x1 - half;
+  const z0 = BENCH.z0 + 0.12, z1 = BENCH.z1 - 0.12;
+  let edge = null;
+  if (x < x0) { x = x0; edge = 'left'; } else if (x > x1) { x = x1; edge = 'right'; }
+  if (z < z0) { z = z0; edge = edge ? edge : 'far'; } else if (z > z1) { z = z1; edge = edge ? edge : 'near'; }
+  X.position.x = x;
+  X.position.z = z;
+  const was = posLast.get(X);
+  if (!was || Math.abs(was.x - x) > 1e-4 || Math.abs(was.z - z) > 1e-4) {
+    posLast.set(X, { x, z });
+    emitChannel(X, 'position', () => placeBox(x, z), 1);
+  }
+  // A READING and not an event: the nest always holds exactly one pad, saying
+  // which edge it is against or "none". An event would leave the nest empty
+  // most of the time, and a team member facing an empty nest dozes -- which
+  // would stop the very robot that does the moving.
+  if (edge !== edgeLast.get(X)) {
+    edgeLast.set(X, edge);
+    emitChannel(X, 'edge', () => makeText(edge || 'none'), 1);
+  }
+  return edge;
+}
+// [set | across | n] and its family. Answers null when it is not one of these,
+// so the kinds' own vocabularies see the message next.
+function placeMsg(X, msg) {
+  if (msg.userData.kind !== 'box') return false;
+  const hole = (i) => msg.userData.holes[i]?.thing ?? null;
+  const word = (t2) => t2?.userData.kind === 'text' ? (t2.userData.text ?? '').trim().toLowerCase() : null;
+  const verb = word(hole(0));
+  if (!['set', 'move', 'query', 'listen'].includes(verb)) return false;
+  const what = word(hole(1));
+  if (!['across', 'away', 'position', 'edge', 'touch'].includes(what)) return false;
+  const arg = hole(2);
+  const num2 = (t2) => t2?.userData.kind === 'number'
+    ? Number(t2.userData.value.n) / Number(t2.userData.value.d) : null;
+  const here = thingPlace(X);
+  msg.removeFromParent();
+  if (verb === 'listen') {
+    const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
+    if (!rb) { sayAttn(`[listen | ${what} | bird] wants a bird to answer to.`); return true; }
+    sendViaBird(rb, makeEventNest(X, what === 'position' ? 'position' : what));
+    return true;
+  }
+  if (!here) {
+    sayAttn(`${panelName(X)} is not standing on the table, so it has no place of its own.`);
+    return true;
+  }
+  if (verb === 'query') {
+    const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
+    if (!rb) { sayAttn(`[query | ${what} | bird] wants a bird to answer to.`); return true; }
+    sendViaBird(rb, what === 'position' ? placeBox(here.x, here.z)
+      : makeNumber(rat(BigInt(Math.round((what === 'across' ? here.x : here.z) * 1000)), 1000n)));
+    return true;
+  }
+  // set and move
+  let nx = here.x, nz = here.z;
+  if (what === 'position') {
+    const holes = arg?.userData.kind === 'box' ? arg.userData.holes.map(h => h.thing) : null;
+    const ax = holes ? num2(holes[0]) : null, az = holes ? num2(holes[1]) : null;
+    if (ax == null || az == null) {
+      sayAttn(`[${verb} | position | ...] wants a box of two numbers \u2014 across and away.`);
+      return true;
+    }
+    nx = verb === 'set' ? ax : here.x + ax;
+    nz = verb === 'set' ? az : here.z + az;
+  } else {
+    const v = num2(arg);
+    if (v == null) { sayAttn(`[${verb} | ${what} | ...] wants a number.`); return true; }
+    if (what === 'across') nx = verb === 'set' ? v : here.x + v;
+    else nz = verb === 'set' ? v : here.z + v;
+  }
+  placeThing(X, nx, nz);
+  return true;
 }
 
 // send something along a bird -- live or ordinary -- without a hand involved
@@ -3860,6 +4158,13 @@ function pageWords(rec) {
 function panelName(owner) {
   const ud = owner.userData;
   if (ud.label) return '“' + ud.label + '”';
+  // A pad with words on it is best named by them: "the pad now works on the
+  // pad" told nobody anything, where "moving right now works on *" does.
+  if (ud.kind === 'text') {
+    const w = (ud.text ?? '').trim().split(String.fromCharCode(10))[0];
+    if (w) return '“' + (w.length > 24 ? w.slice(0, 24) + '…' : w) + '”';
+    if (ud.img) return 'the picture';
+  }
   return { number: 'the number', text: 'the pad', box: 'the box',
            scale: 'the scale', nest: 'the nest', bird: 'the bird',
            robot: 'the robot', room: 'the room', die: 'the die',
@@ -4091,6 +4396,18 @@ function openHeldPanel() {
     return say('Its panel is already out — the tray on the table.');
   }
   clearUndo();                          // open/close is a boundary, like a door
+  bringOutPanel(X);
+  say(`${panelName(X)[0].toUpperCase() + panelName(X).slice(1)}’s panel — what you lay on it stays glued to the thing. The knob puts it away.`);
+  refreshUI();
+}
+// The tray itself, built and set on the table. Asked for by the panel button
+// and by switching a behaviour on, which are the same act from two sides.
+function bringOutPanel(X) {
+  if (X.__panelTray) {
+    const tray0 = X.__panelTray;
+    if (tray0.__closed) { tray0.visible = true; tray0.__closed = false; }
+    return tray0;
+  }
   const size = X.userData.panelSize;
   const tray = makePanelTray(X, size?.[0], size?.[1]);
   tray.userData.fit = PANEL_FIT * (size ? Math.min(size[0], size[1] * (0.5 / 0.42)) / 0.5 : 1);
@@ -4109,8 +4426,7 @@ function openHeldPanel() {
     update(t) { tray.scale.setScalar(Math.max(0.01, s0 * ease(t))); },
     end() { tray.scale.setScalar(s0); },
   });
-  say(`${panelName(X)[0].toUpperCase() + panelName(X).slice(1)}’s panel — what you lay on it stays glued to the thing. The knob puts it away.`);
-  refreshUI();
+  return tray;
 }
 function closePanelTray(tray) {
   if (busy || mode !== 'world' || tray.__running || roomWorkBusy) {
@@ -5287,6 +5603,7 @@ function copyThingRaw(t) {
   else if (ud.kind === 'sound') c = makeSound(ud.sound);
   else if (ud.kind === 'text') {
     c = makeText(ud.text);
+    if (ud.gadget) c.userData.gadget = true;
     // the colours come too: a copied label used to come back as plain paper
     if (ud.look) { c.userData.look = { ...ud.look }; c.applyLook(); }
     if (ud.img) c.setImage(ud.img);
@@ -7103,6 +7420,18 @@ function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
     enqueueNext(settleInto(incoming, from, 0.3));
     sayAttn(msg);
   };
+  // A BEHAVIOUR dropped on a thing binds to it, and this is asked before any
+  // other rule: a behaviour is a pad, and a pad landing on a pad would ride
+  // there instead, which is the one thing a behaviour must never quietly do.
+  if (isGadget(incoming) && target && !isGadget(target)) {
+    const from = incoming.getWorldPosition(new THREE.Vector3());
+    // it goes back on the table rather than into the thing: binding is about
+    // what its robots talk about, not about where it lies
+    putOnBench(incoming, benchSpot(), true);
+    enqueueNext(settleInto(incoming, from, 0.3));
+    bindGadget(incoming, target);
+    return refreshUI();
+  }
   // Boxes join: dropping one box on another concatenates their holes, contents
   // and all, exactly as in ToonTalk.
   if (incoming.userData.panel) {
@@ -7853,6 +8182,11 @@ function runRefusal(target) {
           && stations[target.id]?.occupant ? stations[target.id].occupant
       : null;
     if (victim) return eraseThingInPlace(victim);
+  }
+  // Ruby loosens: on a bound behaviour she lets go of what it was bound to,
+  // and it controls itself again. That is the same job she does on a thought.
+  if (rubyActive && !held && target.kind === 'thing' && isGadget(target.thing)) {
+    return releaseGadget(target.thing);
   }
   // While Dusty is awake, pointing him at things removes them. In training the
   // robot learns it as a step; in the workshop it just happens.
@@ -9902,6 +10236,8 @@ function thingOutRaw(t) {
   }
   if (ud.kind === 'text') {
     const r = { kind: 'text', text: ud.text, sz: ud.sz, img: ud.img,
+                gadget: ud.gadget || undefined,
+                boundTo: ud.boundTo || undefined,
                 look: ud.look ? { ...ud.look } : undefined };
     if (t.__subs?.length) {
       r.subs = t.__subs.map(c => ({ at: c.userData.at, thing: thingOut(c) }));
@@ -10018,6 +10354,8 @@ function thingInRaw(o, nests, birds) {
   }
   else if (o.kind === 'text') {
     t = makeText(o.text);
+    if (o.gadget) t.userData.gadget = true;
+    if (o.boundTo) t.userData.boundTo = o.boundTo;
     // applied, not just remembered: shape and canvas are decided in applyLook,
     // so a saved label came back the right colours at the wrong size without it
     if (o.look) { t.userData.look = { ...o.look }; t.applyLook(); }
@@ -11337,6 +11675,23 @@ addEventListener('keydown', (e) => {
         if (on) playSound(node); else stopSound(node);
         return say(on ? 'Playing.' : was ? 'Stopped.' : 'It was not sounding.');
       }
+      // "Set it on the floor, switch it on, and watch." A behaviour is switched
+      // on by bringing its panel out and setting the robots there working --
+      // the same lever a house has, reached through the thing itself.
+      if (isGadget(node)) {
+        e.preventDefault();
+        const tray = bringOutPanel(node);
+        if (!tray) return say('That behaviour has no panel yet.');
+        if (!on) { tray.userData.dirty = false; return say('Stopped \u2014 its robots rest.'); }
+        if (!roomHasWorker(tray)) {
+          return sayAttn('Nothing to run yet: its panel needs a robot and something for it to work on.');
+        }
+        tray.userData.stepRounds = 0;
+        tray.userData.dirty = true;
+        const boundTo = node.userData.boundTo && liveReg.get(node.userData.boundTo);
+        return say(boundTo ? `Off it goes, on ${panelName(boundTo)}.`
+                           : 'Off it goes \u2014 on itself, since nobody has given it anything else to work on.');
+      }
       if (k === 'room') {
         e.preventDefault();
         if (!on) { node.userData.dirty = false; return say('Stopped \u2014 its robot rests.'); }
@@ -11820,6 +12175,19 @@ function tipFor(t) {
     }
     if (ud.kind === 'text' && t.thing.__padParent && !TIP) {
       return 'A pad riding on another — click to lift it off; it keeps its place until you do.';
+    }
+    if (isGadget(t.thing)) {
+      const words = (ud.text ?? '').trim() || 'a behaviour';
+      const boundTo = ud.boundTo && liveReg.get(ud.boundTo);
+      const on = boundTo ? `works on ${panelName(boundTo)}` : 'works on itself';
+      if (TIP) {
+        return isGadget(TIP)
+          ? 'Two behaviours \u2014 drop one on a THING to bind it, not on another behaviour.'
+          : `Drop it on the behaviour to give ${LQ}${words}${RQ} something to work on.`;
+      }
+      return `${LQ}${words}${RQ} \u2014 a behaviour, and it ${on}. Drop it on a thing and its `
+        + 'robots work on that instead; wake Ruby and click it to let go again. '
+        + 'SPACE sets it going, \u201c.\u201d stops it; the panel holds the robots.';
     }
     if (ud.kind === 'text' && !TIP) {
       const words = (ud.text ?? '').trim();
@@ -12653,6 +13021,7 @@ renderer.setAnimationLoop((now) => {
   if (worldReady) {
     if (speed === Infinity) { fastForward(); advanceWorldClocks(dt); }
     else tick(dt * speed);
+    sweepTouches(now);          // costs nothing until something is listening
   }
   placeReading();          // a pad held up to read stays facing the camera
   if (condDisplay) {
@@ -14457,6 +14826,9 @@ window.__nano = {
   allBots() { return allBots.map(b => ({id: b.id, mini: b.mini, waiting: b.waiting,
     nodeScale: +b.node.scale.x.toFixed(3), rootScale: +b.root.scale.x.toFixed(3)})); },
   dropQueueNow() { dropQueue(); },   // simulate an animation thrown away mid-flight
+  // Houses and panels run from the FRAME loop, not from tick, so a headless
+  // driver has to ask for their turn the way the frame does.
+  rooms(n = 1) { for (let i = 0; i < n; i++) processDirtyRooms(); },
   giveRobot() {
     const bot = activeBot ?? benchThings.find(t => t.userData.kind === 'robot')?.__bot;
     if (bot) handleClick({ kind: 'botThing', bot });
