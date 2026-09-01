@@ -2044,6 +2044,83 @@ async function reachAtPileCheck(D) {
   return ok;
 }
 
+// A ROBOT CAN BE TAUGHT WITH A MODEL. Giving one to a robot builds its thought
+// bubble and puts the thought into words, and both of those walked into the
+// same trap the copier did: an else that assumed a box, reading holes a model
+// has not got. It threw during the click that starts the lesson, so the
+// workshop stopped with the bubble half-built -- "it couldn't pick it up and
+// then it froze". And underneath that, a quieter one: a kind with no matching
+// rule of its own answered "no" to ITSELF, so a robot taught with a model
+// would not have recognised that very model afterwards.
+async function trainWithModelCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [],
+    active: { kind: 'robot', name: 'learner', program: [], team: [] } });
+  await slowSettle(D, 3000);
+  const model = D.makeFromReply(JSON.stringify({ name: 'a boat', parts: [
+    { shape: 'box', size: [0.14, 0.035, 0.34], at: [0, 0.02, 0], color: '#8b5a2b' }]
+  }), 'a boat')?.thing;
+  if (!model) { put('FAIL a robot can be taught with a model  (no model)', 'fail'); return false; }
+  D.hold(model);
+  D.clickActive();                       // hand it over: that starts the lesson
+  await slowSettle(D, 4000);
+  const teaching = D.state.mode === 'training';
+  const words = D.condWords() || '';
+  const saidSomething = /model|boat/i.test(words);
+  // it takes the model off its desk, and what it carries can be seen
+  D.clickThing(model);
+  await slowSettle(D, 6000);
+  const held = D.clawThing();
+  const tookIt = !!held && held.kind === 'model' && held.visible;
+  // ...and the very same model answers its thought
+  const answers = D.condMatches(model);
+  const still = !D.state.current && !D.state.queued;
+  w.document.getElementById('exitBtn').click();
+  await slowSettle(D, 6000);
+  const backOut = D.state.mode === 'world';
+
+  const ok = teaching && saidSomething && tookIt && answers === 'yes' && still && backOut;
+  put((ok ? 'PASS' : 'FAIL') + ' a robot can be taught with a model  (lesson-starts='
+      + teaching + ' thought-says="' + words.slice(0, 40) + '"'
+      + ' picks-it-up=' + tookIt + ' recognises-it=' + answers
+      + ' answering=' + still + ' leaves=' + backOut + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// EVERY WHOLE NUMBER SAYS ITSELF IN ENGLISH. The names ran out at decillion and
+// everything past it fell into scientific notation, which is not something a
+// child reads aloud. The scales now go to vigintillion, and past even those a
+// number is read as "about five point seven times ten to the power of sixty" --
+// still English, still true. The check asks what the FACE would show, since a
+// name that has to be cut off with an ellipsis is not the number displayed.
+async function bigWordsCheck(D) {
+  const cases = [
+    ['12 digits', '123456789012', 'full'],
+    ['36 digits', '576460752303423487576460752303423487', 'full'],
+    ['40 digits', '1234567890123456789012345678901234567890', 'full'],
+    ['70 digits', '5'.padEnd(70, '7'), 'short'],
+    ['200 digits', '7'.padEnd(200, '3'), 'short'],
+  ];
+  const line = [], bad = [];
+  for (const [tag, n, want2] of cases) {
+    const shown = D.faceWords(n);
+    const short = /times ten to the power of/.test(shown);
+    const cut = /\u2026/.test(shown);
+    const digits = /[0-9]/.test(shown);
+    const okOne = !cut && !digits && (want2 === 'short' ? short : !short);
+    if (!okOne) bad.push(tag + (cut ? ' cut-off' : '') + (digits ? ' has-digits' : '')
+      + (short ? ' short' : ' full'));
+    line.push(tag + '=' + (short ? 'short' : 'full') + (cut ? '/CUT' : ''));
+  }
+  // and the words themselves reach the new scales
+  const vig = D.words('9'.padEnd(66, '8'));
+  const named = /vigintillion/.test(vig);
+  const ok = !bad.length && named;
+  put((ok ? 'PASS' : 'FAIL') + ' every number says itself  (' + line.join(' ')
+      + ' vigintillion=' + named + (bad.length ? ' BAD: ' + bad.join(', ') : '')
+      + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 // THE OPERATOR DOES NOT SIT ON THE NUMBER. The badge that says what dropping
 // this number does is painted AFTER the face, so wherever it is put it wins.
 // At (54,54) with a radius of 30 it reached down to row 84, and a long number
@@ -2846,6 +2923,12 @@ async function runOne(D, spec) {
   let stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK, picOK, wholeOK, t3dOK, mtOK,
       zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK;
   let paceOK, foldOK, reachOK, makerOK, faceOK, pileOK, drawOK, postOffOK, waitOK;
+  let teachOK = true;
+  try { teachOK = want('trainmodel') ? await trainWithModelCheck(D, frame.contentWindow) : true; }
+  catch (e) { teachOK = false; put('FAIL a robot can be taught with a model  ' + e.message, 'fail'); }
+  let wordsOK = true;
+  try { wordsOK = want('bigwords') ? await bigWordsCheck(D) : true; }
+  catch (e) { wordsOK = false; put('FAIL every number says itself  ' + e.message, 'fail'); }
   let badgeOK = true;
   try { badgeOK = want('badge') ? await opBadgeCheck(D) : true; }
   catch (e) { badgeOK = false; put('FAIL the operator keeps out of the way  ' + e.message, 'fail'); }
@@ -2986,7 +3069,7 @@ async function runOne(D, spec) {
                         && twinOK && nbOK,
                        bad, leakOK, playOK, pauseOK, copyOK, r28OK, shelfOK, bindOK, inexOK,
                        turtleOK, pgOK, stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK,
-                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, dumps };
+                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, teachOK, wordsOK, dumps };
   // AND ONTO DISK. Reading a verdict back out of the browser costs a round
   // trip through a channel that, on a loaded machine, times out more often
   // than it answers -- eight minutes of polling for one line of text. The

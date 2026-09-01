@@ -377,6 +377,13 @@ messagewhat it does
 [set | width | 2]pads only, in pad-widths
 [set | height | 1/3]pads only
 
+Every whole number says itself in English on one of its faces, however
+big it is: “one hundred twenty-three billion four hundred fifty-six million…”.
+Past the point where English runs out of names — beyond a vigintillion, which
+is a one with sixty-three noughts — it reads itself as about five point
+seven times ten to the power of sixty-nine, which is still something you
+can say out loud.
+
 Any colour the browser knows by name works, and so does a #rrggbb
 of your own. A number takes background, colour and font; its size is its own.
 Every one of these is a real box on a page of the thing's info notebook
@@ -2199,8 +2206,15 @@ function drawNum(c, s, cx, cyMid, maxW, maxH, lod = 1) {
 const SMALL_WORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten',
   'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
 const TENS_WORDS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+// The named scales, as far as English actually names them: up to vigintillion,
+// which is ten to the sixty-third, so any whole number of 66 digits or fewer
+// can be said. Ken: "even very large integers should be displayed in English
+// on one face of the cube" -- the table stopped at decillion, and everything
+// past it fell out of words and into scientific notation.
 const SCALE_WORDS = ['','thousand','million','billion','trillion','quadrillion','quintillion',
-  'sextillion','septillion','octillion','nonillion','decillion'];
+  'sextillion','septillion','octillion','nonillion','decillion','undecillion',
+  'duodecillion','tredecillion','quattuordecillion','quindecillion','sexdecillion',
+  'septendecillion','octodecillion','novemdecillion','vigintillion'];
 function english999(n) {
   let out = '';
   if (n >= 100) { out += SMALL_WORDS[Math.floor(n / 100)] + ' hundred'; n %= 100; if (n) out += ' '; }
@@ -2220,11 +2234,27 @@ function englishInt(n) {                 // BigInt >= 0; null past the names we 
   }
   return parts.join(' ');
 }
+// PAST EVEN THOSE NAMES, still English. A whole number of a hundred digits has
+// no name in any language anyone speaks, but it can still be SAID: the leading
+// figures, and how many tens it is multiplied by. Everything a face shows
+// should be readable aloud by a child, and "5.76\u00d710\u2077\u2070" is not
+// something a child reads aloud -- it is something they have to be taught to
+// decode first. This says the same thing in words, and says "about", because
+// that is the truth of it.
+function englishHuge(n) {
+  const s2 = n.toString();
+  const exp = englishInt(BigInt(s2.length - 1));
+  const digits = [...s2.slice(0, 4)].map(ch => SMALL_WORDS[+ch]);
+  const lead = digits.length > 1
+    ? digits[0] + ' point ' + digits.slice(1).join(' ')
+    : digits[0];
+  return `about ${lead} times ten to the power of ${exp}`;
+}
 function englishText(v) {
   const neg = v.n < 0n, n = neg ? -v.n : v.n;
   if (v.d === 1n) {
-    const w = englishInt(n);
-    return w ? (neg ? 'negative ' : '') + w : sciText(v);
+    const w = englishInt(n) ?? englishHuge(n);
+    return (neg ? 'negative ' : '') + w;
   }
   const a = englishInt(n);
   const part = fractionWord(v.d, n !== 1n);
@@ -2579,7 +2609,14 @@ function wrapLines(c, text, maxW) {
   if (line) lines.push(line);
   return lines;
 }
-function drawWrapped(c, text, cx, cy, maxW, maxH) {
+// `alt` is a SHORTER WAY OF SAYING THE SAME THING, used when the full wording
+// would have to be shrunk past reading size. A whole number of sixty digits
+// has a real English name, and that name is eight hundred characters long: on
+// a face this size it becomes a grey wall ending in an ellipsis, which is not
+// the number displayed in English -- it is the number hidden in English. When
+// that happens the face says "about five point seven times ten to the power of
+// fifty-nine" instead, which is English, complete, and readable across a room.
+function drawWrapped(c, text, cx, cy, maxW, maxH, alt) {
   const words = String(text).split(' ');
   for (let px = 64; px >= 9; px = Math.floor(px * 0.88)) {
     c.font = `bold ${px}px Georgia, serif`;
@@ -2592,15 +2629,22 @@ function drawWrapped(c, text, cx, cy, maxW, maxH) {
     if (lines.length * lh <= maxH) {
       const y0 = cy - (lines.length - 1) * lh / 2;
       lines.forEach((l, i) => c.fillText(l, cx, y0 + i * lh));
-      return;
+      return text;
     }
   }
+  // NOT AT ANY SIZE. Only here, at the end, when the whole wording will not go
+  // on the face however small it is set -- a sixty-digit number's real English
+  // name runs to eight hundred characters. Ken's thirty-six digit one DOES fit,
+  // in small type, and it must go on saying itself in full: the short reading
+  // is the last resort, not the first.
+  if (alt) return drawWrapped(c, alt, cx, cy, maxW, maxH);
   // still too much to show: cut it to what fits and say so with an ellipsis
   c.font = 'bold 9px Georgia, serif';
   const lines = wrapLines(c, text, maxW).slice(0, Math.max(1, Math.floor(maxH / 10.1)));
   if (lines.length) lines[lines.length - 1] = lines[lines.length - 1].replace(/.$/, '…');
   const y0 = cy - (lines.length - 1) * 10.1 / 2;
   lines.forEach((l, i) => c.fillText(l, cx, y0 + i * 10.1));
+  return lines.join(' ');
 }
 
 const allNumbers = [];
@@ -2798,7 +2842,13 @@ function makeNumber(value, op = '+', lite = false) {
     // words on the back, fractions included: "one sixth", "three quarters"
     // — but an approximation is read aloud digit by digit, never spelled as
     // the trillion-part fraction that stands behind it
-    paint(fBack, (c) => drawWrapped(c, v.x ? englishApprox(v) : englishText(v), 128, 140, 192, 168));
+    paint(fBack, (c) => {
+      const said = v.x ? englishApprox(v) : englishText(v);
+      // ...and, for a whole number too long to name in full, the short reading
+      const brief = (!v.x && v.d === 1n)
+        ? (v.n < 0n ? 'negative ' : '') + englishHuge(v.n < 0n ? -v.n : v.n) : null;
+      drawWrapped(c, said, 128, 140, 192, 168, brief);
+    });
     paint(fSci, (c) => drawSci(c, v, lod));
     paint(fAlt, (c) => v.d === 1n
       ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
@@ -8892,6 +8942,17 @@ function matchState(cond, spec) {
     }
     return r;
   }
+  // A KIND WITH NO RULE ANSWERED "no" TO ITSELF. A model, a drawing or a
+  // notebook has no wildcard and no parts a robot can be taught to look at, so
+  // there was nothing to write here -- and the silence meant a robot trained
+  // on Ken's boat would not recognise that very boat. Same kind, written the
+  // same way, is the whole of what "the same thing" means for these.
+  if (cond.kind === 'model' || cond.kind === 'trail' || cond.kind === 'notebook') {
+    if (spec.kind !== cond.kind) return 'no';
+    const bare = (o) => JSON.stringify({ ...o, lid: undefined, evt: undefined,
+      liveLid: undefined, liveEvt: undefined, panelRec: undefined, label: undefined });
+    return bare(spec) === bare(cond) ? 'yes' : 'no';
+  }
   return 'no';
 }
 function matches(cond, spec) { return matchState(cond, spec) === 'yes'; }
@@ -8930,6 +8991,21 @@ function condText(c) {
       : c.tilt ? `a scale tipping ${c.tilt === 'L' ? 'left' : 'right'},` : 'a scale';
     return `${lean} weighing ${c.holes.map(condText).join(' against ')}`;
   }
+  // THE THINGS THAT ARE NOT BOXES, said plainly. Everything without a line of
+  // its own fell through to the box wording below, which reads the holes it
+  // has not got -- the throw that stopped the lesson dead.
+  if (c.kind === 'model') {
+    const n = (c.parts || []).length;
+    return c.label ? `the model \u201c${c.label}\u201d`
+      : `a model made of ${n} part${n === 1 ? '' : 's'}`;
+  }
+  if (c.kind === 'trail') {
+    const n = (c.segs || []).length;
+    return `a drawing of ${n} stroke${n === 1 ? '' : 's'}`;
+  }
+  if (c.kind === 'notebook') return 'a notebook';
+  if (c.kind === 'room') return 'that very house';
+  if (c.kind !== 'box') return 'that very thing';
   if (!c.holes.length) return 'a box with no holes';
   // a long box of don't-cares reads as "and 7 more of anything", not as
   // seven repetitions of the same phrase
@@ -13179,7 +13255,7 @@ function buildCondNode(cond, path, marks) {
       : cond.tilt === 'R' ? -SCALE_TILT : 0;
     g.__pans.forEach(p => { p.rotation.z = -g.__pivot.rotation.z; });
   }
-  else {
+  else if (cond.kind === 'box' || cond.kind === 'scale') {
     g = cond.kind === 'scale' ? makeScale() : makeBox(cond.holes.length);
     if (cond.kind === 'scale' && cond.tilt) {
       g.__tiltLock = cond.tilt;
@@ -13192,6 +13268,18 @@ function buildCondNode(cond, path, marks) {
       if (h) putInHole(g.userData.holes[i], child);
       else { child.position.set(0, 0, 0); g.userData.holes[i].anchor.add(child); }
     });
+  }
+  else {
+    // ANYTHING ELSE SHOWS ITSELF IN THE BUBBLE. This was the else, so every
+    // kind with no branch of its own -- a model, a drawing, a sound, a
+    // notebook -- was drawn as a BOX, by reading holes it does not have. It
+    // threw, and it threw during the click that starts the lesson, so the
+    // robot never got its thought and the workshop stopped with a half-built
+    // bubble: "it couldn't pick it up and then it froze".
+    //
+    // A condition IS a spec (condFromSpec keeps the record and drops only the
+    // identity), so the honest picture of "this very thing" is the thing.
+    g = buildThing(cond) || makeAnything();
   }
   marks.push([g, path]);
   return g;
@@ -14116,12 +14204,19 @@ function thingInRaw(o, nests, birds) {
       const child = thingIn(h, nests, birds);
       if (child) putInHole(t.userData.holes[+i], child);
     }
-  } else {
+  } else if (o.holes) {
+    // `o.holes` rather than an else: a record with no holes is not a box with
+    // none, and reading them is how the copier and the thought bubble both
+    // came to throw on a model. Anything else that reaches here is unknown to
+    // this reader, and an empty box is a better answer than a broken world.
     t = o.kind === 'scale' ? makeScale() : makeBox(o.holes.length);
     o.holes.forEach((h, i) => {
       const child = thingIn(h, nests, birds);
       if (child) putInHole(t.userData.holes[i], child);
     });
+  } else {
+    console.warn('[world] no way to build a', o.kind, '-- an empty box stands in');
+    t = makeBox(1);
   }
   if (o.label) setThingLabel(t, o.label);
   if (o.holeLabels && t.userData.kind === 'box') {
@@ -19934,6 +20029,11 @@ window.__nano = {
   },
   // what is shaking under the pointer, if anything -- a closeup must be still
   wiggling() { return wiggle ? (wiggle.node.userData?.kind ?? 'node') : null; },
+  // what the robot at the bench is thinking, and whether a given thing answers
+  // it: "yes", "no" or "wait". A kind with no rule of its own used to answer
+  // "no" to ITSELF, which makes a lesson about it worthless.
+  condWords() { return condition ? condText(condition) : null; },
+  condMatches(t) { return condition ? matchState(condition, specOf(t)) : null; },
   claw() {
     if (!grip) return { sh: armPose.sh, el: armPose.el, y: null };
     const p2 = grip.getWorldPosition(new THREE.Vector3());
@@ -20022,6 +20122,20 @@ window.__nano = {
   get condition() { return condition; },
   get condText() { return condText(condition); },
   words(n, d = 1) { return englishText(rat(BigInt(n), BigInt(d))); },
+  // WHAT THE FACE ACTUALLY SHOWS, which is not the same question: the wording
+  // is chosen, then fitted, and a name too long to fit used to be cut off with
+  // an ellipsis. Painted onto a scratch canvas of the very size the face uses.
+  faceWords(n, d = 1) {
+    const v = rat(BigInt(n), BigInt(d));
+    const cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 256;
+    const c = cv.getContext('2d');
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    const said = v.x ? englishApprox(v) : englishText(v);
+    const brief = (!v.x && v.d === 1n)
+      ? (v.n < 0n ? 'negative ' : '') + englishHuge(v.n < 0n ? -v.n : v.n) : null;
+    return drawWrapped(c, said, 128, 140, 192, 168, brief);
+  },
   approxWords(n, d = 1) { return englishApprox(rat(BigInt(n), BigInt(d), true)); },
   say(c) { return condText(c); },
   get hint() { return document.getElementById('hint').textContent; },

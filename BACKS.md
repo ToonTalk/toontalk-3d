@@ -4259,3 +4259,50 @@ hard white spark on top of that: the recipe for a googly eye. v11 takes Marty's
 proportion, drops the spark, and makes the pupil indigo rather than the black
 those two wear -- his one point of difference, which is what Ken asked for. He
 is 251 KB, smaller again.
+
+## The same else, three doors along
+
+*Added 1 Sep. Ken: "I think even very large integers should be displayed in
+English on one face of the cube. The app froze when I tried to train a robot
+with a model. It couldn't pick it up and then it froze."*
+
+The copier's `else` that assumed a box had two siblings, and the lesson is
+about the shape of the mistake rather than any one of them. **A chain of
+`else if (kind === ...)` ending in a bare `else` is a promise that no new kind
+will ever be added** -- and models and drawings were added months after these
+chains were written. Neither author did anything wrong; the `else` did.
+
+  buildCondNode   the picture in the robot's thought bubble
+  condText        the same thought, in words
+  thingIn         the world reader (this one had a model branch already, and
+                  its else is now guarded anyway: a record with no holes is
+                  not a box with none)
+
+The freeze came from the first two, and where they threw is why it read as a
+freeze rather than an error: **the click that hands the robot its lesson builds
+the bubble and the words in the same breath**, so the throw left the workshop
+mid-gesture, with a lesson begun and no thought to show for it. Nothing
+answered afterwards.
+
+And underneath, quieter and worse: `matchState` had no rule for a model, and
+its tail is `return 'no'` -- so a robot taught with Ken's boat **would not have
+recognised that very boat**. The lesson would have been a waste even once it
+stopped crashing. Same-kind-and-written-the-same-way is now the rule for the
+kinds that have no parts to match on, and the check asks the question directly:
+`recognises-it=yes`.
+
+**Very large integers.** The scale names stopped at decillion, and past ten to
+the thirty-sixth `englishText` gave up and handed back scientific notation --
+which is exactly the thing a child cannot read aloud. The names now run to
+vigintillion (ten to the sixty-third), and past even those a number is read as
+"about five point seven times ten to the power of sixty-nine": still English,
+still true, and short.
+
+The subtler half was the FACE rather than the words. A sixty-digit number's
+real name runs to eight hundred characters; on a face this size that becomes a
+grey wall ending in an ellipsis, which is not the number displayed in English
+but the number hidden in it. The face now takes a second, shorter wording and
+uses it **only when the full name will not fit at any size** -- so Ken's
+thirty-six digit number goes on saying itself in full, in small type, and a
+sixty-digit one says itself briefly. Measured on the faces: 12, 36 and 40
+digits in full, 70 and 200 in the short reading, and nothing cut off anywhere.
