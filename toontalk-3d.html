@@ -2695,11 +2695,18 @@ function makeNumber(value, op = '+', lite = false) {
     }
     fn(c, st);
     if (!g.__bare) {
-      c.beginPath(); c.arc(54, 54, 30, 0, Math.PI * 2);
+      // INTO THE CORNER, and small enough to stay out of the writing. The
+      // badge is painted AFTER the face, so wherever it sits it wins -- and it
+      // sat at (54,54) with a radius of 30, reaching down to y 84. Every face
+      // centres its block on y 140 with up to 168 of height, so the top line
+      // starts at 56: the badge lay across the first line of every long number
+      // ("hundred seventy-six" with a plus sign through it). At radius 20
+      // centred on 36 it stops at 56, which is where the writing begins.
+      c.beginPath(); c.arc(36, 36, 20, 0, Math.PI * 2);
       c.fillStyle = st.ink; c.fill();
       c.fillStyle = st.face;
-      c.font = lookFace(look, 'bold', st.glyph.length > 1 ? 26 : 42);
-      c.fillText(st.glyph, 54, 57);
+      c.font = lookFace(look, 'bold', st.glyph.length > 1 ? 18 : 28);
+      c.fillText(st.glyph, 36, 38);
     }
     face.tex.needsUpdate = true;
   };
@@ -5853,7 +5860,15 @@ function makeModel(rec) {
   }
   const box = new THREE.Box3().setFromObject(g);
   if (Number.isFinite(box.min.y)) minY = box.min.y;
-  g.userData = { kind: 'model', parts: (rec.parts || []).slice(), rest: 0.004 - Math.min(0, minY),
+  // ITS OWN PARTS, all the way down. slice() copied the LIST and left every
+  // part shared with whatever record built it -- so a model and its copy off
+  // Mimi's tray held the same part objects, and editing one would have moved
+  // the other. A copy is wholly its own or it is not a copy.
+  const ownParts = (rec.parts || []).map(pt => ({ ...pt,
+    size: pt.size ? pt.size.slice() : undefined,
+    at: pt.at ? pt.at.slice() : undefined,
+    rot: pt.rot ? pt.rot.slice() : undefined }));
+  g.userData = { kind: 'model', parts: ownParts, rest: 0.004 - Math.min(0, minY),
                  width: Math.max(0.2, Number.isFinite(box.max.x - box.min.x) ? box.max.x - box.min.x : 0.2) };
   setPick(g, { kind: 'thing', thing: g });
   return g;
@@ -8722,14 +8737,32 @@ function copyThingRaw(t) {
       if (pc) { c.add(pc); c.userData.pile.push(pc); }
     });
     restackNest(c);
-  } else {
+  } else if (ud.kind === 'box' || ud.kind === 'scale') {
+    // NAMED, not left as the else. This was the catch-all, so every kind
+    // nobody had thought about arrived here and was copied as a BOX -- which
+    // for a model means reading the holes of a thing that has none, and
+    // throwing from inside Mimi's scan.
     c = ud.kind === 'scale' ? makeScale() : makeBox(ud.holes.length);
     ud.holes.forEach((h, i) => {
       const hc = copyThing(h.thing);
       if (hc) putInHole(c.userData.holes[i], hc);
     });
   }
-  if (ud.label) setThingLabel(c, ud.label);
+  // ANYTHING ELSE COPIES BY THE BOOK. Every kind here was written out by
+  // hand, and two of them were never added: a MODEL and a TRAIL could be
+  // saved, loaded, bound and given to a bird, but not copied -- so Mimi
+  // scanned Ken's sailboat, got nothing back, and threw inside the step that
+  // was lowering the copy into the tray. An exception in a queued step leaves
+  // the step half-run and the workshop stuck, which is what "the app froze"
+  // was. Rather than adding the two branches and waiting for the third kind,
+  // whatever a thing can WRITE it can now be rebuilt from.
+  //
+  // The RAW record, not the full one: thingOut carries the live name, and
+  // buildThing hands back the registered thing itself when it sees one -- so
+  // copying by the full record would return the original and call it a copy.
+  // Identity, panel and size are the wrapper's business, above.
+  if (!c) c = buildThing(thingOutRaw(t));
+  if (c && ud.label) setThingLabel(c, ud.label);
   return c;
 }
 // Does this thing contain anything alive -- a bird, nest or robot -- anywhere?
@@ -10390,6 +10423,15 @@ function runDuplicate() {
     dur: 0.45,
     start() {
       copy = copyThing(inSt.occupant);
+      // A MACHINE THAT CANNOT DO IT SAYS SO. Whatever went wrong, the one
+      // thing it must not do is throw from in here: the step never finishes,
+      // and every click afterwards waits on a scan that will never end.
+      if (!copy) {
+        say('Mimi could not make a copy of that \u2014 take it back off the '
+          + 'platform and tell Ken what it was.');
+        sfx('alert');
+        return;
+      }
       WROOT.add(copy);
       from = inSt.occupant.getWorldPosition(new THREE.Vector3());
       copy.position.copy(from);
@@ -10397,6 +10439,7 @@ function runDuplicate() {
       flash(from);
     },
     update(t) {
+      if (!copy) return;
       const full = copy.userData.kind === 'robot' ? MINI : 1;
       const s = 0.01 + (full - 0.01) * ease(t);
       copy.scale.setScalar(s);
@@ -10405,12 +10448,13 @@ function runDuplicate() {
   }, {
     dur: 0.5,
     update(t) {
+      if (!copy) return;
       const e = ease(t);
       copy.position.y = lerp(inSt.point.y + 0.3, outSt.topY + copy.userData.rest, e);
       copy.position.x = lerp(from.x, outSt.point.x, e);
       copy.position.z = lerp(from.z, outSt.point.z, e);
     },
-    end() { putOnStation(outSt, copy); refreshUI(); },
+    end() { if (copy) putOnStation(outSt, copy); refreshUI(); },
   });
 }
 
@@ -16780,7 +16824,7 @@ loadModel('robot_v4.glb', (gltf) => {
   renderProgram(); refreshUI();
   $('loading').classList.add('gone');
 
-  loadModel('dusty_v10.glb', (dg) => {
+  loadModel('dusty_v11.glb', (dg) => {
     if (new URLSearchParams(location.search).get('demo')) { refreshUI(); return; }
     dusty = dg.scene;
     dusty.traverse(o => {

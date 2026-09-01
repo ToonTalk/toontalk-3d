@@ -2044,6 +2044,116 @@ async function reachAtPileCheck(D) {
   return ok;
 }
 
+// THE OPERATOR DOES NOT SIT ON THE NUMBER. The badge that says what dropping
+// this number does is painted AFTER the face, so wherever it is put it wins.
+// At (54,54) with a radius of 30 it reached down to row 84, and a long number
+// spells itself out in a block that starts at row 56 -- so the plus sign lay
+// across the first line of Ken's monster fraction. The check reads the painted
+// canvases and asks where the writing starts, which is the thing that was
+// wrong; comparing constants would only be comparing the code with itself.
+async function opBadgeCheck(D) {
+  const big = '576460752303423487576460752303423487';
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: big, d: '8' }, op: '+' }, x: 0.2, z: 1.6 }] });
+  await slowSettle(D, 3000);
+  await frames(D, 400);                     // the secondary faces paint lazily
+  const num = D.bench(0);
+  const ims = [];
+  num.traverse(o => { const i = o.material?.map?.image; if (i && i.width) ims.push(i); });
+  const faces = [...new Set(ims)];
+  if (!faces.length) { put('FAIL the operator keeps out of the way  (no faces painted)', 'fail'); return false; }
+  const BADGE_BOTTOM = 56;                  // authored coordinates: the face is 256 square
+  const rows = faces.map((im) => {
+    const K = im.width / 256;
+    const cv = document.createElement('canvas');
+    cv.width = im.width; cv.height = im.height;
+    const cx = cv.getContext('2d');
+    cx.drawImage(im, 0, 0);
+    const d = cx.getImageData(0, 0, im.width, im.height).data;
+    // the paper's own colour, read from a blank spot rather than assumed
+    const px = (x, y) => { const i = (((y * K) | 0) * im.width + ((x * K) | 0)) * 4;
+      return [d[i], d[i + 1], d[i + 2]]; };
+    const paper = px(128, 250 / 4);
+    const ink = (x, y) => { const c2 = px(x, y);
+      return Math.abs(c2[0] - paper[0]) > 14 || Math.abs(c2[1] - paper[1]) > 14
+          || Math.abs(c2[2] - paper[2]) > 16; };
+    // the writing, well inside the frame and away from the badge's corner
+    for (let y = 30; y < 232; y++)
+      for (let x = 64; x < 196; x++) if (ink(x, y)) return y;
+    return 999;
+  });
+  const worst = Math.min(...rows);
+  const ok = worst > BADGE_BOTTOM;
+  put((ok ? 'PASS' : 'FAIL') + ' the operator keeps out of the way  (badge ends at '
+      + BADGE_BOTTOM + ', writing starts at ' + worst + ' on ' + faces.length
+      + ' faces)', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// MIMI COPIES WHATEVER SHE IS GIVEN. Every kind was written into the copier
+// by hand and the last branch was a catch-all that assumed a BOX -- so a made
+// model, which has parts and no holes, was copied by reading holes it does not
+// have. The throw happened inside the step that lowers the copy into the tray,
+// which leaves that step half-run and every later click waiting on a scan that
+// will never finish: "the app froze when I placed a generated model on the
+// copier". The check drives the machine and then asks whether the workshop
+// still answers, because a wedged queue is the symptom that matters.
+async function copierKindsCheck(D) {
+  const line = [];
+  const still = () => !D.state.current && !D.state.queued && !D.state.busy;
+  const count = (kind) => { let n = 0;
+    D.scene.traverse(o => { if (o.userData?.kind === kind) n++; }); return n; };
+  const setOnPlatform = async (thing) => {
+    D.hold(thing);
+    D.clickRaw({ kind: 'station', id: 'copyIn' });
+    for (let i = 0; i < 900 && !still(); i++) { D.frame(1, fnow()); await maybeBreathe(); }
+    await slowSettle(D, 4000);
+  };
+
+  // 1. a MADE MODEL -- the one Ken put on the platform
+  D.worldIn({ kind: 'world', v: 4, bench: [], stations: {}, active: null });
+  await slowSettle(D, 3000);
+  const model = D.makeFromReply(JSON.stringify({ name: 'a boat', parts: [
+    { shape: 'box', size: [0.14, 0.035, 0.34], at: [0, 0.02, 0], color: '#8b5a2b' },
+    { shape: 'cone', size: [0.08, 0.24], at: [0, 0.15, 0.02], rot: [90, 0, 0], color: 'crimson' }]
+  }), 'a boat')?.thing;
+  if (!model) { put('FAIL Mimi copies what she is given  (no model built)', 'fail'); return false; }
+  await setOnPlatform(model);
+  const models = [];
+  D.scene.traverse(o => { if (o.userData?.kind === 'model') models.push(o); });
+  const copied = models.length === 2;
+  const answering = still();
+  // ...and WHOLLY ITS OWN: the parts were sliced as a list and shared as
+  // objects, so editing one model would have edited its copy
+  let own = false;
+  if (copied) {
+    models[0].userData.parts[0].color = '#00ff00';
+    models[0].userData.parts[0].size[0] = 9;
+    own = models[1].userData.parts[0].color !== '#00ff00'
+       && models[1].userData.parts[0].size[0] !== 9;
+  }
+  line.push('model=' + models.length + ' its-own=' + own + ' answering=' + answering);
+
+  // 2. a TRAIL -- swept-up pen marks, the other kind with no branch of its own
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'trail', segs: [
+      { x0: 0, y0: 1, z0: 0, x1: 0.2, y1: 1.1, z1: 0.1, ink: '#ff0000', wide: 0.01 },
+      { x0: 0.2, y0: 1.1, z0: 0.1, x1: 0.3, y1: 1.0, z1: 0.2, ink: '#ff0000', wide: 0.01 }] },
+      x: 0.2, z: 1.6 }] });
+  await slowSettle(D, 3000);
+  const trail = D.bench(0);
+  const had = count('trail');
+  await setOnPlatform(trail);
+  const trails = count('trail');
+  const trailOK = had === 1 && trails === 2 && still();
+  line.push('trail=' + had + '->' + trails);
+
+  const ok = copied && answering && own && trailOK;
+  put((ok ? 'PASS' : 'FAIL') + ' Mimi copies what she is given  ('
+      + line.join(' ') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 // A CLOSEUP OF ANYTHING. Enter used to answer for pads alone, and a pad is
 // read from straight above -- which for a number is a square with a lid on it.
 // Anything that is not a pad is now flown to from the FRONT, at the bearing you
@@ -2736,6 +2846,12 @@ async function runOne(D, spec) {
   let stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK, picOK, wholeOK, t3dOK, mtOK,
       zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK;
   let paceOK, foldOK, reachOK, makerOK, faceOK, pileOK, drawOK, postOffOK, waitOK;
+  let badgeOK = true;
+  try { badgeOK = want('badge') ? await opBadgeCheck(D) : true; }
+  catch (e) { badgeOK = false; put('FAIL the operator keeps out of the way  ' + e.message, 'fail'); }
+  let copierOK = true;
+  try { copierOK = want('copier') ? await copierKindsCheck(D) : true; }
+  catch (e) { copierOK = false; put('FAIL Mimi copies what she is given  ' + e.message, 'fail'); }
   let closeOK = true;
   try { closeOK = want('closeup') ? await closeupCheck(D, frame.contentWindow) : true; }
   catch (e) { closeOK = false; put('FAIL a closeup of anything  ' + e.message, 'fail'); }
@@ -2870,7 +2986,7 @@ async function runOne(D, spec) {
                         && twinOK && nbOK,
                        bad, leakOK, playOK, pauseOK, copyOK, r28OK, shelfOK, bindOK, inexOK,
                        turtleOK, pgOK, stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK,
-                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, dumps };
+                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, dumps };
   // AND ONTO DISK. Reading a verdict back out of the browser costs a round
   // trip through a channel that, on a loaded machine, times out more often
   // than it answers -- eight minutes of polling for one line of text. The

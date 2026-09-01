@@ -4204,3 +4204,58 @@ strength the pupil blows out white too, so the whole eye read as a ping-pong
 ball -- which is why "blue eyes" done to Marty last round left Dusty looking
 exactly as before. v10: the ball is #9fe4ff and the pupil a navy that still
 reads against it. 280 KB, four hundred bytes more than v9.
+
+## The else that assumed a box
+
+*Added 1 Sep. Ken: "The app froze when I placed a generated model on the
+copier." Then: "I think the operator should not obscure the display of numbers
+-- move it to the upper corner", and "Somehow [Dusty's] eyes are a bit creepy.
+Maybe his eyes should be more like marty and ruby just a different color than
+black."*
+
+The copier knows how to copy each kind of thing, written out by hand: a robot,
+a number, a die, a sound, a pad, a notebook, a room, a bird, a nest -- and then
+an `else` that made a BOX. Not "if it is a box": an else. So every kind nobody
+thought about arrived there and was copied by reading holes it does not have.
+A model has parts and no holes, so the read threw.
+
+**Where it threw is why it froze rather than complained.** The copy is made
+inside the step that lowers it into the tray, and an exception in a queued
+step leaves that step half-run: it never finishes, so the queue never advances,
+and every click afterwards waits on a scan that will never end. The workshop
+does not crash, it stops -- which is exactly what a person calls a freeze.
+
+Three things came out of it, in order of how much they matter:
+
+  1. The catch-all is now named (`box` or `scale`), and anything with no branch
+     of its own is copied **from its own written record** -- whatever a thing
+     can save, it can now be copied. That closed `trail` too, which had the
+     same hole and which nobody had hit yet.
+  2. The raw record, not the full one. `thingOut` carries the live name, and
+     `buildThing` hands back the registered thing itself when it sees one -- so
+     copying by the full record would have returned the ORIGINAL and called it
+     a copy. Identity, panel and size are handled a level up.
+  3. Mimi says so instead of throwing. Whatever else is ever wrong, the one
+     thing she must not do is die inside her own scan.
+
+And a fourth, found by the check rather than by Ken: `makeModel` did
+`parts.slice()`, which copies the LIST and shares every part in it -- so a
+model and its copy off the tray held the same parts, and editing one would have
+edited the other. A copy is wholly its own or it is not a copy.
+
+**The operator badge** was painted after the face, so wherever it sat it won,
+and it sat at (54,54) with a radius of 30 -- reaching down to row 84 on a
+256-square face. Every face centres its block on row 140 with up to 168 of
+height, so a long number starts writing at row 56: the plus sign lay across the
+first line of Ken's monster fraction. At radius 20 centred on 36 the badge ends
+at 56. Measured on the six painted faces: writing starts at 85 at the earliest,
+so it is clear by nearly thirty rows, and the check reads the painted canvases
+rather than comparing the code with itself.
+
+**Dusty's eyes.** Marty and Ruby share one eye -- a plain ball with a small
+pupil standing just proud of it, the pupil a bit under half the ball's radius,
+and no highlight at all. Dusty's had a pupil at 53% of the ball, lit, with a
+hard white spark on top of that: the recipe for a googly eye. v11 takes Marty's
+proportion, drops the spark, and makes the pupil indigo rather than the black
+those two wear -- his one point of difference, which is what Ken asked for. He
+is 251 KB, smaller again.
