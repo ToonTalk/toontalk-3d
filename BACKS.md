@@ -4142,3 +4142,65 @@ thinking parameter at all, so there is nothing of ours to correct; what is
 there now is one retry after 900 ms and a message that names the mothership
 rather than the child. If it persists it is worth sending `thinkingLevel`
 explicitly -- but not on a guess about a request shape nobody here can test.
+
+## The number the robot was carrying
+
+*Added 1 Sep. Ken: "Dusty's eyes are still white. The totaller robot's arm
+motions after entering the house are better but the number it grabs and drops
+isn't visible. But it is dropped and the addition happens. Enter should display
+a number (or other objects besides pads) as the camera zoomed in on it. And the
+arrow keys for rotation should still work. No need for wiggle feedback after
+pressing enter for a closeup view of anything."*
+
+**The invisible number was mine, from the round before.** Last round's speed fix
+had the nest remember the ten members it last showed, so a restack costs ten
+visits rather than one per letter ever delivered. But the top of the pile is
+exactly what a robot takes, and `detach` splices the thing out of the pile and
+restacks **while the thing is still hanging on the nest** -- so the memory hid
+the number at the very moment the claw was closing on it, and nothing showed it
+again until it landed somewhere else. A robot mimed an addition with nothing in
+its hand for the whole walk across the desk.
+
+Two false starts are worth recording, because both were the same error.
+
+  1. The first fix guarded on parentage -- do not hide what has been reparented
+     -- which sounds right and is useless here: at that instant the thing is
+     still the nest's child. Kept anyway, with a truthful comment, because it
+     catches the OTHER way a shown member leaves: two nests merging.
+  2. The first *reproduction* was a false positive. A probe counted every
+     invisible number that was not on a nest and found 1603 frames of them --
+     but Ken had two houses, and the halver's whole world is legitimately
+     hidden while you stand inside the totaller, claw and all. **A measurement
+     that cannot tell your bug from the world working correctly is not a
+     measurement.** The honest instrument was one line of debug -- what does
+     the claw hold, and can it be seen -- and with it the bug reproduced in a
+     world with no houses at all: 513 carried frames, 513 of them blind.
+
+The cure is in `detach`: forget the thing where it stops being the nest's.
+Measured after: 513 carried frames, 513 visible, and the sum still 33/1.
+
+**A closeup of anything.** Enter answered for pads alone, and a pad is read from
+straight above -- which for a number is a square with a lid on it, and no
+vantage from which turning it means anything. Anything that is not a pad is now
+flown to from the FRONT: the bearing you were already watching it from, lifted
+17 degrees above its equator, as close as its own bounding sphere fits. Measured
+on a number: 0.75 m away at 17 degrees, upright, and Escape lands back within a
+hundredth of where you left. A pad is untouched -- still 90 degrees, still with
+the flat up-vector.
+
+The arrows turn what you are looking at, quarter by quarter, reusing the roll
+that keeps a number's writing the right way up. That is the point of the whole
+feature: a number says the same value six ways and five of them were unreadable
+without picking it up.
+
+**And no shaking in there.** The hover wiggle already refused to start in a
+closeup -- but only `wiggleTargetOf` knew that, and it is consulted when the
+pointer MOVES. After Enter the pointer does not have to move again, so whatever
+was already shaking went on shaking, in the middle of the screen, at the thing
+you had just asked to look at. Cleared on the way in, and refused every frame.
+
+**Dusty's eyes** were cream balls with a cyan pupil at emit_str 2.0, and at that
+strength the pupil blows out white too, so the whole eye read as a ping-pong
+ball -- which is why "blue eyes" done to Marty last round left Dusty looking
+exactly as before. v10: the ball is #9fe4ff and the pupil a navy that still
+reads against it. 280 KB, four hundred bytes more than v9.

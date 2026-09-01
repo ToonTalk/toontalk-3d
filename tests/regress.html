@@ -2005,8 +2005,16 @@ async function reachAtPileCheck(D) {
   D.speed(1); D.rounds(2);
   D.run();
   let minTake = 99, minPut = 99, takeDy = 99;
+  // AND IT CAN BE SEEN ON THE WAY. The nest remembers the ten it showed last
+  // so that a restack stays cheap, and the top of the pile -- the one a robot
+  // takes -- was in that list, so the number crossed the desk invisibly and
+  // appeared only where it landed. Every frame the claw holds something, that
+  // something must be visible.
+  let carried = 0, seenCarried = 0;
   for (let i = 0; i < 60 * 40 && (D.state.busy || D.state.queued || D.state.current); i++) {
     D.frame(1, fnow());
+    const ch = D.clawThing();
+    if (ch) { carried++; if (ch.visible) seenCarried++; }
     const c = D.claw();
     const top = topOf();
     if (top && c.y != null) {
@@ -2026,11 +2034,81 @@ async function reachAtPileCheck(D) {
   const total = D.mine([1]);
   const sum = total?.userData?.value ? total.userData.value.n + '/' + total.userData.value.d : '-';
   const ok = minTake < 0.15 && minPut < 0.15 && sum === '23/1'
-    && nest.userData.pile.length === 10;
+    && nest.userData.pile.length === 10
+    && carried > 60 && seenCarried === carried;
   put((ok ? 'PASS' : 'FAIL') + ' the hand is at the stack  (take-off-by='
       + minTake.toFixed(3) + ' take-dy=' + takeDy.toFixed(2)
       + ' put-off-by=' + minPut.toFixed(3) + ' sum=' + sum
-      + ' pile-left=' + nest.userData.pile.length + ')', ok ? 'pass' : 'fail');
+      + ' pile-left=' + nest.userData.pile.length
+      + ' carried-frames=' + carried + ' seen=' + seenCarried + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A CLOSEUP OF ANYTHING. Enter used to answer for pads alone, and a pad is
+// read from straight above -- which for a number is a square with a lid on it.
+// Anything that is not a pad is now flown to from the FRONT, at the bearing you
+// were already watching it from, and the arrows turn it there: the only way to
+// read the other five faces of a number without picking it up. Nothing shakes
+// while you are in there.
+async function closeupCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '7', d: '1' }, op: '+' }, x: 0.2, z: 1.6 },
+    { thing: { kind: 'text', text: 'a pad' }, x: -0.9, z: 1.6 }] });
+  await slowSettle(D, 3000);
+  const num = D.bench(0), pad = D.bench(1);
+  const home = D.camera.position.clone();
+  const fly = (n) => { for (let i = 0; i < n; i++) D.holdStraightOn(1 / 60); };
+  const where = (t) => {
+    const c = t.getWorldPosition(new D.V3()), at = D.camera.position;
+    const flat = Math.hypot(at.x - c.x, at.z - c.z);
+    return { el: Math.atan2(at.y - c.y, flat) * 180 / Math.PI, d: at.distanceTo(c) };
+  };
+
+  // 1. THE POINTER, then Enter -- the whole route, not just the function
+  const cv = D.renderer.domElement, r = cv.getBoundingClientRect();
+  const pt = num.getWorldPosition(new D.V3()).project(D.camera);
+  cv.dispatchEvent(new w.PointerEvent('pointermove', { bubbles: true,
+    clientX: r.left + (pt.x * 0.5 + 0.5) * r.width,
+    clientY: r.top + (-pt.y * 0.5 + 0.5) * r.height }));
+  const stirred = D.wiggling() === 'number';        // it acknowledges the pointer...
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  const entered = D.straightOn === num;
+  const stillNow = D.wiggling() === null;           // ...and stops the moment you go in
+  fly(120);
+  const onNum = where(num);
+  const front = entered && onNum.el > 5 && onNum.el < 45 && onNum.d < 1.2
+    && D.camera.up.y > 0.99;
+
+  // 2. the arrows turn it, a quarter at a time
+  const q0 = num.quaternion.clone();
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+  const turned = q0.angleTo(num.quaternion);
+  const turns = turned > 1.3 && turned < 1.9;       // a right angle, give or take the roll
+
+  // 3. Escape comes back to exactly where you were
+  D.comeBackFrom(); fly(120);
+  const back = D.camera.position.distanceTo(home) < 0.01;
+
+  // 4. and a PAD is still read from straight above -- AND KEEPS ITS ARROWS.
+  // A pad in a closeup is a game being played and the arrows are very likely
+  // what is playing it; turning the pitch a quarter round mid-rally would be
+  // the fix doing more harm than the thing it fixed.
+  D.lookStraightOn(pad); fly(120);
+  const onPad = where(pad);
+  const overhead = onPad.el > 80 && D.camera.up.z < -0.9;
+  const pq = pad.quaternion.clone();
+  w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+  const padStill = pq.angleTo(pad.quaternion) < 0.001;
+  D.comeBackFrom(); fly(120);
+
+  const ok = stirred && front && stillNow && turns && back && overhead && padStill;
+  put((ok ? 'PASS' : 'FAIL') + ' a closeup of anything  (enter-on-a-number=' + entered
+      + ' from-the-front=' + onNum.el.toFixed(0) + 'deg/' + onNum.d.toFixed(2) + 'm'
+      + ' arrows-turn-it=' + turned.toFixed(2) + 'rad'
+      + ' wiggles-first=' + stirred + ' still-in-closeup=' + stillNow
+      + ' escape-comes-back=' + back
+      + ' pad-still-overhead=' + onPad.el.toFixed(0) + 'deg'
+      + ' pad-keeps-its-arrows=' + padStill + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -2658,6 +2736,9 @@ async function runOne(D, spec) {
   let stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK, picOK, wholeOK, t3dOK, mtOK,
       zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK;
   let paceOK, foldOK, reachOK, makerOK, faceOK, pileOK, drawOK, postOffOK, waitOK;
+  let closeOK = true;
+  try { closeOK = want('closeup') ? await closeupCheck(D, frame.contentWindow) : true; }
+  catch (e) { closeOK = false; put('FAIL a closeup of anything  ' + e.message, 'fail'); }
   try { waitOK = want('attentive') ? await attentiveCheck(D) : true; }
   catch (e) { waitOK = false; put('FAIL they wait on you  ' + e.message, 'fail'); }
   try { postOffOK = want('postDoesNotStart') ? await postDoesNotStartCheck(D) : true; }
@@ -2789,7 +2870,7 @@ async function runOne(D, spec) {
                         && twinOK && nbOK,
                        bad, leakOK, playOK, pauseOK, copyOK, r28OK, shelfOK, bindOK, inexOK,
                        turtleOK, pgOK, stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK,
-                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, dumps };
+                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, dumps };
   // AND ONTO DISK. Reading a verdict back out of the browser costs a round
   // trip through a channel that, on a loaded machine, times out more often
   // than it answers -- eight minutes of polling for one line of text. The

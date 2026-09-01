@@ -28,7 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, '.artifact-cache')
 SRC = os.path.join(HERE, 'toontalk-3d.html')
 OUT = os.path.join(HERE, 'toontalk-3d.artifact.html')
-MODELS = ['robot_v4.glb', 'dusty_v9.glb']
+MODELS = ['robot_v4.glb', 'dusty_v10.glb']
 BLOCK_MAX = 700 * 1024          # comfortably under what the host will run
 
 # name -> (path inside the three package, JS identifier for its namespace).
