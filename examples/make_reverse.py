@@ -132,7 +132,7 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'that asked -- and sends it\ninto a house with a copy of\n'
                   'the APPEND team.\n\nEach house dozes until the\nnest it is watching fills.'),
      'x': -1.05, 'z': 2.15},
-    {'thing': txt('TO RUN IT\n\nGive the four-hole box to the\nReverse robot, Rounds at 10.\n\n'
+    {'thing': txt('TO RUN IT\n\nGive the four-hole box to\nthe Reverse robot.\n\n'
                   'Houses pile up in the last\nhole, all smoking, all\n'
                   'waiting on one another.\n\n[1,[2,[3,[]]]] goes in and\n'
                   '[3,[2,[1,[]]]] comes back on\nthe nest marked "reversed"\n'

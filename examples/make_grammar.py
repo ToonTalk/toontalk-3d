@@ -152,7 +152,7 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   '  5 adjective→ big|pink|silly\n\n'
                   'Rule 2 mentions itself, so\nadjectives can pile up.'),
      'x': -1.05, 'z': 2.15},
-    {'thing': txt('TO RUN IT\n\nSet Rounds to 200 and pull\nthe lever. Sentences arrive\n'
+    {'thing': txt('TO RUN IT\n\nPull the lever — and pull it\nagain when you have enough.\nSentences arrive\n'
                   'on the nest.\n\nA number is a rule: the\nrobot SPLITS a copy of the\n'
                   'dictionary at that number\nto find it, throws the die\n'
                   'kept with it to choose one\nalternative, and joins those\n'

@@ -20,7 +20,8 @@ structural way described under *Rooms* below.
 | `activity6-all-rationals` | 6 | Merging to get all of them — the capstone |
 | `activity7-any-interval` | 7 | Scale and shift the unit interval; density |
 
-Each is self-contained: set **Rounds**, pull the **lever** on the first room,
+Each is self-contained: pull the **lever** on the first room — and pull it
+again when you have seen enough —
 and the whole pipeline runs. Everything else is already dozing in its own room
 waiting to be woken. The two text pads say what it does and what to ask.
 

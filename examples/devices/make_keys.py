@@ -37,8 +37,8 @@ ABOUT = ('KEYS\n\n'
          'dozing already was.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 500 and give\n'
-       'the work box to the Scribe.\n'
+       'Give the work box to the\n'
+       'Scribe.\n'
        'It shrinks and waits.\n\n'
        'Now type. Each key lands on\n'
        'the keyboard nest, wakes it,\n'

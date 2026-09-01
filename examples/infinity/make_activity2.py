@@ -59,8 +59,9 @@ ABOUT = ('ACTIVITY 2\nCombining sequences, part 1\n\n'
          'finite wait. Countable.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 12 and pull the\n'
-       'lever on the Add 1 room.\n\n'
+       'Pull the lever on the Add 1\n'
+       'room — and pull it again when\n'
+       'you have seen enough.\n\n'
        'All three rooms run together.\n\n'
        'Merge lags one behind Negator:\n'
        'it will not hand out a positive\n'

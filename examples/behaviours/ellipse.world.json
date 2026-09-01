@@ -1,0 +1,587 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "text",
+    "text": "*",
+    "look": {
+     "bg": "#1b2233",
+     "ink": "#ffd23f",
+     "font": "sans"
+    },
+    "lid": "L9598",
+    "evt": "evt-L9598"
+   },
+   "x": 0.0,
+   "z": 1.7
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "moving in an ellipse",
+    "gadget": true,
+    "lid": "G913",
+    "evt": "evt-G913",
+    "look": {
+     "bg": "#2a2135",
+     "ink": "#e8d7ff",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "G913",
+         "label": "my thing"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "sin"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "cos"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "11",
+          "d": "10"
+         },
+         "op": "*"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "2",
+          "d": "5"
+         },
+         "op": "*"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "17",
+          "d": "10"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "across"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "away"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "6",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Ellipse",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "wildNumber"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          6
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          8,
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          8,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          8
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          5
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          7
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          9,
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          9,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          9
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          10
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "G913"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "sin"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "cos"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "11",
+          "d": "10"
+         },
+         "op": "*"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "2",
+          "d": "5"
+         },
+         "op": "*"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "17",
+          "d": "10"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "across"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "away"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "6",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": -1.45,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "MOVING IN AN ELLIPSE\n\nacross = centre + radius x\n         sin(angle)\naway   = centre + radius x\n         cos(angle)\nangle  = angle + 6\n\nEach line is badged numbers\ndropped on a running total.\nNothing knows what an\nellipse is."
+   },
+   "x": -1.45,
+   "z": 2.28
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WHY IT IS APPROXIMATE\n\nNo fraction IS the sine of\n6 degrees. A number wearing\nthe sin badge answers to\ntwelve decimal places and\nMARKS ITSELF with a wavy\nequals: ~0.104528463268\n\nTouch an approximation and\nthe answer is one too. That\nis the only way an exact\nnumber ever becomes\ninexact."
+   },
+   "x": -0.75,
+   "z": 2.28
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "DEGREES, AND TWELVE PLACES\n\nAngles are in DEGREES: 360\nis a full turn, so a step of\n6 makes a lap in 60 rounds.\n\nThe sine is worked out from\na series over fractions, not\nfrom the machine's own sine.\nThat is slower, and it is\nthe SAME on every machine --\nso a saved world replays\ndigit for digit."
+   },
+   "x": -0.05,
+   "z": 2.28
+  }
+ ],
+ "stations": {},
+ "active": null
+}

@@ -1,0 +1,2789 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "model",
+    "parts": [
+     {
+      "shape": "cylinder",
+      "size": [
+       0.035,
+       0.035,
+       0.3
+      ],
+      "at": [
+       0,
+       0.075,
+       0.0
+      ],
+      "color": "#b8241a",
+      "rot": [
+       90,
+       0,
+       0
+      ]
+     },
+     {
+      "shape": "cone",
+      "size": [
+       0.035,
+       0.07
+      ],
+      "at": [
+       0,
+       0.075,
+       0.185
+      ],
+      "color": "#b8241a",
+      "rot": [
+       90,
+       0,
+       0
+      ]
+     },
+     {
+      "shape": "box",
+      "size": [
+       0.42,
+       0.012,
+       0.1
+      ],
+      "at": [
+       0,
+       0.082,
+       0.03
+      ],
+      "color": "#efe2c6"
+     },
+     {
+      "shape": "box",
+      "size": [
+       0.17,
+       0.01,
+       0.06
+      ],
+      "at": [
+       0,
+       0.085,
+       -0.125
+      ],
+      "color": "#efe2c6"
+     },
+     {
+      "shape": "box",
+      "size": [
+       0.01,
+       0.075,
+       0.065
+      ],
+      "at": [
+       0,
+       0.115,
+       -0.125
+      ],
+      "color": "#b8241a"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.018
+      ],
+      "at": [
+       0.06,
+       0.018,
+       0.04
+      ],
+      "color": "#1c2330"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.018
+      ],
+      "at": [
+       -0.06,
+       0.018,
+       0.04
+      ],
+      "color": "#1c2330"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.014
+      ],
+      "at": [
+       0,
+       0.014,
+       -0.12
+      ],
+      "color": "#1c2330"
+     }
+    ],
+    "label": "the airplane",
+    "lid": "A901",
+    "evt": "evt-A901",
+    "pen": true,
+    "penInk": 12067866,
+    "penWide": 2
+   },
+   "x": 0.1,
+   "z": 1.7
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 9801,
+    "nestGuid": "turtle3d-orders",
+    "label": "to the airplane"
+   },
+   "x": 0.95,
+   "z": 1.28
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "a 3D turtle",
+    "gadget": true,
+    "lid": "A902",
+    "evt": "evt-A902",
+    "look": {
+     "bg": "#1b2f42",
+     "ink": "#9fd8ff",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "A901",
+         "label": "my thing"
+        },
+        {
+         "kind": "nest",
+         "id": 9801,
+         "guid": "turtle3d-orders",
+         "hasEgg": false,
+         "label": "orders",
+         "pile": []
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "forward"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "yaw"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "pitch"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "roll"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "down"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          }
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "100"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "home"
+          },
+          {
+           "kind": "text",
+           "text": "yes"
+          }
+         ]
+        }
+       ],
+       "holeLabels": [
+        "my thing",
+        "letterbox",
+        "the step",
+        "yaw",
+        "pitch",
+        "roll",
+        "pen down",
+        "pen up",
+        "step size",
+        "home"
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "move",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "wildNumber"
+          }
+         ]
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBox"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "s1",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          8
+         ]
+        }
+       },
+       {
+        "type": "setOp",
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          2,
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "A901"
+        },
+        {
+         "kind": "nest",
+         "id": 9801,
+         "guid": "turtle3d-orders",
+         "hasEgg": false,
+         "label": "orders",
+         "pile": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "30",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "forward"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "yaw"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "pitch"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "roll"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "down"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          }
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "100"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "home"
+          },
+          {
+           "kind": "text",
+           "text": "yes"
+          }
+         ]
+        }
+       ],
+       "holeLabels": [
+        "my thing",
+        "letterbox",
+        "the step",
+        "yaw",
+        "pitch",
+        "roll",
+        "pen down",
+        "pen up",
+        "step size",
+        "home"
+       ]
+      },
+      "team": [
+       {
+        "kind": "robot",
+        "name": "yaw",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "yaw"
+            },
+            {
+             "kind": "wildNumber"
+            }
+           ]
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBox"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "s1",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            3,
+            2
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "A901"
+          },
+          {
+           "kind": "nest",
+           "id": 9801,
+           "guid": "turtle3d-orders",
+           "hasEgg": false,
+           "label": "orders",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "yaw"
+              },
+              {
+               "kind": "number",
+               "value": {
+                "n": "30",
+                "d": "1"
+               },
+               "op": "+"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "forward"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "yaw"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "pitch"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "roll"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "down"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "up"
+            }
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "home"
+            },
+            {
+             "kind": "text",
+             "text": "yes"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "my thing",
+          "letterbox",
+          "the step",
+          "yaw",
+          "pitch",
+          "roll",
+          "pen down",
+          "pen up",
+          "step size",
+          "home"
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "pitch",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "pitch"
+            },
+            {
+             "kind": "wildNumber"
+            }
+           ]
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBox"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "s1",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            4,
+            2
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "A901"
+          },
+          {
+           "kind": "nest",
+           "id": 9801,
+           "guid": "turtle3d-orders",
+           "hasEgg": false,
+           "label": "orders",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "pitch"
+              },
+              {
+               "kind": "number",
+               "value": {
+                "n": "30",
+                "d": "1"
+               },
+               "op": "+"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "forward"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "yaw"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "pitch"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "roll"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "down"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "up"
+            }
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "home"
+            },
+            {
+             "kind": "text",
+             "text": "yes"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "my thing",
+          "letterbox",
+          "the step",
+          "yaw",
+          "pitch",
+          "roll",
+          "pen down",
+          "pen up",
+          "step size",
+          "home"
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "roll",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "roll"
+            },
+            {
+             "kind": "wildNumber"
+            }
+           ]
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBox"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "s1",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            5,
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            5,
+            2
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            5
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "A901"
+          },
+          {
+           "kind": "nest",
+           "id": 9801,
+           "guid": "turtle3d-orders",
+           "hasEgg": false,
+           "label": "orders",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "roll"
+              },
+              {
+               "kind": "number",
+               "value": {
+                "n": "30",
+                "d": "1"
+               },
+               "op": "+"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "forward"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "yaw"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "pitch"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "roll"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "down"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "up"
+            }
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "home"
+            },
+            {
+             "kind": "text",
+             "text": "yes"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "my thing",
+          "letterbox",
+          "the step",
+          "yaw",
+          "pitch",
+          "roll",
+          "pen down",
+          "pen up",
+          "step size",
+          "home"
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "pendown",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "text",
+           "text": "pendown"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBox"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            6
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "A901"
+          },
+          {
+           "kind": "nest",
+           "id": 9801,
+           "guid": "turtle3d-orders",
+           "hasEgg": false,
+           "label": "orders",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "pendown"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "forward"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "yaw"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "pitch"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "roll"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "down"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "up"
+            }
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "home"
+            },
+            {
+             "kind": "text",
+             "text": "yes"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "my thing",
+          "letterbox",
+          "the step",
+          "yaw",
+          "pitch",
+          "roll",
+          "pen down",
+          "pen up",
+          "step size",
+          "home"
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "penup",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "text",
+           "text": "penup"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBox"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "A901"
+          },
+          {
+           "kind": "nest",
+           "id": 9801,
+           "guid": "turtle3d-orders",
+           "hasEgg": false,
+           "label": "orders",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "penup"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "forward"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "yaw"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "pitch"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "roll"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "down"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "up"
+            }
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "home"
+            },
+            {
+             "kind": "text",
+             "text": "yes"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "my thing",
+          "letterbox",
+          "the step",
+          "yaw",
+          "pitch",
+          "roll",
+          "pen down",
+          "pen up",
+          "step size",
+          "home"
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "home",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "text",
+           "text": "home"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBox"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            9
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "A901"
+          },
+          {
+           "kind": "nest",
+           "id": 9801,
+           "guid": "turtle3d-orders",
+           "hasEgg": false,
+           "label": "orders",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "home"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "forward"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "yaw"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "pitch"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "move"
+            },
+            {
+             "kind": "text",
+             "text": "roll"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "down"
+            }
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "pen"
+            },
+            {
+             "kind": "text",
+             "text": "up"
+            }
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "home"
+            },
+            {
+             "kind": "text",
+             "text": "yes"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "my thing",
+          "letterbox",
+          "the step",
+          "yaw",
+          "pitch",
+          "roll",
+          "pen down",
+          "pen up",
+          "step size",
+          "home"
+         ]
+        },
+        "team": []
+       }
+      ]
+     }
+    },
+    "boundTo": "A901"
+   },
+   "x": 1.42,
+   "z": 1.28
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "the pilot",
+    "gadget": true,
+    "lid": "A903",
+    "evt": "evt-A903",
+    "look": {
+     "bg": "#3a2340",
+     "ink": "#ffd9a0",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 9801,
+         "nestGuid": "turtle3d-orders",
+         "label": "to the airplane"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "10",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "pitch"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "30",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "the pilot",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 9801,
+         "nestGuid": "turtle3d-orders"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "10",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "pitch"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "30",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        }
+       ]
+      },
+      "team": []
+     }
+    },
+    "boundTo": "A901"
+   },
+   "x": 1.42,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "move"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "10",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": -1.45,
+   "z": 1.28
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "pitch"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "30",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": -1.05,
+   "z": 1.28
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "pitch"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "-30",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": -0.65,
+   "z": 1.28
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "roll"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "30",
+       "d": "1"
+      },
+      "op": "+"
+     }
+    ]
+   },
+   "x": -1.45,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "home"
+   },
+   "x": -1.05,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "penup"
+   },
+   "x": -0.65,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TAKE OFF AND LOOP\n\nPress SPACE on THE\nAIRPLANE. Two behaviours\nare bound to it and both\nstart at once:\n\n  a 3D turtle -- which\n    gives it move, yaw,\n    pitch and roll\n  the pilot -- which\n    speaks them\n\n\".\" lands it. Its pen is\ndown, so it draws its own\nflight path as it goes.",
+    "ghost": true
+   },
+   "x": -0.75,
+   "z": 2.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "A LOOP NEEDS NO COUNTING\n\nThe pilot's whole round is\nthree orders, always the\nsame three:\n\n  move 10\n  move 10\n  pitch 30\n\nTurn the same few degrees\nevery stride and the path\ncloses into a circle. Two\nstrides per turn makes the\narc wide, so it runs, lifts,\nclimbs, and comes over the\ntop. Twelve rounds is a\nfull 360.",
+    "ghost": true
+   },
+   "x": -0.05,
+   "z": 2.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TRY THIS\n\nOpen the pilot's panel and\nchange 30 to 45: a tighter\nloop. Change it to 0 and it\nflies straight until the\ntable runs out.\n\nPost [roll | 30] to the bird\nwhile it loops and the loop\ntilts -- roll turns about\nthe line of travel, so it\nchanges the PLANE the loop\nis drawn in.\n\n\"home\" puts it back on the\ntable, level and facing the\nfar edge.",
+    "ghost": true
+   },
+   "x": 0.65,
+   "z": 2.3
+  }
+ ],
+ "stations": {},
+ "active": null
+}

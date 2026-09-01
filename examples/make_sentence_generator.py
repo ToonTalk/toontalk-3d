@@ -80,8 +80,8 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'to the nest.'),
      'x': -1.10, 'z': 2.15},
     {'thing': txt('TO RUN IT\n\nPull the lever on the right\nwall. Sentences pile up on\n'
-                  'the nest — the top one is\nthe oldest. Five rounds make\n'
-                  'one sentence, so set Rounds\nto 50 for ten of them.\n\n'
+                  'the nest — the top one is\nthe oldest. Pull the lever\n'
+                  'again when you have enough\nof them.\n\n'
                   'Click the roof for solid\nwalls; click the door to\nstep inside and watch.'),
      'x': -0.15, 'z': 2.15},
 ], 'stations': {}, 'active': None}

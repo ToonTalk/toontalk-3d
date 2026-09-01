@@ -89,9 +89,10 @@ ABOUT = ('ACTIVITY 7\nRationals between any two\n\n'
          'all of them. Pat is right.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 20 and pull the\n'
-       'lever on the All Fractions\n'
-       'room.\n\n'
+       'Pull the lever on the All\n'
+       'Fractions room — and pull it\n'
+       'again when you have seen\n'
+       'enough.\n\n'
        'Four rooms run at once. The\n'
        'three nests fill at exactly the\n'
        'same rate -- that is the whole\n'

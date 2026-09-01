@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>reach2 probe</title></head>
+<body>
+<div id="log" style="white-space:pre-wrap;font:13px monospace"></div>
+<iframe id="app" src="../toontalk-3d.html?demo=1&v=74" style="width:420px;height:260px"></iframe>
+<script>
+const logEl = document.getElementById('log');
+const put = (s) => { logEl.textContent += s + '\n'; };
+let VNOW = 1e12;
+const fnow = () => (VNOW += 17);
+const breathe = () => new Promise(r => setTimeout(r));
+async function settle(D, max = 20000) {
+  let n = 0;
+  while (n < max) {
+    const t0 = performance.now();
+    let idle = false;
+    do { D.step(1 / 60, 4); n += 4;
+      if (!D.state.busy && !D.state.queued && !D.state.current) { idle = true; break; }
+    } while (n < max && performance.now() - t0 < 10);
+    if (idle) break;
+    await breathe();
+  }
+  return n;
+}
+async function ticks(D, n) {
+  let d = 0;
+  while (d < n) { const t0 = performance.now();
+    do { D.step(1 / 60, 4); d += 4; } while (d < n && performance.now() - t0 < 10);
+    await breathe(); }
+}
+const post = (name, data) => fetch('/capture?name=' + name, {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data, null, 1) });
+
+(async () => {
+  const D = await new Promise(res => {
+    const t = setInterval(() => {
+      const d = document.getElementById('app').contentWindow.__nano;
+      if (d && d.ready) { clearInterval(t); res(d); }
+    }, 200);
+  });
+  D.mute(); D.autoLoop(false);
+  const out = {};
+  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  D.worldIn(w); await settle(D, 6000);
+  D.speed(1);
+  const rooms = [];
+  for (let i = 0; i < 10; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'room') rooms.push(t); }
+  const halver = rooms.find(r => r.userData.label !== 'the totaller');
+  const tot = rooms.find(r => r.userData.label === 'the totaller');
+  // ONLY the sender: letters pile up on the totaller's nest instead of being
+  // eaten the instant they land, which is the state Ken was looking at.
+  D.clickRaw({ kind: 'roomLever', room: halver });
+  // REAL seconds: the houses pace themselves by the wall clock, so virtual
+  // ticks fly past the pace gate and no letter is ever posted.
+  const tW = performance.now();
+  while (performance.now() - tW < 9000) {
+    D.frame(1, performance.now());
+    await breathe();
+  }
+  // switch the RECEIVER on too, from outside where its lever is, then walk in:
+  // it has a queue of letters to work through, so the nest stays deep
+  D.clickRaw({ kind: 'roomLever', room: tot });
+  D.enter(tot); await settle(D, 9000);
+  out.deep = D.worldsDeep();
+
+  // INSIDE now: the robot runs for real. Watch a whole round and record where
+  // the claw goes against where the two things it addresses actually are.
+  const stand = () => {
+    // the box on the robot's desk: hole 0 is the letterbox, hole 1 the total
+    let box = null;
+    D.scene.traverse(o => { if (!box && o.userData?.kind === 'box'
+      && o.userData.holes?.length === 2
+      && o.userData.holes[0]?.thing?.userData?.kind === 'nest') box = o; });
+    return box;
+  };
+  const box = stand();
+  out.foundBox = !!box;
+  if (!box) { await post('probe-reach2', out); put('no box'); return; }
+  const nest = box.userData.holes[0].thing;
+  const total = box.userData.holes[1].thing;
+  const pileTop = () => { const p = nest.userData.pile;
+    return p && p.length ? p[p.length - 1] : null; };
+  out.pile0 = nest.userData.pile.length;
+
+  const V = D.V3;
+  const wp = (o) => o.getWorldPosition(new V());
+  let minToTop = 99, minToTotal = 99, atTopY = null, topY = null;
+  const film = [];
+  let sampled = 0;
+  for (let i = 0; i < 60 * 25; i++) {
+    D.frame(1, performance.now());
+    const c = D.claw();
+    if (c.y == null) continue;
+    sampled++;
+    const top = pileTop();
+    if (top) {
+      const tp = wp(top);
+      const d = Math.hypot(c.x - tp.x, c.z - tp.z);
+      if (d < minToTop) { minToTop = d; atTopY = c.y; topY = tp.y; }
+    }
+    const gp = wp(total);
+    const d2 = Math.hypot(c.x - gp.x, c.z - gp.z);
+    if (d2 < minToTotal) minToTotal = d2;
+    if ((i % 30) === 0) film.push({ i, claw: [c.x, c.y, c.z],
+      nest: wp(nest).toArray().map(v => +v.toFixed(2)),
+      total: gp.toArray().map(v => +v.toFixed(2)) });
+    if ((i & 63) === 0) await breathe();
+  }
+  out.minClawToPileTop = +minToTop.toFixed(3);
+  out.minClawToTotal = +minToTotal.toFixed(3);
+  out.clawYatClosest = atTopY;
+  out.pileTopY = topY;
+  out.nestAt = wp(nest).toArray().map(v => +v.toFixed(2));
+  out.totalAt = wp(total).toArray().map(v => +v.toFixed(2));
+  out.film = film.slice(0, 12);
+  out.pileAfter = nest.userData.pile.length;
+  out.clawSamples = sampled;
+  put(JSON.stringify(out, null, 1));
+  await post('probe-reach2', out);
+  put('posted');
+})();
+</script>
+</body>
+</html>

@@ -291,11 +291,40 @@ embedded workshops (the app itself in an iframe with a small canned scene), so
 every example can actually be tried.
 
 `tests/regress.html` is the regression gate (PLAN.md, ground rule 1): it
-drives nine example worlds in an iframe and requires their final dumps to be
-byte-identical to `tests/golden.json`. `?make=1` regenerates the goldens
+drives thirteen example worlds in an iframe and requires their final dumps to
+be byte-identical to `tests/golden.json`. `?make=1` regenerates the goldens
 (via the capture sink below) -- copy `captures/golden.json` over
 `tests/golden.json` deliberately, in a commit that says why. `?app=` points
 the suite at another build, e.g. the v1 snapshot.
+
+It ends with behaviour checks that are not dumps: **copies are wholly their
+own** (a copied game's record shares no defined name with the original's, and
+ball, copy and copy-of-copy all run at once), **a pause stops the world, not
+the workshop**, **a thing off the table is out of play**, **the registers
+stay bounded**, and the **round-28 behaviours** (riders scale with their
+field; Dusty switches off what he vacuums; a behaviour dropped on a thing's
+panel binds to it; a world imported mid-project lands as a notebook).
+
+The goldens were remade on 28 August 2026, deliberately: `dustySuck` used to
+begin `if (!dusty) return`, demo frames build no mascot, and so every robot
+vacuum in the suite's own frame had been a silent no-op — the old goldens
+faithfully recorded a machine where vacuuming did nothing. The commit that
+moved them is the fix that made the frame honest. It
+switches on both of Pong's players, runs 600 frames, and fails if the list of
+every number in the workshop passes 800 -- the shape of two slowdowns Ken felt
+on a desk, where a thing removed from the scene stayed on a list that is swept
+twice a second. It also asserts the ball moved, because its first version
+switched on the wrong thing and passed a dead world five times.
+
+```bash
+python tests/check_syntax.py toontalk-3d.html toontalk-3d.artifact.html toontalk-3d.chat.html
+```
+
+parses the main script block of each build with `node --check` -- as **.mjs**,
+never .js: node hands a .js file to the CommonJS parser, fails on the import,
+and falls back to a detection pass that reports success without a strict parse,
+which is how an invalid unicode escape once shipped past a gate that had been
+running all session.
 
 `serve.js` also accepts `POST /capture`, which the pages use to write rendered
 frames to `captures/` — that is how the 3D work gets reviewed without a human

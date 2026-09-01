@@ -64,8 +64,9 @@ ABOUT = ('ACTIVITY 3\nA variety of sequences\n\n'
          'fast it grows.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 10 and pull the\n'
-       'lever on the Add 1 room.\n\n'
+       'Pull the lever on the Add 1\n'
+       'room — and pull it again when\n'
+       'you have seen enough.\n\n'
        'The squares appear on their\n'
        'nest, and the pairs nest fills\n'
        'with boxes: [1,1] [2,4] [3,9]\n'

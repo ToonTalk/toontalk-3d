@@ -74,9 +74,10 @@ ABOUT = ('ACTIVITY 4\nAll fractions between 0 and 1\n\n'
          'Denominator takes the turn.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 20 and pull the\n'
-       'lever on the All Fractions\n'
-       'room.\n\n'
+       'Pull the lever on the All\n'
+       'Fractions room — and pull it\n'
+       'again when you have seen\n'
+       'enough.\n\n'
        'The scale pans are holes: walk\n'
        'in through the door and watch\n'
        'the numbers in them climb.\n\n'

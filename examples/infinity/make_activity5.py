@@ -73,9 +73,10 @@ ABOUT = ('ACTIVITY 5\nRationals greater than 1\n\n'
          'dances with 2, 2/3 with 3/2.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 20 and pull the\n'
-       'lever on the All Fractions\n'
-       'room.\n\n'
+       'Pull the lever on the All\n'
+       'Fractions room — and pull it\n'
+       'again when you have seen\n'
+       'enough.\n\n'
        'Three rooms run at once: the\n'
        'boxes become fractions, and\n'
        'the fractions become their own\n'

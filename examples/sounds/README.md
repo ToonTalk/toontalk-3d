@@ -59,7 +59,7 @@ The first program here. **Singer** is handed
    joins two pads into a word.
 
 Its thought is `[any number, anything, anything, anything]`, so it knows no
-notes. Set Rounds to 8 and give it the work box: a C major scale grows a note
+notes. Give it the work box: a C major scale grows a note
 at a time, playing as it goes, and then the robot shrinks and dozes on the bare
 nest waiting for another pitch.
 

@@ -38,8 +38,8 @@ ABOUT = ('POINTER\n\n'
          'you can see it.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 2000 and give\n'
-       'the work box to the Watcher.\n\n'
+       'Give the work box to the\n'
+       'Watcher.\n\n'
        'Now move the pointer over the\n'
        'table. The two numbers in the\n'
        'second hole follow it.\n\n'

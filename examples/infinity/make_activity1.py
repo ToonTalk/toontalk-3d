@@ -66,8 +66,8 @@ ABOUT = ('ACTIVITY 1\nThe even numbers, two ways\n\n'
          'size of the other.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 12 and pull the\n'
-       'lever on the Add 1 room.\n\n'
+       'Pull the lever on the Add 1\n'
+       'room.\n\n'
        'That is all. Every robot is\n'
        'already in place; the three\n'
        'rooms work at the same time,\n'

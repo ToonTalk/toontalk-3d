@@ -1,0 +1,2221 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "text",
+    "text": "",
+    "look": {
+     "bg": "#ffd23f",
+     "ink": "#1b2233",
+     "font": "sans",
+     "w": 0.5,
+     "h": 0.5
+    },
+    "lid": "V901",
+    "evt": "evt-V901",
+    "label": "the ball"
+   },
+   "x": 0.1,
+   "z": 1.5
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "",
+    "look": {
+     "bg": "#7ee787",
+     "ink": "#1b2233",
+     "font": "sans",
+     "w": 0.25,
+     "h": 1.3
+    },
+    "lid": "V902",
+    "evt": "evt-V902",
+    "label": "the bat"
+   },
+   "x": 1.42,
+   "z": 1.95
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "0",
+     "d": "1"
+    },
+    "op": "+",
+    "lid": "V905",
+    "evt": "evt-V905",
+    "label": "rally",
+    "ghost": true
+   },
+   "x": -0.9,
+   "z": 1.95
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "bouncing at a speed",
+    "gadget": true,
+    "lid": "V911",
+    "evt": "evt-V911",
+    "look": {
+     "bg": "#2a2135",
+     "ink": "#e8d7ff",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V901",
+         "label": "my thing"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "speed"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "9",
+              "d": "20"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "11",
+              "d": "40"
+             },
+             "op": "+"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9161,
+         "guid": "evt-V901#edge",
+         "hasEgg": false,
+         "label": "edge",
+         "pile": [
+          {
+           "kind": "text",
+           "text": "none"
+          }
+         ]
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "at the left",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "text",
+         "text": "left"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "-1",
+         "d": "1"
+        },
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2,
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V901"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "speed"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "9",
+              "d": "20"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "11",
+              "d": "40"
+             },
+             "op": "+"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9161,
+         "guid": "evt-V901#edge",
+         "hasEgg": false,
+         "label": "edge",
+         "pile": [
+          {
+           "kind": "text",
+           "text": "none"
+          }
+         ]
+        }
+       ]
+      },
+      "team": [
+       {
+        "kind": "robot",
+        "name": "at the right",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "text",
+           "text": "right"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "-1",
+           "d": "1"
+          },
+          "op": "*"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            0
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "number",
+               "value": {
+                "n": "9",
+                "d": "20"
+               },
+               "op": "+"
+              },
+              {
+               "kind": "number",
+               "value": {
+                "n": "11",
+                "d": "40"
+               },
+               "op": "+"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9161,
+           "guid": "evt-V901#edge",
+           "hasEgg": false,
+           "label": "edge",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "none"
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "at the near wall",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "text",
+           "text": "near"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "-1",
+           "d": "1"
+          },
+          "op": "*"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            1
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "number",
+               "value": {
+                "n": "9",
+                "d": "20"
+               },
+               "op": "+"
+              },
+              {
+               "kind": "number",
+               "value": {
+                "n": "11",
+                "d": "40"
+               },
+               "op": "+"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9161,
+           "guid": "evt-V901#edge",
+           "hasEgg": false,
+           "label": "edge",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "none"
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "at the far wall",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "text",
+           "text": "far"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "-1",
+           "d": "1"
+          },
+          "op": "*"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            1
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "number",
+               "value": {
+                "n": "9",
+                "d": "20"
+               },
+               "op": "+"
+              },
+              {
+               "kind": "number",
+               "value": {
+                "n": "11",
+                "d": "40"
+               },
+               "op": "+"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9161,
+           "guid": "evt-V901#edge",
+           "hasEgg": false,
+           "label": "edge",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "none"
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "setting off",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "text",
+           "text": "none"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "number",
+               "value": {
+                "n": "9",
+                "d": "20"
+               },
+               "op": "+"
+              },
+              {
+               "kind": "number",
+               "value": {
+                "n": "11",
+                "d": "40"
+               },
+               "op": "+"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9161,
+           "guid": "evt-V901#edge",
+           "hasEgg": false,
+           "label": "edge",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "none"
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       }
+      ]
+     }
+    },
+    "boundTo": "V901",
+    "ghost": true
+   },
+   "x": -1.5,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "reverse a speed on collision",
+    "gadget": true,
+    "lid": "V912",
+    "evt": "evt-V912",
+    "look": {
+     "bg": "#2a2135",
+     "ink": "#e8d7ff",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V901",
+         "label": "my thing"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "speed"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            null,
+            null
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9171,
+         "guid": "evt-V901#touch",
+         "hasEgg": false,
+         "label": "touching",
+         "pile": []
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "thing on my left",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "text",
+           "text": "left"
+          }
+         ]
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2,
+          0
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2,
+          1
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "9",
+         "d": "20"
+        },
+        "op": "+"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2,
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V901"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "speed"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            null,
+            null
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9171,
+         "guid": "evt-V901#touch",
+         "hasEgg": false,
+         "label": "touching",
+         "pile": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "nothing"
+            },
+            {
+             "kind": "text",
+             "text": "left"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "team": [
+       {
+        "kind": "robot",
+        "name": "thing on my right",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "text",
+             "text": "right"
+            }
+           ]
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            0
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            1
+           ]
+          }
+         },
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "-9",
+           "d": "20"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            0
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              null,
+              null
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9171,
+           "guid": "evt-V901#touch",
+           "hasEgg": false,
+           "label": "touching",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "nothing"
+              },
+              {
+               "kind": "text",
+               "text": "right"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "thing on my near side",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "text",
+             "text": "near"
+            }
+           ]
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            1
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            0
+           ]
+          }
+         },
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "-11",
+           "d": "40"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            1
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              null,
+              null
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9171,
+           "guid": "evt-V901#touch",
+           "hasEgg": false,
+           "label": "touching",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "nothing"
+              },
+              {
+               "kind": "text",
+               "text": "near"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "thing on my far side",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "text",
+             "text": "far"
+            }
+           ]
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            1
+           ]
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            0
+           ]
+          }
+         },
+         {
+          "type": "newNumber"
+         },
+         {
+          "type": "setValue",
+          "value": {
+           "n": "11",
+           "d": "40"
+          },
+          "op": "+"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            2,
+            1
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              null,
+              null
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9171,
+           "guid": "evt-V901#touch",
+           "hasEgg": false,
+           "label": "touching",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "nothing"
+              },
+              {
+               "kind": "text",
+               "text": "far"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "contact ends",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "text",
+             "text": "none"
+            }
+           ]
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V901"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "speed"
+            },
+            {
+             "kind": "box",
+             "holes": [
+              null,
+              null
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9171,
+           "guid": "evt-V901#touch",
+           "hasEgg": false,
+           "label": "touching",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "nothing"
+              },
+              {
+               "kind": "text",
+               "text": "none"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "team": []
+       }
+      ]
+     }
+    },
+    "boundTo": "V901",
+    "ghost": true
+   },
+   "x": -1.5,
+   "z": 1.5
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "send 1 to the score when hit",
+    "gadget": true,
+    "lid": "V913",
+    "evt": "evt-V913",
+    "look": {
+     "bg": "#2a2135",
+     "ink": "#e8d7ff",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 0,
+         "guid": "evt-V901#touch",
+         "hasEgg": false,
+         "label": "touching",
+         "pile": []
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V905",
+         "label": "the score"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+",
+         "label": "the score",
+         "lid": "V913S",
+         "evt": "evt-V913S"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "contact ends",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "text",
+           "text": "none"
+          }
+         ]
+        },
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 0,
+         "guid": "evt-V901#touch",
+         "hasEgg": false,
+         "label": "touching",
+         "pile": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "nothing"
+            },
+            {
+             "kind": "text",
+             "text": "none"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V905"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+",
+         "label": "the score",
+         "lid": "V913S",
+         "evt": "evt-V913S"
+        }
+       ]
+      },
+      "team": [
+       {
+        "kind": "robot",
+        "name": "one for a hit",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "wildText"
+            }
+           ]
+          },
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "wildNumber"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "nest",
+           "id": 0,
+           "guid": "evt-V901#touch",
+           "hasEgg": false,
+           "label": "touching",
+           "pile": [
+            {
+             "kind": "box",
+             "holes": [
+              {
+               "kind": "text",
+               "text": "nothing"
+              },
+              {
+               "kind": "text",
+               "text": "left"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "V905"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+",
+           "label": "the score",
+           "lid": "V913S",
+           "evt": "evt-V913S"
+          }
+         ]
+        },
+        "team": []
+       }
+      ]
+     }
+    },
+    "boundTo": "V901",
+    "ghost": true
+   },
+   "x": -1.5,
+   "z": 1.85
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "following up and down",
+    "gadget": true,
+    "lid": "V914",
+    "evt": "evt-V914",
+    "look": {
+     "bg": "#2a2135",
+     "ink": "#e8d7ff",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V902",
+         "label": "my thing"
+        },
+        {
+         "kind": "nest",
+         "id": 9151,
+         "guid": "dev-pointer",
+         "hasEgg": false,
+         "dev": true,
+         "label": "pointer",
+         "pile": []
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "away"
+          },
+          null
+         ]
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Follower",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s1",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "V902"
+        },
+        {
+         "kind": "nest",
+         "id": 9151,
+         "guid": "dev-pointer",
+         "hasEgg": false,
+         "dev": true,
+         "label": "pointer",
+         "pile": []
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "away"
+          },
+          null
+         ]
+        }
+       ]
+      },
+      "team": []
+     }
+    },
+    "boundTo": "V902",
+    "ghost": true
+   },
+   "x": -1.05,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "PONG, FROM THE SHELF\n\nNo robot here was written\nfor Pong. The ball is a pad\nwith three shelf gadgets\nbound to it:\n\n  bouncing at a speed\n    (the walls)\n  reverse a speed on\n    collision (the bat)\n  send 1 to the score\n\nThe bat is a pad with\n\"following up and down\".",
+    "ghost": true
+   },
+   "x": -0.55,
+   "z": 2.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO PLAY\n\nPress SPACE on THE BALL --\neverything bound to it\nstarts as one. SPACE on the\nbat starts its follower.\n\".\" stops either.\n\nThe bat tracks your pointer\nUP AND DOWN only, so it\nstays a wall -- and so you\ncan point at it to stop it.\n\nThe rally counter climbs\neach time the ball meets\nthe bat. Everything else\nhere is scenery: the ball\npasses through the cards.",
+    "ghost": true
+   },
+   "x": 0.15,
+   "z": 2.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THE HONEST SEAMS\n\nThe ball moves on the\nCLOCK, not on a robot\nturn: its gadgets set a\nspeed and then sleep until\na wall or a contact. The\nstep-based pair is still\non the shelf -- bind those\ninstead and watch it\nstutter, and add up.\n\nEverything but the ball and\nthe bat is SCENERY --\n[set | solid | no] -- or\nthe ball collides with the\ndocumentation and scores\nagainst it.\n\nAnd the counter scores\nHITS (touch is what the\nshelf gadget hears), where\nclassic Pong scores\nmisses. A miss-counter\nwould listen to the edge\nreading -- a shelf gadget\nnobody has asked for yet.",
+    "ghost": true
+   },
+   "x": 0.85,
+   "z": 2.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "ASK MARTY\n\nOpen Marty and ask:\n\n  \"what does the ball do?\"\n  \"what happens when the\n   ball meets the bat?\"\n\nHe reads the panels of the\nbound gadgets and answers\nwith the PURPOSE of the\nwhole loop -- the steps only\nif you ask how.",
+    "ghost": true
+   },
+   "x": 1.5,
+   "z": 2.3
+  }
+ ],
+ "stations": {},
+ "active": null
+}

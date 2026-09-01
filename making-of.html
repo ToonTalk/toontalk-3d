@@ -1204,6 +1204,82 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
+    <div class="rail">The capstone</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">&#9679;</span>
+        <h2>Pong, and nothing new in it</h2>
+      </div>
+      <p>&ldquo;Can you try to make the pong game.&rdquo; The plan had said the
+        capstone should be built <em>only</em> out of pads and library
+        behaviours &mdash; no bespoke robots &mdash; and that clause turned out
+        to be protecting the right thing for a slightly wrong reason. Four of
+        the gadgets Pong needs are among the six of twelve still unbuilt (one
+        of them is literally <em>send a message to the score</em>), so the ball
+        and the bat carry their own robots on ordinary panels instead. What
+        survives, and is the claim worth making, is that
+        <strong>no engine work was done for Pong</strong>.</p>
+      <p>The <strong>table is the court</strong>. Three of its walls are the
+        table&rsquo;s own edges; the fourth, on the right, is yours. The ball,
+        the bat and the counter are three ordinary things standing on the
+        table, and the ball and the bat each carry their own program on their
+        own panel &mdash; so two programs run at once, which is the difference
+        between a game and a demonstration.</p>
+      <p>The ball&rsquo;s team is six robots that differ only in what they
+        expect in two holes, the edge and what it is touching: far or near
+        wall, flip the away step; left wall, flip the across step; right wall,
+        give the counter&rsquo;s bird a <span class="mono">+1</span> and start
+        again in the middle; touching a thing, flip the across step; anything
+        else, fly. Flipping is a <span class="mono">&times;&minus;1</span>
+        dropped on a number, exactly as you would drop one by hand. Every part
+        of it was built for something else, weeks apart and for other reasons:
+        <span class="mono">[move | across | n]</span> and the edge reading from
+        the behaviours, the pointer device from the senses, a badged number
+        given to a bird from live things, and
+        <span class="mono">[set | width | n]</span> from the appearance API
+        &mdash; which is the whole of why the bat is a bat and the ball is a
+        ball. Nothing anywhere knows the game is Pong.</p>
+      <h3>What a program that runs every frame finds</h3>
+      <p>Three bugs stood in the way, and all three were found by measuring
+        rather than by thinking about it. <strong>Touch</strong> had been an
+        event, and events do not work here for the reason the edge already had
+        written on it: an event leaves the nest empty, an empty nest makes a
+        team member doze, and a dozing member stops the member doing the
+        moving. A ball that bounces off a bat could not be written at all. It
+        is a reading now &mdash; a live bird to whatever is against you, or a
+        pad saying <em>nothing</em> &mdash; swept every frame, because a
+        behaviour takes a round every frame and a ball told twice over that it
+        has just hit the bat turns round twice over, in front of the bat.</p>
+      <p><strong>Auto-run</strong> belongs to the table. Mail landing in the
+        standing robot&rsquo;s own box arms another round, which on the table is
+        exactly right: a robot dozing over a mismatch should get to work when
+        the post arrives. Inside a panel it is a catastrophe, because a
+        behaviour whose work box holds a reading gets mail every round &mdash;
+        and the extra round ran from inside the first round&rsquo;s own queue,
+        outside the scheduler, outside the Rounds limit and outside the frame
+        budget. Measured: <strong>594 extra rounds in a single frame, sixteen
+        seconds of one frame</strong>. Which is precisely what Ken had been
+        reporting for two rounds as &ldquo;it freezes for about a second, even
+        Marty stops&rdquo;.</p>
+      <p>And the <strong>edge</strong> had been clamping with a strict
+        greater-than, so only the move that was <em>refused</em> said
+        &ldquo;right&rdquo;. A round sends two messages &mdash; the across step
+        and the away step &mdash; and the second asks for a position the first
+        already clamped to, so it is not refused, so it says
+        &ldquo;none&rdquo;. The reading was back to none before the round that
+        would have acted on it began: a robot whose thought asked for the
+        right-hand wall never once saw it. The edge says where a thing
+        <em>is</em> now, not what was refused.</p>
+      <p>Verified by driving the frame clock and the pointer together. A player
+        who tracks the ball saves it twice and misses nothing. A player who
+        walks away is past at frame 675 &mdash; the counter goes to 1 and the
+        ball starts again in the middle of the table.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
     <div class="rail">How it worked</div>
     <div class="body">
       <div class="head">

@@ -36,6 +36,70 @@ def _png(rows):
     return 'data:image/png;base64,' + base64.b64encode(out).decode('ascii')
 
 
+def _png_rgba(rows):
+    """RGBA rows -> a data: URL.
+
+    The same writer with an alpha channel, for pictures that have to sit on
+    something -- a round ball on a green field is round only if the corners
+    are see-through. Kept separate from _png so the shapes above keep the
+    exact bytes the naming example matches robots against.
+    """
+    h = len(rows)
+    w = len(rows[0])
+    raw = b''.join(b'\x00' + bytes(v for px in r for v in px) for r in rows)
+
+    def chunk(tag, data):
+        body = tag + data
+        return (struct.pack('>I', len(data)) + body
+                + struct.pack('>I', zlib.crc32(body) & 0xffffffff))
+
+    out = (b'\x89PNG\r\n\x1a\n'
+           + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6, 0, 0, 0))
+           + chunk(b'IDAT', zlib.compress(raw, 9))
+           + chunk(b'IEND', b''))
+    return 'data:image/png;base64,' + base64.b64encode(out).decode('ascii')
+
+
+def draw_rgba(shape, paint, n=N, tall=1):
+    """One shape on nothing, sampled 3x3 at the edges.
+
+    `shape(u, v)` says whether a point is inside; `paint(u, v)` says what
+    colour it is there, so a gradient costs no more than a flat fill. `tall`
+    makes the image taller than it is wide -- a picture is drawn to FIT its
+    pad, so a bat painted square on a pad twice as deep as it is wide comes
+    out squat with empty field above and below it.
+    """
+    h = int(round(n * tall))
+    rows = []
+    for y in range(h):
+        row = []
+        for x in range(n):
+            hits = 0
+            for sy in range(3):
+                for sx in range(3):
+                    u = (x + (sx + 0.5) / 3) / n * 2 - 1
+                    v = (y + (sy + 0.5) / 3) / h * 2 - 1
+                    if shape(u, v):
+                        hits += 1
+            u = (x + 0.5) / n * 2 - 1
+            v = (y + 0.5) / h * 2 - 1
+            r, g, b = paint(u, v)
+            row.append((r, g, b, int(round(255 * hits / 9.0))))
+        rows.append(row)
+    return _png_rgba(rows)
+
+
+def hue(t):
+    """A colour a sixth of the way round the wheel per unit, fully saturated --
+    which is what the original's ball and bat are painted with."""
+    t = t % 1.0
+    i = int(t * 6) % 6
+    f = t * 6 - int(t * 6)
+    q, r = int(255 * (1 - f)), int(255 * f)
+    return [(255, r, 0), (q, 255, 0), (0, 255, r), (0, q, 255),
+            (r, 0, 255), (255, 0, q)][i]
+
+
 def draw(shape, ink, ground=(0xf7, 0xf1, 0xdf)):
     """One flat shape, centred, on a paper-coloured ground.
 

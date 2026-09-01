@@ -6,18 +6,35 @@
 <style>
   body { margin: 0; background: #12151b; color: #eef1f6;
          font: 14px/1.5 ui-monospace, Consolas, monospace; }
-  #log { padding: 16px 20px; white-space: pre-wrap; }
+  /* the log stops short of the frame's corner rather than running under it */
+  #log { padding: 16px 20px 16px 20px; margin-right: 452px; white-space: pre-wrap; }
   .pass { color: #6ee7a8; }
   .fail { color: #ff7a5c; }
   .dim { color: #97a2b3; }
+  /* OPAQUE, and never over the words. It hung here at 60% so the log could be
+     read behind it, which is the same wish backwards: the fix is for them not
+     to share the pixels. */
   iframe { position: fixed; right: 8px; bottom: 8px; width: 420px; height: 260px;
-           border: 1px solid #333; opacity: 0.6; }
+           border: 1px solid #333; background: #0b0e14; }
+  /* A narrow window has no corner to spare -- the frame alone is 420 wide --
+     so it joins the flow above the log, where it can overlap nothing. */
+  /* min-width floors the frame in a HIDDEN pane, whose viewport reports 0
+     wide: calc(100% - 40px) then collapsed the app to zero pixels, its
+     camera aspect to 0/NaN, and every press-driven check to "non-finite
+     clientX". A real narrow window is never under 320. */
+  @media (max-width: 960px) {
+    #log { margin-right: 0; }
+    iframe { position: static; display: block; width: calc(100% - 40px);
+             min-width: 320px; max-width: 420px; height: 240px;
+             margin: 12px 20px 0; }
+  }
   textarea { width: 96%; height: 200px; background: #0e1218; color: #cdd8e8;
              border: 1px solid #3a4356; margin: 8px 20px; font: inherit; }
 </style>
 </head>
 <body>
-<div id="log">tt3d regression suite\n</div>
+<div id="log">tt3d regression suite
+</div>
 <iframe id="app" src="../toontalk-3d.html?demo=1" title="app under test"></iframe>
 
 <script>
@@ -63,6 +80,14 @@ const WORLDS = [
 ];
 const ROUNDS = 8;
 
+// One monotonic clock for every harness frame, far above real time. Checks
+// used performance.now() + i*17, which ran the app's touch-sweep timestamp
+// seconds ahead of the next check's clock -- and a sweep that thinks no time
+// has passed does not sweep. The grow gadget failed for exactly that reason
+// while the same steps worked by hand, where real seconds passed between.
+let VNOW = 1e12;
+const fnow = () => (VNOW += 17);
+
 const logEl = document.getElementById('log');
 const put = (line, cls) => {
   const s = document.createElement('span');
@@ -77,16 +102,2425 @@ if (appURL) frame.src = appURL + (appURL.includes('?') ? '&' : '?') + 'demo=1';
 
 function ready(D) { return D && D.ready; }
 
-// settle in slices, yielding, so a heavy world cannot wedge the tab -- the
-// lesson of the first harness attempt, which froze the renderer for 30s
-async function slowSettle(D, cap) {
+// GIVE THE BROWSER ITS THREAD BACK. A check that drives two thousand frames in
+// one synchronous loop holds the main thread for seconds: Chrome offers to
+// kill the tab, and nothing on the page can be selected or reloaded while it
+// runs. Every frame loop breathes every 64th frame instead.
+// A SLICE IS A LENGTH OF TIME, not a number of steps: a hundred ticks of Pong
+// and a hundred of an empty world are nothing like the same length, so a count
+// that keeps one page usable wedges another.
+// ?block=1 turns the yielding OFF: a headless driver's hidden tab starves
+// every macrotask (~200ms each under page freezing), so the polite version
+// runs at two frames a second there -- while the driver does not care that
+// the page is unresponsive, which is the only thing yielding buys. A person's
+// foreground tab wants the default.
+const SLICE_MS = new URLSearchParams(location.search).has('block') ? 8.64e7 : 10;
+// ?checks=pace,fold  runs only the checks whose names contain a listed word
+// ('goldens' names the byte-identical worlds); everything else is skipped
+// and counted as passed. The verdict records the filter, so a green subset
+// can never be mistaken for the full gate.
+const CHECKS_FILTER = (new URLSearchParams(location.search).get('checks') || '')
+  .split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+const want = (name) => !CHECKS_FILTER.length
+  || CHECKS_FILTER.some(w => name.toLowerCase().includes(w));
+let _sliceT0 = performance.now();
+// MessageChannel, NOT setTimeout: a background or hidden tab clamps timers to
+// a full second, and a suite that yields thousands of times became hours long
+// the moment it was not the front tab (melody alone took 317 seconds). A
+// posted message is not a timer, so it is not clamped -- and it is still a
+// macrotask, so the browser handles input between slices all the same.
+const _breatheCh = new MessageChannel();
+let _breatheWake = null;
+_breatheCh.port1.onmessage = () => { const w = _breatheWake; _breatheWake = null; w?.(); };
+// WHICH yield depends on who is watching. setTimeout in a VISIBLE tab: it
+// lets input and paint through, which is the whole point of yielding -- a
+// MessageChannel ping-pong starves both, so the log froze and Chrome offered
+// to kill the very tab the yields were meant to keep alive. MessageChannel
+// only when HIDDEN, where nothing paints anyway and setTimeout is clamped to
+// a full second per yield (melody alone took 317s in a background tab).
+const breathe = () => {
+  _sliceT0 = performance.now();
+  if (document.hidden) {
+    return new Promise(r => { _breatheWake = r; _breatheCh.port2.postMessage(0); });
+  }
+  return new Promise(r => setTimeout(r));
+};
+// For loops that do their own work per frame and cannot call frames(): yields
+// only once the current slice has run long enough. Count-based yields were the
+// bug this replaces -- sixty-four frames of three Pong balls is half a second
+// with the thread held, which is why the page went dead at "copies are wholly
+// their own" and stayed dead.
+async function maybeBreathe() {
+  if (performance.now() - _sliceT0 >= SLICE_MS) await breathe();
+}
+// Every driver below works for SLICE_MS and then hands the thread back,
+// whatever that bought in steps -- so the longest the page can hold the
+// browser is one slice, in any world, on any machine.
+async function frames(D, n) {
+  let i = 0;
+  while (i < n) {
+    const t0 = performance.now();
+    do { D.frame(1, fnow()); i++; } while (i < n && performance.now() - t0 < SLICE_MS);
+    await breathe();
+  }
+}
+// AND THE SETTLES, which were the worst of it: await settle(D, 9000) runs up to nine
+// thousand ticks of a whole world without ever returning to the browser, and
+// the suite makes eighty-four such calls. This one steps in hundred-tick
+// slices and breathes between them, so the longest hold is one slice.
+// ...and a plain PASSAGE OF TIME, which is not the same thing: three checks
+// want the clock to run whether or not anything is happening (a thing sitting
+// on the copier for ten seconds proves it is quiet). settle stops early when
+// the world goes idle; this one does not.
+async function ticks(D, n) {
+  let done = 0;
+  while (done < n) {
+    const t0 = performance.now();
+    do { D.step(1 / 60, 4); done += 4; } while (done < n && performance.now() - t0 < SLICE_MS);
+    await breathe();
+  }
+}
+async function settle(D, max = 9000) {
   let n = 0;
-  while (n < cap) {
-    D.step(1 / 60, 400); n += 400;
-    if (!D.state.busy && !D.state.queued) break;
-    if (n % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+  while (n < max) {
+    const t0 = performance.now();
+    let idle = false;
+    do {
+      D.step(1 / 60, 4); n += 4;
+      // the app's own settle waits on the step in progress too; stopping a
+      // beat early left a copier animation half-finished under a check
+      if (!D.state.busy && !D.state.queued && !D.state.current) { idle = true; break; }
+    } while (n < max && performance.now() - t0 < SLICE_MS);
+    if (idle) break;
+    await breathe();
   }
   return n;
+}
+// settle in slices, yielding, so a heavy world cannot wedge the tab -- the
+// lesson of the first harness attempt, which froze the renderer for 30s
+async function slowSettle(D, cap) { return settle(D, cap); }
+
+// A REGISTER THAT STOPS BEING PRUNED is a leak you only notice on a desk after
+// a minute, so it is a test. Pong is the world that mints the most: it copies
+// and sends two message boxes a round, about four numbers a round per player.
+// Every number ever made goes on allNumbers, which is swept twice a second --
+// and before the sweep learned about disposal the list grew 240 a second and
+// walking it was the slowing down Ken felt.
+async function leakCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.speed('instant');
+  // BY WHAT IT IS, not by where it sits: bench indexes shift between loads,
+  // and the first version of this test switched on a number called "misses"
+  // and watched a dead world hold steady at 195 for five batches. A gate that
+  // passes because nothing happened is the bug it was written to catch.
+  const gadgets = [];
+  for (let i = 0; i < 20; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.gadget) gadgets.push(t);
+  }
+  const ball = gadgets[0];
+  for (const g of gadgets) D.switchGadget(g, true);
+  const marks = [], seen = [];
+  for (let k = 0; k < 5; k++) {
+    for (let i = 0; i < 120; i++) {
+      D.frame(1, fnow());
+      await maybeBreathe();
+      if (ball && (i & 7) === 0) seen.push(ball.position.x);
+    }
+    marks.push(D.sizes.numbers);
+    await new Promise(r => setTimeout(r, 0));
+  }
+  // Bounded, not monotone: the count rises and falls with the messages in
+  // flight. Before the sweep learned about disposal it passed 1200 by frame
+  // 300 and kept climbing.
+  const worst = Math.max(...marks);
+  // The SPREAD, not start-against-end: the ball bounces, so where it finishes
+  // can be where it began. The first version of this compared the two and went
+  // red on a world that was running perfectly well.
+  const moved = seen.length > 0 && (Math.max(...seen) - Math.min(...seen)) > 0.2;
+  const ok = gadgets.length === 2 && moved && worst < 800;
+  if (!moved) put('  (the ball never moved -- the world was not running)', 'fail');
+  put((ok ? 'PASS' : 'FAIL') + ' registers stay bounded  (numbers after each '
+      + '120 frames of Pong: ' + marks.join(', ') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// "I put the square ball from pong.world on Mimi and it got stuck." It did:
+// the panel went on running while the ball sat at a station with no place of
+// its own, so every round tried to move it, failed, and said so -- sixty times
+// a second for as long as it was left there. A thing off the table is out of
+// play, and this is that rule: silent while it is in the machine, still
+// switched on, and moving again the moment it is back.
+async function outOfPlayCheck(D, win) {
+  const w = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const gadgets = [];
+  for (let i = 0; i < 20; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.gadget) gadgets.push(t);
+  }
+  const ball = gadgets[0];
+  for (const g of gadgets) D.switchGadget(g, true);
+  await ticks(D, 120);
+
+  const warns = [];
+  const was = win.console.warn;
+  win.console.warn = (...a) => { warns.push(String(a[0])); was.apply(win.console, a); };
+  try {
+    D.clickThing(ball); await settle(D, 9000);
+    D.clickRaw({ kind: 'station', id: 'copyIn' }); await settle(D, 20000);
+    const parked = ball.position.x;
+    await ticks(D, 600);                      // ten seconds sitting on Mimi
+    var quiet = warns.filter(t => /no place to move/.test(t)).length === 0;
+    var still = Math.abs(ball.position.x - parked) < 0.001;
+    var stillOn = !!ball.__panelTray?.userData.dirty;
+  } finally { win.console.warn = was; }
+
+  D.clickRaw({ kind: 'station', id: 'copyIn' }); await settle(D, 20000);   // take it back
+  D.clickBench(-0.3, 1.6); await settle(D, 20000);
+  const x0 = ball.position.x;
+  await ticks(D, 180);
+  const again = Math.abs(ball.position.x - x0) > 0.02;
+
+  const ok = quiet && still && stillOn && again;
+  put((ok ? 'PASS' : 'FAIL') + ' a thing off the table is out of play  (silent='
+      + quiet + ' still=' + still + ' switched-on=' + stillOn
+      + ' resumes=' + again + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// "when I clicked pause to stop the bouncing ball and placed it on Mimi the
+// copying stopped." A pause stops the WORLD running itself; it must not stop
+// the workshop, or the pause is useless for the one thing it is wanted for.
+// Four things at once: the ball stands still, you can still pick it up, Mimi
+// still finishes the copy, and no panel sneaks a fresh turn while paused.
+async function pauseCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const gadgets = [];
+  for (let i = 0; i < 20; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.gadget) gadgets.push(t);
+  }
+  const ball = gadgets[0];
+  for (const g of gadgets) D.switchGadget(g, true);
+  await frames(D, 120);
+
+  D.pause(true);
+  const parked = ball.position.x;
+  const roundsBefore = gadgets.map(g => g.__panelTray?.userData.stepRounds ?? 0);
+  await frames(D, 120);
+  const stillPaused = Math.abs(ball.position.x - parked) < 0.001;
+
+  D.clickThing(ball);
+  await frames(D, 200);
+  const canPickUp = D.state.held !== null;
+
+  D.clickRaw({ kind: 'station', id: 'copyIn' });
+  await frames(D, 600);
+  const d = D.dump();
+  const copied = d.copyIn !== null && d.copyOut !== null;
+
+  const roundsAfter = gadgets.map(g => g.__panelTray?.userData.stepRounds ?? 0);
+  const noFreshTurns = roundsAfter.every((r, i) => r <= roundsBefore[i]);
+  D.pause(false);
+
+  const ok = stillPaused && canPickUp && copied && noFreshTurns;
+  put((ok ? 'PASS' : 'FAIL') + ' a pause stops the world, not the workshop  (still='
+      + stillPaused + ' can-pick-up=' + canPickUp + ' copier-works=' + copied
+      + ' no-fresh-turns=' + noFreshTurns + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// Ken's scenario: copy a game and run original and copy together. Before the
+// one-renaming fix every copy wore the record's identities and evicted the
+// previous owner from the live register; the dispossessed ball's robot went
+// deaf and the ball glided into a corner and stuck.
+//
+// Two halves. STRUCTURAL, on the classic game (a field with riders, the case
+// where the riders reference each other): after one trip through Mimi the
+// copy's record must share not one name with the original's. RUNTIME, on the
+// square ball (which fits on the table many times over): original, copy and
+// copy-of-the-copy all running at once, and every one of them must keep
+// moving. The first draft of this check ran three full-size pitches instead,
+// which cannot fit on the bench without overlapping -- a ball pressed against
+// a neighbouring solid pitch pins at the edge, and the check blamed the app.
+async function copyCheck(D) {
+  // -- structural: the classic game through Mimi once
+  put('   ..cp.a start', 'dim');
+  const w1 = await (await fetch('../examples/behaviours/pong-classic.world.json')).json();
+  D.worldIn(w1); await slowSettle(D, 2000);
+  let field = null;
+  for (let i = 0; i < 20; i++) {
+    const t = D.bench(i); if (!t) break;
+    if ((t.__subs || []).length) { field = t; break; }
+  }
+  const home = { x: field.position.x, z: field.position.z };
+  D.clickThing(field); await settle(D, 20000);
+  D.clickRaw({ kind: 'station', id: 'copyIn' }); await settle(D, 20000);
+  D.clickRaw({ kind: 'station', id: 'copyOut' }); await settle(D, 20000);
+  D.clickBench(1.2, 1.0); await settle(D, 20000);
+  D.clickRaw({ kind: 'station', id: 'copyIn' }); await settle(D, 20000);
+  D.clickBench(home.x, home.z); await settle(D, 20000);
+  put('   ..cp.b structural done', 'dim');
+  const recs = D.worldOut().bench.filter(b => b.thing.subs?.length).map(b => JSON.stringify(b.thing));
+  // DEFINED names only: what each record's own things are called. References
+  // may legitimately be shared -- both games' bats listen to the same pointer
+  // device, and that entanglement is the design, not a leak.
+  const names = (j) => new Set([...j.matchAll(/"(?:lid|liveLid)":"([^"]+)"/g)].map(m => m[1]));
+  let disjoint = false;
+  if (recs.length === 2) {
+    const a = names(recs[0]), b = names(recs[1]);
+    disjoint = a.size > 0 && ![...a].some(x => b.has(x));
+  }
+
+  // -- runtime: the square ball, thrice over
+  const w2 = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  D.worldIn(w2); await slowSettle(D, 2000);
+  let ball = null;
+  for (let i = 0; i < 20; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.gadget) { ball = t; break; }
+  }
+  const trip = async (thing, x, z) => {
+    const h = { x: thing.position.x, z: thing.position.z };
+    D.clickThing(thing); await settle(D, 20000);
+    D.clickRaw({ kind: 'station', id: 'copyIn' }); await settle(D, 20000);
+    D.clickRaw({ kind: 'station', id: 'copyOut' }); await settle(D, 20000);
+    D.clickBench(x, z); await settle(D, 20000);
+    D.clickRaw({ kind: 'station', id: 'copyIn' }); await settle(D, 20000);
+    D.clickBench(h.x, h.z); await settle(D, 20000);
+  };
+  // a BALL is square; the bat is a gadget too, and the first draft of this
+  // selection tripped the bat and then wondered why its copy never moved
+  const isBall = (t) => t.userData.gadget && !(t.userData.look?.h > 1)
+    && !(t.__subs || []).length;
+  const ballsBefore = () => {
+    const out = [];
+    for (let i = 0; i < 25; i++) {
+      const t = D.bench(i); if (!t) break;
+      if (isBall(t)) out.push(t);
+    }
+    return out;
+  };
+  put('   ..cp.c first trip', 'dim');
+  await trip(ball, 0.9, 1.3);
+  const copy1 = ballsBefore().find(t => t !== ball);
+  if (copy1) await trip(copy1, -0.9, 1.3);
+  put('   ..cp.d trips done', 'dim');
+  const balls = ballsBefore();
+  const gadgets = [];
+  for (let i = 0; i < 25; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.gadget) gadgets.push(t);
+  }
+  for (const g of gadgets) D.switchGadget(g, true);
+  const track = balls.map(() => []);
+  for (let i = 0; i < 700; i++) {
+    if (i % 25 === 0) { try { await fetch('/capture?name=suiteprog', { method: 'POST',
+      body: JSON.stringify({ at: 'copy700', i }) }); } catch (e2) {} }
+    D.frame(1, fnow());
+    await maybeBreathe();
+    balls.forEach((b, j) => { if (b.parent) track[j].push(b.position.x); });
+  }
+  put('   ..cp.e 700 frames done', 'dim');
+  const spreads = track.map(t2 => t2.length ? Math.max(...t2) - Math.min(...t2) : 0);
+  const allRun = balls.length === 3 && spreads.every(sp => sp > 0.5);
+  const ok = disjoint && allRun;
+  put((ok ? 'PASS' : 'FAIL') + ' copies are wholly their own  (records-share-no-name='
+      + disjoint + ' balls=' + balls.length + ' spreads='
+      + spreads.map(sp => sp.toFixed(1)).join('/') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// Round 28's behaviours, each driven the way a user would drive it:
+// a) shrink a game and its riders shrink with it;
+// b) Dusty switches off what he vacuums, and it stays off till SPACE;
+// c) a behaviour dropped on a pad's PANEL binds to the pad -- the pad moves;
+// d) importing a world mid-project lands as a notebook, wiping nothing.
+async function round28Check(D, win) {
+  const out = { rider: false, dusty: false, bind: false, imp: false };
+
+  // a) rider scale follows the field's size
+  {
+    const w = await (await fetch('../examples/behaviours/pong-classic.world.json')).json();
+    D.worldIn(w); await slowSettle(D, 2000);
+    let field = null;
+    for (let i = 0; i < 20; i++) {
+      const t = D.bench(i); if (!t) break;
+      if ((t.__subs || []).length) { field = t; break; }
+    }
+    const bat = field.__subs.find(sb => sb.userData.look?.h > 1);
+    const full = bat.scale.x;
+    D.clickThing(field); await settle(D, 20000);
+    field.setPadSize(0.5);
+    const half = bat.scale.x;
+    D.clickBench(field.position.x, field.position.z); await settle(D, 20000);
+    // and the HALF-SIZE game still plays: a rider's place is said in the
+    // field's own units, so the bat's authored numbers aim true at any size
+    // -- shrinking once pinned the bat at the clamp after a single move
+    D.switchScene(field, true);
+    const ball = field.__subs[0];
+    const bu = [], bv = [];
+    for (let i = 0; i < 450; i++) {
+      D.frame(1, fnow());
+      await maybeBreathe();
+      if (i % 6 === 0) D.deliverPointer(field.position.x,
+        field.position.z + 0.4 * Math.sin(i / 30));
+      bu.push(ball.userData.at.u);
+      bv.push(bat.userData.at.v);
+    }
+    D.switchScene(field, false);
+    const plays = (Math.max(...bu) - Math.min(...bu)) > 0.5
+               && (Math.max(...bv) - Math.min(...bv)) > 0.2;
+    field.setPadSize(1);
+    out.rider = Math.abs(half - full / 2) < 0.01 && plays;
+  }
+
+  // b, c, d ride on the square-ball world
+  const w2 = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  D.worldIn(w2); await slowSettle(D, 2000);
+  const things = [];
+  for (let i = 0; i < 25; i++) { const t = D.bench(i); if (!t) break; things.push(t); }
+  const ball = things.find(t => t.userData.gadget && !(t.userData.look?.h > 1));
+  const doc = things.find(t => t.userData.kind === 'text' && !t.userData.gadget);
+
+  // b) vacuumed running ball: off in the bag, off when back, until SPACE
+  D.switchGadget(ball, true);
+  await frames(D, 40);
+  D.dusty(true); D.clickThing(ball); await settle(D, 20000); D.dusty(false);
+  const offInBag = !ball.__panelTray?.userData.dirty;
+  D.clickThing(ball); await settle(D, 20000);          // back into the hand
+  D.clickBench(0.3, 1.5); await settle(D, 20000);
+  await settle(D, 20000);
+  const p0 = ball.position.x;
+  await frames(D, 150);
+  const staysPut = Math.abs(ball.position.x - p0) < 0.05;
+  D.switchGadget(ball, true);
+  const xs = [];
+  for (let i = 0; i < 300; i++) {
+    D.frame(1, fnow()); xs.push(ball.position.x);
+    await maybeBreathe();
+  }
+  const runsAgain = (Math.max(...xs) - Math.min(...xs)) > 0.5;
+  out.dusty = offInBag && staysPut && runsAgain;
+  D.switchGadget(ball, false);
+
+  // c) bound by dropping on the pad's panel: the PAD bounces.
+  // A fresh world first: each leg stands alone, because the dusty leg's
+  // leftovers once failed this one and the report blamed the wrong feature.
+  D.worldIn(w2); await slowSettle(D, 2000);
+  const things2 = [];
+  for (let i = 0; i < 25; i++) { const t = D.bench(i); if (!t) break; things2.push(t); }
+  const ball2 = things2.find(t => t.userData.gadget && !(t.userData.look?.h > 1));
+  const doc2 = things2.find(t => t.userData.kind === 'text' && !t.userData.gadget);
+  D.clickThing(doc2); await settle(D, 20000);
+  D.openHeldPanel(); await settle(D, 20000);
+  const tray = doc2.__panelTray;
+  D.clickBench(-1.1, 1.2); await settle(D, 20000);
+  D.clickThing(ball2); await settle(D, 20000);
+  D.clickThing(tray); await settle(D, 20000);
+  const bound = ball2.userData.boundTo != null && ball2.userData.boundTo === doc2.userData.lid;
+  D.switchGadget(ball2, true);
+  const ds = [];
+  for (let i = 0; i < 400; i++) {
+    D.frame(1, fnow()); ds.push(doc2.position.x);
+    await maybeBreathe();
+  }
+  out.bind = bound && (Math.max(...ds) - Math.min(...ds)) > 0.5;
+  D.switchGadget(ball2, false);
+
+  // d) a world imported over a working table lands as a notebook
+  const before = [];
+  for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; before.push(t); }
+  const json = await (await fetch('../examples/behaviours/pong-classic.world.json')).text();
+  const file = new win.File([json], 'pong-classic.world.json', { type: 'application/json' });
+  const dt2 = new win.DataTransfer();
+  dt2.items.add(file);
+  win.document.body.dispatchEvent(new win.DragEvent('drop',
+    { dataTransfer: dt2, bubbles: true, cancelable: true }));
+  await new Promise(r => setTimeout(r, 900));
+  await settle(D, 20000);
+  const stillThere = before.every(t => t.parent || t === D.state.heldThing);
+  const gotBook = D.state.held === 'notebook';
+  out.imp = stillThere && gotBook;
+
+  const ok = out.rider && out.dusty && out.bind && out.imp;
+  put((ok ? 'PASS' : 'FAIL') + ' round-28 behaviours  (riders-scale=' + out.rider
+      + ' dusty-switches-off=' + out.dusty + ' panel-drop-binds=' + out.bind
+      + ' import-lands-as-notebook=' + out.imp + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// The full shelf: fifteen behaviours, and two of the new six driven end to
+// end. The SPEED LIMIT is born too fast on purpose and must cap itself (the
+// scale-as-if, the #speed channel and the echo rule all in one breath), and
+// GROW WHEN TOUCHED must grow when the shelf's own mover drives through it
+// (the dozing-on-touch idiom: an announcement arrives, is eaten, and one
+// step of growth happens per change of contact).
+async function shelfCheck(D) {
+  // the previous check ends holding the imported notebook; a full hand is
+  // not this check's subject, so it goes down first
+  if (D.state.held) { D.clickBench(0.9, 2.1); await settle(D, 20000); }
+  // NOT at Instant: the dump checks left speed at 'inf', where fastForward
+  // drains whole rounds per frame and the mover TELEPORTS across the grow
+  // pad between two touch sweeps -- contact is a thing that happens in
+  // sampled time, so this check runs at a walking pace
+  D.speed(2);
+  const w = await (await fetch('../examples/behaviours/library.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const by = {};
+  for (let i = 0; i < 25; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.lid) by[t.userData.lid] = t;
+  }
+  const lids = ['G901','G902','G903','G904','G905','G906',
+                'G907','G908','G909','G910','G911','G912',
+                // and the three the gadget-built Pong needed: one axis of the
+                // pointer, and the speed-based pair that move on the world's
+                // clock instead of on a robot's turn
+                'G915','G916','G917'];
+  const twelve = lids.every(l => by[l]);
+
+  D.switchGadget(by.G911, true);
+  await frames(D, 200);
+  const capped = Math.abs((by.G911.userData.speed?.x ?? 0) - 0.5) < 0.001;
+
+  D.switchGadget(by.G907, true);
+  D.switchGadget(by.G901, true);       // same row as grow, by shelf design
+  await frames(D, 700);
+  const grew = (by.G907.userData.sz ?? 1) > 1.2;
+
+  const ok = twelve && capped && grew;
+  put((ok ? 'PASS' : 'FAIL') + ' the shelf is fifteen  (all-present=' + twelve
+      + ' limit-caps-itself=' + capped + ' grow-grows=' + grew
+      + ' sz=' + (by.G907?.userData.sz ?? 1) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// What the away-day probes found, kept: bindings must TRAVEL. Two gadgets
+// bound to one star survive a save/load and still drive it (the composition
+// the manual promises); and a behaviour dropped on ANOTHER behaviour binds
+// rather than falling through to the pad-join rule -- which used to merge
+// their faces and silently discard the dropped one's panel.
+async function bindingsCheck(D) {
+  const w = await (await fetch('../examples/behaviours/library.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const by = {};
+  for (let i = 0; i < 25; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.lid) by[t.userData.lid] = t;
+  }
+  D.clickThing(by.G903); await settle(D, 9000);
+  D.clickThing(by.L9599); await settle(D, 9000);          // bind bouncing -> star
+  D.clickThing(by.G910); await settle(D, 9000);
+  D.clickThing(by.L9599); await settle(D, 9000);          // bind reversing -> star
+
+  // gadget-on-gadget: drop the speed limit on the EDGE of the bouncing
+  // gadget -- it must bind, and the target's face must stay its own
+  D.clickThing(by.G911); await settle(D, 9000);
+  const pt = by.G903.getWorldPosition(new D.THREE.Vector3());
+  pt.x += 0.15;
+  D.clickRaw({ kind: 'thing', thing: by.G903, point: pt }); await settle(D, 9000);
+  const g2g = by.G911.userData.boundTo === by.G903.userData.lid
+           && by.G903.userData.text === 'bouncing';
+
+  // ...and the star's two bindings survive a save/load and still drive it
+  const saved = D.worldOut();
+  D.worldIn(JSON.parse(JSON.stringify(saved))); await slowSettle(D, 2000);
+  const by2 = {};
+  for (let i = 0; i < 25; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.lid) by2[t.userData.lid] = t;
+  }
+  const rebound = by2.G903?.userData.boundTo === 'L9599'
+               && by2.G910?.userData.boundTo === 'L9599';
+  D.switchGadget(by2.G903, true);
+  D.switchGadget(by2.G910, true);
+  const xs = [];
+  let flips = 0, lastSign = 0, px = by2.L9599.position.x;
+  for (let i = 0; i < 700; i++) {
+    D.frame(1, fnow());
+    await maybeBreathe();
+    xs.push(by2.L9599.position.x);
+    const dx = by2.L9599.position.x - px;
+    if (Math.abs(dx) > 0.001) {
+      const s2 = Math.sign(dx);
+      if (lastSign && s2 !== lastSign) flips++;
+      lastSign = s2;
+    }
+    px = by2.L9599.position.x;
+  }
+  const wanders = (Math.max(...xs) - Math.min(...xs)) > 1 && flips >= 2;
+  D.switchGadget(by2.G903, false);
+  D.switchGadget(by2.G910, false);
+  // ...and Ruby RELEASES a binding rather than erasing the gadget: the
+  // manual's own promise, which was dead code behind erase-in-place until a
+  // probe read it back and found "boundTo" still set
+  D.rubyOn(true); D.clickThing(by2.G903); await settle(D, 9000); D.rubyOn(false);
+  const released = by2.G903.userData.boundTo == null
+                && by2.G903.userData.text === 'bouncing';
+  const ok = g2g && rebound && wanders && released;
+  put((ok ? 'PASS' : 'FAIL') + ' bindings travel  (gadget-binds-gadget=' + g2g
+      + ' survive-save-load=' + rebound + ' star-wanders-and-bounces=' + wanders
+      + ' flips=' + flips + ' ruby-releases=' + released + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// Stage 6's acceptance, as a check. The arithmetic is deterministic BY
+// CONSTRUCTION -- the kernel is a Taylor series over rationals, never the
+// machine's own sine, whose last bits the spec leaves to the implementation
+// -- so these digits are the same on every machine, and that is what makes a
+// saved world replay.
+async function inexactCheck(D) {
+  const numWorld = (target, op, badge) => ({
+    kind: 'world', v: 3, bench: [
+      { thing: { kind: 'number', value: { n: String(target[0]), d: String(target[1]) } }, x: -0.6, z: 1.3 },
+      { thing: { kind: 'number', value: { n: String(badge[0]), d: String(badge[1]) }, op }, x: 0.6, z: 1.3 },
+    ], stations: {}, active: null });
+  const find = (pred) => {
+    for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; if (pred(t)) return t; }
+    return null;
+  };
+  const apply = async (target, op, badge) => {
+    D.worldIn(numWorld(target, op, badge)); await slowSettle(D, 2000);
+    const b = find(t => t.userData.op === op);
+    const t0 = find(t => t.userData.kind === 'number' && t !== b);
+    D.clickThing(b); await settle(D, 9000);
+    D.clickThing(t0); await settle(D, 9000);
+    const v = t0.userData.value;
+    return { s: String(v.n) + '/' + String(v.d), x: !!v.x, t: t0 };
+  };
+  const sin30 = await apply([30, 1], 'sin', [1, 1]);
+  const sin45 = await apply([45, 1], 'sin', [1, 1]);
+  const root4 = await apply([4, 1], 'root', [2, 1]);
+  const root2 = await apply([2, 1], 'root', [2, 1]);
+  // exactly a half, and MARKED -- an exact value reached inexactly
+  const marked = sin30.s === '1/2' && sin30.x
+              && sin45.s === '707106781187/1000000000000' && sin45.x
+              && root2.s === '1414213562373/1000000000000' && root2.x;
+  // ...and a root that comes out whole stays EXACT: two is two
+  const exactRoot = root4.s === '2/1' && !root4.x;
+
+  // contagion, and determinism across a save and a load
+  D.worldIn({ kind: 'world', v: 3, bench: [
+    { thing: { kind: 'number', value: { n: '45', d: '1' } }, x: -0.6, z: 1.3 },
+    { thing: { kind: 'number', value: { n: '1', d: '1' }, op: 'sin' }, x: 0.0, z: 1.3 },
+    { thing: { kind: 'number', value: { n: '1', d: '1' }, op: '+' }, x: 0.6, z: 1.3 },
+  ], stations: {}, active: null }); await slowSettle(D, 2000);
+  const sb = find(t => t.userData.op === 'sin');
+  const pb = find(t => t.userData.op === '+');
+  const tg = find(t => t.userData.kind === 'number' && t !== sb && t !== pb);
+  D.clickThing(sb); await settle(D, 9000); D.clickThing(tg); await settle(D, 9000);
+  D.clickThing(pb); await settle(D, 9000); D.clickThing(tg); await settle(D, 9000);
+  const caught = !!tg.userData.value.x;                 // exact 1 did not cure it
+  const before = JSON.stringify(D.dump());
+  D.worldIn(JSON.parse(JSON.stringify(D.worldOut()))); await slowSettle(D, 2000);
+  const stable = JSON.stringify(D.dump()) === before;
+
+  // and the ellipse: an approximation good enough to draw with
+  const ew = await (await fetch('../examples/behaviours/ellipse.world.json')).json();
+  D.worldIn(ew); await slowSettle(D, 2000);
+  const by = {};
+  for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
+  D.clickThing(by.G913); await settle(D, 9000);
+  D.clickThing(by.L9598); await settle(D, 9000);
+  D.switchGadget(by.G913, true);
+  const xs = [], zs = [], err = [];
+  for (let i = 0; i < 200; i++) {
+    D.frame(1, fnow());
+    await maybeBreathe();
+    xs.push(by.L9598.position.x); zs.push(by.L9598.position.z);
+    err.push(Math.abs((by.L9598.position.x / 1.1) ** 2
+                    + ((by.L9598.position.z - 1.7) / 0.4) ** 2 - 1));
+  }
+  D.switchGadget(by.G913, false);
+  const sp = a => Math.max(...a) - Math.min(...a);
+  const ellipse = Math.abs(sp(xs) - 2.2) < 0.05 && Math.abs(sp(zs) - 0.8) < 0.05
+               && Math.max(...err) < 0.01;
+
+  // the words face reads an approximation ALOUD -- never the trillion-part
+  // fraction spelled out ("one trillion four hundred fourteen billion ...
+  // over one trillion" was Ken's screenshot)
+  const spoken = D.approxWords('1414213562373', '1000000000000') === 'about one point four one four two…'
+              && D.approxWords('1', '2') === 'about zero point five'
+              && D.approxWords('-5', '2') === 'about negative two point five';
+
+  const ok = marked && exactRoot && caught && stable && ellipse && spoken;
+  put((ok ? 'PASS' : 'FAIL') + ' inexact numbers  (sin-marked=' + marked
+      + ' whole-root-stays-exact=' + exactRoot + ' contagion=' + caught
+      + ' same-after-save-load=' + stable + ' ellipse=' + ellipse
+      + ' spoken=' + spoken
+      + ' x=' + sp(xs).toFixed(2) + ' z=' + sp(zs).toFixed(2) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// The turtle takes FORWARD and RIGHT, and neither is built in: it is a nest
+// for a letterbox, two robots that dispatch on the word in the order, and the
+// sine that Stage 6 brought. The diagonal is the point -- before inexact
+// numbers a turtle could only have turned in quarters.
+//
+// And a SLEEPING turtle must be cheap: an empty letterbox puts its team to
+// sleep, and a sleeping panel is stepped over by the scheduler until the post
+// comes. That is Ken's own rule about dozing robots, and it was measured at
+// 0.08 ms a frame EACH before the scheduler learned it.
+async function turtleCheck(D) {
+  const w = await (await fetch('../examples/behaviours/turtle.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const by = {};
+  for (let i = 0; i < 25; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
+  let post = null; const orders = {};
+  for (let i = 0; i < 25; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'bird') post = t;
+    // ...and only the ones whose second hole is a NUMBER: the world carries
+    // [set | pen | red] and [set | pen | 4] now, which are messages to the
+    // thing rather than orders for the letterbox
+    if (t.userData.kind === 'box' && t.userData.holes?.[0]?.thing?.userData?.text) {
+      const v = t.userData.holes[1]?.thing?.userData?.value;
+      if (v) orders[t.userData.holes[0].thing.userData.text + ' ' + String(v.n) + '/' + String(v.d)] = t;
+    }
+  }
+  const turtle = by.G914, shell = by.L9597;
+  D.clickThing(turtle); await settle(D, 9000);
+  D.clickThing(shell); await settle(D, 9000);
+  D.switchGadget(turtle, true);
+  await frames(D, 60);
+
+  // asleep on an empty letterbox, and skipped by the scheduler
+  const tray = turtle.__panelTray;
+  const asleep = !!tray.__ctx?.activeBot?.waiting;
+  const r0 = tray.userData.stepRounds;
+  await frames(D, 300);
+  const turns = tray.userData.stepRounds - r0;
+  const cheap = asleep && turns < 60;           // ~1 in 30, not 2 a frame
+
+  const give = async (o) => {
+    D.clickThing(o); await settle(D, 9000);
+    D.clickThing(post); await settle(D, 9000);
+    // 500, not 220: a step is two robot moves longer since the turtle took a
+    // STEP SIZE out of its box, and an order that has not finished by the time
+    // the next arrives makes every later reading a lie
+    await frames(D, 500);
+  };
+  // forward at heading 0 goes AWAY, and the post wakes it at once
+  const a0 = [shell.position.x, shell.position.z];
+  await give(orders['forward 30/1']);
+  const a1 = [shell.position.x, shell.position.z];
+  const straight = Math.abs(a1[0] - a0[0]) < 0.002 && Math.abs(a1[1] - a0[1] - 0.3) < 0.002;
+
+  // A TURN TURNS THE THING. Heading zero points at the far edge, so after a
+  // right 90 the pad itself is rotated a quarter turn -- and what it does
+  // next has to agree with where it points, or the picture is a lie.
+  const rot0 = shell.rotation.y;
+  await give(orders['right 90/1']);
+  const turned = Math.abs(shell.rotation.y - rot0 - Math.PI / 2) < 0.001;
+  const b0 = [shell.position.x, shell.position.z];
+  await give(orders['forward 30/1']);
+  const walksWhereItPoints = Math.abs(shell.position.x - b0[0] - 0.3) < 0.002
+                          && Math.abs(shell.position.z - b0[1]) < 0.002;
+  await give(orders['right 90/1']);
+  await give(orders['right 90/1']);
+  await give(orders['right 90/1']);          // back to facing the far edge
+
+  // ...and the diagonal, which is what the sine bought
+  await give(orders['right 30/1']);
+  const a2 = [shell.position.x, shell.position.z];
+  await give(orders['forward -30/1']);
+  const a3 = [shell.position.x, shell.position.z];
+  const dx = a3[0] - a2[0], dz = a3[1] - a2[1];
+  const diagonal = Math.abs(dx + 0.15) < 0.002          // -0.3 x sin 30
+                && Math.abs(dz + 0.2598) < 0.002        // -0.3 x cos 30
+                && Math.abs(Math.hypot(dx, dz) - 0.3) < 0.002;
+
+  // and the PEN: down, each move leaves a chalk stroke; up, it stops
+  // COUNT THEM AND ASK WHERE THEY ARE. For weeks this counted meshes and
+  // passed while every stroke was being laid five millimetres above the
+  // FLOOR, under the table, where no camera could ever see one -- which is
+  // why Ken kept asking why there was no trail. A stroke that is not near
+  // the height of the thing that drew it does not count.
+  const strokes = () => { let c = 0;
+    const shellY = shell.getWorldPosition(new D.V3()).y;
+    D.scene.traverse(o => {
+      if (!(o.isMesh && o.material?.color?.getHex?.() === 0x2f4a3a)) return;
+      if (Math.abs(o.getWorldPosition(new D.V3()).y - shellY) < 0.1) c++;
+    });
+    return c; };
+  let pendown = null, penup = null;
+  for (let i = 0; i < 30; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'text' && t.userData.text === 'pendown') pendown = t;
+    if (t.userData.kind === 'text' && t.userData.text === 'penup') penup = t;
+  }
+  await give(pendown);
+  const s0 = strokes();
+  await give(orders['forward 30/1']);
+  const s1 = strokes();
+  await give(penup);
+  await give(orders['forward 30/1']);
+  const s2 = strokes();
+  const pen = s1 > s0 && s2 === s1;
+
+  // THE SHAPE OF THE DRAWING, not the number of marks. Ken's sequence --
+  // forward, pendown, forward, right 30, forward -- should leave TWO
+  // segments with thirty degrees between them. It left a staircase of right
+  // angles, because a step was sent as [move|across] and then [move|away]
+  // and the pen drew both; and it left the FIRST segment out entirely,
+  // because pendown forgot where the turtle was standing. Neither showed up
+  // in a count, and both are plain in the angles.
+  D.worldIn(w); await slowSettle(D, 2000);
+  let post2 = null, pd2 = null, shell2 = null, turtle2 = null;
+  const ord2 = {};
+  for (let i = 0; i < 25; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'bird') post2 = t;
+    if (t.userData.kind === 'text' && t.userData.text === 'pendown') pd2 = t;
+    if (t.userData.lid === 'L9597') shell2 = t;
+    if (t.userData.lid === 'G914') turtle2 = t;
+    if (t.userData.kind === 'box' && t.userData.holes?.[0]?.thing?.userData?.text) {
+      const v = t.userData.holes[1]?.thing?.userData?.value;
+      if (v) ord2[t.userData.holes[0].thing.userData.text + ' ' + String(v.n)] = t;
+    }
+  }
+  D.clickThing(turtle2); await settle(D, 9000);
+  D.clickThing(shell2); await settle(D, 9000);
+  D.switchGadget(turtle2, true);
+  await frames(D, 60);
+  const give2 = async (o) => {
+    D.clickThing(o); await settle(D, 9000);
+    D.clickThing(post2); await settle(D, 9000);
+    await frames(D, 500);
+  };
+  await give2(ord2['forward 30']); await give2(pd2);
+  await give2(ord2['forward -30']); await give2(ord2['right 30']); await give2(ord2['forward -30']);
+  const drawn = [];
+  D.scene.traverse(o => {
+    if (!o.userData?.penMark) return;
+    const sc = o.getWorldScale(new D.V3());
+    drawn.push({ len: sc.x, deg: (o.rotation.y * 180 / Math.PI + 360) % 360 });
+  });
+  const twoSegments = drawn.length === 2;
+  const bothFullLength = drawn.every(m => Math.abs(m.len - 0.3) < 0.01);
+  const between = twoSegments ? Math.abs(((drawn[1].deg - drawn[0].deg) + 360) % 360) : -1;
+  const thirtyBetween = twoSegments && Math.abs(between - 30) < 0.5;
+  const shape = twoSegments && bothFullLength && thirtyBetween;
+
+  const ok = cheap && straight && diagonal && pen && turned && walksWhereItPoints && shape;
+  put((ok ? 'PASS' : 'FAIL') + ' the turtle  (sleeps-cheaply=' + cheap + ' turns=' + turns
+      + ' forward=' + straight + ' diagonal=' + diagonal
+      + ' step=' + Math.hypot(dx, dz).toFixed(4)
+      + ' pen=' + pen + ' strokes=' + s0 + '/' + s1 + '/' + s2
+      + ' turns=' + turned + ' walks-where-it-points=' + walksWhereItPoints
+      + ' drawing=' + drawn.length + ' segments at ' + between.toFixed(1) + ' degrees)', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// The capstone clause, honoured late: Pong with NO bespoke robots -- a ball
+// that is a pad with three shelf gadgets bound to it, a bat with one. The
+// ball must roam and bounce on BOTH axes (bouncing grew its second axis for
+// exactly this), the rally must climb while a perfect pointer-player keeps
+// the bat on the ball, and must freeze when the bat is parked away.
+async function pongGadgetsCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  // ITS OWN speed, stated. This check counted bounces at speed 2 for weeks
+  // without saying so -- it was inheriting a leaked D.speed(2) from the shelf
+  // check, and the day a check between them restored the speed to 1, the
+  // flip counts halved and pong "came apart". A check that depends on a
+  // setting must set it.
+  D.speed(2);
+  const by = {};
+  for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
+  const ball = by.V901, bat = by.V902, score = by.V905;
+  // THROUGH THE DOOR A PLAYER USES -- a real pointermove onto the thing and
+  // a real keydown, not switchGadget(). Driving the inside function is how
+  // "SPACE on the ball does nothing" survived a green suite: the simulation
+  // was proved and the door was never touched.
+  const doorBall = D.press(ball, ' ');
+  const doorBat = D.press(bat, ' ');
+  const started = [by.V911, by.V912, by.V913, by.V914]
+    .map(g => !!g.__panelTray?.userData?.dirty);
+  if (!doorBall || !doorBat || started.some(v => !v)) {
+    put('FAIL pong from the shelf  (SPACE reached ball=' + doorBall + ' bat=' + doorBat
+        + ' started=' + started.join(',') + ')', 'fail');
+    return false;
+  }
+  const xs = [], zs = [];
+  let xf = 0, zf = 0, lx = 0, lz = 0, px = ball.position.x, pz = ball.position.z;
+  for (let i = 0; i < 500; i++) {
+    if (i % 4 === 0) D.deliverPointer(ball.position.x, ball.position.z);
+    D.frame(1, fnow());
+    xs.push(ball.position.x); zs.push(ball.position.z);
+    const dx = ball.position.x - px, dz = ball.position.z - pz;
+    if (Math.abs(dx) > 0.001) { const s2 = Math.sign(dx); if (lx && s2 !== lx) xf++; lx = s2; }
+    if (Math.abs(dz) > 0.001) { const s2 = Math.sign(dz); if (lz && s2 !== lz) zf++; lz = s2; }
+    px = ball.position.x; pz = ball.position.z;
+  }
+  const sp = a => Math.max(...a) - Math.min(...a);
+  const roams = sp(xs) > 1.5 && sp(zs) > 0.5 && xf >= 3 && zf >= 3;
+  // EVEN MOTION. The ball moves on the world's clock, so every frame carries
+  // it the same distance except at a bounce. The step-based pair it replaced
+  // ran a robot cycle a frame and delivered anything from 0.005 to 0.106 --
+  // which is what "it slows down... its bounces are not very natural" was.
+  const steps = [];
+  for (let i = 1; i < xs.length; i++) {
+    const d = Math.hypot(xs[i] - xs[i - 1], zs[i] - zs[i - 1]);
+    if (d > 1e-6) steps.push(+d.toFixed(5));
+  }
+  const sizes = [...new Set(steps)];
+  const commonest = sizes.map(v => steps.filter(d => d === v).length).sort((a, b) => b - a)[0];
+  const even = sizes.length <= 8 && commonest > steps.length * 0.9;
+  const r1 = Number(score.userData.value.n);
+  for (let i = 0; i < 200; i++) {
+    if (i % 4 === 0) D.deliverPointer(1.5, 0.6);
+    D.frame(1, fnow());
+  }
+  const r2 = Number(score.userData.value.n);
+  // a parked bat still stands ON the table, and the roaming ball can find it
+  // in its corner -- so the honest assertion is RATE, not freeze: chasing
+  // scores several times faster than parking
+  const chaseRate = r1 / 500, parkRate = (r2 - r1) / 200;
+  const scores = r1 > 0 && parkRate < chaseRate * 0.5;
+  const ok = roams && scores && even;
+  put((ok ? 'PASS' : 'FAIL') + ' pong from the shelf  (roams=' + roams
+      + ' x=' + sp(xs).toFixed(1) + ' z=' + sp(zs).toFixed(1)
+      + ' bounces=' + xf + '/' + zf + ' rally=' + r1 + '->' + r2
+      + ' even=' + even + ' stepSizes=' + sizes.length + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// OFF IS A DECISION. A behaviour listening to the pointer gets post sixty
+// times a second; before this, the next delivery marked its panel dirty
+// again and the thing could not be stopped at all -- not by ".", not by
+// pausing first. Ken found it on the bat: "I couldn't turn the paddle off."
+// Also here: the bat follows UP AND DOWN only, so it stays a wall and can be
+// pointed at, which is what makes "." reachable in the first place.
+async function stoppingCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const by = {};
+  for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
+  const bat = by.V902;
+  D.press(bat, ' ');
+  const xs = [], zs = [];
+  const drive = (k, pz) => {
+    for (let i = 0; i < k; i++) {
+      D.deliverPointer(-0.2, pz);
+      D.frame(1, fnow());
+      xs.push(bat.position.x); zs.push(bat.position.z);
+    }
+    return +bat.position.z.toFixed(3);
+  };
+  drive(60, 1.35);
+  const low = drive(60, 2.05);
+  const oneAxis = Math.max(...xs) - Math.min(...xs) < 0.01
+                && Math.max(...zs) - Math.min(...zs) > 0.5;
+  // now stop it, and keep the post coming
+  const reached = D.press(bat, '.');
+  const parked = bat.position.z;
+  drive(150, 1.25);
+  drive(150, 2.2);
+  const stays = Math.abs(bat.position.z - parked) < 0.02;
+  // ...and SPACE starts it again
+  D.press(bat, ' ');
+  drive(80, 1.3);
+  const restarts = Math.abs(bat.position.z - 1.3) < 0.12;
+  const ok = oneAxis && reached && stays && restarts;
+  put((ok ? 'PASS' : 'FAIL') + ' stopping sticks  (one-axis=' + oneAxis
+      + ' dot-reached=' + reached + ' stayed=' + stays + ' at=' + parked.toFixed(2)
+      + ' restarts=' + restarts + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// SCENERY IS NOT SCORED. Solid is the right default -- it is what makes a
+// ball bounce off a bat -- but four cards of documentation and a rally
+// counter left solid are things to HIT: with the bat lifted off the table
+// the ball still scored 69 in 700 frames, 39 of them sitting on a doc card,
+// and every contact ran a scoring cycle, which is the stall Ken felt "as it
+// passes through text pads".
+async function sceneryCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const by = {}; const cards = [];
+  for (let i = 0; i < 30; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.lid) by[t.userData.lid] = t;
+    if (t.userData.kind === 'text' && !t.userData.lid) cards.push(t);
+  }
+  const ball = by.V901, bat = by.V902, score = by.V905;
+  const allScenery = cards.every(c => !!c.userData.ghost) && !!score.userData.ghost;
+  // the bat off the pitch entirely, so nothing legitimate is there to hit
+  // the bat off the table for good, the way a person does it: Dusty
+  D.dusty(true); D.clickThing(bat); await settle(D, 20000); D.dusty(false);
+  D.press(ball, ' ');
+  let onCard = 0;
+  for (let i = 0; i < 600; i++) {
+    D.frame(1, fnow());
+    await maybeBreathe();
+    if (cards.some(c => Math.abs(ball.position.x - c.position.x) < 0.4
+                     && Math.abs(ball.position.z - c.position.z) < 0.3)) onCard++;
+  }
+  const rally = Number(score.userData.value.n);
+  const ok = allScenery && onCard > 20 && rally === 0;
+  put((ok ? 'PASS' : 'FAIL') + ' scenery is not scored  (marked=' + allScenery
+      + ' framesOnACard=' + onCard + ' rally=' + rally + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// STOPPING A MOVING THING STOPS IT. The ball moves on the world's clock now,
+// so quieting the robots that drive it is not enough -- it kept gliding, and
+// "." looked broken. Ken: "I couldn't turn off the ball."
+async function stopsDeadCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const by = {};
+  for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
+  const ball = by.V901;
+  D.press(ball, ' ');
+  await frames(D, 120);
+  const wasMoving = !!(ball.userData.speed && (ball.userData.speed.x || ball.userData.speed.z));
+  D.press(ball, '.');
+  const x0 = ball.position.x, z0 = ball.position.z;
+  await frames(D, 180);
+  const drift = Math.hypot(ball.position.x - x0, ball.position.z - z0);
+  D.press(ball, ' ');
+  await frames(D, 120);
+  const again = Math.hypot(ball.position.x - x0, ball.position.z - z0);
+  const ok = wasMoving && drift < 0.001 && again > 0.1;
+  put((ok ? 'PASS' : 'FAIL') + ' stopping a moving thing  (wasMoving=' + wasMoving
+      + ' driftAfterDot=' + drift.toFixed(4) + ' movesAgain=' + again.toFixed(2) + ')',
+      ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// UNDO PUTS THE WORLD BACK AS IT WAS, and a save keeps what things are
+// CALLED. Undo snapshots were taken with the MATCHING spec, which describes a
+// thing as one of its kind -- so an undo returned a world with no colours, no
+// names and nothing bound to anything, and a pad's label was never written to
+// a file at all. Ken met the first as "undo returned a blank pad".
+async function keepsWhatItIsCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const survey = () => {
+    const out = {};
+    for (let i = 0; i < 30; i++) {
+      const t = D.bench(i); if (!t) break;
+      if (t.userData.lid) out[t.userData.lid] = { label: t.userData.label ?? null,
+        bg: (t.userData.look || {}).bg ?? null, boundTo: t.userData.boundTo ?? null };
+    }
+    return out;
+  };
+  const before = survey();
+  // a save-and-open round trip keeps the names
+  D.worldIn(JSON.parse(JSON.stringify(D.worldOut()))); await slowSettle(D, 2000);
+  const saved = survey();
+  const namesSaved = ['V901', 'V902', 'V905'].every(l => saved[l] && saved[l].label === before[l].label);
+  // and an undo keeps colours, names and bindings
+  const ball = (() => { for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.lid === 'V901') return t; } })();
+  D.clickThing(ball); await settle(D, 20000);
+  D.clickBench(-0.2, 1.3); await settle(D, 20000);
+  document.getElementById('appFrame') ? null : null;
+  D.undo(); await settle(D, 20000);
+  const back = survey();
+  const undoKeeps = ['V911', 'V912', 'V913', 'V914'].every(l => back[l] && back[l].boundTo === before[l].boundTo)
+    && back.V902 && back.V902.label === 'the bat' && back.V902.bg === before.V902.bg;
+  const ok = namesSaved && undoKeeps;
+  put((ok ? 'PASS' : 'FAIL') + ' a thing keeps what it is  (names-survive-save=' + namesSaved
+      + ' undo-keeps-look-name-bindings=' + undoKeeps + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A NAMED THING IS NOT SPARE WORDS. Pads concatenate at the edges, which ate
+// Ken's ball whole -- it had no words of its own, so it vanished without
+// changing the card by a letter, taking three bindings with it.
+async function notSpareWordsCheck(D) {
+  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  let ball = null, card = null;
+  for (let i = 0; i < 30; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.lid === 'V901') ball = t;
+    if (t.userData.kind === 'text' && !t.userData.lid && !card) card = t;
+  }
+  const V = ball.position.constructor;
+  const wp = card.getWorldPosition(new V());
+  D.clickThing(ball); await settle(D, 20000);
+  D.clickRaw({ kind: 'thing', thing: card, point: new V(wp.x - 0.42, wp.y, wp.z) });
+  await settle(D, 20000);
+  const alive = !!D.live('V901');
+  const bound = [];
+  for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.boundTo === 'V901') bound.push(t.userData.lid); }
+  const ok = alive && bound.length === 3;
+  put((ok ? 'PASS' : 'FAIL') + ' a named thing is not spare words  (ball-survives=' + alive
+      + ' bindings=' + bound.length + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// PANELS INSIDE PANELS. A macro behaviour groups its parts by purpose, and
+// Ken gave the semantics: a nested part "does not drive its object but the
+// object of the top-level panel it is a part of". Three things have to hold:
+// SPACE on the macro starts the parts, a nested part gets its turns at all
+// (it sits on no bench the scheduler walks), and it drives the OUTER thing.
+async function nestedPanelCheck(D) {
+  const lib = await (await fetch('../examples/behaviours/library.world.json')).json();
+  const moverRec = lib.bench.find(b => (b.thing.text || '') === 'moving right').thing;
+  const star = JSON.parse(JSON.stringify(lib.bench.find(b => b.thing.lid === 'L9599').thing));
+  // the part, rebound to the star exactly as dropping it on the star would
+  const part = JSON.parse(JSON.stringify(moverRec).split('G901').join('L9599'));
+  part.lid = 'P901'; part.evt = 'evt-P901'; part.boundTo = 'L9599';
+  const macro = { kind: 'text', text: 'macro', gadget: true, lid: 'M900', evt: 'evt-M900',
+    boundTo: 'L9599', look: { bg: '#2a2135', ink: '#e8d7ff', font: 'sans', h: 0.42 },
+    panel: { kind: 'world', v: 4, bench: [{ thing: part, x: -0.2, z: 1.4 }],
+             stations: {}, active: null } };
+  D.worldIn({ kind: 'world', v: 4, bench: [{ thing: star, x: -1.2, z: 1.5 },
+                                           { thing: macro, x: 0.8, z: 1.5 }],
+              stations: {}, active: null });
+  await slowSettle(D, 2000);
+  const get = (lid) => { for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.lid === lid) return t; } return null; };
+  const M = get('M900'), S = get('L9599');
+  if (!M || !S) { put('FAIL panels inside panels  (world did not build)', 'fail'); return false; }
+  const x0 = S.position.x;
+  const reached = D.press(M, ' ');
+  await frames(D, 250);
+  const moved = S.position.x - x0;
+  const at = S.position.x;
+  D.press(M, '.');
+  await frames(D, 150);
+  const rests = Math.abs(S.position.x - at) < 0.01;
+  const ok = reached && moved > 0.5 && rests;
+  put((ok ? 'PASS' : 'FAIL') + ' panels inside panels  (space-reached=' + reached
+      + ' outer-thing-moved=' + moved.toFixed(2) + ' stops=' + rests + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A PICTURE ARRIVES. Ken dropped one file five times and two pads kept
+// saying "(a picture, on its way)" over a picture that had loaded perfectly.
+// The data was never the problem: a pad takes the picture's PROPORTIONS when
+// it loads, which resizes its canvas -- and a resized canvas needs a fresh GL
+// texture, as the number faces have always known. Without one the canvas held
+// the picture while the screen went on showing what was uploaded before it.
+// So: the canvas must really be resized, the texture must be a NEW one, and
+// the canvas must hold the picture.
+async function pictureCheck(D) {
+  const src = (() => {
+    const c = document.createElement('canvas');
+    c.width = 900; c.height = 700;           // deliberately not a pad's shape
+    const x = c.getContext('2d');
+    x.fillStyle = '#2244ff'; x.fillRect(0, 0, 900, 700);
+    return c.toDataURL('image/png');
+  })();
+  D.worldIn({ kind: 'world', v: 3, bench: [{ thing: { kind: 'text', text: '' }, x: 0, z: 1.5 }],
+              stations: {}, active: null });
+  await slowSettle(D, 2000);
+  let pad = null;
+  for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'text') { pad = t; break; } }
+  if (!pad) { put('FAIL a picture arrives  (no pad)', 'fail'); return false; }
+  const faceMat = (t) => { const m = t.children[0].material; return Array.isArray(m) ? m[2] : m; };
+  const was = { uuid: faceMat(pad).map.uuid, h: faceMat(pad).map.image.height };
+  pad.setImage(src);
+  await new Promise(r => setTimeout(r, 1500));
+  const now = { uuid: faceMat(pad).map.uuid, h: faceMat(pad).map.image.height };
+  const resized = now.h !== was.h;
+  const freshTexture = now.uuid !== was.uuid;
+  // ...and the face really carries the picture (cool blue, not warm paper)
+  const im = faceMat(pad).map.image;
+  let cool = 0, warm = 0;
+  const d = im.getContext('2d').getImageData(0, 0, im.width, im.height).data;
+  for (let j = 0; j < d.length; j += 400) { if (d[j + 2] > d[j]) cool++; else warm++; }
+  const showsPicture = cool > warm;
+  const ok = resized && freshTexture && showsPicture;
+  put((ok ? 'PASS' : 'FAIL') + ' a picture arrives  (canvas-resized=' + resized
+      + ' fresh-texture=' + freshTexture + ' shows-picture=' + showsPicture
+      + ' ' + was.h + '->' + now.h + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A WORLD IMPORTED MID-PROJECT ARRIVES WHOLE. Ken: "the idea of importing a
+// world as a notebook breaks connections between objects - maybe the
+// contents should be in one long box." Page one is now that box. Two things
+// have to be true at once, and they pull in opposite directions: what comes
+// out of the box still knows what came out with it, AND a second copy shares
+// no name with the first (copies are wholly their own -- the rule that made
+// page-by-page rekeying cut the connections in the first place).
+async function importWholeCheck(D) {
+  const rec = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  // mid-project: something of the visitor's own is on the table
+  D.worldIn({ kind: 'world', v: 3, bench: [{ thing: { kind: 'text', text: 'my work' }, x: -1.2, z: 1.2 }],
+              stations: {}, active: null });
+  await slowSettle(D, 2000);
+  const file = new File([JSON.stringify(rec)], 'pong-gadgets.world.json', { type: 'application/json' });
+  await D.importFile(file);
+  await slowSettle(D, 4000);
+  let nb = null;
+  D.scene.traverse(o => { if (o.userData?.kind === 'notebook'
+    && o.userData.label === 'pong-gadgets.world') nb = o; });
+  if (!nb) { put('FAIL a world arrives whole  (no notebook)', 'fail'); return false; }
+  const page1 = nb.userData.pages[0];
+  const isBox = page1?.kind === 'box' && (page1.holes || []).length > 5
+             && (page1.holeLabels || []).includes('the ball');
+  const takeOne = async () => {
+    if (D.state.held) { D.clickBench(-1.4, 2.2); await settle(D, 20000); }
+    D.clickRaw({ kind: 'nbItem', nb, slot: 0 });
+    await settle(D, 20000);
+    let box = null;
+    D.scene.traverse(o => { if (o.userData?.kind === 'box'
+      && (o.userData.holes || []).length === (page1.holes || []).length
+      && !box && D.state.held === 'box') box = o; });
+    // the held one: whatever the hand has
+    let held = null;
+    D.scene.traverse(o => { if (o.userData?.kind === 'box'
+      && (o.userData.holes || []).length === (page1.holes || []).length) held = o; });
+    return held;
+  };
+  const lidsOf = (b) => b.userData.holes.map(h => h.thing).filter(Boolean)
+    .map(t => t.userData.lid).filter(Boolean);
+  const wiredInside = (b) => b.userData.holes.map(h => h.thing).filter(Boolean)
+    .filter(t => t.userData.boundTo)
+    .every(t => lidsOf(b).includes(t.userData.boundTo));
+  const first = await takeOne();
+  const firstLids = first ? lidsOf(first) : [];
+  const firstWired = first ? wiredInside(first) : false;
+  const boundCount = first ? first.userData.holes.map(h => h.thing).filter(Boolean)
+    .filter(t => t.userData.boundTo).length : 0;
+  if (D.state.held) { D.clickBench(-1.4, 1.2); await settle(D, 20000); }
+  D.clickRaw({ kind: 'nbItem', nb, slot: 0 });
+  await settle(D, 20000);
+  let second = null;
+  D.scene.traverse(o => { if (o.userData?.kind === 'box' && o !== first
+    && (o.userData.holes || []).length === (page1.holes || []).length) second = o; });
+  const secondLids = second ? lidsOf(second) : [];
+  const shared = firstLids.filter(x => secondLids.includes(x));
+  const secondWired = second ? wiredInside(second) : false;
+  const ok = isBox && firstWired && boundCount >= 4 && second && !shared.length && secondWired;
+  put((ok ? 'PASS' : 'FAIL') + ' a world arrives whole  (page1-is-the-box=' + isBox
+      + ' bindings=' + boundCount + ' wired-inside=' + firstWired
+      + ' second-copy-fresh=' + (second ? !shared.length : false)
+      + ' second-wired=' + secondWired + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE TURTLE IN THE AIR. move + yaw + pitch + roll, each about the turtle's
+// OWN axes, and the frame is one quaternion rather than three angles kept
+// side by side. Three things: it climbs when it is pitched up, the pen draws
+// the climb, and four ninety-degree yaws bring it exactly back -- which is
+// the property Ken warned about, since sequential Euler updates drift and
+// quaternion multiplication does not.
+async function turtle3dCheck(D) {
+  const w = await (await fetch('../examples/behaviours/turtle3d.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const by = {}; let post = null, pd = null; const orders = {};
+  for (let i = 0; i < 30; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.lid) by[t.userData.lid] = t;
+    if (t.userData.kind === 'bird') post = t;
+    if (t.userData.kind === 'text' && t.userData.text === 'pendown') pd = t;
+    if (t.userData.kind === 'box' && t.userData.holes?.[0]?.thing?.userData?.text) {
+      const v = t.userData.holes[1]?.thing?.userData?.value;
+      if (v) orders[t.userData.holes[0].thing.userData.text + ' ' + String(v.n)] = t;
+    }
+  }
+  const turtle = by.G918, shell = by.L9596;
+  if (!turtle || !shell) { put('FAIL the turtle in the air  (world did not build)', 'fail'); return false; }
+  D.clickThing(turtle); await settle(D, 9000);
+  D.clickThing(shell); await settle(D, 9000);
+  D.switchGadget(turtle, true);
+  await frames(D, 60);
+  const give = async (o) => {
+    D.clickThing(o); await settle(D, 9000);
+    D.clickThing(post); await settle(D, 9000);
+    await frames(D, 400);
+  };
+  await give(pd);
+  const y0 = shell.position.y;
+  await give(orders['move 30']);
+  const flatMove = Math.abs(shell.position.y - y0) < 0.001;   // level: no climb
+  await give(orders['pitch 30']);
+  await give(orders['move 30']);
+  const climbed = Math.abs((shell.position.y - y0) - 0.15) < 0.005;   // 0.3 x sin 30
+  // the pen came with it: two strokes, at two different heights
+  const heights = [];
+  D.scene.traverse(o => {
+    if (o.userData?.penMark) heights.push(o.getWorldPosition(new D.V3()).y);
+  });
+  const drewInTheAir = heights.length === 2
+    && Math.abs(Math.max(...heights) - Math.min(...heights)) > 0.02;
+  // FOUR RIGHT-ANGLE YAWS COME BACK. A frame kept as one quaternion composes
+  // exactly; three angles updated in turn do not.
+  await give(orders['pitch -30']);          // level again first
+  const before = shell.userData.aim ? shell.userData.aim.slice() : null;
+  for (let i = 0; i < 4; i++) await give(orders['yaw 90']);
+  const after = shell.userData.aim;
+  const closes = !!before && !!after
+    && [0, 1, 2, 3].every(i => Math.abs(Math.abs(after[i]) - Math.abs(before[i])) < 0.002);
+  const ok = flatMove && climbed && drewInTheAir && closes;
+  put((ok ? 'PASS' : 'FAIL') + ' the turtle in the air  (level-move-stays-level=' + flatMove
+      + ' climbs=' + climbed + ' draws-in-the-air=' + drewInTheAir
+      + ' four-yaws-close=' + closes + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// MODELS AND TRAILS ARE THINGS. A model file imports (twice, with fresh
+// names each time -- the copies-clash rule), the 3D turtle behaviour binds to
+// the airplane and flies it, and the trail it draws sweeps up as ONE thing
+// that survives a save and a load.
+async function modelTrailCheck(D) {
+  const w = await (await fetch('../examples/behaviours/turtle3d.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const rec = await (await fetch('../examples/models/airplane.thing.json')).json();
+  const file = () => new File([JSON.stringify(rec)], 'airplane.thing.json',
+                              { type: 'application/json' });
+  await D.importFile(file());
+  await settle(D, 9000);
+  if (D.state.held) { D.clickBench(0.6, 1.9); await settle(D, 20000); }
+  await D.importFile(file());
+  await settle(D, 9000);
+  if (D.state.held) { D.clickBench(-0.6, 2.15); await settle(D, 20000); }
+  const all = [];
+  for (let i = 0; i < 34; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const models = all.filter(t => t.userData.kind === 'model');
+  const freshNames = models.length === 2
+    && models[0].userData.lid !== models[1].userData.lid;
+  const plane = models[0];
+  const gadget = all.find(t => t.userData.gadget);
+  let post = null, pd = null; const orders = {};
+  for (const t of all) {
+    if (t.userData.kind === 'bird') post = t;
+    if (t.userData.kind === 'text' && t.userData.text === 'pendown') pd = t;
+    if (t.userData.kind === 'box' && t.userData.holes?.[0]?.thing?.userData?.text) {
+      const v = t.userData.holes[1]?.thing?.userData?.value;
+      if (v) orders[t.userData.holes[0].thing.userData.text + ' ' + String(v.n)] = t;
+    }
+  }
+  // bind the behaviour to the airplane, the way a person does
+  D.clickThing(gadget); await settle(D, 9000);
+  D.clickThing(plane); await settle(D, 20000);
+  const bound = gadget.userData.boundTo === plane.userData.lid;
+  D.press(gadget, ' ');
+  await frames(D, 60);
+  const give = async (o) => {
+    D.clickThing(o); await settle(D, 9000);
+    D.clickThing(post); await settle(D, 9000);
+    await frames(D, 450);
+  };
+  await give(pd);
+  const y0 = plane.position.y;
+  await give(orders['pitch 30']); await give(orders['move 30']);
+  const flies = plane.position.y - y0 > 0.1;
+  // sweep the climbing stroke and take the trail back out as a thing
+  let mark = null;
+  D.scene.traverse(o => { if (!mark && o.userData?.penMark) mark = o; });
+  D.dusty(true);
+  D.clickRaw({ kind: 'penMark', mark, owner: mark.userData.penMark });
+  await settle(D, 20000);
+  D.dusty(false);
+  D.clickRaw({ kind: 'dustyBag' }); await settle(D, 15000);
+  const fromBag = D.state.held === 'trail';
+  if (D.state.held) { D.clickBench(-1.2, 1.3); await settle(D, 20000); }
+  // ...and both kinds survive a save and a load
+  D.worldIn(JSON.parse(JSON.stringify(D.worldOut()))); await slowSettle(D, 2000);
+  let trail2 = null, model2 = null;
+  for (let i = 0; i < 34; i++) {
+    const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'trail') trail2 = t;
+    if (t.userData.kind === 'model' && !model2) model2 = t;
+  }
+  const survives = !!trail2 && trail2.userData.segs.length >= 1
+    && !!model2 && model2.userData.parts.length === 8;
+  const ok = freshNames && bound && flies && fromBag && survives;
+  put((ok ? 'PASS' : 'FAIL') + ' models fly and trails are things  (fresh-names=' + freshNames
+      + ' binds=' + bound + ' flies=' + flies + ' trail-from-bag=' + fromBag
+      + ' both-survive-save=' + survives + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// ZENO'S POSTMAN. One robot halves and posts, the other totals; the numbers
+// are exact, so the invariant is not "close to 1" but EXACTLY (2^k - 1)/2^k:
+// the denominator a power of two and the numerator one less than it, every
+// single delivery, forever.
+async function zenoCheck(D) {
+  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.speed('inf');
+  const rooms = [];
+  for (let i = 0; i < 10; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'room') rooms.push(t); }
+  D.clickRaw({ kind: 'roomLever', room: rooms[0] }); await settle(D, 9000);
+  D.clickRaw({ kind: 'roomLever', room: rooms[1] }); await settle(D, 9000);
+  await frames(D, 2200);
+  const tot = rooms.find(r => r.userData.label === 'the totaller');
+  const v = tot.__ctx?.standOcc?.userData?.holes?.[1]?.thing?.userData?.value;
+  if (!v) { put('FAIL zeno  (no total found)', 'fail'); return false; }
+  const num = BigInt(v.n), den = BigInt(v.d);
+  const grew = den >= 8n;                       // at least three deliveries landed
+  const exact = (den & (den - 1n)) === 0n && (den - num) === 1n;
+  const ok = grew && exact;
+  D.speed(1);      // Instant is this check's, not the suite's -- pong broke at it
+  put((ok ? 'PASS' : 'FAIL') + ' zeno\u2019s postman  (total=' + String(v.n) + '/' + String(v.d)
+      + ' power-of-two=' + ((den & (den - 1n)) === 0n) + ' one-behind=' + ((den - num) === 1n)
+      + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// SHAPE DROPS. [drop | sphere | 1/10] sets a solid down at the thing's
+// position and orientation, in the pen's colour; shapes and lines belong to
+// one trail, sweep up as ONE thing, and the whole sculpture survives a save.
+async function shapeDropCheck(D) {
+  const mkN = (v2, w2, nu, de) => ({ kind: 'box', holes: [{ kind: 'text', text: v2 },
+    { kind: 'text', text: w2 }, { kind: 'number', value: { n: String(nu), d: String(de) } }] });
+  const mkT = (v2, w2, t2) => ({ kind: 'box', holes: [{ kind: 'text', text: v2 },
+    { kind: 'text', text: w2 }, { kind: 'text', text: t2 }] });
+  D.worldIn({ kind: 'world', v: 4, bench: [
+    { thing: { kind: 'text', text: 'S', lid: 'SD1', evt: 'evt-SD1' }, x: -0.8, z: 1.5 },
+    { thing: { kind: 'bird', liveId: 'SD1', label: 'to S' }, x: -0.2, z: 1.5 },
+    { thing: mkT('set', 'pen', 'down'), x: 0.3, z: 2.1 },
+    { thing: mkN('drop', 'sphere', 1, 10), x: 0.3, z: 2.3 },
+    { thing: mkN('move', 'forward', 2, 10), x: 0.8, z: 2.3 },
+    { thing: mkN('drop', 'cube', 1, 10), x: 1.3, z: 2.3 },
+  ], stations: {}, active: null });
+  await slowSettle(D, 2000);
+  const all = [];
+  for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const bird = all.find(t => t.userData.kind === 'bird');
+  const boxes = all.filter(t => t.userData.kind === 'box');
+  const find = (v2, w2) => boxes.find(t => t.userData.holes[0]?.thing?.userData?.text === v2
+    && t.userData.holes[1]?.thing?.userData?.text === w2);
+  const give = async (b) => { D.clickThing(b); await settle(D, 9000);
+    D.clickThing(bird); await settle(D, 20000); };
+  await give(find('set', 'pen'));
+  await give(find('drop', 'sphere'));
+  await give(find('move', 'forward'));
+  await give(find('drop', 'cube'));
+  let mark = null;
+  D.scene.traverse(o => { if (!mark && o.userData?.penMark) mark = o; });
+  if (!mark) { put('FAIL shape drops  (nothing deposited)', 'fail'); return false; }
+  D.dusty(true);
+  D.clickRaw({ kind: 'penMark', mark, owner: mark.userData.penMark });
+  await settle(D, 20000);
+  D.dusty(false);
+  D.clickRaw({ kind: 'dustyBag' }); await settle(D, 15000);
+  if (D.state.held) { D.clickBench(1.0, 1.3); await settle(D, 20000); }
+  D.worldIn(JSON.parse(JSON.stringify(D.worldOut()))); await slowSettle(D, 2000);
+  let trail = null;
+  for (let i = 0; i < 14; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'trail') trail = t; }
+  const pieces = trail ? trail.userData.segs.map(sg => sg.shape || 'line').sort().join(',') : '';
+  const ok = pieces === 'cube,line,sphere';
+  put((ok ? 'PASS' : 'FAIL') + ' shape drops  (sculpture-after-save=' + (pieces || 'gone')
+      + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A GLASS HOUSE SHOWS WHAT ITS ROBOT NEEDS, AND NOTHING ELSE. activity1 is
+// the perfect witness: Add 1 and Doubler both make fresh numbers, so each
+// gets a number stack; Split only swaps birds, makes nothing, and gets no
+// props at all. An opaque house shows none of it, and the robot's walk
+// actually reaches the stack it fetches from.
+async function houseFurnitureCheck(D) {
+  const w = await (await fetch('../examples/infinity/activity1-even-numbers.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  await frames(D, 120);
+  const rooms = [];
+  for (let i = 0; i < 14; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'room') rooms.push(t); }
+  const by = {};
+  for (const r of rooms) by[r.userData.label] = Object.keys(r.__props || {});
+  const onlyWhatItNeeds = by['Add 1']?.join() === 'numbers'
+    && by.Doubler?.join() === 'numbers'
+    && (by.Split || []).length === 0;
+  // an opaque house builds none of it
+  const a1 = rooms.find(r => r.userData.label === 'Add 1');
+  a1.setOpaque(true);
+  const bareWhenOpaque = Object.keys(a1.__props || {}).length === 0
+    && (a1.__contents || []).length === 0;
+  a1.setOpaque(false);
+  // the NAME is off the lever wall (x > 0.2) and on the roof (y > 0.4)
+  const plates = a1.__labelPlates || [];
+  const offLever = !plates.some(pl => pl.position.x > 0.2);
+  const onRoof = plates.some(pl => pl.position.y > 0.4);
+  // ...and the walk really reaches the stack. AT SPEED 8, not 1: a glass
+  // house is paced in REAL seconds now -- about a round a second at speed 1 --
+  // and a check that only needs the walk to happen should not spend a minute
+  // of the suite waiting for it. The pace itself is asserted in "a house posts
+  // to a house", where it belongs.
+  D.speed(8);
+  D.clickRaw({ kind: 'roomLever', room: a1 });
+  await settle(D, 6000);
+  const prop = a1.__props?.numbers;
+  let mini = a1.__ctx?.activeBot?.node;
+  if (!mini) a1.__ctx?.root.traverse(o => { if (!mini && o.userData?.kind === 'robot') mini = o; });
+  let closest = 1e9;
+  for (let i = 0; i < 900; i++) {
+    D.frame(1, fnow());
+    await maybeBreathe();
+    if (!mini || !prop || !mini.parent) continue;
+    const lp = mini.parent.worldToLocal(prop.getWorldPosition(new D.V3()).clone());
+    closest = Math.min(closest, Math.hypot(lp.x - mini.position.x, lp.z - mini.position.z));
+  }
+  const reachesIt = closest < 0.07;
+  const ok = onlyWhatItNeeds && bareWhenOpaque && offLever && onRoof && reachesIt;
+  put((ok ? 'PASS' : 'FAIL') + ' a glass house shows what it needs  (props='
+      + JSON.stringify(by) + ' bare-when-opaque=' + bareWhenOpaque
+      + ' name-off-lever-wall=' + offLever + ' name-on-roof=' + onRoof
+      + ' robot-reaches-stack=' + closest.toFixed(3) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE AIRPLANE TAKES OFF AND LOOPS. One SPACE on the airplane starts BOTH
+// behaviours bound to it -- the 3D turtle that gives it the vocabulary, and
+// the pilot that speaks it -- and the loop needs no counting: a constant
+// pitch with a constant stride IS a circle. The proof is the drawn path,
+// which must be as tall as it is deep, and the plane must come back DOWN.
+async function flightCheck(D) {
+  const w = await (await fetch('../examples/behaviours/airplane-flight.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const all = [];
+  for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const plane = all.find(t => t.userData.kind === 'model');
+  const bound = all.filter(t => t.userData.boundTo === plane?.userData.lid);
+  if (!plane || bound.length !== 2) {
+    put('FAIL the airplane loops  (world did not build)', 'fail'); return false;
+  }
+  const started = D.press(plane, ' ');
+  const bothRunning = bound.every(g => !!g.__panelTray?.userData?.dirty);
+  // EVERY frame, not every thirty-fifth. The pilot's round is three orders and
+  // the loop is twelve rounds, so sampling every 35 frames aliased against a
+  // 36-frame period: the check read almost the same point of the loop each
+  // time and whether it ever saw the bottom was luck. It passed, then failed
+  // on an unrelated change that shifted the phase by a frame.
+  const ups = [];
+  for (let i = 0; i < 350; i++) {
+    D.frame(1, fnow()); ups.push(plane.userData.up || 0);
+    await maybeBreathe();
+  }
+  const tookOff = Math.max(...ups) > 0.6;          // over the top of the loop
+  const cameDown = Math.min(...ups) < 0.05;        // and back to the table
+  // the flight path it drew: a circle stands as tall as it is deep
+  const segs = [];
+  D.scene.traverse(o => {
+    if (o.userData?.penMark && o.userData.seg && !o.userData.seg.shape) segs.push(o.userData.seg);
+  });
+  const ys = segs.map(g => g.y0), zs = segs.map(g => g.z0);
+  const tall = segs.length ? Math.max(...ys) - Math.min(...ys) : 0;
+  const deep = segs.length ? Math.max(...zs) - Math.min(...zs) : 0;
+  const round = tall > 0.5 && Math.abs(tall - deep) < 0.12;
+  // ...and it stayed on the table: no wall clipped the back of the loop
+  const onTheTable = plane.position.z > 1.2 && plane.position.z < 2.2;
+  const ok = started && bothRunning && tookOff && cameDown && round && onTheTable;
+  put((ok ? 'PASS' : 'FAIL') + ' the airplane loops  (both-behaviours=' + bothRunning
+      + ' climbed=' + Math.max(...ups).toFixed(2) + ' landed=' + cameDown
+      + ' path ' + tall.toFixed(2) + ' tall x ' + deep.toFixed(2) + ' deep'
+      + ' on-the-table=' + onTheTable + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A HOUSE POSTS TO A HOUSE, AND EVERY HOUSE WORKS. activity1 is three houses
+// in a row: Add 1 posts to the letterbox INSIDE Doubler and the one inside
+// Split (both nests answer to the same name), and those two post out to the
+// nests on the desk. Two things a watcher must see, and neither was checked:
+// the bird crossing the table between the houses, and all three robots doing
+// their rounds -- the two woken by mail stood still for weeks because their
+// round runs in checkWaiting, below where the performance was built.
+async function postAcrossCheck(D) {
+  const w = await (await fetch('../examples/infinity/activity1-even-numbers.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const rooms = [];
+  for (let i = 0; i < 14; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'room') rooms.push(t); }
+  D.speed(1);
+  // START WHAT IS OFF -- and "off" is not "not dirty". A house woken by post is
+  // dirty only for the instant its round takes, so a house that has run once
+  // and gone quiet reads as not-dirty while being very much switched ON. This
+  // loop used to pull ITS lever too, which since the lever learned to mean
+  // stop is a press that stops it: activity1's Doubler and Split were switched
+  // off before the first letter and stood there with eight waiting (measured:
+  // d0 s1 w0 r1 p8 apiece). The house itself was right; the test was asking
+  // the old question.
+  for (const r of rooms) {
+    if (!r.userData.dirty && !r.__switched) D.clickRaw({ kind: 'roomLever', room: r });
+  }
+  await settle(D, 4000);
+  const walk = new Map(rooms.map(r => [r, 0]));
+  const last = new Map();
+  const trips = new Map();
+  let mostInTheAir = 0;
+  // REAL seconds, not virtual frames: the houses pace themselves by the wall
+  // clock (about a round a second at speed 1), so the watch must last real
+  // time. Driven by frame count, the loop's wall-clock was whatever the
+  // yields happened to cost -- it PASSED while breathe() was slow and failed
+  // the moment breathe() got fast, with walks of 0.0 because no round fit.
+  const tWatch = performance.now();
+  for (let k = 0; performance.now() - tWatch < 8000; k++) {
+    D.frame(1, performance.now());
+    await maybeBreathe();
+    for (const r of rooms) {
+      let mini = r.__ctx?.activeBot?.node;
+      if (!mini) r.__ctx?.root?.traverse(o => {
+        if (!mini && o.userData?.kind === 'robot') mini = o; });
+      if (!mini) continue;
+      const p0 = last.get(r);
+      if (p0) walk.set(r, walk.get(r) + Math.hypot(mini.position.x - p0.x, mini.position.z - p0.z));
+      last.set(r, { x: mini.position.x, z: mini.position.z });
+    }
+    // birds ON THE DESK -- outside every house -- and how far each travelled
+    let air = 0;
+    D.scene.traverse(o => {
+      if (o.userData?.kind !== 'bird' || !o.__flying) return;
+      air++;
+      for (let q = o.parent; q; q = q.parent) if (q.userData?.kind === 'room') return;
+      const wp = o.getWorldPosition(new D.V3());
+      const seen = trips.get(o) ?? { x0: wp.x, z0: wp.z, d: 0 };
+      seen.d = Math.max(seen.d, Math.hypot(wp.x - seen.x0, wp.z - seen.z0));
+      trips.set(o, seen);
+    });
+    mostInTheAir = Math.max(mostInTheAir, air);
+  }
+  const walks = rooms.map(r => walk.get(r));
+  const allWork = walks.every(d => d > 1);
+  // Add 1 stands at x -1.20 and Split at x 0.60: a courier between them
+  // crosses most of the table
+  const crossings = [...trips.values()].filter(t2 => t2.d > 0.8).length;
+  // and the piles say the activity itself ran: odds and evens, one each
+  const piles = {};
+  D.scene.traverse(o => { if (o.userData?.kind === 'nest' && o.userData.label)
+    piles[o.userData.label] = (o.userData.pile || []).length; });
+  // eight rounds, because the suite leaves the Rounds limit at 8 and a house
+  // stops there like any robot: four odds and four evens is the whole run
+  // A HOUSE YOU CAN SEE INTO RUNS AT A PACE YOU CAN WATCH -- about a round a
+  // second at speed 1 -- so nine hundred frames is a handful of rounds, not a
+  // thousand. That pace IS the assertion: Ken watched two glass houses tear
+  // through 20 rounds a second because a house running its own inner houses
+  // also found its neighbours on the desk and pumped them, cooldown ignored.
+  const sorted = ((piles['A: odds'] ?? 0) + (piles['B: evens'] ?? 0)) > 0;
+  const rounds = rooms.reduce((n, r) => n + (r.userData.stepRounds || 0), 0);
+  const paced = rounds < 60;
+  // no unbounded queue in the air: letters land in order, so a fast sender
+  // could pile them up for ever
+  const bounded = mostInTheAir <= 40;
+  // OFF IS A DECISION. A "." typed while a house's turn was running was
+  // undone by the turn's own answer to "is there more to do" -- so a house
+  // Ken had switched off carried straight on.
+  const one = rooms[0];
+  D.press(one, '.');
+  const roundsAtStop = one.userData.stepRounds || 0;
+  await frames(D, 400);
+  const staysStopped = !one.userData.dirty && !!one.userData.stopped
+    && (one.userData.stepRounds || 0) === roundsAtStop;
+  const ok = allWork && crossings > 0 && sorted && bounded && paced && staysStopped;
+
+  put((ok ? 'PASS' : 'FAIL') + ' a house posts to a house  (walks='
+      + walks.map(d => d.toFixed(1)).join('/') + ' desk-crossings=' + crossings
+      + ' odds=' + (piles['A: odds'] ?? 0) + ' evens=' + (piles['B: evens'] ?? 0)
+      + ' most-in-the-air=' + mostInTheAir + ' rounds-in-900-frames=' + rounds
+      + ' stop-sticks=' + staysStopped + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A DOCUMENT ARRIVES AS A PAGE. Measured off the pad's own canvas, not off a
+// flag: a rendered page is laid out from the left margin, while the plain pad
+// centres every line -- so the same words, imported as .md and as .txt, must
+// have their ink starting in different places. And the mark has to survive a
+// save, which is exactly what the first cut got wrong: the import rendered
+// and came back from a load as centred grey.
+const MD_DOC = ['# Zeno\'s postman', '',
+  'A halver posts **1/2**, then *1/4*, then `1/8`.', '',
+  '## What to watch', '', '- the bird carries the post', '- the total is exact',
+  '  - even at 1/1024', '', '1. pull the halver', '2. pull the totaller', '',
+  '> An empty nest puts the totaller to sleep.', '', '---', '',
+  '```', 'total = (2^k - 1) / 2^k', '```', '', 'Plain last line.'].join('\n');
+async function markdownCheck(D) {
+  // where the ink starts, and how far down the page it reaches
+  const inkOf = (pad) => {
+    let cv = null;
+    pad?.traverse(o => {
+      const ms = o.isMesh ? [].concat(o.material) : [];
+      for (const m of ms) if (!cv && m?.map?.image?.getContext) cv = m.map.image;
+    });
+    if (!cv) return null;
+    const px = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+    let left = cv.width, top = cv.height, bottom = 0, dark = 0;
+    for (let y = 0; y < cv.height; y++) {
+      for (let x = 0; x < cv.width; x++) {
+        const i = (y * cv.width + x) * 4;
+        // ink, not paper: the paper is cream, the writing is dark
+        if (px[i] + px[i + 1] + px[i + 2] > 330) continue;
+        dark++;
+        if (x < left) left = x;
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+      }
+    }
+    return { left: left / cv.width, top: top / cv.height,
+             bottom: bottom / cv.height, dark, w: cv.width };
+  };
+  const bring = async (name, type, body) => {
+    D.worldIn({ kind: 'world', v: 4, bench: [], stations: {}, active: null });
+    await slowSettle(D, 2000);
+    D.readMedia(new File([body ?? MD_DOC], name, { type }), null, { x: 0, z: 1.6 });
+    await frames(D, 200);
+    await new Promise(r => setTimeout(r, 350));
+    await frames(D, 120);
+    for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break;
+      if (t.userData.kind === 'text') return t; }
+    return null;
+  };
+  const page = await bring('notes.md', 'text/markdown');
+  const inkA = inkOf(page);
+  // it must survive a save: the mark is on the pad, not on the file
+  const rec = D.worldOut();
+  D.worldIn(rec); await slowSettle(D, 2000);
+  let back = null;
+  for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'text') { back = t; break; } }
+  await frames(D, 60);
+  const inkB = inkOf(back);
+  // A DOCUMENT TOO LONG FOR ONE PAGE HAS PAGES. Ken imported the behaviours
+  // README -- eighteen thousand characters -- and got two hundred lines of
+  // grey thread, because the page shrank its type until the whole of it fitted.
+  const gap = String.fromCharCode(10, 10);
+  const long = await bring('long.md', 'text/markdown',
+    MD_DOC + gap + MD_DOC + gap + MD_DOC + gap + MD_DOC);
+  const pages = long?.__mdPages ?? 1;
+  const inkP1 = inkOf(long);
+  long.userData.mdPage = 1;
+  long.setText(long.userData.text);
+  await frames(D, 40);
+  const inkP2 = inkOf(long);
+  const turns = pages > 1 && !!inkP1 && !!inkP2 && Math.abs(inkP1.dark - inkP2.dark) > 50;
+  const plain = await bring('notes.txt', 'text/plain');
+  const inkC = inkOf(plain);
+  const rendered = !!page?.userData.md && !!inkA;
+  const survives = !!back?.userData.md
+    && !!inkB && Math.abs(inkB.left - inkA.left) < 0.03;
+  // a page starts at its margin; a poem is centred, so its ink starts further in
+  const fromTheMargin = !!inkA && !!inkC && inkA.left < 0.12 && inkC.left > inkA.left + 0.05;
+  // and it fills the page from the top rather than floating in the middle
+  const fillsThePage = !!inkA && inkA.top < 0.2 && inkA.bottom > 0.7;
+  const ok = rendered && survives && fromTheMargin && fillsThePage && turns;
+  put((ok ? 'PASS' : 'FAIL') + ' a document arrives as a page  (md=' + !!page?.userData.md
+      + ' ink-from-left=' + (inkA ? inkA.left.toFixed(3) : '-')
+      + ' plain-from-left=' + (inkC ? inkC.left.toFixed(3) : '-')
+      + ' top=' + (inkA ? inkA.top.toFixed(2) : '-')
+      + ' bottom=' + (inkA ? inkA.bottom.toFixed(2) : '-')
+      + ' survives-save=' + survives + ' pages=' + pages
+      + ' page-turns=' + turns + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// UNDO NEVER MINTS A TWIN. Drop a gadget into another gadget's open tray,
+// undo: the pilot must come back OUT of the tray -- the same node, name and
+// binding intact -- not be rebuilt on the bench while the original lives on
+// inside the tray with the same live name.
+async function undoTwinCheck(D) {
+  const w = await (await fetch('../examples/behaviours/airplane-flight.world.json')).json();
+  D.worldIn(w); await settle(D, 4000);
+  const find = (lid) => { for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.lid === lid) return t; } return null; };
+  const pilots = () => { let n = 0;
+    D.scene.traverse(o => { if (o.userData?.lid === 'A903') n++; }); return n; };
+  const pilot = find('A903'), turtle = find('A902');
+  if (!pilot || !turtle) { put('FAIL undo never twins  (world did not build)', 'fail'); return false; }
+  D.clickThing(turtle); await settle(D, 9000);
+  D.openHeldPanel(); await settle(D, 9000);
+  D.clickBench(1.4, 1.25); await settle(D, 9000);
+  const tray = D.panelOf(turtle);
+  D.clickThing(pilot); await settle(D, 9000);
+  D.clickThing(tray); await settle(D, 20000);
+  const inTray = pilots() === 1;
+  D.undo(); await settle(D, 20000);
+  const after = pilots();
+  const back = find('A903');
+  const ok = inTray && after === 1 && !!back && back.userData.boundTo === 'A901';
+  put((ok ? 'PASS' : 'FAIL') + ' undo never twins  (into-tray=' + inTray
+      + ' pilots-after-undo=' + after + ' back-on-bench=' + !!back
+      + ' binding-kept=' + (back?.userData.boundTo === 'A901') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE ROBOT READS ITS OWN NOTEBOOK. A round snapshots the pages at its first
+// read, so the user can be HOLDING the notebook mid-run and the robot still
+// works -- where it used to abort with "there is no notebook here".
+async function notebookCheck(D) {
+  D.worldIn({ kind: 'world', v: 4,
+    bench: [{ thing: { kind: 'notebook', page: 0,
+                       pages: [{ kind: 'number', value: { n: '7', d: '1' } }] },
+              x: 0.9, z: 1.3 }],
+    stations: { stand: { kind: 'box', holes: [null] } },
+    active: { kind: 'robot', name: 'reader',
+      condition: { kind: 'anyBox', n: 1 },
+      program: [
+        { type: 'take', at: { c: 'notebook', path: [0] } },
+        { type: 'put', at: { c: 'given', path: [0] } }],
+      trainedOn: { kind: 'box', holes: [null] }, team: [] } });
+  await settle(D, 4000);
+  let nb = null;
+  D.scene.traverse(o => { if (o.userData?.kind === 'notebook') nb = o; });
+  if (!nb) { put('FAIL the robot reads its own notebook  (no notebook)', 'fail'); return false; }
+  nb.userData.main = true;
+  D.hold(nb); await settle(D, 9000);
+  D.rounds(5);
+  D.run(); await settle(D, 60000);
+  D.rounds(ROUNDS);
+  const given = D.mine([0]);
+  const total = given?.userData?.kind === 'number'
+    ? given.userData.value.n + '/' + given.userData.value.d : '-';
+  const stillHeld = D.state.hand === 'notebook';
+  const ok = total === '35/1' && stillHeld;
+  put((ok ? 'PASS' : 'FAIL') + ' the robot reads its own notebook  (five sevens='
+      + total + ' notebook-stayed-in-hand=' + stillHeld + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A LETTER AT A TIME, AND THE LEVER MEANS STOP. zeno behind glass at speed
+// 1: a house that has posted a courier is not offered another turn until the
+// letter is on the nest, so no backlog can build behind the watcher's back --
+// and stopping the sender stops the arrivals within one flight. The lever of
+// the mail-driven totaller must STOP it: it is dirty only for the instant a
+// letter lands, and judged by dirty the press used to take the start branch
+// instead ("the totaller robot ignored the stop button").
+async function paceAndLeverCheck(D) {
+  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.speed(1);
+  const rooms = [];
+  for (let i = 0; i < 10; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'room') rooms.push(t); }
+  const halver = rooms.find(r => r.userData.label !== 'the totaller');
+  const tot = rooms.find(r => r.userData.label === 'the totaller');
+  D.clickRaw({ kind: 'roomLever', room: halver });
+  D.clickRaw({ kind: 'roomLever', room: tot });
+  const denOf = () => {
+    const v = tot.__ctx?.standOcc?.userData?.holes?.[1]?.thing?.userData?.value;
+    return v ? BigInt(v.d) : null;
+  };
+  // REAL seconds -- the pace is wall-clock
+  let most = 0;
+  const t0 = performance.now();
+  while (performance.now() - t0 < 7000) {
+    D.frame(1, performance.now());
+    most = Math.max(most, D.sizes.flights);
+    await maybeBreathe();
+  }
+  const den1 = denOf();
+  const delivered = den1 != null && den1 >= 4n;   // at least two letters landed
+  const paced = most <= 3;                        // one letter at a time, not a swarm
+  // the lever stops the mail-driven house
+  D.clickRaw({ kind: 'roomLever', room: tot });
+  const totStopped = !!tot.userData.stopped && !tot.userData.dirty;
+  D.clickRaw({ kind: 'roomLever', room: tot });   // and starts it again
+  const totRestarts = !tot.userData.stopped;
+  // stopping the SENDER stops the arrivals within about one flight
+  D.clickRaw({ kind: 'roomLever', room: halver });
+  const halverStopped = !!halver.userData.stopped;
+  const t1 = performance.now();
+  while (performance.now() - t1 < 2500) { D.frame(1, performance.now()); await maybeBreathe(); }
+  const den2 = denOf();
+  const t2 = performance.now();
+  while (performance.now() - t2 < 3000) { D.frame(1, performance.now()); await maybeBreathe(); }
+  const den3 = denOf();
+  const drains = den2 != null && den3 === den2;   // nothing more once the air is clear
+  const ok = delivered && paced && totStopped && totRestarts && halverStopped && drains;
+  put((ok ? 'PASS' : 'FAIL') + ' a letter at a time, and the lever means stop  (total-den='
+      + String(den1) + ' most-in-air=' + most + ' lever-stops=' + totStopped
+      + ' lever-restarts=' + totRestarts + ' sender-stops=' + halverStopped
+      + ' drains=' + drains + ' den-after=' + String(den3) + ')', ok ? 'pass' : 'fail');
+  D.speed(1);
+  return ok;
+}
+
+// FOLDING A PANEL NEVER FREEZES THE LIVE PANEL NESTED INSIDE IT. The knob
+// used to judge the plane's panel by its own work -- no robot, not dirty --
+// and serialized the whole world, taking the switched-on turtle panel with
+// it: its letterbox left the scene and Ken's hand-flown orders had nowhere
+// to land. A fold over live nested work keeps the tray on the bench, closed.
+async function foldAliveCheck(D) {
+  const w = await (await fetch('../examples/behaviours/airplane-flight.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.speed(1);
+  const all = [];
+  for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const plane = all.find(t => t.userData.kind === 'model');
+  const turtleG = all.find(t => t.userData.lid === 'A902');
+  if (!plane || !turtleG) { put('FAIL a fold keeps nested work alive  (world did not build)', 'fail'); return false; }
+  const at = { x: plane.position.x, z: plane.position.z };
+  D.switchGadget(turtleG, true); await slowSettle(D, 2000);
+  const turtleTray = D.panelOf(turtleG);
+  const letterbox = turtleTray?.__ctx?.standOcc?.userData?.holes?.map(h => h.thing)
+    .find(t => t?.userData?.kind === 'nest') ?? null;
+  D.hold(plane); D.openHeldPanel(); D.clickBench(at.x, at.z);
+  await slowSettle(D, 2000);
+  const planeTray = D.panelOf(plane);
+  if (!planeTray || !turtleTray || !letterbox) {
+    put('FAIL a fold keeps nested work alive  (no trays)', 'fail'); return false;
+  }
+  turtleTray.visible = true; turtleTray.__closed = false;
+  D.hold(turtleTray); D.clickRaw({ kind: 'thing', thing: planeTray });
+  await slowSettle(D, 2000);
+  let nested = false;
+  for (let q = turtleTray.parent; q; q = q.parent) if (q === planeTray) { nested = true; break; }
+  D.clickRaw({ kind: 'panelClose', tray: planeTray });
+  await slowSettle(D, 2000);
+  const keptLive = plane.__panelTray === planeTray && !!planeTray.__closed;
+  const boxInScene = (() => { let q = letterbox; while (q && q.parent) q = q.parent;
+    return q?.type === 'Scene'; })();
+  const f0 = turtleTray.__frame || 0;
+  for (let i = 0; i < 90; i++) { D.frame(1, fnow()); if ((i & 31) === 31) await maybeBreathe(); }
+  const stillTicks = (turtleTray.__frame || 0) > f0;
+  const ok = nested && keptLive && boxInScene && stillTicks;
+  put((ok ? 'PASS' : 'FAIL') + ' a fold keeps nested work alive  (nested=' + nested
+      + ' tray-kept-live=' + keptLive + ' letterbox-in-scene=' + boxInScene
+      + ' nested-panel-still-ticks=' + stillTicks + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE ROBOT MOVES OVER SO ITS HAND IS AT THE STACK. One decision picks the
+// grab pose by the pile-top's height and stands where that pose's claw lands
+// on the pile -- so the horizontal claw-to-top distance at the closest
+// approach is ~0, for the take AND for the drop onto the target. The lerp
+// this replaced could be a cube's width off ("reaching to the wrong place").
+async function reachAtPileCheck(D) {
+  const pile = [];
+  for (let i = 0; i < 12; i++) pile.push({ kind: 'number', value: { n: String(i + 1), d: '1' }, op: '+' });
+  D.worldIn({ kind: 'world', v: 4, bench: [],
+    stations: { stand: { kind: 'box', holes: [
+      { kind: 'nest', id: 7701, guid: 'reach-post', hasEgg: false, pile },
+      { kind: 'number', value: { n: '0', d: '1' }, op: '+' }] } },
+    active: { kind: 'robot', name: 'reader',
+      condition: { kind: 'box', holes: [{ kind: 'wildNumber' }, { kind: 'wildNumber' }] },
+      program: [{ type: 'take', at: { c: 'given', path: [0] } },
+                { type: 'put',  at: { c: 'given', path: [1] } }],
+      trainedOn: { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '1' }, op: '+' },
+                                        { kind: 'number', value: { n: '0', d: '1' }, op: '+' }] },
+      team: [] } });
+  await slowSettle(D, 4000);
+  const nests = [];
+  D.scene.traverse(o => { if (o.userData?.kind === 'nest') nests.push(o); });
+  const nest = nests.find(n => (n.userData.pile || []).length);
+  if (!nest) { put('FAIL the hand is at the stack  (no pile built)', 'fail'); return false; }
+  const topOf = () => { const p2 = nest.userData.pile; return p2.length ? p2[p2.length - 1] : null; };
+  D.speed(1); D.rounds(2);
+  D.run();
+  let minTake = 99, minPut = 99, takeDy = 99;
+  for (let i = 0; i < 60 * 40 && (D.state.busy || D.state.queued || D.state.current); i++) {
+    D.frame(1, fnow());
+    const c = D.claw();
+    const top = topOf();
+    if (top && c.y != null) {
+      const tp = top.getWorldPosition(new D.V3());
+      const d = Math.hypot(c.x - tp.x, c.z - tp.z);
+      if (d < minTake) { minTake = d; takeDy = c.y - tp.y; }
+    }
+    const targ = D.mine ? D.mine([1]) : null;
+    if (targ && c.y != null) {
+      const tp2 = targ.getWorldPosition(new D.V3());
+      minPut = Math.min(minPut, Math.hypot(c.x - tp2.x, c.z - tp2.z));
+    }
+    await maybeBreathe();
+  }
+  await slowSettle(D, 30000);
+  D.rounds(ROUNDS);
+  const total = D.mine([1]);
+  const sum = total?.userData?.value ? total.userData.value.n + '/' + total.userData.value.d : '-';
+  const ok = minTake < 0.15 && minPut < 0.15 && sum === '23/1'
+    && nest.userData.pile.length === 10;
+  put((ok ? 'PASS' : 'FAIL') + ' the hand is at the stack  (take-off-by='
+      + minTake.toFixed(3) + ' take-dy=' + takeDy.toFixed(2)
+      + ' put-off-by=' + minPut.toFixed(3) + ' sum=' + sum
+      + ' pile-left=' + nest.userData.pile.length + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// MARTY MAKES A THING. He may make nouns and never verbs: what arrives is a
+// prop the child still has to program. Three canned answers stand in for the
+// brain -- the guards, which are the whole risk, live on this side of the wire.
+async function martyMakesCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, bench: [], stations: {}, active: null });
+  await slowSettle(D, 2000);
+  const benchN = () => { let n = 0; for (let i = 0; i < 30; i++) { if (!D.bench(i)) break; n++; } return n; };
+  const n0 = benchN();
+
+  // 1. a good answer, wrapped in the chatter models like to add
+  const good = 'Here you go!\n```json\n' + JSON.stringify({
+    name: 'a red sailboat', say: 'One sailboat, ready for the sea.',
+    parts: [
+      { shape: 'box', size: [0.16, 0.03, 0.34], at: [0, 0.015, 0], color: '#8b5a2b' },
+      { shape: 'cylinder', size: [0.006, 0.006, 0.3], at: [0, 0.17, 0], color: '#efe2c6' },
+      { shape: 'cone', size: [0.09, 0.26], at: [0, 0.16, 0.03], rot: [90, 0, 0], color: 'crimson' },
+    ] }) + '\n```';
+  const r1 = D.makeFromReply(good);
+  const boat = r1?.thing;
+  const built = !!boat && boat.userData.kind === 'model' && boat.userData.parts.length === 3;
+  const named = (boat?.userData?.label || '') === 'a red sailboat';
+  const onBench = benchN() === n0 + 1;
+  // it is a THING: it survives a save and a load like anything else
+  const saved = D.worldOut();
+  D.worldIn(saved); await slowSettle(D, 2000);
+  let again = null;
+  for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'model') again = t; }
+  const survives = !!again && again.userData.parts.length === 3;
+
+  // 2. a hostile answer: too many parts, a shape that is not a shape, numbers
+  // that are not numbers, a colour that is a script, and a boat the size of a
+  // house. Every one of those is a poisoned scene if it gets through.
+  const nasty = { name: 'x'.repeat(200), say: 'y',
+    parts: [{ shape: 'box', size: [900, 900, 900], at: [0, 0, 0], color: 'javascript:alert(1)' },
+            { shape: 'banana', size: [1], at: [0, 0, 0] },
+            { shape: 'sphere', size: ['NaN'], at: [null, undefined, 'x'] },
+            { shape: 'cone', size: [0.05, 0.1], at: [0, 0, 0], rot: [1e9, NaN, 0] }] };
+  for (let i = 0; i < 200; i++) nasty.parts.push({ shape: 'box', size: [0.05], at: [0, 0.02, 0] });
+  const r2 = D.makeFromReply(JSON.stringify(nasty));
+  const t2 = r2?.thing;
+  const parts2 = t2?.userData?.parts ?? [];
+  const capped = parts2.length > 0 && parts2.length <= 40;
+  const shapesOK = parts2.every(pt => ['box', 'sphere', 'cylinder', 'cone'].includes(pt.shape));
+  const finite = parts2.every(pt => [...pt.size, ...pt.at, ...(pt.rot || [])].every(Number.isFinite));
+  const noScript = parts2.every(pt => !/script/i.test(pt.color || ''));
+  const wide = t2 ? t2.userData.width : 99;
+  const fits = wide > 0 && wide <= 0.55;
+  const shortName = (t2?.userData?.label || '').length <= 40;
+
+  // 2b. ...and the same error the other way: a toy answered in centimetres is
+  // a speck too small to point at, so it is grown as surely as a giant shrinks
+  const speck = D.makeFromReply(JSON.stringify({ name: 'a bead',
+    parts: [{ shape: 'sphere', size: [0.008], at: [0, 0.008, 0], color: 'teal' },
+            { shape: 'box', size: [0.01, 0.004, 0.02], at: [0, 0.002, 0.01], color: 'teal' }] }));
+  const grown = !!speck && speck.thing.userData.width >= 0.1;
+
+  // 2c. A REVISION LANDS BESIDE WHAT IT REVISED, on free space. Ken: "when I
+  // asked for a new drawing or model it replaces the previous one. they should
+  // appear on any free space on the desk." Comparing what you asked for
+  // against what you got is the whole of iterating, and there is nothing to
+  // compare with once the last one has been thrown away.
+  D.worldIn({ kind: 'world', v: 4, bench: [], stations: {}, active: null });
+  await slowSettle(D, 2000);
+  const one = D.makeFromReply(JSON.stringify({ name: 'a bug',
+    parts: [{ shape: 'sphere', size: [0.08], at: [0, 0.08, 0], color: 'olive' }] }));
+  const at1 = { x: one.thing.position.x, z: one.thing.position.z };
+  const afterFirst = benchN();
+  const two = D.makeFromReply(JSON.stringify({ name: 'a bug with six legs',
+    parts: [{ shape: 'sphere', size: [0.08], at: [0, 0.08, 0], color: 'olive' },
+            { shape: 'cylinder', size: [0.004, 0.004, 0.1], at: [0.05, 0.04, 0], rot: [0, 0, 60], color: 'black' }] }));
+  const replaced = benchN() === afterFirst + 1
+    && !!one.thing.parent && !!two.thing.parent
+    && Math.hypot(two.thing.position.x - at1.x, two.thing.position.z - at1.z) > 0.05
+    && two.thing.userData.parts.length === 2;
+  // ...and once it is in your hand it is yours: the next one arrives beside it
+  D.hold(two.thing);
+  const held = benchN();
+  const three = D.makeFromReply(JSON.stringify({ name: 'a snail',
+    parts: [{ shape: 'sphere', size: [0.07], at: [0, 0.07, 0], color: 'peru' }] }), 'a snail');
+  const spares = benchN() === held + 1 && !!three;
+  D.clickBench(1.2, 1.4);            // put the held one down again
+  await slowSettle(D, 2000);
+
+  // 2d. HE REMEMBERS WHAT HE JUST MADE. Without this the next wish is a fresh
+  // start, and "good, but it should have six legs" builds a second insect
+  // instead of fixing the first -- which is what Ken hit in real use.
+  const mem = D.makeMemory();
+  const remembers = mem.length === 2 && mem[0] === 'a snail'
+    && /"parts"/.test(mem[1]) && /peru/.test(mem[1]);
+
+  // 2e. A LONG ANSWER IS NOT A BAD ANSWER. Ken's six-legged mantis came back
+  // from Sonnet and Opus cut off mid-array (their branch is the one that
+  // sends a token cap) and was refused outright, while the same wish built
+  // under GPT. What arrived whole is a toy; only the tail is missing.
+  const leg = (i) => '{"shape":"cylinder","size":[0.004,0.004,0.09],'
+    + '"at":[' + (0.03 * (i - 3)) + ',0.05,0],"color":"olive"}';
+  const truncated = '{"name":"a preying mantis","say":"here","parts":['
+    + '{"shape":"box","size":[0.05,0.03,0.16],"at":[0,0.06,0],"color":"olive"},'
+    + '{"shape":"sphere","size":[0.03],"at":[0,0.08,0.09],"color":"olive"},'
+    + [0, 1, 2, 3].map(leg).join(',') + ',{"shape":"cyli';
+  const salvaged = D.makeFromReply(truncated, 'a preying mantis');
+  const rescued = !!salvaged && salvaged.thing.userData.parts.length === 6
+    && salvaged.made.cutShort === true;
+  // ...and an answer with a sentence after the JSON parses too: taking the
+  // first brace to the LAST one made that unreadable
+  const chatty = '{"name":"a top","parts":[{"shape":"cone","size":[0.06,0.12],'
+    + '"at":[0,0.06,0],"color":"tomato"}]}\n\nHope that helps! {smiley}';
+  const afterWords = !!D.makeFromReply(chatty, 'a top');
+
+  // 3. an answer that is not one: nothing is built, and nothing is disturbed
+  const before3 = benchN();
+  const r3 = D.makeFromReply('I would rather not, honestly.');
+  const r4 = D.makeFromReply(JSON.stringify({ name: 'empty', parts: [] }));
+  const refuses = r3 === null && r4 === null && benchN() === before3;
+
+  const ok = built && named && onBench && survives && capped && shapesOK
+    && finite && noScript && fits && grown && replaced && spares
+    && remembers && rescued && afterWords && shortName && refuses;
+  put((ok ? 'PASS' : 'FAIL') + ' Marty makes a thing  (built=' + built + ' named=' + named
+      + ' on-bench=' + onBench + ' survives-save=' + survives
+      + ' capped=' + parts2.length + ' shapes=' + shapesOK + ' finite=' + finite
+      + ' no-script=' + noScript + ' fits=' + (+wide.toFixed(2))
+      + ' speck-grown=' + (speck ? +speck.thing.userData.width.toFixed(2) : 'none')
+      + ' both-toys-stay=' + replaced + ' spares-what-you-hold=' + spares
+      + ' remembers-last=' + remembers
+      + ' salvages-cut-off=' + rescued + ' reads-past-chatter=' + afterWords
+      + ' refuses-nonsense=' + refuses + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// HE IS FACING YOU WHEN YOU WALK IN. A robot's yaw is wherever its last walk
+// left it -- the glass-house performance turns it toward each hole it visits
+// and used to leave it pointing whichever way it walked home -- so stepping
+// through the door showed you its back. Measured before the fix: five entries
+// in ten settled at -138 degrees and stayed there.
+async function facingCheck(D) {
+  const deg = (r) => Math.round(((r % (2 * Math.PI)) * 180 / Math.PI + 540) % 360 - 180);
+  const yaws = [];
+  for (const waitTicks of [60, 100, 160, 220]) {
+    const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+    D.worldIn(w); await slowSettle(D, 4000);
+    D.speed(1);
+    const rooms = [];
+    for (let i = 0; i < 10; i++) { const t = D.bench(i); if (!t) break;
+      if (t.userData.kind === 'room') rooms.push(t); }
+    const halver = rooms.find(r => r.userData.label !== 'the totaller');
+    const tot = rooms.find(r => r.userData.label === 'the totaller');
+    if (!tot) { put('FAIL he faces you  (zeno did not build)', 'fail'); return false; }
+    D.clickRaw({ kind: 'roomLever', room: halver });
+    D.clickRaw({ kind: 'roomLever', room: tot });
+    for (let i = 0; i < waitTicks; i += 4) { D.step(1 / 60, 4); }
+    await maybeBreathe();
+    D.enter(tot); await slowSettle(D, 9000);
+    for (let i = 0; i < 60; i += 4) { D.step(1 / 60, 4); }
+    const bot = tot.__ctx?.activeBot?.node;
+    yaws.push(bot ? deg(bot.rotation.y) : 999);
+    D.leave(); await slowSettle(D, 4000);
+  }
+  const away = yaws.filter(y => Math.abs(y) > 90).length;
+  const ok = away === 0;
+  put((ok ? 'PASS' : 'FAIL') + ' he faces you when you walk in  (yaws='
+      + yaws.join('/') + ' backs-turned=' + away + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A BUSY NEST STAYS QUICK. Two costs grew with the pile and neither showed up
+// as anything but "it feels sluggish": restacking hid every member of the pile
+// on every delivery (n-squared over a run -- Ken's zeno save holds 3,840 on
+// one nest), and the half-second detail sweep asked all of them where they
+// were in the world, which walks each one's parents. Both are measured here
+// as work rather than as wall-clock: how many pile members a restack touches,
+// and how long a frame that DOES run the sweep takes.
+async function bigPileCheck(D) {
+  const pile = [];
+  for (let i = 0; i < 1200; i++) pile.push({ kind: 'number', value: { n: String(i + 1), d: '1' }, op: '+' });
+  D.worldIn({ kind: 'world', v: 4,
+    bench: [{ thing: { kind: 'nest', id: 8801, guid: 'big-post', hasEgg: false, pile },
+              x: 0.4, z: 1.5 }],
+    stations: {}, active: null });
+  await slowSettle(D, 20000);
+  // the DEEPEST pile, not the last nest the traverse happens on: the desk's
+  // own nest stack is full of nests with nothing on them
+  let nest = null;
+  D.scene.traverse(o => {
+    if (o.userData?.kind !== 'nest') return;
+    if (!nest || (o.userData.pile || []).length > (nest.userData.pile || []).length) nest = o;
+  });
+  if (!nest) { put('FAIL a busy nest stays quick  (no nest)', 'fail'); return false; }
+  const deep = (nest.userData.pile || []).length;
+  const shown = (nest.userData.pile || []).filter(t => t.visible).length;
+  // a LATER restack touches only what was standing up, not the whole pile
+  // dir 1 is "towards the newer ones", which is the plate that EXISTS while
+  // the window sits at the old end -- scrolling the other way restacks
+  // nothing, and an assertion about nothing passes for the wrong reason
+  const t0 = D.restackTouched();
+  D.clickRaw({ kind: 'pileScroll', nest, dir: 1 });
+  const touched = D.restackTouched() - t0;
+  // ...and a frame that runs the detail sweep does not walk the hidden ones.
+  // The clock is stepped by more than half a second per frame ON PURPOSE, so
+  // every one of these frames runs the sweep -- at real frame spacing it runs
+  // about twice a second and a timing sample would mostly miss it.
+  let clock = performance.now();
+  const times = [];
+  for (let i = 0; i < 31; i++) {
+    clock += 600;
+    const a = performance.now();
+    D.frame(1, clock);
+    times.push(performance.now() - a);
+    await maybeBreathe();
+  }
+  times.sort((x, y) => x - y);
+  const median = times[15];
+  const ok = deep === 1200 && shown > 0 && shown <= 12
+    && touched > 0 && touched <= 24 && median < 8;
+  put((ok ? 'PASS' : 'FAIL') + ' a busy nest stays quick  (pile=' + deep
+      + ' standing=' + shown + ' restack-touched=' + touched
+      + ' sweep-frame-median=' + median.toFixed(1) + 'ms)', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// MARTY DRAWS, WITH A TURTLE. The picture is a program in the words the turtle
+// behaviour already teaches, so what arrives can be read back -- and it is
+// text, which is why this works in the artifact where no picture-model can be
+// reached. The network is not part of the test: the interpreter and the guards
+// are the whole risk and they are all on this side of the wire.
+async function martyDrawsCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, bench: [], stations: {}, active: null });
+  await slowSettle(D, 2000);
+  const benchN = () => { let n = 0; for (let i = 0; i < 30; i++) { if (!D.bench(i)) break; n++; } return n; };
+
+  // the interpreter itself: repeat, nesting, and the words it does not know
+  const snow = 'color #7fd8ff\nwidth 2\n'
+    + 'repeat 6 [ forward 60 repeat 3 [ back 20 right 60 forward 20 left 60 ] back 60 right 60 ]';
+  const drew = D.turtle(snow).strokes.length;
+  const pen = D.turtle('fd 10 penup fd 50 pendown fd 10').strokes.length;   // the gap is not drawn
+  const chatty = D.turtle('draw a lovely house please fd 10 thank you rt 90 fd 10').strokes.length;
+  // a runaway cannot hang the workshop, and nonsense draws nothing
+  const runaway = D.turtle('repeat 999999 [ repeat 999999 [ fd 1 rt 1 ] ]').strokes.length;
+  const prose = D.turtle('please draw me a lovely house, thank you!').strokes.length;
+  // a colour that is a script is not a colour
+  const evil = D.turtle('color javascript:alert(1)\nfd 10').strokes;
+  const noScript = evil.every(st => !/script/i.test(st.color));
+
+  // ...and the whole path: a reply becomes a pad with a picture on it
+  const n0 = benchN();
+  const r1 = D.drawFromReply(JSON.stringify(
+    { name: 'a snowflake', say: 'one snowflake', turtle: snow }), 'a snowflake');
+  const pad = r1 && r1.thing;
+  const landed = !!pad && pad.userData.kind === 'text'
+    && /^data:image\/png/.test(pad.userData.img || '')
+    && (pad.userData.label || '') === 'a snowflake'
+    && benchN() === n0 + 1;
+  // it is a THING: it survives a save and a load
+  const saved = D.worldOut();
+  D.worldIn(saved); await slowSettle(D, 4000);
+  let again = null;
+  for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.img) again = t; }
+  const survives = !!again;
+
+  // a re-drawing takes the place of the one it re-draws
+  D.worldIn({ kind: 'world', v: 4, bench: [], stations: {}, active: null });
+  await slowSettle(D, 2000);
+  const a = D.drawFromReply(JSON.stringify({ name: 'a spiral', turtle: 'repeat 60 [ fd 3 rt 6 ]' }), 'a spiral');
+  const at1 = { x: a.thing.position.x, z: a.thing.position.z };
+  const afterFirst = benchN();
+  const b = D.drawFromReply(JSON.stringify({ name: 'a red spiral', turtle: 'color crimson\nrepeat 60 [ fd 3 rt 6 ]' }), 'in red');
+  // A RE-DRAWING KEEPS THE OLD ONE, on free space beside it. Ken: "when I
+  // asked for a new drawing or model it replaces the previous one. they should
+  // appear on any free space on the desk" -- you cannot compare what you asked
+  // for against what you got once the last one has been thrown away.
+  const redrawn = benchN() === afterFirst + 1 && !!a.thing.parent && !!b.thing.parent
+    && Math.hypot(b.thing.position.x - at1.x, b.thing.position.z - at1.z) > 0.05;
+
+  // SOLID SHAPES ON TRANSPARENT PAPER, which is what a sprite is. Ken asked
+  // for "a solid red triangle on a transparent background": before `fill` the
+  // turtle could only outline, and with the pen left down a filled shape came
+  // out ringed in ink.
+  const tri = D.drawFromReply(JSON.stringify({ name: 'a red triangle',
+    turtle: 'fill crimson [ repeat 3 [ forward 100 right 120 ] ]' }), 'a solid red triangle');
+  const alpha = await new Promise(res => {
+    if (!tri) return res(null);
+    const im = new Image();
+    im.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = im.width; cv.height = im.height;
+      const c2 = cv.getContext('2d');
+      c2.drawImage(im, 0, 0);
+      const d = c2.getImageData(0, 0, im.width, im.height).data;
+      const at = (x, y) => { const i2 = (y * im.width + x) * 4;
+        return [d[i2], d[i2 + 1], d[i2 + 2], d[i2 + 3]]; };
+      let dark = 0, solid = 0;
+      for (let i2 = 0; i2 < d.length; i2 += 4) {
+        if (d[i2 + 3] > 200) { solid++;
+          if (d[i2] < 120 && d[i2 + 1] < 120 && d[i2 + 2] < 120) dark++; }
+      }
+      res({ corner: at(3, 3), middle: at(256, 300), dark, solid });
+    };
+    im.onerror = () => res(null);
+    im.src = tri.made.src;
+  });
+  const seeThrough = !!alpha && alpha.corner[3] === 0;
+  const filledSolid = !!alpha && alpha.middle[3] === 255 && alpha.middle[0] > 180
+    && alpha.solid > 5000;
+  const noOutline = !!alpha && alpha.dark === 0;
+  // the LAST exchange, which is now the triangle above -- that is what a
+  // follow-up like "make it bigger" would be a change to
+  const remembers = D.drawMemory().length === 2 && /fill crimson/.test(D.drawMemory()[1]);
+
+  // CUT OFF MID-ORDER is barely a failure for a turtle: what arrived is still
+  // a picture. (The orders are inside a JSON string, so a truncated answer
+  // ends mid-string and the whole object never closes.)
+  const truncated = '{"name":"a tree","say":"here","turtle":"color sienna\\nwidth 3\\n'
+    + 'repeat 5 [ fd 20 rt 20 ]\\nfd 30 rt 9';
+  const cutRes = D.drawFromReply(truncated, 'a tree');
+  const salvaged = !!cutRes && cutRes.made.cutShort === true && cutRes.made.strokes > 0;
+
+  // ...and an answer with no orders in it at all builds nothing
+  const before = benchN();
+  const refuses = D.drawFromReply('I would rather not, honestly.') === null
+    && D.drawFromReply(JSON.stringify({ name: 'x', turtle: 'hello there' })) === null
+    && benchN() === before;
+
+  const ok = drew === 48 && pen === 2 && chatty === 2 && prose === 0 && noScript
+    && runaway > 0 && runaway <= 40000
+    && landed && survives && redrawn && remembers && salvaged && refuses
+    && seeThrough && filledSolid && noOutline;
+  put((ok ? 'PASS' : 'FAIL') + ' Marty draws with a turtle  (snowflake-strokes=' + drew
+      + ' pen-lifts=' + (pen === 2) + ' skips-unknown-words=' + (chatty === 2)
+      + ' prose-draws-nothing=' + (prose === 0) + ' no-script-colour=' + noScript
+      + ' runaway-capped=' + runaway + ' lands-on-a-pad=' + landed
+      + ' survives-save=' + survives + ' redraw-replaces=' + redrawn
+      + ' remembers=' + remembers + ' salvages-cut-off=' + salvaged
+      + ' transparent=' + seeThrough + ' fill-solid=' + filledSolid
+      + ' fill-no-outline=' + noOutline + ' both-drawings-stay=' + redrawn
+      + ' refuses-nonsense=' + refuses + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// POST DOES NOT PULL THE LEVER. Ken: "when a bird delivers it turns on -- it
+// should only be on if it is explicitly turned on." A letter landing on a nest
+// inside a house that nobody has started used to start it, so a house you were
+// merely filling with post ran the moment the first letter arrived. The letter
+// still lands and still waits; the lever is what makes the house work.
+async function postDoesNotStartCheck(D) {
+  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 4000);
+  D.speed(1);
+  const rooms = [];
+  for (let i = 0; i < 10; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'room') rooms.push(t); }
+  const halver = rooms.find(r => r.userData.label !== 'the totaller');
+  const tot = rooms.find(r => r.userData.label === 'the totaller');
+  if (!halver || !tot) { put('FAIL post does not pull the lever  (zeno did not build)', 'fail'); return false; }
+  // ONLY the sender is switched on. Real seconds, because the pace is the
+  // wall clock and virtual ticks fly straight past it.
+  D.clickRaw({ kind: 'roomLever', room: halver });
+  const t0 = performance.now();
+  while (performance.now() - t0 < 7000) { D.frame(1, performance.now()); await maybeBreathe(); }
+  const nest = tot.__ctx?.standOcc?.userData?.holes?.[0]?.thing;
+  const landed = (nest?.userData?.pile || []).length;
+  const stayedOff = !tot.userData.dirty && !tot.__switched;
+  const totalNow = () => {
+    const v = tot.__ctx?.standOcc?.userData?.holes?.[1]?.thing?.userData?.value;
+    return v ? String(v.n) + '/' + String(v.d) : '-';
+  };
+  const untouched = totalNow() === '0/1';
+  // ...and the lever still starts it, with the waiting post to hand
+  D.clickRaw({ kind: 'roomLever', room: tot });
+  const t1 = performance.now();
+  while (performance.now() - t1 < 5000) { D.frame(1, performance.now()); await maybeBreathe(); }
+  const worksAfter = totalNow() !== '0/1';
+  const ok = landed > 0 && stayedOff && untouched && worksAfter;
+  put((ok ? 'PASS' : 'FAIL') + ' post does not pull the lever  (letters-waiting=' + landed
+      + ' stayed-off=' + stayedOff + ' total-untouched=' + untouched
+      + ' lever-then-works=' + worksAfter + ')', ok ? 'pass' : 'fail');
+  D.speed(1);
+  return ok;
+}
+
+// THE THINGS THAT WAIT ON YOU. Three of Ken's asks in one check, because all
+// three are about a thing being usable rather than merely present: an info
+// notebook you can give back, helpers that look at you, and a saved file a
+// person can actually edit.
+async function attentiveCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, bench: [], stations: {}, active: null });
+  await slowSettle(D, 3000);
+  const benchN = () => { let n = 0; for (let i = 0; i < 30; i++) { if (!D.bench(i)) break; n++; } return n; };
+
+  // 1. the info plaque hands out AND takes back
+  const made = D.makeFromReply(JSON.stringify({ name: 'a sailboat', parts: [
+    { shape: 'box', size: [0.14, 0.035, 0.34], at: [0, 0.02, 0], color: '#8b5a2b' }] }), 'a sailboat');
+  const model = made.thing;
+  D.hold(model); D.openHeldPanel(); D.clickBench(0.4, 1.5);
+  await slowSettle(D, 4000);
+  const tray = D.panelOf(model);
+  D.clickRaw({ kind: 'panelInfo', tray });
+  await slowSettle(D, 4000);
+  const handedOut = D.state.hand === 'notebook' && !!D.infoNbOf(model);
+  D.clickBench(1.4, 1.5);                       // set it down on the table
+  await slowSettle(D, 4000);
+  const withNb = benchN();
+  D.clickRaw({ kind: 'panelInfo', tray });      // ...and the same plaque takes it back
+  await slowSettle(D, 4000);
+  const givenBack = benchN() === withNb - 1 && !D.infoNbOf(model);
+
+  // 2. the helpers watch you, and what you pick up
+  const find = (kind) => { let n = null;
+    D.scene.traverse(o => { if (!n && o.__pick?.kind === kind && o.children.length) n = o; });
+    return n; };
+  const aimAt = (n, tx, tz) => {
+    if (!n) return null;
+    const f = new D.V3(Math.sin(n.rotation.y), 0, Math.cos(n.rotation.y));
+    const to = new D.V3(tx - n.position.x, 0, tz - n.position.z).normalize();
+    return f.dot(to);
+  };
+  for (let i = 0; i < 200; i++) D.frame(1, fnow());
+  const cam = D.cameraAt ? D.cameraAt() : { x: 0.40, z: 5.45 };
+  // WHOEVER IS THERE. The suite drives the app with ?demo=1, and in demo mode
+  // Dusty and Ruby are never built -- the load skips them -- so insisting on
+  // all three would be asserting something about the harness rather than
+  // about the workshop. Every helper that EXISTS must be looking at you, and
+  // the count is printed so nobody reads more into a pass than it says.
+  const watchers = ['dusty', 'ruby', 'marty'].map(k => find(k)).filter(Boolean);
+  const idleDots = watchers.map(n => aimAt(n, cam.x, cam.z));
+  const watchYou = watchers.length >= 1 && idleDots.every(d => d > 0.9);
+
+  // 3. a saved thing is a document a person can edit
+  const rec = { kind: 'thing', v: 4, thing: { kind: 'model', parts: [
+    { shape: 'box', size: [0.16, 0.03, 0.34], at: [0, 0.015, 0], color: '#8b5a2b' },
+    { shape: 'cone', size: [0.09, 0.26], at: [0, 0.16, 0.03], rot: [90, 0, 0], color: 'crimson' }] } };
+  const txt = D.prettyJSON(rec);
+  const lines = txt.split(String.fromCharCode(10));
+  const partLines = lines.filter(l => /"shape"/.test(l));
+  const readable = JSON.stringify(JSON.parse(txt)) === JSON.stringify(rec)
+    && partLines.length === 2                        // one part to a line
+    && /"size": \[0\.16, 0\.03, 0\.34\]/.test(txt);  // numbers kept together
+
+  // 4. and Marty turns to his OWN panel while you are using it
+  // The two places -- his panel and your face -- can lie close together when
+  // the window is narrow, so this does not demand a number of degrees, which
+  // would only be measuring the width of the test frame. It asks whether he
+  // is aiming at the place the code says he should be aiming at, and prints
+  // how far apart those places were, so a small turn is never mistaken for a
+  // missing one.
+  const marty = find('marty');
+  const doc = D.doc, panel = doc && doc.getElementById('martyPanel');
+  const inBox = doc && doc.getElementById('martyIn');
+  let busyAim = null, backAim = null, apartDeg = null, typedAim = null;
+  if (marty && panel && inBox) {
+    const PE = doc.defaultView.PointerEvent;
+    const wasDisp = panel.style.display;
+    panel.style.display = 'block';
+    const aimPt = (pt) => aimAt(marty, pt.x, pt.z);
+    panel.dispatchEvent(new PE('pointerenter', { bubbles: true }));
+    for (let i = 0; i < 260; i++) D.frame(1, fnow());
+    const look = D.panelLookPoint();
+    busyAim = aimPt(look);
+    const a = Math.atan2(look.x - marty.position.x, look.z - marty.position.z);
+    const b = Math.atan2(cam.x - marty.position.x, cam.z - marty.position.z);
+    apartDeg = Math.abs(((a - b) * 180 / Math.PI + 540) % 360 - 180);
+    panel.dispatchEvent(new PE('pointerleave', { bubbles: true }));
+    for (let i = 0; i < 260; i++) D.frame(1, fnow());
+    backAim = aimAt(marty, cam.x, cam.z);
+    inBox.focus();                                 // typing counts as using it
+    for (let i = 0; i < 260; i++) D.frame(1, fnow());
+    typedAim = aimPt(D.panelLookPoint());
+    inBox.blur();
+    for (let i = 0; i < 260; i++) D.frame(1, fnow());
+    panel.style.display = wasDisp;
+  }
+  const watchesPanel = busyAim != null && busyAim > 0.995
+    && typedAim != null && typedAim > 0.995 && backAim != null && backAim > 0.995;
+
+  const ok = handedOut && givenBack && watchYou && readable && watchesPanel;
+  put((ok ? 'PASS' : 'FAIL') + ' they wait on you  (info-handed-out=' + handedOut
+      + ' info-given-back=' + givenBack
+      + ' helpers-face-you=' + watchers.length + ':'
+      + idleDots.map(d => d == null ? '?' : d.toFixed(2)).join('/')
+      + ' saved-json-editable=' + readable
+      + ' marty-at-panel=' + (busyAim == null ? '?' : busyAim.toFixed(3))
+      + '/typing=' + (typedAim == null ? '?' : typedAim.toFixed(3))
+      + '/back-to-you=' + (backAim == null ? '?' : backAim.toFixed(3))
+      + ' places-apart=' + (apartDeg == null ? '?' : apartDeg.toFixed(1)) + 'deg'
+      + ')', ok ? 'pass' : 'fail');
+  return ok;
 }
 
 async function runOne(D, spec) {
@@ -104,6 +2538,16 @@ async function runOne(D, spec) {
     D.clickThing(arg); await slowSettle(D, 2000); D.clickBot(bot);
   }
   await slowSettle(D, 120000);
+  // LET THE SCHEDULER QUIESCE ITS FLAGS. A room can be left dirty by a pass
+  // that ran out of budget for its "nothing more to do" turn; the live app
+  // clears it on the very next frame, but a dump taken between passes caught
+  // it and a one-flag diff failed a byte-identical world. A few frames give
+  // every stale flag its clearing turn; content cannot change (no mail moves).
+  // 40, not 4: a dozing room's sleep-cache lasts 30 scheduler frames, and a
+  // final delivery that re-dirtied it clears only after the cache expires --
+  // half a second in the live app, an eternity to a dump taken sooner.
+  for (let i = 0; i < 40; i++) { D.frame(1, fnow()); if ((i & 7) === 7) await breathe(); }
+  await slowSettle(D, 20000);
   return JSON.stringify(D.dump());
 }
 
@@ -120,11 +2564,33 @@ async function runOne(D, spec) {
     window.__VERDICT = { ok: false, error: 'app never booted' };
     return;
   }
+  // WHICH COPY OF THIS PAGE IS RUNNING. A tab keeps the JavaScript it loaded
+  // with, so an old one can finish, say PASS, and write nothing to disk --
+  // which looks exactly like a suite that ran and a sink that failed. The
+  // stamp is printed first, so a stale tab is visible at a glance, and it
+  // names the file the verdict will land in.
+  put('suite loaded ' + new Date().toLocaleTimeString()
+      + '  ->  captures/verdict-'
+      + ((appURL || 'source').replace(/[^\w.-]/g, '_')) + '.json', 'dim');
   put('app booted: ' + frame.src, 'dim');
+  // and SILENT. A suite drives thousands of rounds; every one of them chirped
+  // through the speakers of whoever was in the room. Not setVolume -- that
+  // would write the mute into the workshop's own saved preference.
+  D.mute(true);
+  // AND THE CLOCK IS OURS. The app steps itself sixty times a second; while
+  // the suite blocked the thread that loop never ran, and every check was
+  // deterministic by accident of that. Now that the drivers yield -- so the
+  // page stays usable under the hand -- the app would run BETWEEN slices and
+  // step worlds behind the checks' backs. Measured the moment it happened: "a
+  // thing off the table is out of play" went still=false, because a thing the
+  // check had left sitting was moved while the check was not looking.
+  D.autoLoop(false);
 
   const make = new URLSearchParams(location.search).get('make');
   const dumps = {};
-  for (const spec of WORLDS) {
+  const wantGoldens = want('goldens');
+  if (!wantGoldens) put('skipped: the 13 golden worlds (?checks filter)', 'dim');
+  for (const spec of wantGoldens ? WORLDS : []) {
     const t0 = performance.now();
     try {
       dumps[spec.name] = await runOne(D, spec);
@@ -167,15 +2633,145 @@ async function runOne(D, spec) {
     return;
   }
 
-  const names = [...new Set([...Object.keys(golden), ...Object.keys(dumps)])];
+  let leakOK = true;
+  try { leakOK = want('leakCheck') ? await leakCheck(D) : true; }
+  catch (e) { leakOK = false; put('FAIL registers stay bounded  ' + e.message, 'fail'); }
+  let playOK = true;
+  try { playOK = want('outOfPlayCheck') ? await outOfPlayCheck(D, frame.contentWindow) : true; }
+  catch (e) { playOK = false; put('FAIL out of play  ' + e.message, 'fail'); }
+  let pauseOK = true;
+  try { pauseOK = want('pauseCheck') ? await pauseCheck(D) : true; }
+  catch (e) { pauseOK = false; put('FAIL pause  ' + e.message, 'fail'); }
+  let copyOK = true;
+  try { copyOK = want('copyCheck') ? await copyCheck(D) : true; }
+  catch (e) { copyOK = false; put('FAIL copies  ' + e.message, 'fail'); }
+  let r28OK = true;
+  try { r28OK = want('round28Check') ? await round28Check(D, frame.contentWindow) : true; }
+  catch (e) { r28OK = false; put('FAIL round-28  ' + e.message, 'fail'); }
+  let shelfOK = true;
+  try { shelfOK = want('shelfCheck') ? await shelfCheck(D) : true; }
+  catch (e) { shelfOK = false; put('FAIL shelf  ' + e.message, 'fail'); }
+  let bindOK = true;
+  try { bindOK = want('bindingsCheck') ? await bindingsCheck(D) : true; }
+  catch (e) { bindOK = false; put('FAIL bindings  ' + e.message, 'fail'); }
+  let inexOK = true;
+  let stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK, picOK, wholeOK, t3dOK, mtOK,
+      zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK;
+  let paceOK, foldOK, reachOK, makerOK, faceOK, pileOK, drawOK, postOffOK, waitOK;
+  try { waitOK = want('attentive') ? await attentiveCheck(D) : true; }
+  catch (e) { waitOK = false; put('FAIL they wait on you  ' + e.message, 'fail'); }
+  try { postOffOK = want('postDoesNotStart') ? await postDoesNotStartCheck(D) : true; }
+  catch (e) { postOffOK = false; put('FAIL post does not pull the lever  ' + e.message, 'fail'); }
+  try { drawOK = want('martyDraws') ? await martyDrawsCheck(D) : true; }
+  catch (e) { drawOK = false; put('FAIL Marty draws with a turtle  ' + e.message, 'fail'); }
+  try { faceOK = want('facing') ? await facingCheck(D) : true; }
+  catch (e) { faceOK = false; put('FAIL he faces you  ' + e.message, 'fail'); }
+  try { pileOK = want('bigPile') ? await bigPileCheck(D) : true; }
+  catch (e) { pileOK = false; put('FAIL a busy nest stays quick  ' + e.message, 'fail'); }
+  try { makerOK = want('martyMakes') ? await martyMakesCheck(D) : true; }
+  catch (e) { makerOK = false; put('FAIL Marty makes a thing  ' + e.message, 'fail'); }
+  try { paceOK = want('paceAndLeverCheck') ? await paceAndLeverCheck(D) : true; }
+  catch (e) { paceOK = false; put('FAIL a letter at a time  ' + e.message, 'fail'); }
+  try { foldOK = want('foldAliveCheck') ? await foldAliveCheck(D) : true; }
+  catch (e) { foldOK = false; put('FAIL a fold keeps nested work alive  ' + e.message, 'fail'); }
+  try { reachOK = want('reachAtPileCheck') ? await reachAtPileCheck(D) : true; }
+  catch (e) { reachOK = false; put('FAIL the hand is at the stack  ' + e.message, 'fail'); }
+  try { twinOK = want('undoTwinCheck') ? await undoTwinCheck(D) : true; }
+  catch (e) { twinOK = false; put('FAIL undo never twins  ' + e.message, 'fail'); }
+  try { nbOK = want('notebookCheck') ? await notebookCheck(D) : true; }
+  catch (e) { nbOK = false; put('FAIL the robot reads its own notebook  ' + e.message, 'fail'); }
+  try { mdOK = want('markdownCheck') ? await markdownCheck(D) : true; }
+  catch (e) { mdOK = false; put('FAIL a document arrives as a page  ' + e.message, 'fail'); }
+  try { postOK = want('postAcrossCheck') ? await postAcrossCheck(D) : true; }
+  catch (e) { postOK = false; put('FAIL a house posts to a house  ' + e.message, 'fail'); }
+  try { flyOK = want('flightCheck') ? await flightCheck(D) : true; }
+  catch (e) { flyOK = false; put('FAIL the airplane loops  ' + e.message, 'fail'); }
+  try { houseOK = want('houseFurnitureCheck') ? await houseFurnitureCheck(D) : true; }
+  catch (e) { houseOK = false; put('FAIL a glass house shows what it needs  ' + e.message, 'fail'); }
+  try { zenoOK = want('zenoCheck') ? await zenoCheck(D) : true; }
+  catch (e) { zenoOK = false; put('FAIL zeno\u2019s postman  ' + e.message, 'fail'); }
+  try { shapeOK = want('shapeDropCheck') ? await shapeDropCheck(D) : true; }
+  catch (e) { shapeOK = false; put('FAIL shape drops  ' + e.message, 'fail'); }
+  try { mtOK = want('modelTrailCheck') ? await modelTrailCheck(D) : true; }
+  catch (e) { mtOK = false; put('FAIL models fly and trails are things  ' + e.message, 'fail'); }
+  try { t3dOK = want('turtle3dCheck') ? await turtle3dCheck(D) : true; }
+  catch (e) { t3dOK = false; put('FAIL the turtle in the air  ' + e.message, 'fail'); }
+  try { wholeOK = want('importWholeCheck') ? await importWholeCheck(D) : true; }
+  catch (e) { wholeOK = false; put('FAIL a world arrives whole  ' + e.message, 'fail'); }
+  try { picOK = want('pictureCheck') ? await pictureCheck(D) : true; }
+  catch (e) { picOK = false; put('FAIL a picture arrives  ' + e.message, 'fail'); }
+  try { nestOK = want('nestedPanelCheck') ? await nestedPanelCheck(D) : true; }
+  catch (e) { nestOK = false; put('FAIL panels inside panels  ' + e.message, 'fail'); }
+  try { deadOK = want('stopsDeadCheck') ? await stopsDeadCheck(D) : true; }
+  catch (e) { deadOK = false; put('FAIL stopping a moving thing  ' + e.message, 'fail'); }
+  try { keepOK = want('keepsWhatItIsCheck') ? await keepsWhatItIsCheck(D) : true; }
+  catch (e) { keepOK = false; put('FAIL a thing keeps what it is  ' + e.message, 'fail'); }
+  try { spareOK = want('notSpareWordsCheck') ? await notSpareWordsCheck(D) : true; }
+  catch (e) { spareOK = false; put('FAIL a named thing is not spare words  ' + e.message, 'fail'); }
+  try { stopOK = want('stoppingCheck') ? await stoppingCheck(D) : true; }
+  catch (e) { stopOK = false; put('FAIL stopping sticks  ' + e.message, 'fail'); }
+  try { sceneOK = want('sceneryCheck') ? await sceneryCheck(D) : true; }
+  catch (e) { sceneOK = false; put('FAIL scenery is not scored  ' + e.message, 'fail'); }
+  try { inexOK = want('inexactCheck') ? await inexactCheck(D) : true; }
+  catch (e) { inexOK = false; put('FAIL inexact  ' + e.message, 'fail'); }
+  let turtleOK = true;
+  try { turtleOK = want('turtleCheck') ? await turtleCheck(D) : true; }
+  catch (e) { turtleOK = false; put('FAIL turtle  ' + e.message, 'fail'); }
+  let pgOK = true;
+  try { pgOK = want('pongGadgetsCheck') ? await pongGadgetsCheck(D) : true; }
+  catch (e) { pgOK = false; put('FAIL pong-gadgets  ' + e.message, 'fail'); }
+  put('');
+
+  const names = wantGoldens
+    ? [...new Set([...Object.keys(golden), ...Object.keys(dumps)])] : [];
   const bad = [];
   for (const n of names) {
     if (golden[n] === dumps[n]) put(`PASS ${n}`, 'pass');
     else { bad.push(n); put(`FAIL ${n}`, 'fail'); }
   }
   put('');
-  if (bad.length) {
-    put(`${bad.length}/${names.length} differ from golden`, 'fail');
+  if (bad.length || !leakOK || !playOK || !pauseOK || !copyOK || !r28OK || !shelfOK
+      || !bindOK || !inexOK || !turtleOK || !pgOK
+      || !paceOK || !foldOK || !reachOK || !makerOK || !faceOK || !pileOK || !drawOK
+      || !postOffOK || !waitOK) {
+    if (bad.length) put(`${bad.length}/${names.length} differ from golden`, 'fail');
+    if (!leakOK) put('a register grew without bound', 'fail');
+    if (!playOK) put('a thing off the table went on running', 'fail');
+    if (!pauseOK) put('a pause froze the workshop as well as the world', 'fail');
+    if (!copyOK) put('a copy shared its original\u2019s name', 'fail');
+    if (!r28OK) put('a round-28 behaviour regressed', 'fail');
+    if (!shelfOK) put('the shelf came up short', 'fail');
+    if (!bindOK) put('a binding did not travel', 'fail');
+    if (!inexOK) put('an inexact number misbehaved', 'fail');
+    if (!stopOK) put('a stopped behaviour would not stay stopped', 'fail');
+    if (!sceneOK) put('the ball scored against the scenery', 'fail');
+    if (!deadOK) put('a moving thing would not stop', 'fail');
+    if (!keepOK) put('a thing lost its name, look or bindings', 'fail');
+    if (!spareOK) put('a named thing was swallowed by a pad', 'fail');
+    if (!nestOK) put('a behaviour nested in a panel did not drive its thing', 'fail');
+    if (!picOK) put('a picture would not appear on its pad', 'fail');
+    if (!wholeOK) put('an imported world lost its connections', 'fail');
+    if (!t3dOK) put('the turtle could not fly', 'fail');
+    if (!mtOK) put('a model would not fly, or a trail was not a thing', 'fail');
+    if (!zenoOK) put('zeno\u2019s total was not exactly (2^k-1)/2^k', 'fail');
+    if (!shapeOK) put('a dropped shape was lost', 'fail');
+    if (!houseOK) put('a glass house showed the wrong furniture', 'fail');
+    if (!flyOK) put('the airplane would not take off, or its loop was not round', 'fail');
+    if (!postOK) put('a house posted to a house unseen, or a house stood idle', 'fail');
+    if (!mdOK) put('an imported document was not rendered as a page', 'fail');
+    if (!twinOK) put('undo minted a twin of a living thing', 'fail');
+    if (!nbOK) put('a robot could not read the notebook, or locked it', 'fail');
+    if (!paceOK) put('the postman ran ahead of her letters, or a lever would not stop', 'fail');
+    if (!foldOK) put('a fold froze the live panel nested inside', 'fail');
+    if (!reachOK) put('the robot\u2019s hand was not at the stack', 'fail');
+    if (!makerOK) put('what Marty made was not a thing, or a bad answer got through', 'fail');
+    if (!faceOK) put('a robot had its back to you when you walked in', 'fail');
+    if (!pileOK) put('a busy nest cost more than it should', 'fail');
+    if (!drawOK) put('the turtle would not draw, or drew what it should not', 'fail');
+    if (!postOffOK) put('a delivery started a house nobody had switched on', 'fail');
+    if (!waitOK) put('a notebook would not go back, a helper looked away, or a save was unreadable', 'fail');
+    if (!turtleOK) put('the turtle lost its way', 'fail');
+    if (!pgOK) put('pong from the shelf came apart', 'fail');
     for (const n of bad) {
       put(`\n--- ${n} ---`, 'dim');
       put('golden: ' + (golden[n] ?? '(missing)').slice(0, 400), 'dim');
@@ -186,7 +2782,30 @@ async function runOne(D, spec) {
     put(`all ${names.length} byte-identical`, 'pass');
     document.title = 'PASS';
   }
-  window.__VERDICT = { ok: !bad.length, bad, dumps };
+  window.__VERDICT = { ok: !bad.length && leakOK && playOK && pauseOK && copyOK && r28OK
+                        && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
+                        && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
+                        && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
+                        && twinOK && nbOK,
+                       bad, leakOK, playOK, pauseOK, copyOK, r28OK, shelfOK, bindOK, inexOK,
+                       turtleOK, pgOK, stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK,
+                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, dumps };
+  // AND ONTO DISK. Reading a verdict back out of the browser costs a round
+  // trip through a channel that, on a loaded machine, times out more often
+  // than it answers -- eight minutes of polling for one line of text. The
+  // sink that takes the goldens takes this too, so `cat captures/verdict.json`
+  // answers instead. Named after the build, so two runs at once do not
+  // overwrite each other.
+  try {
+    const tag = (appURL || 'source').replace(/[^\w.-]/g, '_');
+    await fetch('/capture?name=verdict-' + tag, { method: 'POST', body: JSON.stringify({
+      filtered: CHECKS_FILTER.length ? CHECKS_FILTER : undefined,
+      ok: window.__VERDICT.ok,
+      app: frame.src,
+      lines: [...logEl.querySelectorAll('span')].map(s2 => s2.textContent.trim())
+        .filter(t => /^(PASS|FAIL|ERR|all )/.test(t)),
+    }, null, 1) });
+  } catch (e) {}
 })();
 </script>
 </body>

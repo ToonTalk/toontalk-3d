@@ -84,9 +84,10 @@ ABOUT = ('ACTIVITY 6\nAll the positive rationals\n\n'
          'and counted off.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 24 and pull the\n'
-       'lever on the All Fractions\n'
-       'room.\n\n'
+       'Pull the lever on the All\n'
+       'Fractions room — and pull it\n'
+       'again when you have seen\n'
+       'enough.\n\n'
        'Five rooms wake in turn as the\n'
        'first fraction reaches them.\n\n'
        'Merge lags: it will not hand\n'

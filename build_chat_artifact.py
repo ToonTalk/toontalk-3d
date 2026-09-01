@@ -34,7 +34,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, 'toontalk-3d.html')
 OUT = os.path.join(HERE, 'toontalk-3d.chat.html')
 PACK = os.path.join(HERE, 'toontalk-3d-models.json')
-MODELS = ['robot_v4.glb', 'dusty_v1.glb']
+MODELS = ['robot_v4.glb', 'dusty_v9.glb']
 THREE_VERSION = '0.185.0'
 PACK_FORMAT = 'toontalk-3d-models-1'
 

@@ -65,5 +65,18 @@ def pad(text, **look_kw):
     return p
 
 
+LOOK = dict(bg='#2a2135', ink='#e8d7ff', font='sans', h=0.42)
+
+
+def gadget(name, lid, bot, work, look=None, bench=None):
+    """A pad whose panel holds a robot team and the box it works on -- and,
+    when it needs company (a bell, a score), things on the panel's bench."""
+    return {'kind': 'text', 'text': name, 'gadget': True,
+            'lid': lid, 'evt': 'evt-' + lid,
+            'look': dict(look or LOOK),
+            'panel': {'kind': 'world', 'v': 3, 'bench': bench or [],
+                      'stations': {'stand': work}, 'active': bot}}
+
+
 def write_beh(name, bench):
     return write(name, bench, HERE)                           # noqa: F405

@@ -36,9 +36,8 @@ ABOUT = ('MOVING\n\n'
          'moving right".')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 200, Speed to\n'
-       '8x, and give the work box to\n'
-       'the Mover.\n\n'
+       'Set Speed to 8x and give the\n'
+       'work box to the Mover.\n\n'
        'The star slides right and\n'
        'stops at the table\'s edge.\n\n'
        'Pick up the step, type a\n'

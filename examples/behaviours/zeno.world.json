@@ -1,0 +1,249 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "room",
+    "label": "the halver",
+    "opaque": false,
+    "dirty": false,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 9901,
+         "nestGuid": "zeno-post",
+         "label": "to the total"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "2"
+         },
+         "op": "+",
+         "label": "the fraction"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "the halver",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "wildNumber"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "newNumber"
+       },
+       {
+        "type": "setValue",
+        "value": {
+         "n": "1",
+         "d": "2"
+        },
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 9901,
+         "nestGuid": "zeno-post"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "2"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": -0.85,
+   "z": 1.45
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "the totaller",
+    "opaque": false,
+    "dirty": false,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9901,
+         "guid": "zeno-post",
+         "label": "the post",
+         "hasEgg": false,
+         "pile": []
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+",
+         "label": "the total so far"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "the totaller",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9901,
+         "guid": "zeno-post",
+         "label": "the post",
+         "hasEgg": false,
+         "pile": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "2"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.55,
+   "z": 1.45
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "ZENO'S POSTMAN\n\nThe left house halves: its\nrobot copies the fraction,\ngives the copy to the bird,\nand drops a x1/2 badge on\nwhat is left. 1/2, 1/4,\n1/8, ...\n\nThe right house totals: its\nrobot takes each delivery\noff the nest and drops it\non the running total. A\nnumber dropped on a number\nADDS -- the total IS the\narithmetic."
+   },
+   "x": -0.75,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WHY IT NEVER GETS TO 1\n\nThese numbers are EXACT.\nAfter 20 deliveries the\ntotal is not 0.99999-ish,\nit is\n\n   1048575\n   -------\n   1048576\n\nRead it off the block: the\nbottom doubles each time\nand the top stays one\nbehind it. That missing\nONE PART is why the total\ncreeps toward 1 for ever\nand never arrives."
+   },
+   "x": -0.05,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nPull the lever on each\nhouse (the halver's and\nthe totaller's), and\nwatch the bird carry the\npost between them.\n\nThe totaller SLEEPS when\nthe nest is empty -- it\nworks only when the post\ncomes. \".\" on a house\nstops it."
+   },
+   "x": 0.65,
+   "z": 2.25
+  }
+ ],
+ "stations": {},
+ "active": null
+}

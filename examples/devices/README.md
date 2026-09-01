@@ -32,7 +32,7 @@ A robot that types what you type. The **Scribe** is handed
 beside them*. Two steps: take the key off the nest, join it onto the right edge
 of the pad.
 
-Set Rounds to 500, give it the work box, and type. It shrinks and waits between
+Give it the work box and type. It shrinks and waits between
 key presses, which is the whole of "waiting for input".
 
 Regenerate with `python make_keys.py`.

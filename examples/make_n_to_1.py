@@ -98,7 +98,7 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'Each round one link lands on\nthe nest marked "the list":\n'
                   f'{N}, then {N - 1}, and so on down to\n1, and last a box with no\n'
                   'holes, which means the end.\n\n'
-                  'Set Rounds high enough to\nreach it.'),
+                  'It stops by itself at the\nend: an empty box fits no\nthought.'),
      'x': -0.35, 'z': 2.15},
     {'thing': txt('BOTH FORMS AT ONCE\n\nThe house reads the list as it\n'
                   'arrives and builds the same\nthing as a flat box.\n\n'

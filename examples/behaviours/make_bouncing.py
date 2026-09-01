@@ -64,9 +64,10 @@ ABOUT = ('BOUNCING\n\n'
          '  any     move')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 2000, Speed to\n'
-       '8x, and give the work box to\n'
-       'the team leader.\n\n'
+       'Set Speed to 8x and give the\n'
+       'work box to the team leader.\n'
+       'It runs until you take the\n'
+       'box back or press Pause.\n\n'
        'The star runs to the right\n'
        'edge, turns round, runs back,\n'
        'turns again, and keeps going.\n\n'

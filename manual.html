@@ -234,7 +234,9 @@ can set it. Send the thing's own bird a box:</p>
 of your own. A number takes background, colour and font; its size is its own.
 Every one of these is a real box on a page of the thing's <b>info notebook</b>
 (the ⓘ on its panel): take one out, write a different word on its last pad,
-and give it to the bird.</p>
+and give it to the bird. The ⓘ hands the notebook to you and then changes to
+a return arrow &mdash; press it again and the notebook goes back where it came
+from, from wherever on the table it had got to.</p>
 <p>So a grey label with white writing is four messages, and a robot shown those
 four messages can make one for every picture it meets.</p>
 
@@ -373,9 +375,10 @@ things</em> — "hole 1 of what it was given", never places in your world. Leave
 the bubble and the daydream rewinds; the robot keeps the lesson.</p>
 <p>Its thought bubble shows the <b>condition</b>: the shape it must be given
 before it will run. Give a trained robot something that fits and it gets to
-work at once, repeating while the condition still matches, up to the Rounds
-limit. <b>Stop</b> does not freeze it mid-move: the round it is in finishes at
-once, so nothing is left half done, and Run carries on from there. Drop one trained robot on another to form a <b>team</b>: the members
+work at once, repeating <b>while the condition still matches</b> — a finite
+job ends itself, because at the end the condition stops fitting or the robot
+dozes on an empty nest. The bar’s <b>Pause</b> button holds the whole world
+still, mid-stride, and Run carries on exactly from there. Drop one trained robot on another to form a <b>team</b>: the members
 line up on the floor behind the leader, each with its own small thought over
 its head, and whichever one recognises what the team was given walks up to the
 desk and does the work while the others wait their turn.</p>
@@ -493,6 +496,10 @@ a little room of its own — walk back out through its door. If the room was
 running when you opened the door, its robot picks straight back up once it has
 grown to full size. Birds fly in and out of rooms to reach their nests, so a
 machine in a box can feed a nest on your table.</p>
+<p><b>The robot turns to face you when you step in.</b> Through glass walls a
+robot walks to whatever its round touched, so it may be looking anywhere when
+you open the door &mdash; it squares up to its desk between rounds, and if you
+catch it mid-round it turns round to greet you before carrying on.</p>
 <p><b>Robots can build rooms too.</b> A robot may take a room from the stack,
 drop a robot in and something for it to work on, and stow the whole house in a
 hole of the box it is holding — a machine that builds machines. Rooms inside
@@ -520,8 +527,17 @@ word list or a grammar can be written elsewhere and brought in;</li>
 </ul>
 
 <h2 id="where">Where a thing is</h2>
+<p>A thing riding on a pad is part of a <b>scene</b>. It travels with the pad,
+and clicking it does not lift it — wake <b>Dusty</b> and click to take one off,
+click what he is holding to take it back into your hand, and drop it on the pad
+to put it back.</p>
 <p>A thing standing on the table has a <b>place</b>, and its place is data like
-everything else. Send its bird:</p>
+everything else. So does a thing <b>riding on a pad</b> — then the pad is its
+<b>field</b>, and its place is measured from the middle of that field in the
+same steps. Everything below means the same in both, which is why a behaviour
+trained on the table works unchanged on a field, and why <em>the edge</em>
+means the edge of whatever you are standing on.</p>
+<p>Send its bird:</p>
 <table>
 <tr><th>message</th><th>what it does</th></tr>
 <tr><td><code>[set | across | 1/2]</code></td><td>put it there. Zero
@@ -535,17 +551,39 @@ now, rather than to a place</td></tr>
 <tr><td><code>[query | position | bird]</code></td><td>tell that bird
 where it is</td></tr>
 </table>
+<p>And a thing can have a <b>speed</b>, which is when it starts moving on its
+own — on the world's clock, smoothly, whether or not any robot is doing
+anything:</p>
+<table>
+<tr><th>message</th><th>what it does</th></tr>
+<tr><td><code>[set | speed | [1/2 | -1/3]]</code></td><td>off it goes,
+half a step a second to the right and a third of one away from you</td></tr>
+<tr><td><code>[set | speed | [-1/2 | ]]</code></td><td>an <b>empty hole</b>
+leaves that one alone — so turning a ball round is one message, and it keeps
+whatever it was doing the other way</td></tr>
+<tr><td><code>[move | speed | [0 | -1/9]]</code></td><td>add to what it is
+doing, rather than replace it</td></tr>
+<tr><td><code>[query | speed | bird]</code></td><td>tell that bird how fast
+it is going</td></tr>
+<tr><td><code>[set | speed | [0 | 0]]</code></td><td>stop</td></tr>
+</table>
+<p>A thing with a speed is the difference between a game and a demonstration:
+its robots stop being responsible for moving it and are left with the only
+interesting question, which is what to do when it hits something.</p>
 <p>And three things to doze on:</p>
 <table>
 <tr><th>channel</th><th>the nest holds</th></tr>
 <tr><td><code>[listen | position | bird]</code></td><td>the latest
 <code>[across | away]</code></td></tr>
 <tr><td><code>[listen | edge | bird]</code></td><td>one pad saying
-which edge of the table it is against — <em>left</em>, <em>right</em>,
-<em>near</em>, <em>far</em> — or <em>none</em>. A <b>reading</b>, so it is
-never empty</td></tr>
-<tr><td><code>[listen | touch | bird]</code></td><td>a live bird to
-whatever has just run into it</td></tr>
+which edge of the table — or of its field — it is against:
+<em>left</em>, <em>right</em>, <em>near</em>, <em>far</em>, or <em>none</em>.
+A <b>reading</b>, so it is never empty</td></tr>
+<tr><td><code>[listen | touch | bird]</code></td><td>a box of two:
+<code>[a live bird to what it has run into | which side of it that is on]</code>,
+or <code>[nothing | none]</code>. The <em>side</em> is the half that makes it
+usable: run into something on your <em>left</em> and the thing to change is
+which way you are going across, not away. Also a reading</td></tr>
 </table>
 
 <h2 id="behaviours">Behaviours</h2>
@@ -556,6 +594,46 @@ speak about <em>my thing</em> through a live bird. Load
 <kbd>.</kbd> stops it, and waking <b>Ruby</b> and clicking it lets go again.
 Binding is not editing — nothing inside the behaviour changes except which
 thing its bird is addressed to.</p>
+<p><b>SPACE and “.” act on whatever the pointer is over</b>, so the keyboard
+always belongs to the workshop: a button you have just clicked hands it back at
+once, and only a field you are genuinely typing in keeps it.</p>
+<p>And a pad with things riding on it is a <b>scene</b>: SPACE on the pad
+switches on <em>everything standing on it</em>, and <kbd>.</kbd> stops the lot.
+The pitch is the game; the ball and the bat are its parts.</p>
+<p>Point at any pad and press <kbd>Enter</kbd> and the camera goes and looks
+<b>straight down at it</b>, framed so the whole face fills the window however
+wide it is. That is <b>playing</b>: the workshop's cards, its tooltips, its
+wiggle and the pointer itself all get out of the way, because they belong to
+the bench and not to the game. The bar stays, because <b>Pause</b> lives there.</p>
+<p> <kbd>Escape</kbd> comes back to the view you left. That is how you
+play a game that lives on a pad — and it is not a screen or an overlay but
+this workshop’s own camera, moved, so everything still works from there: the
+pointer still drives what follows it, SPACE and <kbd>.</kbd> still switch
+things on and off, Dusty still takes a piece off the board.</p>
+<p>Holding a pad is a different thing: that is for <b>reading</b> it and
+<b>typing</b> on it, which is why space writes a space when a pad is in your
+hand. Holding one, <kbd>Ctrl</kbd> with the <b>left and right</b> arrows sets
+its width and <b>up and down</b> its height, so a board can be made taller
+without writing a message box.</p>
+<p>And whether a thing is <b>in the way</b> is data like everything else:</p>
+<table>
+<tr><th>message</th><th>what it does</th></tr>
+<tr><td><code>[set | solid | no]</code></td><td>scenery — everything passes
+straight through it</td></tr>
+<tr><td><code>[set | solid | yes]</code></td><td>an obstacle again</td></tr>
+<tr><td><code>[query | solid | bird]</code></td><td>which is it</td></tr>
+</table>
+<p>Solid is the default and has to be: it is what makes a ball bounce off a
+bat. A score, a title, a line down the middle of a pitch is told otherwise
+once, and is then simply part of the scenery.</p>
+<p>A behaviour that has been switched on runs <b>until you switch it off</b>
+— and if it carries a <b>speed</b>, that waits for the switch too: SPACE
+starts the whole thing, robots and motion together, and <kbd>.</kbd> stops the
+whole thing.</p>
+<p>Dropped in the <b>middle</b> of another pad it does not bind — it climbs
+aboard as part of the scene, the way a ball is added to a pitch. To give a
+<em>pad</em> its behaviour, drop it on the pad’s <b>edge</b>; anything that is
+not a pad binds wherever you drop it.</p>
 <p>Set one down on its own and switch it on and it does its thing <em>to
 itself</em>. That is not a demonstration mode: <em>my thing</em> means itself
 until somebody has said otherwise, so the shelf is legible by watching.</p>
@@ -592,8 +670,396 @@ receives the same mail: two robots can watch one keyboard, and a world saved
 with a device nest in it comes back wired up.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> load <em>devices/keys</em> from the examples,
-  set Rounds to 500, give the box to the Scribe, and type.</div>
+  give the box to the Scribe, and type.</div>
 </div>
+
+<p><b>Dusty's bag</b> is an undo for a gesture you made: whatever you last
+vacuumed rides on his head, and clicking it puts it back in your hand. A robot
+<em>replaying</em> what it learned does not fill it — it made no gesture, so
+there is nothing to give back — but a robot you are <em>training</em> does,
+because that is you doing it.</p>
+
+<p><b>The pen.</b> <b>[set | pen | down]</b> makes a thing draw as it moves:
+every move leaves a chalk stroke from where it was to where it is, on the
+table or on the field it rides. <b>[set | pen | up]</b> lifts it,
+<b>[set | pen | clear]</b> rubs its lines out, <b>[query | pen | bird]</b>
+answers “down” or “up”. The strokes are chalk, not things: they cannot be
+picked up and they do not save. The turtle answers the words
+<b>pendown</b> and <b>penup</b> posted to its letterbox.</p>
+
+<p><b>A turtle, and it is not built in.</b> `examples/behaviours/turtle`
+takes Logo’s two orders — <b>[forward | 3/10]</b> and <b>[right | 90]</b> —
+and neither exists in the workshop. The turtle keeps a NEST as its letterbox;
+give an order to the bird and she posts it; the robot whose thought names that
+word wakes, does it, and eats the order. Forward is
+<em>across + n × sin(heading)</em> and <em>away + n × cos(heading)</em>, which
+is why it had to wait for approximate numbers: before them a turtle could only
+have turned in quarters. An idle turtle is asleep and costs almost nothing. And an order posted to a
+turtle nobody has switched on WAKES it: her nest was only asleep inside the
+closed panel, and the post hydrates the panel and starts the team.</p>
+
+<p><b>Some numbers are approximate.</b> Hold a number and type <b>sin</b>,
+<b>cos</b> or <b>root</b> and it takes that badge. Drop a <b>sin</b> badge on a
+number of DEGREES and it becomes its sine; drop a <b>root</b> badge showing 2
+on a number and it becomes that number’s square root. Those answers are
+approximations, so they wear a wavy equals and read as decimals:
+<b>≈ 0.707106781187</b>. An approximation is dressed differently all
+over: a <b>broken frame</b> on every face, so it reads as not-exact at
+arm&rsquo;s length; a words face that reads it <b>aloud</b> (&ldquo;about one
+point four one four two…&rdquo; — never the trillion-part fraction
+spelled out); and an underside that owns up: <i>not exact — only the
+first twelve decimal places are kept</i>. Touch an approximation with anything and the answer
+is approximate too — that is the only way an exact number ever becomes
+inexact. A root that comes out whole stays exact: the square root of 4 is
+plainly 2.</p>
+
+<p>The sums are worked out from series over fractions, never from the
+machine’s own sine, so every machine gets the same twelve decimal places and
+a saved world replays digit for digit.</p>
+
+<p><b>Size is sayable.</b> [set | size | 3/2], [move | size | 1/4],
+[query | size | bird] — the same number the held card’s + and − buttons
+step, and every kind of thing has one. And [set | speed | …] now announces
+the new speed on the thing’s #speed channel, so a behaviour can react to how
+fast its thing is going.</p>
+
+<p><b>The shelf is fifteen.</b> The second six anima-gadgets: <em>grow when
+bumped</em>, <em>shrink when bumped</em>, <em>make a sound on hit</em>,
+<em>reverse on collision</em>, <em>speed limit</em>, and <em>send 1 to the
+score when hit</em> &mdash; and three more since: <em>following up and
+down</em>, <em>bouncing at a speed</em> and <em>reverse a speed on
+collision</em>. BUMPED means one thing running into another: being
+<em>touched</em> is what a click does, and a click picks a thing up, so
+nothing you do with the pointer sets these off. (A message may still say
+<b>touch</b>, which every saved world spells that way; <b>bump</b> and
+<b>hit</b> mean the same.) The bump gadgets DOZE until something actually
+runs into their thing, and act once per change of contact. The speed limit weighs the
+speed against the limit on an ordinary scale — the scale is the if — and is
+born too fast on purpose, so SPACE alone shows it braking itself. Reverse
+handles things and leaves edges to <em>bouncing</em>: bind both to one star
+and you have a pong ball with no training anywhere.</p>
+
+<p><b>A copy is wholly its own.</b> Whether it comes from Mimi, off a
+notebook page, or out of a robot’s thought, everything <em>inside</em> the copy
+gets fresh names — its own senses, its birds to itself, riders’ wiring to each
+other — so a copied game and the original play side by side without crossing.
+What a copy <em>refers to outside itself</em> stays shared on purpose: a copied
+bird serves the same nest, a copied nest joins the original’s flock, and both
+bats hear the same pointer.</p>
+
+<p><b>Pause stops the robots, and only the robots.</b> While it is paused no
+robot takes a fresh turn and nothing drifts under a speed a behaviour gave it
+— but your hands still work, Mimi still copies, birds finish their deliveries
+and eggs still hatch. Press Run and the robots carry on from where they
+stood.</p>
+
+<p><b>A game resizes whole — and still plays.</b> Hold a scene — a pitch
+with its ball and bat riding on it — and the + and − buttons on the card
+resize everything together. A rider’s place is said in the field’s own
+units whatever size it is drawn, so the same program plays the same game
+at every size.</p>
+
+<p><b>The game starts at the ball.</b> SPACE on a thing that has behaviours
+BOUND to it switches them all on as one, and “.” stops them — the player’s
+eye is on the ball, not on the cards that drive it. And a behaviour switched
+on while its bound thing is not here says so, and says what to do: wake Ruby
+to make it work on itself, or drop it on a new thing.</p>
+
+<p><b>Stopping stops the moving too.</b> A thing that is travelling under a
+speed rests where it is when you press &ldquo;.&rdquo; on it, and goes on again
+at the same speed when you press SPACE &mdash; whether the speed came from a
+behaviour bound to it or from a message you sent by hand.</p>
+
+<p><b>A paused workshop looks paused.</b> Nothing is moving, so there is no
+motion to notice the absence of: the light goes cold and low instead, and the
+ground goes blue. Press Run and the warmth comes back.</p>
+
+<p><b>A named thing is not spare words.</b> Pads join at the edges &mdash;
+&ldquo;Talk&rdquo; on the right of &ldquo;Toon&rdquo; makes
+&ldquo;ToonTalk&rdquo; &mdash; but a pad that has a NAME, or that behaviours
+are bound to, will not be swallowed that way: it says so and stays whole.
+Drop it in the middle of a pad instead and it rides there.</p>
+
+<p><b>Nothing builds a face that nobody can see.</b> A pad's face is a
+canvas, and finding the largest type that still fits means measuring the
+words again at every size it tries &mdash; about a millisecond. A behaviour's
+robots build a message and hand it to a bird every round, inside a folded
+panel where no face can be seen by anybody, so pads built out of sight
+record their words and paint nothing. The face appears the moment something
+could look at it, and the copies that are consumed within the round are never
+painted at all &mdash; and since a face that is never painted needs no canvas
+either, one is not made until the first time something is drawn on it. A
+robot's round went from 8.2 milliseconds to 2.8.</p>
+
+<p><b>A world imported mid-project arrives whole.</b> Its notebook&rsquo;s
+FIRST page is the entire world in one long box, with every hole named; the
+pages after it are the pieces on their own. Take the box and everything that
+comes out of it still knows everything else that came out with it &mdash;
+because a page hands out a copy, every copy is renamed so it cannot steal the
+original&rsquo;s mail, and renaming a whole box at once keeps the names inside
+it agreeing. Lifting a thing out of a box afterwards is a move, not a copy,
+so nothing is renamed again. Take page one twice and you get two worlds that
+share no names at all, each wired to itself.</p>
+
+<p><b>Robots in glass houses walk their rounds.</b> A transparent house used
+to show its robot swaying while the work happened invisibly; now the
+miniature walks to each hole its round actually touched, bows at it, and
+returns to the desk. A robot WOKEN BY MAIL performs its round too, and its
+walk outlasts the round: a house driven by post is busy for the single instant
+the round takes and quiet again immediately, which left the very robots an
+activity is built around standing still. And a house lays out the STACKS AND
+TOOLS its robot needs, so a round that fetches a fresh number is seen going to
+a number stack for it. Only what that robot's program calls for is shown: a house
+whose robot makes nothing has nothing standing in it, and a house with its
+walls solid has none of it at all.</p>
+
+<p><b>The turtle is a dispenser as well as a pen.</b>
+<b>[drop | sphere | 1/10]</b> &mdash; or cube, tube, cone &mdash; sets a solid
+of that size down at the thing&rsquo;s position and orientation, in the
+pen&rsquo;s colour. Dropped shapes join the pen&rsquo;s current trail, so a
+sculpture of shapes and lines sweeps up as ONE thing and saves like any
+trail. A tube lies along the way the thing is pointing.</p>
+
+<p><b>A trail is a thing.</b> Wake Dusty and point him at any stroke: the
+whole trail, from pen down to pen up, goes into his bag as ONE object &mdash;
+take it back out and set it down anywhere, save it with the world, sweep it
+up again. A turtle&rsquo;s drawing is a sculpture once it is finished.</p>
+
+<p><b>Models can be imported.</b> A model is a thing built of PARTS &mdash;
+boxes, spheres, cylinders, cones, each with a place, a turn and a colour
+&mdash; small enough to write by hand and read back. <b>Import file</b> on a
+<code>.thing.json</code> carrying one puts it in your hand;
+<code>examples/models/</code> has a toy airplane and a dragonfly, both facing
+heading zero. Drop the 3D turtle behaviour on one and it flies. An import
+always arrives with fresh names, so importing the same file twice gives two
+things that share nothing.</p>
+
+<p><b>A bird flies house to house.</b> Mail from one house to another crosses
+your table in full view, the same way mail from a house to a nest on the desk
+does &mdash; which is the flight that says what an activity is doing, since in
+<code>activity1</code> the only nests <b>Add 1</b> feeds are the ones inside
+<b>Doubler</b> and <b>Split</b>. Every nest that answers to the name is fed,
+one bird apiece &mdash; and a letter posted while she is still in the air JOINS
+HER, so one bird flies at her own pace however fast the sender runs, and sets
+her whole post down in the order it was sent. A folded behaviour&rsquo;s letterbox is not a house: its post
+arrives at once, or a turtle&rsquo;s orders would each take a second to
+land.</p>
+
+<p><b>A document arrives as a page.</b> Import a <code>.md</code> file and the
+pad renders the markdown rather than quoting it: headings in their sizes,
+bullets hanging, numbered lists, quotes ruled down the side, fenced code in a
+mono face on a tint, and <b>bold</b>, <em>italic</em> and <code>code</code> read
+inside a line. Anything markdown can do that a pad cannot show &mdash; a table,
+a link &mdash; stays as its own plain text rather than disappearing. It is a
+mark on the PAD, not on the file, so it survives a save, a copy, and a robot
+handing the pad to a bird. A page is drawn at more pixels than a pad usually
+gets, because twenty lines of small type need them where one word does not.</p>
+
+<p><b>A long document has pages.</b> A page is laid out at a size meant to be
+READ, and what does not fit starts the next page &mdash; the behaviours README
+comes in at twenty-three of them, numbered in the corner. <b>]</b> and
+<b>[</b> (or <b>PageDown</b> and <b>PageUp</b>) turn the page you are pointing
+at or holding; the arrows are left alone, since they already turn a pad. The
+page you left it on is part of the pad and travels with it.</p>
+
+<p><b>A nest shows ten and says how many more.</b> At Instant speed a sender
+can outrun the robot reading its mail for as long as it likes &mdash;
+zeno&rsquo;s halver posts as fast as it runs and the totaller takes one a round
+&mdash; so a nest may hold hundreds. It stands ten of them up, with
+<em>&hellip; 152 newer &hellip;</em> over the rest, and mail that arrives into
+a backlog is tucked straight onto the pile rather than performed one letter at
+a time.</p>
+
+<p><b>Behind glass, the post is paced by its own delivery.</b> A house that
+has handed a letter to a courier waits for it to be <em>on the nest</em>
+before taking another round &mdash; so what you watch is every delivery, one
+bird at a time, and stopping a house stops its arrivals within about one
+flight. No backlog can build up behind your back; only Instant speed lets a
+sender run ahead.</p>
+
+<p><b>The lever means stop.</b> A house woken by post is only briefly
+&ldquo;busy&rdquo; &mdash; between letters its robot dozes over the nest
+&mdash; but the switch remembers being thrown: a house you set going stays
+&ldquo;on&rdquo; through its dozes, so pressing the lever stops it whatever
+instant you catch it in, and pressing it again sets it going.</p>
+
+<p><b>Panels have doors.</b> Every panel carries the same door a house has;
+walk through it and the panel&rsquo;s world takes the stage at full size, its
+robots running where you can watch them, the tall door leading back out.</p>
+
+<p><b>A panel dropped on a panel nests whole.</b> The card and its tray both
+move onto the group&rsquo;s own bench, shrinking with its world, visibly part
+of it. The nested gadget drives the group&rsquo;s subject, and lifting it back
+out restores its independence.</p>
+
+<p><b>Folding a panel never freezes what lives inside it.</b> The knob folds
+a panel back into its thing &mdash; but a running panel nested inside is live
+work, and a fold over live work keeps the tray on the bench, closed, where
+its robots carry on out of sight. Mail addressed to a letterbox inside a
+folded panel still arrives, and the bird comes down on the thing the
+behaviour drives &mdash; the airplane, not the empty spot where its panel
+used to stand.</p>
+
+<p><b>The robot&rsquo;s hand is at the stack.</b> Taking from a pile, the
+robot picks the arm pose that meets the pile-top&rsquo;s height and walks to
+where that pose&rsquo;s claw lands on the pile &mdash; so it reaches the top
+number itself, not a spot beside it, and a drop onto a pile is released at
+the target rather than floating over from desk height. A pile taller than
+the arm is reached at full stretch, directly underneath, and the top floats
+the last of the way into the claw.</p>
+
+<p><b>The robot reads its own notebook.</b> Each round, the first step that
+looks in the notebook takes a snapshot of its pages, and the whole round reads
+from that. So the notebook is never locked by a robot: hold it, flip it, edit
+it mid-run &mdash; the round is untouched, and the next round sees what you
+changed. What a robot FILES still goes into the real notebook, because filing
+is how a robot publishes.</p>
+
+<p><b>Undo never mints a twin.</b> Undoing a drop brings back the very thing
+that moved &mdash; out of whatever tray or hole it landed in &mdash; never a
+fresh copy of it. A live name is one thing, through every undo.</p>
+
+<p><b>The robot reaches for the top of the pile.</b> Taking a delivery off a
+nest, the arm rises to where the top actually stands and grabs it there. A pile
+taller than the arm is grabbed at full stretch, the thing crossing the last of
+the gap on its way into the claw.</p>
+
+<p><b>Stepping inside is the training view.</b> Walk through a house&rsquo;s
+door and the camera settles at the workshop&rsquo;s own vantage &mdash; over the
+robot&rsquo;s shoulder, its desk and work spots in front of it &mdash; the same
+tableau as training a robot or watching one you have just trained. Walking back
+out settles it the same way.</p>
+
+<p><b>A running robot does not freeze the switches.</b> A house and a
+behaviour can be switched on and off with SPACE and &ldquo;.&rdquo;, or by the
+house&rsquo;s lever, whatever else is working &mdash; including while you are
+standing inside another house whose robot is mid-round. What a robot is working
+on is still off limits while it works; a switch never was.</p>
+
+<p><b>A pause cuts the power.</b> While the world is paused the robots hold
+still &mdash; no swaying behind glass, no walking a round, no smoke from the
+chimney. Birds still finish their deliveries and the levers still swing, because
+a pause is the robots stopping, not the air freezing.</p>
+
+<p><b>The edge speaks.</b> A thing standing against the table&rsquo;s edge
+and told to walk into it says so &mdash; <em>&ldquo;that move could not go
+anywhere&rdquo;</em> &mdash; instead of silently ignoring the order.</p>
+
+<p><b>A thing can fly.</b> <b>[set | up | 1/2]</b> floats it above the table;
+<b>[move | yaw | 90]</b>, <b>[move | pitch | 30]</b> and
+<b>[move | roll | 45]</b> turn it about its OWN upright, nose and line of
+travel; <b>[move | forward | 30]</b> sends it that far along the way it is
+pointing, in three dimensions; and <b>[set | home | yes]</b> puts it back
+level, facing the far edge, on the table. Turns are always <em>move</em>,
+never <em>set</em>, because a turn is relative by nature &mdash; that is the
+whole point of a turtle.</p>
+
+<p><b>A loop needs no counting.</b>
+<code>examples/behaviours/airplane-flight</code> is a toy airplane that takes
+off, flies and loops, and its pilot has no counter, no phases and no
+comparisons: its whole round is three orders, always the same three &mdash;
+<b>[move | 10]</b>, <b>[move | 10]</b>, <b>[pitch | 30]</b>. Turn the same few
+degrees after every stride and the path closes into a circle; twelve rounds is
+a full turn. TWO behaviours are bound to the one airplane and one SPACE starts
+both: the 3D turtle, which gives it <em>move</em>, <em>yaw</em>,
+<em>pitch</em> and <em>roll</em>, and the pilot, which speaks them. Its pen is
+down, so it draws the loop it is flying and you can pick the flight path up
+afterwards. Post <b>[roll | 30]</b> to its bird while it flies and the loop
+tilts &mdash; roll turns about the line of travel, so it changes the plane the
+loop is drawn in.</p>
+
+<p>The frame is kept as ONE orientation, multiplied and renormalised at each
+turn, not as three angles side by side. So the turns compose in any order
+without drifting and without a gimbal to lock: ninety one-degree yaws land on
+exactly the same frame as a single ninety-degree yaw, which is what lets a
+staircase built out of many small turns actually close.</p>
+
+<p><b>The pen has a colour and a width.</b>
+<b>[set | pen | red]</b> draws in red from there on; <b>[set | pen | 3]</b>
+makes the line three ordinary widths wide. Each stroke keeps the colour and
+width it was drawn with, so one drawing can change its mind halfway. And
+chalk comes off: wake Dusty and point him at a stroke and that stroke goes,
+leaving the rest of the line.</p>
+
+<p><b>Which way a thing points.</b> <b>[set | facing | 90]</b> turns a thing,
+<b>[move | facing | 30]</b> turns it further, and <b>[query | facing |
+bird]</b> asks. <b>Zero points at the FAR edge</b> &mdash; of the table, or of
+the pad a thing is riding on, since a rider&rsquo;s angle is measured in its
+field&rsquo;s own frame. Degrees run clockwise, so a right turn adds. That is
+the same frame a step forward has always used (across is the sine of the
+heading, away is its cosine), which is why the turtle now points the way it
+is about to walk: its <em>right</em> hands the thing a
+<b>[set | facing | &hellip;]</b> with the new heading in it.</p>
+
+<p><b>A pad can have no paper.</b> <b>[set | background | none]</b> and the
+writing stays while the card goes: a turtle is then a turtle, not a turtle on
+a tile.</p>
+
+<p><b>The turtle speaks Logo&rsquo;s units.</b> <b>forward 100</b> is a good
+stride; <b>forward 30</b> crosses a tenth of the table. The scale is not
+hidden in the robots &mdash; it is a number in the turtle&rsquo;s box called
+<em>step size</em>, one hundredth, and every step is multiplied by it. Change
+that one number and the whole turtle changes gait. Its box says what each of
+its ten holes is for, so opening the panel tells you the machine rather than
+making you work it out.</p>
+
+<p><b>A sound is made by a box, however it arrives.</b> Drop a
+<b>[frequency | seconds | shape]</b> box on a sound and it sings; give that
+same box to a bird addressed to the sound and it sings just the same. What
+your hand can do to a thing, a message can do.</p>
+
+<p><b>A behaviour may hold behaviours.</b> Put anima-gadgets inside another
+one&rsquo;s panel and you have a MACRO: its parts grouped by purpose &mdash;
+movement in one, sounds in another. SPACE on the macro sets every part going
+and &ldquo;.&rdquo; rests them all, and a part does not drive itself: it
+drives <em>the thing the macro drives</em>. Take a part out again and it
+works on itself as before. That is what makes a macro one behaviour to the
+person holding it and several to the person opening it.</p>
+
+<p><b>Off is a decision.</b> A behaviour you stop with &ldquo;.&rdquo; stays
+stopped. Post wakes a team that is merely idle; it does not overrule you.
+(Before this a behaviour listening to the pointer could not be stopped at
+all: the next pointer reading, sixty times a second, started it again.)</p>
+
+<p><b>Scenery.</b> Solid is the default, because that is what makes a ball
+bounce off a bat. Anything that is there to be READ &mdash; a title, a score,
+a card of instructions &mdash; should be told <b>[set | solid | no]</b> once,
+or the ball collides with your documentation and, if something is counting
+hits, scores against it.</p>
+
+<p><b>Moving on the clock, not on a turn.</b> Two shelf behaviours move a
+thing by sending it a step every round; two others set a <b>speed</b> and
+then sleep until something happens. The second kind moves perfectly evenly
+and costs nothing between events, because the world&rsquo;s own clock does the
+carrying &mdash; a robot cycle builds boxes and flies birds, and three of
+those on one ball cost about 26 milliseconds a frame against 0.2 for the
+speed-based pair. Both kinds are on the shelf; bind one, then the other, and
+watch the difference.</p>
+
+<p><b>Binding lands anywhere on the panel.</b> Drop a behaviour — or its own
+open panel — on any part of another thing’s panel (the floor, the work box,
+the perch, a plaque) and it binds to that thing. And the target may itself be
+a behaviour: drop the speed limit on a game’s ball and you are limiting the
+ball. As with any pad, the middle means ride — the edge means bind.</p>
+
+<p><b>Dusty switches off what he takes.</b> Vacuum a running behaviour and it
+goes into his bag switched off; take it back out, put it down, and press SPACE
+when you want it going again.</p>
+
+<p><b>A behaviour dropped on a thing’s panel binds to it.</b> Drop a working
+ball on a picture’s panel (or drop the ball’s own open panel there) and the
+picture obtains the behaviour: the ball’s robots now work on the picture. The
+behaviour itself stays on the table — press SPACE on it to set it going.</p>
+
+<p><b>Importing a world mid-project lands as a notebook.</b> With work on your
+table, a world file arrives as a notebook of its things — one per page, named
+after the file — and wipes nothing. Take copies off its pages. Import into a
+fresh workshop to open the file as the whole world.</p>
+
+<p><b>A thing off the table is out of play.</b> Pick up something that is
+switched on — or put it in a house, in a hole, on Mimi’s platform — and its
+behaviour waits. It is still switched on, it just has no place of its own to
+move in or read from until you put it back, and then it carries straight on.</p>
 
 <h2 id="marty">Marty the Martian</h2>
 <p>The little green fellow beside Dusty and Ruby is <b>Marty</b>. Click him and
@@ -645,6 +1111,62 @@ and whether the messages under the title are read aloud, belong to
 name, so picking a voice does not change it for everybody else who uses this
 browser. The 🎤 button lets you ask by voice, where the browser
 offers a microphone — where it does not, the button simply is not shown.</p>
+
+<h3>Asking Marty for a toy</h3>
+<p>Next to <b>Ask</b> in Marty&rsquo;s panel is <b>Make</b>. Type what you want
+&mdash; <em>a red sailboat</em>, <em>a teapot</em>, <em>a dragonfly</em> &mdash;
+and he builds it out of solid shapes and sets it on your table. It is an
+ordinary thing from the moment it lands: pick it up, copy it on Mimi, drop a
+behaviour on it, file it in your notebook, save it with the world. If you did
+not want it, <b>Undo</b> takes it away.</p>
+<p><b>Say what is wrong with it and he makes it over.</b> He remembers the
+last toy he made, so &ldquo;good, but it should have six legs&rdquo; or
+&ldquo;make the sails blue&rdquo; changes <em>that</em> thing rather than
+building a second one beside it. <b>The old one stays</b>, on the nearest free
+spot: you cannot judge what you asked for against what you got once the last
+one has been thrown away. Sweep the ones you do not want into the dust bin.
+Name something else and he starts fresh.</p>
+
+<p><b>A toy carries its own recipe.</b> Open a made thing&rsquo;s panel and press
+the ⓘ: its info notebook has a page saying what it is made of, a page saying
+how to change it, and a page holding the <b>source</b> &mdash; the list of
+shapes, sizes, places and colours it was built from. Save the thing to a file,
+open the file in any text editor, change a number or a colour, and import it
+again. The file is laid out to be read: one part to a line, with its numbers
+kept together.</p>
+
+<h3>Asking Marty for a picture</h3>
+<p>Beside <b>Make</b> is <b>Draw</b>. Type what you want &mdash; <em>a
+snowflake</em>, <em>a spiral</em>, <em>a house with a tree</em> &mdash; and it
+arrives on a pad on your table, an ordinary pad you can pick up, caption, copy
+or ride things on.</p>
+<p><b>He draws by walking a turtle</b>, in the very words you already know from
+the turtle: <em>forward</em>, <em>back</em>, <em>right</em>, <em>left</em>, the
+pen up and down, a colour, a width, and <em>repeat</em> for the parts that come
+round again. That is the point of doing it this way &mdash; the picture is not
+a wall you cannot get behind. A snowflake is six of something repeated, and you
+can see that it is.</p>
+<p>Say what is wrong with it and he draws it again: &ldquo;bigger&rdquo;,
+&ldquo;in red&rdquo;, &ldquo;more points&rdquo;. Each one lands on a free spot
+of its own and the earlier ones stay where they are, so you can put them side
+by side and see which you liked. Ask for a picture <em>on a transparent
+background</em> and you get one, which is what a sprite for a game wants.</p>
+
+<p><b>A very elaborate toy may come up short.</b> There is a limit to how much
+a brain can say in one answer, and something with a great many parts can reach
+it. When that happens he hands you what did arrive and says so, rather than
+pretending it is finished &mdash; ask again and he will have another go.</p>
+
+<p><b>He makes things, never programs.</b> Marty will not design a program for
+you and never has &mdash; working it out yourself is the whole point of this
+workshop. A toy is the opposite of a program: it arrives doing <em>nothing at
+all</em>, which is an invitation. What it does is still yours to train.</p>
+<p>Making needs a real brain, so it wants one of the choices under &ldquo;How
+Marty thinks&rdquo; &mdash; his phrasebook can pick a demonstration but cannot
+invent a toy, and he says so rather than pretending. Everything he sends back
+is checked before it is built: only boxes, balls, tubes and cones, only real
+colours, and always a size your hand can pick up, so a strange answer makes a
+strange toy and never a broken workshop.</p>
 
 <h2 id="notebook">The notebook, saving and sharing</h2>
 <p>The notebook on your table is a two-page spread. Drop anything on a blank

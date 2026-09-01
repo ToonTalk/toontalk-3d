@@ -43,7 +43,7 @@ holds a pad matches that pad's words *and* its image, so a robot trained on the
 red circle wakes for the red circle and for nothing else.
 
 Pictures land on a nest; each round exactly one of the six fits; it discards
-what it read and answers with the name of what it saw. Set Rounds to 10 and
+what it read and answers with the name of what it saw. 
 give the work box to the leader: seven pictures go in, seven names come out.
 **The dispatch is the matching** — there is no table of names anywhere, the
 same way `account` dispatches on words and `grammar` on numbers.

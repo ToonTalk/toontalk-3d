@@ -33,7 +33,9 @@ numbers, and a team of robots that recognise pictures by looking at them.
 off a shelf and drop on your own thing. Each is one pad whose panel carries the
 robots; binding one re-points a single bird and changes nothing else, and an
 unbound one demonstrates itself because "my thing" means itself until somebody
-says otherwise.
+says otherwise. It ends with **`pong`**, where the table is the court and
+the ball and the bat each carry their own program on their own panel -- two
+programs running at once, out of parts that were all built for something else.
 
 **[`devices/`](devices/)** is the workshop's own senses: nests that receive
 every key press and every move of the pointer. `keys` is a robot that types
@@ -74,7 +76,7 @@ thought matches the box:
   it out of the room to the nest — and resets the phase, so the whole team
   starts over.
 
-Five rounds per sentence; the Rounds control decides how many the room makes
+Five rounds per sentence; pull the lever again when the room has made enough
 per pull of the lever. Open the door to walk in and watch, or click the roof
 to make the walls opaque and let it work in private — the chimney smokes
 while it's busy.
@@ -201,7 +203,7 @@ as *MakeExamplestop* matches it. Because rule 2 mentions itself, adjectives
 pile up as deep as the dice allow: *"pink silly big big boys kick silly silly
 dogs."*
 
-Set Rounds to 200 and pull the lever. Then walk in through the door and edit
+Pull the lever. Then walk in through the door and edit
 the dictionary — type new words on the pads, or give a rule another
 alternative and add a face to its die. The language changes; no robot is
 retrained, because none of them ever knew the language.
@@ -316,7 +318,7 @@ the rest is usually a *nest* — an answer that has not arrived yet.
   count down.
 
 The finisher leads the team, because 0 is a number too and the worker would
-happily take it. Set Rounds past N and the whole of `[5,[4,[3,[2,[1,[]]]]]]`
+happily take it. The whole of `[5,[4,[3,[2,[1,[]]]]]]`
 grows on the nest, from the outside in.
 
 Regenerate with `python make_n_to_1.py`.
@@ -353,7 +355,7 @@ the answer it needs turns up. Meanwhile Reverse carries on down the list
 holding the nest's own bird, so the **last** link is the first to be settled
 and the answer unwinds from the end of the list back to the front.
 
-Give it `[1,[2,[3,[]]]]` with Rounds at 10: three houses pile up in the last
+Give it `[1,[2,[3,[]]]]`: three houses pile up in the last
 hole of the work box, and `[3,[2,[1,[]]]]` comes back on the nest.
 
 Each house sweeps away its own box when its append is done, so **the houses

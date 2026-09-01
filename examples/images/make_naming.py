@@ -62,9 +62,8 @@ ABOUT = ('NAMING\n\n'
          'says one word.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 10 and give\n'
-       'the work box to the team\n'
-       'leader.\n\n'
+       'Give the work box to the\n'
+       'team leader.\n\n'
        'Seven pictures come off the\n'
        'nest -- star appears twice --\n'
        'and seven names pile up on\n'

@@ -155,7 +155,7 @@ nest had to be exempted from the notebook's "a lone eggless nest comes out
 fresh" rule, which was replacing it with a new nest and costing it the guid
 that makes it a device at all.
 
-### Stage 5 — behaviours: anima-gadgets (2–3 days) — **part done 26 Aug**
+### Stage 5 — behaviours: anima-gadgets (2–3 days) — **DONE 28 Aug: the shelf is twelve**
 
 The binding rule (both directions unless Stage 1 experience says one is
 enough): panel-on-panel re-points the inner robots at the outer panel's
@@ -179,13 +179,23 @@ SPACE ran to 1.24, turned, ran to −1.17 and turned again, with no training
 anywhere. Self-demonstration falls out of the binding rather than being built:
 an unbound gadget's bird points at the gadget. Suite green at 13.
 
-**Six of the twelve** are on the shelf: moving right, moving left, bouncing,
-wrapping at the edges, following the pointer, moving with the arrow keys. The
-other six — grow and shrink when touched, make a sound on hit, reverse on
-collision, a speed limit, send a message to the score — all want either a
-SIZE message (a thing's `sz` is not yet sayable) or arithmetic on what the
-`touch` channel hands over. The `touch` channel itself is built and delivers a
-live bird to whatever ran into a thing.
+**All twelve** are on the shelf (28 Aug). The first six: moving right, moving
+left, bouncing, wrapping at the edges, following the pointer, moving with the
+arrow keys. The second six — grow when touched, shrink when touched, make a
+sound on hit, reverse on collision, a speed limit, send 1 to the score when
+hit — wanted two message-surface additions, both built the day the gadgets
+were: a sayable SIZE ([set|move|query|listen | size | n], the number the held
+card's +/− buttons step) and the #speed channel ([set | speed | ...] now
+announces, with the numbers' echo rule). Two idioms carried the six:
+**dozing on touch** (the touch nest starts empty, the team dozes until an
+announcement, eats it, and acts once per change of contact — so grow grows
+once per touch and an untouched gadget costs nothing) and **the scale is the
+if** (the speed limit weighs the across-speed against the limit on an
+ordinary scale and dispatches on the lean). The bell and the score ride in
+their gadgets' work boxes — a live thing in a hole still gets its mail.
+`reverse on collision` handles THINGS and leaves edges to `bouncing`;
+binding both to one star is pong-ball physics with no training anywhere,
+which is the composition the shelf exists to teach.
 
 Two things came out differently from the plan. The binding is **one
 direction** so far — a behaviour dropped on a thing — rather than the
@@ -195,7 +205,7 @@ and the binding underneath it is the same call. And the EDGE had to be a
 dozes and a dozing member stops the team — so an edge event would have
 stopped the very robot doing the moving. Readings are never empty.
 
-### Stage 6 — inexact numbers (1–2 days)
+### Stage 6 — inexact numbers — **DONE 28 Aug**
 
 Per BACKS.md: exactness flag, contagion, fixed-precision trig and powers,
 the visual marker. Last because nothing above requires it — it unlocks the
@@ -205,11 +215,83 @@ proof.
 *Acceptance:* `sin` of an exact number is inexact and marked; ellipse
 movement runs; determinism holds across reloads; suite green.
 
-### Capstone — Pong
+*Met, and measured.* A number is a rational plus a flag; three operations are
+inexact by nature — `sin`, `cos` and `root`, typed onto a held number the way
+`mod` always was. Angles are DEGREES. Answers are kept to twelve decimal
+places and the kernel works to thirty.
 
-`examples/pong.world.json`: built **only** from pads, sub-pads and library
-behaviours — no bespoke robots. It is the epic's acceptance test, the
-making-of's payoff, and the first candidate for the export-to-web wish.
+Nothing calls JS `Math`: `Math.sin` is implementation-approximated by the
+spec, so two browsers may differ in the last bits and a saved world would
+replay differently on another machine. Instead, argument reduction and a
+Taylor series over rationals for sine, Newton's method over BigInts for
+roots — deterministic BY CONSTRUCTION, which is what makes replay and
+headless verification mean anything. Measured: sin 30 is exactly 1/2 and
+marked; sin 45 is ~0.707106781187; the square root of 2 is ~1.414213562373;
+**the square root of 4 is 2, exact** — a root that comes out whole is not an
+approximation, and saying "approximately two" about it would be a lie.
+Contagion holds, a world with approximations in it saves and reloads
+byte-identical, and `examples/behaviours/ellipse.world.json` traces an
+ellipse 2.2 across by 0.8 deep with every point on the curve.
+
+Suite check twenty-one covers all of it; with contagion disabled it goes red.
+
+### Capstone — Pong — **DONE 2026-08-26**, with one divergence
+
+`examples/behaviours/pong.world.json`. The **table is the court**: three of its
+walls are the table's own edges, the fourth is yours. The ball, the bat and the
+counter are three ordinary things on the table; the ball and the bat each carry
+their own program on their own panel, so two programs run at once — which is
+what makes it a game rather than a demonstration.
+
+*The divergence:* the plan said "built only from pads, sub-pads and **library**
+behaviours — no bespoke robots". Pong's ball wants a team that dispatches on
+two readings at once and counts a miss, and its bat wants to follow one axis
+and not the other. Neither is on the shelf, and the four library gadgets that
+would have covered them are among the six of twelve still unbuilt (`send a
+message to the score` is literally one of them). So the ball and the bat carry
+**bespoke robots on ordinary panels** instead.
+
+What the clause was protecting is intact and is the thing worth claiming: no
+engine work was done for Pong. Every part of it existed for another reason —
+`[move | across | n]` and the `edge` reading from Stage 5, the `touch` reading,
+the pointer device from Stage 4, a badged number given to a bird from Stage 2,
+and `[set | width | n]` from Stage 3, which is the whole of why the bat is a
+bat and the ball is a ball. Nothing anywhere knows the game is Pong. Building
+the missing library gadgets and then rebuilding Pong out of them is a real
+follow-up, and a good one. **Done 28 Aug:**
+`examples/behaviours/pong-gadgets.world.json` — a ball that is a pad with
+three shelf gadgets bound to it (bouncing, now both axes; reverse on
+collision; send 1 to the score), a bat with one (following the pointer), and
+not a single robot written for the occasion. Measured playing: the ball roams
+3.2 × 1.1 bouncing on both axes, the rally climbs under a perfect
+pointer-player and slows when the bat is parked. The honest seams are on a
+card IN the world: two bound movers ADD their steps, and the counter scores
+hits where classic Pong scores misses — a miss-counter would be an
+edge-listening shelf gadget nobody has asked for yet.
+
+Three things had to be fixed to make it run, all of them general and all of
+them measured — see BACKS.md: the `touch` reading, auto-run inside a room, and
+what the `edge` reading means when a thing is resting against a wall.
+
+### Capstone II — Pong the original's way — **DONE 2026-08-26**
+
+`examples/behaviours/pong-classic.world.json`, after Ken sent `pong.tt` out of
+ToonTalk 3 and asked for one like it. Three capabilities came out of reading
+that file, and none of them is about Pong (BACKS.md has the detail):
+
+- **a pad can be a FIELD** — a thing riding on a pad has a place of its own,
+  in that pad's own steps, and *the edge* means the edge of whatever it is
+  standing on;
+- **a thing can have a SPEED** — `[set | speed | [across | away]]`, moving on
+  the world's clock, with an empty hole meaning "leave that one alone";
+- **the touching reading says WHICH SIDE**, which is the original's pair of
+  per-axis collide sensors under another name.
+
+This one comes much closer to the plan's original clause than the first did:
+its ball and bat are pads and sub-pads on a field, and the robots on their
+panels send nothing but messages the workshop already had. What is still true
+of both is that the library gadgets they would have been assembled from are
+among the six of twelve unbuilt.
 
 ## Decisions Ken owns, and when they bite
 

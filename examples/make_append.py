@@ -96,7 +96,7 @@ world = {'kind': 'world', 'v': 1, 'bench': [
                   'each carrying a promise of\nthe next.'),
      'x': -1.05, 'z': 2.15},
     {'thing': txt('TO RUN IT\n\nGive the three-hole box to\nthe FinishAppend robot.\n\n'
-                  'Set Rounds to 5 or more.\n\n'
+                  'It stops by itself when the\nlists run out.\n\n'
                   'Each link lands inside the\npromise the last one carried,\n'
                   'so the answer grows on the\nnest marked "both lists"\n'
                   'from the outside in.'),

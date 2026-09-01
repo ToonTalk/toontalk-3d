@@ -60,8 +60,10 @@ ABOUT = ('MELODY\n\n'
          'thought is "any number".')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 8 and give the\n'
-       'work box to the Singer.\n\n'
+       'Give the work box to the\n'
+       'Singer. Eight pitches wait\n'
+       'on the nest, so eight rounds\n'
+       'later it dozes, done.\n\n'
        'The tune plays as it grows,\n'
        'a note longer each round --\n'
        'that is not a demonstration\n'

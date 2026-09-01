@@ -43,9 +43,8 @@ ABOUT = ('FOLLOWING\n\n'
          'to put one inside the other.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Rounds to 5000, Speed to\n'
-       'Instant, and give the work\n'
-       'box to the Follower.\n\n'
+       'Set Speed to Instant and give\n'
+       'the work box to the Follower.\n\n'
        'Now move the pointer over the\n'
        'table. The star follows your\n'
        'hand.\n\n'
