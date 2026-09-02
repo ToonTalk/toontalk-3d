@@ -4790,3 +4790,70 @@ cubes rides on his head, and clicking it gives the stack back. A robot cannot
 be taught it. Measured in the suite: free play had no rules; the box stack
 leaves the rules and is hidden; the save has no box stack; it rides with
 him; it comes back.
+
+## Mimi in the workshop, a ship that came down hard, and a quiet Next
+
+*Added 2 Sep. Ken, with a picture of the ship: "If the user clicks on Next
+puzzle then stop any ongoing narration. I think the broken spaceship can look
+more broken. In free play I didn't see the new Mimi -- your design looks
+good."*
+
+**Mimi stands at her machine.** The mime from `mimi_v1.glb` is part of the
+copier's node now: beside it on the bench side and a step behind, turned to
+face her platform, hands up in the invisible-wall pose, at nearly twice the
+size she was modelled at so her eyes are between the tray and the platform.
+Clicking her is clicking the copier. Because she is a child of the copier's
+node, a puzzle without Mimi hides her with the machine. The two artifact
+builds carry her glb with the others.
+
+**A new world silences the old one.** Next puzzle, Start over and a robot's
+`load` all go through one `hushNarration()`: whatever the voice is reading
+stops, and a demo in progress with it. Marty had been reading out the last
+puzzle's note over the next puzzle's intro.
+
+**The ship came down hard.** The nose is bent up and off the line of the
+hull and scorched, with a scorched band behind it; a gash of three dark
+slivers runs along the side; the hull is dented; one fin is still on, bent,
+and the other snapped off and lies on the ground behind; the stripe is torn
+in two; the porthole is cracked; bits of hull, nose and fin are scattered
+where it slid; and three puffs of smoke still rise. Seen from two angles
+by rendering the page's own canvas to a picture.
+
+**Looking without a big pane.** The browser pane here is small and its
+screenshots smaller, so the pictures in this round came from the page
+itself: point the camera, render one frame, draw the canvas into an 800-wide
+JPEG and hand the data URL out through the test hook. (A result over the
+tool's size is saved to a file, which is where a picture wants to be.)
+
+## No box for the doubler, a shorter Marty, advice only while it applies
+
+*Added 2 Sep. Ken: "For the 1024 puzzle Marty starts off saying too much
+about how to solve it. Also why do we need a box (original ToonTalk did but we
+don't). After using Ruby to erase the advice to erase came too late -- no need
+to say it if it has already been done. The box in a box in a box puzzle
+shouldn't have 1-hole boxes because they aren't usefully nested. 2-hole boxes
+are better."*
+
+**The box was never needed.** A robot here can set a thing down on its own
+desk where its given thing was: the stand is a container like a hole, and a
+put on an empty stand is a put. So the doubler is trained on a bare 1: take
+it, set it on Mimi, take the copy, put the copy on the desk, take the
+original off the platform, drop it on the copy -- six steps, no box, and the
+round ends with the doubled number where the given was, which is what the
+next round needs. Measured in free play: trained to 2 on the desk; loosened
+to "any number"; ran to 4 in two rounds and stopped cleanly by the full-stop
+key. Puzzle 7 hands out a 1 and a robot and nothing else.
+
+**Marty says less.** The intro is what the computer needs and the one fact
+that matters -- a doubling robot never stops by itself, so you will have to
+stop it in time -- and the recipe moved into the hints, where a visitor who
+wants it asks.
+
+**Advice only while there is something red.** "Wake Ruby and click a red
+part" was appended to every stop and every refusal, including after Ruby had
+already loosened everything. Both places now compute the red parts first and
+say the Ruby line only when there are some.
+
+**Two-hole boxes in a box in a box.** One-hole boxes nest without ever
+looking nested; the puzzle asks for each box in the FIRST hole of the next,
+so the goal is [[[_|_]|_]|_] and the judge reads it hole by hole.

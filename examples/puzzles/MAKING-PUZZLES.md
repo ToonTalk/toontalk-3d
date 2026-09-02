@@ -180,6 +180,10 @@ The judge is a robot, so it decides what a robot's thought can say:
   by a thought bubble; the originals used special cases for those. Here a
   puzzle whose answer is a *process* is written so that the process leaves a
   thing: the total in the box, the 1,024 in the hole.
+- **A robot needs no box.** It can be given a bare thing, and it can set
+  something down on its own desk where that thing was -- the doubler in
+  puzzle 7 works on a lone 1. Give it a box when the work needs more than
+  one place.
 - **No Rounds control.** A robot runs until its thought stops fitting. A
   puzzle that iterates must therefore either stop by itself (a nest that
   empties) or be the visitor's to stop in time (Stop, or the full-stop key,

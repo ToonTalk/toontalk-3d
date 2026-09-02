@@ -36,26 +36,59 @@ BACK = 1.2
 
 
 def ship():
-    """Marty's ship, on its side on the floor behind the table with a
-    scorched nose: the reason for every puzzle. Scenery -- nothing runs into
-    it, and nobody lifts it. Built at hand size and scaled up in SCENERY."""
+    """Marty's ship, on its side on the floor behind the table: the reason
+    for every puzzle. It came down HARD (Ken: "the broken spaceship can look
+    more broken"): the nose is scorched and bent off the line of the hull,
+    a gash runs along the side, the hull is dented, one fin snapped off and
+    lies where it fell, a stripe is torn, bits of it are scattered about, and
+    it still smokes. Scenery -- nothing runs into it, and nobody lifts it.
+    Built at hand size and scaled up in SCENERY."""
+    white, scorch, red, dark, glass = '#e9e4d8', '#3a3a3a', '#c0392b', '#1a1a1a', '#7fd4ff'
     parts = [
+        # the hull, on its side
         {'shape': 'cylinder', 'size': [0.055, 0.05, 0.30], 'at': [0, 0.06, 0],
-         'rot': [0, 0, 90], 'color': '#e9e4d8'},
-        {'shape': 'cone', 'size': [0.05, 0.12], 'at': [0.21, 0.06, 0],
-         'rot': [0, 0, -90], 'color': '#3a3a3a'},               # scorched
+         'rot': [0, 0, 90], 'color': white},
+        # a scorched band where the nose burnt
+        {'shape': 'cylinder', 'size': [0.057, 0.052, 0.07], 'at': [0.12, 0.06, 0],
+         'rot': [0, 0, 90], 'color': '#5a4a3a'},
+        # the nose: bent up and to one side, off the line of the hull
+        {'shape': 'cone', 'size': [0.05, 0.12], 'at': [0.21, 0.08, 0.02],
+         'rot': [10, 0, -70], 'color': scorch},
+        # a gash torn along the side, three dark slivers
+        {'shape': 'box', 'size': [0.10, 0.012, 0.03], 'at': [-0.02, 0.085, 0.045],
+         'rot': [0, 0, 8], 'color': dark},
+        {'shape': 'box', 'size': [0.06, 0.012, 0.03], 'at': [0.07, 0.10, 0.03],
+         'rot': [0, 0, -14], 'color': dark},
+        {'shape': 'box', 'size': [0.04, 0.010, 0.03], 'at': [-0.10, 0.07, 0.05],
+         'rot': [0, 0, 20], 'color': dark},
+        # dents: dark flattened bumps on the hull
+        {'shape': 'sphere', 'size': [0.022], 'at': [0.04, 0.045, -0.04], 'color': '#6b6b6b'},
+        {'shape': 'sphere', 'size': [0.018], 'at': [-0.07, 0.10, -0.02], 'color': '#6b6b6b'},
+        # one fin still on, bent
         {'shape': 'box', 'size': [0.08, 0.02, 0.12], 'at': [-0.15, 0.06, 0.05],
-         'rot': [0, 0, 20], 'color': '#c0392b'},
-        {'shape': 'box', 'size': [0.08, 0.02, 0.12], 'at': [-0.15, 0.06, -0.05],
-         'rot': [0, 0, -20], 'color': '#c0392b'},
-        {'shape': 'box', 'size': [0.14, 0.03, 0.10], 'at': [-0.02, 0.06, 0],
-         'color': '#c0392b'},                                    # the stripe
-        {'shape': 'sphere', 'size': [0.028], 'at': [0.05, 0.10, 0.045],
-         'color': '#7fd4ff'},                                    # a porthole
-        {'shape': 'sphere', 'size': [0.05], 'at': [0.24, 0.13, 0.02],
-         'color': '#6b6b6b'},                                    # a puff of smoke
-        {'shape': 'sphere', 'size': [0.035], 'at': [0.29, 0.2, -0.02],
-         'color': '#8a8a8a'},
+         'rot': [0, 0, 32], 'color': red},
+        # ...the other snapped off, lying on the ground behind
+        {'shape': 'box', 'size': [0.08, 0.02, 0.12], 'at': [-0.26, 0.012, -0.14],
+         'rot': [0, 35, 0], 'color': red},
+        # the stripe, torn in two
+        {'shape': 'box', 'size': [0.06, 0.03, 0.10], 'at': [-0.05, 0.06, 0], 'color': red},
+        {'shape': 'box', 'size': [0.05, 0.03, 0.10], 'at': [0.04, 0.062, 0.006],
+         'rot': [0, 0, 6], 'color': red},
+        # a porthole, cracked (a dark line across it)
+        {'shape': 'sphere', 'size': [0.028], 'at': [0.05, 0.10, 0.045], 'color': glass},
+        {'shape': 'box', 'size': [0.05, 0.004, 0.004], 'at': [0.05, 0.115, 0.06],
+         'rot': [0, 0, 30], 'color': dark},
+        # bits of it scattered where it slid
+        {'shape': 'box', 'size': [0.03, 0.01, 0.02], 'at': [0.30, 0.005, 0.10],
+         'rot': [0, 25, 0], 'color': white},
+        {'shape': 'box', 'size': [0.025, 0.01, 0.02], 'at': [0.24, 0.005, -0.12],
+         'rot': [0, -40, 0], 'color': scorch},
+        {'shape': 'box', 'size': [0.02, 0.008, 0.035], 'at': [-0.05, 0.004, 0.16],
+         'rot': [0, 60, 0], 'color': red},
+        # smoke, still rising from the nose
+        {'shape': 'sphere', 'size': [0.05], 'at': [0.24, 0.16, 0.02], 'color': '#5e5e5e'},
+        {'shape': 'sphere', 'size': [0.038], 'at': [0.29, 0.24, -0.02], 'color': '#7a7a7a'},
+        {'shape': 'sphere', 'size': [0.026], 'at': [0.33, 0.31, 0.01], 'color': '#939393'},
     ]
     return {'kind': 'model', 'parts': parts, 'fixed': True, 'ghost': True,
             'label': 'Marty’s ship'}
@@ -85,37 +118,34 @@ ROBOT = {'kind': 'robot', 'name': None, 'program': [], 'team': []}
 SCENERY = [{'thing': ship(), 'x': 2.3, 'y': 0.0, 'z': -1.6, 'ry': 35, 'sz': 7}]
 
 # --- p7: exactly 1024 -- and it is you who has to stop the robot ------------
+# No box: a robot can set a thing down on its own desk where its given thing
+# was (Ken: "why do we need a box -- original ToonTalk did but we don't").
 P7 = puzzle(
     'p7',
-    'The last thing the computer needs is exactly 1,024 — and there is only a '
-    '1. A robot can double it: teach one to take the 1 out of its box, set it '
-    'on Mimi, put the copy in the box, and drop the original on the copy. '
-    'Wake Ruby to loosen its thought, give it the box and press Run. But a '
-    'doubling robot never stops on its own — 2, 4, 8… — and Stop lets it '
-    'finish the round it is in. So watch the box and press Stop (or the full '
-    'stop key) when it says 512. Stopped short? Run and then Stop straight '
-    'away is one more round. Then give the bird the 1,024.',
+    'Last of all the computer needs exactly 1,024 — and there is only a 1. A '
+    'robot can double a number, but a doubling robot never stops by itself: '
+    'you will have to stop it in time. Ask me for a hint if you need one.',
     'exactly 1,024',
-    ['Give the robot the box. In its imagination: click the 1 to take it, '
-     'click Mimi to set it on her platform, click the copy in the tray, and '
-     'click the empty hole to put the copy in the box.',
-     'Now click the original on Mimi’s platform and click the number in the '
-     'box: a number dropped on a number adds, and 1 on 1 is 2.',
+    ['Give the robot the 1. In its imagination: click the 1 to pick it up, '
+     'click Mimi to set it on her platform, click the copy in her tray, and '
+     'click the robot’s desk to put the copy where the 1 was.',
+     'Now click the original on Mimi’s platform and click the number on the '
+     'desk: a number dropped on a number adds, and 1 on 1 is 2. Leave the '
+     'thought bubble.',
      'Its thought wants exactly a 1. Wake Ruby and click the 1 in its thought '
-     'until it says “any number”. Then give it the box and press Run.',
-     'It doubles every round and it will not stop by itself. Stop lets it '
-     'finish the round it is in, so press Stop — or the full stop key — when '
-     'the box says 512. If it stops at 512, press Run and then Stop straight '
-     'away: that is one more round, 1,024. Past it is 2,048, and there is no '
-     'way back but Start over.',
-     'Here’s what I’d do. Drop the box on the robot; take the 1, set it on '
-     'Mimi, take the copy and drop it in the box, take the original off the '
+     'until it says “any number”. Then give it the number and press Run.',
+     'It doubles every round and will not stop by itself. Stop lets it finish '
+     'the round it is in, so press Stop — or the full stop key — when the '
+     'number says 512. Stopped at 512? Run and then Stop straight away is one '
+     'more round. Past 1,024 is 2,048, and there is no way back but Start over.',
+     'Here’s what I’d do. Drop the 1 on the robot; take the 1, set it on '
+     'Mimi, take the copy and put it on the desk, take the original off the '
      'platform and drop it on the copy. Leave the thought bubble; wake Ruby '
-     'and loosen the 1 in its thought. Give it the box, press Run, and press '
-     'Stop when the number reads 512; if it stops at 512, Run and Stop again '
-     'for one more round. Take the 1,024 out and give it to the bird.'],
+     'and loosen the 1 in its thought. Give it the number, press Run, and '
+     'press Stop when it reads 512; if it stops at 512, Run and Stop again '
+     'for one more round. Take the 1,024 and give it to the bird.'],
     rules(tools=['mimi', 'ruby']),
-    table([box(num(1)), ROBOT],                              # noqa: F405
+    table([num(1), ROBOT],                                   # noqa: F405
           fixed(num(1024), 'we need this'),                  # noqa: F405
           bird(9971, 'p7-post', 'give me your answer'),      # noqa: F405
           nest(9972, 'p7-reply', 'from the judge'),          # noqa: F405
@@ -297,22 +327,22 @@ puzzle(
 puzzle(
     'p8',
     'Now the computer wants boxes with boxes inside. To practise, put a box '
-    'inside a box inside a box — three boxes, each in the next — and give the '
-    'outside one to the bird.',
-    'a box inside a box inside a box',
+    'inside a box inside a box — three boxes, each in the FIRST hole of the '
+    'next — and give the outside one to the bird.',
+    'a box inside a box inside a box, each in the first hole of the next',
     ['A box goes into a hole like anything else.',
-     'Drop one box into the hole of another. Then pick up THAT box and drop '
-     'it into the hole of the third.',
-     'Here’s what I’d do: drop the first box into the second box’s hole; '
-     'pick up the second box and drop it into the third box’s hole; give the '
+     'Drop one box into the first hole of another. Then pick up THAT box and '
+     'drop it into the first hole of the third.',
+     'Here’s what I’d do: drop the first box into the second box’s left hole; '
+     'pick up the second box and drop it into the third box’s left hole; give the '
      'third box to the bird.'],
     rules(),
-    table([empty_box(1), empty_box(1), empty_box(1)],
-          fixed(box(box(box(None))), 'we need this'),      # noqa: F405
+    table([empty_box(2), empty_box(2), empty_box(2)],
+          fixed(box(box(box(None, None), None), None), 'we need this'),      # noqa: F405
           bird(9981, 'p8-post', 'give me your answer'),      # noqa: F405
           nest(9982, 'p8-reply', 'from the judge'),          # noqa: F405
           judge('the judge', 9981, 'p8-post', 9982, 'p8-reply',
-                right=box(box(box(None))),                   # noqa: F405
+                right=box(box(box(None, None), None), None),                   # noqa: F405
                 on_right=next_note('') + [load('p9')],
                 notes=['Three deep — the computer likes that. Next: zeros '
                        'in a box in a box.'])),

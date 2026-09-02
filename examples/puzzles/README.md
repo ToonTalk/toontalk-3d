@@ -50,8 +50,9 @@ robot you train, with Mimi; the total of the numbers on a nest, by a robot
 whose thought Ruby loosens -- it dozes when the nest is empty; and exactly
 1,024 from a single 1 and a robot that doubles, which never stops by itself:
 Stop lets it finish the round it is in, so the player presses Stop -- or the
-full-stop key -- while the box says 512; then a box inside a box inside a
-box; three zeros in the second hole of a box; six zeros from a box of two;
+full-stop key -- when the number says 512; no box is needed, the robot
+sets the copy down on its own desk; then a box inside a box inside a box, of
+two-hole boxes; three zeros in the second hole of a box; six zeros from a box of two;
 the door code 77 from powers of two; a half from a divide badge; a million
 from a times-ten badge copied five times; and A, B and C on pads, typed).
 Marty's ship lies on the floor behind every table as `scenery`.
