@@ -4682,3 +4682,64 @@ job is that a copy appears. She would keep her platform and tray as a little
 stage, and get a face like the others. The other candidate was a mimic
 octopus, which also copies for a living; the mime is the better fit for the
 name and for a cast of people rather than animals.
+
+## A ship to travel in, a mime, and a robot you have to stop
+
+*Added 2 Sep. Ken: stop bundling the later puzzles inside each earlier one
+(files can be fetched, and an artifact can take them once into browser
+storage -- postponable); yes, show the new Mimi; the ship should not be on the
+desk but in the background, big enough for Marty to have travelled in; "hand
+it to the robot instead" was heard while building the box of 8, 16 and 32;
+picking up a turned number turned it again; a cube's face could end up not
+parallel to the desk; and the 1,024 puzzle should ask for exactly 1,024, so
+the player has to stop the robot in time.*
+
+**One file, one puzzle.** Each `pN.world.json` is its own puzzle now with no
+`library` inside it, and `embed_puzzles.py` bundles every file in
+`examples/puzzles/` into the page as `{ worlds: { p1, p2, … } }` -- a robot's
+`load` finds the next by name in memory, or by fetch when there is a server.
+The reader still accepts the old one-world shape. Seven puzzles pack to five
+kilobytes of gzip.
+
+**The ship is scenery.** A world file has a `scenery` list: things that stand
+in the *room* rather than on the table, each with a place, a turn and a size.
+Marty's ship lies on the floor beyond the far side of the table at seven times
+hand size, nose toward the room, and its label is scaled back down to twice
+hand size so a sign the size of a door did not hang off it. Scenery is fixed
+and ghost by nature, saved with the world and cleared with it. Measured after
+loading p1: one model at (2.3, 0, −1.6), scale 7, labelled "Marty's ship".
+
+**Puzzle 7 is the one you stop.** Exactly 1,024 from a single 1: a robot
+trained to take the number out of its box, set it on Mimi, put the copy in
+the box and drop the original on it -- six steps -- then loosened by Ruby,
+doubles every round and never stops on its own. The Stop button (and now the
+full-stop key, which the manual always said stops things but which did
+nothing during a run) lets the robot *finish the round it is in*. So the
+moment to stop is while the box says 512: that round ends at 1,024, and the
+next number is 2,048 with no way back but Start over. Marty says exactly
+this. Measured: training 6 steps, thought "a box of any number", a round of
+about 17 s at 1× and 3.3 s at 8× (at ∞ the number is astronomical within
+seconds -- that speed is the player's own choice), the wrong answer comes
+back "Not quite — it has to be exactly 1,024", and the run stopped by "."
+reports "Stopped after N rounds — it finished the one it was in".
+
+**A turned number stays turned in the hand.** Pickup set the thing's turn to
+identity, so a cube turned to the face you wanted read one thing on the
+table and another in the hand. The turn it had is the hand's base now and the
+arrows turn from there; measured: a 90° turn survives pickup.
+
+**Square on the table, whatever the hand rolled.** The hand rolls a number
+about the line of sight so its writing is upright for the camera, and that
+roll rode along in `aim`: after a few turns a cube could lie on the desk a few
+degrees off. A number or model set down snaps to the nearest of the 24 square
+orientations. Measured: off-axis 0.46 in the hand, 0 after the drop.
+
+**The desk of no robot is more table.** With no robot at the bench, a drop
+on the desk went to "hand it to the robot instead"; it goes to the table now.
+
+**Mimi, rendered.** `mimi_v1.py` builds the mime in Blender: white face,
+black beret, black-and-white striped top, white gloves held up palms out --
+the invisible wall, which is the copying pose -- Marty's own eye in her
+colours, a small closed red mouth, one painted tear, and the family's amber
+badge. `mimi_v1_hero.png` and `mimi_v1_sheet.png` are the look; the glb is
+exported but she is not in the app until Ken says so.

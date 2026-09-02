@@ -8,14 +8,17 @@
 #   p5  a box with two zeros, made by a ROBOT you train, with Mimi to copy
 #   p6  the sum of the numbers on a nest -- a robot that runs until the nest
 #       is empty, and the first thought Ruby has to loosen
+#   p7  exactly 1024 -- a robot that doubles and never stops by itself, so
+#       YOU have to stop it in time
 #
-# Each is its own world file, and every later one also rides inside p1's
-# library, so a robot can open the next by name where nothing can be fetched.
+# Each is its own world file; the app carries the whole set by name (see
+# embed_puzzles.py), and a server can fetch any of them.
 #
 # THE LAYOUT, the same on every table: what you work with at the FRONT (near
 # you), the bird in the middle, the reply nest beside her, the goal and the
 # judge at the back where they are seen and not in the way -- and Marty's
-# ship, lying where it came down, so the story has something to point at.
+# ship, lying where it came down on the floor behind the table, big enough
+# for him to have travelled in, so the story has something to point at.
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _pz import *                                           # noqa: F403
@@ -26,9 +29,9 @@ BACK = 1.2
 
 
 def ship():
-    """Marty's ship, on its side at the back of the table with a scorched
-    nose: the reason for every puzzle. Scenery -- nothing runs into it, and
-    nobody lifts it."""
+    """Marty's ship, on its side on the floor behind the table with a
+    scorched nose: the reason for every puzzle. Scenery -- nothing runs into
+    it, and nobody lifts it. Built at hand size and scaled up in SCENERY."""
     parts = [
         {'shape': 'cylinder', 'size': [0.055, 0.05, 0.30], 'at': [0, 0.06, 0],
          'rot': [0, 0, 90], 'color': '#e9e4d8'},
@@ -59,8 +62,7 @@ def table(materials, goal, post, reply, judge_, extra=()):
     bench += [{'thing': post, 'x': 0.0, 'z': MID},
               {'thing': reply, 'x': 0.55, 'z': MID},
               {'thing': goal, 'x': 1.15, 'z': BACK},
-              {'thing': judge_, 'x': -1.25, 'z': BACK},
-              {'thing': ship(), 'x': 0.1, 'z': 1.12}]
+              {'thing': judge_, 'x': -1.25, 'z': BACK}]
     bench += list(extra)
     return bench
 
@@ -70,6 +72,55 @@ def next_note(text):
 
 
 ROBOT = {'kind': 'robot', 'name': None, 'program': [], 'team': []}
+
+# Where it came down: on the floor beyond the far side of the table, nose
+# toward the room, seven times hand size -- a ship Marty could sit in.
+SCENERY = [{'thing': ship(), 'x': 2.3, 'y': 0.0, 'z': -1.6, 'ry': 35, 'sz': 7}]
+
+# --- p7: exactly 1024 -- and it is you who has to stop the robot ------------
+P7 = puzzle(
+    'p7',
+    'The last thing the computer needs is exactly 1,024 — and there is only a '
+    '1. A robot can double it: teach one to take the 1 out of its box, set it '
+    'on Mimi, put the copy in the box, and drop the original on the copy. '
+    'Wake Ruby to loosen its thought, give it the box and press Run. But a '
+    'doubling robot never stops on its own — 2, 4, 8… — and Stop lets it '
+    'finish the round it is in. So watch the box and press Stop (or the full '
+    'stop key) when it says 512. Stopped short? Run and then Stop straight '
+    'away is one more round. Then give the bird the 1,024.',
+    'exactly 1,024',
+    ['Give the robot the box. In its imagination: click the 1 to take it, '
+     'click Mimi to set it on her platform, click the copy in the tray, and '
+     'click the empty hole to put the copy in the box.',
+     'Now click the original on Mimi’s platform and click the number in the '
+     'box: a number dropped on a number adds, and 1 on 1 is 2.',
+     'Its thought wants exactly a 1. Wake Ruby and click the 1 in its thought '
+     'until it says “any number”. Then give it the box and press Run.',
+     'It doubles every round and it will not stop by itself. Stop lets it '
+     'finish the round it is in, so press Stop — or the full stop key — when '
+     'the box says 512. If it stops at 512, press Run and then Stop straight '
+     'away: that is one more round, 1,024. Past it is 2,048, and there is no '
+     'way back but Start over.',
+     'Here’s what I’d do. Drop the box on the robot; take the 1, set it on '
+     'Mimi, take the copy and drop it in the box, take the original off the '
+     'platform and drop it on the copy. Leave the thought bubble; wake Ruby '
+     'and loosen the 1 in its thought. Give it the box, press Run, and press '
+     'Stop when the number reads 512; if it stops at 512, Run and Stop again '
+     'for one more round. Take the 1,024 out and give it to the bird.'],
+    rules(tools=['mimi', 'ruby']),
+    table([box(num(1)), ROBOT],                              # noqa: F405
+          fixed(num(1024), 'we need this'),                  # noqa: F405
+          bird(9971, 'p7-post', 'give me your answer'),      # noqa: F405
+          nest(9972, 'p7-reply', 'from the judge'),          # noqa: F405
+          judge('the judge', 9971, 'p7-post', 9972, 'p7-reply',
+                right=num(1024),                             # noqa: F405
+                on_right=next_note(''),
+                notes=['1,024 exactly — the computer is working, and Marty '
+                       'can go home. Thank you! (More puzzles are on the '
+                       'way.)'],
+                sorry='Not quite — it has to be exactly 1,024. Too small? Run '
+                      'and Stop is one more round. Too big? Start over.')),
+    scenery=SCENERY)
 
 # --- p6: the sum of what came in the post -------------------------------------
 P6 = puzzle(
@@ -102,9 +153,10 @@ P6 = puzzle(
           nest(9964, 'p6-reply', 'from the judge'),          # noqa: F405
           judge('the judge', 9963, 'p6-post', 9964, 'p6-reply',
                 right=num(9),                                # noqa: F405
-                on_right=next_note(''),
+                on_right=next_note('') + [load('p7')],
                 notes=['The total is in — the computer can count its post now. '
-                       '(More puzzles are on the way.)'])))
+                       'Last: exactly 1,024.'])),
+    scenery=SCENERY)
 
 # --- p5: a robot makes a box with two zeros ----------------------------------
 P5 = puzzle(
@@ -131,7 +183,7 @@ P5 = puzzle(
                 on_right=next_note('') + [load('p6')],
                 notes=['You trained a robot! The computer has its zeros. '
                        'Next: the post.'])),
-    library={'p6': P6})
+    scenery=SCENERY)
 
 # --- p4: a zero --------------------------------------------------------------
 P4 = puzzle(
@@ -154,7 +206,7 @@ P4 = puzzle(
                 right=num(0),                                # noqa: F405
                 on_right=next_note('') + [load('p5')],
                 notes=['A zero — just what the computer needed. Next: robots.'])),
-    library={'p5': P5, 'p6': P6})
+    scenery=SCENERY)
 
 # --- p3: a box with 8, 16 and 32 ----------------------------------------------
 P3 = puzzle(
@@ -179,7 +231,7 @@ P3 = puzzle(
                 on_right=next_note('') + [load('p4')],
                 notes=['Three numbers in a row — the computer is filling up. '
                        'Next: a zero.'])),
-    library={'p4': P4, 'p5': P5, 'p6': P6})
+    scenery=SCENERY)
 
 # --- p2: we need a 4 ---------------------------------------------------------
 P2 = puzzle(
@@ -200,13 +252,13 @@ P2 = puzzle(
                 right=num(4),                                # noqa: F405
                 on_right=next_note('') + [load('p3')],
                 notes=['That’s it! The computer has its 4. Next: a box of three.'])),
-    library={'p3': P3, 'p4': P4, 'p5': P5, 'p6': P6})
+    scenery=SCENERY)
 
 # --- p1: we need a box with 1 and 2 in it -----------------------------------
 puzzle(
     'p1',
     'Thanks for coming to help me. My ship came down hard — that’s it lying '
-    'over there with its nose burnt — and its computer is broken. First it '
+    'on the floor behind the table with its nose burnt — and its computer is broken. First it '
     'needs numbers to work. Can you make a box with 1 and 2 in it, and give '
     'it to the bird? If you get stuck, ask me for a hint.',
     'a box with 1 and 2 in it, in that order',
@@ -229,4 +281,4 @@ puzzle(
                 on_right=next_note('') + [load('p2')],
                 notes=['Well done — the computer has its first numbers. '
                        'Press Next when you are ready.'])),
-    library={'p2': P2, 'p3': P3, 'p4': P4, 'p5': P5, 'p6': P6})
+    scenery=SCENERY)

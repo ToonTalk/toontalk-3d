@@ -9,8 +9,10 @@ intro    what Marty says when it opens
 goal     what is wanted, for the card and for Marty
 hints    in order; the last is the whole answer
 rules    { stacks: [ids], tools: [ids], typing: {numbers, pads}, undo, maxSteps }
-library  { name: world } -- other worlds bundled inside, so "load" works where
-         nothing can be fetched (a published artifact)
+library  { name: world } -- other worlds bundled inside (optional: the app
+         carries the whole set by name, and a server can fetch any file)
+scenery  [ {thing, x, y, z, ry, sz} ] -- things standing in the room rather
+         than on the table (Marty's ship, seven times hand size)
 wipe     false means "add these things to the table" instead of replacing it
 ```
 
@@ -39,18 +41,21 @@ In a puzzle the judge's `load` step *offers* the next world: a Next button
 appears on the card once the note has been read. Outside a puzzle `load`
 opens the world at once.
 
-`make_puzzles.py` writes p1 to p6 (after the original tutorial: a box with 1
+`make_puzzles.py` writes p1 to p7 (after the original tutorial: a box with 1
 and 2; a 4 from two 2s; a box with 8, 16 and 32, joined by dropping boxes on
 each other's sides; a zero from a 3 and a −3; a box of two zeros made by a
 robot you train, with Mimi; the total of the numbers on a nest, by a robot
-whose thought Ruby loosens -- it dozes when the nest is empty). Marty's ship
-lies at the back of every table as scenery (`fixed` and `ghost`).
+whose thought Ruby loosens -- it dozes when the nest is empty; and exactly
+1,024 from a single 1 and a robot that doubles, which never stops by itself:
+Stop lets it finish the round it is in, so the player presses Stop -- or the
+full-stop key -- while the box says 512). Marty's ship lies on the floor
+behind every table as `scenery`.
 
 There is no Rounds control: a robot runs until its thought stops fitting, so
-a puzzle that iterates must stop by itself -- an emptying nest does, doubling
-does not. Every later puzzle rides in the earlier
-ones' `library`, so p1 alone carries the set. Open one with
-`?world=examples/puzzles/p1.world.json`, or import the file.
+a puzzle that iterates either stops by itself (an emptying nest) or is the
+player's to stop in time (doubling). Each file is one puzzle; the page
+carries the set. Open one with `?world=examples/puzzles/p1.world.json`, or
+import the file.
 
 The layout is one rule for every table (`table()` in `make_puzzles.py`): what
 you work with across the front, the bird in the middle, the reply nest beside
@@ -59,7 +64,7 @@ her, the goal and the judge at the back.
 ## Shipping the set
 
 `python make_puzzles.py` writes the files; then, from the project root,
-`python embed_puzzles.py` puts p1 (with its library) into `toontalk-3d.html`
+`python embed_puzzles.py` puts every `*.world.json` here into `toontalk-3d.html`
 as a JSON block, so the **Puzzle game** button on the door card works in a
 published artifact where nothing can be fetched. Progress (the puzzle a
 player is on, and the ones solved) is kept per person in the browser.

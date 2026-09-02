@@ -1,7 +1,7 @@
 # Puts the puzzle set inside toontalk-3d.html, where the Puzzle Game button
 # can find it without fetching anything -- which is what a single-file build
-# (a Claude artifact, say) has to live with. p1 carries every later puzzle in
-# its library, so one file is the whole set.
+# (a Claude artifact, say) has to live with. Every examples/puzzles/*.world.json
+# goes in, by name.
 #
 #   python embed_puzzles.py
 #
@@ -23,8 +23,18 @@ AFTER = '</script><!-- /martyManual -->'
 def main():
     page = os.path.join(HERE, 'toontalk-3d.html')
     html = io.open(page, encoding='utf-8').read()
-    rec = json.load(io.open(os.path.join(HERE, 'examples', 'puzzles', 'p1.world.json'),
-                            encoding='utf-8'))
+    # EVERY puzzle file, by name -- one block, { worlds: { p1: ..., p2: ... } }.
+    # Ken: stop bundling the later puzzles inside each earlier one; a file is
+    # one puzzle, and the page carries the set.
+    folder = os.path.join(HERE, 'examples', 'puzzles')
+    worlds = {}
+    for fn in sorted(os.listdir(folder)):
+        if not fn.endswith('.world.json'):
+            continue
+        w = json.load(io.open(os.path.join(folder, fn), encoding='utf-8'))
+        w.pop('library', None)
+        worlds[w.get('name') or fn[:-len('.world.json')]] = w
+    rec = {'worlds': worlds}
     # compact, and safe inside a script element
     raw = json.dumps(rec, separators=(',', ':')).encode('utf-8')
     body = base64.b64encode(gzip.compress(raw, 9)).decode('ascii')
@@ -37,7 +47,7 @@ def main():
         assert AFTER in html, 'the manual block is the anchor'
         html = html.replace(AFTER, AFTER + '\n' + block, 1)
     io.open(page, 'w', encoding='utf-8', newline='').write(html)
-    names = ['p1'] + list((rec.get('library') or {}).keys())
+    names = list(worlds.keys())
     print('embedded the puzzle set (%d bytes of JSON -> %d of base64 gzip): %s'
           % (len(raw), len(body), ', '.join(names)))
 

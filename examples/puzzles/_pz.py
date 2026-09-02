@@ -8,8 +8,10 @@
 #   hints   in order; the last is the whole answer, for the desperate
 #   rules   which stacks and tools exist, what the keyboard may reach, Undo,
 #           and how many steps a robot may be taught
-#   library other worlds bundled by name, so a robot can open the next one
-#           even where nothing can be fetched (a published artifact)
+#   library other worlds bundled by name (optional now: the app carries the
+#           whole set, and a server can fetch any file by name)
+#   scenery things standing in the room rather than on the table, with a
+#           place and a size -- Marty's ship, big enough to travel in
 #   wipe    false means "add these things to the table" rather than replace it
 #
 # This mirrors the original ToonTalk .pzl file, which was Marty's intro, a
@@ -87,12 +89,15 @@ def judge(name, post_id, post_guid, reply_id, reply_guid, right, on_right,
     return dict(room(name, work, yes, opaque=True, dirty=True), judge=True)     # noqa: F405
 
 
-def puzzle(name, intro, goal, hints, rules_, bench, library=None):
+def puzzle(name, intro, goal, hints, rules_, bench, library=None, scenery=None):
     world = {'kind': 'world', 'v': 3, 'name': name, 'intro': intro,
              'goal': goal, 'hints': list(hints), 'rules': rules_,
              'bench': bench, 'stations': {}, 'active': None}
     if library:
         world['library'] = library
+    if scenery:
+        # things that stand in the ROOM, not on the table: {thing, x, y, z, ry, sz}
+        world['scenery'] = list(scenery)
     out = os.path.join(HERE, name + '.world.json')
     io.open(out, 'w', encoding='utf-8').write(json.dumps(world, indent=1))
     print('wrote', os.path.basename(out))

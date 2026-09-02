@@ -2170,7 +2170,7 @@ async function puzzleCheckBody(D, w, at) {
 async function puzzleSetCheck(D) {
   const line = [];
   let ok = true;
-  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6']) {
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']) {
     const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
     D.worldIn(rec);
     await slowSettle(D, 3000);
@@ -2362,7 +2362,17 @@ async function numberInHandCheck(D, w) {
     D.clickBench(0.6, 1.6);
     await slowSettle(D, 4000);
     const downQ = num.quaternion.toArray();
-    const kept = heldQ.every((v, i) => Math.abs(v - downQ[i]) < 0.02);
+    // as you left it -- SQUARED TO THE TABLE: the hand rolls a number about the
+    // line of sight so its writing is upright for the camera, and a thing set
+    // down keeps its quarter turns and drops that roll (Ken: a cube's face was
+    // not parallel to the desk). So: within the roll of the held turn, and
+    // every axis of the set-down turn on an axis of the table.
+    const Q = D.THREE.Quaternion, M = D.THREE.Matrix4;
+    const roll = new Q().fromArray(heldQ).angleTo(new Q().fromArray(downQ));
+    const els = new M().makeRotationFromQuaternion(new Q().fromArray(downQ)).elements.slice(0, 12);
+    const offAxis = Math.max(...els.map(v => Math.min(Math.abs(v), Math.abs(Math.abs(v) - 1))));
+    const turned = new Q().fromArray(downQ).angleTo(new Q()) > 1.0;   // the quarter turn survived
+    const kept = roll < 0.6 && offAxis < 1e-3 && turned;
 
     const copiesFace = plain === '1234567' && turnedCopy !== plain && !!turnedCopy;
     // ...and a MADE THING tips end over end, which a number could always do and
@@ -2382,7 +2392,7 @@ async function numberInHandCheck(D, w) {
     const focus = w.document.activeElement; const focusName = focus ? (focus.id || focus.tagName) : 'none';
     put((ok ? 'PASS' : 'FAIL') + ' a number keeps what you did to it  (focus=' + focusName + ' mode=' + D.state.mode + ' copied="'
         + String(plain).slice(0, 12) + '" after-a-turn="' + String(turnedCopy).slice(0, 14)
-        + '" keeps-its-turn=' + kept + ' model-tips=' + tipped.toFixed(2) + 'rad)',
+        + '" keeps-its-turn=' + kept + '/roll=' + roll.toFixed(2) + '/off-axis=' + offAxis.toFixed(3) + '/turned=' + turned + ' model-tips=' + tipped.toFixed(2) + 'rad)',
         ok ? 'pass' : 'fail');
     return ok;
   } finally {
