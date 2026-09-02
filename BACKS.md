@@ -4306,3 +4306,91 @@ uses it **only when the full name will not fit at any size** -- so Ken's
 thirty-six digit number goes on saying itself in full, in small type, and a
 sixty-digit one says itself briefly. Measured on the faces: 12, 36 and 40
 digits in full, 70 and 200 in the short reading, and nothing cut off anywhere.
+
+## What you did to it belongs to it
+
+*Added 1 Sep. Ken: "why does this face have '...'? I think when the English
+doesn't fit on a face let's have shrinking letters like shrinking digits so the
+first and last parts are shown. I think if a number cube has been rotated by
+the user that it should stay that way when released (or return for closeup
+viewing) rather than restoring the default orientation. You can use the way
+scale names are generated from Latin to handle much bigger numbers.
+control-c while holding a number cube should put the top face text on the
+clipboard."*
+
+**The ellipsis.** A wrapped face that would not fit kept the first lines and
+put an ellipsis on the end -- so a number nine hundred digits long showed its
+beginning and threw its end away, and the end of a number is as much of it as
+the beginning. It now works the way the digits face has always worked: head,
+a gap, tail, with the lines either side of the gap set smaller so the break
+reads as a break rather than as a sentence that stops making sense. Measured
+on a 900-digit number: the gap is in the middle, the head is there, the tail
+is there, and nothing trails off.
+
+**The scale names are built now, not listed.** A table stops wherever whoever
+wrote it got bored; ours stopped at decillion, and last round I extended it by
+hand to vigintillion, which is the same mistake with a longer table. English
+does not stop there -- past a nonillion the names are made from Latin numerals
+to Conway and Wechsler's rule, and a rule can be written down once and answer
+for every number. The subtlety is all in the joins: "tre" grows an *s*, "se"
+an *s* or an *x*, "septe" and "nove" an *m* or an *n*, depending on what
+follows, so that the word can be said aloud. Spot-checked against the
+dictionaries: ten to the 63rd is one vigintillion, the 93rd one trigintillion,
+the 303rd one centillion. It runs out at ten to the three thousandth, where the
+short reading takes over.
+
+**A turn is part of what a thing is.** Putting something down levelled it, so
+a cube turned to the face you wanted went back to its digits the moment it
+touched the table. There was already a field that means exactly "this is how
+this thing points" -- `aim`, which putOnBench restores and the saved world
+carries -- and turning now writes it. Measured: the quaternion after the drop
+is the quaternion before it, and a fresh closeup finds the cube as it was left.
+
+**And Ctrl+C.** A face is a canvas, and a canvas is not text: there was
+nothing to copy. Each face now records its own wording as it is painted, and
+Ctrl+C copies the face turned toward you -- the digits, the grouped form, the
+English, the scientific -- rather than one fixed choice. Measured: untouched it
+copies 1234567, and one turn later it copies 1,234,567.
+
+## A herd of unicorns, and being told what shape to answer in
+
+*Added 1 Sep. Ken: "Chrome's Gemini Nano isn't very capable but can it make any
+models? Here's the console: [marty] could not build from this reply:
+{"say":"Here you go! A little blue box to get you started.","demo":"boxes"} ...
+The tooltip for dropping on a robot should be different for untrained and
+trained robots ... I trained a robot to copy the unicorn model and it did fine
+creating many extra platforms. But when I stopped the training all the objects
+on the extra platforms ended up on the desk ... When holding a model the up and
+down arrow should work as well."*
+
+**Nano could always make models.** It was being told to answer in the wrong
+shape. The brain built into Chrome is small, and the one thing that makes it
+usable here is constrained decoding: it is *told* what shape its answer must
+take. `nanoThink` passed the CHAT schema no matter what it was asked -- so
+pressing Make produced a perfectly well-formed conversational reply, which the
+maker then failed to build, and the console blamed the child for it. There are
+three kinds of errand now and three schemas, and the errand chooses. Measured
+with a stand-in for Chrome's model: told `name,parts` it makes a model, told
+`name,orders` it draws.
+
+**The unicorns were not a leak.** Four ways of making copies inside a lesson --
+onto fresh work spots, onto the table, left on Mimi, left in the claw -- all
+rewind to exactly the world you came in with; that is now a check. What Ken
+watched was a RUN, whose work is real and is meant to stay: the run's results
+go on the table when the robot stops, which is ToonTalk's own rule and one this
+code has always followed deliberately.
+
+The real fault was that **nothing said which of the two had just happened**. A
+lesson ending and a run ending look identical at the moment the robot stops
+moving. Both now say so in words: leaving a lesson says the table is as you
+left it and the robot keeps only what it learned; a run that sweeps its work
+spots says how many things it put on the table and that they are yours to keep.
+A rule nobody can see is a rule nobody can rely on.
+
+**And two small ones.** The tooltip for dropping something on a robot said
+"training if it is untrained", making the reader do the case analysis every
+time; it now says what will actually happen to the robot in front of them, with
+the step count for one that already knows something. Tipping was refused for
+everything but a number, on the grounds that only a number has six faces worth
+reading -- but a made thing has a top and an underside, and being able to lay a
+unicorn on its back is the difference between a toy and a picture of one.

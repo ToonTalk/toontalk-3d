@@ -2044,6 +2044,204 @@ async function reachAtPileCheck(D) {
   return ok;
 }
 
+// A DAYDREAM LEAVES NOTHING BEHIND. Ken watched a robot copy a unicorn until
+// the work spots were full, stopped it, and found the herd on the desk -- and
+// read that as a lesson that had failed to rewind. It was a RUN, whose work is
+// real and is meant to be kept; but the two look identical at the moment the
+// robot stops, so the workshop now says which just happened. This pins the
+// half that must never change: whatever you do inside the bubble -- copies on
+// the table, copies on fresh work spots, something left on Mimi, something
+// still in the claw -- is gone when you leave.
+async function daydreamCheck(D, w) {
+  const models = () => { let m = 0;
+    D.scene.traverse(o => { if (o.userData?.kind === 'model') m++; }); return m; };
+  const spots = () => Object.values(D.stations)
+    .filter(s2 => s2.kind === 'scratch').length;
+  const start = async () => {
+    D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [],
+      active: { kind: 'robot', name: 'copier', program: [], team: [] } });
+    await slowSettle(D, 3000);
+    const m = D.makeFromReply(JSON.stringify({ name: 'a unicorn', parts: [
+      { shape: 'sphere', size: [0.09], at: [0, 0.08, 0], color: '#ffffff' }] }), 'a unicorn')?.thing;
+    await slowSettle(D, 2000);
+    D.hold(m);
+    D.clickActive();                       // the lesson begins
+    await slowSettle(D, 4000);
+    return m;
+  };
+  const copyOnto = async (model, where) => {
+    D.clickThing(model); await slowSettle(D, 4000);
+    D.clickRaw({ kind: 'station', id: 'copyIn' }); await slowSettle(D, 5000);
+    D.clickRaw({ kind: 'station', id: 'copyOut' }); await slowSettle(D, 4000);
+    if (where === 'bench') D.clickBench(-0.5, 1.9);
+    else D.clickRaw({ kind: 'station', id: where });
+    await slowSettle(D, 4000);
+  };
+  const line = [];
+  let ok = true;
+  for (const [tag, run2] of [
+    ['work spots', async (m) => { await copyOnto(m, 's0'); await copyOnto(m, 's1'); }],
+    ['the table', async (m) => { await copyOnto(m, 'bench'); }],
+    ['on Mimi', async (m) => { D.clickThing(m); await slowSettle(D, 4000);
+      D.clickRaw({ kind: 'station', id: 'copyIn' }); await slowSettle(D, 5000); }],
+    ['in the claw', async (m) => { D.clickThing(m); await slowSettle(D, 4000); }],
+  ]) {
+    const model = await start();
+    if (!model) { put('FAIL a daydream leaves nothing behind  (no model)', 'fail'); return false; }
+    const base = models();                 // the given one, and the bubble's picture
+    await run2(model);
+    const during = models();
+    w.document.getElementById('exitBtn').click();
+    await slowSettle(D, 6000);
+    const after = models();
+    const clean = after === base && D.state.mode === 'world';
+    if (!clean) ok = false;
+    line.push(tag + '=' + during + '->' + after + (clean ? '' : ' LEAK'));
+  }
+
+  // ...and the two robots on the table are described differently, since what
+  // dropping something on one MEANS depends on whether it has been taught
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'robot', name: 'green', program: [], team: [] }, x: -0.7, z: 1.5 },
+    { thing: { kind: 'robot', name: 'taught', team: [],
+        condition: { kind: 'box', holes: [{ kind: 'wildNumber' }] },
+        program: [{ type: 'take', at: { c: 'given', path: [0] } }],
+        trainedOn: { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '1' }, op: '+' }] } },
+      x: 0.7, z: 1.5 },
+    { thing: { kind: 'number', value: { n: '5', d: '1' }, op: '+' }, x: 0, z: 2.0 }] });
+  await slowSettle(D, 3000);
+  const bots = [];
+  for (let i = 0; i < 10; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'robot') bots.push(t); }
+  let num = null;
+  for (let i = 0; i < 10; i++) { const t = D.bench(i);
+    if (t?.userData.kind === 'number') { num = t; break; } }
+  D.hold(num); await frames(D, 60);
+  const cv = D.renderer.domElement, r = cv.getBoundingClientRect();
+  const tipOver = (node) => {
+    const pt = node.getWorldPosition(new D.V3()); pt.y += 0.15; pt.project(D.camera);
+    cv.dispatchEvent(new w.PointerEvent('pointermove', { bubbles: true,
+      clientX: r.left + (pt.x * 0.5 + 0.5) * r.width,
+      clientY: r.top + (-pt.y * 0.5 + 0.5) * r.height }));
+    return w.document.getElementById('tip')?.textContent || '';
+  };
+  const green = tipOver(bots[0]), taught = tipOver(bots[1]);
+  const tips = /lesson/.test(green) && /work/.test(taught) && green !== taught;
+  if (!tips) ok = false;
+
+  put((ok ? 'PASS' : 'FAIL') + ' a daydream leaves nothing behind  (' + line.join(' ')
+      + ' untrained-tip=' + /lesson/.test(green) + ' trained-tip=' + /work/.test(taught)
+      + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE BRAIN IN CHROME IS TOLD WHAT SHAPE TO ANSWER IN, and it was told the
+// chat shape whatever it was asked -- so Make got a perfectly well-formed
+// conversational reply and was blamed for not being a model. Ken's console:
+// {"say":"Here you go! A little blue box...","demo":"boxes"}. The check stands
+// in for Chrome's model and reads back what it was asked to answer with.
+async function nanoShapeCheck(D, w) {
+  const asked = [];
+  const had = w.LanguageModel;
+  w.LanguageModel = {
+    availability: async () => 'available',
+    create: async () => ({
+      prompt: async (q, o) => {
+        const props = Object.keys(o?.responseConstraint?.properties || {});
+        asked.push(props.join(',') || 'none');
+        if (props.includes('parts')) return JSON.stringify({ name: 'a blue box',
+          parts: [{ shape: 'box', size: [0.2, 0.1, 0.2], at: [0, 0.05, 0], color: 'blue' }] });
+        if (props.includes('orders')) return JSON.stringify({ name: 'a line', orders: 'forward 40' });
+        return JSON.stringify({ say: 'Hello!', demo: null });
+      },
+      destroy() {},
+    }),
+  };
+  w.localStorage.setItem('tt3d.marty-provider', 'nano');
+  try {
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+    await slowSettle(D, 3000);
+    const count = (k) => { let m = 0;
+      D.scene.traverse(o => { if (o.userData?.kind === k) m++; }); return m; };
+    const models0 = count('model'), pads0 = count('text');
+    w.document.getElementById('martyIn').value = 'a little blue box';
+    w.document.getElementById('martyMakeBtn').click();
+    for (let i = 0; i < 90 && count('model') === models0; i++) { await frames(D, 10); }
+    const made = count('model') - models0;
+    w.document.getElementById('martyIn').value = 'a straight line';
+    w.document.getElementById('martyDrawBtn').click();
+    for (let i = 0; i < 90 && count('text') === pads0; i++) { await frames(D, 10); }
+    const drew = count('text') - pads0;
+    const ok = asked[0] === 'name,parts' && asked[1] === 'name,orders' && made === 1 && drew === 1;
+    put((ok ? 'PASS' : 'FAIL') + ' the brain in Chrome is asked properly  (told="'
+        + asked.join('" then "') + '" made=' + made + ' drew=' + drew + ')',
+        ok ? 'pass' : 'fail');
+    return ok;
+  } finally {
+    if (had) w.LanguageModel = had; else delete w.LanguageModel;
+    w.localStorage.removeItem('tt3d.marty-provider');
+  }
+}
+
+// A NUMBER IN YOUR HAND. Two things Ken asked for, and they are the same
+// thought twice: what you have done to a thing belongs to the thing. A cube
+// turned to the face you wanted was levelled the moment it touched the table,
+// and the face you were reading could not be copied at all -- a face is a
+// canvas, and a canvas is not text.
+async function numberInHandCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '1234567', d: '1' }, op: '+' }, x: 0.2, z: 1.6 }] });
+  await slowSettle(D, 3000);
+  const num = D.bench(0);
+  // the clipboard, watched rather than read: reading it needs a permission the
+  // suite has no way to grant, and what matters is what the workshop offered
+  let copied = null;
+  const realWrite = w.navigator.clipboard.writeText;
+  w.navigator.clipboard.writeText = (t) => { copied = t; return Promise.resolve(); };
+  try {
+    D.hold(num);
+    await frames(D, 60);
+    w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true }));
+    await frames(D, 30);
+    const plain = copied;
+    // turn it: the arrows have always turned what you hold
+    w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await frames(D, 60);
+    w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'c', ctrlKey: true, bubbles: true }));
+    await frames(D, 30);
+    const turnedCopy = copied;
+    const heldQ = num.quaternion.toArray();
+    // ...and put it down: it must stay as you left it
+    D.clickBench(0.6, 1.6);
+    await slowSettle(D, 4000);
+    const downQ = num.quaternion.toArray();
+    const kept = heldQ.every((v, i) => Math.abs(v - downQ[i]) < 0.02);
+
+    const copiesFace = plain === '1234567' && turnedCopy !== plain && !!turnedCopy;
+    // ...and a MADE THING tips end over end, which a number could always do and
+    // a model could not: a unicorn has a top and an underside.
+    const model = D.makeFromReply(JSON.stringify({ name: 'a unicorn', parts: [
+      { shape: 'sphere', size: [0.09], at: [0, 0.08, 0], color: '#fff' }] }), 'a unicorn')?.thing;
+    await frames(D, 60);
+    D.hold(model);
+    await frames(D, 60);
+    const mq = model.quaternion.clone();
+    w.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await frames(D, 60);
+    const tipped = mq.angleTo(model.quaternion);
+    const tips = tipped > 1.3 && tipped < 1.9;
+
+    const ok = copiesFace && kept && tips;
+    put((ok ? 'PASS' : 'FAIL') + ' a number keeps what you did to it  (copied="'
+        + String(plain).slice(0, 12) + '" after-a-turn="' + String(turnedCopy).slice(0, 14)
+        + '" keeps-its-turn=' + kept + ' model-tips=' + tipped.toFixed(2) + 'rad)',
+        ok ? 'pass' : 'fail');
+    return ok;
+  } finally {
+    w.navigator.clipboard.writeText = realWrite;
+  }
+}
+
 // A ROBOT CAN BE TAUGHT WITH A MODEL. Giving one to a robot builds its thought
 // bubble and puts the thought into words, and both of those walked into the
 // same trap the copier did: an else that assumed a box, reading holes a model
@@ -2111,13 +2309,31 @@ async function bigWordsCheck(D) {
       + (short ? ' short' : ' full'));
     line.push(tag + '=' + (short ? 'short' : 'full') + (cut ? '/CUT' : ''));
   }
-  // and the words themselves reach the new scales
-  const vig = D.words('9'.padEnd(66, '8'));
-  const named = /vigintillion/.test(vig);
-  const ok = !bad.length && named;
+  // THE SCALE NAMES ARE BUILT FROM LATIN, so they do not stop where a table
+  // would have. Three spot checks against the names the dictionaries give.
+  const named = { vigintillion: D.words('1'.padEnd(64, '0')),      // ten to the 63rd
+                  trigintillion: D.words('1'.padEnd(94, '0')),     // ...to the 93rd
+                  centillion: D.words('1'.padEnd(304, '0')) };     // ...to the 303rd
+  const latin = /^one vigintillion$/.test(named.vigintillion)
+    && /^one trigintillion$/.test(named.trigintillion)
+    && /^one centillion$/.test(named.centillion);
+
+  // AND A FACE TOO LONG TO HOLD IT SHOWS THE FIRST AND LAST OF IT, the way a
+  // long number's digits taper to an ellipsis and come back. Cutting the tail
+  // off threw away the half a reader most wants.
+  const huge = '2399787825375610644499733573594241610221812538008592263008224'.padEnd(900, '3');
+  const grouped = D.faceWords(huge, 1, 'grouped').replace(/\s+/g, ' ');
+  const gap = /\u2026/.test(grouped) && !/\u2026\s*$/.test(grouped);
+  const headShown = grouped.startsWith('239,978');
+  const tailShown = /3(33|,3)/.test(grouped.slice(-12));
+  const bothEnds = gap && headShown && tailShown;
+
+  const ok = !bad.length && latin && bothEnds;
   put((ok ? 'PASS' : 'FAIL') + ' every number says itself  (' + line.join(' ')
-      + ' vigintillion=' + named + (bad.length ? ' BAD: ' + bad.join(', ') : '')
-      + ')', ok ? 'pass' : 'fail');
+      + ' latin-scales=' + latin
+      + ' head-and-tail=' + bothEnds + '/gap=' + gap + '/head=' + headShown
+      + '/tail=' + tailShown
+      + (bad.length ? ' BAD: ' + bad.join(', ') : '') + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -2923,6 +3139,15 @@ async function runOne(D, spec) {
   let stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK, picOK, wholeOK, t3dOK, mtOK,
       zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK;
   let paceOK, foldOK, reachOK, makerOK, faceOK, pileOK, drawOK, postOffOK, waitOK;
+  let dreamOK = true;
+  try { dreamOK = want('daydream') ? await daydreamCheck(D, frame.contentWindow) : true; }
+  catch (e) { dreamOK = false; put('FAIL a daydream leaves nothing behind  ' + e.message, 'fail'); }
+  let nanoOK = true;
+  try { nanoOK = want('nanoshape') ? await nanoShapeCheck(D, frame.contentWindow) : true; }
+  catch (e) { nanoOK = false; put('FAIL the brain in Chrome is asked properly  ' + e.message, 'fail'); }
+  let handOK = true;
+  try { handOK = want('inhand') ? await numberInHandCheck(D, frame.contentWindow) : true; }
+  catch (e) { handOK = false; put('FAIL a number keeps what you did to it  ' + e.message, 'fail'); }
   let teachOK = true;
   try { teachOK = want('trainmodel') ? await trainWithModelCheck(D, frame.contentWindow) : true; }
   catch (e) { teachOK = false; put('FAIL a robot can be taught with a model  ' + e.message, 'fail'); }
@@ -3069,7 +3294,7 @@ async function runOne(D, spec) {
                         && twinOK && nbOK,
                        bad, leakOK, playOK, pauseOK, copyOK, r28OK, shelfOK, bindOK, inexOK,
                        turtleOK, pgOK, stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK,
-                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, teachOK, wordsOK, dumps };
+                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, teachOK, wordsOK, handOK, dreamOK, nanoOK, dumps };
   // AND ONTO DISK. Reading a verdict back out of the browser costs a round
   // trip through a channel that, on a loaded machine, times out more often
   // than it answers -- eight minutes of polling for one line of text. The

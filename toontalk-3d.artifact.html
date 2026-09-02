@@ -376,10 +376,22 @@ messagewhat it does
 
 Every whole number says itself in English on one of its faces, however
 big it is: “one hundred twenty-three billion four hundred fifty-six million…”.
-Past the point where English runs out of names — beyond a vigintillion, which
-is a one with sixty-three noughts — it reads itself as about five point
-seven times ten to the power of sixty-nine, which is still something you
-can say out loud.
+The names are built the way English builds them, out of Latin numerals, so they
+go on well past the ones in dictionaries — a one with three hundred and three
+noughts is one centillion. Past even those it reads itself as
+about five point seven times ten to the power of sixty-nine, which is
+still something you can say out loud. When a number is too long to write out on
+one face you get the beginning and the end of it, with the middle closing
+up, never just the beginning.
+
+A made thing can be tipped as well as turned: hold it and the up and
+down arrows lay it on its back or stand it on its nose, the same as they turn a
+number to its other faces.
+
+Ctrl+C copies the face you are reading off a number in your hand —
+the digits, the grouped form, the words or the scientific one, whichever you
+have turned toward you. And a cube you have turned stays turned when you
+put it down.
 
 Any colour the browser knows by name works, and so does a #rrggbb
 of your own. A number takes background, colour and font; its size is its own.
@@ -11508,15 +11520,46 @@ function drawNum(c, s, cx, cyMid, maxW, maxH, lod = 1) {
 const SMALL_WORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten',
   'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
 const TENS_WORDS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
-// The named scales, as far as English actually names them: up to vigintillion,
-// which is ten to the sixty-third, so any whole number of 66 digits or fewer
-// can be said. Ken: "even very large integers should be displayed in English
-// on one face of the cube" -- the table stopped at decillion, and everything
-// past it fell out of words and into scientific notation.
-const SCALE_WORDS = ['','thousand','million','billion','trillion','quadrillion','quintillion',
-  'sextillion','septillion','octillion','nonillion','decillion','undecillion',
-  'duodecillion','tredecillion','quattuordecillion','quindecillion','sexdecillion',
-  'septendecillion','octodecillion','novemdecillion','vigintillion'];
+// THE SCALE NAMES ARE BUILT, NOT LISTED. A table stops wherever whoever wrote
+// it got bored -- ours stopped at decillion, and everything past ten to the
+// thirty-sixth fell out of English. English does not actually stop there:
+// past a nonillion the names are made out of Latin numerals to a rule (Conway
+// and Wechsler's, the one the dictionaries follow), and a rule can be written
+// down once and then answer for every number.
+//
+//   n-illion is ten to the (3n+3). 21 is un + viginti -> unvigintillion;
+//   23 is tre + viginti, and viginti asks for the s -> tresvigintillion;
+//   100 is centi -> centillion, which is ten to the three hundred and third.
+//
+// The letters in the units are the whole subtlety: "tre" grows an s, "se" an
+// s or an x, "septe" and "nove" an m or an n, depending on what follows -- so
+// that the word can be said. Each ten and hundred carries the letters it asks
+// for.
+const ILLIONS_SMALL = ['', 'million', 'billion', 'trillion', 'quadrillion',
+  'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion'];
+const L_UNITS = ['', 'un', 'duo', 'tre', 'quattuor', 'quinqua', 'se', 'septe', 'octo', 'nove'];
+const L_TENS = [['', ''], ['deci', 'n'], ['viginti', 'ms'], ['triginta', 'ns'],
+  ['quadraginta', 'ns'], ['quinquaginta', 'ns'], ['sexaginta', 'n'],
+  ['septuaginta', 'n'], ['octoginta', 'mx'], ['nonaginta', '']];
+const L_HUNDREDS = [['', ''], ['centi', 'nx'], ['ducenti', 'n'], ['trecenti', 'ns'],
+  ['quadringenti', 'ns'], ['quingenti', 'ns'], ['sescenti', 'n'],
+  ['septingenti', 'n'], ['octingenti', 'mx'], ['nongenti', '']];
+function illionName(n) {
+  if (n < 10) return ILLIONS_SMALL[n];
+  if (n > 999) return null;                 // past ten to the three thousandth
+  const u = n % 10, t = Math.floor(n / 10) % 10, h = Math.floor(n / 100);
+  const nextFlags = t ? L_TENS[t][1] : L_HUNDREDS[h][1];
+  let pre = L_UNITS[u];
+  if (u === 3 && /[sx]/.test(nextFlags)) pre += 's';
+  else if (u === 6) pre += nextFlags.includes('s') ? 's' : nextFlags.includes('x') ? 'x' : '';
+  else if (u === 7 || u === 9) {
+    pre += nextFlags.includes('m') ? 'm' : nextFlags.includes('n') ? 'n' : '';
+  }
+  const word = pre + (t ? L_TENS[t][0] : '') + (h ? L_HUNDREDS[h][0] : '');
+  return word.replace(/[aeiou]$/, '') + 'illion';
+}
+// index 0 is the units, 1 is the thousands, and after that it is the illions
+const scaleWord = (i) => i === 0 ? '' : i === 1 ? 'thousand' : illionName(i - 1);
 function english999(n) {
   let out = '';
   if (n >= 100) { out += SMALL_WORDS[Math.floor(n / 100)] + ' hundred'; n %= 100; if (n) out += ' '; }
@@ -11528,11 +11571,13 @@ function englishInt(n) {                 // BigInt >= 0; null past the names we 
   if (n === 0n) return 'zero';
   const groups = [];
   while (n > 0n) { groups.push(Number(n % 1000n)); n /= 1000n; }
-  if (groups.length > SCALE_WORDS.length) return null;
+  if (groups.length > 1000) return null;          // even Latin runs out eventually
   const parts = [];
   for (let i = groups.length - 1; i >= 0; i--) {
     if (!groups[i]) continue;
-    parts.push(english999(groups[i]) + (SCALE_WORDS[i] ? ' ' + SCALE_WORDS[i] : ''));
+    const scale = scaleWord(i);
+    if (scale === null) return null;
+    parts.push(english999(groups[i]) + (scale ? ' ' + scale : ''));
   }
   return parts.join(' ');
 }
@@ -11940,13 +11985,36 @@ function drawWrapped(c, text, cx, cy, maxW, maxH, alt) {
   // in small type, and it must go on saying itself in full: the short reading
   // is the last resort, not the first.
   if (alt) return drawWrapped(c, alt, cx, cy, maxW, maxH);
-  // still too much to show: cut it to what fits and say so with an ellipsis
-  c.font = 'bold 9px Georgia, serif';
-  const lines = wrapLines(c, text, maxW).slice(0, Math.max(1, Math.floor(maxH / 10.1)));
-  if (lines.length) lines[lines.length - 1] = lines[lines.length - 1].replace(/.$/, '…');
-  const y0 = cy - (lines.length - 1) * 10.1 / 2;
-  lines.forEach((l, i) => c.fillText(l, cx, y0 + i * 10.1));
-  return lines.join(' ');
+  // STILL too much -- and now it is shown the way a long number's digits are:
+  // the beginning and the END, with the lines shrinking toward the gap. Cutting
+  // the tail off with an ellipsis threw away the half a reader most wants,
+  // since the last figures of a number are as much of it as the first.
+  const PX = 9, LH = PX * 1.12;
+  c.font = `bold ${PX}px Georgia, serif`;
+  const all = wrapLines(c, text, maxW);
+  const room = Math.max(1, Math.floor(maxH / LH));
+  if (all.length <= room) {
+    const y1 = cy - (all.length - 1) * LH / 2;
+    all.forEach((l, i) => c.fillText(l, cx, y1 + i * LH));
+    return text;
+  }
+  const keep = Math.max(2, room - 1);              // one line of the room is the gap
+  const headN = Math.ceil(keep / 2), tailN = keep - headN;
+  const parts = [...all.slice(0, headN).map(l => [l, 1]), ['…', 0.9],
+                 ...all.slice(all.length - tailN).map(l => [l, 1])];
+  // the two lines either side of the gap are set smaller, so the eye reads the
+  // break as a break rather than as a sentence that stops making sense
+  parts.forEach((pr, i) => { const d = Math.abs(i - headN);
+    if (d === 1) pr[1] = 0.78; else if (d === 2) pr[1] = 0.9; });
+  const H2 = parts.reduce((a, pr) => a + LH * pr[1], 0);
+  let y = cy - H2 / 2;
+  for (const [l, k] of parts) {
+    c.font = `bold ${Math.max(6, Math.round(PX * k))}px Georgia, serif`;
+    y += LH * k / 2;
+    c.fillText(l, cx, y);
+    y += LH * k / 2;
+  }
+  return parts.map(pr => pr[0]).join(' ');
 }
 
 const allNumbers = [];
@@ -12075,6 +12143,15 @@ function makeNumber(value, op = '+', lite = false) {
     const label = g.userData.faceText;
     const v = g.userData.value;
     const lod = g.__lod;
+    // WHAT EACH FACE SAYS, kept beside the picture of it. A face is a canvas,
+    // and a canvas cannot be read back as words -- so Ctrl+C on a number in
+    // your hand would have nothing to copy unless the wording is remembered as
+    // it is painted.
+    fMain.mat.__text = label != null ? label
+      : !v ? ''
+      : v.x ? APPROX + decText(v)
+      : v.d === 1n ? String(v.n)
+      : String(v.n) + '/' + String(v.d);
     paint(fMain, (c, st) => {
       if (label != null) {
         c.font = lookFace(g.userData.look, 'bold', fitFont(c, label, 176, 176));
@@ -12103,6 +12180,7 @@ function makeNumber(value, op = '+', lite = false) {
       const improper = v && !v.x && v.d !== 1n && (v.n < 0n ? -v.n : v.n) > v.d;
       if (improper && label == null) {
         if (!fTop) fTop = mkFace();
+        fTop.mat.__text = mixedText(v);
         paint(fTop, (c, st) => drawMixed(c, st, v, lod));
         topMesh.material = fTop.mat;
       } else {
@@ -12133,6 +12211,7 @@ function makeNumber(value, op = '+', lite = false) {
     const v = g.userData.value;
     const lod = g.__lod;
     if (label != null || !v) {
+      [fBack, fSci, fAlt, fBot].forEach(f => { f.mat.__text = label ?? ''; });
       [fBack, fSci, fAlt, fBot].forEach(f => paint(f, (c) => {
         if (label != null) {
           c.font = `bold ${fitFont(c, label, 176, 176)}px Georgia, serif`;
@@ -12146,12 +12225,15 @@ function makeNumber(value, op = '+', lite = false) {
     // the trillion-part fraction that stands behind it
     paint(fBack, (c) => {
       const said = v.x ? englishApprox(v) : englishText(v);
+      fBack.mat.__text = said;                  // the words, not what would fit
       // ...and, for a whole number too long to name in full, the short reading
       const brief = (!v.x && v.d === 1n)
         ? (v.n < 0n ? 'negative ' : '') + englishHuge(v.n < 0n ? -v.n : v.n) : null;
       drawWrapped(c, said, 128, 140, 192, 168, brief);
     });
+    fSci.mat.__text = sciText(v);
     paint(fSci, (c) => drawSci(c, v, lod));
+    fAlt.mat.__text = v.d === 1n ? groupText(v.n) : decText(v);
     paint(fAlt, (c) => v.d === 1n
       ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160)
       : drawDecimal(c, v, lod));
@@ -22586,6 +22668,26 @@ function buildCondNode(cond, path, marks) {
   marks.push([g, path]);
   return g;
 }
+// WHICH FACE IS TOWARD THE EYE, and what is written on it. The same walk
+// uprightHeld does: the six panes are real meshes, so the one facing you is the
+// one whose normal points back along the view. Ctrl+C on a number in your hand
+// copies that face -- the digits, or the words, or the scientific form,
+// whichever you turned toward yourself.
+const _ft = { n: new THREE.Vector3(), view: new THREE.Vector3(), q: new THREE.Quaternion() };
+function visibleFaceText(node) {
+  if (!node) return null;
+  node.updateMatrixWorld(true);
+  camera.getWorldDirection(_ft.view);
+  let best = null, facing = -2;
+  for (const ch of node.children) {
+    if (ch.geometry?.type !== 'PlaneGeometry' || !ch.material) continue;
+    ch.getWorldQuaternion(_ft.q);
+    _ft.n.set(0, 0, 1).applyQuaternion(_ft.q);
+    const d = -_ft.n.dot(_ft.view);
+    if (d > facing) { facing = d; best = ch; }
+  }
+  return best?.material?.__text ?? null;
+}
 // A trained robot on the table (or standing in a room) carries a small
 // thought bubble of its own, so its condition is visible at a glance.
 function addMiniBubble(node, cond) {
@@ -23761,7 +23863,14 @@ function leaveTraining(restore = true) {
   preTraining = null;
   parkRobot();
   renderProgram(); refreshUI();
-  if (stations.stand.occupant) say('It keeps what it was given — press Run to watch it work.');
+  // SAID EVERY TIME, not only when something is left on the stand: the one
+  // thing a person needs to know on the way out of a daydream is that it was
+  // one. Nothing that happened in there happened.
+  if (restore) {
+    say(stations.stand.occupant
+      ? `The daydream is over and the table is as you left it — it keeps only what it learned. It still has what it was given, so press Run to watch it work.`
+      : `The daydream is over and the table is as you left it — it keeps only what it learned.`);
+  }
 }
 // Outside its thought bubble the robot just stands there, so send it back to
 // its spot rather than leaving it mid-bench.
@@ -24132,7 +24241,19 @@ function finishRun(msg) {
     restoreLeaderBody(activeBot);
     layoutTeam();
   }
+  // WHAT THE RUN MADE GOES ON THE TABLE, and it now says so. A lesson is a
+  // daydream and leaves nothing behind; a RUN is real work and its results are
+  // yours to keep -- and the two look identical at the moment the robot stops
+  // unless somebody says which just happened. Ken watched a robot copy a
+  // unicorn until his work spots were full, stopped it, and read the herd
+  // arriving on the desk as a lesson that had failed to rewind.
+  const swept = Object.values(stations)
+    .filter(s2 => s2.kind === 'scratch' && s2.occupant).length;
   clearScratch();
+  if (swept) {
+    say(`${swept} thing${swept === 1 ? '' : 's'} from the work spots ${swept === 1 ? 'is' : 'are'} on the table `
+      + `— that is the run's work, and it is yours to keep.`);
+  }
   // the given STAYS on the desk -- as in ToonTalk, a robot that stops just
   // stops; loosen a red part or raise Rounds and it can go again. It returns
   // to the table only when the robot itself leaves the bench.
@@ -24883,36 +25004,54 @@ function uprightHeld(node) {
 function turnLooked(kind, dir) {
   const t = straightOn?.thing;
   if (!t) return;
-  if (kind === 'pitch' && t.userData.kind !== 'number') {
-    return say('Tipping only makes sense for a number, every face of which '
-      + 'says the value another way. Turn this one left and right instead.');
+  if (kind === 'pitch' && !TIPPABLE.includes(t.userData.kind)) {
+    return say('Tipping makes sense for a number, whose every face says the '
+      + 'value another way, and for a made thing, which has a top and an '
+      + 'underside. Turn this one left and right instead.');
   }
   if (kind === 'pitch') straightOn.pitch = ((straightOn.pitch + dir) % 4 + 4) % 4;
   else straightOn.yaw = ((straightOn.yaw + dir) % 4 + 4) % 4;
   t.quaternion.copy(straightOn.baseQ).premultiply(new THREE.Quaternion().setFromEuler(
     new THREE.Euler(straightOn.pitch * QUARTER, straightOn.yaw * QUARTER, 0, 'YXZ')));
   uprightHeld(t);
+  t.userData.aim = t.quaternion.toArray();   // and it keeps it after Escape
   sfx('type');
   say(t.userData.kind === 'number'
     ? 'Turning it \u2014 the faces say the same number other ways: words, a mixed '
       + 'fraction, scientific notation, exact decimal.'
     : 'Turning it round.');
 }
+// Which kinds are worth TIPPING end over end. A number, because every face of
+// it says the value another way -- and a MODEL, because a made thing is a
+// solid: Ken's unicorn has a top and an underside, and being able to lie it on
+// its back is the difference between a toy and a picture of one. A nest with a
+// pile on it went over on its head and half through the table, which is why
+// this was ever a short list.
+const TIPPABLE = ['number', 'model', 'trail'];
 function turnHeld(kind, dir) {
   const HAND = inHand();
   if (!HAND) return;
   if (kind === 'pitch') {
-    if (HAND.userData.kind !== 'number') {
-      return say('Tipping only makes sense for a number, every face of which '
-        + 'says the value another way. Turn this one left and right instead.');
+    if (!TIPPABLE.includes(HAND.userData.kind)) {
+      return say('Tipping makes sense for a number, whose every face says the '
+        + 'value another way, and for a made thing, which has a top and an '
+        + 'underside. Turn this one left and right instead.');
     }
     // A number is a cube with something written on all six sides, so it goes
     // round and round; only a nest with a pile had any business being stopped.
     heldPitch = ((heldPitch + dir) % 4 + 4) % 4;
+    // and it is the same quarter turn for a model, which has no faces to read
+    // but does have a right way up
   } else {
     heldYaw = ((heldYaw + dir) % 4 + 4) % 4;
   }
   applyHeldTurn();
+  // WHICH WAY YOU LEFT IT IS PART OF WHAT IT IS. Putting a thing down levelled
+  // it, so a number turned to the face you wanted to read went back to its
+  // digits the moment it touched the table -- and `aim` is the field that
+  // already means "this is how this thing points", read by putOnBench and
+  // written into the saved world.
+  HAND.userData.aim = HAND.quaternion.toArray();
   sfx('type');
   say(HAND.userData.kind === 'number'
     ? 'Turning it — the faces say the same number other ways: words, a mixed '
@@ -25208,6 +25347,22 @@ addEventListener('keydown', (e) => {
     else if (e.key === 'Enter') { pushUndo(); H.setText(H.userData.text + '\n'); }
     else if (labelKey) { pushUndo(); H.setText(H.userData.text + e.key); sfx('type'); }
     refreshUI();
+    return;
+  }
+  // Ctrl+C ON A NUMBER copies the face you are reading. Ken asked for it and it
+  // is the one thing a number in your hand could not do: the value is on a
+  // canvas, and a canvas is not text. Every face keeps its own wording now, so
+  // this copies the digits, the words, the grouped form or the scientific one,
+  // whichever you have turned toward you.
+  if (H.userData.kind === 'number' && (e.ctrlKey || e.metaKey)
+      && e.key.toLowerCase() === 'c') {
+    e.preventDefault();
+    const t2 = visibleFaceText(H) || '';
+    if (!t2) return say('That face has nothing written on it yet.');
+    try {
+      navigator.clipboard.writeText(t2);
+      say(`Copied: ${t2.length > 60 ? t2.slice(0, 57) + '\u2026' : t2}`);
+    } catch { say('This browser would not let go of the clipboard.'); }
     return;
   }
   if (H.userData.kind === 'die') {
@@ -25536,8 +25691,16 @@ function tipFor(t) {
     if (TIP?.userData.kind === 'robot') {
       return 'Drop to form a team — each pass, the first member that recognises the thing runs.';
     }
-    if (TIP) return activeBot ? 'Another robot is already at the bench.'
-      : 'Drop that on it: it wakes, grows, and takes it — training if it is untrained.';
+    if (TIP) {
+      // WHICH ROBOT THIS IS decides what dropping on it means, and the one
+      // sentence covering both cases made the reader work it out every time.
+      // An untrained one is about to watch you; a trained one is about to be
+      // set going on the thing in your hand.
+      if (activeBot) return 'Another robot is already at the bench.';
+      return trained
+        ? `Drop that on it: it wakes, grows, and gets to work on it — it already knows ${trained} step${trained === 1 ? '' : 's'}.`
+        : 'Drop that on it: it wakes, grows, and watches you — whatever you do next is its lesson.';
+    }
     if (trained) {
       const lines = bot.program.slice(0, 8).map((st2, i) => `${i + 1}. ${describe(st2)}`);
       if (bot.program.length > 8) lines.push(`… and ${bot.program.length - 8} more`);
@@ -27559,6 +27722,43 @@ const martyReplySchema = () => ({
   required: ['say'],
   additionalProperties: false,
 });
+// THE SHAPE OF THE ANSWER DEPENDS ON THE QUESTION, and the brain built into
+// Chrome is TOLD the shape rather than asked for it: constrained decoding is
+// the one thing that makes a small on-device model usable for this. It was
+// handed the CHAT schema whatever it was asked, so pressing Make got a
+// perfectly well-formed conversational reply -- Ken's console:
+//
+//   [marty] could not build from this reply:
+//   {"say":"Here you go! A little blue box to get you started.","demo":"boxes"}
+//
+// It was not failing to make a model. It was being made to answer as though it
+// had been asked a question, and then blamed for it.
+const makerReplySchema = () => ({
+  type: 'object',
+  properties: {
+    name: { type: 'string' },
+    parts: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          shape: { enum: ['box', 'sphere', 'cylinder', 'cone'] },
+          size: { type: 'array', items: { type: 'number' } },
+          at: { type: 'array', items: { type: 'number' } },
+          rot: { type: 'array', items: { type: 'number' } },
+          color: { type: 'string' },
+        },
+        required: ['shape', 'size', 'at'],
+      },
+    },
+  },
+  required: ['name', 'parts'],
+});
+const drawReplySchema = () => ({
+  type: 'object',
+  properties: { name: { type: 'string' }, orders: { type: 'string' } },
+  required: ['orders'],
+});
 // The keyless route. No key, no account -- and no clean failure either: a
 // signed-out reader is not refused with a tidy 401 but with a non-JSON body
 // that sails past a status check and dies at JSON.parse. So everything that
@@ -27602,7 +27802,7 @@ async function hereThink(sys, q, history = null, cap = 900) {
   if (!out.trim()) throw new HereTrouble('an empty answer', 'signedout');
   return out;
 }
-async function nanoThink(sys, q, history = martyHistory) {
+async function nanoThink(sys, q, history = martyHistory, schema = null) {
   const api = nanoAPI();
   if (!api) return null;                      // no built-in model: phrasebook
   const state = await nanoState();
@@ -27619,7 +27819,9 @@ async function nanoThink(sys, q, history = martyHistory) {
       ...history.slice(-2).map(m => ({ role: m.role, content: m.content }))],
   });
   try {
-    try { return await session.prompt(q, { responseConstraint: martyReplySchema() }); }
+    try {
+      return await session.prompt(q, { responseConstraint: schema ?? martyReplySchema() });
+    }
     catch (e) {
       // an older build with no constrained decoding, or a schema it dislikes
       if (nanoTooMuch(e)) throw e;
@@ -27746,10 +27948,10 @@ function apiWhy(body) {
   const t = raw.replace(/\s+/g, ' ').trim();
   return t ? ' — ' + t.slice(0, 200) : '';
 }
-async function askBrain(sys, q, history = martyHistory, cap = 900) {
+async function askBrain(sys, q, history = martyHistory, cap = 900, schema = null) {
   const prov = martyProv();
   if (prov === 'here') return await hereThink(sys, q, history, cap);
-  if (prov === 'nano') return await nanoThink(sys, q, history);
+  if (prov === 'nano') return await nanoThink(sys, q, history, schema);
   const key = martyKeyOf(prov);
   if (!key) return null;
   const model = martyModelOf(prov);
@@ -28167,7 +28369,8 @@ async function martyMake(want) {
   // 4000, not 1600: a mantis is twenty-odd parts and Claude's branch is the
   // one that actually sends a cap, which is why the same wish built under GPT
   // and came back unparseable under Sonnet and Opus alike.
-  try { reply = await askBrain(MARTY_MAKER_SYSTEM, wish, martyMakeHistory, 4000); }
+  try { reply = await askBrain(MARTY_MAKER_SYSTEM, wish, martyMakeHistory, 4000,
+                               makerReplySchema()); }
   catch (e) { trouble = e; }
   finally { doneThinking(); martyMaking = false; }
   if (trouble) {
@@ -28500,7 +28703,8 @@ async function martyDraw(want) {
   martyDrawing = true;
   const doneThinking = martyThinkingStart();
   let reply = null, trouble = null;
-  try { reply = await askBrain(MARTY_DRAW_SYSTEM, wish, martyDrawHistory, 4000); }
+  try { reply = await askBrain(MARTY_DRAW_SYSTEM, wish, martyDrawHistory, 4000,
+                               drawReplySchema()); }
   catch (e) { trouble = e; }
   finally { doneThinking(); martyDrawing = false; }
   if (trouble) {
@@ -29427,12 +29631,17 @@ window.__nano = {
   // WHAT THE FACE ACTUALLY SHOWS, which is not the same question: the wording
   // is chosen, then fitted, and a name too long to fit used to be cut off with
   // an ellipsis. Painted onto a scratch canvas of the very size the face uses.
-  faceWords(n, d = 1) {
+  // what the face turned toward the eye says -- what Ctrl+C would copy
+  faceTextNow(t) { return visibleFaceText(t); },
+  faceWords(n, d = 1, which = 'words') {
     const v = rat(BigInt(n), BigInt(d));
     const cv = document.createElement('canvas');
     cv.width = 256; cv.height = 256;
     const c = cv.getContext('2d');
     c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (which === 'grouped') {
+      return v.d === 1n ? drawWrapped(c, groupText(v.n), 128, 140, 192, 160) : null;
+    }
     const said = v.x ? englishApprox(v) : englishText(v);
     const brief = (!v.x && v.d === 1n)
       ? (v.n < 0n ? 'negative ' : '') + englishHuge(v.n < 0n ? -v.n : v.n) : null;
