@@ -163,6 +163,8 @@
   <p id="whoLine" style="margin-top:6px;font-size:11.5px;color:var(--dim)"></p>
   <button id="againBtn" style="display:none;margin-top:8px"
     title="Put this puzzle back exactly as it began.">Start this puzzle over</button>
+  <button id="nextBtn" class="go" style="display:none;margin-top:8px"
+    title="The judge has accepted your answer: on to the next puzzle.">Next puzzle ▸</button>
 </div>
 
 <div id="prog" class="card">
@@ -1401,16 +1403,18 @@ the table holds only what the puzzle gives you — the stacks and tools it
 does not want are simply not there, and the keyboard may not reach numbers or
 pads. When you have an answer, give it to the bird. She flies it into the
 judges house, an opaque house whose robots decide: a wrong answer
-comes back to the nest marked from the judge; the right one gets a note
-and, usually, the next puzzle. Start this puzzle over on the card puts
-everything back as it began, and asking Marty for a hint gets the
-authors hints one at a time, the last of them the whole answer.
+comes back to the nest marked from the judge; the right one gets a note,
+and a Next puzzle button appears on the card for when you have read it.
+Start this puzzle over puts everything back as it began, and asking
+Marty for a hint gets the authors hints one at a time, the last
+of them the whole answer.
 
 Do step inside the judges house and look. The robots in there were
 trained the way you train yours, and reading them is how you learn to make a
-puzzle of your own — just not how to solve this one. The first puzzles
-are in examples/puzzles/, and make_puzzles.py there
-shows how they are written.
+puzzle of your own — just not how to solve this one. The first five puzzles
+— a box with 1 and 2, a 4, a box with 8, 16 and 32, a zero, and a box of
+two zeros made by a robot you train — are in examples/puzzles/,
+and make_puzzles.py there shows how they are written.
 
 ## The notebook, saving and sharing
 
@@ -13241,7 +13245,7 @@ function runStep(step) {
   // OPEN ANOTHER WORLD. The one step a robot in a judge's house needs that no
   // robot had: the next puzzle by name. Honoured at the top of a frame, since
   // this robot is standing in the very world about to be replaced.
-  else if (step.type === 'load') enqueue(doNow(() => requestWorldLoad(step.name)));
+  else if (step.type === 'load') enqueue(doNow(() => offerOrLoad(step.name)));
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (clawHeld?.userData.kind === 'box') resizeHeldBox(step.n, true); } });
   } else if (step.type === 'setOp') {
@@ -14471,6 +14475,8 @@ function worldIn(data) {
   // was built. Measured: rules null, stacks back, one line after they were set.
   if (!offstage()) rememberWorld(data);
   if (!merging && !offstage()) {
+    nextWorld = null;
+    { const b = document.getElementById('nextBtn'); if (b) b.style.display = 'none'; }
     worldName = data.name ?? null;
     puzzleInfo = (data.intro || data.goal || data.hints) ? {
       name: data.name ?? null, intro: data.intro ?? null, goal: data.goal ?? null,
@@ -18275,6 +18281,7 @@ let puzzleInfo = null;        // { name, intro, goal, hints }
 let hintCounter = 0;          // how many hints Marty has given on this puzzle
 let worldName = null;         // the name the current world file gave itself
 let pendingLoad = null;       // a world a robot asked for, opened at the top of a frame
+let nextWorld = null;         // a world the judge has OFFERED: the Next button opens it
 // EVERY WORLD THIS SESSION HAS SEEN, BY NAME. Inside a published artifact
 // nothing can be fetched, so "open the world p2" has to find p2 in memory: a
 // file may carry its successors in a `library`, and every file opened is
@@ -18307,6 +18314,25 @@ async function resolveWorld(name) {
 // would pull the floor out from under the step that asked -- so the request is
 // noted and honoured at the top of the next frame, where nothing is standing
 // anywhere.
+// IN A PUZZLE THE JUDGE OFFERS THE NEXT WORLD RATHER THAN OPENING IT. Ken
+// never saw the note for solving puzzle 1: the judge sent it and opened
+// puzzle 2 in the same breath, and the letter was still in the air when the
+// table changed under it. A robot that says "well done -- next" now arms the
+// Next button and leaves the player to press it when they have read the note.
+// Outside a puzzle the step still opens the world at once.
+function offerOrLoad(name) {
+  if (!puzzleInfo) return requestWorldLoad(name);
+  nextWorld = name;
+  const b = document.getElementById('nextBtn');
+  if (b) { b.style.display = ''; b.textContent = 'Next puzzle ▸'; }
+  say('Solved! Press Next puzzle when you are ready.');
+}
+function goToNextWorld() {
+  if (!nextWorld) return;
+  const name = nextWorld; nextWorld = null;
+  const b = document.getElementById('nextBtn'); if (b) b.style.display = 'none';
+  requestWorldLoad(name);
+}
 function requestWorldLoad(name) {
   resolveWorld(name).then(rec => {
     if (rec) pendingLoad = rec;
@@ -20095,6 +20121,7 @@ function toggleMartyPanel() {
 }
 document.getElementById('martyClose').onclick = () => { martyUI.style.display = 'none'; };
 document.getElementById('againBtn').onclick = () => { if (!busy) startWorldOver(); };
+document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld(); };
 {
   const vb = document.getElementById('martyVoice');
   const showV = () => { vb.textContent = martyVoiceOn ? '\u{1F50A}' : '\u{1F508}';
@@ -20465,6 +20492,11 @@ window.__nano = {
   get rules() { return worldRules; },
   get puzzle() { return puzzleInfo; },
   loadWorld(name) { requestWorldLoad(name); },
+  get nextWorld() { return nextWorld; },
+  goNext() { goToNextWorld(); },
+  // would THIS condition accept THAT thing -- for asking a judge, from
+  // outside its house, whether it would take the very goal on the table
+  matchOf(cond, t) { return matchState(cond, specOf(t)); },
   openPending() { openPendingWorld(); },
   startOver() { startWorldOver(); },
   nextHint(q = 'hint') { return puzzleHint(q); },   // the card's own `hint` is a getter below

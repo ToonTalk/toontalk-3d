@@ -1,0 +1,663 @@
+{
+ "kind": "world",
+ "v": 3,
+ "name": "p4",
+ "intro": "The computer\u2019s going to need a zero to work. Notice the badge on one of these numbers: a number wearing a minus takes away when you drop it on another. Give the bird a zero.",
+ "goal": "a zero",
+ "hints": [
+  "Look at the badge on the 3 that says minus.",
+  "Drop the minus 3 on the other 3.",
+  "Here\u2019s what I\u2019d do: pick up the 3 wearing the minus badge and drop it on the plain 3. That leaves a 0. Give the 0 to the bird."
+ ],
+ "rules": {
+  "stacks": [],
+  "tools": [],
+  "typing": {
+   "numbers": false,
+   "pads": false
+  },
+  "undo": true
+ },
+ "bench": [
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "1"
+    },
+    "op": "+"
+   },
+   "x": -0.23,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "1"
+    },
+    "op": "-"
+   },
+   "x": 0.23,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 9941,
+    "nestGuid": "p4-post",
+    "label": "give me your answer"
+   },
+   "x": 0.0,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9942,
+    "guid": "p4-reply",
+    "hasEgg": false,
+    "pile": [],
+    "label": "from the judge"
+   },
+   "x": 0.55,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "0",
+     "d": "1"
+    },
+    "op": "+",
+    "fixed": true,
+    "label": "we need this"
+   },
+   "x": 1.15,
+   "z": 1.2
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "the judge",
+    "opaque": true,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9941,
+         "guid": "p4-post",
+         "hasEgg": false,
+         "pile": [],
+         "label": "the post"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9942,
+         "nestGuid": "p4-reply",
+         "label": "to the player"
+        },
+        {
+         "kind": "text",
+         "text": "A zero \u2014 just what the computer needed. Next: robots."
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "the judge",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "wild"
+        },
+        {
+         "kind": "wild"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "load",
+        "name": "p5"
+       }
+      ],
+      "trainedOn": null,
+      "team": [
+       {
+        "kind": "robot",
+        "name": "the judge (not a box like that)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "wild"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not a number)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "wild"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not a pad)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildText"
+          },
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "wild"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       }
+      ]
+     }
+    },
+    "judge": true
+   },
+   "x": -1.25,
+   "z": 1.2
+  }
+ ],
+ "stations": {},
+ "active": null,
+ "library": {
+  "p5": {
+   "kind": "world",
+   "v": 3,
+   "name": "p5",
+   "intro": "Sometimes to get things done I have to train robots to do work for me. See if you can train a robot to make a box with two zeros in it. Mimi the copier is here to help. Give the box to the bird when you have it.",
+   "goal": "a box with two zeros in it",
+   "hints": [
+    "You can train the robot if you give it the box with the zero in it. You\u2019ll end up in its imagination, and it remembers whatever you do.",
+    "Set the box on Mimi\u2019s platform: a copy drops into the tray.",
+    "Drop the copy on the side of the box and they join into one box.",
+    "Here\u2019s what I\u2019d do. I\u2019d drop the box on the robot. Then I\u2019d have it set the box on Mimi, take the copy, and drop the copy on the side of the box. When I leave its thought bubble, I\u2019d give it the box and let it work \u2014 then give the bird the box it made."
+   ],
+   "rules": {
+    "stacks": [],
+    "tools": [
+     "mimi"
+    ],
+    "typing": {
+     "numbers": false,
+     "pads": false
+    },
+    "undo": true,
+    "maxSteps": 6
+   },
+   "bench": [
+    {
+     "thing": {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ]
+     },
+     "x": -0.23,
+     "z": 2.05
+    },
+    {
+     "thing": {
+      "kind": "robot",
+      "name": null,
+      "program": [],
+      "team": []
+     },
+     "x": 0.23,
+     "z": 2.05
+    },
+    {
+     "thing": {
+      "kind": "bird",
+      "nestId": 9951,
+      "nestGuid": "p5-post",
+      "label": "give me your answer"
+     },
+     "x": 0.0,
+     "z": 1.55
+    },
+    {
+     "thing": {
+      "kind": "nest",
+      "id": 9952,
+      "guid": "p5-reply",
+      "hasEgg": false,
+      "pile": [],
+      "label": "from the judge"
+     },
+     "x": 0.55,
+     "z": 1.55
+    },
+    {
+     "thing": {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ],
+      "fixed": true,
+      "label": "we need this"
+     },
+     "x": 1.15,
+     "z": 1.2
+    },
+    {
+     "thing": {
+      "kind": "room",
+      "label": "the judge",
+      "opaque": true,
+      "dirty": true,
+      "world": {
+       "kind": "world",
+       "v": 3,
+       "bench": [],
+       "stations": {
+        "stand": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "nest",
+           "id": 9951,
+           "guid": "p5-post",
+           "hasEgg": false,
+           "pile": [],
+           "label": "the post"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9952,
+           "nestGuid": "p5-reply",
+           "label": "to the player"
+          },
+          {
+           "kind": "text",
+           "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+          }
+         ]
+        }
+       },
+       "active": {
+        "kind": "robot",
+        "name": "the judge",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
+          },
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "wild"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [
+         {
+          "kind": "robot",
+          "name": "the judge (not a box like that)",
+          "condition": {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "anyBox"
+            },
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "wild"
+            }
+           ]
+          },
+          "program": [
+           {
+            "type": "take",
+            "at": {
+             "c": "given",
+             "path": [
+              0
+             ],
+             "nest": true
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           }
+          ],
+          "trainedOn": null,
+          "team": []
+         },
+         {
+          "kind": "robot",
+          "name": "the judge (not a number)",
+          "condition": {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wildNumber"
+            },
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "wild"
+            }
+           ]
+          },
+          "program": [
+           {
+            "type": "take",
+            "at": {
+             "c": "given",
+             "path": [
+              0
+             ],
+             "nest": true
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           }
+          ],
+          "trainedOn": null,
+          "team": []
+         },
+         {
+          "kind": "robot",
+          "name": "the judge (not a pad)",
+          "condition": {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wildText"
+            },
+            {
+             "kind": "wild"
+            },
+            {
+             "kind": "wild"
+            }
+           ]
+          },
+          "program": [
+           {
+            "type": "take",
+            "at": {
+             "c": "given",
+             "path": [
+              0
+             ],
+             "nest": true
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           }
+          ],
+          "trainedOn": null,
+          "team": []
+         }
+        ]
+       }
+      },
+      "judge": true
+     },
+     "x": -1.25,
+     "z": 1.2
+    }
+   ],
+   "stations": {},
+   "active": null
+  }
+ }
+}

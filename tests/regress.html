@@ -2106,8 +2106,22 @@ async function puzzleCheckBody(D, w, at) {
   D.hold(one2); D.clickHole(emptyBox, 0); await frames(D, 90);
   D.hold(two); D.clickHole(emptyBox, 1); await frames(D, 90);
   D.hold(emptyBox); D.clickThing(bird);
+  // THE JUDGE OFFERS, THE PLAYER PRESSES. Ken never saw the note for solving
+  // puzzle 1 -- it was in the air when the table changed under it. So the
+  // right answer must leave the note ON the reply nest, the table still on
+  // puzzle 1, and the Next button armed; Next is what brings puzzle 2.
+  for (let i = 0; i < 120 && !D.nextWorld; i++) { await frames(D, 20); await maybeBreathe(); }
+  // the offer is made the moment the judge's last step runs; the note is
+  // still in the bird's beak for a second after that
+  for (let i = 0; i < 120 && !reply.userData.pile.length; i++) { await frames(D, 20); await maybeBreathe(); }
+  const offered = D.nextWorld === 'p2' && D.worldName === 'p1'
+    && reply.userData.pile.some(t => /Well done/.test(t.userData.text || ''))
+    && w.document.getElementById('nextBtn').style.display !== 'none';
+  line.push('offered=' + offered);
+  D.goNext();
   for (let i = 0; i < 120 && D.worldName !== 'p2'; i++) { await frames(D, 20); await maybeBreathe(); }
-  const next = D.worldName === 'p2' && !!find(t => t.userData.fixed && t.userData.kind === 'number');
+  const next = D.worldName === 'p2' && !!find(t => t.userData.fixed && t.userData.kind === 'number')
+    && w.document.getElementById('nextBtn').style.display === 'none';
   line.push('next-puzzle=' + next);
   // 6. start over puts THIS puzzle back exactly as it began
   at('start over');
@@ -2121,8 +2135,35 @@ async function puzzleCheckBody(D, w, at) {
 
   const panel = w.document.getElementById('martyPanel'); if (panel) panel.style.display = 'none';
   w.document.activeElement?.blur?.();
-  const ok = constrained && goalStays && hinted && wrongBack && next && again;
+  const ok = constrained && goalStays && hinted && wrongBack && offered && next && again;
   put((ok ? 'PASS' : 'FAIL') + ' a puzzle is a world file  (' + line.join(' ') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// EVERY PUZZLE FILE JUDGES ITS OWN GOAL. Five files, each with a goal on the
+// table and a judge in a house whose leader's thought is meant to BE that
+// goal -- so the thing the author put on the table to be copied must be a
+// thing the judge would accept. Asked from outside the house, through the
+// hydrated robot's condition, for each file in turn; and each file's rules
+// must have taken effect (no number stack on a puzzle that lists none).
+async function puzzleSetCheck(D) {
+  const line = [];
+  let ok = true;
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5']) {
+    const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
+    D.worldIn(rec);
+    await slowSettle(D, 3000);
+    let goal = null, judge = null;
+    for (let i = 0; i < 16; i++) { const t = D.bench(i); if (!t) break;
+      if (t.userData.fixed) goal = t; if (t.userData.kind === 'room' && t.userData.judge) judge = t; }
+    const cond = judge?.__ctx?.activeBot?.condition;
+    const accepts = cond && goal ? D.matchOf(cond.holes[0], goal) : 'no judge';
+    const stacksOff = (rec.rules.stacks.length === 0) === (D.stations.numbers.__plinth.visible === false);
+    const good = accepts === 'yes' && stacksOff && D.worldName === name;
+    if (!good) ok = false;
+    line.push(name + '=' + accepts + (stacksOff ? '' : '/stacks?'));
+  }
+  put((ok ? 'PASS' : 'FAIL') + ' every puzzle judges its own goal  (' + line.join(' ') + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -3229,6 +3270,9 @@ async function runOne(D, spec) {
   let puzzleOK = true;
   try { puzzleOK = want('puzzle') ? await puzzleCheck(D, frame.contentWindow) : true; }
   catch (e) { puzzleOK = false; put('FAIL a puzzle is a world file  ' + e.message, 'fail'); }
+  let setOK = true;
+  try { setOK = want('puzzleset') ? await puzzleSetCheck(D) : true; }
+  catch (e) { setOK = false; put('FAIL every puzzle judges its own goal  ' + e.message, 'fail'); }
   let dreamOK = true;
   try { dreamOK = want('daydream') ? await daydreamCheck(D, frame.contentWindow) : true; }
   catch (e) { dreamOK = false; put('FAIL a daydream leaves nothing behind  ' + e.message, 'fail'); }
@@ -3384,7 +3428,7 @@ async function runOne(D, spec) {
                         && twinOK && nbOK,
                        bad, leakOK, playOK, pauseOK, copyOK, r28OK, shelfOK, bindOK, inexOK,
                        turtleOK, pgOK, stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK,
-                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, teachOK, wordsOK, handOK, dreamOK, nanoOK, puzzleOK, dumps };
+                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, teachOK, wordsOK, handOK, dreamOK, nanoOK, puzzleOK, setOK, dumps };
   // AND ONTO DISK. Reading a verdict back out of the browser costs a round
   // trip through a channel that, on a loaded machine, times out more often
   // than it answers -- eight minutes of polling for one line of text. The

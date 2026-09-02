@@ -4471,3 +4471,53 @@ player barely reads it -- the load should wait for the letter to land; the
 per-puzzle `rules` do not yet cover flipping; behavioural goals need the
 judge's program to copy and compare across rounds; and the whole authoring
 side, which Ken has agreed to take after the first puzzle is right.
+
+## The judge offers; the player presses
+
+*Added 2 Sep. Ken: "I didn't see a message after solving puzzle 1 (I guess it
+was reset too quickly) but puzzle 2 was fine. The layout could be better: the
+bird could be central and the objects to be used closer to the camera side of
+the desk. ... Instead you can add a button for going to the next puzzle and
+one for starting over. After doing all this create several more puzzles."*
+
+**The note was in the air when the table changed under it.** The judge's last
+two steps were "give the bird the note" and "open p2", and a bird takes a
+second to cross the desk. In a puzzle the `load` step now *offers* the next
+world -- it arms a Next button on the card and says so -- and the player
+presses it when they have read the note. Outside a puzzle the step still opens
+the world at once. Measured: after the right answer the note is on the reply
+nest, the table is still puzzle 1, the button is up; Next brings puzzle 2 and
+the button goes down.
+
+**The layout is one rule for every table:** what you work with across the
+front, nearest you; the bird in the middle with the reply nest beside her; the
+goal and the judge at the back, seen and out of the way. `make_puzzles.py`
+lays every puzzle out with the same `table()`.
+
+**Three more puzzles**, after the originals where the workshop's tools allow:
+
+  p3  a box with 8, 16 and 32 -- boxes join by dropping one on the SIDE of
+      another (left of centre joins on the left), and a 16 dropped on a boxed
+      16 makes 32 where it sits
+  p4  a zero -- the keyboard is off, so a 3 wearing a minus badge takes away
+      when dropped on a plain 3; the original had Dusty find a zero in a
+      messy room, which needs his reverse and erase modes we do not have
+  p5  a box with two zeros, made by a ROBOT you train, with Mimi on and a cap
+      of six steps: give it the box, set the box on Mimi, take the original
+      back, set it on a work spot, take the copy, drop the copy on the box's
+      side; leave the bubble, press Run, give the bird what it made
+
+Each is its own file, and every later one rides in the earlier ones'
+libraries, so the set travels as p1 alone. A check loads all five and asks each
+judge, from outside its house, whether it would accept the very goal on its
+table: `p1=yes p2=yes p3=yes p4=yes p5=yes`.
+
+**Not built, on purpose:** the original's fourth puzzle, "a number bigger than
+1,000", which is the first to need a judge that WEIGHS rather than matches -- a
+scale inside the house, the answer set on one pan against a 1000, and a second
+round reading the tilt. That is the enhanced-scales round Ken and I discussed,
+and it deserves its own measurements rather than an afternoon's guess. Also
+deferred, at Ken's word: a clock the robot can read (so the judge could pause
+before the next puzzle), which he wants as a bird that carries messages to the
+system's own senses, later; and puzzle files dropped on a published artifact
+and cached in the browser -- the tt-wasm route -- a zip most likely.

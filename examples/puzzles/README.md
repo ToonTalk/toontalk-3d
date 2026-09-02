@@ -29,6 +29,17 @@ The pieces on the table:
 Stack ids: rooms, texts, nests, scales, dice, sounds, minis, numbers, boxes.
 Tool ids: mimi, dusty, ruby, notebook, save, import, devices.
 
-`make_puzzles.py` writes p1 and p2 (the first two of the original tutorial:
-a box with 1 and 2 in it; a 4 from two 2s). Open one with
+In a puzzle the judge's `load` step *offers* the next world: a Next button
+appears on the card once the note has been read. Outside a puzzle `load`
+opens the world at once.
+
+`make_puzzles.py` writes p1 to p5 (after the original tutorial: a box with 1
+and 2; a 4 from two 2s; a box with 8, 16 and 32, joined by dropping boxes on
+each other's sides; a zero from a 3 wearing a minus badge; a box of two zeros
+made by a robot you train, with Mimi). Every later puzzle rides in the earlier
+ones' `library`, so p1 alone carries the set. Open one with
 `?world=examples/puzzles/p1.world.json`, or import the file.
+
+The layout is one rule for every table (`table()` in `make_puzzles.py`): what
+you work with across the front, the bird in the middle, the reply nest beside
+her, the goal and the judge at the back.
