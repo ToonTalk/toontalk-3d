@@ -633,7 +633,9 @@ robot at the desk is always the one doing the work.
 ## Mimi the copier
 
 The tall machine at the right end of the arc is Mimi the copier. Set
-anything on her upper platform and she scans it; an independent, exact copy
+anything on her upper platform and she scans it — Mimi herself, the
+mime beside the machine, reaches up and follows the scan down with her hands,
+gathers the copy out of the air and lowers it to the tray; an independent, exact copy
 drops into the lower tray — contents, names and all. Click a surface with an
 empty hand to take from it (the tray first, then the original). Robots use
 Mimi exactly the way you do, which is how a robot copies things mid-program.
@@ -18543,6 +18545,8 @@ function detach(thing) {
   for (const st of Object.values(stations)) if (st.occupant === thing) {
     thing.__from = { kind: 'station', st };
     st.occupant = null;
+    // whoever takes it -- a hand, a claw, Dusty -- Mimi hands it over
+    if (st.kind === 'copyIn' || st.kind === 'copyOut') mimiOffer(st.kind);
     return;
   }
   for (const st of allStands) if (st.occupant === thing) { st.occupant = null; return; }
@@ -19455,6 +19459,7 @@ function advanceWorldClocks(dt, worldRuns = true) {
   advanceWobbles(dt);
   advanceRetiring(dt);
   advanceMarty(dt);
+  advanceMimi(dt);
   // a working room's chimney smokes
   for (const t of benchThings) {
     if (t.userData?.kind !== 'room') continue;
@@ -19962,6 +19967,7 @@ const scanStep = (st) => ({
     const e = Math.sin(Math.PI * t);
     st.scanBar.position.y = lerp(st.scanTop, st.scanBottom, e);
     st.scanBar.material.emissiveIntensity = 2.6 + 3.4 * e;
+    mimiPose('scan', t);
   },
   end() { st.scanBar.position.y = st.scanTop; st.scanBar.material.emissiveIntensity = 2.6; },
 });
@@ -19993,6 +19999,7 @@ function runDuplicate() {
       flash(from);
     },
     update(t) {
+      mimiPose('pull', t);
       if (!copy) return;
       const full = copy.userData.kind === 'robot' ? MINI : 1;
       const s = 0.01 + (full - 0.01) * ease(t);
@@ -20002,13 +20009,14 @@ function runDuplicate() {
   }, {
     dur: 0.5,
     update(t) {
+      mimiPose('lower', t);
       if (!copy) return;
       const e = ease(t);
       copy.position.y = lerp(inSt.point.y + 0.3, outSt.topY + copy.userData.rest, e);
       copy.position.x = lerp(from.x, outSt.point.x, e);
       copy.position.z = lerp(from.z, outSt.point.z, e);
     },
-    end() { if (copy) putOnStation(outSt, copy); refreshUI(); },
+    end() { if (copy) putOnStation(outSt, copy); mimiPose('rest'); refreshUI(); },
   });
 }
 
@@ -23230,6 +23238,78 @@ function layoutDustyBag() {
   top.position.set(0, (top.userData.rest ?? 0.05) * sc, 0);
   setPick(top, { kind: 'dustyBag' });
   refreshUI();
+}
+// MIMI ACTS. Ken: "Can Mimi move and use her arms so it is clear she is
+// running the copier?" Her model is loose parts under one node, so at load
+// they are regrouped under two shoulder pivots and a neck; the copier's own
+// steps (scan, pull, lower) set a target pose as they run, so her acting
+// keeps time with the machine at any speed, and between copies she feels
+// along her invisible wall. Angles ease toward the target every frame.
+const MIMI_WALL = { shx: 0, shzL: 0, shzR: 0, neckx: 0, necky: 0, bob: 0 };
+function rigMimi(m) {
+  const pivot = (name, at, parts) => {
+    const g = new THREE.Group(); g.name = name; g.position.copy(at); m.add(g);
+    for (const n of parts) { const o = m.getObjectByName(n); if (o) g.attach(o); }
+    return g;
+  };
+  const shL = pivot('shoulder_L', new THREE.Vector3(-0.065, 0.34, 0), ['arm_L', 'forearm_L', 'glove_L', 'cuff_L']);
+  const shR = pivot('shoulder_R', new THREE.Vector3(0.065, 0.34, 0), ['arm_R', 'forearm_R', 'glove_R', 'cuff_R']);
+  const neck = pivot('neck', new THREE.Vector3(0, 0.44, 0),
+    ['head', 'beret', 'beret_stalk', 'eye_L', 'eye_R', 'pupil_L', 'pupil_R', 'brow_L', 'brow_R',
+     'mouth', 'tear', 'antenna', 'blinker']);
+  m.__rig = { shL, shR, neck, t: 0, cur: { ...MIMI_WALL }, target: null, baseY: m.position.y };
+}
+// a copier step tells her what to do with (0..1) of that step
+function mimiPose(phase, t) {
+  const rig = stations.copyOut?.__mimi?.__rig; if (!rig) return;
+  const e = Math.sin(Math.PI * t);
+  // She is small beside her machine -- the platform is above her head -- so
+  // she conducts it: reaches up to the thing on the platform and follows the
+  // scanning bar down with her hands, gathers the copy out of the air in
+  // front of her, and lowers it into the tray.
+  // (a raised arm turned by a positive angle about the shoulder swings
+  // forward, toward the platform; negative swung it behind her back)
+  if (phase === 'scan') {
+    rig.target = { shx: 0.25 + 0.6 * e, shzL: 0.15, shzR: -0.15, neckx: -0.35 + 0.5 * e, necky: 0, bob: 0.006 };
+  } else if (phase === 'pull') {
+    rig.target = { shx: 1.45, shzL: -0.6 * e, shzR: 0.6 * e, neckx: 0.05, necky: 0, bob: 0.012 * e };
+  } else if (phase === 'lower') {
+    rig.target = { shx: 1.45 + 0.8 * t, shzL: -0.35 * (1 - t), shzR: 0.35 * (1 - t), neckx: 0.4 * t, necky: 0, bob: 0 };
+  } else rig.target = null;         // back to the wall
+}
+// SOMETHING LEAVES HER MACHINE and she hands it over (Ken: "she should move
+// her arms when taking something off the copier"): a short act of her own,
+// not a copier step, so it runs whoever did the taking. From the tray her
+// hands go down to it and open outward; from the platform they reach up and
+// open the same way -- "there you are".
+function mimiOffer(which) {
+  const rig = stations.copyOut?.__mimi?.__rig; if (!rig) return;
+  rig.act = { which, t: 0, dur: 0.8 };
+}
+function mimiActPose(act) {
+  const u = Math.min(1, act.t / act.dur);
+  const reach = Math.sin(Math.PI * Math.min(1, u * 1.6));      // in, then away
+  const open = Math.sin(Math.PI * Math.max(0, (u - 0.3) / 0.7)); // hands open outward late
+  const high = act.which === 'copyIn';
+  return { shx: (high ? 0.7 : 1.9) * reach, shzL: 0.55 * open, shzR: -0.55 * open,
+           neckx: (high ? -0.35 : 0.4) * reach, necky: 0, bob: 0.008 * reach };
+}
+function advanceMimi(dt) {
+  const m = stations.copyOut?.__mimi, rig = m?.__rig; if (!rig) return;
+  rig.t += dt;
+  const T = rig.t;
+  if (rig.act) { rig.act.t += dt; if (rig.act.t >= rig.act.dur) rig.act = null; }
+  // idle: a slow feel along the wall, one hand then the other, a look about
+  const idle = { shx: 0.06 * Math.sin(T * 1.1), shzL: 0.10 * Math.sin(T * 0.9), shzR: -0.10 * Math.sin(T * 0.9 + 1.7),
+                 neckx: 0.04 * Math.sin(T * 0.7), necky: 0.18 * Math.sin(T * 0.31), bob: 0.004 * Math.sin(T * 2.2) };
+  const want = rig.target || (rig.act ? mimiActPose(rig.act) : idle);
+  const k = Math.min(1, dt * (rig.target || rig.act ? 14 : 4));
+  for (const key of Object.keys(rig.cur)) rig.cur[key] += (want[key] - rig.cur[key]) * k;
+  const c = rig.cur;
+  rig.shL.rotation.set(c.shx, 0, c.shzL);
+  rig.shR.rotation.set(c.shx, 0, c.shzR);
+  rig.neck.rotation.set(c.neckx, c.necky, 0);
+  m.position.y = rig.baseY + c.bob;
 }
 // stacks Dusty has swallowed, by id, newest last; given back after the things
 const dustyStacks = [];
@@ -26566,10 +26646,11 @@ loadModel('robot_v4.glb', (gltf) => {
         // beside the machine on the bench side and a step behind it, turned
         // to face her platform: seen from the room she is not behind bars
         m.position.set(-0.46, 0, -0.22);
-        m.rotation.y = 0.9;
+        m.rotation.y = Math.atan2(0.46, 0.22);   // squarely facing her platform
         m.traverse(o => setPick(o, { kind: 'station', id: 'copyIn' }));
         obj.add(m);
         stations.copyOut.__mimi = m;      // the station record is a copy of st by then
+        rigMimi(m);
       });
       // one machine, two slots: the upper platform takes the original, the
       // lower tray delivers the copy

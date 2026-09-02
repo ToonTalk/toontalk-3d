@@ -4857,3 +4857,41 @@ say the Ruby line only when there are some.
 **Two-hole boxes in a box in a box.** One-hole boxes nest without ever
 looking nested; the puzzle asks for each box in the FIRST hole of the next,
 so the goal is [[[_|_]|_]|_] and the judge reads it hole by hole.
+
+## Mimi acts
+
+*Added 2 Sep. Ken: "Can Mimi move and use her arms so it is clear she is
+running the copier?"*
+
+**A rig at load.** Her model is loose parts under one node -- the way the
+Blender script built her -- so when it arrives the parts are regrouped: each
+arm, forearm, glove and cuff under a shoulder pivot at the top of the arm,
+and the head with everything on it under a neck. `attach` keeps their places;
+only the pivots turn.
+
+**The machine tells her what to do.** The copier's three steps -- the scan,
+the copy growing out of the air, the copy lowered into the tray -- each set a
+target pose as they run, with their own (0..1), so her acting keeps time with
+the machine at any speed and pauses with it. She is small beside her
+machine (the platform is above her head), so she conducts it: reaches up to
+the thing on the platform and follows the scanning bar down with her hands,
+gathers the copy between her gloves in front of her, lowers it to the tray,
+and goes back to the wall. Between copies she feels along the wall, one hand
+and then the other, and looks about. The joints ease toward their target
+every frame, faster while acting, so nothing snaps. She now stands squarely
+facing her platform.
+
+**Measured** by stepping the world's frames by hand (the pane's tab was
+hidden, so nothing animated on its own): the target pose changes with each
+step -- scan start, scan mid, pull, lower -- the joints follow, the copy
+lands in the tray, and after two seconds she is back to the wall.
+
+**And she hands things over.** *Ken: "The animation is ok when Mimi is given
+something but she should move her arms when taking something off the
+copier."* A thing leaving her platform or her tray -- by a hand, a claw or
+Dusty, since all of them go through `detach` -- starts a short act of her
+own rather than a copier step: from the tray her hands go down to it and open
+outward, from the platform they reach up and open the same way, with a look
+down or up to match. Measured by stepping frames: the act starts on the take
+from the tray (`copyOut`) and on the take from the platform (`copyIn`), and
+the joints follow it.
