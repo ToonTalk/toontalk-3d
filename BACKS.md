@@ -4394,3 +4394,80 @@ the step count for one that already knows something. Tipping was refused for
 everything but a number, on the grounds that only a number has six faces worth
 reading -- but a made thing has a top and an underside, and being able to lay a
 unicorn on its back is the difference between a toy and a picture of one.
+
+## A puzzle is a world file
+
+*Added 2 Sep. Ken, over three messages: puzzles should not be a new
+capability but "creatable within ToonTalk 3D" -- a constrained world, a goal
+the player can see, a way to submit, an action on success that "a puzzle
+author should be able to train a robot to do", and a way to start over. Marty
+gives hints. Each puzzle its own world file, "and a robot can load a named
+world file", with a setting for whether loading wipes the table first.*
+
+The original was read first: `puzzle.cpp` and the 74 `.pzl` files of the
+tutorial (fix the ship's computer, then its clock). A `.pzl` is Marty's intro,
+a saved room, a goal object with a one-line description, four permission
+switches -- typing to numbers, typing to pads, flipping, function keys -- and
+hints in escalating order, the last always the whole walkthrough, given one
+per visit to Marty and repeated once exhausted. About a third of the goals are
+BEHAVIOURS ("the sum of all the numbers", "a number that keeps getting
+bigger"), judged by special cases with timed waits. That settled one thing at
+once: a scale cannot be *the* mechanism, only the commonest program for the
+judge to run.
+
+Everything else composed out of what the workshop already had:
+
+  the goal          a thing on the table with `fixed` on it -- shown, never
+                    taken, dropped into, vacuumed or erased. The word is chosen
+                    against `ghost`, which is scenery nothing runs into: this
+                    is furniture nobody lifts.
+  the submission    a bird on the table whose nest is inside the judge's
+                    house. No new gadget: giving a bird your answer is the
+                    thing every child here already knows how to do.
+  the judge         a robot team in an opaque house, dozing on the post nest
+                    the way Zeno's totaller dozes. The leader's thought IS the
+                    goal; the team behind it recognises any box, any number,
+                    any pad, and sends it back. A wrong answer therefore comes
+                    home on the reply nest labelled "from the judge", which is
+                    the whole of the feedback and needs no words.
+  the rules         a `rules` field on the world: which stacks and tools exist,
+                    whether the keyboard reaches numbers and pads, whether Undo
+                    is there, how many steps a robot may be taught. Per puzzle,
+                    as the original's switches were.
+  the next puzzle   the one robot step that did not exist -- `load`, by name.
+                    A `library` field bundles other worlds inside a file, since
+                    a published artifact can fetch nothing, and every world
+                    opened is remembered by name; the examples folder is asked
+                    only when there is a server to ask.
+  start over        a button on the card, present whenever the world came from
+                    a named file; Marty answers "start over" the same way.
+  hints             the author's, in order, from `hints`; Marty gives the next
+                    one to anything that sounds like asking, brain or no brain,
+                    and once they run out says so and gives the last again.
+
+Two things went wrong, both instructive.
+
+**A house's own world is hydrated through the same `worldIn`.** The first
+build read the name, the rules and the hints from whatever record came
+through that door -- and the judge's inner world, which has none, came through
+it a moment after the puzzle's, and wiped them. Measured: rules null, every
+stack back on the table, one line after they had been set. Only the outer
+world names the place now; `offstage()` is the test, the same one `clearWorld`
+already uses to keep a house from sweeping the user's bench.
+
+**A robot asks for the next world from inside the world about to be
+replaced.** So the request is noted and honoured at the top of a frame, where
+nothing is standing anywhere -- and that is where the suite caught the second
+mistake: it passed live and failed headless, because live the real frame loop
+ran alongside the check and opened the pending world, while the check's own
+frame driver did not. The driver now does what the loop does. A test driver
+that is not faithful to the loop tests a different program.
+
+Puzzle 1 runs end to end and is a check: a constrained table, a goal that
+stays put, hints in order, a wrong answer sent back, the right one judged and
+puzzle 2 arriving, Start over restoring the puzzle. Not yet built, and known:
+the note the judge sends flies out a moment before the world changes, so the
+player barely reads it -- the load should wait for the letter to land; the
+per-puzzle `rules` do not yet cover flipping; behavioural goals need the
+judge's program to copy and compare across rounds; and the whole authoring
+side, which Ken has agreed to take after the first puzzle is right.

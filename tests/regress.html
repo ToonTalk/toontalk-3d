@@ -2044,6 +2044,88 @@ async function reachAtPileCheck(D) {
   return ok;
 }
 
+// A PUZZLE IS A WORLD FILE. Nothing new is needed to make one: a constrained
+// world (rules say which stacks and tools exist), a goal in plain sight that
+// cannot be taken, a bird to give the answer to, and a judge -- a robot team
+// in an opaque house, dozing on the post nest -- that decides with its own
+// thought bubble and answers by bird. The judge's last step opens the next
+// world by name, which is the one robot step that did not exist. This drives
+// puzzle 1 from the original tutorial end to end: a wrong answer comes back,
+// the right one is judged and puzzle 2 arrives, Marty gives the author's
+// hints in order, and Start over puts the puzzle back.
+async function puzzleCheck(D, w) {
+  let stage = 'load';
+  try { return await puzzleCheckBody(D, w, (s2) => { stage = s2; }); }
+  catch (e) { throw new Error('at stage "' + stage + '": ' + e.message); }
+}
+async function puzzleCheckBody(D, w, at) {
+  const rec = await (await fetch('../examples/puzzles/p1.world.json')).json();
+  D.worldIn(rec);
+  await slowSettle(D, 3000);
+  const find = (pred) => { for (let i = 0; i < 14; i++) { const t = D.bench(i); if (t && pred(t)) return t; } return null; };
+  const line = [];
+  const must = (x, what) => { if (!x) throw new Error('no ' + what + ' on the table: '
+    + (() => { const k = []; for (let i = 0; i < 14; i++) { const t = D.bench(i); if (!t) break; k.push(t.userData.kind); } return k.join(','); })()); return x; };
+  // 1. the rules of the place
+  at('rules');
+  const constrained = D.worldName === 'p1'
+    && D.stations.numbers.__plinth.visible === false
+    && D.stations.copyOut.__node?.visible === false
+    && w.document.getElementById('againBtn').style.display !== 'none';
+  line.push('constrained=' + constrained);
+  // 2. the goal stays put
+  at('goal');
+  const goal = must(find(t => t.userData.fixed), 'goal');
+  D.clickThing(goal); await frames(D, 30);
+  const goalStays = !!goal && D.state.hand === null;
+  line.push('goal-stays=' + goalStays);
+  // 3. hints, in the author's order, no brain needed
+  at('hints');
+  const h1 = D.nextHint('hint'), h2 = D.nextHint('I am stuck'), h3 = D.nextHint('hint'), h4 = D.nextHint('hint');
+  const hinted = /pick up numbers/.test(h1) && /first hole/.test(h2) && /what I/.test(h3) && h4 === h3;
+  line.push('hints-in-order=' + hinted);
+  // 4. a wrong answer comes back
+  at('wrong answer');
+  const bird = must(find(t => t.userData.kind === 'bird'), 'bird');
+  const reply = must(find(t => t.userData.kind === 'nest'), 'reply nest');
+  const one = must(find(t => t.userData.kind === 'number' && t.userData.value.n === 1n), 'a 1');
+  const two = must(find(t => t.userData.kind === 'number' && t.userData.value.n === 2n), 'a 2');
+  const emptyBox = must(find(t => t.userData.kind === 'box' && !t.userData.fixed), 'an empty box');
+  D.hold(one); D.clickThing(bird);
+  for (let i = 0; i < 150 && !reply.userData.pile.length; i++) { await frames(D, 20); await maybeBreathe(); }
+  const back = must(reply.userData.pile[0], 'answer back on the reply nest (judge: '
+    + JSON.stringify(D.ctxInfo(find(t => t.userData.kind === 'room'))) + ')');
+  const wrongBack = !!back && back.userData.kind === 'number';
+  line.push('wrong-comes-back=' + wrongBack);
+  at('taking it back');
+  D.clickThing(back); await frames(D, 60);
+  const one2 = D.state.hand === 'number' ? back : one;
+  D.clickBench(-0.6, 1.6); await frames(D, 120);
+  // 5. the right answer is judged, and the next puzzle arrives
+  at('right answer');
+  D.hold(one2); D.clickHole(emptyBox, 0); await frames(D, 90);
+  D.hold(two); D.clickHole(emptyBox, 1); await frames(D, 90);
+  D.hold(emptyBox); D.clickThing(bird);
+  for (let i = 0; i < 120 && D.worldName !== 'p2'; i++) { await frames(D, 20); await maybeBreathe(); }
+  const next = D.worldName === 'p2' && !!find(t => t.userData.fixed && t.userData.kind === 'number');
+  line.push('next-puzzle=' + next);
+  // 6. start over puts THIS puzzle back exactly as it began
+  at('start over');
+  const twos = () => { let n = 0; for (let i = 0; i < 14; i++) { const t = D.bench(i);
+    if (t?.userData.kind === 'number' && !t.userData.fixed && t.userData.value.n === 2n) n++; } return n; };
+  const a = find(t => t.userData.kind === 'number' && !t.userData.fixed);
+  D.hold(a); D.clickBench(0.2, 1.9); await frames(D, 120);       // move one, so restart has something to undo
+  D.startOver(); await slowSettle(D, 3000);
+  const again = D.worldName === 'p2' && twos() === 2;
+  line.push('start-over=' + again);
+
+  const panel = w.document.getElementById('martyPanel'); if (panel) panel.style.display = 'none';
+  w.document.activeElement?.blur?.();
+  const ok = constrained && goalStays && hinted && wrongBack && next && again;
+  put((ok ? 'PASS' : 'FAIL') + ' a puzzle is a world file  (' + line.join(' ') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 // A DAYDREAM LEAVES NOTHING BEHIND. Ken watched a robot copy a unicorn until
 // the work spots were full, stopped it, and found the herd on the desk -- and
 // read that as a lesson that had failed to rewind. It was a RUN, whose work is
@@ -2180,6 +2262,8 @@ async function nanoShapeCheck(D, w) {
   } finally {
     if (had) w.LanguageModel = had; else delete w.LanguageModel;
     w.localStorage.removeItem('tt3d.marty-provider');
+    w.document.activeElement?.blur?.();
+    const panel = w.document.getElementById('martyPanel'); if (panel) panel.style.display = 'none';
   }
 }
 
@@ -2189,6 +2273,7 @@ async function nanoShapeCheck(D, w) {
 // and the face you were reading could not be copied at all -- a face is a
 // canvas, and a canvas is not text.
 async function numberInHandCheck(D, w) {
+  w.document.activeElement?.blur?.();     // a check that types must own the keyboard
   D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
     { thing: { kind: 'number', value: { n: '1234567', d: '1' }, op: '+' }, x: 0.2, z: 1.6 }] });
   await slowSettle(D, 3000);
@@ -2232,7 +2317,8 @@ async function numberInHandCheck(D, w) {
     const tips = tipped > 1.3 && tipped < 1.9;
 
     const ok = copiesFace && kept && tips;
-    put((ok ? 'PASS' : 'FAIL') + ' a number keeps what you did to it  (copied="'
+    const focus = w.document.activeElement; const focusName = focus ? (focus.id || focus.tagName) : 'none';
+    put((ok ? 'PASS' : 'FAIL') + ' a number keeps what you did to it  (focus=' + focusName + ' mode=' + D.state.mode + ' copied="'
         + String(plain).slice(0, 12) + '" after-a-turn="' + String(turnedCopy).slice(0, 14)
         + '" keeps-its-turn=' + kept + ' model-tips=' + tipped.toFixed(2) + 'rad)',
         ok ? 'pass' : 'fail');
@@ -2454,6 +2540,7 @@ async function copierKindsCheck(D) {
 // read the other five faces of a number without picking it up. Nothing shakes
 // while you are in there.
 async function closeupCheck(D, w) {
+  w.document.activeElement?.blur?.();     // a check that types must own the keyboard
   D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
     { thing: { kind: 'number', value: { n: '7', d: '1' }, op: '+' }, x: 0.2, z: 1.6 },
     { thing: { kind: 'text', text: 'a pad' }, x: -0.9, z: 1.6 }] });
@@ -3139,6 +3226,9 @@ async function runOne(D, spec) {
   let stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK, picOK, wholeOK, t3dOK, mtOK,
       zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK;
   let paceOK, foldOK, reachOK, makerOK, faceOK, pileOK, drawOK, postOffOK, waitOK;
+  let puzzleOK = true;
+  try { puzzleOK = want('puzzle') ? await puzzleCheck(D, frame.contentWindow) : true; }
+  catch (e) { puzzleOK = false; put('FAIL a puzzle is a world file  ' + e.message, 'fail'); }
   let dreamOK = true;
   try { dreamOK = want('daydream') ? await daydreamCheck(D, frame.contentWindow) : true; }
   catch (e) { dreamOK = false; put('FAIL a daydream leaves nothing behind  ' + e.message, 'fail'); }
@@ -3294,7 +3384,7 @@ async function runOne(D, spec) {
                         && twinOK && nbOK,
                        bad, leakOK, playOK, pauseOK, copyOK, r28OK, shelfOK, bindOK, inexOK,
                        turtleOK, pgOK, stopOK, sceneOK, deadOK, keepOK, spareOK, nestOK,
-                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, teachOK, wordsOK, handOK, dreamOK, nanoOK, dumps };
+                       picOK, wholeOK, t3dOK, mtOK, zenoOK, shapeOK, houseOK, flyOK, postOK, mdOK, twinOK, nbOK, closeOK, copierOK, badgeOK, teachOK, wordsOK, handOK, dreamOK, nanoOK, puzzleOK, dumps };
   // AND ONTO DISK. Reading a verdict back out of the browser costs a round
   // trip through a channel that, on a loaded machine, times out more often
   // than it answers -- eight minutes of polling for one line of text. The

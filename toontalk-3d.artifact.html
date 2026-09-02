@@ -158,6 +158,8 @@
   <p id="sayRow" style="margin-top:6px;font-size:11.5px;color:var(--dim);
      display:flex;align-items:center;gap:6px"></p>
   <p id="whoLine" style="margin-top:6px;font-size:11.5px;color:var(--dim)"></p>
+  <button id="againBtn" style="display:none;margin-top:8px"
+    title="Put this puzzle back exactly as it began.">Start this puzzle over</button>
 </div>
 
 <div id="prog" class="card">
@@ -1386,6 +1388,26 @@ invent a toy, and he says so rather than pretending. Everything he sends back
 is checked before it is built: only boxes, balls, tubes and cones, only real
 colours, and always a size your hand can pick up, so a strange answer makes a
 strange toy and never a broken workshop.
+
+## Puzzles
+
+A puzzle is a world file with a few more things in it, and the
+workshop needs nothing new to play one. Open it and Marty says what is wanted;
+the goal stands on the table where you can see it but cannot pick it up;
+the table holds only what the puzzle gives you — the stacks and tools it
+does not want are simply not there, and the keyboard may not reach numbers or
+pads. When you have an answer, give it to the bird. She flies it into the
+judges house, an opaque house whose robots decide: a wrong answer
+comes back to the nest marked from the judge; the right one gets a note
+and, usually, the next puzzle. Start this puzzle over on the card puts
+everything back as it began, and asking Marty for a hint gets the
+authors hints one at a time, the last of them the whole answer.
+
+Do step inside the judges house and look. The robots in there were
+trained the way you train yours, and reading them is how you learn to make a
+puzzle of your own — just not how to solve this one. The first puzzles
+are in examples/puzzles/, and make_puzzles.py there
+shows how they are written.
 
 ## The notebook, saving and sharing
 
@@ -13964,7 +13986,7 @@ function makeRoom(data = null) {
   nextRoomId = Math.max(nextRoomId, id + 1);
   g.userData = { kind: 'room', rest: 0, width: 0.5, world: data?.world ?? null,
                  opaque: data?.opaque ?? true, id,
-                 dirty: !!data?.dirty };
+                 dirty: !!data?.dirty, judge: !!data?.judge };
   // a house saved while it was RUNNING is one somebody switched on, and post
   // may go on waking it -- see nestReceived
   if (data?.dirty) g.__switched = true;
@@ -17928,6 +17950,7 @@ function specOf(thing, full = false) {
       if (ud.label) sp.label = ud.label;
       if (ud.boundTo) sp.boundTo = ud.boundTo;
       if (ud.ghost) sp.ghost = true;
+      if (ud.fixed) sp.fixed = true;
       if (ud.facing) sp.facing = ud.facing;
       if (ud.gadget) sp.gadget = true;
       if (ud.speed) sp.speed = { ...ud.speed };
@@ -18004,6 +18027,7 @@ function buildThing(spec) {
     if (spec.boundTo) t.userData.boundTo = spec.boundTo;
     if (spec.gadget) t.userData.gadget = true;
     if (spec.ghost) t.userData.ghost = true;
+    if (spec.fixed) t.userData.fixed = true;
     if (spec.facing) setFacing(t, spec.facing);
     if (spec.width != null) t.userData.width = spec.width;
     if (spec.aspect != null) t.userData.aspect = spec.aspect;
@@ -21179,6 +21203,7 @@ function runRefusal(target) {
       : target.kind === 'station' && stations[target.id]?.kind !== 'stack'
           && stations[target.id]?.occupant ? stations[target.id].occupant
       : null;
+    if (victim && fixedRoot(victim)) return say(FIXED_WORDS);
     if (victim) return eraseThingInPlace(victim);
   }
   // CHALK COMES OFF. A stroke is not a thing you can pick up, but pointing
@@ -21240,6 +21265,7 @@ function runRefusal(target) {
           && stations[target.id].occupant ? stations[target.id].occupant
       : null;
     if (victim) {
+      if (fixedRoot(victim)) return say(FIXED_WORDS);
       if (victim.userData.panel) {
         return say('The panel belongs to its thing — Dusty can only take the thing itself.');
       }
@@ -21522,11 +21548,13 @@ function userClick(target) {
           + 'is riding on the pad under it, and travels with it. Wake DUSTY and click to '
           + 'take it off — he holds what he takes, and clicking him gives it back.');
       }
+      if (fixedRoot(target.thing)) return say(FIXED_WORDS);
       // Picking a sound up does NOT play it -- that was startling. Space
       // plays whatever is in your hand or under the pointer; "." stops it.
       return userTake(target.thing);
     }
     if (target.thing === held) return;
+    if (fixedRoot(target.thing)) return say(FIXED_WORDS);
     if (holdingBot) {
       // the shell of a box occludes its holes: aim at the hole meant
       const hs = holesOf(target.thing);
@@ -22047,6 +22075,16 @@ function userTakeFromStack(st) {
   refillStack(st, true);
   if (obj) takeIntoHand(obj);
 }
+// THE GOAL IS SHOWN, NOT TAKEN. A puzzle puts what it wants on the table in
+// plain sight, and the one thing the player must not do with it is post it
+// back as the answer. So it -- and anything it is made of -- cannot be picked
+// up, dropped into, vacuumed or erased. The word is chosen against `ghost`,
+// which is scenery nothing runs into: this is furniture nobody lifts.
+function fixedRoot(t) {
+  for (let q = t; q; q = q.parent) if (q.userData?.fixed) return q;
+  return null;
+}
+const FIXED_WORDS = 'That is the goal \u2014 it stays where it is. Make one like it.';
 function userTake(thing) {
   pushUndo();
   // OUT OF A GROUP, BACK TO ITSELF. Ken's rule again, the other way round: a
@@ -22502,6 +22540,10 @@ function runStep(step) {
   else if (step.type === 'copy') actionCopy(step.at);
   else if (step.type === 'put') actionPut(step.at, step.side);
   else if (step.type === 'vacuum') actionVacuum(step.at);
+  // OPEN ANOTHER WORLD. The one step a robot in a judge's house needs that no
+  // robot had: the next puzzle by name. Honoured at the top of a frame, since
+  // this robot is standing in the very world about to be replaced.
+  else if (step.type === 'load') enqueue(doNow(() => requestWorldLoad(step.name)));
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (clawHeld?.userData.kind === 'box') resizeHeldBox(step.n, true); } });
   } else if (step.type === 'setOp') {
@@ -22533,6 +22575,12 @@ function runStep(step) {
 }
 function record(step) {
   if (mode !== 'training') return;
+  // A PUZZLE MAY CAP THE LESSON. The step still happened in the daydream --
+  // it is the robot that does not learn it, and the card says so at once.
+  if (worldRules?.maxSteps != null && program.length >= worldRules.maxSteps) {
+    sayAttn(`This puzzle lets a robot learn only ${worldRules.maxSteps} step${worldRules.maxSteps === 1 ? '' : 's'} \u2014 that one was not learned.`);
+    return;
+  }
   program.push(step);
   renderProgram();
 }
@@ -23397,6 +23445,7 @@ function thingOut(t) {
     // is -- a world saved mid-rally opens with the ball still travelling
     if (t.userData?.speed) r.speed = { ...t.userData.speed };
     if (t.userData?.ghost) r.ghost = true;      // scenery: nothing runs into it
+    if (t.userData?.fixed) r.fixed = true;      // a goal: shown, never taken
     if (t.userData?.facing) r.facing = t.userData.facing;   // which way it points
     if (t.userData?.aim) r.aim = t.userData.aim.slice();    // ...in three dimensions
     if (t.userData?.up) r.up = t.userData.up;               // ...and how high
@@ -23437,7 +23486,8 @@ function thingOutRaw(t) {
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
                                    opaque: ud.opaque,
-                                   dirty: ud.dirty, id: ud.id, label: ud.label ?? undefined };
+                                   dirty: ud.dirty, id: ud.id, label: ud.label ?? undefined,
+                                   judge: ud.judge || undefined };
   if (ud.kind === 'robot') return botOut(t.__bot);
   if (ud.kind === 'nest') {
     return { kind: 'nest', id: ud.id, guid: ud.guid, hasEgg: !!ud.hasEgg,
@@ -23493,13 +23543,24 @@ function worldOut() {
   const act = activeBot;
   const sts = {};
   for (const [id, occ] of stationNodes) sts[id] = thingOut(occ);
-  return stampV({
+  const rec = stampV({
     kind: 'world', v: FILE_V,
     bench: bench.map(t => ({ thing: thingOut(t),
       x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })),
     stations: sts,
     active: act ? botOut(act) : null,
   });
+  // the puzzle's own words and rules ride along, so saving a puzzle keeps it one
+  if (worldName) rec.name = worldName;
+  if (worldRules) rec.rules = cloneRec(worldRules);
+  if (puzzleInfo) {
+    if (puzzleInfo.intro) rec.intro = puzzleInfo.intro;
+    if (puzzleInfo.goal) rec.goal = puzzleInfo.goal;
+    if (puzzleInfo.hints?.length) rec.hints = puzzleInfo.hints.slice();
+  }
+  const lib = worldLibrary[worldName]?.library;
+  if (lib) rec.library = cloneRec(lib);
+  return rec;
 }
 function botIn(o) {
   const node = makeMiniRobot();
@@ -23529,6 +23590,7 @@ function thingIn(o, nests, birds) {
   if (t && o?.liveId) t.userData.liveId = o.liveId;   // resolved lazily
   if (t && o?.speed) setSpeed(t, o.speed.x || 0, o.speed.z || 0);
   if (t && o?.ghost) t.userData.ghost = true;
+  if (t && o?.fixed) t.userData.fixed = true;
   if (t && o?.facing) setFacing(t, o.facing);
   if (t && o?.aim) { t.userData.aim = o.aim.slice(); t.quaternion.fromArray(o.aim); }
   if (t && o?.up) t.userData.up = o.up;
@@ -23700,8 +23762,24 @@ function worldIn(data) {
     if (!topCtx.root.parent) scene.add(topCtx.root);
     if (exitDoor) exitDoor.visible = false;
   }
-  clearWorld();
+  // MERGE, NOT WIPE: a file that says wipe:false adds its things to whatever
+  // is on the table and leaves the rules alone -- a resource, not a place.
+  const merging = data.wipe === false;
+  if (!merging) clearWorld();
   ensureMainNotebook();      // your library is furniture, not part of the world
+  // ONLY THE OUTER WORLD NAMES THE PLACE. A house's own world is hydrated
+  // through this same door, offstage, and that record has no name and no
+  // rules -- so reading them from it wiped the puzzle's the moment its judge
+  // was built. Measured: rules null, stacks back, one line after they were set.
+  if (!offstage()) rememberWorld(data);
+  if (!merging && !offstage()) {
+    worldName = data.name ?? null;
+    puzzleInfo = (data.intro || data.goal || data.hints) ? {
+      name: data.name ?? null, intro: data.intro ?? null, goal: data.goal ?? null,
+      hints: Array.isArray(data.hints) ? data.hints.slice() : [] } : null;
+    hintCounter = 0;
+    applyRules(data.rules ?? null);
+  }
   nestGroupPending = [];
   const nests = new Map(), birds = [];
   (data.bench || []).forEach(b => {
@@ -23745,6 +23823,13 @@ function worldIn(data) {
     activateBot(node.__bot);
   }
   refreshUI();
+  // A PUZZLE INTRODUCES ITSELF, the way Marty met you at the rocket: he says
+  // what is wanted, out loud if he is speaking, and the card says it too.
+  if (!merging && !offstage() && puzzleInfo?.intro) {
+    if (typeof martyUI !== 'undefined' && martyUI) martyUI.style.display = 'block';
+    if (typeof martySay === 'function') martySay(puzzleInfo.intro);
+    say(puzzleInfo.goal ? 'We need ' + puzzleInfo.goal : puzzleInfo.intro);
+  }
 }
 
 function snapshotWorld() {
@@ -24520,6 +24605,7 @@ function describe(s) {
        : s.type === 'newRoom' ? 'take a new room'
        : s.type === 'newDie' ? 'take a new die'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
+       : s.type === 'load' ? `open the world \u201c${s.name}\u201d`
        : s.type === 'take' ? (s.at.nbHalf != null ? `take a copy from ${holeName(s.at)}`
            : s.at.nest ? `take the top of ${holeName(s.at)}`
            : s.at.path.length ? `take what is in ${holeName(s.at)}`
@@ -25132,7 +25218,7 @@ addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && straightOn) { e.preventDefault(); comeBackFrom(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
-    if (!busy && mode !== 'replay') undo();
+    if (!busy && mode !== 'replay' && worldRules?.undo !== false) undo();
     return;
   }
   // ToonTalk's own convention, brought over: SPACE turns a thing on and "."
@@ -25343,6 +25429,9 @@ addEventListener('keydown', (e) => {
   };
   if (H.userData.kind === 'text') {
     if (clip(() => H.userData.text, t2 => H.setText(t2))) return;
+    if (worldRules?.typing?.pads === false) {
+      return sayAttn('In this puzzle the keyboard does not reach pads.');
+    }
     if (e.key === 'Backspace') { pushUndo(); H.setText(H.userData.text.slice(0, -1)); e.preventDefault(); }
     else if (e.key === 'Enter') { pushUndo(); H.setText(H.userData.text + '\n'); }
     else if (labelKey) { pushUndo(); H.setText(H.userData.text + e.key); sfx('type'); }
@@ -25402,6 +25491,9 @@ addEventListener('keydown', (e) => {
     return;
   }
   if (H.userData.kind !== 'number') return;
+  if (worldRules?.typing?.numbers === false) {
+    return sayAttn('In this puzzle the keyboard does not reach numbers \u2014 make them out of what is on the table.');
+  }
   const v = H.userData.value;
   // A tablet's keyboard offers the SYMBOLS -- ×, ÷, a real minus sign -- where a
   // typewriter offered ASCII stand-ins, and a child reaching for × means
@@ -25729,6 +25821,18 @@ function tipFor(t) {
   }
   if (t.kind === 'thing') {
     const ud = t.thing.userData;
+    // THE JUDGE'S HOUSE says what it is. Ken wanted it visible, and explorable
+    // -- a child who opens the door and reads the robots inside learns how
+    // puzzles are made, which is the point of the whole workshop -- with the
+    // one caution that reading the answer off the judge is not solving it.
+    if (ud.kind === 'room' && ud.judge && !TIP) {
+      return `${ud.label ? ud.label[0].toUpperCase() + ud.label.slice(1) : 'The judge'} \u2014 the house that runs this puzzle. `
+        + 'Give the bird your answer and the robots in here decide. Do step inside and see how they work \u2014 '
+        + 'just not to read the answer off them.';
+    }
+    if (fixedRoot(t.thing) && !TIP) {
+      return `The goal \u2014 ${panelName(t.thing)}. It stays here; make one like it and give it to the bird.`;
+    }
     if (ud.panel) {
       const who = t.thing.__owner ? panelName(t.thing.__owner) : 'its thing';
       return TIP
@@ -26201,6 +26305,7 @@ loadModel('robot_v4.glb', (gltf) => {
     } else {
       const h = Math.max(0.15, st.topY);
       const obj = makeCopier(h, st);
+      st.__node = obj;                    // so the rules of a place can hide her
       obj.position.set(point.x, 0, point.z);
       setPick(obj, { kind: 'station', id: 'copyOut' });
       scene.add(obj);
@@ -26387,6 +26492,7 @@ loadModel('robot_v4.glb', (gltf) => {
   loadModel('dusty_v11.glb', (dg) => {
     if (new URLSearchParams(location.search).get('demo')) { refreshUI(); return; }
     dusty = dg.scene;
+    if (worldRules) dusty.visible = (worldRules.tools ?? TOOL_IDS).includes('dusty');
     dusty.traverse(o => {
       if (!o.isMesh) return;
       o.castShadow = true; o.receiveShadow = true;
@@ -26862,6 +26968,7 @@ renderer.setAnimationLoop((now) => {
   if (worldReady && !simPaused && !busy && !queue.length && !current && mode === 'world') {
     processDirtyRooms();
   }
+  openPendingWorld();
   if (ruby) {
     rubyLook = easeYaw(rubyLook, ruby, dt * 3);
     if (rubyActive) {
@@ -27458,6 +27565,112 @@ async function runMartyDemo(id) {
 
 // --- what Marty can see: the table, in plain English ------------------------
 let loadedWorldName = null;
+// --- puzzles ----------------------------------------------------------------
+// A puzzle is not a new kind of thing: it is a WORLD FILE with a few more
+// fields -- what Marty says on arrival, what is wanted, hints in order, and
+// the RULES of the place: which stacks and tools exist, whether the keyboard
+// reaches numbers and pads, whether Undo is there, how many steps a robot may
+// be taught. A judge lives in an opaque house and does the rest with birds.
+// Nothing here is puzzle-only: a lesson world can turn off Mimi too.
+let worldRules = null;        // the rules in force, or null for the whole workshop
+let puzzleInfo = null;        // { name, intro, goal, hints }
+let hintCounter = 0;          // how many hints Marty has given on this puzzle
+let worldName = null;         // the name the current world file gave itself
+let pendingLoad = null;       // a world a robot asked for, opened at the top of a frame
+// EVERY WORLD THIS SESSION HAS SEEN, BY NAME. Inside a published artifact
+// nothing can be fetched, so "open the world p2" has to find p2 in memory: a
+// file may carry its successors in a `library`, and every file opened is
+// remembered here, so a set of puzzles travels as one file and a robot can
+// still ask for the next by name.
+const worldLibrary = {};
+const cloneRec = (r) => JSON.parse(JSON.stringify(r));
+function rememberWorld(rec, name = rec?.name) {
+  if (!rec || rec.kind !== 'world') return;
+  if (name) worldLibrary[name] = rec;
+  for (const [k, v] of Object.entries(rec.library || {})) rememberWorld(v, k);
+}
+// Where a named world comes from: memory first, then -- when there is a server
+// to ask -- the examples folder. A name with a slash is a path of its own.
+async function resolveWorld(name) {
+  if (worldLibrary[name]) return cloneRec(worldLibrary[name]);
+  const path = /\//.test(name) ? name : `examples/puzzles/${name}.world.json`;
+  if (/^[a-z]+:|^\/\/|\.\./i.test(path)) return null;
+  try {
+    const r = await fetch(path, { cache: 'no-store' });
+    if (!r.ok) return null;
+    const rec = await r.json();
+    if (rec?.kind !== 'world') return null;
+    rememberWorld(rec, rec.name || name);
+    return rec;
+  } catch { return null; }
+}
+// A robot asks for a world from INSIDE its own house, mid-round, with the
+// scheduler standing in that house's world. Replacing everything from there
+// would pull the floor out from under the step that asked -- so the request is
+// noted and honoured at the top of the next frame, where nothing is standing
+// anywhere.
+function requestWorldLoad(name) {
+  resolveWorld(name).then(rec => {
+    if (rec) pendingLoad = rec;
+    else sayAttn(`No world called \u201c${name}\u201d could be found.`);
+  });
+}
+function openPendingWorld() {
+  if (!pendingLoad || !worldReady || worldStack.length) return;
+  const rec = pendingLoad; pendingLoad = null;
+  worldIn(rec);
+  loadedWorldName = (rec.name || loadedWorldName || '') + '';
+}
+function startWorldOver() {
+  if (!worldName || !worldLibrary[worldName]) return;
+  worldIn(cloneRec(worldLibrary[worldName]));
+}
+// THE RULES OF THE PLACE, applied. null means the whole workshop: every stack,
+// every tool, the keyboard everywhere, Undo. A puzzle lists what it keeps.
+const STACK_IDS = ['rooms', 'texts', 'nests', 'scales', 'dice', 'sounds', 'minis', 'numbers', 'boxes'];
+const TOOL_IDS = ['mimi', 'dusty', 'ruby', 'notebook', 'save', 'import', 'devices'];
+function applyRules(rules) {
+  worldRules = rules || null;
+  const stacks = rules?.stacks ?? STACK_IDS;
+  const tools = rules?.tools ?? TOOL_IDS;
+  for (const id of STACK_IDS) {
+    const st = stations[id];
+    if (!st) continue;
+    const on = stacks.includes(id);
+    if (st.__plinth) st.__plinth.visible = on;
+    st.cubes.forEach(c => { c.visible = on; });
+  }
+  const show = (node, on) => { if (node) node.visible = on; };
+  show(stations.copyOut?.__node, tools.includes('mimi'));
+  show(dusty, tools.includes('dusty'));
+  show(ruby, tools.includes('ruby'));
+  show(mainNotebook(), tools.includes('notebook'));
+  const btn = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+  btn('exportHeldBtn', tools.includes('save'));
+  btn('exportWorldBtn', tools.includes('save'));
+  btn('importBtn', tools.includes('import'));
+  btn('devicesBtn', tools.includes('devices'));
+  btn('undoBtn', rules?.undo !== false);
+  btn('againBtn', !!(worldName && worldLibrary[worldName] && (rules || puzzleInfo)));
+}
+// what Marty knows about the puzzle, for a brain that is asked about it
+function puzzleContextText() {
+  if (!puzzleInfo) return '';
+  return '\n\nThe visitor is on a PUZZLE. What was said on arrival: ' + (puzzleInfo.intro || '')
+    + (puzzleInfo.goal ? '\nWhat is wanted: ' + puzzleInfo.goal : '')
+    + '\nIf they ask for a hint, they get the next of the author\u2019s hints (you need not invent any); never give the whole answer unprompted.';
+}
+// "hint", in any of its forms, gets the NEXT hint the author wrote, and once
+// they run out the last one again -- which by convention is the whole answer,
+// for the desperate. The original ToonTalk gave them one per visit to Marty.
+function puzzleHint(q) {
+  const hints = puzzleInfo?.hints;
+  if (!hints?.length || !/\b(hint|help|stuck|clue|how do i|what do i do|give up)\b/i.test(q)) return null;
+  const i = Math.min(hintCounter, hints.length - 1);
+  hintCounter = Math.min(hintCounter + 1, hints.length);
+  const last = i === hints.length - 1 && hints.length > 1;
+  return (last ? 'That is all I have \u2014 so here is what I would do. ' : '') + hints[i];
+}
 // The FACTS of what a robot or behaviour does -- condition, steps in words,
 // team shape -- for Marty to abstract a PURPOSE from. Marty's job is the
 // summary; this is the evidence it must come from.
@@ -28020,6 +28233,7 @@ async function martyThink(q) {
     const manual = manualFor(whole, q, budget);
     return MARTY_SYSTEM
       + martyActivityText()
+      + puzzleContextText()
       + (manual ? '\n\n=== THE MANUAL (authoritative; answer from it, and say you are unsure rather than inventing anything it does not say) ===\n'
           + manual + '\n=== end of manual ===' : '')
       + '\n\nOn the table right now:\n' + martyWorldText();
@@ -28101,6 +28315,14 @@ function martyThinkingStart() {
 async function askMarty(q) {
   window.speechSynthesis?.cancel();
   martySay(q, 'you');
+  // a puzzle's hints come from its author, one at a time, brain or no brain
+  const hint = puzzleHint(q);
+  if (hint) { martySay(hint); return; }
+  if (puzzleInfo && /\b(start (over|again)|restart|reset)\b/i.test(q)) {
+    martySay('Here it is again from the beginning.');
+    startWorldOver();
+    return;
+  }
   let reply = null;
   const doneThinking = martyThinkingStart();
   try {
@@ -29174,6 +29396,7 @@ function toggleMartyPanel() {
   if (on) { martyModeLine(); document.getElementById('martyIn').focus(); }
 }
 document.getElementById('martyClose').onclick = () => { martyUI.style.display = 'none'; };
+document.getElementById('againBtn').onclick = () => { if (!busy) startWorldOver(); };
 {
   const vb = document.getElementById('martyVoice');
   const showV = () => { vb.textContent = martyVoiceOn ? '\u{1F50A}' : '\u{1F508}';
@@ -29442,6 +29665,11 @@ window.__nano = {
       if (worldReady && !simPaused && !busy && !queue.length && !current && mode === 'world') {
         processDirtyRooms();
       }
+      // ...and what the frame loop does next: a world a robot asked for is
+      // opened here too, or a headless check would judge the answer and never
+      // see the next puzzle arrive (it passed live, where the real loop ran
+      // alongside, and failed in the suite, where nothing else runs)
+      openPendingWorld();
       advanceLOD(1 / 60);        // the sweep that keeps the registers honest
     }
   },
@@ -29533,6 +29761,15 @@ window.__nano = {
     while (p) { if (!p.visible) seen = false; p = p.parent; }
     return { kind: clawHeld.userData.kind, visible: seen, own: clawHeld.visible };
   },
+  // the puzzle machinery: the rules in force, the world's name, and a way to
+  // ask for a world by name the way a robot's step does
+  get worldName() { return worldName; },
+  get rules() { return worldRules; },
+  get puzzle() { return puzzleInfo; },
+  loadWorld(name) { requestWorldLoad(name); },
+  openPending() { openPendingWorld(); },
+  startOver() { startWorldOver(); },
+  nextHint(q = 'hint') { return puzzleHint(q); },   // the card's own `hint` is a getter below
   // what is shaking under the pointer, if anything -- a closeup must be still
   wiggling() { return wiggle ? (wiggle.node.userData?.kind ?? 'node') : null; },
   // what the robot at the bench is thinking, and whether a given thing answers

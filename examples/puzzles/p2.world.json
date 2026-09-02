@@ -1,0 +1,312 @@
+{
+ "kind": "world",
+ "v": 3,
+ "name": "p2",
+ "intro": "Did you notice that things wiggle when they are ready to be picked up? OK, now we\u2019ll need a 4. Give it to the bird when you have one.",
+ "goal": "a 4",
+ "hints": [
+  "Try putting the twos together.",
+  "Drop a 2 on a 2 and wait until it turns into a 4.",
+  "OK, here\u2019s all you have to do: drop one 2 on the other. When it turns into a 4, pick up the 4 and give it to the bird."
+ ],
+ "rules": {
+  "stacks": [],
+  "tools": [],
+  "typing": {
+   "numbers": false,
+   "pads": false
+  },
+  "undo": true
+ },
+ "bench": [
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "2",
+     "d": "1"
+    },
+    "op": "+"
+   },
+   "x": -0.5,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "2",
+     "d": "1"
+    },
+    "op": "+"
+   },
+   "x": -0.1,
+   "z": 1.6
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "4",
+     "d": "1"
+    },
+    "op": "+",
+    "fixed": true,
+    "label": "we need this"
+   },
+   "x": 0.9,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 9911,
+    "nestGuid": "p2-post",
+    "label": "give me your answer"
+   },
+   "x": 0.9,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9912,
+    "guid": "p2-reply",
+    "hasEgg": false,
+    "pile": [],
+    "label": "from the judge"
+   },
+   "x": 1.35,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "the judge",
+    "opaque": true,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9911,
+         "guid": "p2-post",
+         "hasEgg": false,
+         "pile": [],
+         "label": "the post"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9912,
+         "nestGuid": "p2-reply",
+         "label": "to the player"
+        },
+        {
+         "kind": "text",
+         "text": "That\u2019s it! The computer has its 4. (More puzzles are on the way.)"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "the judge",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "4",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "wild"
+        },
+        {
+         "kind": "wild"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": null,
+      "team": [
+       {
+        "kind": "robot",
+        "name": "the judge (not a box like that)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "wild"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not a number)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "wild"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not a pad)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildText"
+          },
+          {
+           "kind": "wild"
+          },
+          {
+           "kind": "wild"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": []
+       }
+      ]
+     }
+    },
+    "judge": true
+   },
+   "x": -1.25,
+   "z": 2.1
+  }
+ ],
+ "stations": {},
+ "active": null
+}
