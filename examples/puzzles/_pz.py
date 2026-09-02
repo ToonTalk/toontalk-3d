@@ -52,28 +52,37 @@ def rules(stacks=(), tools=(), typing=NO_KEYBOARD, undo=True, max_steps=None):
 
 
 def judge(name, post_id, post_guid, reply_id, reply_guid, right, on_right,
-          notes=(), others=()):
+          notes=(), others=(), sorry='Not quite. Look at what we need, and try again.'):
     """The judge: an opaque house whose robot team dozes on the post nest.
 
-    The given box is [the post nest | the reply bird | note pads...].
-    `right` is the condition for hole 0 -- what a correct answer looks like on
-    the nest -- and `on_right` the steps after the answer has been taken off
-    the nest and set down on a work spot. `others` are (condition, program)
-    pairs for answers that are wrong but recognisable, so they can be sent
-    back; the default sends any box and any number back to the player."""
+    The given box is [the post nest | the reply bird | note pads... | the
+    "not quite" pad]. `right` is the condition for hole 0 -- what a correct
+    answer looks like on the nest -- and `on_right` the steps after the answer
+    has been taken off the nest and set down on a work spot. A wrong answer
+    that is recognisable (any box, any number, any pad) gets a COPY of the
+    "not quite" pad by bird, and then the answer itself back.
+
+    Every hole but the first is matched as None: a hole the robot never looked
+    in, so anything OR NOTHING may sit there. WILD would insist on something
+    being there, and the note pad is gone once it has been sent -- which had
+    the leader refusing to doze on an empty nest and complaining every round.
+    Mimi is the workshop's, not the table's, so a robot in a house can copy."""
     holes = [nest(post_id, post_guid, 'the post'),                  # noqa: F405
              bird(reply_id, reply_guid, 'to the player')]           # noqa: F405
     holes += [pad(n) for n in notes]
+    sorry_i = len(holes)
+    holes.append(pad(sorry))
     work = box(*holes)                                              # noqa: F405
-    wild_rest = [WILD] * (len(holes) - 1)                           # noqa: F405
-    yes = robot(name, box(right, *wild_rest),                       # noqa: F405
+    rest = [None] * (len(holes) - 1)
+    yes = robot(name, box(right, *rest),                            # noqa: F405
                 [takeTop('given', 0), put('s0')] + list(on_right))  # noqa: F405
-    send_back = [takeTop('given', 0), put('given', 1)]              # noqa: F405
-    team = [robot(name + ' (not a box like that)', box(ANYBOX, *wild_rest), send_back),   # noqa: F405
-            robot(name + ' (not a number)', box(ANYNUM, *wild_rest), send_back),          # noqa: F405
-            robot(name + ' (not a pad)', box(WILDTEXT, *wild_rest), send_back)]           # noqa: F405
+    send_back = [copy('given', sorry_i), put('given', 1),           # a copy of the note  # noqa: F405
+                 takeTop('given', 0), put('given', 1)]              # ...then the answer  # noqa: F405
+    team = [robot(name + ' (not a box like that)', box(ANYBOX, *rest), send_back),   # noqa: F405
+            robot(name + ' (not a number)', box(ANYNUM, *rest), send_back),          # noqa: F405
+            robot(name + ' (not a pad)', box(WILDTEXT, *rest), send_back)]           # noqa: F405
     for cond, prog in others:
-        team.insert(0, robot(name + ' (other)', box(cond, *wild_rest), prog))  # noqa: F405
+        team.insert(0, robot(name + ' (other)', box(cond, *rest), prog))  # noqa: F405
     yes['team'] = team
     return dict(room(name, work, yes, opaque=True, dirty=True), judge=True)     # noqa: F405
 

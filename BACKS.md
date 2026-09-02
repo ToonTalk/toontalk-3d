@@ -4521,3 +4521,88 @@ deferred, at Ken's word: a clock the robot can read (so the judge could pause
 before the next puzzle), which he wants as a bird that carries messages to the
 system's own senses, later; and puzzle files dropped on a published artifact
 and cached in the browser -- the tt-wasm route -- a zip most likely.
+
+## A hole in a box on a nest is still a hole
+
+*Added 2 Sep. Ken, testing puzzle 1: a wrong answer should come back with a
+message; Marty should say that the ORDER of a box's contents matters; an undo
+"restored a copy of the original contents on the nest"; a 1 dropped on the box
+on the nest "was added to the 3 far away"; a Read button for a held pad;
+Marty's "front or behind" should be left or right; the box-over-box tooltip
+should be about joining; a step cap only where a bad algorithm would solve the
+puzzle, and said up front; and inside the judge's house the robot complained
+of a mismatch every round instead of dozing.*
+
+**Two of those were one bug, and it was old.** `holeOwnerOf` -- the walk that
+finds which hole a thing sits in so `detach` can strike it off -- searched the
+stations and the bench. A box delivered by a bird sits on a NEST, and nests
+were not in the list. So a number lifted out of a box on the reply nest was
+never removed from its hole: the box went on saying it held the number now in
+your hand, a number dropped on another across the table changed the box's
+reading too (Ken's "3 far away"), and undo rebuilt the pile from a record that
+still listed both numbers, and the table filled with copies. The fix is one
+line -- the piles are roots -- and the check now takes a number off a box on a
+nest and asks whether the nest still thinks it has it.
+
+**The judge complained every round because of a wildcard.** The conditions on
+the judge's other holes were `wild`, and `wild` means SOMETHING must be there;
+once the note pad had been sent, its hole was empty, so the leader's thought
+answered "no" instead of "wait" -- and "no" beats "wait", so the robot nagged
+instead of dozing. A `null` in a thought is a hole the robot never looked in:
+anything or nothing. That is what those holes are now, and inside the house
+after a solved puzzle the judge is `waiting: true` with no complaint said.
+The run-start refusal is also said in full only once; the second time it is
+"Still no match."
+
+**A wrong answer comes back with a note, and the note is never used up.**
+Mimi is the workshop's, not the table's -- `loadCtx` clears her platform but
+she stands in every world -- so a robot in a house can `copy`. The
+wrong-answer robots copy the judge's "not quite" pad, give the copy to the
+bird, and then give the answer itself: two deliveries, the note first.
+
+The rest is what it says: the box-over-box tooltip names the side and the
+size of the joined box; the manual's "in front / behind" for joining is now
+"left / right" (that sentence is what Marty was quoting); Marty's puzzle
+context says a box is matched hole by hole, in order, and p1's goal says "in
+that order"; a held pad's card has a **Read** button that puts the words on
+the card in full and reads them aloud when Marty's voice is on; a step cap is
+announced when the lesson starts, the first time with a pointer to the
+Trained actions panel, and p5 no longer has one -- there is no lazy way to
+make a box of two zeros.
+
+## Two ways in the door
+
+*Added 2 Sep. Ken: "We should replace the Start button with Free Play and
+Puzzle Game (and maybe something about the infinity exercises too). If the
+player has completed some of the puzzles then the Puzzle Game should provide
+the choice of continuing or starting over."*
+
+The card at the door asks who is working here; it now offers **Free play**
+and **Puzzle game** instead of Start. Puzzle game opens the first puzzle -- or,
+for somebody who has been here before, says "You were on puzzle 2, with 1
+solved" and offers *Carry on at puzzle 2* or *Start again from the first*.
+Where they got to is kept per person in this browser, beside their notebook:
+the puzzle they are on is written when a puzzle opens, and a puzzle is marked
+solved the moment the judge offers the next.
+
+**The set has to be in the page.** A published artifact can fetch nothing, so
+`embed_puzzles.py` puts p1 -- which carries every later puzzle in its
+library -- into a JSON block beside the embedded manual, and the app reads it
+at boot and remembers every world in it by name. Locally the files are still
+fetched, so edits show up without re-embedding; run the script after
+`make_puzzles.py` whenever a puzzle changes, the way `embed_manual.py` follows
+the manual.
+
+The infinity activities are not a third button: they are activity sheets that
+open the workshop with `?activity=N` from outside, and a door inside the
+workshop would need a sheet to hand back to. Left for a proper look.
+
+**And a suite bug worth its own line.** The verdict's `ok` was an `&&` over
+the flags that existed when the line was written. Every check added since --
+nineteen of them -- reported PASS or FAIL in the log and was ignored by the
+verdict, so a run could say `ok: true` over a FAIL line, and for most of a day
+did. It now ANDs every flag, and the puzzle check that had been failing
+quietly is green because its waits were wrong: the "not quite" note lands
+AFTER the answer it accompanies, and the well-done note lands after the Next
+button is armed; a check that reads the nest the instant the flag flips reads
+it too early.

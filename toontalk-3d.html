@@ -108,7 +108,8 @@
   #held .k { font-size: 11.5px; color: var(--dim); }
   /* the keyboard is a touch screen's only way in; a machine with keys of its
      own has no use for the button and does not show it */
-  #heldKeys, #heldTurn, #heldPanel, #heldPlus, #heldMinus { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
+  #heldKeys, #heldTurn, #heldPanel, #heldPlus, #heldMinus, #heldRead { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
+  #held.pad #heldRead { display: block; font-size: 12px; }
   body.touching #heldKeys, body.touching #heldTurn { display: block; }
   /* the turn button is worth having with a mouse too -- the arrow keys are
      not a thing anybody guesses; the panel button is the door to the whole
@@ -186,6 +187,7 @@
      title="What your invisible hand is carrying — it follows the mouse, and on a touch screen waits at one spot where you can see it. Click to hold a pad up and read it.">
   <span class="k">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
+  <button id="heldRead" title="Read what is written on it, in full — and aloud, if Marty’s voice is on.">Read</button>
   <button id="heldTurn" title="Turn it over a quarter — the arrow keys do the same, and turn it the other way too.">⟳</button>
   <button id="heldPanel" title="Open its panel — the tray where its behaviour lives. Ctrl+P does the same.">⚙</button>
   <button id="heldBack" title="Put it back exactly where you picked it up. Ctrl+B does the same.">↩</button>
@@ -391,6 +393,9 @@ still something you can say out loud. When a number is too long to write out on
 one face you get the beginning and the end of it, with the middle closing
 up, never just the beginning.
 
+Read on the card while you hold a pad puts its words on the card in
+full — and reads them aloud, if Martys voice is on.
+
 A made thing can be tipped as well as turned: hold it and the up and
 down arrows lay it on its back or stand it on its nose, the same as they turn a
 number to its other faces.
@@ -467,9 +472,9 @@ Boxes have holes, and holes hold anything — numbers, pads, nests, other
 boxes, even little robots (they lie down inside). Type a digit while holding a
 box to give it that many holes; type 0 and you have an empty box,
 which joins onto another box without changing it. Boxes are arrays: drop a
-box on a box to join them — left half to put its holes in front, right half
-behind — and shrinking a box splits the extra holes off as a box of their
-own.
+box on a box to join them — drop it on the left side and its holes go on
+the left, on the right side and they go on the right — and shrinking a box
+splits the extra holes off as a box of their own.
 
 Drop a box on a whole number and it splits there: a box of five
 dropped on a 2 becomes a box of the first two and a box of the rest.
@@ -1396,6 +1401,12 @@ strange toy and never a broken workshop.
 
 ## Puzzles
 
+The card at the door offers Free play — the workshop as it always
+was — and Puzzle game, a series of small worlds each with something
+to make. If you have solved some already it asks whether to carry on where you
+were or start again from the first; where you got to is kept under your name in
+this browser, beside your notebook.
+
 A puzzle is a world file with a few more things in it, and the
 workshop needs nothing new to play one. Open it and Marty says what is wanted;
 the goal stands on the table where you can see it but cannot pick it up;
@@ -1403,7 +1414,7 @@ the table holds only what the puzzle gives you — the stacks and tools it
 does not want are simply not there, and the keyboard may not reach numbers or
 pads. When you have an answer, give it to the bird. She flies it into the
 judges house, an opaque house whose robots decide: a wrong answer
-comes back to the nest marked from the judge; the right one gets a note,
+comes back to the nest marked from the judge with a note; the right one gets a note,
 and a Next puzzle button appears on the card for when you have read it.
 Start this puzzle over puts everything back as it began, and asking
 Marty for a hint gets the authors hints one at a time, the last
@@ -1566,6 +1577,7 @@ dozes — smoking gently — until the nest it is watching fills. The last link 
 settled first, and the answer unwinds from the end of the list back to the
 front.
 </script><!-- /martyManual -->
+<script type="text/plain" id="puzzleSet" data-gzip="1">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</script><!-- /puzzleSet -->
 <div id="loading">Loading…</div>
 <div id="tip"></div>
 
@@ -8482,8 +8494,18 @@ function makeScale() {
 }
 
 // Everything the user can touch, as roots of object trees.
+// EVERYTHING THAT CAN HOLD SOMETHING: the stations' occupants, the bench --
+// and the piles on the nests, which were missing. A box delivered by a bird
+// sits on a nest, and a number lifted out of one of its holes was never
+// struck off: detach walked the stations and the bench for the hole that held
+// it, found nothing, and left the hole pointing at a number now in your
+// hand. Ken dropped that number on another and the box on the nest read
+// [3 | 1] with the 3 across the table; undo then rebuilt the pile from a
+// record that still listed both numbers, and the table filled with copies.
 const roots = () => Object.values(stations)
-  .map(s => s.occupant).concat(benchThings).filter(Boolean);
+  .map(s => s.occupant).concat(benchThings)
+  .concat(allNests.flatMap(n => n.userData.pile || []))
+  .filter(Boolean);
 
 // The robot's whole world is one object: whatever it was given. `path` is a
 // chain of hole indices into that, and [] means the thing itself. Nothing a
@@ -12713,6 +12735,22 @@ function showSoftKeys(on) {
     // one button, so it goes one way; the arrows are there for the other
     turnHeld('yaw', 1);
   });
+  // READ WHAT IS ON THE PAD. A long pad is a page in a small hand: the words
+  // are there but not readable at arm's length. The button puts them on the
+  // card in full and, if Marty's voice is on, reads them out.
+  const rd = document.getElementById('heldRead');
+  rd.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const H = inHand();
+    if (!H || H.userData.kind !== 'text') return;
+    const words = (H.userData.text || '').trim();
+    if (!words) return say('Nothing is written on it yet.');
+    sayAttn(words);
+    if (typeof martyVoiceOn !== 'undefined' && martyVoiceOn && window.speechSynthesis) {
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(words));
+    }
+  });
   const pnl = document.getElementById('heldPanel');
   pnl.addEventListener('pointerdown', (e) => e.preventDefault());
   pnl.addEventListener('click', (e) => {
@@ -12762,6 +12800,7 @@ function putBackHeld() {
   refreshUI();
 }
 function noteHeld(t = inHand()) {
+  document.getElementById('held')?.classList.toggle('pad', t?.userData?.kind === 'text');
   heldYaw = 0; heldPitch = 0;          // whatever was turned before, this is new
   if (t) delete t.__faceBuf;           // typing on a die starts a fresh count
   valueAtPickup = t?.userData.value ?? null;
@@ -14478,6 +14517,7 @@ function worldIn(data) {
     nextWorld = null;
     { const b = document.getElementById('nextBtn'); if (b) b.style.display = 'none'; }
     worldName = data.name ?? null;
+    if (data.name && (data.intro || data.rules)) mineSet(PUZZLE_AT, data.name);   // where they are
     puzzleInfo = (data.intro || data.goal || data.hints) ? {
       name: data.name ?? null, intro: data.intro ?? null, goal: data.goal ?? null,
       hints: Array.isArray(data.hints) ? data.hints.slice() : [] } : null;
@@ -14631,6 +14671,15 @@ function enterTraining() {
     activeBot.root.scale.setScalar(1);
   }
   preTraining = snapshotWorld();     // the daydream must not disturb the world
+  // A CAP IS SAID UP FRONT, not discovered at the step that is refused: Ken's
+  // rule is that only a puzzle solvable by a bad algorithm caps the steps at
+  // all, and a player under a cap must know it -- and, the first time, where
+  // to watch the count.
+  if (worldRules?.maxSteps != null) {
+    sayAttn(`This puzzle lets the robot learn at most ${worldRules.maxSteps} step${worldRules.maxSteps === 1 ? '' : 's'}`
+      + (worldRules.__capTold ? '.' : ' \u2014 the Trained actions panel on the right counts them as it learns.'));
+    worldRules.__capTold = true;
+  }
   mode = 'training';
   program = [];
   syncBot();                          // after program is replaced, not before
@@ -14748,9 +14797,14 @@ function runProgram() {
       return;
     }
     flagMismatch(mismatchPaths(condition, specOf(given)));
-    return sayAttn(members.length > 1
+    // ONCE. Inside a house the same refusal came round and round with the same
+    // detail every time the robot was poked; the second time it is one line.
+    const words = members.length > 1
       ? 'No robot on the team recognises what it was given.'
-      : `It only runs when given ${condText(condition)} — the red parts don’t match. Wake Ruby and click a red part to loosen it a step, or Dusty to take it away so anything fits there.`);
+      : `It only runs when given ${condText(condition)} — the red parts don’t match. Wake Ruby and click a red part to loosen it a step, or Dusty to take it away so anything fits there.`;
+    if (words === lastMismatchSaid) return say('Still no match.');
+    lastMismatchSaid = words;
+    return sayAttn(words);
   }
   clearFlags();
   clearUndo();
@@ -15719,6 +15773,7 @@ const QUARTER = Math.PI / 2;
 // Turning is kept as two counters rather than piled-up rotations, so that it
 // can be REASONED about: which way round it is, and how far it may go.
 let heldYaw = 0, heldPitch = 0;
+let lastMismatchSaid = null;      // the refusal said last, so it is not said twice running
 function applyHeldTurn() {
   const HAND = inHand();
   if (!HAND) return;
@@ -16653,6 +16708,12 @@ function tipFor(t) {
         return h && !h.thing ? `Drop the robot into hole ${i} — it lies down inside.`
           : 'Every hole is taken — empty one first.';
       }
+      // A BOX OVER A BOX is a join, and the side you drop on decides the
+      // order -- Ken's screenshot had the generic hole tip here instead.
+      if (TIP?.userData.kind === 'box') {
+        const side = t.point ? sideOf(t.thing, t.point) : 'R';
+        return `Drop to join the boxes — on this side your box’s holes go on the ${side === 'L' ? 'LEFT' : 'RIGHT'}, making one box of ${ud.holes.length + TIP.userData.holes.length}.`;
+      }
       return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — a hole holds anything: numbers, pads, boxes, even a robot.`
         + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
@@ -17190,6 +17251,7 @@ loadModel('robot_v4.glb', (gltf) => {
   }
   frameScene();
   refreshLibrary();
+  rememberEmbeddedPuzzles();
   renderProgram(); refreshUI();
   $('loading').classList.add('gone');
 
@@ -18297,6 +18359,7 @@ function rememberWorld(rec, name = rec?.name) {
 // Where a named world comes from: memory first, then -- when there is a server
 // to ask -- the examples folder. A name with a slash is a path of its own.
 async function resolveWorld(name) {
+  await embeddedPuzzlesReady;               // the set may still be inflating at boot
   if (worldLibrary[name]) return cloneRec(worldLibrary[name]);
   const path = /\//.test(name) ? name : `examples/puzzles/${name}.world.json`;
   if (/^[a-z]+:|^\/\/|\.\./i.test(path)) return null;
@@ -18322,6 +18385,7 @@ async function resolveWorld(name) {
 // Outside a puzzle the step still opens the world at once.
 function offerOrLoad(name) {
   if (!puzzleInfo) return requestWorldLoad(name);
+  notePuzzleSolved(worldName);
   nextWorld = name;
   const b = document.getElementById('nextBtn');
   if (b) { b.style.display = ''; b.textContent = 'Next puzzle ▸'; }
@@ -18344,6 +18408,52 @@ function openPendingWorld() {
   const rec = pendingLoad; pendingLoad = null;
   worldIn(rec);
   loadedWorldName = (rec.name || loadedWorldName || '') + '';
+}
+// THE PUZZLE SET IS IN THE PAGE. embed_puzzles.py puts p1 -- which carries
+// every later puzzle in its library -- into a JSON block, so the Puzzle Game
+// button works where nothing can be fetched. Read once, at boot.
+let embeddedPuzzlesReady = Promise.resolve();
+function rememberEmbeddedPuzzles() {
+  const el = document.getElementById('puzzleSet');
+  if (!el) return;
+  embeddedPuzzlesReady = (async () => {
+    try {
+      let text = el.textContent.trim();
+      if (el.dataset.gzip) {
+        // base64 -> bytes -> gunzip -> text, all in the browser's own hands
+        const bin = atob(text);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        text = await new Response(new Blob([bytes]).stream()
+          .pipeThrough(new DecompressionStream('gzip'))).text();
+      }
+      const rec = JSON.parse(text);
+      rememberWorld(rec, rec.name || 'p1');
+    } catch (e) { console.warn('[puzzles] the embedded set did not open:', e); }
+  })();
+}
+// WHERE THE PLAYER GOT TO, kept per person in this browser like their
+// notebook: the puzzle they are on, and the ones they have solved. "Puzzle
+// game" then offers to carry on or to start again from the first.
+const PUZZLE_AT = 'tt3d.puzzle-at', PUZZLE_SOLVED = 'tt3d.puzzle-solved';
+const FIRST_PUZZLE = 'p1';
+function puzzleProgress() {
+  let solved = [];
+  try { solved = JSON.parse(mineGet(PUZZLE_SOLVED) || '[]'); } catch {}
+  return { at: mineGet(PUZZLE_AT) || null, solved };
+}
+function notePuzzleSolved(name) {
+  const pr = puzzleProgress();
+  if (name && !pr.solved.includes(name)) mineSet(PUZZLE_SOLVED, JSON.stringify([...pr.solved, name]));
+}
+async function startPuzzleGame(fresh) {
+  const pr = puzzleProgress();
+  const name = (!fresh && pr.at) ? pr.at : FIRST_PUZZLE;
+  if (fresh) { mineSet(PUZZLE_AT, null); mineSet(PUZZLE_SOLVED, null); }
+  const rec = await resolveWorld(name);
+  if (!rec) return sayAttn('The puzzles could not be found \u2014 open a puzzle file with Import instead.');
+  worldIn(rec);
+  loadedWorldName = rec.name || name;
 }
 function startWorldOver() {
   if (!worldName || !worldLibrary[worldName]) return;
@@ -18382,6 +18492,7 @@ function puzzleContextText() {
   if (!puzzleInfo) return '';
   return '\n\nThe visitor is on a PUZZLE. What was said on arrival: ' + (puzzleInfo.intro || '')
     + (puzzleInfo.goal ? '\nWhat is wanted: ' + puzzleInfo.goal : '')
+    + '\nJudging is exact: a box is matched hole by hole, IN ORDER, so [2 | 1] is not [1 | 2]; a number\u2019s operator badge counts too.'
     + '\nIf they ask for a hint, they get the next of the author\u2019s hints (you need not invent any); never give the whole answer unprompted.';
 }
 // "hint", in any of its forms, gets the NEXT hint the author wrote, and once
@@ -20067,25 +20178,47 @@ function askWho(switching = false) {
     no.onclick = () => veil.remove();
     row.appendChild(no);
   }
-  const ok = document.createElement('button');
-  ok.type = 'button';
-  ok.className = 'go';
-  ok.textContent = switching ? 'Switch' : 'Start';
+  // TWO WAYS IN, not one Start. Free play is the workshop as it always was.
+  // Puzzle game opens the first puzzle -- or, for somebody who has solved
+  // some, asks whether to carry on where they were or begin again. Ken's
+  // request; the original ToonTalk asked the same at its door.
+  const mk = (text, cls) => { const b = document.createElement('button'); b.type = 'button';
+    if (cls) b.className = cls; b.textContent = text; return b; };
+  const ok = mk(switching ? 'Switch' : 'Free play', 'go');
+  const play = switching ? null : mk('Puzzle game', 'go');
+  if (play) play.title = 'A series of puzzles, each a small world with a goal to make and a judge to give it to.';
+  if (play) row.appendChild(play);
   row.appendChild(ok);
   card.append(h, p, input, list, row);
   veil.appendChild(card);
   document.body.appendChild(veil);
   input.focus();
   input.select();
-  const accept = () => {
+  const takeName = () => {
     const name = input.value.trim();
-    if (!name) return input.focus();
-    veil.remove();
+    if (!name) { input.focus(); return false; }
     const same = name === currentUser;
     setUser(name);
     if (!same) swapNotebook();
+    return true;
   };
+  const accept = () => { if (!takeName()) return; veil.remove(); };
   ok.onclick = accept;
+  if (play) play.onclick = () => {
+    if (!takeName()) return;
+    const pr = puzzleProgress();
+    if (!pr.at || pr.at === FIRST_PUZZLE && !pr.solved.length) { veil.remove(); startPuzzleGame(true); return; }
+    // they have been here before: carry on, or begin again
+    row.textContent = '';
+    p.textContent = `You were on puzzle ${pr.at.replace(/^p/, '')}` + (pr.solved.length
+      ? `, with ${pr.solved.length} solved.` : '.');
+    const go = mk(`Carry on at puzzle ${pr.at.replace(/^p/, '')}`, 'go');
+    const again = mk('Start again from the first');
+    go.onclick = () => { veil.remove(); startPuzzleGame(false); };
+    again.onclick = () => { veil.remove(); startPuzzleGame(true); };
+    row.append(again, go);
+    go.focus();
+  };
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); accept(); }
   });
@@ -20492,6 +20625,8 @@ window.__nano = {
   get rules() { return worldRules; },
   get puzzle() { return puzzleInfo; },
   loadWorld(name) { requestWorldLoad(name); },
+  puzzleGame(fresh = true) { return startPuzzleGame(fresh); },
+  get progress() { return puzzleProgress(); },
   get nextWorld() { return nextWorld; },
   goNext() { goToNextWorld(); },
   // would THIS condition accept THAT thing -- for asking a judge, from

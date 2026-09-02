@@ -24,7 +24,13 @@ The pieces on the table:
 - the **judge**: a room with `judge: true`, opaque, running, whose robot team
   dozes on the post nest. The leader's thought is the goal; its program takes
   the answer off the nest, sends the note, and `load`s the next puzzle. The
-  team behind it recognises any box, any number, any pad, and sends it back.
+  team behind it recognises any box, any number, any pad, and sends back a
+  COPY of the judge's "not quite" pad (Mimi is the workshop's, so a robot in
+  a house can copy) and then the answer itself. Every hole of the judge's
+  thought but the first is `null` -- anything or nothing -- so the judge dozes
+  on an empty nest once the note has gone.
+- a `maxSteps` rule only where a lazy algorithm would otherwise solve the
+  puzzle; it is announced when the lesson starts.
 
 Stack ids: rooms, texts, nests, scales, dice, sounds, minis, numbers, boxes.
 Tool ids: mimi, dusty, ruby, notebook, save, import, devices.
@@ -43,3 +49,11 @@ ones' `library`, so p1 alone carries the set. Open one with
 The layout is one rule for every table (`table()` in `make_puzzles.py`): what
 you work with across the front, the bird in the middle, the reply nest beside
 her, the goal and the judge at the back.
+
+## Shipping the set
+
+`python make_puzzles.py` writes the files; then, from the project root,
+`python embed_puzzles.py` puts p1 (with its library) into `toontalk-3d.html`
+as a JSON block, so the **Puzzle game** button on the door card works in a
+published artifact where nothing can be fetched. Progress (the puzzle a
+player is on, and the ones solved) is kept per person in the browser.

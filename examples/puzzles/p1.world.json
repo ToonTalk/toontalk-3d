@@ -3,10 +3,10 @@
  "v": 3,
  "name": "p1",
  "intro": "Thanks for coming to help me fix the ship. First we\u2019ll need to fix the ship\u2019s computer, and it needs numbers to work. Can you make a box with 1 and 2 in it, and give it to the bird? If you get stuck, ask me for a hint.",
- "goal": "a box with 1 and 2 in it",
+ "goal": "a box with 1 and 2 in it, in that order",
  "hints": [
   "Did you notice that you can pick up numbers and let go of them over holes in the box?",
-  "Put the 1 in the first hole and the 2 in the second. Then pick up the whole box and give it to the bird.",
+  "Put the 1 in the first hole and the 2 in the second \u2014 the order matters, the judge reads a box hole by hole. Then pick up the whole box and give it to the bird.",
   "OK, here\u2019s what I\u2019d do if I could. I\u2019d pick up the 1 and drop it in the first hole. Then I\u2019d pick up the 2 and drop it in the second hole. Then I\u2019d grab the whole box and give it to the bird."
  ],
  "rules": {
@@ -132,6 +132,10 @@
         {
          "kind": "text",
          "text": "Well done \u2014 the computer has its first numbers. Press Next when you are ready."
+        },
+        {
+         "kind": "text",
+         "text": "Not quite. Look at what we need, and try again."
         }
        ]
       }
@@ -163,12 +167,9 @@
           }
          ]
         },
-        {
-         "kind": "wild"
-        },
-        {
-         "kind": "wild"
-        }
+        null,
+        null,
+        null
        ]
       },
       "program": [
@@ -223,15 +224,30 @@
           {
            "kind": "anyBox"
           },
-          {
-           "kind": "wild"
-          },
-          {
-           "kind": "wild"
-          }
+          null,
+          null,
+          null
          ]
         },
         "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
          {
           "type": "take",
           "at": {
@@ -264,15 +280,30 @@
           {
            "kind": "wildNumber"
           },
-          {
-           "kind": "wild"
-          },
-          {
-           "kind": "wild"
-          }
+          null,
+          null,
+          null
          ]
         },
         "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
          {
           "type": "take",
           "at": {
@@ -305,15 +336,30 @@
           {
            "kind": "wildText"
           },
-          {
-           "kind": "wild"
-          },
-          {
-           "kind": "wild"
-          }
+          null,
+          null,
+          null
          ]
         },
         "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
          {
           "type": "take",
           "at": {
@@ -461,6 +507,10 @@
           {
            "kind": "text",
            "text": "That\u2019s it! The computer has its 4. Next: a box of three."
+          },
+          {
+           "kind": "text",
+           "text": "Not quite. Look at what we need, and try again."
           }
          ]
         }
@@ -479,12 +529,9 @@
            },
            "op": "+"
           },
-          {
-           "kind": "wild"
-          },
-          {
-           "kind": "wild"
-          }
+          null,
+          null,
+          null
          ]
         },
         "program": [
@@ -539,15 +586,30 @@
             {
              "kind": "anyBox"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -580,15 +642,30 @@
             {
              "kind": "wildNumber"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -621,15 +698,30 @@
             {
              "kind": "wildText"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -837,6 +929,10 @@
             {
              "kind": "text",
              "text": "Three numbers in a row \u2014 the computer is filling up. Next: a zero."
+            },
+            {
+             "kind": "text",
+             "text": "Not quite. Look at what we need, and try again."
             }
            ]
           }
@@ -876,12 +972,9 @@
               }
              ]
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
@@ -936,15 +1029,30 @@
               {
                "kind": "anyBox"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -977,15 +1085,30 @@
               {
                "kind": "wildNumber"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -1018,15 +1141,30 @@
               {
                "kind": "wildText"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -1174,6 +1312,10 @@
               {
                "kind": "text",
                "text": "A zero \u2014 just what the computer needed. Next: robots."
+              },
+              {
+               "kind": "text",
+               "text": "Not quite. Look at what we need, and try again."
               }
              ]
             }
@@ -1192,12 +1334,9 @@
                },
                "op": "+"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
@@ -1252,15 +1391,30 @@
                 {
                  "kind": "anyBox"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -1293,15 +1447,30 @@
                 {
                  "kind": "wildNumber"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -1334,15 +1503,30 @@
                 {
                  "kind": "wildText"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -1399,8 +1583,7 @@
            "numbers": false,
            "pads": false
           },
-          "undo": true,
-          "maxSteps": 6
+          "undo": true
          },
          "bench": [
           {
@@ -1510,6 +1693,10 @@
                 {
                  "kind": "text",
                  "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+                },
+                {
+                 "kind": "text",
+                 "text": "Not quite. Look at what we need, and try again."
                 }
                ]
               }
@@ -1541,12 +1728,9 @@
                   }
                  ]
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
@@ -1597,15 +1781,30 @@
                   {
                    "kind": "anyBox"
                   },
-                  {
-                   "kind": "wild"
-                  },
-                  {
-                   "kind": "wild"
-                  }
+                  null,
+                  null,
+                  null
                  ]
                 },
                 "program": [
+                 {
+                  "type": "copy",
+                  "at": {
+                   "c": "given",
+                   "path": [
+                    3
+                   ]
+                  }
+                 },
+                 {
+                  "type": "put",
+                  "at": {
+                   "c": "given",
+                   "path": [
+                    1
+                   ]
+                  }
+                 },
                  {
                   "type": "take",
                   "at": {
@@ -1638,15 +1837,30 @@
                   {
                    "kind": "wildNumber"
                   },
-                  {
-                   "kind": "wild"
-                  },
-                  {
-                   "kind": "wild"
-                  }
+                  null,
+                  null,
+                  null
                  ]
                 },
                 "program": [
+                 {
+                  "type": "copy",
+                  "at": {
+                   "c": "given",
+                   "path": [
+                    3
+                   ]
+                  }
+                 },
+                 {
+                  "type": "put",
+                  "at": {
+                   "c": "given",
+                   "path": [
+                    1
+                   ]
+                  }
+                 },
                  {
                   "type": "take",
                   "at": {
@@ -1679,15 +1893,30 @@
                   {
                    "kind": "wildText"
                   },
-                  {
-                   "kind": "wild"
-                  },
-                  {
-                   "kind": "wild"
-                  }
+                  null,
+                  null,
+                  null
                  ]
                 },
                 "program": [
+                 {
+                  "type": "copy",
+                  "at": {
+                   "c": "given",
+                   "path": [
+                    3
+                   ]
+                  }
+                 },
+                 {
+                  "type": "put",
+                  "at": {
+                   "c": "given",
+                   "path": [
+                    1
+                   ]
+                  }
+                 },
                  {
                   "type": "take",
                   "at": {
@@ -1746,8 +1975,7 @@
          "numbers": false,
          "pads": false
         },
-        "undo": true,
-        "maxSteps": 6
+        "undo": true
        },
        "bench": [
         {
@@ -1857,6 +2085,10 @@
               {
                "kind": "text",
                "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+              },
+              {
+               "kind": "text",
+               "text": "Not quite. Look at what we need, and try again."
               }
              ]
             }
@@ -1888,12 +2120,9 @@
                 }
                ]
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
@@ -1944,15 +2173,30 @@
                 {
                  "kind": "anyBox"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -1985,15 +2229,30 @@
                 {
                  "kind": "wildNumber"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -2026,15 +2285,30 @@
                 {
                  "kind": "wildText"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -2184,6 +2458,10 @@
             {
              "kind": "text",
              "text": "A zero \u2014 just what the computer needed. Next: robots."
+            },
+            {
+             "kind": "text",
+             "text": "Not quite. Look at what we need, and try again."
             }
            ]
           }
@@ -2202,12 +2480,9 @@
              },
              "op": "+"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
@@ -2262,15 +2537,30 @@
               {
                "kind": "anyBox"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -2303,15 +2593,30 @@
               {
                "kind": "wildNumber"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -2344,15 +2649,30 @@
               {
                "kind": "wildText"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -2409,8 +2729,7 @@
          "numbers": false,
          "pads": false
         },
-        "undo": true,
-        "maxSteps": 6
+        "undo": true
        },
        "bench": [
         {
@@ -2520,6 +2839,10 @@
               {
                "kind": "text",
                "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+              },
+              {
+               "kind": "text",
+               "text": "Not quite. Look at what we need, and try again."
               }
              ]
             }
@@ -2551,12 +2874,9 @@
                 }
                ]
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
@@ -2607,15 +2927,30 @@
                 {
                  "kind": "anyBox"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -2648,15 +2983,30 @@
                 {
                  "kind": "wildNumber"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -2689,15 +3039,30 @@
                 {
                  "kind": "wildText"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -2756,8 +3121,7 @@
        "numbers": false,
        "pads": false
       },
-      "undo": true,
-      "maxSteps": 6
+      "undo": true
      },
      "bench": [
       {
@@ -2867,6 +3231,10 @@
             {
              "kind": "text",
              "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+            },
+            {
+             "kind": "text",
+             "text": "Not quite. Look at what we need, and try again."
             }
            ]
           }
@@ -2898,12 +3266,9 @@
               }
              ]
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
@@ -2954,15 +3319,30 @@
               {
                "kind": "anyBox"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -2995,15 +3375,30 @@
               {
                "kind": "wildNumber"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -3036,15 +3431,30 @@
               {
                "kind": "wildText"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -3254,6 +3664,10 @@
           {
            "kind": "text",
            "text": "Three numbers in a row \u2014 the computer is filling up. Next: a zero."
+          },
+          {
+           "kind": "text",
+           "text": "Not quite. Look at what we need, and try again."
           }
          ]
         }
@@ -3293,12 +3707,9 @@
             }
            ]
           },
-          {
-           "kind": "wild"
-          },
-          {
-           "kind": "wild"
-          }
+          null,
+          null,
+          null
          ]
         },
         "program": [
@@ -3353,15 +3764,30 @@
             {
              "kind": "anyBox"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -3394,15 +3820,30 @@
             {
              "kind": "wildNumber"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -3435,15 +3876,30 @@
             {
              "kind": "wildText"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -3591,6 +4047,10 @@
             {
              "kind": "text",
              "text": "A zero \u2014 just what the computer needed. Next: robots."
+            },
+            {
+             "kind": "text",
+             "text": "Not quite. Look at what we need, and try again."
             }
            ]
           }
@@ -3609,12 +4069,9 @@
              },
              "op": "+"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
@@ -3669,15 +4126,30 @@
               {
                "kind": "anyBox"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -3710,15 +4182,30 @@
               {
                "kind": "wildNumber"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -3751,15 +4238,30 @@
               {
                "kind": "wildText"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -3816,8 +4318,7 @@
          "numbers": false,
          "pads": false
         },
-        "undo": true,
-        "maxSteps": 6
+        "undo": true
        },
        "bench": [
         {
@@ -3927,6 +4428,10 @@
               {
                "kind": "text",
                "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+              },
+              {
+               "kind": "text",
+               "text": "Not quite. Look at what we need, and try again."
               }
              ]
             }
@@ -3958,12 +4463,9 @@
                 }
                ]
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
@@ -4014,15 +4516,30 @@
                 {
                  "kind": "anyBox"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -4055,15 +4572,30 @@
                 {
                  "kind": "wildNumber"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -4096,15 +4628,30 @@
                 {
                  "kind": "wildText"
                 },
-                {
-                 "kind": "wild"
-                },
-                {
-                 "kind": "wild"
-                }
+                null,
+                null,
+                null
                ]
               },
               "program": [
+               {
+                "type": "copy",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  3
+                 ]
+                }
+               },
+               {
+                "type": "put",
+                "at": {
+                 "c": "given",
+                 "path": [
+                  1
+                 ]
+                }
+               },
                {
                 "type": "take",
                 "at": {
@@ -4163,8 +4710,7 @@
        "numbers": false,
        "pads": false
       },
-      "undo": true,
-      "maxSteps": 6
+      "undo": true
      },
      "bench": [
       {
@@ -4274,6 +4820,10 @@
             {
              "kind": "text",
              "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+            },
+            {
+             "kind": "text",
+             "text": "Not quite. Look at what we need, and try again."
             }
            ]
           }
@@ -4305,12 +4855,9 @@
               }
              ]
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
@@ -4361,15 +4908,30 @@
               {
                "kind": "anyBox"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -4402,15 +4964,30 @@
               {
                "kind": "wildNumber"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -4443,15 +5020,30 @@
               {
                "kind": "wildText"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -4601,6 +5193,10 @@
           {
            "kind": "text",
            "text": "A zero \u2014 just what the computer needed. Next: robots."
+          },
+          {
+           "kind": "text",
+           "text": "Not quite. Look at what we need, and try again."
           }
          ]
         }
@@ -4619,12 +5215,9 @@
            },
            "op": "+"
           },
-          {
-           "kind": "wild"
-          },
-          {
-           "kind": "wild"
-          }
+          null,
+          null,
+          null
          ]
         },
         "program": [
@@ -4679,15 +5272,30 @@
             {
              "kind": "anyBox"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -4720,15 +5328,30 @@
             {
              "kind": "wildNumber"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -4761,15 +5384,30 @@
             {
              "kind": "wildText"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -4826,8 +5464,7 @@
        "numbers": false,
        "pads": false
       },
-      "undo": true,
-      "maxSteps": 6
+      "undo": true
      },
      "bench": [
       {
@@ -4937,6 +5574,10 @@
             {
              "kind": "text",
              "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+            },
+            {
+             "kind": "text",
+             "text": "Not quite. Look at what we need, and try again."
             }
            ]
           }
@@ -4968,12 +5609,9 @@
               }
              ]
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
@@ -5024,15 +5662,30 @@
               {
                "kind": "anyBox"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -5065,15 +5718,30 @@
               {
                "kind": "wildNumber"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -5106,15 +5774,30 @@
               {
                "kind": "wildText"
               },
-              {
-               "kind": "wild"
-              },
-              {
-               "kind": "wild"
-              }
+              null,
+              null,
+              null
              ]
             },
             "program": [
+             {
+              "type": "copy",
+              "at": {
+               "c": "given",
+               "path": [
+                3
+               ]
+              }
+             },
+             {
+              "type": "put",
+              "at": {
+               "c": "given",
+               "path": [
+                1
+               ]
+              }
+             },
              {
               "type": "take",
               "at": {
@@ -5173,8 +5856,7 @@
      "numbers": false,
      "pads": false
     },
-    "undo": true,
-    "maxSteps": 6
+    "undo": true
    },
    "bench": [
     {
@@ -5284,6 +5966,10 @@
           {
            "kind": "text",
            "text": "You trained a robot! The computer has its zeros. (More puzzles are on the way.)"
+          },
+          {
+           "kind": "text",
+           "text": "Not quite. Look at what we need, and try again."
           }
          ]
         }
@@ -5315,12 +6001,9 @@
             }
            ]
           },
-          {
-           "kind": "wild"
-          },
-          {
-           "kind": "wild"
-          }
+          null,
+          null,
+          null
          ]
         },
         "program": [
@@ -5371,15 +6054,30 @@
             {
              "kind": "anyBox"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -5412,15 +6110,30 @@
             {
              "kind": "wildNumber"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {
@@ -5453,15 +6166,30 @@
             {
              "kind": "wildText"
             },
-            {
-             "kind": "wild"
-            },
-            {
-             "kind": "wild"
-            }
+            null,
+            null,
+            null
            ]
           },
           "program": [
+           {
+            "type": "copy",
+            "at": {
+             "c": "given",
+             "path": [
+              3
+             ]
+            }
+           },
+           {
+            "type": "put",
+            "at": {
+             "c": "given",
+             "path": [
+              1
+             ]
+            }
+           },
            {
             "type": "take",
             "at": {

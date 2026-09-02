@@ -54,7 +54,7 @@ P5 = puzzle(
      'set the box on Mimi, take the copy, and drop the copy on the side of '
      'the box. When I leave its thought bubble, I’d give it the box and let '
      'it work — then give the bird the box it made.'],
-    rules(tools=['mimi'], max_steps=6),
+    rules(tools=['mimi']),      # no cap: there is no lazy way to make this box
     table([box(num(0)), {'kind': 'robot', 'name': None, 'program': [], 'team': []}],   # noqa: F405
           fixed(box(num(0), num(0)), 'we need this'),      # noqa: F405
           bird(9951, 'p5-post', 'give me your answer'),    # noqa: F405
@@ -140,11 +140,12 @@ puzzle(
     'the ship’s computer, and it needs numbers to work. Can you make a '
     'box with 1 and 2 in it, and give it to the bird? If you get stuck, ask '
     'me for a hint.',
-    'a box with 1 and 2 in it',
+    'a box with 1 and 2 in it, in that order',
     ['Did you notice that you can pick up numbers and let go of them over '
      'holes in the box?',
-     'Put the 1 in the first hole and the 2 in the second. Then pick up the '
-     'whole box and give it to the bird.',
+     'Put the 1 in the first hole and the 2 in the second — the order '
+     'matters, the judge reads a box hole by hole. Then pick up the whole '
+     'box and give it to the bird.',
      'OK, here’s what I’d do if I could. I’d pick up the 1 and '
      'drop it in the first hole. Then I’d pick up the 2 and drop it in '
      'the second hole. Then I’d grab the whole box and give it to the '
