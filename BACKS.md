@@ -4606,3 +4606,79 @@ quietly is green because its waits were wrong: the "not quite" note lands
 AFTER the answer it accompanies, and the well-done note lands after the Next
 button is armed; a check that reads the nest the instant the flag flips reads
 it too early.
+
+## The post, the ship, and a power of a prime
+
+*Added 2 Sep. Ken: Marty and the card both say the goal; +3 dropped on −3 made
+−6; could Mimi be a character, and why would she copy things; the "make it
+more general" advice after a run confuses in a puzzle; more puzzles; and the
+original's backstory needs the damaged ship to be visible, or another story.
+Then, from a number cube: "Surely it isn't prime"; the words face should be
+the whole name with the middle shrunk, not the short reading; a cube turned
+in the closeup lay askew after Escape; Ctrl+C read out every digit.*
+
+**One voice for the story.** Marty tells you what is wanted; the card said it
+again, word for word. The card keeps to what a card is for -- where you are
+and what the controls do -- and it is the card's *idle line* now, not a
+one-off `say`, since the idle line is what `refreshUI` writes back the moment
+your hand is empty and it had been overwriting the puzzle's line with "Take a
+little robot from its stack".
+
+**−6 was the badge model showing through.** p4's "minus three" was a 3
+wearing a subtract badge, so dropping a plain 3 on it added 3 to its value
+and showed 6 under a minus. The workshop's own rule is that *the minus key
+negates* and adding a negative is subtraction; p4 now hands out a real −3,
+and either drop makes 0. Measured both ways.
+
+**Advice, not a verdict.** A robot that did its job once and stopped because
+its desk no longer fits its thought has often just finished; telling the
+player to loosen it read as a correction. It reads "Ran 1× and stopped: what
+is on its desk no longer fits its thought. If you want it to work in more
+situations, wake Ruby..." now.
+
+**Puzzle 6 is the post.** There is no Rounds control any more -- a robot runs
+until its thought stops fitting -- so the original's "double until 1,024"
+cannot stop itself here, and neither can "four zeros by doubling". What
+stops by itself is a nest: the original's *add up all the numbers on the
+nest*. A box of [nest with 2, 3, 4 | 0], a robot, and Ruby: train one take
+and one drop, loosen the number and the zero in its thought, give it the box,
+and it adds a number a round and dozes when the nest is empty. That is the
+first puzzle that needs Ruby, and the first whose end is the robot going to
+sleep. Measured: thought "a box of any number and any number", total 9, pile
+0, "the robot shrinks and waits", judge accepts.
+
+**The ship.** Ken kept the original's story on condition that the damaged
+ship be visible. It is a made model -- cylinder, scorched cone, two fins, a
+stripe, a porthole, two puffs of smoke -- lying on its side at the back of
+every puzzle table, fixed and ghost, and p1's intro points at it: "that's it
+lying over there with its nose burnt". A fixed thing that is also ghost is
+scenery, and its tooltip says it stays where it came down rather than calling
+it the goal.
+
+**A power of a prime is not prime.** The sixth face takes a whole number
+apart, and 19 to the 199th came apart as a single part, "19¹⁹⁹", which the
+one-part test read as prime. Prime is one part to the power of one; a lone
+part with a power says "a power of the prime 19".
+
+**The whole name, head and tail.** The short reading was offered whenever
+the English name would not fit; Ken wanted the name itself, beginning and
+end with the middle closing up, exactly as the digits face does. The short
+reading remains only past the last Latin scale, where there is no name.
+
+**Square on the table.** The hand's turn rolls a number about the line of
+sight so its writing is upright for the camera; the closeup borrowed that
+roll, and with the camera a little above the table it leaned the cube a few
+degrees -- and after Escape it lay askew for good. Turns in the closeup are
+quarter turns about the table's own axes now; measured axis-aligned after
+Escape with two turns applied.
+
+**Ctrl+C says it in a breath:** "Copied: 733333333… and 111 more digits", or
+"… and 153 more words" on the words face.
+
+**Mimi as a character** is a question, not a build yet. Her name says what
+she is: a *mime*. A mime copies what she is shown -- and a mime *pulling a
+solid copy out of the air* is a natural animation for a machine whose whole
+job is that a copy appears. She would keep her platform and tray as a little
+stage, and get a face like the others. The other candidate was a mimic
+octopus, which also copies for a living; the mime is the better fit for the
+name and for a cast of people rather than animals.

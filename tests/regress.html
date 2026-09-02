@@ -2075,7 +2075,7 @@ async function puzzleCheckBody(D, w, at) {
   line.push('constrained=' + constrained);
   // 2. the goal stays put
   at('goal');
-  const goal = must(find(t => t.userData.fixed), 'goal');
+  const goal = must(find(t => t.userData.fixed && !t.userData.ghost), 'goal');
   D.clickThing(goal); await frames(D, 30);
   const goalStays = !!goal && D.state.hand === null;
   line.push('goal-stays=' + goalStays);
@@ -2170,13 +2170,13 @@ async function puzzleCheckBody(D, w, at) {
 async function puzzleSetCheck(D) {
   const line = [];
   let ok = true;
-  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5']) {
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6']) {
     const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
     D.worldIn(rec);
     await slowSettle(D, 3000);
     let goal = null, judge = null;
     for (let i = 0; i < 16; i++) { const t = D.bench(i); if (!t) break;
-      if (t.userData.fixed) goal = t; if (t.userData.kind === 'room' && t.userData.judge) judge = t; }
+      if (t.userData.fixed && !t.userData.ghost) goal = t;   /* the ship is fixed too, and ghost */ if (t.userData.kind === 'room' && t.userData.judge) judge = t; }
     const cond = judge?.__ctx?.activeBot?.condition;
     const accepts = cond && goal ? D.matchOf(cond.holes[0], goal) : 'no judge';
     const stacksOff = (rec.rules.stacks.length === 0) === (D.stations.numbers.__plinth.visible === false);
@@ -2443,19 +2443,24 @@ async function bigWordsCheck(D) {
     ['12 digits', '123456789012', 'full'],
     ['36 digits', '576460752303423487576460752303423487', 'full'],
     ['40 digits', '1234567890123456789012345678901234567890', 'full'],
-    ['70 digits', '5'.padEnd(70, '7'), 'short'],
-    ['200 digits', '7'.padEnd(200, '3'), 'short'],
+    ['70 digits', '5'.padEnd(70, '7'), 'full'],
+    ['200 digits', '7'.padEnd(200, '3'), 'full'],
   ];
   const line = [], bad = [];
   for (const [tag, n, want2] of cases) {
     const shown = D.faceWords(n);
     const short = /times ten to the power of/.test(shown);
-    const cut = /\u2026/.test(shown);
+    // a gap in the MIDDLE is the head-and-tail showing; only a trailing ellipsis is a name cut off
+    const cut = /…\s*$/.test(shown.trim());
     const digits = /[0-9]/.test(shown);
-    const okOne = !cut && !digits && (want2 === 'short' ? short : !short);
+    // the whole name, head and tail with the middle closing up -- Ken wanted
+    // the name itself on the face, not the "about ... times ten" reading
+    const gapped = /…/.test(shown) && !/…\s*$/.test(shown);
+    const okOne = !cut && !digits && (want2 === 'short' ? short : !short)
+      && (n.length < 60 || gapped);
     if (!okOne) bad.push(tag + (cut ? ' cut-off' : '') + (digits ? ' has-digits' : '')
       + (short ? ' short' : ' full'));
-    line.push(tag + '=' + (short ? 'short' : 'full') + (cut ? '/CUT' : ''));
+    line.push(tag + '=' + (short ? 'short' : 'full') + (cut ? '/CUT' : '') + (n.length >= 60 ? (gapped ? '/head+tail' : '/NO-GAP') : ''));
   }
   // THE SCALE NAMES ARE BUILT FROM LATIN, so they do not stop where a table
   // would have. Three spot checks against the names the dictionaries give.

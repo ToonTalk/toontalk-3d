@@ -4,15 +4,18 @@
 #   p2  a 4, from two 2s (a number dropped on a number adds)
 #   p3  a box with 8, 16 and 32 in it -- boxes join by dropping one on the
 #       side of another
-#   p4  a zero -- a number wearing a minus badge takes away when dropped
+#   p4  a zero -- a number below zero adds itself and takes away
 #   p5  a box with two zeros, made by a ROBOT you train, with Mimi to copy
+#   p6  the sum of the numbers on a nest -- a robot that runs until the nest
+#       is empty, and the first thought Ruby has to loosen
 #
 # Each is its own world file, and every later one also rides inside p1's
 # library, so a robot can open the next by name where nothing can be fetched.
 #
 # THE LAYOUT, the same on every table: what you work with at the FRONT (near
 # you), the bird in the middle, the reply nest beside her, the goal and the
-# judge at the back where they are seen and not in the way.
+# judge at the back where they are seen and not in the way -- and Marty's
+# ship, lying where it came down, so the story has something to point at.
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _pz import *                                           # noqa: F403
@@ -20,6 +23,32 @@ from _pz import *                                           # noqa: F403
 FRONT = 2.05          # near the camera
 MID = 1.55
 BACK = 1.2
+
+
+def ship():
+    """Marty's ship, on its side at the back of the table with a scorched
+    nose: the reason for every puzzle. Scenery -- nothing runs into it, and
+    nobody lifts it."""
+    parts = [
+        {'shape': 'cylinder', 'size': [0.055, 0.05, 0.30], 'at': [0, 0.06, 0],
+         'rot': [0, 0, 90], 'color': '#e9e4d8'},
+        {'shape': 'cone', 'size': [0.05, 0.12], 'at': [0.21, 0.06, 0],
+         'rot': [0, 0, -90], 'color': '#3a3a3a'},               # scorched
+        {'shape': 'box', 'size': [0.08, 0.02, 0.12], 'at': [-0.15, 0.06, 0.05],
+         'rot': [0, 0, 20], 'color': '#c0392b'},
+        {'shape': 'box', 'size': [0.08, 0.02, 0.12], 'at': [-0.15, 0.06, -0.05],
+         'rot': [0, 0, -20], 'color': '#c0392b'},
+        {'shape': 'box', 'size': [0.14, 0.03, 0.10], 'at': [-0.02, 0.06, 0],
+         'color': '#c0392b'},                                    # the stripe
+        {'shape': 'sphere', 'size': [0.028], 'at': [0.05, 0.10, 0.045],
+         'color': '#7fd4ff'},                                    # a porthole
+        {'shape': 'sphere', 'size': [0.05], 'at': [0.24, 0.13, 0.02],
+         'color': '#6b6b6b'},                                    # a puff of smoke
+        {'shape': 'sphere', 'size': [0.035], 'at': [0.29, 0.2, -0.02],
+         'color': '#8a8a8a'},
+    ]
+    return {'kind': 'model', 'parts': parts, 'fixed': True, 'ghost': True,
+            'label': 'Marty’s ship'}
 
 
 def table(materials, goal, post, reply, judge_, extra=()):
@@ -30,7 +59,8 @@ def table(materials, goal, post, reply, judge_, extra=()):
     bench += [{'thing': post, 'x': 0.0, 'z': MID},
               {'thing': reply, 'x': 0.55, 'z': MID},
               {'thing': goal, 'x': 1.15, 'z': BACK},
-              {'thing': judge_, 'x': -1.25, 'z': BACK}]
+              {'thing': judge_, 'x': -1.25, 'z': BACK},
+              {'thing': ship(), 'x': 0.1, 'z': 1.12}]
     bench += list(extra)
     return bench
 
@@ -38,6 +68,43 @@ def table(materials, goal, post, reply, judge_, extra=()):
 def next_note(text):
     return [take('given', 2), put('given', 1)]              # noqa: F405
 
+
+ROBOT = {'kind': 'robot', 'name': None, 'program': [], 'team': []}
+
+# --- p6: the sum of what came in the post -------------------------------------
+P6 = puzzle(
+    'p6',
+    'The computer needs the total of the numbers that came in the post — '
+    'three of them, on that nest. Train a robot to add them up: give it the '
+    'box, take the top number off the nest and drop it on the zero. Its '
+    'thought will want exactly that number, so wake Ruby and click the parts '
+    'of its thought to loosen them; then give it the box again and it will '
+    'work until the nest is empty. Give the bird the total.',
+    'the total of the numbers on the nest',
+    ['Give the robot the box with the nest in it. In its imagination, click '
+     'the top number on the nest — the robot takes it — then click the zero '
+     'to drop it there.',
+     'Look at its thought: it wants exactly the number it saw, and exactly '
+     'a zero. Wake Ruby and click those parts until they say “any number”.',
+     'With the thought loosened, give the robot the box again. It adds one '
+     'number per round and dozes when the nest is empty.',
+     'Here’s what I’d do. Drop the box on the robot; click the top number on '
+     'the nest, then click the zero; leave the thought bubble. Wake Ruby, '
+     'click the number in its thought and the zero in its thought. Give it '
+     'the box, press Run, and when the nest is empty pick the total out of '
+     'the box and give it to the bird.'],
+    rules(tools=['ruby']),
+    table([box(nest(9961, 'p6-pile', 'the post', pile=[num(2), num(3), num(4)]),   # noqa: F405
+               dict(num(0), label='the total')),             # noqa: F405
+           ROBOT],
+          fixed(num(9), 'we need this'),                     # noqa: F405
+          bird(9963, 'p6-post', 'give me your answer'),      # noqa: F405
+          nest(9964, 'p6-reply', 'from the judge'),          # noqa: F405
+          judge('the judge', 9963, 'p6-post', 9964, 'p6-reply',
+                right=num(9),                                # noqa: F405
+                on_right=next_note(''),
+                notes=['The total is in — the computer can count its post now. '
+                       '(More puzzles are on the way.)'])))
 
 # --- p5: a robot makes a box with two zeros ----------------------------------
 P5 = puzzle(
@@ -55,29 +122,31 @@ P5 = puzzle(
      'the box. When I leave its thought bubble, I’d give it the box and let '
      'it work — then give the bird the box it made.'],
     rules(tools=['mimi']),      # no cap: there is no lazy way to make this box
-    table([box(num(0)), {'kind': 'robot', 'name': None, 'program': [], 'team': []}],   # noqa: F405
+    table([box(num(0)), ROBOT],                              # noqa: F405
           fixed(box(num(0), num(0)), 'we need this'),      # noqa: F405
           bird(9951, 'p5-post', 'give me your answer'),    # noqa: F405
           nest(9952, 'p5-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 9951, 'p5-post', 9952, 'p5-reply',
                 right=box(num(0), num(0)),                  # noqa: F405
-                on_right=next_note(''),
+                on_right=next_note('') + [load('p6')],
                 notes=['You trained a robot! The computer has its zeros. '
-                       '(More puzzles are on the way.)'])))
+                       'Next: the post.'])),
+    library={'p6': P6})
 
 # --- p4: a zero --------------------------------------------------------------
 P4 = puzzle(
     'p4',
-    'The computer’s going to need a zero to work. Notice the badge on one of '
-    'these numbers: a number wearing a minus takes away when you drop it on '
-    'another. Give the bird a zero.',
+    'The computer’s going to need a zero to work. One of these numbers is '
+    'below zero — a minus three. A number dropped on another adds itself, '
+    'and adding a minus three takes three away. Give the bird a zero.',
     'a zero',
-    ['Look at the badge on the 3 that says minus.',
-     'Drop the minus 3 on the other 3.',
-     'Here’s what I’d do: pick up the 3 wearing the minus badge and drop it on '
-     'the plain 3. That leaves a 0. Give the 0 to the bird.'],
+    ['One of the 3s is a MINUS three. Dropping a number on a number adds them.',
+     'Drop the minus three on the plain 3 — or the 3 on the minus three; either '
+     'way they add up to nothing.',
+     'Here’s what I’d do: pick up the minus three and drop it on the plain 3. '
+     'That leaves a 0. Give the 0 to the bird.'],
     rules(),
-    table([num(3), num(3, op='-')],                          # noqa: F405
+    table([num(3), num(-3)],                                 # noqa: F405
           fixed(num(0), 'we need this'),                     # noqa: F405
           bird(9941, 'p4-post', 'give me your answer'),      # noqa: F405
           nest(9942, 'p4-reply', 'from the judge'),          # noqa: F405
@@ -85,7 +154,7 @@ P4 = puzzle(
                 right=num(0),                                # noqa: F405
                 on_right=next_note('') + [load('p5')],
                 notes=['A zero — just what the computer needed. Next: robots.'])),
-    library={'p5': P5})
+    library={'p5': P5, 'p6': P6})
 
 # --- p3: a box with 8, 16 and 32 ----------------------------------------------
 P3 = puzzle(
@@ -110,7 +179,7 @@ P3 = puzzle(
                 on_right=next_note('') + [load('p4')],
                 notes=['Three numbers in a row — the computer is filling up. '
                        'Next: a zero.'])),
-    library={'p4': P4, 'p5': P5})
+    library={'p4': P4, 'p5': P5, 'p6': P6})
 
 # --- p2: we need a 4 ---------------------------------------------------------
 P2 = puzzle(
@@ -131,15 +200,15 @@ P2 = puzzle(
                 right=num(4),                                # noqa: F405
                 on_right=next_note('') + [load('p3')],
                 notes=['That’s it! The computer has its 4. Next: a box of three.'])),
-    library={'p3': P3, 'p4': P4, 'p5': P5})
+    library={'p3': P3, 'p4': P4, 'p5': P5, 'p6': P6})
 
 # --- p1: we need a box with 1 and 2 in it -----------------------------------
 puzzle(
     'p1',
-    'Thanks for coming to help me fix the ship. First we’ll need to fix '
-    'the ship’s computer, and it needs numbers to work. Can you make a '
-    'box with 1 and 2 in it, and give it to the bird? If you get stuck, ask '
-    'me for a hint.',
+    'Thanks for coming to help me. My ship came down hard — that’s it lying '
+    'over there with its nose burnt — and its computer is broken. First it '
+    'needs numbers to work. Can you make a box with 1 and 2 in it, and give '
+    'it to the bird? If you get stuck, ask me for a hint.',
     'a box with 1 and 2 in it, in that order',
     ['Did you notice that you can pick up numbers and let go of them over '
      'holes in the box?',
@@ -160,4 +229,4 @@ puzzle(
                 on_right=next_note('') + [load('p2')],
                 notes=['Well done — the computer has its first numbers. '
                        'Press Next when you are ready.'])),
-    library={'p2': P2, 'p3': P3, 'p4': P4, 'p5': P5})
+    library={'p2': P2, 'p3': P3, 'p4': P4, 'p5': P5, 'p6': P6})
