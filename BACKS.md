@@ -4743,3 +4743,50 @@ the invisible wall, which is the copying pose -- Marty's own eye in her
 colours, a small closed red mouth, one painted tear, and the family's amber
 badge. `mimi_v1_hero.png` and `mimi_v1_sheet.png` are the look; the glb is
 exported but she is not in the app until Ken says so.
+
+## Seven more puzzles, a recipe for making them, and Dusty eats a stack
+
+*Added 2 Sep. Ken: "please add more puzzles"; then "can you write a document
+describing how a user could create new puzzles -- I noted that Dusty doesn't
+seem to be able to remove stacks".*
+
+**Puzzles 8 to 14** follow the originals' next steps with what the workshop
+already has: a box inside a box inside a box; three zeros in the second hole
+of a box, with Mimi to copy the one zero; six zeros from a box of two, copies
+joined side by side; the door code 77 from a box of powers of two (a sum by
+choosing, each number once); a half, from a 2 wearing a divide badge; a
+million from a 10 and a times-ten badge copied five times; and A, B and C on
+pads in a box -- the first puzzle that lets you type. Every judge accepts its
+own goal in the suite, and the mechanics each one leans on were measured on
+the page: divide (1 ÷ 2 = ½), times (10 × 10 = 100), a sum out of the box
+(64 + 8 = 72), a box copied on Mimi and joined to its copy (two holes and
+two holes make four), a capital A typed onto a blank pad under the typing
+rule, and the goal [[[_]]] built from a hole list with `None` in it.
+
+**A hole is a None.** `empty_box(n)` had written the sparse `{n, at}` form,
+which the reader never understood: it counts `holes`, so every "empty box"
+was a two-hole box, and p1's happened to be right. It writes a list of Nones
+now.
+
+**A real click has a point.** The test hook that clicks a thing carried no
+point, so a number dropped on a number by script fell through to "set it
+down beside" and stacked instead of adding -- which is not what a hand does.
+The hook passes the thing's centre now, as a click would.
+
+**How to make a puzzle** is written down in `examples/puzzles/MAKING-PUZZLES.md`:
+the file's shape and every field; route one, building it inside the
+workshop (set the table, take away stacks, build the judge house by training
+its team, save, finish in a text editor); route two, the Python helpers with
+a whole puzzle in twenty lines; what the judge can and cannot decide (exact
+identity, anything-or-nothing holes, no emptiness, no behaviour, no Rounds);
+chaining with `load`; embedding a set; and a checklist.
+
+**Dusty swallows a stack.** Route one had a hole in it: a puzzle is a world
+with fewer stacks, and the only way to have fewer was to edit the rules by
+hand. Point Dusty at a stack now and the whole stack leaves the world -- in
+free play that writes the whole workshop down as rules first and takes the
+one stack out, so the save records exactly what is left. One of the stack's
+cubes rides on his head, and clicking it gives the stack back. A robot cannot
+be taught it. Measured in the suite: free play had no rules; the box stack
+leaves the rules and is hidden; the save has no box stack; it rides with
+him; it comes back.

@@ -1,13 +1,13 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p1",
- "intro": "Thanks for coming to help me. My ship came down hard \u2014 that\u2019s it lying on the floor behind the table with its nose burnt \u2014 and its computer is broken. First it needs numbers to work. Can you make a box with 1 and 2 in it, and give it to the bird? If you get stuck, ask me for a hint.",
- "goal": "a box with 1 and 2 in it, in that order",
+ "name": "p11",
+ "intro": "With ones, twos, fours and so on the computer can make any number at all. The ship\u2019s door code is 77 \u2014 make it from the numbers in this box. A number dropped on a number adds, and each of these may be used once.",
+ "goal": "exactly 77",
  "hints": [
-  "Did you notice that you can pick up numbers and let go of them over holes in the box?",
-  "Put the 1 in the first hole and the 2 in the second \u2014 the order matters, the judge reads a box hole by hole. Then pick up the whole box and give it to the bird.",
-  "OK, here\u2019s what I\u2019d do if I could. I\u2019d pick up the 1 and drop it in the first hole. Then I\u2019d pick up the 2 and drop it in the second hole. Then I\u2019d grab the whole box and give it to the bird."
+  "Every number is a sum of some of these, each used at most once. Start with the biggest that fits under 77.",
+  "64 fits, and 77 take away 64 is 13. Which of these make 13?",
+  "Here\u2019s what I\u2019d do: take the 64 out, drop the 8 on it, then the 4, then the 1 \u2014 64, 72, 76, 77 \u2014 and give the 77 to the bird."
  ],
  "rules": {
   "stacks": [],
@@ -19,63 +19,6 @@
   "undo": true
  },
  "bench": [
-  {
-   "thing": {
-    "kind": "number",
-    "value": {
-     "n": "1",
-     "d": "1"
-    },
-    "op": "+"
-   },
-   "x": -0.45,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "number",
-    "value": {
-     "n": "2",
-     "d": "1"
-    },
-    "op": "+"
-   },
-   "x": 0.0,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     null,
-     null
-    ]
-   },
-   "x": 0.45,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "bird",
-    "nestId": 9901,
-    "nestGuid": "p1-post",
-    "label": "give me your answer"
-   },
-   "x": 0.0,
-   "z": 1.55
-  },
-  {
-   "thing": {
-    "kind": "nest",
-    "id": 9902,
-    "guid": "p1-reply",
-    "hasEgg": false,
-    "pile": [],
-    "label": "from the judge"
-   },
-   "x": 0.55,
-   "z": 1.55
-  },
   {
    "thing": {
     "kind": "box",
@@ -95,8 +38,82 @@
        "d": "1"
       },
       "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "4",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "8",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "16",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "32",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "64",
+       "d": "1"
+      },
+      "op": "+"
      }
-    ],
+    ]
+   },
+   "x": 0.0,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 10011,
+    "nestGuid": "p11-post",
+    "label": "give me your answer"
+   },
+   "x": 0.0,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 10012,
+    "guid": "p11-reply",
+    "hasEgg": false,
+    "pile": [],
+    "label": "from the judge"
+   },
+   "x": 0.55,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "77",
+     "d": "1"
+    },
+    "op": "+",
     "fixed": true,
     "label": "we need this"
    },
@@ -119,25 +136,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 9901,
-         "guid": "p1-post",
+         "id": 10011,
+         "guid": "p11-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 9902,
-         "nestGuid": "p1-reply",
+         "nestId": 10012,
+         "nestGuid": "p11-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Well done \u2014 the computer has its first numbers. Press Next when you are ready."
+         "text": "77 \u2014 the door opens. Next: a number smaller than one."
         },
         {
          "kind": "text",
-         "text": "Not quite. Look at what we need, and try again."
+         "text": "Not quite \u2014 the code is exactly 77. Each number in the box may be used once."
         }
        ]
       }
@@ -149,25 +166,12 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "1",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "2",
-            "d": "1"
-           },
-           "op": "+"
-          }
-         ]
+         "kind": "number",
+         "value": {
+          "n": "77",
+          "d": "1"
+         },
+         "op": "+"
         },
         null,
         null,
@@ -212,7 +216,7 @@
        },
        {
         "type": "load",
-        "name": "p2"
+        "name": "p12"
        }
       ],
       "trainedOn": null,

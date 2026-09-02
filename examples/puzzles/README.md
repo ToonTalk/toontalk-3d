@@ -41,15 +41,20 @@ In a puzzle the judge's `load` step *offers* the next world: a Next button
 appears on the card once the note has been read. Outside a puzzle `load`
 opens the world at once.
 
-`make_puzzles.py` writes p1 to p7 (after the original tutorial: a box with 1
+**To make your own, read [MAKING-PUZZLES.md](MAKING-PUZZLES.md).**
+
+`make_puzzles.py` writes p1 to p14 (after the original tutorial: a box with 1
 and 2; a 4 from two 2s; a box with 8, 16 and 32, joined by dropping boxes on
 each other's sides; a zero from a 3 and a −3; a box of two zeros made by a
 robot you train, with Mimi; the total of the numbers on a nest, by a robot
 whose thought Ruby loosens -- it dozes when the nest is empty; and exactly
 1,024 from a single 1 and a robot that doubles, which never stops by itself:
 Stop lets it finish the round it is in, so the player presses Stop -- or the
-full-stop key -- while the box says 512). Marty's ship lies on the floor
-behind every table as `scenery`.
+full-stop key -- while the box says 512; then a box inside a box inside a
+box; three zeros in the second hole of a box; six zeros from a box of two;
+the door code 77 from powers of two; a half from a divide badge; a million
+from a times-ten badge copied five times; and A, B and C on pads, typed).
+Marty's ship lies on the floor behind every table as `scenery`.
 
 There is no Rounds control: a robot runs until its thought stops fitting, so
 a puzzle that iterates either stops by itself (an emptying nest) or is the

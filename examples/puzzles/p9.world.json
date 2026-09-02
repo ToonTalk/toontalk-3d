@@ -1,17 +1,19 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p1",
- "intro": "Thanks for coming to help me. My ship came down hard \u2014 that\u2019s it lying on the floor behind the table with its nose burnt \u2014 and its computer is broken. First it needs numbers to work. Can you make a box with 1 and 2 in it, and give it to the bird? If you get stuck, ask me for a hint.",
- "goal": "a box with 1 and 2 in it, in that order",
+ "name": "p9",
+ "intro": "See if you can make a box with three zeros in it, and put it in the SECOND hole of the other box. There is only one zero; Mimi makes more.",
+ "goal": "a box with three zeros in the second hole of a two-hole box",
  "hints": [
-  "Did you notice that you can pick up numbers and let go of them over holes in the box?",
-  "Put the 1 in the first hole and the 2 in the second \u2014 the order matters, the judge reads a box hole by hole. Then pick up the whole box and give it to the bird.",
-  "OK, here\u2019s what I\u2019d do if I could. I\u2019d pick up the 1 and drop it in the first hole. Then I\u2019d pick up the 2 and drop it in the second hole. Then I\u2019d grab the whole box and give it to the bird."
+  "Set the zero on Mimi\u2019s platform and a copy drops into her tray \u2014 take the copy, and the original comes back off the platform.",
+  "Fill the three-hole box with zeros first. Then drop that box into the second hole of the two-hole box \u2014 the right-hand one.",
+  "Here\u2019s what I\u2019d do: copy the zero twice with Mimi, drop the three zeros into the three-hole box, drop that box into the right-hand hole of the two-hole box, and give the two-hole box to the bird."
  ],
  "rules": {
   "stacks": [],
-  "tools": [],
+  "tools": [
+   "mimi"
+  ],
   "typing": {
    "numbers": false,
    "pads": false
@@ -23,7 +25,7 @@
    "thing": {
     "kind": "number",
     "value": {
-     "n": "1",
+     "n": "0",
      "d": "1"
     },
     "op": "+"
@@ -33,12 +35,12 @@
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "2",
-     "d": "1"
-    },
-    "op": "+"
+    "kind": "box",
+    "holes": [
+     null,
+     null,
+     null
+    ]
    },
    "x": 0.0,
    "z": 2.05
@@ -57,8 +59,8 @@
   {
    "thing": {
     "kind": "bird",
-    "nestId": 9901,
-    "nestGuid": "p1-post",
+    "nestId": 9991,
+    "nestGuid": "p9-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -67,8 +69,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 9902,
-    "guid": "p1-reply",
+    "id": 9992,
+    "guid": "p9-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -80,21 +82,35 @@
    "thing": {
     "kind": "box",
     "holes": [
+     null,
      {
-      "kind": "number",
-      "value": {
-       "n": "1",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "2",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ]
      }
     ],
     "fixed": true,
@@ -119,21 +135,21 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 9901,
-         "guid": "p1-post",
+         "id": 9991,
+         "guid": "p9-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 9902,
-         "nestGuid": "p1-reply",
+         "nestId": 9992,
+         "nestGuid": "p9-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Well done \u2014 the computer has its first numbers. Press Next when you are ready."
+         "text": "Zeros in the second hole \u2014 just so. Next: six of them."
         },
         {
          "kind": "text",
@@ -151,21 +167,35 @@
         {
          "kind": "box",
          "holes": [
+          null,
           {
-           "kind": "number",
-           "value": {
-            "n": "1",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "2",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ]
           }
          ]
         },
@@ -212,7 +242,7 @@
        },
        {
         "type": "load",
-        "name": "p2"
+        "name": "p10"
        }
       ],
       "trainedOn": null,

@@ -36,8 +36,9 @@ def fixed(thing, label=None):
 
 
 def empty_box(n):
-    """A box with n empty holes (the sparse form the reader understands)."""
-    return {'kind': 'box', 'n': n, 'at': {}}
+    """A box with n empty holes. (The sparse {n, at} form only ever made a
+    two-hole box: the reader counts `holes`, so a hole is a None.)"""
+    return box(*([None] * n))                                # noqa: F405
 
 
 def load(name):

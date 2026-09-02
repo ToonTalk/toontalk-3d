@@ -10,6 +10,13 @@
 #       is empty, and the first thought Ruby has to loosen
 #   p7  exactly 1024 -- a robot that doubles and never stops by itself, so
 #       YOU have to stop it in time
+#   p8  a box inside a box inside a box
+#   p9  a box of three zeros in the second hole of a box (Mimi copies)
+#   p10 a box of six zeros from a box of two (copies joined side by side)
+#   p11 the door code, 77, from a box of powers of two (a sum, by choosing)
+#   p12 a half -- a 2 wearing a divide badge
+#   p13 a million from a 10 and a times-ten badge, copied five times
+#   p14 A, B and C on pads, in a box -- the first that lets you type
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -114,10 +121,9 @@ P7 = puzzle(
           nest(9972, 'p7-reply', 'from the judge'),          # noqa: F405
           judge('the judge', 9971, 'p7-post', 9972, 'p7-reply',
                 right=num(1024),                             # noqa: F405
-                on_right=next_note(''),
-                notes=['1,024 exactly — the computer is working, and Marty '
-                       'can go home. Thank you! (More puzzles are on the '
-                       'way.)'],
+                on_right=next_note('') + [load('p8')],
+                notes=['1,024 exactly — the computer is working again. '
+                       'Next: boxes inside boxes.'],
                 sorry='Not quite — it has to be exactly 1,024. Too small? Run '
                       'and Stop is one more round. Too big? Start over.')),
     scenery=SCENERY)
@@ -281,4 +287,188 @@ puzzle(
                 on_right=next_note('') + [load('p2')],
                 notes=['Well done — the computer has its first numbers. '
                        'Press Next when you are ready.'])),
+    scenery=SCENERY)
+
+# ============================================================================
+# The second seven, after the originals' next steps: boxes in boxes, more
+# zeros, numbers made by choosing, dividing and multiplying, and letters.
+
+# --- p8: a box inside a box inside a box --------------------------------------
+puzzle(
+    'p8',
+    'Now the computer wants boxes with boxes inside. To practise, put a box '
+    'inside a box inside a box — three boxes, each in the next — and give the '
+    'outside one to the bird.',
+    'a box inside a box inside a box',
+    ['A box goes into a hole like anything else.',
+     'Drop one box into the hole of another. Then pick up THAT box and drop '
+     'it into the hole of the third.',
+     'Here’s what I’d do: drop the first box into the second box’s hole; '
+     'pick up the second box and drop it into the third box’s hole; give the '
+     'third box to the bird.'],
+    rules(),
+    table([empty_box(1), empty_box(1), empty_box(1)],
+          fixed(box(box(box(None))), 'we need this'),      # noqa: F405
+          bird(9981, 'p8-post', 'give me your answer'),      # noqa: F405
+          nest(9982, 'p8-reply', 'from the judge'),          # noqa: F405
+          judge('the judge', 9981, 'p8-post', 9982, 'p8-reply',
+                right=box(box(box(None))),                   # noqa: F405
+                on_right=next_note('') + [load('p9')],
+                notes=['Three deep — the computer likes that. Next: zeros '
+                       'in a box in a box.'])),
+    scenery=SCENERY)
+
+# --- p9: three zeros, in the second hole of a box ------------------------------
+puzzle(
+    'p9',
+    'See if you can make a box with three zeros in it, and put it in the '
+    'SECOND hole of the other box. There is only one zero; Mimi makes more.',
+    'a box with three zeros in the second hole of a two-hole box',
+    ['Set the zero on Mimi’s platform and a copy drops into her tray — take '
+     'the copy, and the original comes back off the platform.',
+     'Fill the three-hole box with zeros first. Then drop that box into the '
+     'second hole of the two-hole box — the right-hand one.',
+     'Here’s what I’d do: copy the zero twice with Mimi, drop the three zeros '
+     'into the three-hole box, drop that box into the right-hand hole of the '
+     'two-hole box, and give the two-hole box to the bird.'],
+    rules(tools=['mimi']),
+    table([num(0), empty_box(3), empty_box(2)],              # noqa: F405
+          fixed(box(None, box(num(0), num(0), num(0))), 'we need this'),   # noqa: F405
+          bird(9991, 'p9-post', 'give me your answer'),      # noqa: F405
+          nest(9992, 'p9-reply', 'from the judge'),          # noqa: F405
+          judge('the judge', 9991, 'p9-post', 9992, 'p9-reply',
+                right=box(None, box(num(0), num(0), num(0))),   # noqa: F405
+                on_right=next_note('') + [load('p10')],
+                notes=['Zeros in the second hole — just so. Next: six of '
+                       'them.'])),
+    scenery=SCENERY)
+
+# --- p10: six zeros -----------------------------------------------------------
+puzzle(
+    'p10',
+    'Now the computer needs a box with six zeros. You have a box with two; '
+    'boxes join when you drop one on the side of another, and Mimi copies '
+    'boxes as happily as numbers.',
+    'a box with six zeros in it',
+    ['Set the box on Mimi’s platform and a copy of the whole box drops into '
+     'her tray. Take the copy, and then the box itself comes back off the '
+     'platform.',
+     'Two zeros and two zeros and two zeros: three boxes joined side by side '
+     'is six holes.',
+     'Here’s what I’d do: set the box on Mimi, take the copy out of the tray '
+     'and set it down, take the box back off the platform, and drop one on '
+     'the side of the other. Once more for the third pair of zeros, and give '
+     'the long box to the bird.'],
+    rules(tools=['mimi']),
+    table([box(num(0), num(0))],                             # noqa: F405
+          fixed(box(*[num(0) for _ in range(6)]), 'we need this'),   # noqa: F405
+          bird(10001, 'p10-post', 'give me your answer'),    # noqa: F405
+          nest(10002, 'p10-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10001, 'p10-post', 10002, 'p10-reply',
+                right=box(*[num(0) for _ in range(6)]),      # noqa: F405
+                on_right=next_note('') + [load('p11')],
+                notes=['Six zeros in a row. Next: a number made by '
+                       'choosing.'])),
+    scenery=SCENERY)
+
+# --- p11: the door code -------------------------------------------------------
+puzzle(
+    'p11',
+    'With ones, twos, fours and so on the computer can make any number at '
+    'all. The ship’s door code is 77 — make it from the numbers in this box. '
+    'A number dropped on a number adds, and each of these may be used once.',
+    'exactly 77',
+    ['Every number is a sum of some of these, each used at most once. Start '
+     'with the biggest that fits under 77.',
+     '64 fits, and 77 take away 64 is 13. Which of these make 13?',
+     'Here’s what I’d do: take the 64 out, drop the 8 on it, then the 4, '
+     'then the 1 — 64, 72, 76, 77 — and give the 77 to the bird.'],
+    rules(),
+    table([box(num(1), num(2), num(4), num(8), num(16), num(32), num(64))],   # noqa: F405
+          fixed(num(77), 'we need this'),                    # noqa: F405
+          bird(10011, 'p11-post', 'give me your answer'),    # noqa: F405
+          nest(10012, 'p11-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10011, 'p11-post', 10012, 'p11-reply',
+                right=num(77),                               # noqa: F405
+                on_right=next_note('') + [load('p12')],
+                notes=['77 — the door opens. Next: a number smaller than '
+                       'one.'],
+                sorry='Not quite — the code is exactly 77. Each number in '
+                      'the box may be used once.')),
+    scenery=SCENERY)
+
+# --- p12: a half --------------------------------------------------------------
+puzzle(
+    'p12',
+    'The computer divides as well as adds. That 2 wears a divide badge: '
+    'dropped on a number, it divides the number by 2 instead of adding. We '
+    'need a half.',
+    'a half',
+    ['Look at the badge on the 2: that is what it does when it lands on a '
+     'number.',
+     'Drop the 2 on the 1 — not the 1 on the 2.',
+     'Here’s what I’d do: pick up the 2 with the divide badge, drop it on the '
+     '1, and give the half to the bird.'],
+    rules(),
+    table([num(1), num(2, op='/')],                          # noqa: F405
+          fixed(num(1, 2), 'we need this'),                  # noqa: F405
+          bird(10021, 'p12-post', 'give me your answer'),    # noqa: F405
+          nest(10022, 'p12-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10021, 'p12-post', 10022, 'p12-reply',
+                right=num(1, 2),                             # noqa: F405
+                on_right=next_note('') + [load('p13')],
+                notes=['A half — the computer can share now. Next: a '
+                       'million.'])),
+    scenery=SCENERY)
+
+# --- p13: a million -----------------------------------------------------------
+puzzle(
+    'p13',
+    'The computer needs a million. You have a 10, and a 10 wearing a times '
+    'badge — dropped on a number, it multiplies. But a badge number is used '
+    'up when it lands, so Mimi is here to make more.',
+    'a million',
+    ['Times ten on 10 is 100 — and the times-ten is gone. Copy it with Mimi '
+     'before you use it.',
+     '10, 100, 1,000, 10,000, 100,000, 1,000,000: that is five times-tens.',
+     'Here’s what I’d do: set the times-ten on Mimi and take a copy; do that '
+     'until there are five; drop them on the 10 one after another; give the '
+     'bird the million.'],
+    rules(tools=['mimi']),
+    table([num(10), num(10, op='*')],                        # noqa: F405
+          fixed(num(1000000), 'we need this'),               # noqa: F405
+          bird(10031, 'p13-post', 'give me your answer'),    # noqa: F405
+          nest(10032, 'p13-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10031, 'p13-post', 10032, 'p13-reply',
+                right=num(1000000),                          # noqa: F405
+                on_right=next_note('') + [load('p14')],
+                notes=['A million! Next: the computer wants letters.'],
+                sorry='Not quite — exactly one million, six figures of it.')),
+    scenery=SCENERY)
+
+# --- p14: A, B and C ----------------------------------------------------------
+puzzle(
+    'p14',
+    'The computer needs more than numbers — it needs letters and words. Here '
+    'are three blank pads: pick one up and type a capital A on it; then B and '
+    'C. Put them in the box in order and give the box to the bird.',
+    'a box with A, B and C on pads, in that order',
+    ['Hold a pad and press a letter key: the keyboard writes on what you '
+     'hold.',
+     'A capital letter — hold Shift. Backspace takes a letter back.',
+     'Here’s what I’d do: pick up a pad, press Shift and A, drop it in the '
+     'first hole; the same with B into the second and C into the third; give '
+     'the box to the bird.'],
+    rules(typing={'numbers': False, 'pads': True}),
+    table([pad(''), pad(''), pad(''), empty_box(3)],         # noqa: F405
+          fixed(box(txt('A'), txt('B'), txt('C')), 'we need this'),   # noqa: F405
+          bird(10041, 'p14-post', 'give me your answer'),    # noqa: F405
+          nest(10042, 'p14-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10041, 'p14-post', 10042, 'p14-reply',
+                right=box(txt('A'), txt('B'), txt('C')),     # noqa: F405
+                on_right=next_note(''),
+                notes=['A, B, C — the computer can spell. Thank you! (More '
+                       'puzzles are on the way.)'],
+                sorry='Not quite — capital A, B and C, one to a pad, in that '
+                      'order.')),
     scenery=SCENERY)

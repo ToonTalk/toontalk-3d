@@ -1,17 +1,19 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p1",
- "intro": "Thanks for coming to help me. My ship came down hard \u2014 that\u2019s it lying on the floor behind the table with its nose burnt \u2014 and its computer is broken. First it needs numbers to work. Can you make a box with 1 and 2 in it, and give it to the bird? If you get stuck, ask me for a hint.",
- "goal": "a box with 1 and 2 in it, in that order",
+ "name": "p13",
+ "intro": "The computer needs a million. You have a 10, and a 10 wearing a times badge \u2014 dropped on a number, it multiplies. But a badge number is used up when it lands, so Mimi is here to make more.",
+ "goal": "a million",
  "hints": [
-  "Did you notice that you can pick up numbers and let go of them over holes in the box?",
-  "Put the 1 in the first hole and the 2 in the second \u2014 the order matters, the judge reads a box hole by hole. Then pick up the whole box and give it to the bird.",
-  "OK, here\u2019s what I\u2019d do if I could. I\u2019d pick up the 1 and drop it in the first hole. Then I\u2019d pick up the 2 and drop it in the second hole. Then I\u2019d grab the whole box and give it to the bird."
+  "Times ten on 10 is 100 \u2014 and the times-ten is gone. Copy it with Mimi before you use it.",
+  "10, 100, 1,000, 10,000, 100,000, 1,000,000: that is five times-tens.",
+  "Here\u2019s what I\u2019d do: set the times-ten on Mimi and take a copy; do that until there are five; drop them on the 10 one after another; give the bird the million."
  ],
  "rules": {
   "stacks": [],
-  "tools": [],
+  "tools": [
+   "mimi"
+  ],
   "typing": {
    "numbers": false,
    "pads": false
@@ -23,42 +25,31 @@
    "thing": {
     "kind": "number",
     "value": {
-     "n": "1",
+     "n": "10",
      "d": "1"
     },
     "op": "+"
    },
-   "x": -0.45,
+   "x": -0.23,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "number",
     "value": {
-     "n": "2",
+     "n": "10",
      "d": "1"
     },
-    "op": "+"
+    "op": "*"
    },
-   "x": 0.0,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     null,
-     null
-    ]
-   },
-   "x": 0.45,
+   "x": 0.23,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 9901,
-    "nestGuid": "p1-post",
+    "nestId": 10031,
+    "nestGuid": "p13-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -67,8 +58,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 9902,
-    "guid": "p1-reply",
+    "id": 10032,
+    "guid": "p13-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -78,25 +69,12 @@
   },
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "1",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "2",
-       "d": "1"
-      },
-      "op": "+"
-     }
-    ],
+    "kind": "number",
+    "value": {
+     "n": "1000000",
+     "d": "1"
+    },
+    "op": "+",
     "fixed": true,
     "label": "we need this"
    },
@@ -119,25 +97,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 9901,
-         "guid": "p1-post",
+         "id": 10031,
+         "guid": "p13-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 9902,
-         "nestGuid": "p1-reply",
+         "nestId": 10032,
+         "nestGuid": "p13-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Well done \u2014 the computer has its first numbers. Press Next when you are ready."
+         "text": "A million! Next: the computer wants letters."
         },
         {
          "kind": "text",
-         "text": "Not quite. Look at what we need, and try again."
+         "text": "Not quite \u2014 exactly one million, six figures of it."
         }
        ]
       }
@@ -149,25 +127,12 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "1",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "2",
-            "d": "1"
-           },
-           "op": "+"
-          }
-         ]
+         "kind": "number",
+         "value": {
+          "n": "1000000",
+          "d": "1"
+         },
+         "op": "+"
         },
         null,
         null,
@@ -212,7 +177,7 @@
        },
        {
         "type": "load",
-        "name": "p2"
+        "name": "p14"
        }
       ],
       "trainedOn": null,

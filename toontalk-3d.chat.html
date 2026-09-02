@@ -660,6 +660,11 @@ anything. She also erases real things in place: an erased number
 stands for any number, which is how you build a robot's expectations by hand.
 Waking one settles the other, and whoever is awake fidgets.
 
+Dusty takes a whole stack too: point him at one and it leaves the
+world — that is how a puzzle comes to have fewer stacks, and the rule is
+saved with the world. A cube of the stack rides on his head; click it and the
+stack is back.
+
 Dusty’s bag
 What Dusty swallows is not gone at once: it rides on his head, where
 you can see it. Click it and it comes back into your hand. That is how you take
@@ -1434,8 +1439,12 @@ puzzles — a box with 1 and 2, a 4, a box with 8, 16 and 32, a zero, a
 box of two zeros made by a robot you train, the total of the numbers on a
 nest (the first that needs Ruby), and exactly 1,024 from a robot that doubles
 and will not stop by itself, so you press Stop while the box says 512 —
-are in examples/puzzles/, one file each, and
-make_puzzles.py there shows how they are written.
+and seven more after them (boxes inside boxes, more zeros, the door code
+77 from powers of two, a half, a million, and A, B and C on pads) — are
+in examples/puzzles/, one file each. To make your own, read
+MAKING-PUZZLES.md in that folder: a puzzle is a world file with a
+few extra fields, built in the workshop or written with the helpers in
+make_puzzles.py.
 
 ## The notebook, saving and sharing
 
@@ -1587,7 +1596,7 @@ dozes — smoking gently — until the nest it is watching fills. The last link 
 settled first, and the answer unwinds from the end of the list back to the
 front.
 </script><!-- /martyManual -->
-<script type="text/plain" id="puzzleSet" data-gzip="1">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</script><!-- /puzzleSet -->
+<script type="text/plain" id="puzzleSet" data-gzip="1">H4sIAL9MmGoC/+1dbXPbtrL+K6jOl/YeRlekZFmyP2SSNG08t0k7tc9kzu31B0qEJNYUocOXKEon//3uLgASpCjJVuU4itBMbYsiFovF2+6D3cVfraVIoiBtXfzVWrj48y6Mg9aFfNxyWh9aF12nFftzDg/hDacVxlki4MPNzI/vUjYRCRuLeRhPWSbYjEcLNudt9nbF0lm4YGMoyQKxjNnMTwL2f7nXcXssm/kZ/TlMWZixaIXFRQzPOZtEAkiO+AwYoQeZP4o4W4bZDN5NWSxSzkZ5Emeamg8v4jfAxiLPeMLClI0SccfjNvspTNIM64g5D6BwPh/xJEVWoYV3bfbKj9lK5Gzu33Hms5H4KGtyiarHwhgKO/RhGn7gSAnKIlujMAmes6sJFZ/yjKVZPr6DV9M7kADJxWfQiKwNQpsKPwKZba4gjEkoTCQBT6AAFoRe+aP1YxhQDbHIwjGXL+HnMTC+CMd3LF8UrUKKEXAyFUxMkMk5Ex9AHjMR8VRWwZGD51DBb3lGH139fEKSwleJDj7y9HcpH4vY6D0u+QSpZSDv1KFHf+bBlLOE+yBn2VAiNlrR7za7mfGSZSywlN/DixvEi5L79X8cGFUJ18NliQK4kp8CGFksnLAr6Po8Ctrlc7MaKekgEQskv9ZaxVhjUa+pqBJGU9lp4o/u27Rbp5Xk0C846dLMH99hd8PDTIhI/7lawMTAF1QPty4mfpRyp7XwA/3hs9PK4wBmZJbk+GHE4/EMyv/VymaqtJrTkghOaj/KOZGFpzinA/oNhcUC/von/vWxdfGs0+6dOa1PrQuv3Tn77NyXoreRYqfd2UoPBIZjX5BY/ojzKHLwx60uvYMdFCyUj3maXcHn4bDjyk8/52FA69ezhUgzeCXyRxwnJPUMzFaYUTBd43QJramy6rbPmpvOiVAo6/Fgihd1JHwRrbAdfvp6Oi37LIy47Fdd+yQR83LqFBWfnW2tuSqkvXp3nw4EvifhRx7IgVY2YslpbYV2hKlqgtt2dRO8phYkQsyNTiglgLX5/0FGZB1BmGQr/UFuSZu2KD3sgU2YTVkoYj2z4uAewqv0pmv2phoxOzsTW0HvGuJdH5BefUDqwVKQkWvEIvJXNBYLWhn/iHzQr4vWex5FsPrF3FyUiw0QmKUdUa5yavFos98SnqbsHVCABYrLjc9P5Jq9am+u7J3I2H/yMIP17hch7pifyWVYdb3cHrNkxfypH8ZA6PYzDAR/nMHsqnT7SCBVpU2Y3Y4raoidtrurnmr4f3aK9ahYlBaJgCV/Llfb1YJaBYoElPczpDZWS0zcwiU7w/HZuZUjQK3XND1kSei6SsG0U5a6NV/cVYV3u41s7WW38nIk/KDsoYVH0z5LoFd58CvIhloPw0K1eUfHsu9Ba1G6QBTeSe3lh4d1tx+vXsI395T+WCxW21rb3V80h+vYhmq2SPnWGK+7BC3H8wMlvAyj4J2cCFbK95EyKF97iPgG19JTFjBtCnLB17oqKpmgI5TKQnX3NjYRSSsd85gnq0btdi4C2ECRnSSTwk9nvpTmKoJXaJ1Pw0+4bYNyB0oW/oQf3VvZqj86+KTvoAQSoR44Q/w4FpFIgNI/+JD3ggFtIQV12ISrlIGM6xVE257bRPdZlXDXx38VwnIslXQHSMarEAcN3T1T1KHiSgVehf640x16o79B/9laBc8eWoPbQ1JdrMGogKpU4tlGLF2gGVjh2BuUUpZiR1K9M5PS+SToTSa7KJ0Z3YVcul0ShkmoP8J/uwh1TUpDIOKR5CqUBj7+W9eopzOh512pD76F4bzSxi9CKkrH9tqg9K5KOwXmUR96B550YTql8OT8M60ubmc3rNMxcJ13YllVJiVyYkAXafiRfeKJAI3y36BBzvwPFegkW4pL/MRT9qcAm7lQNcmORpVVIT1pGHAEKnxYVkGQUo18G85DqHsRQnFJBHRZkDco3Cv8UyuzjaBKwZmEVUwc5ZpnGv7A+rEaLVXQtbOJSOZUv4+VrxR+YtjxyDySJZArAW3XX4H175NSw6mMo3GTAmdBHZxHExQltgZsfKA70fo91YntuFkKxTURaP50AcUSzg3Bgs1FEhyt5O8wpfbT5oNk32xBTS5Yui4Ph2Vme5jIMy0HbC7xg8XCjBA943Uk0tg8pwRQGjqegCTs+jb7NR6DIS4SCZxRlTMwnmCvDRN8lWRg4HD4RiTiKVX9IFylNYemtg6PrjzILunsY5d0Ntgl90JWqpao2+msYSOdRwFHsCYTHel8VfDI4frhWyx0KpCPmg3TtZlwCNBHTYDaVNsT9rk2NzifJWLZJjznojD+2NyXe8J4JkQKnfBN4jp23u7YE04Pq3JdC1ZZsMpK2YJVFqyyYJUFq44TrLqHD5LphPQeUR8Y0+iCskSAYAK2qkROUqHhhgLJQp8Z6egTr7S6DOquH0XkyEEca+4DQY5NElc5P9fHrFQ8zFhhm2rfG3IOCQmzarMXmjoiHwuwlERcKuh+ECgkg/vjmcJBUrC0/RUbcZan9P6YGxAX/whLS7QCPkxI6/UHWF401RAhujSfI71UzHlB15HVEFlo7By6TZJn1xl0l8LsCD6ZTmEtlS5GEzw+znEhgkqRk36PnknGQR6E/fhL4Bm+gcrdbpu9n4XVBsErbvf5TiyqwJGAlMgzRwJG+GCAkkP/qAJW6xl/u7pX+vD03IP/+47RVxWwCFl+WvebJzq43lWot0+hwT6F3P4+pbp7tarfOyhY5tbBMvexwDLXBMse3ZeoWXi0zNSFdzpYkOtWuuCwWJDrrY2kPbGgcqHDt2m/Egsep2uIUDqHHQ7PLGaw/8FmeR9EqOpWJHfBchdqs9e4p+itpzzwWN/DHhUzesDwPUlIxPrvWEjEStlCIhYSsZCIhUSOFBLxdkMiXiUuy0A8gvBDGEgfmiV6jMNvhB8Q7gAj3IOHPsIl6j028mF2XzShFg55fShqJe6BB40YJZTCKhGQL08Q4Jkje6/MAp/N/GhS8dbBByaMoY8eSYdEBjRu411ILCJUmAH5nfBUOhRh2Bjo9qnJJFbzo4YOPE2mQAlw9ZcPdAW73WSq0UAFVmLKyykChHSFNT8VbPARxv543YPE/vx3YYvuILhuK3l1q9t7LKvbM61u72msbt0Z3kka3Z5b6YHDGt2etzaQ9jS6X8jZ3BR0g+gy7CwJ9I3pljEPowgkcyxuGPcfmydpUXetRW0taitla1Fbi9pa1NaiPk6Lurvbou5usqh1NIxW68wQGLfjqBgSt0OmNaY18VkWyvAPXDCV4rjJwp7nURYuopCDif4yJ02BipWH/HS0AgZpxQh20NuBImfgDewBNDfp+B1DKirWt+LbNMBviL+M4+EQco6n+Z2OeYpO8Rj41jN8C76f4jESe4VRIqFyIaDqR3yCMRwY7QOMwndYN4oFCMIPp0O/Ovq3/oN+wf+lwT8h41lX+YB4lpJNFdUiGyDTu+AucolJQ6iaPM7CCAsBx6i2Y52Xhe/BvDDnOxS74k+w+1Ws0mVp3aO1QX8Uiv5TRaBsUN07BzfyG0j+1/5Wfrdu5Xcfy8rvmlZ+94ms/A79d9IH7F230g+HtfW73tpw2tvWV1P6O2XMV8z9pQ/LJ6Zbyigc8f5H6voYHRcVVYFDkXuTcJonsBKLCS2cT2HmbxycJ2ns96yxb419K2Vr7Ftj3xr71tg/TmO/t9vY72039iktATlPamd/pckVaUWVFkimJtSBB+xvtFWp0jaAnX6HS2eqzpRR+wMznoxTWGDQOPUXYeZH7IX0eb+Ufu4v6ZVXbaYSds5Nd0v4UybirJw3r6VEaEqV8cLRpLE6ZGxLEtI3Igrkyk9FFpRHzlfNZnd8JXVj+GMkMM3rMgF9l47mlzpfKWwKxMmLop2qtJIlfs+uZ+Eka7OXaDMvfEx3Csu1URPmmLj/mT0x7ChuiTRx/8LZnAz0UuanwKS1JKWXMuOHkfZTiqx4SlkqLrfI/gBH/Wq3uCcKULU+Sku/P9hql28qtsOcbywGpbx98nxWk33uYHjd8uvVgYTeYwEJPRNI6D1RRouasbrZAn25+atXJ5XkoedWuu2wuEPPWxt9++IOsDQ7sMhsdDJYcBmxhlsKDOXv2PdvcYta5J8+YaJn3HUUdrn0V+0fHoBNFHtQsTs4tFMB52o1rewRT5MS4lAD/xvGNCxsYWELK2ULW1jYwsIWFrY4Qthit9O/6fPfdEkIzTQwj8PpFK9PUTHzqzLhOyp1I07WMrkUPGd410YslmypjOso0k78vTb7ef0SizK1JzlAUGipgTX0Kk4GyQoU1Cyji2LQcF4KvIZlyin/o3bc96Xbvq9u3lj6oT6mx5rzJFYpOJGjhstBfOC4YAdeQzSgSD5ZBASolJPvlQdFlaxTcfnvff33d3hfwIf/n3ue7g+H9cB575Fu4DDD5p/If793umf6sp+n9T4+zJ0Z9Yj5vX33byq3Tn3HbpquzOiVnvuUGnciAdzjdt/v2RN9Kmq9961lbKVsLWNrGVvL2FrGx2kZ73be767dUgo6HZi1Ked4W6S+PbN+5efAYW6flLUuhbSHAXe23Uy5fqZeo1C7gUIb6Xcx3bABGqK8y2EcocGpTeF7X5fxnA7Tob5KLAF8nqszc+BBneok4XSWKUd3YkumKbzH7ZrGlZpFTr5I4A2sUJH2j++bLgnqIVXpAD3MCKgs7Ewa2V2vfm1mQbqUpKbzy+ufbir3RZQXqPaLCzfKh93CyP/96uc3Zkk/W7usU5/Zl5d8HFOGwMGWBHe7j/sf5hbc317XLlDgYHXtdCx4UOLBfdwMhsN6uEL3kRANM1ih+1VdmvHkyR9P5ypSM1Kie1hYpR4n0d0fVkEHNyMPLt1L0ei9QIFdUYQYcL4ogRa80eKbvKbi6WfKKaI8NmzDojxWyhblsSiPRXksynOcKM/uqI1NQRu61qkgVwOhXRhQycSPQO0O75ssb0goddeUAfugu9K7Ov8Bm4dxnqpjwOarHSQiQ6kV1Z2fKhEEZUOsklAxDfJvvEBBuVYUThVaHzYQJnxgQkkl96ybyqsf3l69+9e1ZhJ9KRayZsVt/QIKCiWp5Es0WVQYCmj+oM53tSTUxZxd/bVR4pLxUKJX/kq5mQSUpgLlL2jRe1iuRZOb4grRMsWi4kzlsYy4/4Egr44hy87X6a7RPbi7xrPuAf016jEUvUdCN8wIit7T+Gt0TtlfwwyF6B0WWKgHQuwfB1FZh//MU2X3r91OzQONJZASnB63s4ZNvyA3+DNrxlsz3krZmvHWjLdmvDXjj9KMP9tpxp8ZZvy1mHOZLBE0xCkvYhgC9IK4Krz6aZYrVU96+ZNRzyZgoM7xXsOqn4d83ZcFisSIhttGthTlpeph1pZpA6WWuQjlsZVOqjjj0cI02KtOA7WACJn+cN1PpFahadn/u8I0eVIQ26o9hSuK6fSAH0hTVuwDjSJ+g8dkhiuvj3DuT8OYljip6QKphM+5hD9QEeYfoL3kfUIIxDXPTM8OFIweDqC9ZyDx+YXKq0gmempkRkj8VQVgoJdqviyatnLkWLE/BbKKNLDPlZfKmwd6qJh+KCi9uueH6pwiZ6TROqe8jBL5dUrwYUcTVDzJlQQjSNrZTOToeDPKR6OIOzXPE6MXsY6I0wUXNJDLo9O4Ic8kJf7IYBQH/OlyTf59i+be7iNVjUjuxaXacmtqUfthHmc1zOPskTCPMwPzOPuqPDo6+5w4d07bNePMNXvzoAjKmVcfkHsiKLibKJ1Yb4Abwl5oO2obeS6RyW/SJ+OAY/0UUZm+RWUsKmOlbFEZi8pYVMaiMkeJyvR3ojL97Rkxyb4XmChMGcDag4LCWsaYPlGhF6hGlvYs+RZQibkj7WgfU2imaKHXURp0IKB8l/niom4xG1Z6Bqa59nGYKGaAYJPTALlVsCvDModFOKJE7kVSdsmRupAjFfAl1PN7PloRQRWqg+3CJUVmai/JAdcUHEPVzS8NA9409qfUUAm+SAbQ5i8uo5Ds43Xr80W25hxSSN5Aljb2hmq3MlsKjKmgqGRdx5IkAxJLumoAjkopmMIv6zJdv1UV5PISZhVkoySjXXN0f1GkEjZQmxaGkC9IbJR7v+yz8oKUjKX+Ulof+mvlT8PeN3YlxjLJzix6YAU0VpLVMeiaijZ9psCv91pQut9lp6PVM20WrTSCYOhJ3xuEthTDC/g/EblKLBqIT/p+0/WRsBMI+3ET/nW5s8ucpi65VFiW2VSJZRnCNIeD7oS4Mit0kFYJURbfGVll9MSW2Vp/zxVA2SwL6SpkjPs8q6OJe+VsgW9Hqy+Ilpl4Qt/AE/rPCDnYhCfslb9lL7+kffJK7EA7HuKMY9Khnv6aYMN+t4rS9B8JNuz3zIHxJK5Sw1N2lcJ+ntb7+DBAH3ZtdQjtHYOll8KQDpU2pY4dw1Yjt1NSzOii2l/8FHZVvVuCvuz1jtuBamgdqKjouYXqLFRnpWyhOgvVWajOQnVHCdWd74TqzmtQXQTqnHScWneUp1ihiqZXu+UVE8QgPkGwiYvRThLIQN0xEDmY/qA8XjBYFcYzfTFAAcW52g5XCWYccrCR+Jv0rVnkWelHUyaNqXnZiCREsCnSAAW+bcI3JcxmQAlOo1dNgSbo63SpESgb2a6Y/J3SDD2XhKQnloX67DmYD3aAn7y+KalrRFEinhGmNQnjMJ0ptCWXuB5p4W12jQBiNp418EQkvlchVRNYH4kLvELnh+Ju39RfpezM9dr0NgabpTORZM+xQbrHYkkpxZWb0BaMwAolxkQXFxFPygNq3ZlIqfsFllgZHLtBwyaA8MJAhNxigISZRoqkd50wBgcGjml3MhNPMocJupM5NRBWYkGUvQfobRhc2DjM/lQWM8dXk0dbrZYS1VIUL8pQuoZ7nAnik5y6dKEy9oaHXFSQ5wqCSXPt/Qao2a0DakVCZBofG3BKo8M3zgniSc1rYAamwsoAIzU8jWoTjc3RSgU3tu85AQhBN4Z7NY6wMuj1dwXeh9yW4/9qQu2leQrGJjwzkMJtU6G8Ubo6IRw18tlvuFxKhmEr6w2c6lIYCwppxIun2AgG2HUGKzoTH2TO6r3x2HLNXF8kKw6IlXMMc8Us3ipHszr+qAzj2hGIXEp/2QDrXtaOO8rDjLVBuBu5Nfq9BHHlDMH049Sxl+jXutaxukuprDwuQdfetRWtlCFuZLj37A/8kpuk86Xx3+b8L1+3t+R5zVvy/JFgz3PDW/L8qe7q9k46qfe5a3bBQZHPc68+ivZEPuXk1xvphqRTeMJK4fDyHE56OcrsizLRo/zwkFu8YYVB30l5h0IVPGU3ArSbuR9Fz6trWZNaBq+OwunzysbyJDd/ezZJuDSoBhY2tbCplbKFTS1samFTC5seJWw62AmbDgzY9B0l5DZURonOSAWR3OJMXRGVNrBucZKCAkywk69u4yZVsuFDxQGSaDmMINRQOzd9zEx8scDpwKiVcYYKat2Ufnxj1SaE94K+nQpe3HZF0BkpKaBxSMyYg1ZfhG2qGMwyqJMKlDnIFcqkEzfdvHlxU8BMJWhRK1tcm707I1QBCcsbuiusqPu44ZkuLy/wNrNIle80s0RsrJMoxF98/3VlBjeuyYZ51jt74F3bt1VrfI+Cu6qsW3uDGmYweCTMYGBgBoMnirC812MpzdsTCpccuGbXHBRLGHj10fW3MlkHnC8agQRcKFN1lYCEEIogfr3wyj+OPG7yYSP4FCGCoYUILERgpWwhAgsRWIjAQgRHCREMd0IEQzM11fa7w6Rlb+R0UmfgeWac21+/fvXrux8rdrDMG02ONDcV7yu0vGUMFrnLyDu98OBoQ0apav2G7VtY7Jh16pm+6cqEBXSOJ4rP2uYSs57nCZlHx5xCXV7PnVRxUQBVGppBzhR1bwVs10/obiLtbmhOwaxsomwcAQEKdlDogN8MDFTgBqPplehE9BN5NkM+1eXl2/EIan8ZsbjEy9aJOem5UcAV1e4owAazUc4m9g2eNjXBqYJEldbt4fbwpVJfd7alvn4wilFVFvbCM5y/BWoMa6DG8JFAjaEBagy/LKhBQnrqNDt75uY5HWhl6JoD5KDQytCrj/E9oZX/3bQ1mdm9U6GBlTT8qBMFHCeYctQz5xQhHbdjMR2L6VgpW0zHYjoW07GYzvFhOp8//z/LdT5AzvIAAA==</script><!-- /puzzleSet -->
 <div id="loading">Loading…</div>
 <div id="tip"></div>
 
@@ -12148,6 +12157,14 @@ function runRefusal(target) {
   // While Dusty is awake, pointing him at things removes them. In training the
   // robot learns it as a step; in the workshop it just happens.
   if (dustyActive && !held) {
+    // A STACK IS A THING TO DUSTY. A puzzle is a world with fewer stacks in
+    // it, and the rules field said which -- but Ken, making a puzzle inside
+    // the workshop, pointed Dusty at a stack and nothing happened. Now the
+    // stack leaves the world (its rule goes with the save), rides in his bag
+    // like anything else, and comes back if you click him.
+    if (target.kind === 'station' && stations[target.id]?.kind === 'stack') {
+      return dustyTakeStack(target.id);
+    }
     const victim = target.kind === 'thing' ? target.thing
       : target.kind === 'botThing' && target.bot !== activeBot ? target.bot.node
       : target.kind === 'station' && stations[target.id].kind !== 'stack'
@@ -14015,7 +14032,23 @@ function layoutDustyBag() {
   // only the top one is shown, and it is the one you can take: a stack of six
   // things over his head would hide him and each other
   const top = dustyBag[dustyBag.length - 1];
-  if (!top) return refreshUI();
+  if (!top) {
+    // a swallowed STACK rides on his head as one of its own cubes, so there
+    // is something to point at and click to get the stack back
+    const id = dustyStacks[dustyStacks.length - 1];
+    const cube = id && stations[id]?.cubes?.[0];
+    if (cube) {
+      const token = cube.clone();
+      token.visible = true;
+      token.scale.setScalar(0.42);
+      token.position.set(0, 0.05, 0);
+      token.quaternion.identity();
+      token.traverse(o => { o.visible = true; });
+      setPick(token, { kind: 'dustyBag' });
+      bag.add(token);
+    }
+    return refreshUI();
+  }
   bag.add(top);
   top.quaternion.identity();
   const sc = top.userData.kind === 'robot' ? MINI * 0.9 : 0.42;
@@ -14026,8 +14059,35 @@ function layoutDustyBag() {
   setPick(top, { kind: 'dustyBag' });
   refreshUI();
 }
+// stacks Dusty has swallowed, by id, newest last; given back after the things
+const dustyStacks = [];
+function stackLabel(id) { return stations[id]?.label ?? `the ${id} stack`; }
+function stationLabelOf(id) { return stackLabel(id); }
+function dustyTakeStack(id) {
+  if (mode === 'training') return say('A robot cannot be taught to remove a stack.');
+  if (!worldRules) {
+    // free play had no rules at all: write down the whole workshop, then
+    // take one stack out of it, so the save records exactly what is left
+    worldRules = { stacks: [...STACK_IDS], tools: [...TOOL_IDS],
+                   typing: { numbers: true, pads: true }, undo: true };
+  } else {
+    worldRules = cloneRec(worldRules);
+  }
+  worldRules.stacks = (worldRules.stacks ?? STACK_IDS).filter(x => x !== id);
+  dustyStacks.push(id);
+  applyRules(worldRules);
+  sfx('vacuum');
+  return say(`Dusty swallowed ${stackLabel(id)} — it has left the world. Click him to give it back; save the world and it stays out.`);
+}
 function takeFromDusty() {
   const t = dustyBag.pop();
+  if (!t && dustyStacks.length) {
+    const id = dustyStacks.pop();
+    worldRules = cloneRec(worldRules || {});
+    worldRules.stacks = [...(worldRules.stacks ?? []), id].filter((x, i, a) => a.indexOf(x) === i);
+    applyRules(worldRules);
+    return say(`${stackLabel(id)[0].toUpperCase()}${stackLabel(id).slice(1)} is back.`);
+  }
   if (!t) return say('Dusty is empty.');
   t.removeFromParent();
   WROOT.add(t);
@@ -14706,6 +14766,7 @@ function worldIn(data) {
   // was built. Measured: rules null, stacks back, one line after they were set.
   if (!offstage()) rememberWorld(data);
   if (!merging && !offstage()) {
+    dustyStacks.length = 0;
     clearScenery();
     placeScenery(data.scenery);
     nextWorld = null;
@@ -16613,6 +16674,9 @@ function tipFor(t) {
         : 'The spine \u2014 Dusty takes the whole notebook by it, entries and all.';
     }
     return 'The spine \u2014 click to pick up the notebook itself, not what is on its pages.';
+  }
+  if (dustyActive && !TIP && t.kind === 'station' && stations[t.id]?.kind === 'stack') {
+    return `Dusty swallows the whole stack — ${stationLabelOf(t.id)} leaves the world (a puzzle is a world with fewer stacks). Click him to get it back.`;
   }
   if (dustyActive && !TIP && (t.kind === 'thing'
       || (t.kind === 'botThing' && t.bot !== activeBot))) {
@@ -20791,7 +20855,9 @@ window.__nano = {
     const bot = activeBot ?? benchThings.find(t => t.userData.kind === 'robot')?.__bot;
     if (bot) handleClick({ kind: 'botThing', bot });
   },
-  clickThing(t) { handleClick({ kind: 'thing', thing: t }); },
+  // a real click carries the point it landed on; without one a drop on a
+  // number fell through to "set it down beside" and stacked instead of adding
+  clickThing(t, point) { handleClick({ kind: 'thing', thing: t, point: point ?? t.getWorldPosition(new THREE.Vector3()) }); },
   // put a thing at EXACTLY x,z on the bench -- no proximity resolution, no
   // ride/join/bind. clickBench is the user's gesture and lands where a drop
   // would; this is the test harness's tripod, for probes that need a thing
@@ -20956,6 +21022,9 @@ window.__nano = {
   run() { runProgram(); },
   dusty(on = true) { dustyActive = on; if (on) rubyActive = false; refreshUI(); },
   rubyOn(on = true) { rubyActive = on; if (on) dustyActive = false; refreshUI(); },
+  dustyOn(on = true) { dustyActive = on; if (on) rubyActive = false; refreshUI(); },
+  dustyBag() { handleClick({ kind: 'dustyBag' }); },
+  get dustyStacks() { return dustyStacks.slice(); },
   erase(path) { dustyErase(path); },
   clickCond(path = []) { handleClick({ kind: 'cond', path }); },
   clickRaw(target) { handleClick(target); },

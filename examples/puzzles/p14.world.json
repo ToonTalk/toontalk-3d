@@ -1,46 +1,46 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p1",
- "intro": "Thanks for coming to help me. My ship came down hard \u2014 that\u2019s it lying on the floor behind the table with its nose burnt \u2014 and its computer is broken. First it needs numbers to work. Can you make a box with 1 and 2 in it, and give it to the bird? If you get stuck, ask me for a hint.",
- "goal": "a box with 1 and 2 in it, in that order",
+ "name": "p14",
+ "intro": "The computer needs more than numbers \u2014 it needs letters and words. Here are three blank pads: pick one up and type a capital A on it; then B and C. Put them in the box in order and give the box to the bird.",
+ "goal": "a box with A, B and C on pads, in that order",
  "hints": [
-  "Did you notice that you can pick up numbers and let go of them over holes in the box?",
-  "Put the 1 in the first hole and the 2 in the second \u2014 the order matters, the judge reads a box hole by hole. Then pick up the whole box and give it to the bird.",
-  "OK, here\u2019s what I\u2019d do if I could. I\u2019d pick up the 1 and drop it in the first hole. Then I\u2019d pick up the 2 and drop it in the second hole. Then I\u2019d grab the whole box and give it to the bird."
+  "Hold a pad and press a letter key: the keyboard writes on what you hold.",
+  "A capital letter \u2014 hold Shift. Backspace takes a letter back.",
+  "Here\u2019s what I\u2019d do: pick up a pad, press Shift and A, drop it in the first hole; the same with B into the second and C into the third; give the box to the bird."
  ],
  "rules": {
   "stacks": [],
   "tools": [],
   "typing": {
    "numbers": false,
-   "pads": false
+   "pads": true
   },
   "undo": true
  },
  "bench": [
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "1",
-     "d": "1"
-    },
-    "op": "+"
+    "kind": "text",
+    "text": ""
    },
-   "x": -0.45,
+   "x": -0.68,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "2",
-     "d": "1"
-    },
-    "op": "+"
+    "kind": "text",
+    "text": ""
    },
-   "x": 0.0,
+   "x": -0.23,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": ""
+   },
+   "x": 0.22,
    "z": 2.05
   },
   {
@@ -48,17 +48,18 @@
     "kind": "box",
     "holes": [
      null,
+     null,
      null
     ]
    },
-   "x": 0.45,
+   "x": 0.68,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 9901,
-    "nestGuid": "p1-post",
+    "nestId": 10041,
+    "nestGuid": "p14-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -67,8 +68,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 9902,
-    "guid": "p1-reply",
+    "id": 10042,
+    "guid": "p14-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -81,20 +82,16 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "number",
-      "value": {
-       "n": "1",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "text",
+      "text": "A"
      },
      {
-      "kind": "number",
-      "value": {
-       "n": "2",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "text",
+      "text": "B"
+     },
+     {
+      "kind": "text",
+      "text": "C"
      }
     ],
     "fixed": true,
@@ -119,25 +116,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 9901,
-         "guid": "p1-post",
+         "id": 10041,
+         "guid": "p14-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 9902,
-         "nestGuid": "p1-reply",
+         "nestId": 10042,
+         "nestGuid": "p14-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Well done \u2014 the computer has its first numbers. Press Next when you are ready."
+         "text": "A, B, C \u2014 the computer can spell. Thank you! (More puzzles are on the way.)"
         },
         {
          "kind": "text",
-         "text": "Not quite. Look at what we need, and try again."
+         "text": "Not quite \u2014 capital A, B and C, one to a pad, in that order."
         }
        ]
       }
@@ -152,20 +149,16 @@
          "kind": "box",
          "holes": [
           {
-           "kind": "number",
-           "value": {
-            "n": "1",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "text",
+           "text": "A"
           },
           {
-           "kind": "number",
-           "value": {
-            "n": "2",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "text",
+           "text": "B"
+          },
+          {
+           "kind": "text",
+           "text": "C"
           }
          ]
         },
@@ -209,10 +202,6 @@
           1
          ]
         }
-       },
-       {
-        "type": "load",
-        "name": "p2"
        }
       ],
       "trainedOn": null,

@@ -1164,6 +1164,34 @@ async function notSpareWordsCheck(D) {
 // object of the top-level panel it is a part of". Three things have to hold:
 // SPACE on the macro starts the parts, a nested part gets its turns at all
 // (it sits on no bench the scheduler walks), and it drives the OUTER thing.
+// DUSTY SWALLOWS A STACK. A puzzle is a world with fewer stacks in it, and
+// Ken, making one inside the workshop, pointed Dusty at a stack and nothing
+// happened. Now the stack leaves the world, the rule is in the save, and a
+// click on what rides on his head brings it back.
+async function dustyStackCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
+  await slowSettle(D, 2000);
+  const before = (D.rules?.stacks ?? null) === null;      // free play: no rules at all
+  D.dustyOn(true);
+  D.click('boxes');
+  await slowSettle(D, 1500);
+  const rules1 = D.rules?.stacks ?? [];
+  const gone = !rules1.includes('boxes') && rules1.includes('numbers');
+  const hidden = !(D.stations.boxes.cubes[0].visible);
+  const saved = D.worldOut();
+  const inSave = !!saved.rules && !saved.rules.stacks.includes('boxes');
+  const carried = D.dustyStacks.includes('boxes');
+  D.dustyBag();                                          // click what rides on his head
+  await slowSettle(D, 1500);
+  const back = (D.rules?.stacks ?? []).includes('boxes') && D.stations.boxes.cubes[0].visible;
+  D.dustyOn(false);
+  const ok = before && gone && hidden && inSave && carried && back;
+  put((ok ? 'PASS' : 'FAIL') + ' Dusty swallows a stack  (free-play-had-no-rules=' + before
+      + ' stack-leaves-the-rules=' + gone + ' hidden=' + hidden + ' in-the-save=' + inSave
+      + ' rides-with-him=' + carried + ' comes-back=' + back + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function nestedPanelCheck(D) {
   const lib = await (await fetch('../examples/behaviours/library.world.json')).json();
   const moverRec = lib.bench.find(b => (b.thing.text || '') === 'moving right').thing;
@@ -2170,7 +2198,7 @@ async function puzzleCheckBody(D, w, at) {
 async function puzzleSetCheck(D) {
   const line = [];
   let ok = true;
-  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']) {
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14']) {
     const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
     D.worldIn(rec);
     await slowSettle(D, 3000);
@@ -3377,6 +3405,9 @@ async function runOne(D, spec) {
   catch (e) { picOK = false; put('FAIL a picture arrives  ' + e.message, 'fail'); }
   try { nestOK = want('nestedPanelCheck') ? await nestedPanelCheck(D) : true; }
   catch (e) { nestOK = false; put('FAIL panels inside panels  ' + e.message, 'fail'); }
+  let dstOK = true;
+  try { dstOK = want('dustyStack') ? await dustyStackCheck(D) : true; }
+  catch (e) { dstOK = false; put('FAIL Dusty swallows a stack  ' + e.message, 'fail'); }
   try { deadOK = want('stopsDeadCheck') ? await stopsDeadCheck(D) : true; }
   catch (e) { deadOK = false; put('FAIL stopping a moving thing  ' + e.message, 'fail'); }
   try { keepOK = want('keepsWhatItIsCheck') ? await keepsWhatItIsCheck(D) : true; }
@@ -3461,7 +3492,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK
+                        && twinOK && nbOK && dstOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
