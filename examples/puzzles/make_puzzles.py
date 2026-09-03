@@ -38,7 +38,8 @@
 #   p29 a box of letters poured onto a blank pad becomes the word
 #   p30 a word dropped into a box with no holes comes apart, a letter a hole
 #   p31 the third letter of "Marty": a pad dropped on a number picks it out
-#   p32 down to one: a halver that weighs itself against 1 and stops
+#   p32 down to one
+#   p33 sort three: a team of four robots, trained on a practice box: a halver that weighs itself against 1 and stops
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -892,7 +893,7 @@ puzzle(
      'seed on the platform, click the second hole; click the number stack, '
      'click the count in the scale’s left pan. Leave the thought bubble. Wake '
      'Ruby; click the first box in its thought until it says any box, and the '
-     'count until it says any number. Give it the box, press Run, and wait — '
+     'count until it says any number. Press Run — it still has the box — and wait: '
      'it stops at seven. Take the box of seven out and give it to the bird.'],
     rules(stacks=['numbers'], tools=['mimi', 'ruby']),
     table([box(box(num(0)), box(num(0)), scale(num(1), num(7))), ROBOT],   # noqa: F405
@@ -926,7 +927,7 @@ puzzle(
      'Mimi, take the copy, put it back in the pan, take the original, drop it '
      'on the copy. Leave the thought bubble.',
      'Wake Ruby and loosen the number in the thought to “any number”; the '
-     'tilt stays. Give it the box and press Run: it doubles until the scale '
+     'tilt stays. Press Run — it still has the box: it doubles until the scale '
      'tips left, and that is 1,024.',
      'Here’s what I’d do. Drop the box on the robot; click the 1 in the pan, '
      'click Mimi, click the copy, click the empty left pan, click the '
@@ -948,25 +949,29 @@ puzzle(
     scenery=SCENERY)
 
 # --- p26: the biggest of three ---------------------------------------------------
+# Fractions close enough that nobody can tell by eye (Ken: with 23, 31 and 29
+# most players already knew which way the scale would tilt).
 puzzle(
     'p26',
-    'The computer wants the biggest of these three numbers, and it cannot '
-    'tell which that is — but a scale can. Give the bird the biggest.',
-    'the biggest of the three numbers',
-    ['A scale tips toward the bigger number. Put two in its pans.',
+    'The computer wants the biggest of these three fractions, and neither it '
+    'nor you can tell by looking which that is — but a scale can. Give the '
+    'bird the biggest.',
+    'the biggest of the three fractions',
+    ['A scale tips toward the bigger number, fractions included. Put two in '
+     'its pans.',
      'Keep the heavier one on the scale and try it against the third.',
-     'Here’s what I’d do: put the 23 and the 31 on the scale — it tips '
-     'toward the 31; take the 23 off and put the 29 in its place — it still '
-     'tips toward the 31. Give the bird the 31.'],
+     'Here’s what I’d do: put the 5/7 and the 8/11 on the scale — it tips '
+     'toward the 8/11; take the 5/7 off and put the 13/18 in its place — it '
+     'still tips toward the 8/11. Give the bird the 8/11.'],
     rules(),
-    table([num(23), num(31), num(29), scale(None, None)],    # noqa: F405
-          fixed(num(31), 'we need this'),                    # noqa: F405
+    table([num(5, 7), num(8, 11), num(13, 18), scale(None, None)],    # noqa: F405
+          fixed(num(8, 11), 'we need this'),                 # noqa: F405
           bird(10261, 'p26-post', 'give me your answer'),    # noqa: F405
           nest(10262, 'p26-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10261, 'p26-post', 10262, 'p26-reply',
-                right=num(31),                               # noqa: F405
+                right=num(8, 11),                            # noqa: F405
                 on_right=next_note('') + [load('p27')],
-                notes=['31 — the scale knew. Next: two in order.'])),
+                notes=['8/11 — the scale knew. Next: two in order.'])),
     scenery=SCENERY)
 
 # --- p27: a pair in order ---------------------------------------------------------
@@ -994,35 +999,40 @@ puzzle(
     scenery=SCENERY)
 
 # --- p28: a robot sorts the pans ------------------------------------------------------
-# Stuck numbers in the pans of a scale, tipping left; the robot swaps them
-# through the spare hole. One run: once swapped, the scale tips right and the
-# thought no longer fits.
+# Sorting is swapping what is out of order, and this is the smallest piece of
+# it: two stuck fractions in the pans of a scale, tipping left; the robot
+# swaps them through the spare hole. One run: once swapped, the scale tips
+# right and the thought no longer fits. Puzzle 33 sorts three with a team
+# built round this robot.
 puzzle(
     'p28',
-    'These two numbers are stuck in a scale’s pans, and the computer wants '
-    'the smaller one on the left. The scale tips toward the bigger one, so '
-    'right now it tips left. Train the robot to swap them — the box has a '
-    'spare hole — and give the bird the box.',
-    'a box holding a scale with the smaller number in its left pan',
+    'Sorting is swapping what is out of order, over and over — and this is '
+    'the smallest piece of it. Two fractions are stuck in a scale’s pans, '
+    'the bigger one on the left, and the computer wants the smaller one on '
+    'the left. They are too close to tell apart by eye, and stuck too fast '
+    'for your fingers — the scale says which is bigger, and only a robot’s '
+    'claw can swap them. The box has a spare hole. A team of these will '
+    'sort three, soon.',
+    'a box holding a scale with the smaller fraction in its left pan',
     ['A pan holds one thing, like a hole. To swap two things you need '
      'somewhere to put one of them first.',
      'Move the left one to the spare hole; move the right one to the left '
      'pan; move the spare one to the right pan.',
      'Here’s what I’d do. Drop the box on the robot. In its imagination: '
-     'click the 9, click the spare hole; click the 4, click the left pan; '
-     'click the 9, click the right pan. Leave the thought bubble and give the '
-     'bird the box.'],
+     'click the 7/9, click the spare hole; click the 5/7, click the left '
+     'pan; click the 7/9 in the spare hole, click the right pan. Leave the '
+     'thought bubble and give the bird the box.'],
     rules(),
-    table([box(scale(stuck(num(9)), stuck(num(4))), None), ROBOT],   # noqa: F405
-          fixed(box(scale(stuck(num(4)), stuck(num(9))), None), 'we need this'),   # noqa: F405
+    table([box(scale(stuck(num(7, 9)), stuck(num(5, 7))), None), ROBOT],   # noqa: F405
+          fixed(box(scale(stuck(num(5, 7)), stuck(num(7, 9))), None), 'we need this'),   # noqa: F405
           bird(10281, 'p28-post', 'give me your answer'),    # noqa: F405
           nest(10282, 'p28-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10281, 'p28-post', 10282, 'p28-reply',
-                right=box(scale(stuck(num(4)), stuck(num(9))), None),   # noqa: F405
+                right=box(scale(stuck(num(5, 7)), stuck(num(7, 9))), None),   # noqa: F405
                 on_right=next_note('') + [load('p29')],
-                notes=['4 on the left, 9 on the right — sorted by robot. '
+                notes=['5/7 on the left, 7/9 on the right — sorted by robot. '
                        'Next: letters into a word.'],
-                sorry='Not quite — the smaller number in the LEFT pan, and '
+                sorry='Not quite — the smaller fraction in the LEFT pan, and '
                       'the spare hole empty.')),
     scenery=SCENERY)
 
@@ -1095,13 +1105,18 @@ puzzle(
     scenery=SCENERY)
 
 # --- p32: down to one --------------------------------------------------------------------
+# The 64 and the 1 are stuck (Ken: "too easy to cheat and grab the 1 from the
+# scale"), and a stuck thing can only be moved by a claw INSIDE what the robot
+# was given -- so the robot cannot pull the 1 out for you either. The answer
+# is the whole box, its scale balanced.
 puzzle(
     'p32',
-    'The computer wants a 1, and all it has is a 64 in the left pan of a '
-    'scale, a 1 in the right, and a 2 wearing a divide badge. A robot that '
-    'halves the number every round will get there — and the scale can tell '
-    'it when to stop.',
-    'a 1, from a robot that halved its way down and stopped by itself',
+    'The computer wants this box with its 64 halved down to 1, so that the '
+    'scale balances: 1 against 1. The 64 and the 1 are stuck fast, so only a '
+    'robot can work on them — and the 2 wearing a divide badge, in the third '
+    'hole, halves whatever it lands on. A robot that halves the number every '
+    'round will get there, and the scale can tell it when to stop.',
+    'the box, its scale balanced at 1 against 1 and the ÷2 back in its hole',
     ['The scale tips left while the number is bigger than 1. A thought that '
      'says “tipping left” fits only then.',
      'A badge number is used up when it lands, so the robot needs a copy of '
@@ -1112,19 +1127,78 @@ puzzle(
      'tilt stays; the robot halves until the pans balance.',
      'Here’s what I’d do. Drop the box on the robot; click the ÷2, click '
      'Mimi, click the copy, click the 64; click the ÷2 on the platform, click '
-     'its hole. Leave the thought bubble; wake Ruby and loosen the 64. Give '
-     'it the box, press Run, and wait — it stops at 1. Take the 1 out of the '
-     'pan and give it to the bird.'],
+     'its hole. Leave the thought bubble; wake Ruby and loosen the 64. Press '
+     'Run — it still has the box — and wait: it stops at 1. Take the box '
+     'and give it to the bird.'],
     rules(tools=['mimi', 'ruby']),
-    table([box(scale(num(64), num(1)), num(2, op='/')), ROBOT],   # noqa: F405
-          fixed(num(1), 'we need this'),                     # noqa: F405
+    table([box(scale(stuck(num(64)), stuck(num(1))), num(2, op='/')), ROBOT],   # noqa: F405
+          fixed(box(scale(stuck(num(1)), stuck(num(1))), num(2, op='/')), 'we need this'),   # noqa: F405
           bird(10321, 'p32-post', 'give me your answer'),    # noqa: F405
           nest(10322, 'p32-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10321, 'p32-post', 10322, 'p32-reply',
-                right=num(1),                                # noqa: F405
+                right=box(scale(stuck(num(1)), stuck(num(1))), num(2, op='/')),   # noqa: F405
+                on_right=next_note('') + [load('p33')],
+                notes=['Down to one, and it knew where to stop. Next: a '
+                       'team of robots sorts three.'],
+                sorry='Not quite — the whole box, its scale balanced at 1 '
+                      'against 1, and the ÷2 back in its hole.')),
+    scenery=SCENERY)
+
+# --- p33: sort three ---------------------------------------------------------------------
+# The sorting challenge Ken expected after 28. Four robots make a team: the
+# swapper from 28 (scale tipping LEFT: swap the pans through hole 5, the spare
+# that stays empty in every phase -- hole 4 is where the biggest number parks), and
+# three movers, each keyed on which hole is full and a scale tipping RIGHT:
+#   hole 2 full: left pan -> hole 3, hole 2 -> left pan
+#   hole 3 full: right pan -> hole 4, hole 3 -> right pan
+#   hole 4 full: left pan -> hole 2, right pan -> hole 3
+# Three compare-and-swaps, and the team stops by itself when the scale is
+# empty. Trained on a practice box; judged on a box of other, stuck fractions.
+PRACTICE = box(scale(num(2, 3), num(3, 5)), num(5, 8), None, None, None)     # noqa: F405
+TO_SORT = box(scale(stuck(num(11, 15)), stuck(num(7, 9))), stuck(num(4, 5)), None, None, None)   # noqa: F405
+SORTED = box(scale(None, None), stuck(num(11, 15)), stuck(num(7, 9)), stuck(num(4, 5)), None)   # noqa: F405
+puzzle(
+    'p33',
+    'The sorting challenge. The computer wants the box on the middle row '
+    'sorted: its three fractions in holes 2, 3 and 4, smallest first, the '
+    'scale empty, and the fifth hole — the swapper’s spare — empty too. They '
+    'are stuck fast, and too close to tell apart by '
+    'eye. A team of four robots can do it — the swapper from puzzle 28 and '
+    'three that each move a number — trained on the practice box at the '
+    'front, which holds other fractions.',
+    'the box with its three fractions in order after the empty scale, '
+    'smallest first',
+    ['Sorting three is three compare-and-swaps. The scale compares; the '
+     'swapper swaps when it tips left. Three more robots move numbers in and '
+     'out of the pans, and each knows its turn by which hole is full: 2, 3 '
+     'or 4. Hole 5 is the swapper’s spare, and stays empty.',
+     'The swapper first, on the practice box (its scale tips left): left pan '
+     'to hole 5, right pan to the left pan, hole 5 to the right pan. Leave. '
+     'Wake Ruby and loosen both pans to “any number”; wake Dusty and take '
+     'hole 2 out of its thought, so anything or nothing may be there.',
+     'Run the swapper on the practice box: the smaller fraction is now on '
+     'the left. Train the second robot on that: left pan to hole 3, then '
+     'hole 2 to the left pan. Ruby: loosen both pans and hole 2 to any '
+     'number. Its thought says tipping RIGHT — keep that.',
+     'Run the second robot once. Train the third on what you see: right pan '
+     'to hole 4, then hole 3 to the right pan. Ruby: both pans and hole 3.',
+     'Run the third once, then the swapper once more, since the scale tips '
+     'left again. Train the fourth: left pan to hole 2, right pan to hole 3. '
+     'Ruby: both pans and hole 4.',
+     'Drop the robots on one another to make a team. Give the team the '
+     'middle box and press Run: it swaps and moves until the scale is empty '
+     'and the three are in order. Give the bird the box.'],
+    rules(tools=['ruby', 'dusty']),
+    table([PRACTICE, ROBOT, ROBOT, ROBOT, ROBOT],
+          fixed(SORTED, 'we need this'),
+          bird(10331, 'p33-post', 'give me your answer'),    # noqa: F405
+          nest(10332, 'p33-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10331, 'p33-post', 10332, 'p33-reply',
+                right=SORTED,
                 on_right=next_note(''),
-                notes=['Down to one, and it knew where to stop. Thank you! '
-                       '(More puzzles are on the way.)'],
-                sorry='Not quite — a plain 1, the number the halving robot '
-                      'ends on.')),
+                notes=['11/15, 7/9, 4/5 — sorted by a team of four. Thank '
+                       'you! (More puzzles are on the way.)'],
+                sorry='Not quite — the three fractions in holes 2, 3 and 4, '
+                      'smallest first, both pans empty, and hole 5 empty.'),
+          extra=[{'thing': TO_SORT, 'x': 0.75, 'z': MID}]),
     scenery=SCENERY)

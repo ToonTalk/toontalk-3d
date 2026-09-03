@@ -2,12 +2,12 @@
  "kind": "world",
  "v": 3,
  "name": "p28",
- "intro": "These two numbers are stuck in a scale\u2019s pans, and the computer wants the smaller one on the left. The scale tips toward the bigger one, so right now it tips left. Train the robot to swap them \u2014 the box has a spare hole \u2014 and give the bird the box.",
- "goal": "a box holding a scale with the smaller number in its left pan",
+ "intro": "Sorting is swapping what is out of order, over and over \u2014 and this is the smallest piece of it. Two fractions are stuck in a scale\u2019s pans, the bigger one on the left, and the computer wants the smaller one on the left. They are too close to tell apart by eye, and stuck too fast for your fingers \u2014 the scale says which is bigger, and only a robot\u2019s claw can swap them. The box has a spare hole. A team of these will sort three, soon.",
+ "goal": "a box holding a scale with the smaller fraction in its left pan",
  "hints": [
   "A pan holds one thing, like a hole. To swap two things you need somewhere to put one of them first.",
   "Move the left one to the spare hole; move the right one to the left pan; move the spare one to the right pan.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot. In its imagination: click the 9, click the spare hole; click the 4, click the left pan; click the 9, click the right pan. Leave the thought bubble and give the bird the box."
+  "Here\u2019s what I\u2019d do. Drop the box on the robot. In its imagination: click the 7/9, click the spare hole; click the 5/7, click the left pan; click the 7/9 in the spare hole, click the right pan. Leave the thought bubble and give the bird the box."
  ],
  "rules": {
   "stacks": [],
@@ -29,8 +29,8 @@
        {
         "kind": "number",
         "value": {
-         "n": "9",
-         "d": "1"
+         "n": "7",
+         "d": "9"
         },
         "op": "+",
         "stuck": true
@@ -38,8 +38,8 @@
        {
         "kind": "number",
         "value": {
-         "n": "4",
-         "d": "1"
+         "n": "5",
+         "d": "7"
         },
         "op": "+",
         "stuck": true
@@ -94,8 +94,8 @@
        {
         "kind": "number",
         "value": {
-         "n": "4",
-         "d": "1"
+         "n": "5",
+         "d": "7"
         },
         "op": "+",
         "stuck": true
@@ -103,8 +103,8 @@
        {
         "kind": "number",
         "value": {
-         "n": "9",
-         "d": "1"
+         "n": "7",
+         "d": "9"
         },
         "op": "+",
         "stuck": true
@@ -150,11 +150,11 @@
         },
         {
          "kind": "text",
-         "text": "4 on the left, 9 on the right \u2014 sorted by robot. Next: letters into a word."
+         "text": "5/7 on the left, 7/9 on the right \u2014 sorted by robot. Next: letters into a word."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 the smaller number in the LEFT pan, and the spare hole empty."
+         "text": "Not quite \u2014 the smaller fraction in the LEFT pan, and the spare hole empty."
         }
        ]
       }
@@ -174,8 +174,8 @@
             {
              "kind": "number",
              "value": {
-              "n": "4",
-              "d": "1"
+              "n": "5",
+              "d": "7"
              },
              "op": "+",
              "stuck": true
@@ -183,8 +183,8 @@
             {
              "kind": "number",
              "value": {
-              "n": "9",
-              "d": "1"
+              "n": "7",
+              "d": "9"
              },
              "op": "+",
              "stuck": true

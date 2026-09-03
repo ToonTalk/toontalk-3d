@@ -1241,6 +1241,41 @@ async function scalePanCheck(D) {
   return ok;
 }
 
+// SORTING BY TEAM. Puzzle 33's four robots -- the swapper (scale tipping
+// left: swap through hole 5) and three movers keyed on which hole is full --
+// sort any three fractions and stop by themselves. The team in
+// p33_team.json is the intended solution; the first design used hole 4 as
+// the swapper's spare and ADDED two fractions together, caught by this run.
+async function sortTeamCheck(D) {
+  const world = await (await fetch('p33_team.json')).json();
+  D.worldIn(world);
+  await slowSettle(D, 2000);
+  const fr = (t) => t?.userData?.value ? String(t.userData.value.n) + '/' + String(t.userData.value.d) : null;
+  const order = (b) => b.userData.holes.slice(1, 4).map(h => fr(h.thing)).join(' ');
+  const pans = (b) => b.userData.holes[0].thing.userData.holes.map(h => fr(h.thing)).join(' ');
+  const boxes = [];
+  for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'box') boxes.push(t); }
+  const stuckBox = boxes.find(b => b.userData.holes[1].thing?.userData.stuck);
+  const practice = boxes.find(b => b !== stuckBox);
+  const results = [];
+  for (const b of [stuckBox, practice]) {
+    D.hold(b);
+    D.giveRobot();                      // the team recognises it and sets off
+    await slowSettle(D, 20000);
+    const g = D.mine() || b;
+    results.push({ order: order(g), pans: pans(g), spare: fr(g.userData.holes[4].thing) });
+    D.clickThing(g);                    // take it back for the next one
+    await slowSettle(D, 1500);
+    D.clickBench(-0.9, 2.0);
+    await slowSettle(D, 1500);
+  }
+  const ok = results[0].order === '11/15 7/9 4/5' && results[1].order === '3/5 5/8 2/3'
+    && results.every(r => r.pans === ' ' && r.spare === null);
+  put((ok ? 'PASS' : 'FAIL') + ' a team of four sorts three  (stuck=' + results[0].order + ' | ' + results[0].pans
+      + ' practice=' + results[1].order + ' | ' + results[1].pans + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -2271,7 +2306,7 @@ async function puzzleCheckBody(D, w, at) {
 async function puzzleSetCheck(D) {
   const line = [];
   let ok = true;
-  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28', 'p29', 'p30', 'p31', 'p32']) {
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28', 'p29', 'p30', 'p31', 'p32', 'p33']) {
     const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
     D.worldIn(rec);
     await slowSettle(D, 3000);
@@ -3481,6 +3516,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let sortOK = true;
+  try { sortOK = want('sortTeam') ? await sortTeamCheck(D) : true; }
+  catch (e) { sortOK = false; put('FAIL a team of four sorts three  ' + e.message, 'fail'); }
   let panOK = true;
   try { panOK = want('scalePan') ? await scalePanCheck(D) : true; }
   catch (e) { panOK = false; put('FAIL a drop on a scale means its pan  ' + e.message, 'fail'); }
@@ -3571,7 +3609,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

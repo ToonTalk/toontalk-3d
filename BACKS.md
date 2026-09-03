@@ -5197,3 +5197,83 @@ for your hand and for the claw alike, and an occupied pan takes the drop
 onto what is in it, so a 1 aimed at the 7 in the right pan makes 8. The
 tooltip says which pan. A step that names the scale (recorded before this)
 lands in the pan on its recorded side when replayed.
+
+## Sorting by team, a smart camera, and a robot that waits for Run
+
+*Added 3 Sep. Ken, in one batch: the narrator said "Ran 5x" for a robot he
+had watched run 1 + 6 times; puzzle 26 would be better with fractions or
+very large numbers so nobody already knows which way the scale tips; puzzle
+28 has no motivation for a robot rather than the scale; he expected a
+sorting challenge after 28; a "smart camera" that zooms in on the action
+while keeping some context, behind a toggle; and puzzle 32 was too easy to
+cheat by grabbing the 1 from the scale -- with the worry that a robot
+strong enough to move stuck things could pull the 1 out for the player.*
+
+**Ran 5x, seen 1 + 6.** Measured on the page: after a lesson rewinds, the
+thought still fits what is on the stand, so Ruby's first loosening set the
+robot going while Ken was still loosening. It ran once, stopped when the
+grown box no longer fit the still-particular thought, and ran five more
+after the next erasure -- one, then five, and the training round makes
+seven. The narrator counted the last run correctly; it was the early start
+that was wrong. Now an erasure sets the robot going only when it turns a
+mismatch into a match -- puzzle 21's whole point -- and a thought that
+already fit waits for Run. The hints that said "give it the box, press Run"
+say "press Run, it still has the box", since after the rewind it does.
+
+**Puzzle 26 weighs 5/7, 8/11 and 13/18.** Nobody knows by eye; the scale
+does.
+
+**Puzzle 28 is the smallest piece of sorting.** Two stuck fractions, too
+close to tell apart, the bigger one on the left: the scale says which is
+which, and only a claw can swap them. The intro says so, and says a team of
+these will sort three, which is now puzzle 33.
+
+**Puzzle 33, the sorting challenge.** Three stuck fractions in a five-hole
+box: a scale in hole 1 with two of them in its pans, the third in hole 2,
+and holes 3, 4, 5 empty. Four robots: the swapper (a scale tipping LEFT:
+left pan to hole 5, right pan to left, hole 5 to right, with Ruby on both
+pans and Dusty on hole 2) and three movers, each keyed on a scale tipping
+RIGHT and on which hole is full -- hole 2: left pan to hole 3 and hole 2 to
+the left pan; hole 3: right pan to hole 4 and hole 3 to the right pan; hole
+4: left pan to hole 2 and right pan to hole 3. Three compare-and-swaps, and
+the team stops by itself when the scale is empty. The player trains on a
+practice box of other fractions, running each robot once to reach the next
+phase, then drops the four on one another and gives the team the stuck box.
+The first design used hole 4 as the swapper's spare -- and hole 4 is where
+the third mover parks the biggest number, so the swap ADDED two fractions:
+71/45 in a pan, caught by running the team before writing a hint. Measured
+after the change: both boxes sorted, five rounds each, and the player's
+route trained by clicks gives exactly the thoughts the hints describe.
+
+**Stuck stays inside.** Ken's idea, from an earlier round: things stuck in
+a puzzle that only a robot is strong enough to move. His worry now: the
+robot could pull the 1 out of the scale and hand it to the player. So a
+claw can move a stuck thing only inside the thing the robot was given --
+not out to its work area, the copier or a bird -- and puzzle 32's 64 and 1
+are stuck, with the whole box, its scale balanced at 1 against 1, as the
+answer. A step that tries to carry a stuck thing out is refused in a
+lesson and aborts a run.
+
+**And a rewind that forgot the flags.** Found while measuring the above:
+after any lesson, the goal could be picked up and the stuck numbers moved
+by hand. The rewind rebuilds the bench from specs, and three things dropped
+the flags on the way: a full spec did not pass "full" down into a box's
+holes, the robot's given was snapshotted without it, and a rebuilt box or
+scale skipped the step that puts a thing's flags back. All three fixed;
+measured on puzzle 28: fixed and stuck survive a lesson, on the bench and
+on the stand. Undo had the same hole.
+
+**The smart camera.** With Ruby or Dusty awake, pointing at the thought
+bubble brings the camera in along its own line of sight -- the same view,
+closer, so the workshop stays around the edges -- and pointing away brings
+it back. A clock, like the closeup, so it always comes home. It is a toggle
+in the More menu, remembered between visits, because a camera that moves by
+itself is not always wanted.
+
+**The balance question.** Ken asked whether two things in a scale's pans
+"should be balanced", and the question itself was lost when the
+conversation was compacted. What the picture shows is a 1/2 (or a 2) in the
+left pan and a 1 in the right, the beam down on the left. The rule is that a
+scale weighs values: a badge number weighs its face -- a divide-by-2 badge
+weighs 2 -- and a half against a 1 should tip RIGHT. If the picture is a
+half tipping left, that is a bug, and the question stands.

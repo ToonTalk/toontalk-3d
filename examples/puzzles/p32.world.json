@@ -2,13 +2,13 @@
  "kind": "world",
  "v": 3,
  "name": "p32",
- "intro": "The computer wants a 1, and all it has is a 64 in the left pan of a scale, a 1 in the right, and a 2 wearing a divide badge. A robot that halves the number every round will get there \u2014 and the scale can tell it when to stop.",
- "goal": "a 1, from a robot that halved its way down and stopped by itself",
+ "intro": "The computer wants this box with its 64 halved down to 1, so that the scale balances: 1 against 1. The 64 and the 1 are stuck fast, so only a robot can work on them \u2014 and the 2 wearing a divide badge, in the third hole, halves whatever it lands on. A robot that halves the number every round will get there, and the scale can tell it when to stop.",
+ "goal": "the box, its scale balanced at 1 against 1 and the \u00f72 back in its hole",
  "hints": [
   "The scale tips left while the number is bigger than 1. A thought that says \u201ctipping left\u201d fits only then.",
   "A badge number is used up when it lands, so the robot needs a copy of the \u00f72 every round: set it on Mimi, take the copy, drop the copy on the number in the pan, take the badge back off the platform, put it in its hole.",
   "Wake Ruby and loosen the number in the left pan to \u201cany number\u201d. The tilt stays; the robot halves until the pans balance.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the \u00f72, click Mimi, click the copy, click the 64; click the \u00f72 on the platform, click its hole. Leave the thought bubble; wake Ruby and loosen the 64. Give it the box, press Run, and wait \u2014 it stops at 1. Take the 1 out of the pan and give it to the bird."
+  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the \u00f72, click Mimi, click the copy, click the 64; click the \u00f72 on the platform, click its hole. Leave the thought bubble; wake Ruby and loosen the 64. Press Run \u2014 it still has the box \u2014 and wait: it stops at 1. Take the box and give it to the bird."
  ],
  "rules": {
   "stacks": [],
@@ -36,7 +36,8 @@
          "n": "64",
          "d": "1"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
        },
        {
         "kind": "number",
@@ -44,7 +45,8 @@
          "n": "1",
          "d": "1"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
        }
       ]
      },
@@ -95,18 +97,46 @@
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "1",
-     "d": "1"
-    },
-    "op": "+",
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "scale",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
+       }
+      ]
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "2",
+       "d": "1"
+      },
+      "op": "/"
+     }
+    ],
     "fixed": true,
     "label": "we need this",
     "size": 1.5
    },
    "z": 1.2,
-   "x": 1.27
+   "x": 1.09
   },
   {
    "thing": {
@@ -138,11 +168,11 @@
         },
         {
          "kind": "text",
-         "text": "Down to one, and it knew where to stop. Thank you! (More puzzles are on the way.)"
+         "text": "Down to one, and it knew where to stop. Next: a team of robots sorts three."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 a plain 1, the number the halving robot ends on."
+         "text": "Not quite \u2014 the whole box, its scale balanced at 1 against 1, and the \u00f72 back in its hole."
         }
        ]
       }
@@ -154,12 +184,40 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "number",
-         "value": {
-          "n": "1",
-          "d": "1"
-         },
-         "op": "+"
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "scale",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "1",
+              "d": "1"
+             },
+             "op": "+",
+             "stuck": true
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "1",
+              "d": "1"
+             },
+             "op": "+",
+             "stuck": true
+            }
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "2",
+            "d": "1"
+           },
+           "op": "/"
+          }
+         ]
         },
         null,
         null,
@@ -201,6 +259,10 @@
           1
          ]
         }
+       },
+       {
+        "type": "load",
+        "name": "p33"
        }
       ],
       "trainedOn": null,

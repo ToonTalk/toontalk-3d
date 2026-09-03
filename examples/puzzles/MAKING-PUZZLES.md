@@ -201,6 +201,11 @@ The judge is a robot, so it decides what a robot's thought can say:
   something down on its own desk where that thing was -- the doubler in
   puzzle 7 works on a lone 1. Give it a box when the work needs more than
   one place.
+- **Stuck things make a robot worth training.** `stuck(thing)` marks a
+  thing fingers cannot move; a robot's claw can, but only *inside* the thing
+  the robot was given -- it cannot carry a stuck thing out to its work area,
+  the copier or a bird, so it cannot hand the work back to the player. Give
+  the judge the whole box when the answer is stuck inside it (puzzle 32).
 - **A scale is how a robot knows when to stop.** A thought remembers which
   way a scale tipped, and Ruby keeps the tilt when she loosens what is in a
   pan. A robot whose thought says *tipping right* runs while the count in the
