@@ -94,10 +94,33 @@ def ship():
             'label': 'Marty’s ship'}
 
 
+def width_of(thing):
+    """How wide a thing stands on the table, in metres, the way the app draws
+    it: a number is a cube, a box is its holes and walls (holes shrink to a
+    floor as the count grows, then the box widens), a pad its face."""
+    k = thing.get('kind')
+    if k == 'box':
+        n = len(thing.get('holes') or [])
+        wall = 0.032
+        hole_w = max(0.12, min(0.19, (0.62 - (n + 1) * wall) / max(1, n)))
+        return n * hole_w + (n + 1) * wall
+    if k == 'number':
+        return 0.24
+    if k == 'text':
+        return 0.34
+    return 0.26                                           # a mini robot, a nest
+
+
 def table(materials, goal, post, reply, judge_, extra=()):
-    """materials: things left to right across the front; the rest fixed."""
-    n = len(materials)
-    xs = [(-0.45 * (n - 1) / 2) + 0.45 * i for i in range(n)] if n > 1 else [0.0]
+    """materials: things left to right across the front, spaced by how wide
+    each one is (Ken: puzzle 9's boxes overlapped); the rest fixed."""
+    widths = [width_of(m) for m in materials]
+    gap = 0.14
+    total = sum(widths) + gap * (len(widths) - 1)
+    xs, x = [], -total / 2
+    for w in widths:
+        xs.append(x + w / 2)
+        x += w + gap
     bench = [{'thing': m, 'x': round(x, 2), 'z': FRONT} for m, x in zip(materials, xs)]
     bench += [{'thing': post, 'x': 0.0, 'z': MID},
               {'thing': reply, 'x': 0.55, 'z': MID},

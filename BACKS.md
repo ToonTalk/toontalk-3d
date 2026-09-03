@@ -4895,3 +4895,26 @@ outward, from the platform they reach up and open the same way, with a look
 down or up to match. Measured by stepping frames: the act starts on the take
 from the tray (`copyOut`) and on the take from the platform (`copyIn`), and
 the joints follow it.
+
+## Spaced by width
+
+*Added 3 Sep. Ken, with two pictures: "puzzle 9 has the boxes overlapping.
+When I joined 2 [0 | 0] one of the numbers became the wrong size."*
+
+**Materials are spaced by how wide they are.** The table laid its materials
+0.45 apart whatever they were, and a three-hole box is 0.62 wide, so puzzle
+9's boxes sat on each other. `width_of` in `make_puzzles.py` knows the app's
+own rule -- a cube for a number, holes and walls for a box (holes shrink to a
+floor as the count grows, then the box widens), a face for a pad -- and
+`table` lays the row out from those widths with a gap between. Puzzle 9's
+zero, three-hole box and two-hole box now stand at −0.69, −0.12 and 0.57.
+
+**The wrong-sized zero I could not reproduce.** Joining two boxes of two
+zeros was measured three ways -- the held copy on the right of the original,
+the copy straight from the tray on the left, and every zero read back --
+and all four zeros came out at the four-hole scale (0.47 in a 0.12 hole).
+The join moves each thing with the same call that fits it to its hole. The
+picture shows the big zero standing a little higher than the others, which
+is how a number looks while it rests on another for a beat before merging;
+so the likeliest story is a zero dropped on a zero in the box just before or
+after the join. Ken has been asked for the exact steps.
