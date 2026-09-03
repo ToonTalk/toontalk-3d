@@ -39,7 +39,8 @@
 #   p30 a word dropped into a box with no holes comes apart, a letter a hole
 #   p31 the third letter of "Marty": a pad dropped on a number picks it out
 #   p32 down to one
-#   p33 sort three: a team of four robots, trained on a practice box: a halver that weighs itself against 1 and stops
+#   p33 two robots, one run: the first team, a swapper and a mover
+#   p34 sort three: a team of four robots, trained on a practice box: a halver that weighs itself against 1 and stops
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -949,8 +950,9 @@ puzzle(
     scenery=SCENERY)
 
 # --- p26: the biggest of three ---------------------------------------------------
-# Fractions close enough that nobody can tell by eye (Ken: with 23, 31 and 29
-# most players already knew which way the scale would tilt).
+# Fractions close enough that nobody can tell by eye, and a SIGN for the goal
+# rather than the answer itself (Ken: "some puzzles like 26 should not show
+# the answer").
 puzzle(
     'p26',
     'The computer wants the biggest of these three fractions, and neither it '
@@ -960,42 +962,46 @@ puzzle(
     ['A scale tips toward the bigger number, fractions included. Put two in '
      'its pans.',
      'Keep the heavier one on the scale and try it against the third.',
-     'Here’s what I’d do: put the 5/7 and the 8/11 on the scale — it tips '
-     'toward the 8/11; take the 5/7 off and put the 13/18 in its place — it '
-     'still tips toward the 8/11. Give the bird the 8/11.'],
+     'Here’s what I’d do: put two on the scale and see which way it tips; '
+     'take the lighter one off and put the third in its place. Whichever is '
+     'still on the heavy side at the end is the biggest — give it to the '
+     'bird.'],
     rules(),
     table([num(5, 7), num(8, 11), num(13, 18), scale(None, None)],    # noqa: F405
-          fixed(num(8, 11), 'we need this'),                 # noqa: F405
+          fixed(pad('the biggest of the three'), 'we need this'),   # noqa: F405
           bird(10261, 'p26-post', 'give me your answer'),    # noqa: F405
           nest(10262, 'p26-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10261, 'p26-post', 10262, 'p26-reply',
                 right=num(8, 11),                            # noqa: F405
                 on_right=next_note('') + [load('p27')],
-                notes=['8/11 — the scale knew. Next: two in order.'])),
+                notes=['8/11 — the scale knew. Next: two in order.'],
+                sorry='Not quite — the scale tips toward the bigger; keep '
+                      'the winner on and try the others against it.')),
     scenery=SCENERY)
 
 # --- p27: a pair in order ---------------------------------------------------------
 puzzle(
     'p27',
-    'The computer wants these two numbers in a box, the smaller one first. '
+    'The computer wants these two fractions in a box, the smaller one first. '
     'Which is smaller is for the scale to say.',
-    'a box with the smaller number first',
-    ['Put both numbers on the scale and see which way it tips.',
-     'The lighter pan holds the smaller number; that one goes in the first '
+    'a box with the smaller fraction first',
+    ['Put both on the scale and see which way it tips.',
+     'The lighter pan holds the smaller one; that one goes in the first '
      'hole.',
-     'Here’s what I’d do: put the 47 and the 43 on the scale — it tips toward '
-     'the 47, so the 43 is smaller. Put the 43 in the first hole and the 47 '
-     'in the second, and give the bird the box.'],
+     'Here’s what I’d do: put both on the scale. The pan that goes up holds '
+     'the smaller fraction: put that one in the first hole and the other in '
+     'the second, and give the bird the box.'],
     rules(),
-    table([num(47), num(43), scale(None, None), empty_box(2)],   # noqa: F405
-          fixed(box(num(43), num(47)), 'we need this'),     # noqa: F405
+    table([num(7, 12), num(5, 9), scale(None, None), empty_box(2)],   # noqa: F405
+          fixed(pad('the smaller one first'), 'we need this'),   # noqa: F405
           bird(10271, 'p27-post', 'give me your answer'),    # noqa: F405
           nest(10272, 'p27-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10271, 'p27-post', 10272, 'p27-reply',
-                right=box(num(43), num(47)),                 # noqa: F405
+                right=box(num(5, 9), num(7, 12)),            # noqa: F405
                 on_right=next_note('') + [load('p28')],
-                notes=['43 then 47. Next: a robot that sorts.'],
-                sorry='Not quite — the smaller number in the first hole.')),
+                notes=['5/9 then 7/12. Next: a robot that sorts.'],
+                sorry='Not quite — the smaller fraction in the first hole; '
+                      'the scale tips toward the bigger.')),
     scenery=SCENERY)
 
 # --- p28: a robot sorts the pans ------------------------------------------------------
@@ -1058,18 +1064,23 @@ puzzle(
     scenery=SCENERY)
 
 # --- p30: a word into letters ---------------------------------------------------------
+# The mould is not provided: the box stack is, and the hint says how a box
+# gets no holes (Ken: "hint how to make a 0-hole box rather than just provide
+# it").
 puzzle(
     'p30',
     'Now the computer wants a word taken apart: one letter to a hole. Here '
-    'is the word, and a box with no holes at all.',
+    'is the word, and the stack of boxes. A box with no holes at all is a '
+    'mould — and a box has as many holes as you tell it.',
     'a box with T, a, l, k in its holes',
     ['A box with no holes is a mould: pour something into it and it comes '
      'apart, one part to a hole.',
-     'Drop the pad on the box with no holes.',
-     'Here’s what I’d do: drop the Talk pad on the empty box, and give the '
-     'bird the box of four letters.'],
-    rules(),
-    table([pad('Talk'), box()],                              # noqa: F405
+     'Take a box from the stack. While you are holding it, type a digit: '
+     'that is how many holes it has. Type 0.',
+     'Here’s what I’d do: click the box stack, type 0, put the box down; '
+     'drop the Talk pad on it, and give the bird the box of four letters.'],
+    rules(stacks=['boxes']),
+    table([pad('Talk')],                                     # noqa: F405
           fixed(box(pad('T'), pad('a'), pad('l'), pad('k')), 'we need this'),   # noqa: F405
           bird(10301, 'p30-post', 'give me your answer'),    # noqa: F405
           nest(10302, 'p30-reply', 'from the judge'),        # noqa: F405
@@ -1138,13 +1149,61 @@ puzzle(
           judge('the judge', 10321, 'p32-post', 10322, 'p32-reply',
                 right=box(scale(stuck(num(1)), stuck(num(1))), num(2, op='/')),   # noqa: F405
                 on_right=next_note('') + [load('p33')],
-                notes=['Down to one, and it knew where to stop. Next: a '
-                       'team of robots sorts three.'],
+                notes=['Down to one, and it knew where to stop. Next: two '
+                       'robots, one run.'],
                 sorry='Not quite — the whole box, its scale balanced at 1 '
                       'against 1, and the ÷2 back in its hole.')),
     scenery=SCENERY)
 
-# --- p33: sort three ---------------------------------------------------------------------
+# --- p33: two robots, one run ----------------------------------------------------------
+# The first team puzzle, kept small (Ken: 33 was too complex for the first
+# puzzle involving teams). Two stuck fractions in a scale tipping left, and a
+# spare hole: robot A (tipping LEFT) swaps the pans through the spare hole;
+# robot B (tipping RIGHT) moves the right pan -- the bigger -- to the spare
+# hole. In a team, one Run does both: A swaps, the scale tips right, B moves
+# the bigger out, the scale has one number and nothing fits. Two identical
+# boxes: one to train on, one for the team.
+PAIR = box(scale(stuck(num(5, 6)), stuck(num(4, 5))), None)   # noqa: F405
+PAIR_DONE = box(scale(stuck(num(4, 5)), None), stuck(num(5, 6)))   # noqa: F405
+puzzle(
+    'p33',
+    'Two robots, one run. The computer wants the smaller of these two stuck '
+    'fractions left alone in the scale — the bigger one moved out to the '
+    'spare hole. That takes two different jobs: swap the pans if the bigger '
+    'one is on the left, then move the right pan out. Two robots, one for '
+    'each job, dropped one on the other, make a team — and a team does the '
+    'whole thing in one Run. Here are two of the same box: practice on one, '
+    'give the team the other.',
+    'a box holding a scale with only the smaller fraction, in its left pan, '
+    'and the bigger one in the spare hole',
+    ['A team is tried in order: the first robot whose thought fits takes the '
+     'round, and the team goes on while any thought fits.',
+     'The swapper first, as in puzzle 28: left pan to the spare hole, right '
+     'pan to the left pan, spare hole to the right pan. Leave; wake Ruby and '
+     'loosen both pans to “any number”. Its thought says tipping LEFT.',
+     'Run the swapper on the first box: it swaps once and stops, since the '
+     'scale now tips right. Train the second robot on that box: the right '
+     'pan to the spare hole. Leave; Ruby on both pans. Its thought says '
+     'tipping RIGHT.',
+     'Drop the second robot on the swapper: a team of two, the swapper '
+     'leading. Give the team the OTHER box and press Run: swap, move, stop. '
+     'Give the bird that box.'],
+    rules(tools=['ruby']),
+    table([PAIR, PAIR, ROBOT, ROBOT],
+          fixed(PAIR_DONE, 'we need this'),
+          bird(10331, 'p33-post', 'give me your answer'),    # noqa: F405
+          nest(10332, 'p33-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10331, 'p33-post', 10332, 'p33-reply',
+                right=PAIR_DONE,
+                on_right=next_note('') + [load('p34')],
+                notes=['4/5 stays, 5/6 moves out — two robots, one run. '
+                       'Next: a team of four sorts three.'],
+                sorry='Not quite — the smaller fraction alone in the left '
+                      'pan, the bigger in the spare hole, the right pan '
+                      'empty.')),
+    scenery=SCENERY)
+
+# --- p34: sort three ---------------------------------------------------------------------
 # The sorting challenge Ken expected after 28. Four robots make a team: the
 # swapper from 28 (scale tipping LEFT: swap the pans through hole 5, the spare
 # that stays empty in every phase -- hole 4 is where the biggest number parks), and
@@ -1158,12 +1217,12 @@ PRACTICE = box(scale(num(2, 3), num(3, 5)), num(5, 8), None, None, None)     # n
 TO_SORT = box(scale(stuck(num(11, 15)), stuck(num(7, 9))), stuck(num(4, 5)), None, None, None)   # noqa: F405
 SORTED = box(scale(None, None), stuck(num(11, 15)), stuck(num(7, 9)), stuck(num(4, 5)), None)   # noqa: F405
 puzzle(
-    'p33',
+    'p34',
     'The sorting challenge. The computer wants the box on the middle row '
     'sorted: its three fractions in holes 2, 3 and 4, smallest first, the '
     'scale empty, and the fifth hole — the swapper’s spare — empty too. They '
     'are stuck fast, and too close to tell apart by '
-    'eye. A team of four robots can do it — the swapper from puzzle 28 and '
+    'eye. A team of four robots can do it — the swapper you know and '
     'three that each move a number — trained on the practice box at the '
     'front, which holds other fractions.',
     'the box with its three fractions in order after the empty scale, '
@@ -1189,16 +1248,17 @@ puzzle(
      'middle box and press Run: it swaps and moves until the scale is empty '
      'and the three are in order. Give the bird the box.'],
     rules(tools=['ruby', 'dusty']),
-    table([PRACTICE, ROBOT, ROBOT, ROBOT, ROBOT],
+    table([PRACTICE],
           fixed(SORTED, 'we need this'),
-          bird(10331, 'p33-post', 'give me your answer'),    # noqa: F405
-          nest(10332, 'p33-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10331, 'p33-post', 10332, 'p33-reply',
+          bird(10341, 'p34-post', 'give me your answer'),    # noqa: F405
+          nest(10342, 'p34-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10341, 'p34-post', 10342, 'p34-reply',
                 right=SORTED,
                 on_right=next_note(''),
                 notes=['11/15, 7/9, 4/5 — sorted by a team of four. Thank '
                        'you! (More puzzles are on the way.)'],
                 sorry='Not quite — the three fractions in holes 2, 3 and 4, '
                       'smallest first, both pans empty, and hole 5 empty.'),
-          extra=[{'thing': TO_SORT, 'x': 0.75, 'z': MID}]),
+          extra=[{'thing': TO_SORT, 'x': 0.75, 'z': MID}]
+                + [{'thing': ROBOT, 'x': x, 'z': BACK} for x in (-0.8, -0.45, -0.1, 0.25)]),
     scenery=SCENERY)

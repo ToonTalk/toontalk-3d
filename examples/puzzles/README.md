@@ -43,7 +43,7 @@ opens the world at once.
 
 **To make your own, read [MAKING-PUZZLES.md](MAKING-PUZZLES.md).**
 
-`make_puzzles.py` writes p1 to p33 (after the original tutorial: a box with 1
+`make_puzzles.py` writes p1 to p34 (after the original tutorial: a box with 1
 and 2; a 4 from two 2s; a box with 8, 16 and 32, joined by dropping boxes on
 each other's sides; a zero from a 3 and a −3; a box of two zeros made by a
 robot you train, with Mimi; the total of the numbers on a nest, by a robot
@@ -65,7 +65,8 @@ the pans balance; then 1,024 by a doubler weighed against 1,000; the biggest
 of three and a pair in order, with a scale by hand; a robot that swaps a
 scale's stuck pans; letters poured into a word and a word into letters; the
 third letter of a word picked out by a number; a halver weighed against
-1; and a team of four robots that sorts three stuck fractions). Marty's ship lies on the floor behind every table as `scenery`; a small
+1; two robots that together leave the smaller of two stuck fractions in
+the pan; and a team of four that sorts three). Marty's ship lies on the floor behind every table as `scenery`; a small
 goal carries `size` on its thing and stands larger.
 
 There is no Rounds control: a robot runs until its thought stops fitting, so

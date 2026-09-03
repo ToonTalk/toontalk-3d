@@ -2,12 +2,12 @@
  "kind": "world",
  "v": 3,
  "name": "p27",
- "intro": "The computer wants these two numbers in a box, the smaller one first. Which is smaller is for the scale to say.",
- "goal": "a box with the smaller number first",
+ "intro": "The computer wants these two fractions in a box, the smaller one first. Which is smaller is for the scale to say.",
+ "goal": "a box with the smaller fraction first",
  "hints": [
-  "Put both numbers on the scale and see which way it tips.",
-  "The lighter pan holds the smaller number; that one goes in the first hole.",
-  "Here\u2019s what I\u2019d do: put the 47 and the 43 on the scale \u2014 it tips toward the 47, so the 43 is smaller. Put the 43 in the first hole and the 47 in the second, and give the bird the box."
+  "Put both on the scale and see which way it tips.",
+  "The lighter pan holds the smaller one; that one goes in the first hole.",
+  "Here\u2019s what I\u2019d do: put both on the scale. The pan that goes up holds the smaller fraction: put that one in the first hole and the other in the second, and give the bird the box."
  ],
  "rules": {
   "stacks": [],
@@ -23,8 +23,8 @@
    "thing": {
     "kind": "number",
     "value": {
-     "n": "47",
-     "d": "1"
+     "n": "7",
+     "d": "12"
     },
     "op": "+"
    },
@@ -35,8 +35,8 @@
    "thing": {
     "kind": "number",
     "value": {
-     "n": "43",
-     "d": "1"
+     "n": "5",
+     "d": "9"
     },
     "op": "+"
    },
@@ -89,31 +89,14 @@
   },
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "43",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "47",
-       "d": "1"
-      },
-      "op": "+"
-     }
-    ],
+    "kind": "text",
+    "text": "the smaller one first",
     "fixed": true,
     "label": "we need this",
     "size": 1.5
    },
    "z": 1.2,
-   "x": 1.09
+   "x": 1.19
   },
   {
    "thing": {
@@ -145,11 +128,11 @@
         },
         {
          "kind": "text",
-         "text": "43 then 47. Next: a robot that sorts."
+         "text": "5/9 then 7/12. Next: a robot that sorts."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 the smaller number in the first hole."
+         "text": "Not quite \u2014 the smaller fraction in the first hole; the scale tips toward the bigger."
         }
        ]
       }
@@ -166,16 +149,16 @@
           {
            "kind": "number",
            "value": {
-            "n": "43",
-            "d": "1"
+            "n": "5",
+            "d": "9"
            },
            "op": "+"
           },
           {
            "kind": "number",
            "value": {
-            "n": "47",
-            "d": "1"
+            "n": "7",
+            "d": "12"
            },
            "op": "+"
           }

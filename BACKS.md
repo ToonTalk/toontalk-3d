@@ -5280,3 +5280,48 @@ lighter than x3. Across families -- a doubler against a plain 3, a power
 against a multiplier -- the scale cannot decide and the beam bobs, which is
 what it already did for a number against a word. Measured on four scales:
 = = R ?.
+
+## Signs, not answers; a camera on the action; two robots before four
+
+*Added 3 Sep. Ken: puzzles like 26 should not show the answer -- a sign
+saying "we need the biggest number" makes it more challenging, and 27
+should be like that too, and harder; the smart camera should do more, for
+instance when the numbers on the scale the robot works on are tiny, or when
+the robot drops an operation on a tiny number; puzzle 30 should hint how to
+make a no-hole box rather than provide one; the Ruby tips repeat too often;
+the robots stand in front of the goal box; 33 is too complex for the first
+puzzle involving teams.*
+
+**A sign for a goal.** Puzzles 26 and 27 show a pad -- "the biggest of the
+three", "the smaller one first" -- where the answer used to stand; 27's
+numbers are 7/12 and 5/9. The judge checks the answer as before; the sign
+is only what the player sees.
+
+**The camera follows the work.** In a lesson or a run the smart camera
+comes in on what the robot's claw carries, or what is in its hands, close
+enough to read a small number in a pan and far enough to keep the robot and
+the desk in the picture. Pointing at the side of the screen leans it back
+out, so the stacks, the copier and the work area stay reachable; the
+thought-bubble rule from before still holds in the workshop. Measured: the
+camera 2.6 from the given box during a lesson, out again with the pointer
+at the edge, and unmoved with the toggle off.
+
+**Puzzle 30 makes its own mould.** The box stack is there instead of the
+mould, and the hint says how a box gets no holes: hold it and type 0.
+
+**The Ruby advice, twice.** The full sentence the first two times a
+session needs it; after that a few words -- "Ruby or Dusty can loosen the
+red parts."
+
+**Robots at the back.** In the sorting puzzle the four robots stand on the
+back row between the judge and the goal, where they hide nothing.
+
+**Puzzle 33 is two robots, one run.** Two stuck fractions in a scale
+tipping left and a spare hole: the swapper (tipping LEFT) swaps the pans
+through the spare hole; the mover (tipping RIGHT) moves the right pan out.
+Dropped one on the other they make a team, and one Run does both: swap,
+tips right, move, one number left, nothing fits. Two identical boxes: one to
+train on, one for the team. Measured: the team leaves 4/5 alone in the left
+pan and 5/6 in the spare hole from a box tipping either way, and the
+player's route trained by clicks gives the thoughts the hints describe. The
+sorting challenge is puzzle 34.
