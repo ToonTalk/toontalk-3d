@@ -1,19 +1,17 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p24",
- "intro": "Last time you had to stop the robot yourself. This time it should know when to stop: the computer wants seven zeros, and the box has a scale in its third hole with a count in one pan and the 7 in the other. A robot only runs while its thought fits \u2014 and a scale in a thought remembers which way it tipped.",
- "goal": "a box with exactly seven zeros, made by a robot that stopped by itself",
+ "name": "p25",
+ "intro": "Remember 1,024, and how you had to stop the robot yourself? This time the robot should stop on its own. The number is in the left pan of a scale and 1,000 is in the right; the computer wants the first doubling that tips the scale the other way \u2014 which is 1,024.",
+ "goal": "exactly 1,024, from a robot that stopped by itself",
  "hints": [
-  "The scale tips toward the bigger number. Right now the count is 1 and the 7 is bigger, so it tips right. The robot should count every hole it adds \u2014 a fresh 1 from the number stack, dropped on the count.",
-  "Train the round as before \u2014 copy the seed, join the copy on, put the seed back \u2014 and then take a 1 from the stack and drop it on the count in the left pan. Leave the thought bubble.",
-  "Its thought says the scale tips RIGHT. Wake Ruby and loosen the growing box and the count to \u201cany\u201d; the tilt stays. Now it runs while the count is smaller than 7 and stops when the pans balance.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the seed, click Mimi, click the copy, click the right edge of the growing box; click the seed on the platform, click the second hole; click the number stack, click the count in the scale\u2019s left pan. Leave the thought bubble. Wake Ruby; click the first box in its thought until it says any box, and the count until it says any number. Give it the box, press Run, and wait \u2014 it stops at seven. Take the box of seven out and give it to the bird."
+  "The scale tips right while the number is smaller than 1,000. A thought that says \u201ctipping right\u201d fits only then.",
+  "Train the doubling round on the number in the pan: take it, set it on Mimi, take the copy, put it back in the pan, take the original, drop it on the copy. Leave the thought bubble.",
+  "Wake Ruby and loosen the number in the thought to \u201cany number\u201d; the tilt stays. Give it the box and press Run: it doubles until the scale tips left, and that is 1,024.",
+  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the 1 in the pan, click Mimi, click the copy, click the empty left pan, click the original on the platform, click the number in the pan. Leave the thought bubble; wake Ruby and loosen the number. Give it the box, press Run, and wait. Take the 1,024 out of the pan and give it to the bird."
  ],
  "rules": {
-  "stacks": [
-   "numbers"
-  ],
+  "stacks": [],
   "tools": [
    "mimi",
    "ruby"
@@ -30,32 +28,6 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "box",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "0",
-         "d": "1"
-        },
-        "op": "+"
-       }
-      ]
-     },
-     {
-      "kind": "box",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "0",
-         "d": "1"
-        },
-        "op": "+"
-       }
-      ]
-     },
-     {
       "kind": "scale",
       "holes": [
        {
@@ -69,7 +41,7 @@
        {
         "kind": "number",
         "value": {
-         "n": "7",
+         "n": "1000",
          "d": "1"
         },
         "op": "+"
@@ -88,14 +60,14 @@
     "program": [],
     "team": []
    },
-   "x": 0.38,
+   "x": 0.2,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10241,
-    "nestGuid": "p24-post",
+    "nestId": 10251,
+    "nestGuid": "p25-post",
     "label": "give me your answer"
    },
    "x": -0.55,
@@ -104,8 +76,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10242,
-    "guid": "p24-reply",
+    "id": 10252,
+    "guid": "p25-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -115,70 +87,18 @@
   },
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     }
-    ],
+    "kind": "number",
+    "value": {
+     "n": "1024",
+     "d": "1"
+    },
+    "op": "+",
     "fixed": true,
-    "label": "we need this"
+    "label": "we need this",
+    "size": 1.5
    },
    "z": 1.2,
-   "x": 0.9
+   "x": 1.27
   },
   {
    "thing": {
@@ -196,25 +116,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10241,
-         "guid": "p24-post",
+         "id": 10251,
+         "guid": "p25-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 10242,
-         "nestGuid": "p24-reply",
+         "nestId": 10252,
+         "nestGuid": "p25-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Seven zeros, and the robot stopped by itself. Change the number in the pan and it would make any number of them. Next: 1,024 again \u2014 hands off this time."
+         "text": "1,024, and nobody had to watch it. Next: the biggest of three."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 exactly seven zeros, the box itself out of the first hole."
+         "text": "Not quite \u2014 1,024 exactly, the first doubling past a thousand."
         }
        ]
       }
@@ -226,65 +146,12 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          }
-         ]
+         "kind": "number",
+         "value": {
+          "n": "1024",
+          "d": "1"
+         },
+         "op": "+"
         },
         null,
         null,
@@ -329,7 +196,7 @@
        },
        {
         "type": "load",
-        "name": "p25"
+        "name": "p26"
        }
       ],
       "trainedOn": null,

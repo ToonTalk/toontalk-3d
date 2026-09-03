@@ -31,6 +31,14 @@
 #       another one you have to stop in time
 #   p24 the same robot with a SCALE: it counts the holes it makes against a
 #       number in the other pan and stops by itself when the pans balance
+#   p25 1,024 again, by a doubler that weighs itself against 1,000 and stops
+#   p26 the biggest of three, found with a scale by hand
+#   p27 a pair sorted into a box, smaller first, by hand
+#   p28 a robot sorts a scale's pans -- stuck numbers, one run
+#   p29 a box of letters poured onto a blank pad becomes the word
+#   p30 a word dropped into a box with no holes comes apart, a letter a hole
+#   p31 the third letter of "Marty": a pad dropped on a number picks it out
+#   p32 down to one: a halver that weighs itself against 1 and stops
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -783,18 +791,14 @@ puzzle(
     'the number of letters on the nest',
     ['Counting is adding one for each letter — and the letter itself has to '
      'go, or the robot will count it again.',
-     'One round: click the top letter (the robot takes it), click one of its '
-     'work spots to set it down, then wake Dusty and click it there — gone. '
-     'Then click the number stack for a fresh 1 and drop it on the count. '
-     '(In a lesson Dusty only takes what is standing on the robot’s own '
-     'things, not what is in its claw.)',
+     'One round: wake Dusty and click the top letter on the nest — gone. '
+     'Then click the number stack for a fresh 1 and drop it on the count.',
      'Its thought will want exactly the letter it saw and exactly the count '
      'it saw. Wake Ruby and click each until they say “any pad” and “any '
      'number”.',
-     'Here’s what I’d do. Drop the box on the robot; click the top letter; '
-     'click a work spot; wake Dusty and click the letter there; put Dusty '
-     'back to sleep; click the number stack, click the count. Leave the '
-     'thought bubble; '
+     'Here’s what I’d do. Drop the box on the robot; wake Dusty and click '
+     'the top letter on the nest; put Dusty back to sleep; click the number '
+     'stack, click the count. Leave the thought bubble; '
      'wake Ruby and loosen the letter and the count. Give it the box, press '
      'Run, and when it dozes take the 4 out and give it to the bird.'],
     rules(stacks=['numbers'], tools=['dusty', 'ruby']),
@@ -897,10 +901,230 @@ puzzle(
           nest(10242, 'p24-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10241, 'p24-post', 10242, 'p24-reply',
                 right=box(*[num(0) for _ in range(7)]),      # noqa: F405
-                on_right=next_note(''),
+                on_right=next_note('') + [load('p25')],
                 notes=['Seven zeros, and the robot stopped by itself. Change '
                        'the number in the pan and it would make any number '
-                       'of them. Thank you! (More puzzles are on the way.)'],
+                       'of them. Next: 1,024 again — hands off this time.'],
                 sorry='Not quite — exactly seven zeros, the box itself out of '
                       'the first hole.')),
+    scenery=SCENERY)
+
+# ============================================================================
+# The fifth batch: scales that stop robots, scales by hand, and letters.
+
+# --- p25: 1,024, hands off -------------------------------------------------------
+puzzle(
+    'p25',
+    'Remember 1,024, and how you had to stop the robot yourself? This time '
+    'the robot should stop on its own. The number is in the left pan of a '
+    'scale and 1,000 is in the right; the computer wants the first doubling '
+    'that tips the scale the other way — which is 1,024.',
+    'exactly 1,024, from a robot that stopped by itself',
+    ['The scale tips right while the number is smaller than 1,000. A thought '
+     'that says “tipping right” fits only then.',
+     'Train the doubling round on the number in the pan: take it, set it on '
+     'Mimi, take the copy, put it back in the pan, take the original, drop it '
+     'on the copy. Leave the thought bubble.',
+     'Wake Ruby and loosen the number in the thought to “any number”; the '
+     'tilt stays. Give it the box and press Run: it doubles until the scale '
+     'tips left, and that is 1,024.',
+     'Here’s what I’d do. Drop the box on the robot; click the 1 in the pan, '
+     'click Mimi, click the copy, click the empty left pan, click the '
+     'original on the platform, click the number in the pan. Leave the '
+     'thought bubble; wake Ruby and loosen the number. Give it the box, press '
+     'Run, and wait. Take the 1,024 out of the pan and give it to the bird.'],
+    rules(tools=['mimi', 'ruby']),
+    table([box(scale(num(1), num(1000))), ROBOT],             # noqa: F405
+          fixed(num(1024), 'we need this'),                  # noqa: F405
+          bird(10251, 'p25-post', 'give me your answer'),    # noqa: F405
+          nest(10252, 'p25-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10251, 'p25-post', 10252, 'p25-reply',
+                right=num(1024),                             # noqa: F405
+                on_right=next_note('') + [load('p26')],
+                notes=['1,024, and nobody had to watch it. Next: the '
+                       'biggest of three.'],
+                sorry='Not quite — 1,024 exactly, the first doubling past a '
+                      'thousand.')),
+    scenery=SCENERY)
+
+# --- p26: the biggest of three ---------------------------------------------------
+puzzle(
+    'p26',
+    'The computer wants the biggest of these three numbers, and it cannot '
+    'tell which that is — but a scale can. Give the bird the biggest.',
+    'the biggest of the three numbers',
+    ['A scale tips toward the bigger number. Put two in its pans.',
+     'Keep the heavier one on the scale and try it against the third.',
+     'Here’s what I’d do: put the 23 and the 31 on the scale — it tips '
+     'toward the 31; take the 23 off and put the 29 in its place — it still '
+     'tips toward the 31. Give the bird the 31.'],
+    rules(),
+    table([num(23), num(31), num(29), scale(None, None)],    # noqa: F405
+          fixed(num(31), 'we need this'),                    # noqa: F405
+          bird(10261, 'p26-post', 'give me your answer'),    # noqa: F405
+          nest(10262, 'p26-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10261, 'p26-post', 10262, 'p26-reply',
+                right=num(31),                               # noqa: F405
+                on_right=next_note('') + [load('p27')],
+                notes=['31 — the scale knew. Next: two in order.'])),
+    scenery=SCENERY)
+
+# --- p27: a pair in order ---------------------------------------------------------
+puzzle(
+    'p27',
+    'The computer wants these two numbers in a box, the smaller one first. '
+    'Which is smaller is for the scale to say.',
+    'a box with the smaller number first',
+    ['Put both numbers on the scale and see which way it tips.',
+     'The lighter pan holds the smaller number; that one goes in the first '
+     'hole.',
+     'Here’s what I’d do: put the 47 and the 43 on the scale — it tips toward '
+     'the 47, so the 43 is smaller. Put the 43 in the first hole and the 47 '
+     'in the second, and give the bird the box.'],
+    rules(),
+    table([num(47), num(43), scale(None, None), empty_box(2)],   # noqa: F405
+          fixed(box(num(43), num(47)), 'we need this'),     # noqa: F405
+          bird(10271, 'p27-post', 'give me your answer'),    # noqa: F405
+          nest(10272, 'p27-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10271, 'p27-post', 10272, 'p27-reply',
+                right=box(num(43), num(47)),                 # noqa: F405
+                on_right=next_note('') + [load('p28')],
+                notes=['43 then 47. Next: a robot that sorts.'],
+                sorry='Not quite — the smaller number in the first hole.')),
+    scenery=SCENERY)
+
+# --- p28: a robot sorts the pans ------------------------------------------------------
+# Stuck numbers in the pans of a scale, tipping left; the robot swaps them
+# through the spare hole. One run: once swapped, the scale tips right and the
+# thought no longer fits.
+puzzle(
+    'p28',
+    'These two numbers are stuck in a scale’s pans, and the computer wants '
+    'the smaller one on the left. The scale tips toward the bigger one, so '
+    'right now it tips left. Train the robot to swap them — the box has a '
+    'spare hole — and give the bird the box.',
+    'a box holding a scale with the smaller number in its left pan',
+    ['A pan holds one thing, like a hole. To swap two things you need '
+     'somewhere to put one of them first.',
+     'Move the left one to the spare hole; move the right one to the left '
+     'pan; move the spare one to the right pan.',
+     'Here’s what I’d do. Drop the box on the robot. In its imagination: '
+     'click the 9, click the spare hole; click the 4, click the left pan; '
+     'click the 9, click the right pan. Leave the thought bubble and give the '
+     'bird the box.'],
+    rules(),
+    table([box(scale(stuck(num(9)), stuck(num(4))), None), ROBOT],   # noqa: F405
+          fixed(box(scale(stuck(num(4)), stuck(num(9))), None), 'we need this'),   # noqa: F405
+          bird(10281, 'p28-post', 'give me your answer'),    # noqa: F405
+          nest(10282, 'p28-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10281, 'p28-post', 10282, 'p28-reply',
+                right=box(scale(stuck(num(4)), stuck(num(9))), None),   # noqa: F405
+                on_right=next_note('') + [load('p29')],
+                notes=['4 on the left, 9 on the right — sorted by robot. '
+                       'Next: letters into a word.'],
+                sorry='Not quite — the smaller number in the LEFT pan, and '
+                      'the spare hole empty.')),
+    scenery=SCENERY)
+
+# --- p29: letters into a word -------------------------------------------------------
+puzzle(
+    'p29',
+    'The computer has the letters of a word, one to a hole, and it wants the '
+    'word on one pad. There is a blank pad here.',
+    'one pad that says Toon',
+    ['A box of letters poured onto a blank pad becomes the word.',
+     'Pick up the box and drop it on the blank pad.',
+     'Here’s what I’d do: drop the box of letters on the blank pad, and give '
+     'the bird the pad that says Toon.'],
+    rules(),
+    table([box(pad('T'), pad('o'), pad('o'), pad('n')), pad('')],   # noqa: F405
+          fixed(pad('Toon'), 'we need this'),                # noqa: F405
+          bird(10291, 'p29-post', 'give me your answer'),    # noqa: F405
+          nest(10292, 'p29-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10291, 'p29-post', 10292, 'p29-reply',
+                right=txt('Toon'),                           # noqa: F405
+                on_right=next_note('') + [load('p30')],
+                notes=['Toon, on one pad. Next: the other way round.'])),
+    scenery=SCENERY)
+
+# --- p30: a word into letters ---------------------------------------------------------
+puzzle(
+    'p30',
+    'Now the computer wants a word taken apart: one letter to a hole. Here '
+    'is the word, and a box with no holes at all.',
+    'a box with T, a, l, k in its holes',
+    ['A box with no holes is a mould: pour something into it and it comes '
+     'apart, one part to a hole.',
+     'Drop the pad on the box with no holes.',
+     'Here’s what I’d do: drop the Talk pad on the empty box, and give the '
+     'bird the box of four letters.'],
+    rules(),
+    table([pad('Talk'), box()],                              # noqa: F405
+          fixed(box(pad('T'), pad('a'), pad('l'), pad('k')), 'we need this'),   # noqa: F405
+          bird(10301, 'p30-post', 'give me your answer'),    # noqa: F405
+          nest(10302, 'p30-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10301, 'p30-post', 10302, 'p30-reply',
+                right=box(txt('T'), txt('a'), txt('l'), txt('k')),   # noqa: F405
+                on_right=next_note('') + [load('p31')],
+                notes=['T, a, l, k — four holes. Next: one letter out of '
+                       'a word.'])),
+    scenery=SCENERY)
+
+# --- p31: the third letter -----------------------------------------------------------
+puzzle(
+    'p31',
+    'The computer wants one letter out of a word: the third letter of '
+    '“Marty”. A number can pick a letter out of a pad.',
+    'a pad that says r',
+    ['Drop a pad on a whole number and the number picks out that letter: 1 '
+     'for the first, 2 for the second…',
+     'The third letter wants a 3. Drop the Marty pad on the 3.',
+     'Here’s what I’d do: pick up the Marty pad, drop it on the 3 — the 3 '
+     'becomes an r — and give the bird the r.'],
+    rules(),
+    table([pad('Marty'), num(3)],                            # noqa: F405
+          fixed(pad('r'), 'we need this'),                   # noqa: F405
+          bird(10311, 'p31-post', 'give me your answer'),    # noqa: F405
+          nest(10312, 'p31-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10311, 'p31-post', 10312, 'p31-reply',
+                right=txt('r'),                              # noqa: F405
+                on_right=next_note('') + [load('p32')],
+                notes=['r — the third letter. Next: halving down to one.'],
+                sorry='Not quite — the third letter of Marty, on its own '
+                      'pad.')),
+    scenery=SCENERY)
+
+# --- p32: down to one --------------------------------------------------------------------
+puzzle(
+    'p32',
+    'The computer wants a 1, and all it has is a 64 in the left pan of a '
+    'scale, a 1 in the right, and a 2 wearing a divide badge. A robot that '
+    'halves the number every round will get there — and the scale can tell '
+    'it when to stop.',
+    'a 1, from a robot that halved its way down and stopped by itself',
+    ['The scale tips left while the number is bigger than 1. A thought that '
+     'says “tipping left” fits only then.',
+     'A badge number is used up when it lands, so the robot needs a copy of '
+     'the ÷2 every round: set it on Mimi, take the copy, drop the copy on the '
+     'number in the pan, take the badge back off the platform, put it in its '
+     'hole.',
+     'Wake Ruby and loosen the number in the left pan to “any number”. The '
+     'tilt stays; the robot halves until the pans balance.',
+     'Here’s what I’d do. Drop the box on the robot; click the ÷2, click '
+     'Mimi, click the copy, click the 64; click the ÷2 on the platform, click '
+     'its hole. Leave the thought bubble; wake Ruby and loosen the 64. Give '
+     'it the box, press Run, and wait — it stops at 1. Take the 1 out of the '
+     'pan and give it to the bird.'],
+    rules(tools=['mimi', 'ruby']),
+    table([box(scale(num(64), num(1)), num(2, op='/')), ROBOT],   # noqa: F405
+          fixed(num(1), 'we need this'),                     # noqa: F405
+          bird(10321, 'p32-post', 'give me your answer'),    # noqa: F405
+          nest(10322, 'p32-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10321, 'p32-post', 10322, 'p32-reply',
+                right=num(1),                                # noqa: F405
+                on_right=next_note(''),
+                notes=['Down to one, and it knew where to stop. Thank you! '
+                       '(More puzzles are on the way.)'],
+                sorry='Not quite — a plain 1, the number the halving robot '
+                      'ends on.')),
     scenery=SCENERY)

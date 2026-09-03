@@ -1,23 +1,17 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p24",
- "intro": "Last time you had to stop the robot yourself. This time it should know when to stop: the computer wants seven zeros, and the box has a scale in its third hole with a count in one pan and the 7 in the other. A robot only runs while its thought fits \u2014 and a scale in a thought remembers which way it tipped.",
- "goal": "a box with exactly seven zeros, made by a robot that stopped by itself",
+ "name": "p28",
+ "intro": "These two numbers are stuck in a scale\u2019s pans, and the computer wants the smaller one on the left. The scale tips toward the bigger one, so right now it tips left. Train the robot to swap them \u2014 the box has a spare hole \u2014 and give the bird the box.",
+ "goal": "a box holding a scale with the smaller number in its left pan",
  "hints": [
-  "The scale tips toward the bigger number. Right now the count is 1 and the 7 is bigger, so it tips right. The robot should count every hole it adds \u2014 a fresh 1 from the number stack, dropped on the count.",
-  "Train the round as before \u2014 copy the seed, join the copy on, put the seed back \u2014 and then take a 1 from the stack and drop it on the count in the left pan. Leave the thought bubble.",
-  "Its thought says the scale tips RIGHT. Wake Ruby and loosen the growing box and the count to \u201cany\u201d; the tilt stays. Now it runs while the count is smaller than 7 and stops when the pans balance.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the seed, click Mimi, click the copy, click the right edge of the growing box; click the seed on the platform, click the second hole; click the number stack, click the count in the scale\u2019s left pan. Leave the thought bubble. Wake Ruby; click the first box in its thought until it says any box, and the count until it says any number. Give it the box, press Run, and wait \u2014 it stops at seven. Take the box of seven out and give it to the bird."
+  "A pan holds one thing, like a hole. To swap two things you need somewhere to put one of them first.",
+  "Move the left one to the spare hole; move the right one to the left pan; move the spare one to the right pan.",
+  "Here\u2019s what I\u2019d do. Drop the box on the robot. In its imagination: click the 9, click the spare hole; click the 4, click the left pan; click the 9, click the right pan. Leave the thought bubble and give the bird the box."
  ],
  "rules": {
-  "stacks": [
-   "numbers"
-  ],
-  "tools": [
-   "mimi",
-   "ruby"
-  ],
+  "stacks": [],
+  "tools": [],
   "typing": {
    "numbers": false,
    "pads": false
@@ -30,52 +24,29 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "box",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "0",
-         "d": "1"
-        },
-        "op": "+"
-       }
-      ]
-     },
-     {
-      "kind": "box",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "0",
-         "d": "1"
-        },
-        "op": "+"
-       }
-      ]
-     },
-     {
       "kind": "scale",
       "holes": [
        {
         "kind": "number",
         "value": {
-         "n": "1",
+         "n": "9",
          "d": "1"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
        },
        {
         "kind": "number",
         "value": {
-         "n": "7",
+         "n": "4",
          "d": "1"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
        }
       ]
-     }
+     },
+     null
     ]
    },
    "x": -0.2,
@@ -88,14 +59,14 @@
     "program": [],
     "team": []
    },
-   "x": 0.38,
+   "x": 0.31,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10241,
-    "nestGuid": "p24-post",
+    "nestId": 10281,
+    "nestGuid": "p28-post",
     "label": "give me your answer"
    },
    "x": -0.55,
@@ -104,8 +75,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10242,
-    "guid": "p24-reply",
+    "id": 10282,
+    "guid": "p28-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -118,67 +89,36 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "scale",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "4",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "9",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
+       }
+      ]
      },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     }
+     null
     ],
     "fixed": true,
-    "label": "we need this"
+    "label": "we need this",
+    "size": 1.5
    },
    "z": 1.2,
-   "x": 0.9
+   "x": 1.09
   },
   {
    "thing": {
@@ -196,25 +136,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10241,
-         "guid": "p24-post",
+         "id": 10281,
+         "guid": "p28-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 10242,
-         "nestGuid": "p24-reply",
+         "nestId": 10282,
+         "nestGuid": "p28-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Seven zeros, and the robot stopped by itself. Change the number in the pan and it would make any number of them. Next: 1,024 again \u2014 hands off this time."
+         "text": "4 on the left, 9 on the right \u2014 sorted by robot. Next: letters into a word."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 exactly seven zeros, the box itself out of the first hole."
+         "text": "Not quite \u2014 the smaller number in the LEFT pan, and the spare hole empty."
         }
        ]
       }
@@ -229,61 +169,29 @@
          "kind": "box",
          "holes": [
           {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "scale",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "4",
+              "d": "1"
+             },
+             "op": "+",
+             "stuck": true
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "9",
+              "d": "1"
+             },
+             "op": "+",
+             "stuck": true
+            }
+           ]
           },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          }
+          null
          ]
         },
         null,
@@ -329,7 +237,7 @@
        },
        {
         "type": "load",
-        "name": "p25"
+        "name": "p29"
        }
       ],
       "trainedOn": null,

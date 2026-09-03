@@ -5143,3 +5143,37 @@ size is the bench's, not the thing's, so a copy made from it is ordinary.
 The bird and her nest sit to the left of the goal in every layout, or at
 the front right for the two goals too wide for that, so nothing stands in
 front of the goal from the door.
+
+## Eight more, and Dusty reaches the top of the pile
+
+*Added 3 Sep. Ken: "While training a robot Dusty wouldn't vacuum the top of
+a nest stack -- I had to move it to a spare work area and then vacuum it.
+Did you address the obsolete narration issue? Many more puzzles please."*
+
+**The top of a pile is the robot's too.** A delivery on a nest the robot was
+given has no address of its own, so in a lesson Dusty refused it. It is
+addressed now the way a take is -- the nest, and "the top of what is on
+it" -- and the vacuum step carries that. Measured: one step recorded, the
+pile one shorter. The counting puzzle's hint no longer sends the letter to
+a work spot first.
+
+**A saved robot keeps its tilt.** Saving and loading a thought dropped the
+scale's tilt on both journeys; a robot trained to run while a scale tipped
+right came back weighing anything against anything. Both directions keep
+it.
+
+**Puzzles 25 to 32.** Two more robots that stop by weighing: 1,024 again,
+by a doubler in a scale's pan against 1,000, hands off this time; and down
+to one, by a halver that copies its divide badge each round and weighs the
+number against 1. Two scales by hand: the biggest of three, and a pair
+sorted into a box smaller first. A robot that swaps a scale's stuck pans
+through a spare hole, one run, because once swapped the thought no longer
+fits. And three of letters: a box of letters poured onto a blank pad becomes
+the word; a word dropped into a box with no holes comes apart a letter to a
+hole; a pad dropped on a 3 picks out the third letter of Marty. Every
+mechanic measured on the page -- the pour, the mould, the pick, the swap,
+the doubler running to 1,024 and the halver to 1 -- and every judge accepts
+its own goal.
+
+The narration was answered in the round before: at most one sentence waits,
+and a new one replaces what is waiting rather than what is being said.

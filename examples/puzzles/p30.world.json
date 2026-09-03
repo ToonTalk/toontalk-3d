@@ -1,23 +1,17 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p24",
- "intro": "Last time you had to stop the robot yourself. This time it should know when to stop: the computer wants seven zeros, and the box has a scale in its third hole with a count in one pan and the 7 in the other. A robot only runs while its thought fits \u2014 and a scale in a thought remembers which way it tipped.",
- "goal": "a box with exactly seven zeros, made by a robot that stopped by itself",
+ "name": "p30",
+ "intro": "Now the computer wants a word taken apart: one letter to a hole. Here is the word, and a box with no holes at all.",
+ "goal": "a box with T, a, l, k in its holes",
  "hints": [
-  "The scale tips toward the bigger number. Right now the count is 1 and the 7 is bigger, so it tips right. The robot should count every hole it adds \u2014 a fresh 1 from the number stack, dropped on the count.",
-  "Train the round as before \u2014 copy the seed, join the copy on, put the seed back \u2014 and then take a 1 from the stack and drop it on the count in the left pan. Leave the thought bubble.",
-  "Its thought says the scale tips RIGHT. Wake Ruby and loosen the growing box and the count to \u201cany\u201d; the tilt stays. Now it runs while the count is smaller than 7 and stops when the pans balance.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the seed, click Mimi, click the copy, click the right edge of the growing box; click the seed on the platform, click the second hole; click the number stack, click the count in the scale\u2019s left pan. Leave the thought bubble. Wake Ruby; click the first box in its thought until it says any box, and the count until it says any number. Give it the box, press Run, and wait \u2014 it stops at seven. Take the box of seven out and give it to the bird."
+  "A box with no holes is a mould: pour something into it and it comes apart, one part to a hole.",
+  "Drop the pad on the box with no holes.",
+  "Here\u2019s what I\u2019d do: drop the Talk pad on the empty box, and give the bird the box of four letters."
  ],
  "rules": {
-  "stacks": [
-   "numbers"
-  ],
-  "tools": [
-   "mimi",
-   "ruby"
-  ],
+  "stacks": [],
+  "tools": [],
   "typing": {
    "numbers": false,
    "pads": false
@@ -27,75 +21,25 @@
  "bench": [
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "box",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "0",
-         "d": "1"
-        },
-        "op": "+"
-       }
-      ]
-     },
-     {
-      "kind": "box",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "0",
-         "d": "1"
-        },
-        "op": "+"
-       }
-      ]
-     },
-     {
-      "kind": "scale",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "1",
-         "d": "1"
-        },
-        "op": "+"
-       },
-       {
-        "kind": "number",
-        "value": {
-         "n": "7",
-         "d": "1"
-        },
-        "op": "+"
-       }
-      ]
-     }
-    ]
+    "kind": "text",
+    "text": "Talk"
    },
-   "x": -0.2,
+   "x": -0.09,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "robot",
-    "name": null,
-    "program": [],
-    "team": []
+    "kind": "box",
+    "holes": []
    },
-   "x": 0.38,
+   "x": 0.24,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10241,
-    "nestGuid": "p24-post",
+    "nestId": 10301,
+    "nestGuid": "p30-post",
     "label": "give me your answer"
    },
    "x": -0.55,
@@ -104,8 +48,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10242,
-    "guid": "p24-reply",
+    "id": 10302,
+    "guid": "p30-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -118,67 +62,27 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "text",
+      "text": "T"
      },
      {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "text",
+      "text": "a"
      },
      {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "text",
+      "text": "l"
      },
      {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "text",
+      "text": "k"
      }
     ],
     "fixed": true,
     "label": "we need this"
    },
    "z": 1.2,
-   "x": 0.9
+   "x": 1.13
   },
   {
    "thing": {
@@ -196,25 +100,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10241,
-         "guid": "p24-post",
+         "id": 10301,
+         "guid": "p30-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 10242,
-         "nestGuid": "p24-reply",
+         "nestId": 10302,
+         "nestGuid": "p30-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Seven zeros, and the robot stopped by itself. Change the number in the pan and it would make any number of them. Next: 1,024 again \u2014 hands off this time."
+         "text": "T, a, l, k \u2014 four holes. Next: one letter out of a word."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 exactly seven zeros, the box itself out of the first hole."
+         "text": "Not quite. Look at what we need, and try again."
         }
        ]
       }
@@ -229,60 +133,20 @@
          "kind": "box",
          "holes": [
           {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "text",
+           "text": "T"
           },
           {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "text",
+           "text": "a"
           },
           {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "text",
+           "text": "l"
           },
           {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
+           "kind": "text",
+           "text": "k"
           }
          ]
         },
@@ -329,7 +193,7 @@
        },
        {
         "type": "load",
-        "name": "p25"
+        "name": "p31"
        }
       ],
       "trainedOn": null,
