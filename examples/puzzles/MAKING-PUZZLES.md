@@ -201,6 +201,12 @@ The judge is a robot, so it decides what a robot's thought can say:
   something down on its own desk where that thing was -- the doubler in
   puzzle 7 works on a lone 1. Give it a box when the work needs more than
   one place.
+- **A scale is how a robot knows when to stop.** A thought remembers which
+  way a scale tipped, and Ruby keeps the tilt when she loosens what is in a
+  pan. A robot whose thought says *tipping right* runs while the count in the
+  left pan is smaller than the number in the right, and stops when they
+  balance -- puzzle 24. Change the number in the pan and the same robot makes
+  any number of anything.
 - **No Rounds control.** A robot runs until its thought stops fitting. A
   puzzle that iterates must therefore either stop by itself (a nest that
   empties) or be the visitor's to stop in time (Stop, or the full-stop key,

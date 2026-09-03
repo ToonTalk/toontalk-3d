@@ -5106,3 +5106,40 @@ on the outer side of her machine. A ten-hole goal is a metre wide, so the
 goal is centred at the back and the bird and her nest are placed clear of
 whichever end of it is free -- both stay reachable however wide the goal
 grows. The ship lies further back again.
+
+## A robot that knows when to stop, and a voice one sentence behind
+
+*Added 3 Sep. Ken: "Maybe puzzle 24 should introduce the idea of using a
+scale so that the robot like puzzle 23 can make a box with any number of
+zeros. And let's add more. When I use Ruby multiple times quickly the
+narration falls behind and explains the old actions -- no need to explain
+things that were more than one action ago -- but the transition should be
+natural." And: puzzle 22's nest obscured the goal, and the goal was tinier
+than need be.*
+
+**Puzzle 24 is the grower with a scale.** The box's third hole holds a scale
+with a count in the left pan and the 7 the computer wants in the right. The
+robot's round is the same as before plus one step: a fresh 1 from the number
+stack dropped on the count. Its thought records the scale *tipping right*,
+and -- the one change the app needed -- Ruby now keeps which way a scale tips
+when she loosens what is in a pan: "any number, but still the lighter one"
+is the whole use of a scale in a thought. Measured: trained in eight steps;
+the thought read "a scale tipping right, weighing the number 1 against the
+number 7"; loosened to "any box" and "any number" with the tilt intact; ran
+five rounds and stopped by itself with seven holes and the pans balanced.
+Change the number in the pan and the same robot makes any number of zeros,
+which is what the note at the end says.
+
+**The voice stays one sentence behind at most.** The browser queues spoken
+utterances without limit, so four quick erasures left it explaining the
+first while the fourth had happened. Now one message waits, at most: a new
+one replaces whatever was *waiting*, never what is being *said*, so the
+current sentence ends naturally and the next thing spoken is the latest.
+Nothing is cut off mid-word, and nothing older than one action is said.
+
+**The goal, seen.** For a small goal -- one number, one pad -- the bench
+record now carries a size and the thing stands half again as large; the
+size is the bench's, not the thing's, so a copy made from it is ordinary.
+The bird and her nest sit to the left of the goal in every layout, or at
+the front right for the two goals too wide for that, so nothing stands in
+front of the goal from the door.

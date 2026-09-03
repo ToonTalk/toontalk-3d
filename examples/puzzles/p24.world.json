@@ -1,18 +1,19 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p23",
- "intro": "The computer wants a box with exactly ten zeros, made by a robot. In the first hole of this box is a box of one zero to grow; in the second, another to copy from. A robot that makes a box longer never stops by itself \u2014 you will have to stop it in time.",
- "goal": "a box with exactly ten zeros, made by a robot",
+ "name": "p24",
+ "intro": "Last time you had to stop the robot yourself. This time it should know when to stop: the computer wants seven zeros, and the box has a scale in its third hole with a count in one pan and the 7 in the other. A robot only runs while its thought fits \u2014 and a scale in a thought remembers which way it tipped.",
+ "goal": "a box with exactly seven zeros, made by a robot that stopped by itself",
  "hints": [
-  "One round should make the box in the first hole one hole longer. The box in the second hole is the seed: copy it, never spend it.",
-  "In its imagination: click the seed box, click Mimi, click the copy in the tray, click the right-hand edge of the box in the first hole \u2014 they join; click the seed on Mimi\u2019s platform, click the second hole.",
-  "Its thought wants exactly the boxes it saw, and the first one grows. Wake Ruby and click the first box in its thought until it says \u201cany box \u2014 any number of holes\u201d; loosen the second too. Give it the box and press Run.",
-  "Stop lets it finish the round it is in. Press Stop \u2014 or the full stop key \u2014 when the first box reads nine. Stopped at nine? Run and then Stop straight away is one more round: ten.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the seed, click Mimi, click the copy, click the right edge of the growing box; click the seed on the platform, click the second hole. Leave the thought bubble; wake Ruby and click the first box in its thought until it says any box, and the second once or twice. Give it the box, press Run, press Stop when it reads nine \u2014 Run and Stop again if it stopped at nine. Take the box of ten out of the first hole and give it to the bird."
+  "The scale tips toward the bigger number. Right now the count is 1 and the 7 is bigger, so it tips right. The robot should count every hole it adds \u2014 a fresh 1 from the number stack, dropped on the count.",
+  "Train the round as before \u2014 copy the seed, join the copy on, put the seed back \u2014 and then take a 1 from the stack and drop it on the count in the left pan. Leave the thought bubble.",
+  "Its thought says the scale tips RIGHT. Wake Ruby and loosen the growing box and the count to \u201cany\u201d; the tilt stays. Now it runs while the count is smaller than 7 and stops when the pans balance.",
+  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the seed, click Mimi, click the copy, click the right edge of the growing box; click the seed on the platform, click the second hole; click the number stack, click the count in the scale\u2019s left pan. Leave the thought bubble. Wake Ruby; click the first box in its thought until it says any box, and the count until it says any number. Give it the box, press Run, and wait \u2014 it stops at seven. Take the box of seven out and give it to the bird."
  ],
  "rules": {
-  "stacks": [],
+  "stacks": [
+   "numbers"
+  ],
   "tools": [
    "mimi",
    "ruby"
@@ -53,6 +54,27 @@
         "op": "+"
        }
       ]
+     },
+     {
+      "kind": "scale",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "7",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ]
      }
     ]
    },
@@ -66,59 +88,35 @@
     "program": [],
     "team": []
    },
-   "x": 0.31,
+   "x": 0.38,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10231,
-    "nestGuid": "p23-post",
+    "nestId": 10241,
+    "nestGuid": "p24-post",
     "label": "give me your answer"
    },
-   "x": 1.05,
-   "z": 2.05
+   "x": -0.55,
+   "z": 1.55
   },
   {
    "thing": {
     "kind": "nest",
-    "id": 10232,
-    "guid": "p23-reply",
+    "id": 10242,
+    "guid": "p24-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
    },
-   "x": 1.55,
-   "z": 2.05
+   "x": -0.05,
+   "z": 1.55
   },
   {
    "thing": {
     "kind": "box",
     "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
      {
       "kind": "number",
       "value": {
@@ -180,7 +178,7 @@
     "label": "we need this"
    },
    "z": 1.2,
-   "x": 0.1
+   "x": 0.9
   },
   {
    "thing": {
@@ -198,25 +196,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10231,
-         "guid": "p23-post",
+         "id": 10241,
+         "guid": "p24-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 10232,
-         "nestGuid": "p23-reply",
+         "nestId": 10242,
+         "nestGuid": "p24-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Ten zeros exactly, by robot. Next: a robot that knows when to stop."
+         "text": "Seven zeros, and the robot stopped by itself. Change the number in the pan and it would make any number of them. Thank you! (More puzzles are on the way.)"
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 exactly ten zeros, the box itself out of the first hole. Too few? Run and Stop is one more round. Too many? Start over."
+         "text": "Not quite \u2014 exactly seven zeros, the box itself out of the first hole."
         }
        ]
       }
@@ -230,30 +228,6 @@
         {
          "kind": "box",
          "holes": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
           {
            "kind": "number",
            "value": {
@@ -352,10 +326,6 @@
           1
          ]
         }
-       },
-       {
-        "type": "load",
-        "name": "p24"
        }
       ],
       "trainedOn": null,

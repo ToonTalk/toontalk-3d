@@ -29,6 +29,8 @@
 #       stack; it dozes when the nest is empty
 #   p23 a robot makes a box of exactly ten zeros, one more hole a round --
 #       another one you have to stop in time
+#   p24 the same robot with a SCALE: it counts the holes it makes against a
+#       number in the other pan and stops by itself when the pans balance
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -134,17 +136,27 @@ def table(materials, goal, post, reply, judge_, extra=()):
         xs.append(x + w / 2)
         x += w + gap
     bench = [{'thing': m, 'x': round(x, 2), 'z': FRONT} for m, x in zip(materials, xs)]
-    # THE GOAL MUST NOT STAND IN FRONT OF THE POST. A ten-hole box is a metre
-    # wide, and the bird and her nest sat in its shadow (Ken). The goal is
-    # centred at the back and the post is set beside whichever end of it is
-    # clear, so both stay reachable however wide the goal grows.
+    # THE GOAL AND THE POST KEEP OUT OF EACH OTHER'S WAY. The goal stands at
+    # the back on the right, its right edge fixed, so it grows leftward; the
+    # bird and her nest sit in the middle row on the left. A goal too wide for
+    # that (24 zeros) is centred and the post moves to the front right, where
+    # nothing stands in front of it. A small goal -- one number, one pad --
+    # is shown half again as large (Ken: "tinier than need be").
     gw = width_of(goal)
-    goal_x = 0.15 if gw < 0.8 else 0.0
-    post_x = round(min(-0.55, goal_x - gw / 2 - 0.45), 2)
-    bench += [{'thing': post, 'x': post_x, 'z': MID},
-              {'thing': reply, 'x': round(post_x + 0.55, 2), 'z': MID},
-              {'thing': goal, 'x': goal_x, 'z': BACK},
-              {'thing': judge_, 'x': round(min(-1.35, post_x - 0.8), 2), 'z': BACK}]
+    goal_rec = {'thing': goal, 'z': BACK}
+    if gw < 0.5:
+        goal_rec['thing'] = dict(goal, size=1.5)    # on the thing: that is where the reader looks
+        gw *= 1.5
+    if gw <= 1.3:
+        goal_rec['x'] = round(1.45 - gw / 2, 2)
+        post_x, post_z = -0.55, MID
+    else:
+        goal_rec['x'] = 0.1
+        post_x, post_z = 1.05, FRONT
+    bench += [{'thing': post, 'x': post_x, 'z': post_z},
+              {'thing': reply, 'x': round(post_x + 0.5, 2), 'z': post_z},
+              goal_rec,
+              {'thing': judge_, 'x': -1.35, 'z': BACK}]
     bench += list(extra)
     return bench
 
@@ -840,10 +852,55 @@ puzzle(
           nest(10232, 'p23-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10231, 'p23-post', 10232, 'p23-reply',
                 right=box(*[num(0) for _ in range(10)]),     # noqa: F405
-                on_right=next_note(''),
-                notes=['Ten zeros exactly, by robot. Thank you! (More '
-                       'puzzles are on the way.)'],
+                on_right=next_note('') + [load('p24')],
+                notes=['Ten zeros exactly, by robot. Next: a robot that '
+                       'knows when to stop.'],
                 sorry='Not quite — exactly ten zeros, the box itself out of '
                       'the first hole. Too few? Run and Stop is one more '
                       'round. Too many? Start over.')),
+    scenery=SCENERY)
+
+# --- p24: a robot that knows when to stop ------------------------------------------
+# The grower again, with a scale in the third hole: a count in the left pan
+# and the number wanted in the right. While the scale tips right the thought
+# fits; when the pans balance it does not, and the robot stops on its own --
+# which is how a robot makes a box of ANY number of zeros: change the number
+# in the right pan.
+puzzle(
+    'p24',
+    'Last time you had to stop the robot yourself. This time it should know '
+    'when to stop: the computer wants seven zeros, and the box has a scale in '
+    'its third hole with a count in one pan and the 7 in the other. A robot '
+    'only runs while its thought fits — and a scale in a thought remembers '
+    'which way it tipped.',
+    'a box with exactly seven zeros, made by a robot that stopped by itself',
+    ['The scale tips toward the bigger number. Right now the count is 1 and '
+     'the 7 is bigger, so it tips right. The robot should count every hole '
+     'it adds — a fresh 1 from the number stack, dropped on the count.',
+     'Train the round as before — copy the seed, join the copy on, put the '
+     'seed back — and then take a 1 from the stack and drop it on the count '
+     'in the left pan. Leave the thought bubble.',
+     'Its thought says the scale tips RIGHT. Wake Ruby and loosen the growing '
+     'box and the count to “any”; the tilt stays. Now it runs while the count '
+     'is smaller than 7 and stops when the pans balance.',
+     'Here’s what I’d do. Drop the box on the robot; click the seed, click '
+     'Mimi, click the copy, click the right edge of the growing box; click the '
+     'seed on the platform, click the second hole; click the number stack, '
+     'click the count in the scale’s left pan. Leave the thought bubble. Wake '
+     'Ruby; click the first box in its thought until it says any box, and the '
+     'count until it says any number. Give it the box, press Run, and wait — '
+     'it stops at seven. Take the box of seven out and give it to the bird.'],
+    rules(stacks=['numbers'], tools=['mimi', 'ruby']),
+    table([box(box(num(0)), box(num(0)), scale(num(1), num(7))), ROBOT],   # noqa: F405
+          fixed(box(*[num(0) for _ in range(7)]), 'we need this'),   # noqa: F405
+          bird(10241, 'p24-post', 'give me your answer'),    # noqa: F405
+          nest(10242, 'p24-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10241, 'p24-post', 10242, 'p24-reply',
+                right=box(*[num(0) for _ in range(7)]),      # noqa: F405
+                on_right=next_note(''),
+                notes=['Seven zeros, and the robot stopped by itself. Change '
+                       'the number in the pan and it would make any number '
+                       'of them. Thank you! (More puzzles are on the way.)'],
+                sorry='Not quite — exactly seven zeros, the box itself out of '
+                      'the first hole.')),
     scenery=SCENERY)
