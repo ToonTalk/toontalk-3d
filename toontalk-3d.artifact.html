@@ -480,7 +480,8 @@ dropped on a 2 becomes a box of the first two and a box of the rest.
 That, with an empty box for the end, is how a robot walks along an array.
 
 Scales have two pans that work exactly like holes; the beam tips toward the
-larger number. A robot trained on a scale that is saying something
+larger number. A drop on the scale itself lands in the pan on that side, and
+a pan with something in it takes the drop onto that thing. A robot trained on a scale that is saying something
 remembers the tilt, not the numbers: its thought reads "a scale tipping left",
 and it fires on any pair that leans that way — which is how a robot chooses
 between two paths.
@@ -19877,6 +19878,13 @@ function actionTake(at, onNest) {
 // Put what the robot holds at the address. A hole takes it (or combines);
 // a bare container places it (or combines with what sits there); placing on
 // the copier platform sets the machine going.
+// a step that names the scale itself (recorded before drops on a scale meant
+// its pans) lands in the pan on its recorded side
+function intoPan(scale, dropped, from, fromQ, side) {
+  const pan = scale.userData.holes[panIndexFor(scale, null, side)];
+  if (pan.thing) combine(pan, dropped, true, from, side);
+  else { putInHole(pan, dropped); enqueueNext(settleInto(dropped, from, 0.3, fromQ)); }
+}
 function actionPut(at, side, backTo) {
   if (at.c === 'notebook' && !mainNotebook()) {
     return enqueue(doNow(() => abort('There is no notebook here to file that in.')));
@@ -19959,12 +19967,18 @@ function actionPut(at, side, backTo) {
         }
         combine({ thing: targ }, dropped, true, from, side);
       }
+      else if (hole.thing?.userData.kind === 'scale' && dropped.userData.kind !== 'scale') {
+        intoPan(hole.thing, dropped, from, fromQ, side);
+      }
       else if (hole.thing) combine(hole, dropped, true, from, side);
       else { putInHole(hole, dropped); enqueueNext(settleInto(dropped, from, 0.3, fromQ)); }
     } else {
       const st = stationOf(at.c);
       if (st.occupant?.userData.kind === 'bird') return birdDeliver(st.occupant, dropped, true);
-      if (st.occupant) combine(st, dropped, false, from, side);
+      if (st.occupant?.userData.kind === 'scale' && dropped.userData.kind !== 'scale') {
+        intoPan(st.occupant, dropped, from, fromQ, side);
+      }
+      else if (st.occupant) combine(st, dropped, false, from, side);
       else {
         putOnStation(st, dropped);
         // the platform sits above the claw, so let the rise be seen
@@ -20175,6 +20189,16 @@ function joinBoxes(target, incoming, refuse, side) {
 function sideOf(target, point) {
   if (!point) return 'R';
   return target.worldToLocal(point.clone()).x < 0 ? 'L' : 'R';
+}
+// A DROP ON A SCALE MEANS A PAN. An empty pan is a thin dish under a wire
+// and a beam, and from where the camera stands the ray meets the wire first
+// -- so Ken's number, put back into the pan it came out of, was "dropped on
+// the scale", refused ("only numbers combine") and set down on the bench;
+// the robot remembered "put it in hole 3" instead of "in the left pan".
+// Read the side the pointer was on and answer the pan there, occupied or not.
+function panIndexFor(scale, point, side) {
+  if (scale?.userData.kind !== 'scale') return -1;
+  return (side ?? sideOf(scale, point)) === 'L' ? 0 : 1;
 }
 // A pad has three zones: the two edges join words, as they always have, and
 // the MIDDLE takes a pad aboard as a sub-pad. Robots are unaffected -- their
@@ -21738,6 +21762,11 @@ function userClick(target) {
     if (target.thing === stations.copyIn.occupant || target.thing === stations.copyOut.occupant) {
       return userClick({ kind: 'station', id: 'copyIn' });
     }
+    // a drop on the scale itself means the pan on that side (see panIndexFor)
+    if (kind === 'scale' && held.userData.kind !== 'scale') {
+      return handleClick({ kind: 'hole', box: target.thing,
+                           index: panIndexFor(target.thing, target.point) });
+    }
     // A held box aimed at a box usually hits the numbers standing in its holes,
     // since they occlude the shell. The intent is the box, so retarget it.
     if (held.userData.kind === 'box' && kind !== 'box') {
@@ -21812,6 +21841,10 @@ function directRobot(target) {
         const side = target.point ? sideOf(target.thing, target.point) : 'R';
         return go({ type: 'put', at: { c: a.c, path: a.path, nest: true }, side });
       }
+    }
+    if (clawHeld && target.kind === 'thing' && target.thing.userData.kind === 'scale'
+        && clawHeld.userData.kind !== 'scale') {
+      target = { kind: 'hole', box: target.thing, index: panIndexFor(target.thing, target.point) };
     }
     const at = target.kind === 'hole'
       ? (() => { const a = addrOf(target.box); return a && { c: a.c, path: a.path.concat(target.index) }; })()
@@ -26450,6 +26483,15 @@ function tipFor(t) {
         + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     if (ud.kind === 'scale') {
+      // held over the scale, the drop means the pan on this side (panIndexFor)
+      if (TIP && TIP.userData.kind !== 'scale') {
+        const i = panIndexFor(t.thing, t.point);
+        const occ = ud.holes[i]?.thing;
+        const pan = i === 0 ? 'LEFT' : 'RIGHT';
+        const what = occ?.userData.kind === 'number' ? ratShort(occ.userData.value) : occ?.userData.kind;
+        return occ ? `Drop it onto the ${what} in the ${pan} pan.`
+                   : `Drop it into the ${pan} pan.`;
+      }
       return 'A scale — put a number in each of its two holes and it tips toward the larger.'
         + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }

@@ -1197,6 +1197,50 @@ async function wiggleFitCheck(D) {
   return ok;
 }
 
+// A DROP ON A SCALE MEANS A PAN. Ken took the 1 out of a scale's pan while
+// training and could not put it back: the empty pan hides under the wire and
+// the beam, so the click meant the scale, the step became "put it in hole 3",
+// and the number was refused onto the bench. Both hands and claw now answer
+// the pan on the pointer's side.
+async function scalePanCheck(D) {
+  const num = (n) => ({ kind: 'number', value: { n: String(n), d: '1' } });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'box', holes: [num(0), num(0), { kind: 'scale', holes: [num(1), num(7)] }] }, x: -0.3, z: 2.0 },
+    { thing: { kind: 'robot', program: [] }, x: 0.5, z: 2.0 },
+  ] });
+  await slowSettle(D, 2000);
+  let box = null;
+  for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'box') box = t; }
+  D.hold(box);
+  D.giveRobot();
+  await slowSettle(D, 3000);
+  const scale = D.mine([2]);
+  D.clickThing(D.mine([2, 0]));                       // the claw takes the 1
+  await slowSettle(D, 3000);
+  const taken = !D.mine([2, 0]);
+  const panAt = (i) => scale.userData.holes[i].pocket.getWorldPosition(new D.THREE.Vector3());
+  D.clickRaw({ kind: 'thing', thing: scale, point: panAt(0) });   // the wire, over the empty pan
+  await slowSettle(D, 4000);
+  const back = D.mine([2, 0])?.userData.value?.n === 1n;
+  const prog = D.state.program || [];
+  const last = prog[prog.length - 1];
+  const stepOK = last && last.type === 'put' && last.at.path.join(',') === '2,0';
+  D.leave();
+  await slowSettle(D, 3000);
+  // by hand: a number aimed at the scale's frame over the RIGHT pan adds to the 7
+  D.click('numbers');
+  await slowSettle(D, 1500);
+  D.type(1);
+  D.clickRaw({ kind: 'thing', thing: scale, point: panAt(1) });
+  await slowSettle(D, 3000);
+  const right = scale.userData.holes[1].thing?.userData.value?.n;
+  const handOK = right === 8n;
+  const ok = taken && back && stepOK && handOK;
+  put((ok ? 'PASS' : 'FAIL') + ' a drop on a scale means its pan  (taken=' + taken + ' back-in-the-pan=' + back
+      + ' step=' + (last ? last.type + '[' + last.at.path + ']' : 'none') + ' by-hand-right-pan=' + right + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3437,6 +3481,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let panOK = true;
+  try { panOK = want('scalePan') ? await scalePanCheck(D) : true; }
+  catch (e) { panOK = false; put('FAIL a drop on a scale means its pan  ' + e.message, 'fail'); }
   let dstOK = true;
   try { dstOK = want('dustyStack') ? await dustyStackCheck(D) : true; }
   catch (e) { dstOK = false; put('FAIL Dusty swallows a stack  ' + e.message, 'fail'); }
@@ -3524,7 +3571,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

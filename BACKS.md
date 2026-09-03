@@ -5177,3 +5177,23 @@ its own goal.
 
 The narration was answered in the round before: at most one sentence waits,
 and a new one replaces what is waiting rather than what is being said.
+
+## A drop on a scale means a pan
+
+*Added 3 Sep. Ken: "While training the robot I accidentally picked up the 1
+instead of the box with the 1 in the second hole. When I tried to drop back
+in it ended up on the desk."*
+
+An empty pan is a thin dish hanging under a wire and a beam, and from where
+the camera stands a click on it meets the wire first. So the click meant
+the scale, not the pan: the robot recorded "put it in hole 3", tried to
+combine a number with a scale, was refused ("only numbers combine") and set
+the 1 down on the bench. Measured before the fix: the step read `put [2]`
+and the number stood on the bench; after it: the 1 is back in the left pan
+and the step reads `put [2, 0]`.
+
+Now a drop aimed at the scale itself means the pan on the pointer's side --
+for your hand and for the claw alike, and an occupied pan takes the drop
+onto what is in it, so a 1 aimed at the 7 in the right pan makes 8. The
+tooltip says which pan. A step that names the scale (recorded before this)
+lands in the pan on its recorded side when replayed.
