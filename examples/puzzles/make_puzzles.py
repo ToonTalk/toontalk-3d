@@ -134,10 +134,17 @@ def table(materials, goal, post, reply, judge_, extra=()):
         xs.append(x + w / 2)
         x += w + gap
     bench = [{'thing': m, 'x': round(x, 2), 'z': FRONT} for m, x in zip(materials, xs)]
-    bench += [{'thing': post, 'x': 0.0, 'z': MID},
-              {'thing': reply, 'x': 0.55, 'z': MID},
-              {'thing': goal, 'x': 1.15, 'z': BACK},
-              {'thing': judge_, 'x': -1.25, 'z': BACK}]
+    # THE GOAL MUST NOT STAND IN FRONT OF THE POST. A ten-hole box is a metre
+    # wide, and the bird and her nest sat in its shadow (Ken). The goal is
+    # centred at the back and the post is set beside whichever end of it is
+    # clear, so both stay reachable however wide the goal grows.
+    gw = width_of(goal)
+    goal_x = 0.15 if gw < 0.8 else 0.0
+    post_x = round(min(-0.55, goal_x - gw / 2 - 0.45), 2)
+    bench += [{'thing': post, 'x': post_x, 'z': MID},
+              {'thing': reply, 'x': round(post_x + 0.55, 2), 'z': MID},
+              {'thing': goal, 'x': goal_x, 'z': BACK},
+              {'thing': judge_, 'x': round(min(-1.35, post_x - 0.8), 2), 'z': BACK}]
     bench += list(extra)
     return bench
 
@@ -150,7 +157,7 @@ ROBOT = {'kind': 'robot', 'name': None, 'program': [], 'team': []}
 
 # Where it came down: on the floor beyond the far side of the table, nose
 # toward the room, seven times hand size -- a ship Marty could sit in.
-SCENERY = [{'thing': ship(), 'x': 2.3, 'y': 0.0, 'z': -1.6, 'ry': 35, 'sz': 7}]
+SCENERY = [{'thing': ship(), 'x': 3.1, 'y': 0.0, 'z': -3.4, 'ry': 35, 'sz': 7}]
 
 # --- p7: exactly 1024 -- and it is you who has to stop the robot ------------
 # No box: a robot can set a thing down on its own desk where its given thing

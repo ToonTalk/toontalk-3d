@@ -5068,3 +5068,41 @@ name "keeps getting bigger", so a puzzle whose answer is a process is written
 to leave a thing behind.
 
 American spelling from here on, in the app and in these notes.
+
+## Six from a play session
+
+*Added 3 Sep. Ken: the card said Ruby had loosened enough when she had not,
+and the parts that still did not fit stopped being red; a box dropped into a
+hole joined instead, and Undo gave back the box joined TO and not the one he
+was carrying; Mimi blocks the stacks in the opening view; a goal number's
+tooltip offers typing a puzzle has taken away; a wide goal hides the bird and
+her nest; and the ship should stand further back.*
+
+**An erasure that was not enough now says so.** Rebuilding the thought threw
+away the red marks with the nodes they were painted on, so a partial erasure
+left a thought with nothing red in it and a card quoting the loosened
+condition as if it fit. After each erasure the parts that still do not match
+are marked again, and the line reads "...Still not what is on its desk — the
+red parts are what to loosen next". It is said as an attention message,
+because a plain one cannot displace the refusal already holding the card --
+which is how Ken came to read a stale "the number 3" line after loosening
+that very 3.
+
+**Undo puts back what the claw was holding.** The undo snapshot captured your
+hand and the whole table but not the robot's claw, and restoring emptied it.
+Ken meant to drop a box into a hole, it joined instead, and Undo handed back
+the box that had been joined to and nothing else. The claw is in the snapshot
+now, by reference for a robot, nest or bird and by description for anything
+else. Measured: a lesson step that joins, undone, leaves the box in the claw
+and the step gone.
+
+**A tooltip may only offer what is on offer.** A number in a puzzle where the
+keyboard is gone no longer promises "type digits", the goal says it is the
+goal, and a stuck thing says a robot's claw can move it.
+
+**Room to see and room to reach.** Mimi and her machine stood square in front
+of the box stack from the door; they are further out and back, and she stands
+on the outer side of her machine. A ten-hole goal is a metre wide, so the
+goal is centred at the back and the bird and her nest are placed clear of
+whichever end of it is free -- both stay reachable however wide the goal
+grows. The ship lies further back again.
