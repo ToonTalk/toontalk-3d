@@ -1168,6 +1168,35 @@ async function notSpareWordsCheck(D) {
 // Ken, making one inside the workshop, pointed Dusty at a stack and nothing
 // happened. Now the stack leaves the world, the rule is in the save, and a
 // click on what rides on his head brings it back.
+// A ZERO AIMED AT KEEPS ITS OLD SIZE. Ken dropped a box on the side of a box
+// while the pointer was over one of its zeros: the join fitted every zero to
+// the four-hole size, but the wiggle under the pointer wrote its remembered
+// two-hole size back every frame. putInHole now tells the wiggle the new size.
+async function wiggleFitCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'box', holes: [{ kind: 'number', value: { n: '0', d: '1' } }, { kind: 'number', value: { n: '0', d: '1' } }] }, x: -0.6, z: 2.0 },
+    { thing: { kind: 'box', holes: [{ kind: 'number', value: { n: '0', d: '1' } }, { kind: 'number', value: { n: '0', d: '1' } }] }, x: 0.4, z: 2.0 },
+  ] });
+  await slowSettle(D, 2000);
+  const boxes = [];
+  for (let i = 0; i < 20; i++) { const b = D.bench(i); if (!b) break; if (b.userData.kind === 'box') boxes.push(b); }
+  const [a, b] = boxes;
+  const aimed = b.userData.holes[1].thing;
+  D.setWiggle(aimed);                                  // the pointer is over this zero
+  D.hold(a);
+  const p = b.getWorldPosition(new D.THREE.Vector3());
+  D.clickThing(b, new D.THREE.Vector3(p.x + b.userData.width / 2 - 0.02, p.y, p.z));
+  await slowSettle(D, 3000);
+  let joined = null;
+  for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'box' && t.userData.holes.length === 4) joined = t; }
+  const scales = joined ? joined.userData.holes.map(h => +h.thing.scale.x.toFixed(2)) : [];
+  const same = scales.length === 4 && scales.every(v => Math.abs(v - scales[0]) < 0.01);
+  D.setWiggle(null);
+  const ok = !!joined && same;
+  put((ok ? 'PASS' : 'FAIL') + ' a wiggling zero takes its new size  (joined=' + !!joined + ' scales=' + scales.join('/') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -2198,7 +2227,7 @@ async function puzzleCheckBody(D, w, at) {
 async function puzzleSetCheck(D) {
   const line = [];
   let ok = true;
-  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14']) {
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19']) {
     const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
     D.worldIn(rec);
     await slowSettle(D, 3000);
@@ -3405,6 +3434,9 @@ async function runOne(D, spec) {
   catch (e) { picOK = false; put('FAIL a picture arrives  ' + e.message, 'fail'); }
   try { nestOK = want('nestedPanelCheck') ? await nestedPanelCheck(D) : true; }
   catch (e) { nestOK = false; put('FAIL panels inside panels  ' + e.message, 'fail'); }
+  let wigOK = true;
+  try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
+  catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
   let dstOK = true;
   try { dstOK = want('dustyStack') ? await dustyStackCheck(D) : true; }
   catch (e) { dstOK = false; put('FAIL Dusty swallows a stack  ' + e.message, 'fail'); }
@@ -3492,7 +3524,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK
+                        && twinOK && nbOK && dstOK && wigOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

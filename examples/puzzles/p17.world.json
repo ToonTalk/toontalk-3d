@@ -1,65 +1,65 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p14",
- "intro": "The computer needs more than numbers \u2014 it needs letters and words. Here are three blank pads: pick one up and type a capital A on it; then B and C. Put them in the box in order and give the box to the bird.",
- "goal": "a box with A, B and C on pads, in that order",
+ "name": "p17",
+ "intro": "The computer needs three quarters. You have a 1, a 4 wearing a divide badge and a 3 wearing a times badge. Dividing and multiplying are badges here \u2014 the number underneath is what changes.",
+ "goal": "three quarters",
  "hints": [
-  "Hold a pad and press a letter key: the keyboard writes on what you hold.",
-  "A capital letter \u2014 hold Shift. Backspace takes a letter back.",
-  "Here\u2019s what I\u2019d do: pick up a pad, press Shift and A, drop it in the first hole; the same with B into the second and C into the third; give the box to the bird."
+  "A divide badge divides the number it lands on; a times badge multiplies it.",
+  "One divided by four is a quarter; a quarter times three is three quarters.",
+  "Here\u2019s what I\u2019d do: drop the \u00f74 on the 1 \u2014 it reads \u00bc \u2014 then drop the \u00d73 on that. Give the bird the \u00be."
  ],
  "rules": {
   "stacks": [],
   "tools": [],
   "typing": {
    "numbers": false,
-   "pads": true
+   "pads": false
   },
   "undo": true
  },
  "bench": [
   {
    "thing": {
-    "kind": "text",
-    "text": ""
-   },
-   "x": -0.86,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "text",
-    "text": ""
+    "kind": "number",
+    "value": {
+     "n": "1",
+     "d": "1"
+    },
+    "op": "+"
    },
    "x": -0.38,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "text",
-    "text": ""
+    "kind": "number",
+    "value": {
+     "n": "4",
+     "d": "1"
+    },
+    "op": "/"
    },
-   "x": 0.1,
+   "x": 0.0,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     null,
-     null,
-     null
-    ]
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "1"
+    },
+    "op": "*"
    },
-   "x": 0.72,
+   "x": 0.38,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10041,
-    "nestGuid": "p14-post",
+    "nestId": 10071,
+    "nestGuid": "p17-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -68,8 +68,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10042,
-    "guid": "p14-reply",
+    "id": 10072,
+    "guid": "p17-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -79,21 +79,12 @@
   },
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "text",
-      "text": "A"
-     },
-     {
-      "kind": "text",
-      "text": "B"
-     },
-     {
-      "kind": "text",
-      "text": "C"
-     }
-    ],
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "4"
+    },
+    "op": "+",
     "fixed": true,
     "label": "we need this"
    },
@@ -116,25 +107,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10041,
-         "guid": "p14-post",
+         "id": 10071,
+         "guid": "p17-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 10042,
-         "nestGuid": "p14-reply",
+         "nestId": 10072,
+         "nestGuid": "p17-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "A, B, C \u2014 the computer can spell. Next: a whole year, in seconds."
+         "text": "Three quarters. Next: which is bigger?"
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 capital A, B and C, one to a pad, in that order."
+         "text": "Not quite. Look at what we need, and try again."
         }
        ]
       }
@@ -146,21 +137,12 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "text",
-           "text": "A"
-          },
-          {
-           "kind": "text",
-           "text": "B"
-          },
-          {
-           "kind": "text",
-           "text": "C"
-          }
-         ]
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "4"
+         },
+         "op": "+"
         },
         null,
         null,
@@ -205,7 +187,7 @@
        },
        {
         "type": "load",
-        "name": "p15"
+        "name": "p18"
        }
       ],
       "trainedOn": null,

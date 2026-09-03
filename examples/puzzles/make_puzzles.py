@@ -17,6 +17,11 @@
 #   p12 a half -- a 2 wearing a divide badge
 #   p13 a million from a 10 and a times-ten badge, copied five times
 #   p14 A, B and C on pads, in a box -- the first that lets you type
+#   p15 the seconds in a year: 365 x 24 x 60 x 60, four numbers with badges
+#   p16 a word from two pads joined at the edge -- order matters
+#   p17 three quarters: a 1, a divide-by-four and a times-three
+#   p18 which is bigger, 3/4 or 2/3: on a scale, the bigger on the left
+#   p19 a box of 24 zeros from a box of three, doubled by copying and joining
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -519,9 +524,141 @@ puzzle(
           nest(10042, 'p14-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10041, 'p14-post', 10042, 'p14-reply',
                 right=box(txt('A'), txt('B'), txt('C')),     # noqa: F405
-                on_right=next_note(''),
-                notes=['A, B, C — the computer can spell. Thank you! (More '
-                       'puzzles are on the way.)'],
+                on_right=next_note('') + [load('p15')],
+                notes=['A, B, C — the computer can spell. Next: a whole '
+                       'year, in seconds.'],
                 sorry='Not quite — capital A, B and C, one to a pad, in that '
                       'order.')),
+    scenery=SCENERY)
+
+# ============================================================================
+# The third batch: multiplying, words, fractions, a scale, and doubling boxes.
+
+# --- p15: the seconds in a year -----------------------------------------------
+puzzle(
+    'p15',
+    'The computer keeps time in seconds, and it wants to know how many there '
+    'are in a year: 365 days, 24 hours in a day, 60 minutes in an hour, 60 '
+    'seconds in a minute. Three of these wear times badges. Give the bird '
+    'the answer.',
+    'the seconds in a year',
+    ['A number wearing a times badge multiplies the number it lands on.',
+     'Start with the 365 and drop the badge numbers on it, one after another: '
+     'days, then hours, then minutes, then seconds.',
+     'Here’s what I’d do: drop the ×24 on the 365 (8,760), then the first ×60 '
+     'on that (525,600), then the other ×60 (31,536,000). Give the bird the '
+     '31,536,000.'],
+    rules(),
+    table([num(365), num(24, op='*'), num(60, op='*'), num(60, op='*')],   # noqa: F405
+          fixed(num(31536000), 'we need this'),              # noqa: F405
+          bird(10051, 'p15-post', 'give me your answer'),    # noqa: F405
+          nest(10052, 'p15-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10051, 'p15-post', 10052, 'p15-reply',
+                right=num(31536000),                         # noqa: F405
+                on_right=next_note('') + [load('p16')],
+                notes=['31,536,000 seconds — the computer can keep a '
+                       'calendar. Next: a word.'],
+                sorry='Not quite — 365 × 24 × 60 × 60. Each badge lands '
+                      'once; Start over if one is spent.')),
+    scenery=SCENERY)
+
+# --- p16: a word ------------------------------------------------------------
+puzzle(
+    'p16',
+    'The computer needs a word, and it needs it on one pad: “ToonTalk”. Pads '
+    'join when you drop one on the EDGE of another — the left edge puts it '
+    'in front, the right edge after. Give the bird the pad.',
+    'one pad that says ToonTalk',
+    ['Drop a pad on the edge of another pad and the words join into one.',
+     'Which edge matters: “Talk” dropped on the RIGHT edge of “Toon” reads '
+     'ToonTalk; on the left edge it reads TalkToon.',
+     'Here’s what I’d do: pick up the Talk pad and drop it on the right-hand '
+     'edge of the Toon pad. Give the bird the ToonTalk pad.'],
+    rules(),
+    table([pad('Toon'), pad('Talk')],                        # noqa: F405
+          fixed(pad('ToonTalk'), 'we need this'),            # noqa: F405
+          bird(10061, 'p16-post', 'give me your answer'),    # noqa: F405
+          nest(10062, 'p16-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10061, 'p16-post', 10062, 'p16-reply',
+                right=txt('ToonTalk'),                       # noqa: F405
+                on_right=next_note('') + [load('p17')],
+                notes=['ToonTalk, on one pad. Next: three quarters.'],
+                sorry='Not quite — one pad reading exactly ToonTalk; the '
+                      'right-hand edge puts Talk after Toon.')),
+    scenery=SCENERY)
+
+# --- p17: three quarters ------------------------------------------------------
+puzzle(
+    'p17',
+    'The computer needs three quarters. You have a 1, a 4 wearing a divide '
+    'badge and a 3 wearing a times badge. Dividing and multiplying are '
+    'badges here — the number underneath is what changes.',
+    'three quarters',
+    ['A divide badge divides the number it lands on; a times badge multiplies '
+     'it.',
+     'One divided by four is a quarter; a quarter times three is three '
+     'quarters.',
+     'Here’s what I’d do: drop the ÷4 on the 1 — it reads ¼ — then drop the ×3 '
+     'on that. Give the bird the ¾.'],
+    rules(),
+    table([num(1), num(4, op='/'), num(3, op='*')],          # noqa: F405
+          fixed(num(3, 4), 'we need this'),                  # noqa: F405
+          bird(10071, 'p17-post', 'give me your answer'),    # noqa: F405
+          nest(10072, 'p17-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10071, 'p17-post', 10072, 'p17-reply',
+                right=num(3, 4),                             # noqa: F405
+                on_right=next_note('') + [load('p18')],
+                notes=['Three quarters. Next: which is bigger?'])),
+    scenery=SCENERY)
+
+# --- p18: which is bigger ------------------------------------------------------
+puzzle(
+    'p18',
+    'The computer cannot tell which is bigger, three quarters or two thirds. '
+    'Put them on the scale — the bigger one on the LEFT — and give the bird '
+    'the scale.',
+    'a scale with the bigger of ¾ and ⅔ on the left',
+    ['A scale has two pans. Drop a number in each and it tips toward the '
+     'bigger one.',
+     'Try them one way; if the scale tips to the right, swap them.',
+     'Here’s what I’d do: drop the ¾ in the left pan and the ⅔ in the right — '
+     'the scale tips left. Give the bird the scale.'],
+    rules(),
+    table([num(3, 4), num(2, 3), scale(None, None)],         # noqa: F405
+          fixed(scale(num(3, 4), num(2, 3)), 'we need this'),   # noqa: F405
+          bird(10081, 'p18-post', 'give me your answer'),    # noqa: F405
+          nest(10082, 'p18-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10081, 'p18-post', 10082, 'p18-reply',
+                right=scale(num(3, 4), num(2, 3)),           # noqa: F405
+                on_right=next_note('') + [load('p19')],
+                notes=['Three quarters it is — the scale says so. Next: a '
+                       'long box of zeros.'],
+                sorry='Not quite — the bigger number goes in the LEFT pan.')),
+    scenery=SCENERY)
+
+# --- p19: twenty-four zeros ------------------------------------------------------
+puzzle(
+    'p19',
+    'The computer needs a box with exactly 24 zeros. You have a box of three, '
+    'and Mimi. Copy the box and join the copy to its side and you have six; do '
+    'it again for twelve, and again for twenty-four.',
+    'a box with exactly 24 zeros in it',
+    ['Set the box on Mimi and take the copy; take the box back off the '
+     'platform; drop one on the side of the other.',
+     'Three, six, twelve, twenty-four: three doublings.',
+     'Here’s what I’d do: copy and join to make six; copy and join to make '
+     'twelve; copy and join to make twenty-four; give the bird the box. A box '
+     'that long shows its ends and says how many holes are between.'],
+    rules(tools=['mimi']),
+    table([box(num(0), num(0), num(0))],                     # noqa: F405
+          fixed(box(*[num(0) for _ in range(24)]), 'we need this'),   # noqa: F405
+          bird(10091, 'p19-post', 'give me your answer'),    # noqa: F405
+          nest(10092, 'p19-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10091, 'p19-post', 10092, 'p19-reply',
+                right=box(*[num(0) for _ in range(24)]),     # noqa: F405
+                on_right=next_note(''),
+                notes=['Twenty-four zeros exactly. Thank you! (More puzzles '
+                       'are on the way.)'],
+                sorry='Not quite — exactly 24 zeros. Too few? Copy and join '
+                      'again. Too many? Start over.')),
     scenery=SCENERY)

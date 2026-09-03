@@ -1,65 +1,64 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p14",
- "intro": "The computer needs more than numbers \u2014 it needs letters and words. Here are three blank pads: pick one up and type a capital A on it; then B and C. Put them in the box in order and give the box to the bird.",
- "goal": "a box with A, B and C on pads, in that order",
+ "name": "p19",
+ "intro": "The computer needs a box with exactly 24 zeros. You have a box of three, and Mimi. Copy the box and join the copy to its side and you have six; do it again for twelve, and again for twenty-four.",
+ "goal": "a box with exactly 24 zeros in it",
  "hints": [
-  "Hold a pad and press a letter key: the keyboard writes on what you hold.",
-  "A capital letter \u2014 hold Shift. Backspace takes a letter back.",
-  "Here\u2019s what I\u2019d do: pick up a pad, press Shift and A, drop it in the first hole; the same with B into the second and C into the third; give the box to the bird."
+  "Set the box on Mimi and take the copy; take the box back off the platform; drop one on the side of the other.",
+  "Three, six, twelve, twenty-four: three doublings.",
+  "Here\u2019s what I\u2019d do: copy and join to make six; copy and join to make twelve; copy and join to make twenty-four; give the bird the box. A box that long shows its ends and says how many holes are between."
  ],
  "rules": {
   "stacks": [],
-  "tools": [],
+  "tools": [
+   "mimi"
+  ],
   "typing": {
    "numbers": false,
-   "pads": true
+   "pads": false
   },
   "undo": true
  },
  "bench": [
   {
    "thing": {
-    "kind": "text",
-    "text": ""
-   },
-   "x": -0.86,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "text",
-    "text": ""
-   },
-   "x": -0.38,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "text",
-    "text": ""
-   },
-   "x": 0.1,
-   "z": 2.05
-  },
-  {
-   "thing": {
     "kind": "box",
     "holes": [
-     null,
-     null,
-     null
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     }
     ]
    },
-   "x": 0.72,
+   "x": 0.0,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10041,
-    "nestGuid": "p14-post",
+    "nestId": 10091,
+    "nestGuid": "p19-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -68,8 +67,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10042,
-    "guid": "p14-reply",
+    "id": 10092,
+    "guid": "p19-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -82,16 +81,196 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "text",
-      "text": "A"
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
      },
      {
-      "kind": "text",
-      "text": "B"
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
      },
      {
-      "kind": "text",
-      "text": "C"
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "op": "+"
      }
     ],
     "fixed": true,
@@ -116,25 +295,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10041,
-         "guid": "p14-post",
+         "id": 10091,
+         "guid": "p19-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 10042,
-         "nestGuid": "p14-reply",
+         "nestId": 10092,
+         "nestGuid": "p19-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "A, B, C \u2014 the computer can spell. Next: a whole year, in seconds."
+         "text": "Twenty-four zeros exactly. Thank you! (More puzzles are on the way.)"
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 capital A, B and C, one to a pad, in that order."
+         "text": "Not quite \u2014 exactly 24 zeros. Too few? Copy and join again. Too many? Start over."
         }
        ]
       }
@@ -149,16 +328,196 @@
          "kind": "box",
          "holes": [
           {
-           "kind": "text",
-           "text": "A"
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
           },
           {
-           "kind": "text",
-           "text": "B"
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
           },
           {
-           "kind": "text",
-           "text": "C"
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
           }
          ]
         },
@@ -202,10 +561,6 @@
           1
          ]
         }
-       },
-       {
-        "type": "load",
-        "name": "p15"
        }
       ],
       "trainedOn": null,

@@ -43,7 +43,7 @@ opens the world at once.
 
 **To make your own, read [MAKING-PUZZLES.md](MAKING-PUZZLES.md).**
 
-`make_puzzles.py` writes p1 to p14 (after the original tutorial: a box with 1
+`make_puzzles.py` writes p1 to p19 (after the original tutorial: a box with 1
 and 2; a 4 from two 2s; a box with 8, 16 and 32, joined by dropping boxes on
 each other's sides; a zero from a 3 and a −3; a box of two zeros made by a
 robot you train, with Mimi; the total of the numbers on a nest, by a robot
@@ -54,8 +54,11 @@ full-stop key -- when the number says 512; no box is needed, the robot
 sets the copy down on its own desk; then a box inside a box inside a box, of
 two-hole boxes; three zeros in the second hole of a box; six zeros from a box of two;
 the door code 77 from powers of two; a half from a divide badge; a million
-from a times-ten badge copied five times; and A, B and C on pads, typed).
-Marty's ship lies on the floor behind every table as `scenery`.
+from a times-ten badge copied five times; A, B and C on pads, typed; the
+seconds in a year from three times-badges; ToonTalk from two pads joined at
+the edge; three quarters from a divide and a times; ¾ against ⅔ on a scale;
+and a box of exactly 24 zeros by copying and joining). Marty's ship lies on
+the floor behind every table as `scenery`.
 
 There is no Rounds control: a robot runs until its thought stops fitting, so
 a puzzle that iterates either stops by itself (an emptying nest) or is the

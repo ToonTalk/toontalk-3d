@@ -1,20 +1,20 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p14",
- "intro": "The computer needs more than numbers \u2014 it needs letters and words. Here are three blank pads: pick one up and type a capital A on it; then B and C. Put them in the box in order and give the box to the bird.",
- "goal": "a box with A, B and C on pads, in that order",
+ "name": "p16",
+ "intro": "The computer needs a word, and it needs it on one pad: \u201cToonTalk\u201d. Pads join when you drop one on the EDGE of another \u2014 the left edge puts it in front, the right edge after. Give the bird the pad.",
+ "goal": "one pad that says ToonTalk",
  "hints": [
-  "Hold a pad and press a letter key: the keyboard writes on what you hold.",
-  "A capital letter \u2014 hold Shift. Backspace takes a letter back.",
-  "Here\u2019s what I\u2019d do: pick up a pad, press Shift and A, drop it in the first hole; the same with B into the second and C into the third; give the box to the bird."
+  "Drop a pad on the edge of another pad and the words join into one.",
+  "Which edge matters: \u201cTalk\u201d dropped on the RIGHT edge of \u201cToon\u201d reads ToonTalk; on the left edge it reads TalkToon.",
+  "Here\u2019s what I\u2019d do: pick up the Talk pad and drop it on the right-hand edge of the Toon pad. Give the bird the ToonTalk pad."
  ],
  "rules": {
   "stacks": [],
   "tools": [],
   "typing": {
    "numbers": false,
-   "pads": true
+   "pads": false
   },
   "undo": true
  },
@@ -22,44 +22,24 @@
   {
    "thing": {
     "kind": "text",
-    "text": ""
+    "text": "Toon"
    },
-   "x": -0.86,
+   "x": -0.24,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "text",
-    "text": ""
+    "text": "Talk"
    },
-   "x": -0.38,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "text",
-    "text": ""
-   },
-   "x": 0.1,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     null,
-     null,
-     null
-    ]
-   },
-   "x": 0.72,
+   "x": 0.24,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10041,
-    "nestGuid": "p14-post",
+    "nestId": 10061,
+    "nestGuid": "p16-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -68,8 +48,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10042,
-    "guid": "p14-reply",
+    "id": 10062,
+    "guid": "p16-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -79,21 +59,8 @@
   },
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "text",
-      "text": "A"
-     },
-     {
-      "kind": "text",
-      "text": "B"
-     },
-     {
-      "kind": "text",
-      "text": "C"
-     }
-    ],
+    "kind": "text",
+    "text": "ToonTalk",
     "fixed": true,
     "label": "we need this"
    },
@@ -116,25 +83,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10041,
-         "guid": "p14-post",
+         "id": 10061,
+         "guid": "p16-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 10042,
-         "nestGuid": "p14-reply",
+         "nestId": 10062,
+         "nestGuid": "p16-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "A, B, C \u2014 the computer can spell. Next: a whole year, in seconds."
+         "text": "ToonTalk, on one pad. Next: three quarters."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 capital A, B and C, one to a pad, in that order."
+         "text": "Not quite \u2014 one pad reading exactly ToonTalk; the right-hand edge puts Talk after Toon."
         }
        ]
       }
@@ -146,21 +113,8 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "text",
-           "text": "A"
-          },
-          {
-           "kind": "text",
-           "text": "B"
-          },
-          {
-           "kind": "text",
-           "text": "C"
-          }
-         ]
+         "kind": "text",
+         "text": "ToonTalk"
         },
         null,
         null,
@@ -205,7 +159,7 @@
        },
        {
         "type": "load",
-        "name": "p15"
+        "name": "p17"
        }
       ],
       "trainedOn": null,

@@ -4918,3 +4918,30 @@ picture shows the big zero standing a little higher than the others, which
 is how a number looks while it rests on another for a beat before merging;
 so the likeliest story is a zero dropped on a zero in the box just before or
 after the join. Ken has been asked for the exact steps.
+
+## The zero under the pointer, and five more puzzles
+
+*Added 3 Sep. Ken: "When I dropped [0 | 0] on a copy I was holding it over
+one of the zeros (see tooltip) -- I suspect that is relevant. After fixing
+this do some puzzles."*
+
+**It was the wiggle.** The thing under the pointer wiggles to say it is
+ready, and the wiggle writes the thing's scale every frame from the size it
+started with. Ken dropped a box on the side of a box with the pointer over
+one of its zeros: the join fitted every zero to the four-hole size, and the
+wiggle wrote the two-hole size back over that one -- and restored it again
+when the pointer left. Reproduced with real pointer events on the canvas
+(the test hooks bypass the pointer, which is why the first three tries came
+out right), and fixed where a thing is fitted to a hole: the wiggle is told
+the new size. Measured the same way after: four zeros at 0.47. The suite
+has `wiggleFitCheck`, which aims the wiggle at a zero and joins.
+
+**Puzzles 15 to 19**, after the originals' next steps: the seconds in a
+year from 365 and three times-badges (31,536,000); the word ToonTalk from
+two pads joined at the right edge; three quarters from a 1, a divide-by-four
+and a times-three; which is bigger, ¾ or ⅔, on a scale with the bigger in
+the left pan (the judge reads a scale hole by hole like a box); and a box of
+exactly 24 zeros from a box of three, copied and joined three times -- a
+long box, which shows its ends and says how many holes lie between. Each
+mechanic measured on the page: the times chain, the edge join, the fraction
+chain, the pans and the tilt.
