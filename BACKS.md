@@ -5270,10 +5270,13 @@ it back. A clock, like the closeup, so it always comes home. It is a toggle
 in the More menu, remembered between visits, because a camera that moves by
 itself is not always wanted.
 
-**The balance question.** Ken asked whether two things in a scale's pans
-"should be balanced", and the question itself was lost when the
-conversation was compacted. What the picture shows is a 1/2 (or a 2) in the
-left pan and a 1 in the right, the beam down on the left. The rule is that a
-scale weighs values: a badge number weighs its face -- a divide-by-2 badge
-weighs 2 -- and a half against a 1 should tip RIGHT. If the picture is a
-half tipping left, that is a bug, and the question stands.
+**The balance question, answered.** Ken's question had been whether the
+scale should *know* that multiplying by 2 is the same as dividing by 1/2
+-- "there is some pedagogic value to this." It does now: a number's weight
+is what it does. A plain 3 is "add 3"; a badge number is an operation, and
+a divide badge folds into multiply by the reciprocal, a subtract badge into
+add the negative, so x2 balances /(1/2) and +3 balances -(-3), and x2 is
+lighter than x3. Across families -- a doubler against a plain 3, a power
+against a multiplier -- the scale cannot decide and the beam bobs, which is
+what it already did for a number against a word. Measured on four scales:
+= = R ?.

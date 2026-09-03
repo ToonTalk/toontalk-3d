@@ -487,7 +487,10 @@ That, with an empty box for the end, is how a robot walks along an array.
 
 Scales have two pans that work exactly like holes; the beam tips toward the
 larger number. A drop on the scale itself lands in the pan on that side, and
-a pan with something in it takes the drop onto that thing. A robot trained on a scale that is saying something
+a pan with something in it takes the drop onto that thing. A badge number
+weighs what it does: ×2 balances 1/2, +3 balances
+−(−3), and an operation against a plain number leaves the beam
+undecided. A robot trained on a scale that is saying something
 remembers the tilt, not the numbers: its thought reads "a scale tipping left",
 and it fires on any pair that leans that way — which is how a robot chooses
 between two paths.
@@ -8660,12 +8663,32 @@ const SCALE_TILT = 0.22;
 const allScales = [];
 // What a scale is saying: 'L' left pan heavier, 'R' right, '=' balanced,
 // null when it has nothing definite to compare.
+// WHAT A NUMBER WEIGHS is what it does. A plain 3 is "add 3"; a badge number
+// is an operation, and two operations weigh the same when they do the same
+// thing: x2 balances /(1/2), +3 balances -(-3). Ken: "whether the scale should
+// know that multiplying by 2 is identical to dividing by 1/2 -- there is some
+// pedagogic value to this." So a badge is folded into its family -- divide
+// into multiply by the reciprocal, subtract into add the negative -- and
+// compared there. Across families (an operation against a plain number, a
+// power against a doubler) the scale cannot decide, and the beam bobs.
+function weightOf(t) {
+  const v = t.userData.value, op = t.userData.op ?? '+';
+  if (op === '+') return { fam: 'add', n: v.n, d: v.d };
+  if (op === '-') return { fam: 'add', n: -v.n, d: v.d };
+  if (op === '*') return { fam: 'mul', n: v.n, d: v.d };
+  if (op === '/') {
+    if (v.n === 0n) return null;                       // dividing by nothing weighs nothing
+    return v.n < 0n ? { fam: 'mul', n: -v.d, d: -v.n } : { fam: 'mul', n: v.d, d: v.n };
+  }
+  return { fam: op, n: v.n, d: v.d };
+}
 function scaleTilt(node) {
   const [a, b] = node.userData.holes.map(h => h.thing);
   if (a?.userData.erased || b?.userData.erased) return null;
   if (a?.userData.kind === 'number' && b?.userData.kind === 'number') {
-    const d = a.userData.value.n * b.userData.value.d
-            - b.userData.value.n * a.userData.value.d;
+    const wa = weightOf(a), wb = weightOf(b);
+    if (!wa || !wb || wa.fam !== wb.fam) return '?';
+    const d = wa.n * wb.d - wb.n * wa.d;
     return d > 0n ? 'L' : d < 0n ? 'R' : '=';
   }
   // Words weigh too: the one later in the alphabet is the heavier. Case is not
@@ -17401,7 +17424,7 @@ function tipFor(t) {
         return occ ? `Drop it onto the ${what} in the ${pan} pan.`
                    : `Drop it into the ${pan} pan.`;
       }
-      return 'A scale — put a number in each of its two holes and it tips toward the larger.'
+      return 'A scale — put a number in each of its two holes and it tips toward the larger. A badge number weighs what it does: ×2 balances ÷½.'
         + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     if (ud.kind === 'text') {
@@ -21317,6 +21340,7 @@ window.__nano = {
     refreshUI();
   },
   clickHole(box, index) { handleClick({ kind: 'hole', box, index }); },
+  tilt(t) { return t?.userData.kind === 'scale' ? scaleTilt(t) : null; },
   smartCam(on) {
     if (on != null) setSmartCam(on);
     let center = null;

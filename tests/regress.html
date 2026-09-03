@@ -1276,6 +1276,26 @@ async function sortTeamCheck(D) {
   return ok;
 }
 
+// A BADGE WEIGHS WHAT IT DOES: x2 balances /(1/2), +3 balances -(-3), x2 is
+// lighter than x3, and an operation against a plain number cannot be decided.
+async function badgeWeightCheck(D) {
+  const num = (n, d = 1, op = '+') => ({ kind: 'number', value: { n: String(n), d: String(d) }, op });
+  const sc = (a, b) => ({ kind: 'scale', holes: [a, b] });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: sc(num(2, 1, '*'), num(1, 2, '/')), x: -1.2, z: 2.0 },
+    { thing: sc(num(3), num(-3, 1, '-')), x: -0.4, z: 2.0 },
+    { thing: sc(num(2, 1, '*'), num(3, 1, '*')), x: 0.4, z: 2.0 },
+    { thing: sc(num(2, 1, '*'), num(3)), x: 1.2, z: 2.0 },
+  ] });
+  await slowSettle(D, 2000);
+  const scales = [];
+  for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'scale') scales.push(t); }
+  const tilts = scales.sort((a, b) => a.position.x - b.position.x).map(t => D.tilt(t) ?? 'null');
+  const ok = tilts.join(' ') === '= = R ?';
+  put((ok ? 'PASS' : 'FAIL') + ' a badge weighs what it does  (x2 vs /half, 3 vs -(-3), x2 vs x3, x2 vs 3 = ' + tilts.join(' ') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3516,6 +3536,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let bwOK = true;
+  try { bwOK = want('badgeWeight') ? await badgeWeightCheck(D) : true; }
+  catch (e) { bwOK = false; put('FAIL a badge weighs what it does  ' + e.message, 'fail'); }
   let sortOK = true;
   try { sortOK = want('sortTeam') ? await sortTeamCheck(D) : true; }
   catch (e) { sortOK = false; put('FAIL a team of four sorts three  ' + e.message, 'fail'); }
@@ -3609,7 +3632,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
