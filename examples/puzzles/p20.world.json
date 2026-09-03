@@ -1,20 +1,17 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p6",
- "intro": "The computer needs the total of the numbers that came in the post \u2014 three of them, on that nest. Train a robot to add them up, one a round, and give the bird the total. Ruby is here if its thought is too fussy.",
- "goal": "the total of the numbers on the nest",
+ "name": "p20",
+ "intro": "The computer wants these numbers the other way round \u2014 1, 2, 3 \u2014 in the empty box beside them. They are stuck fast in their holes: your fingers cannot shift them, but a robot\u2019s claw can. Train the robot and give the bird what it makes.",
+ "goal": "a box holding an empty box and a box that reads 1, 2, 3",
  "hints": [
-  "Give the robot the box with the nest in it. In its imagination, click the top number on the nest \u2014 the robot takes it \u2014 then click the zero to drop it there. A number dropped on a number adds.",
-  "Look at its thought: it wants exactly the number it saw, and exactly a zero. Wake Ruby and click those parts until they say \u201cany number\u201d.",
-  "With the thought loosened, give the robot the box again. It adds one number per round and dozes when the nest is empty.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the top number on the nest, then click the zero; leave the thought bubble. Wake Ruby, click the number in its thought and the zero in its thought. Give it the box, press Run, and when the nest is empty pick the total out of the box and give it to the bird."
+  "Drop the box on the robot and you are inside its imagination, where you move things by clicking: click a number, then click the hole it should go to. Its claw is stronger than your fingers.",
+  "Last first: the 3 goes to the LAST hole of the empty box, the 2 to the middle, the 1 to the first.",
+  "Here\u2019s what I\u2019d do. Drop the box on the robot. In its imagination: click the 3, click the last hole of the empty box; click the 2, click its middle hole; click the 1, click its first hole. Leave the thought bubble and give the bird the box."
  ],
  "rules": {
   "stacks": [],
-  "tools": [
-   "ruby"
-  ],
+  "tools": [],
   "typing": {
    "numbers": false,
    "pads": false
@@ -27,46 +24,44 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "nest",
-      "id": 9961,
-      "guid": "p6-pile",
-      "hasEgg": false,
-      "pile": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "2",
-         "d": "1"
-        },
-        "op": "+"
-       },
+      "kind": "box",
+      "holes": [
        {
         "kind": "number",
         "value": {
          "n": "3",
          "d": "1"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
        },
        {
         "kind": "number",
         "value": {
-         "n": "4",
+         "n": "2",
          "d": "1"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
        }
-      ],
-      "label": "the post"
+      ]
      },
      {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+",
-      "label": "the total"
+      "kind": "box",
+      "holes": [
+       null,
+       null,
+       null
+      ]
      }
     ]
    },
@@ -86,8 +81,8 @@
   {
    "thing": {
     "kind": "bird",
-    "nestId": 9963,
-    "nestGuid": "p6-post",
+    "nestId": 10101,
+    "nestGuid": "p20-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -96,8 +91,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 9964,
-    "guid": "p6-reply",
+    "id": 10102,
+    "guid": "p20-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -107,12 +102,49 @@
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "9",
-     "d": "1"
-    },
-    "op": "+",
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "box",
+      "holes": [
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "2",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "3",
+         "d": "1"
+        },
+        "op": "+",
+        "stuck": true
+       }
+      ]
+     }
+    ],
     "fixed": true,
     "label": "we need this"
    },
@@ -135,25 +167,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 9963,
-         "guid": "p6-post",
+         "id": 10101,
+         "guid": "p20-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 9964,
-         "nestGuid": "p6-reply",
+         "nestId": 10102,
+         "nestGuid": "p20-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "The total is in \u2014 the computer can count its post now. Last: exactly 1,024."
+         "text": "1, 2, 3 \u2014 the robot turned them round. Next: the same robot, other numbers."
         },
         {
          "kind": "text",
-         "text": "Not quite. Look at what we need, and try again."
+         "text": "Not quite \u2014 1, 2, 3 in the second box, in that order, and the first box empty."
         }
        ]
       }
@@ -165,12 +197,49 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "number",
-         "value": {
-          "n": "9",
-          "d": "1"
-         },
-         "op": "+"
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "box",
+           "holes": [
+            null,
+            null,
+            null
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "1",
+              "d": "1"
+             },
+             "op": "+",
+             "stuck": true
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "2",
+              "d": "1"
+             },
+             "op": "+",
+             "stuck": true
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "3",
+              "d": "1"
+             },
+             "op": "+",
+             "stuck": true
+            }
+           ]
+          }
+         ]
         },
         null,
         null,
@@ -215,7 +284,7 @@
        },
        {
         "type": "load",
-        "name": "p7"
+        "name": "p21"
        }
       ],
       "trainedOn": null,

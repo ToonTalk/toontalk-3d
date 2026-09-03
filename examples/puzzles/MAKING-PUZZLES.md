@@ -96,6 +96,12 @@ This is the way that needs no code at all.
    take the answer off the nest and give that to the reply bird too. Mimi is
    the workshop's, not the table's, so a robot inside a house may copy.
 
+   The team is tried **in order**, so the members behind the leader are the
+   judge's *otherwise*: they run precisely when the answer was not the goal.
+   That ordering is the only way to say "not" in a thought, and it is worth
+   more than judging -- a member back there can count the tries, answer
+   differently each time, or send back a hint.
+
    Click the roof until the walls are solid: an opaque house is what marks it
    as the judge, and the tooltip invites the visitor to look but not to
    cheat.
@@ -176,10 +182,21 @@ The judge is a robot, so it decides what a robot's thought can say:
 - **Ruby's loosening**: "any number", "any box", "any pad" — for catching
   wrong answers of the right kind, and for goals such as "any number bigger
   than…" only where a scale can be brought in.
-- **Not behaviour.** "A number that keeps getting bigger" cannot be judged
-  by a thought bubble; the originals used special cases for those. Here a
-  puzzle whose answer is a *process* is written so that the process leaves a
-  thing: the total in the box, the 1,024 in the hole.
+- **"Not this" is a matter of order.** No thought can say *not*, but a team
+  is tried in order and the first member whose thought fits is the one that
+  runs -- so a member placed after the others runs exactly when none of them
+  matched. That is how a wrong answer gets its note: the judge's leader
+  recognizes the goal, and the members behind it (any box, any number, any
+  pad) catch everything else and send the "not quite" pad back. Order the
+  team from the most particular thought to the most general, and the last
+  one is your *otherwise*.
+- **Behavior, indirectly.** "A number that keeps getting bigger" is still
+  not something a thought can name, and the originals used special cases for
+  goals like it. Two things get close. A puzzle whose answer is a *process*
+  can be written so the process leaves a thing -- the total in the box, the
+  1,024 in the hole. And a robot behind the leader can be arranged to run
+  when the match is *not* the goal, which is enough to answer, complain,
+  count the tries, or hand back something different each time.
 - **A robot needs no box.** It can be given a bare thing, and it can set
   something down on its own desk where that thing was -- the doubler in
   puzzle 7 works on a lone 1. Give it a box when the work needs more than

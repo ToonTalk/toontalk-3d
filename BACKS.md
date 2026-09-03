@@ -4945,3 +4945,126 @@ exactly 24 zeros from a box of three, copied and joined three times -- a
 long box, which shows its ends and says how many holes lie between. Each
 mechanic measured on the page: the times chain, the edge join, the fraction
 chain, the pans and the tilt.
+
+## Intros that keep the secret, edges that join, and three robot puzzles
+
+*Added 3 Sep. Ken: "Puzzle 19 gives too big a hint before the player
+starts. Make sure other puzzles also don't start with too big a hint.
+Joining boxes doesn't accept a drop like in the screenshot -- any overlap
+between the left or right edge of what is held with the opposite edge of the
+thing underneath should be good for joining. True for pads too. Otherwise
+all the puzzles are good -- keep going creating puzzles -- especially robot
+training puzzles."*
+
+**Intros say what, hints say how.** Puzzles 6, 10, 13, 14, 16 and 19 had
+their method in Marty's first words; each now states the need and what is
+on the table, and the method moved into the hints where it is asked for.
+
+**An edge over an edge is a join.** A held box or pad set down on the bench
+with its left edge over the right edge of a box or pad already there -- or
+the other way about -- joins it on that side, exactly as a drop on that edge
+would; before, only a drop that landed on the other thing joined, and Ken's
+overlapping drop was "click to put that down". Measured: a copy set down
+overlapping the right edge of [0|0] makes [0|0|0|0]; over the left edge, the
+same; Talk over the right edge of Toon reads ToonTalk, over the left edge
+TalkToon.
+
+**Puzzles 20 to 22 are robots.** Twenty turns [3|2|1|_] into [1|2|3|_]: a
+spare hole and a plan, three moves, one run. Twenty-one counts the letters
+on a nest and sends each on by bird, adding a copy of a 1 to a count each
+round, and dozes when the nest is empty -- the first that loosens two parts
+of a thought (the letter and the count). Twenty-two grows a box by one hole
+a round, copying a seed box of one zero from the box's second hole and
+joining the copy on to the box in its first; it never stops, so the player
+stops it at nine and, if it stopped at nine, runs one more round -- the same
+lesson as 1,024. Each was trained and run by script: the reverse in three
+moves; the counter's round of seven steps; the grower to nine holes, one
+per round, stopped by the full-stop key.
+
+**Two things the grower taught.** Ruby's ladder climbs from the innermost
+detail -- clicking the box in the thought first loosens the zero inside it,
+then the box's contents to anything, and only then the box itself to "any
+box, any number of holes" -- so the hint says to click until it says so.
+And in a lesson Dusty can only vacuum the robot's own things, which the
+top of a pile is not; the counter sends its letters on by bird instead.
+
+## Stuck fast, a robot handed on, and a tooltip that tells the truth
+
+*Added 3 Sep. Ken: the edge-overlap drop works but the tooltip is wrong and
+the box underneath should wiggle; a puzzle between 20 and 21 could hand the
+player the robot from 20 with different numbers, so Ruby or Dusty is the
+whole job; "I am a bit worried about how a player might just move the numbers
+without the robot... Maybe the numbers are stuck into the box except the
+robot is stronger"; puzzle 21 cannot use the bird in its fourth hole; and a
+robot froze picking a copy off the copier.*
+
+**The tooltip and the wiggle.** Hovering the bench with a box or pad held
+now says "Drop to join the boxes -- its holes go after these" (or before),
+and the thing that would be joined WIGGLES, so the drop is offered before it
+is made. The full suite then caught what the edge-join had broken: a
+behaviour is a pad, so setting a gadget down beside another pad joined them.
+Gadgets, named pads and pads carrying scenes are excluded; joining those is
+still a deliberate drop.
+
+**Stuck fast.** A thing marked `stuck` cannot be lifted by you -- it wobbles
+and says a robot's claw is stronger -- and a robot takes it without trouble.
+Ruby leaves it alone too. It travels with the thing and is saved with the
+world, so a puzzle can hand you numbers that only a trained robot can move.
+That is Ken's own answer to the question of why one would train a robot when
+dragging is quicker.
+
+**A robot handed on.** Puzzle 20 trains a robot to move three stuck numbers
+across into a second box, last first. Puzzle 21 gives you THAT robot, already
+trained, and different numbers: it refuses, shows its thought with the
+numbers it remembers in red, and Ruby is the whole puzzle -- three clicks and
+it runs. The shape changed on measurement: a robot that swaps numbers inside
+one box reverses them back for ever once loosened, so the round moves them
+ACROSS, and a round that empties the box it reads cannot fit its own thought
+again. It stops by itself.
+
+**The bird could not stay.** The counting puzzle sent each read letter on by
+bird from the box's fourth hole; a bird has to fly home, and the robot's
+thought wants her in her hole. It uses Dusty now -- and Dusty in a lesson can
+only take what is standing on the robot's own things, not what is in its
+claw, so the round is: take the letter, set it on a work spot, vacuum it,
+take a fresh 1 from the number stack, drop it on the count. Measured: five
+steps, loosened twice, four rounds, dozing on the empty nest with 4 in the
+box.
+
+**The copier froze because the tray was empty.** Clicking the tray while
+Mimi was still scanning fell back to the other surface and took the ORIGINAL
+back off the platform -- one step into a program that no longer made sense.
+Both the robot's own clicks and yours now say "the copy is still on its way"
+instead.
+
+**A fabricated click point cost three rounds.** The test hook that clicks a
+thing had been filling in the thing's centre as the point of the click, so a
+scripted drop always landed in the MIDDLE of a pad -- which means "ride here",
+not "join". The turtle stopped walking, the bindings check threw, and the
+failures looked like a regression in the edge-join written the same day. What
+found it was bisecting the app itself: serve an old commit's file as
+`app_probe.html` and point the harness at it with `?app=`. Two runs said the
+break arrived with the hook, not with the join. The hook passes a point only
+when the caller means one now.
+
+## "Not" is a matter of order
+
+*Added 3 Sep. Ken, on the making-puzzles document: "true there is no direct
+'not behavior' but a robot behind can be arranged to run when the match is
+not something." And: American spelling, please, even though he lives in the
+UK.*
+
+The document said a thought bubble cannot judge behavior and left it there.
+It was half the truth. A team is tried **in order** and the first member
+whose thought fits is the one that runs, so a member placed behind the
+others runs precisely when none of them matched. That ordering is the only
+way to say *not* in this language, and the judge has been leaning on it since
+the first puzzle: the leader recognizes the goal, and the members behind it
+catch everything else and send the "not quite" pad back. A robot back there
+can do more than complain -- it can count the tries, answer differently each
+time, or hand back a hint. Both places in the document that touched on it now
+say so, and the note about behavior says what is still true: a thought cannot
+name "keeps getting bigger", so a puzzle whose answer is a process is written
+to leave a thing behind.
+
+American spelling from here on, in the app and in these notes.

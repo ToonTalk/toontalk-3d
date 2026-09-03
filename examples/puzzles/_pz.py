@@ -35,6 +35,12 @@ def fixed(thing, label=None):
     return t
 
 
+def stuck(thing):
+    """Stuck fast in its hole: your fingers cannot shift it, a robot's claw
+    can. What makes a robot worth training rather than moving things by hand."""
+    return dict(thing, stuck=True)
+
+
 def empty_box(n):
     """A box with n empty holes. (The sparse {n, at} form only ever made a
     two-hole box: the reader counts `holes`, so a hole is a None.)"""

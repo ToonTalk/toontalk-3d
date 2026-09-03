@@ -22,6 +22,13 @@
 #   p17 three quarters: a 1, a divide-by-four and a times-three
 #   p18 which is bigger, 3/4 or 2/3: on a scale, the bigger on the left
 #   p19 a box of 24 zeros from a box of three, doubled by copying and joining
+#   p20 a robot moves stuck numbers across into a second box, in reverse
+#       (a round that empties what it reads stops by itself)
+#   p21 the same robot, other numbers: its thought is too fussy, so Ruby
+#   p22 a robot counts the letters in the post, with Dusty and the number
+#       stack; it dozes when the nest is empty
+#   p23 a robot makes a box of exactly ten zeros, one more hole a round --
+#       another one you have to stop in time
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -190,15 +197,12 @@ P7 = puzzle(
 P6 = puzzle(
     'p6',
     'The computer needs the total of the numbers that came in the post — '
-    'three of them, on that nest. Train a robot to add them up: give it the '
-    'box, take the top number off the nest and drop it on the zero. Its '
-    'thought will want exactly that number, so wake Ruby and click the parts '
-    'of its thought to loosen them; then give it the box again and it will '
-    'work until the nest is empty. Give the bird the total.',
+    'three of them, on that nest. Train a robot to add them up, one a round, '
+    'and give the bird the total. Ruby is here if its thought is too fussy.',
     'the total of the numbers on the nest',
     ['Give the robot the box with the nest in it. In its imagination, click '
      'the top number on the nest — the robot takes it — then click the zero '
-     'to drop it there.',
+     'to drop it there. A number dropped on a number adds.',
      'Look at its thought: it wants exactly the number it saw, and exactly '
      'a zero. Wake Ruby and click those parts until they say “any number”.',
      'With the thought loosened, give the robot the box again. It adds one '
@@ -404,13 +408,14 @@ puzzle(
 # --- p10: six zeros -----------------------------------------------------------
 puzzle(
     'p10',
-    'Now the computer needs a box with six zeros. You have a box with two; '
-    'boxes join when you drop one on the side of another, and Mimi copies '
-    'boxes as happily as numbers.',
+    'Now the computer needs a box with six zeros. You have a box with two, '
+    'and Mimi.',
     'a box with six zeros in it',
-    ['Set the box on Mimi’s platform and a copy of the whole box drops into '
-     'her tray. Take the copy, and then the box itself comes back off the '
-     'platform.',
+    ['Mimi copies boxes as happily as numbers: set the box on her platform '
+     'and a copy of the whole box drops into her tray. Take the copy, and '
+     'then the box itself comes back off the platform.',
+     'Boxes join when you drop one on the side of another — or set one down '
+     'with its edge over the other’s edge.',
      'Two zeros and two zeros and two zeros: three boxes joined side by side '
      'is six holes.',
      'Here’s what I’d do: set the box on Mimi, take the copy out of the tray '
@@ -482,11 +487,12 @@ puzzle(
 # --- p13: a million -----------------------------------------------------------
 puzzle(
     'p13',
-    'The computer needs a million. You have a 10, and a 10 wearing a times '
-    'badge — dropped on a number, it multiplies. But a badge number is used '
-    'up when it lands, so Mimi is here to make more.',
+    'The computer needs a million. You have a 10, a 10 wearing a times '
+    'badge, and Mimi.',
     'a million',
-    ['Times ten on 10 is 100 — and the times-ten is gone. Copy it with Mimi '
+    ['A times badge multiplies the number it lands on — and the badge '
+     'number is used up when it lands.',
+     'Times ten on 10 is 100 — and the times-ten is gone. Copy it with Mimi '
      'before you use it.',
      '10, 100, 1,000, 10,000, 100,000, 1,000,000: that is five times-tens.',
      'Here’s what I’d do: set the times-ten on Mimi and take a copy; do that '
@@ -507,9 +513,9 @@ puzzle(
 # --- p14: A, B and C ----------------------------------------------------------
 puzzle(
     'p14',
-    'The computer needs more than numbers — it needs letters and words. Here '
-    'are three blank pads: pick one up and type a capital A on it; then B and '
-    'C. Put them in the box in order and give the box to the bird.',
+    'The computer needs more than numbers — it needs letters and words. Put '
+    'a capital A, a B and a C on these blank pads, in the box in that order, '
+    'and give the box to the bird.',
     'a box with A, B and C on pads, in that order',
     ['Hold a pad and press a letter key: the keyboard writes on what you '
      'hold.',
@@ -565,11 +571,11 @@ puzzle(
 # --- p16: a word ------------------------------------------------------------
 puzzle(
     'p16',
-    'The computer needs a word, and it needs it on one pad: “ToonTalk”. Pads '
-    'join when you drop one on the EDGE of another — the left edge puts it '
-    'in front, the right edge after. Give the bird the pad.',
+    'The computer needs a word, and it needs it on one pad: “ToonTalk”. '
+    'Give the bird the pad.',
     'one pad that says ToonTalk',
-    ['Drop a pad on the edge of another pad and the words join into one.',
+    ['Drop a pad on the edge of another pad — or set it down with its edge '
+     'over the other’s — and the words join into one.',
      'Which edge matters: “Talk” dropped on the RIGHT edge of “Toon” reads '
      'ToonTalk; on the left edge it reads TalkToon.',
      'Here’s what I’d do: pick up the Talk pad and drop it on the right-hand '
@@ -640,11 +646,11 @@ puzzle(
 puzzle(
     'p19',
     'The computer needs a box with exactly 24 zeros. You have a box of three, '
-    'and Mimi. Copy the box and join the copy to its side and you have six; do '
-    'it again for twelve, and again for twenty-four.',
+    'and Mimi.',
     'a box with exactly 24 zeros in it',
-    ['Set the box on Mimi and take the copy; take the box back off the '
-     'platform; drop one on the side of the other.',
+    ['Mimi copies a whole box. Set it on her platform and take the copy; '
+     'take the box back off the platform.',
+     'Boxes join side to side: a box of three and a copy of it make six.',
      'Three, six, twelve, twenty-four: three doublings.',
      'Here’s what I’d do: copy and join to make six; copy and join to make '
      'twelve; copy and join to make twenty-four; give the bird the box. A box '
@@ -656,9 +662,181 @@ puzzle(
           nest(10092, 'p19-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10091, 'p19-post', 10092, 'p19-reply',
                 right=box(*[num(0) for _ in range(24)]),     # noqa: F405
-                on_right=next_note(''),
-                notes=['Twenty-four zeros exactly. Thank you! (More puzzles '
-                       'are on the way.)'],
+                on_right=next_note('') + [load('p20')],
+                notes=['Twenty-four zeros exactly. Next: a robot that turns '
+                       'a box round.'],
                 sorry='Not quite — exactly 24 zeros. Too few? Copy and join '
                       'again. Too many? Start over.')),
+    scenery=SCENERY)
+
+# ============================================================================
+# The fourth batch: robots. One plans, one counts and stops by itself, one
+# has to be stopped.
+
+# --- p20: turn the numbers round ------------------------------------------------
+# Two boxes: the numbers are moved ACROSS, last to first. A round that empties
+# the box it reads cannot fit its own thought again, so the robot stops by
+# itself -- where a swap inside one box would reverse it back for ever.
+puzzle(
+    'p20',
+    'The computer wants these numbers the other way round — 1, 2, 3 — in the '
+    'empty box beside them. They are stuck fast in their holes: your fingers '
+    'cannot shift them, but a robot’s claw can. Train the robot and give the '
+    'bird what it makes.',
+    'a box holding an empty box and a box that reads 1, 2, 3',
+    ['Drop the box on the robot and you are inside its imagination, where you '
+     'move things by clicking: click a number, then click the hole it should '
+     'go to. Its claw is stronger than your fingers.',
+     'Last first: the 3 goes to the LAST hole of the empty box, the 2 to the '
+     'middle, the 1 to the first.',
+     'Here’s what I’d do. Drop the box on the robot. In its imagination: '
+     'click the 3, click the last hole of the empty box; click the 2, click '
+     'its middle hole; click the 1, click its first hole. Leave the thought '
+     'bubble and give the bird the box.'],
+    rules(),
+    table([box(box(stuck(num(3)), stuck(num(2)), stuck(num(1))), empty_box(3)),   # noqa: F405
+           ROBOT],
+          fixed(box(empty_box(3), box(stuck(num(1)), stuck(num(2)), stuck(num(3)))),   # noqa: F405
+                'we need this'),
+          bird(10101, 'p20-post', 'give me your answer'),    # noqa: F405
+          nest(10102, 'p20-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10101, 'p20-post', 10102, 'p20-reply',
+                right=box(empty_box(3), box(stuck(num(1)), stuck(num(2)), stuck(num(3)))),   # noqa: F405
+                on_right=next_note('') + [load('p21')],
+                notes=['1, 2, 3 — the robot turned them round. Next: the '
+                       'same robot, other numbers.'],
+                sorry='Not quite — 1, 2, 3 in the second box, in that order, '
+                      'and the first box empty.')),
+    scenery=SCENERY)
+
+# --- p21: the same robot, other numbers ----------------------------------------
+# The robot from p20, already trained -- and too fussy: its thought names the
+# very numbers it first saw. Ruby is the whole puzzle.
+REVERSER = robot(                                             # noqa: F405
+    'the turner',
+    box(box(num(3), num(2), num(1)), empty_box(3)),           # noqa: F405
+    [take('given', 0, 0), put('given', 1, 2),                 # noqa: F405
+     take('given', 0, 1), put('given', 1, 1),                 # noqa: F405
+     take('given', 0, 2), put('given', 1, 0)],                # noqa: F405
+    trained_on=box(box(num(3), num(2), num(1)), empty_box(3)))   # noqa: F405
+
+puzzle(
+    'p21',
+    'Here is the robot you trained, and three different numbers — stuck fast '
+    'again. Give it the box and see what happens: it remembers exactly the '
+    'numbers it first saw. Ruby is here. The computer wants 4, 6, 8 in that '
+    'order.',
+    'a box holding an empty box and a box that reads 4, 6, 8',
+    ['Give the robot the box and look at its thought: the parts that do not '
+     'fit are marked red.',
+     'Wake Ruby and click a red number in the thought: it forgets which '
+     'number that was and says “any number” instead. Do that for each.',
+     'The moment its thought fits, it runs by itself.',
+     'Here’s what I’d do. Drop the box on the robot; it refuses and shows '
+     'its thought. Wake Ruby, click each red number until it says any '
+     'number. It runs; give the bird the box.'],
+    rules(tools=['ruby']),
+    table([box(box(stuck(num(8)), stuck(num(6)), stuck(num(4))), empty_box(3)),   # noqa: F405
+           REVERSER],
+          fixed(box(empty_box(3), box(stuck(num(4)), stuck(num(6)), stuck(num(8)))),   # noqa: F405
+                'we need this'),
+          bird(10131, 'p21-post', 'give me your answer'),    # noqa: F405
+          nest(10132, 'p21-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10131, 'p21-post', 10132, 'p21-reply',
+                right=box(empty_box(3), box(stuck(num(4)), stuck(num(6)), stuck(num(8)))),   # noqa: F405
+                on_right=next_note('') + [load('p22')],
+                notes=['4, 6, 8 — one robot, any numbers. Next: counting '
+                       'the post.'],
+                sorry='Not quite — 4, 6, 8 in the second box, in that order, '
+                      'and the first box empty.')),
+    scenery=SCENERY)
+
+# --- p22: count the post --------------------------------------------------------
+# Dusty rather than a bird: a bird has to fly home between rounds, and the
+# robot's thought wants her back in her hole. What the robot holds IS its own
+# thing, so Dusty may take it even in a lesson.
+puzzle(
+    'p22',
+    'Letters keep arriving for the computer, and it wants to know how many. '
+    'There are four on that nest. Train a robot to count them and give the '
+    'bird the count. Dusty and Ruby are here, and the robot may take a '
+    'number from the stack.',
+    'the number of letters on the nest',
+    ['Counting is adding one for each letter — and the letter itself has to '
+     'go, or the robot will count it again.',
+     'One round: click the top letter (the robot takes it), click one of its '
+     'work spots to set it down, then wake Dusty and click it there — gone. '
+     'Then click the number stack for a fresh 1 and drop it on the count. '
+     '(In a lesson Dusty only takes what is standing on the robot’s own '
+     'things, not what is in its claw.)',
+     'Its thought will want exactly the letter it saw and exactly the count '
+     'it saw. Wake Ruby and click each until they say “any pad” and “any '
+     'number”.',
+     'Here’s what I’d do. Drop the box on the robot; click the top letter; '
+     'click a work spot; wake Dusty and click the letter there; put Dusty '
+     'back to sleep; click the number stack, click the count. Leave the '
+     'thought bubble; '
+     'wake Ruby and loosen the letter and the count. Give it the box, press '
+     'Run, and when it dozes take the 4 out and give it to the bird.'],
+    rules(stacks=['numbers'], tools=['dusty', 'ruby']),
+    table([box(nest(10213, 'p22-pile', 'the post',
+                    pile=[pad('A'), pad('B'), pad('C'), pad('D')]),   # noqa: F405
+               dict(num(0), label='the count')),            # noqa: F405
+           ROBOT],
+          fixed(num(4), 'we need this'),                     # noqa: F405
+          bird(10211, 'p22-post', 'give me your answer'),    # noqa: F405
+          nest(10212, 'p22-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10211, 'p22-post', 10212, 'p22-reply',
+                right=num(4),                                # noqa: F405
+                on_right=next_note('') + [load('p23')],
+                notes=['Four letters — counted by a robot. Next: ten '
+                       'zeros, and you have to stop it.'],
+                sorry='Not quite — the count of the letters on the nest, '
+                      'a plain 4.')),
+    scenery=SCENERY)
+
+# --- p23: exactly ten zeros ------------------------------------------------------
+# The given box holds the growing box in its first hole and a SEED box of one
+# zero in its second: a round copies the seed and joins the copy on, so the
+# box grows by one hole a round -- and never stops.
+puzzle(
+    'p23',
+    'The computer wants a box with exactly ten zeros, made by a robot. In '
+    'the first hole of this box is a box of one zero to grow; in the second, '
+    'another to copy from. A robot that makes a box longer never stops by '
+    'itself — you will have to stop it in time.',
+    'a box with exactly ten zeros, made by a robot',
+    ['One round should make the box in the first hole one hole longer. The '
+     'box in the second hole is the seed: copy it, never spend it.',
+     'In its imagination: click the seed box, click Mimi, click the copy in '
+     'the tray, click the right-hand edge of the box in the first hole — they '
+     'join; click the seed on Mimi’s platform, click the second hole.',
+     'Its thought wants exactly the boxes it saw, and the first one grows. '
+     'Wake Ruby and click the first box in its thought until it says “any '
+     'box — any number of holes”; loosen the second too. Give it the box and '
+     'press Run.',
+     'Stop lets it finish the round it is in. Press Stop — or the full stop '
+     'key — when the first box reads nine. Stopped at nine? Run and then '
+     'Stop straight away is one more round: ten.',
+     'Here’s what I’d do. Drop the box on the robot; click the seed, click '
+     'Mimi, click the copy, click the right edge of the growing box; click '
+     'the seed on the platform, click the second hole. Leave the thought '
+     'bubble; wake Ruby and click the first box in its thought until it says '
+     'any box, and the second once or twice. Give it the box, press Run, '
+     'press Stop when it reads nine — Run and Stop again if it stopped at '
+     'nine. Take the box of ten out of the first hole and give it to the '
+     'bird.'],
+    rules(tools=['mimi', 'ruby']),
+    table([box(box(num(0)), box(num(0))), ROBOT],             # noqa: F405
+          fixed(box(*[num(0) for _ in range(10)]), 'we need this'),   # noqa: F405
+          bird(10231, 'p23-post', 'give me your answer'),    # noqa: F405
+          nest(10232, 'p23-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10231, 'p23-post', 10232, 'p23-reply',
+                right=box(*[num(0) for _ in range(10)]),     # noqa: F405
+                on_right=next_note(''),
+                notes=['Ten zeros exactly, by robot. Thank you! (More '
+                       'puzzles are on the way.)'],
+                sorry='Not quite — exactly ten zeros, the box itself out of '
+                      'the first hole. Too few? Run and Stop is one more '
+                      'round. Too many? Start over.')),
     scenery=SCENERY)

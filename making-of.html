@@ -249,6 +249,25 @@
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: .76rem; color: var(--ink-soft); line-height: 1.7;
   }
+  table.stats {
+    width: 100%; border-collapse: collapse; margin: 2rem 0 .6rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .82rem;
+  }
+  table.stats caption {
+    caption-side: top; text-align: left; font-family: inherit;
+    font-size: .92rem; color: var(--ink-soft); font-style: italic;
+    margin-bottom: .8rem; line-height: 1.5;
+  }
+  table.stats th, table.stats td {
+    padding: .42rem .7rem; border-bottom: 1px solid var(--rule); text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  table.stats thead th { color: var(--ink-soft); font-weight: 600; line-height: 1.35; }
+  table.stats thead th .when { font-weight: 400; font-size: .72rem; opacity: .8; }
+  table.stats tbody th[scope="row"] { text-align: left; font-weight: 500; }
+  table.stats tbody tr:last-child th, table.stats tbody tr:last-child td { border-bottom: none; }
+  table.stats td:last-child { font-weight: 600; }
+  .statnote { font-size: .88rem; color: var(--ink-soft); line-height: 1.6; }
   @media (prefers-reduced-motion: no-preference) {
     .body > *, .day, .panel { animation: rise .5s ease both; }
     .alsoby { margin: 1.6rem 0 0; font-size: .92rem; color: var(--ink-soft);
@@ -263,18 +282,40 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Ten days, 160 commits and one 12,400-line file — and
-    the day the project stopped guessing at ToonTalk and went and read it.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16&ndash;25 August 2026</p>
+  <p class="standfirst">Fourteen working days, 195 commits and one 21,000-line
+    file &mdash; the day the project stopped guessing at ToonTalk and went and
+    read it, and everything media asked for afterwards.</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 3 September 2026</p>
 </header>
 
-<dl class="ledger">
-  <div><dt>Built in</dt><dd>10 days</dd></div>
-  <div><dt>Commits</dt><dd>160</dd></div>
-  <div><dt>The app</dt><dd>1 file</dd></div>
-  <div><dt>Lines</dt><dd>12,399</dd></div>
-  <div><dt>Examples</dt><dd>20 worlds</dd></div>
-</dl>
+<table class="stats">
+  <caption>Two halves of the project: everything up to the day media began, the
+    work since, and where it stands. Media started on 25&nbsp;August, with the
+    line <em>a picture is a pad</em>.</caption>
+  <thead>
+    <tr><th scope="col"></th>
+        <th scope="col">Before media<br><span class="when">16&ndash;24 Aug</span></th>
+        <th scope="col">Since<br><span class="when">25 Aug&ndash;3 Sep</span></th>
+        <th scope="col">Total</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">Working days</th><td>9</td><td>5</td><td>14</td></tr>
+    <tr><th scope="row">Commits</th><td>154</td><td>41</td><td>195</td></tr>
+    <tr><th scope="row">Prompts from Ken</th><td>217</td><td>126</td><td>343</td></tr>
+    <tr><th scope="row">Tool calls</th><td>5,491</td><td>7,702</td><td>13,193</td></tr>
+    <tr><th scope="row">Lines in the app</th><td>12,560</td><td>+8,625</td><td>21,185</td></tr>
+    <tr><th scope="row">Example worlds</th><td>20</td><td>+30</td><td>50</td></tr>
+    <tr><th scope="row">Puzzles</th><td>0</td><td>+23</td><td>23</td></tr>
+    <tr><th scope="row">Characters modelled</th><td>2</td><td>+11</td><td>13</td></tr>
+    <tr><th scope="row">Manual (lines)</th><td>544</td><td>+847</td><td>1,391</td></tr>
+    <tr><th scope="row">Regression checks</th><td>&mdash;</td><td>+50</td><td>50</td></tr>
+  </tbody>
+</table>
+<p class="statnote">A <em>prompt</em> is a message Ken typed; a <em>tool call</em>
+  is one action taken in reply &mdash; a file read, an edit, a probe of the
+  running app, a Blender render, a test run. The ratio is about 38 actions to
+  the prompt overall, and it rose as the work went on: measurement got cheaper
+  than guessing, and more of each round went into proving the fix.</p>
 
 <p class="alsoby">Ken Kahn is writing about this project from the other side of
   the collaboration —
@@ -1280,6 +1321,113 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
+    <div class="rail">Since media</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">&#9835;</span>
+        <h2>What media asked for, and what it paid back</h2>
+      </div>
+      <p>Media was supposed to be a stage of its own. It turned out to be a
+        lever: almost nothing in it was about pictures or sounds, and almost
+        everything it touched came back more general than it went in.</p>
+      <p>A <strong>picture is a pad</strong>, so it copied, filed, matched and
+        travelled the day it arrived. A <strong>sound needed a body</strong>,
+        which is a wooden box with a black baffle, because nothing else in the
+        workshop is wooden. Then the questions started arriving that had
+        nothing to do with media at all.</p>
+      <h3>The generic enhancements</h3>
+      <ul>
+        <li><strong>A pad can carry a scene.</strong> Drop a thing in the
+          middle of a pad and it rides there; drop it on the edge and the
+          words join. One gesture, two meanings, decided by where you let go
+          &mdash; which is also how a box now joins a box when you set it down
+          with its edge overlapping.</li>
+        <li><strong>How a thing looks is data.</strong> A box of
+          <span class="mono">[set | background | grey]</span> given to a thing
+          repaints it. Look is not a menu; it is a message, so a robot can
+          send it.</li>
+        <li><strong>A key press is mail.</strong> The keyboard and the pointer
+          became birds delivering to nests, which is what made games possible
+          without a single new idea &mdash; and Pong, when it came, needed
+          nothing that was not already there.</li>
+        <li><strong>Behaviours you can pick up.</strong> A behaviour is a pad
+          with a panel; bind it to a thing by dropping it on. Ruby releases the
+          binding rather than erasing the gadget, which is the difference
+          between a tool and a trap.</li>
+        <li><strong>Two hands.</strong> The workshop stays open while a robot
+          works, and a team takes turns &mdash; the change that made watching a
+          program run feel like watching somebody work rather than waiting for
+          a machine.</li>
+        <li><strong>Dusty carries what he took</strong> on his head, and gives
+          it back when clicked. A vacuum that cannot be undone is a hazard; one
+          that holds the last six things is a tool.</li>
+      </ul>
+      <p>The cost of all this is measured in the table at the top: the second
+        half of the project is a third of the commits and two-thirds of the
+        tool calls. Media did not make the app bigger so much as it made every
+        existing part answer a question it had never been asked.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">Since media</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">?</span>
+        <h2>Two things nobody planned</h2>
+      </div>
+      <h3>A helper with a brain</h3>
+      <p>Marty the Martian was a signpost: a character who said where things
+        were. He can now be <em>asked</em>. A key you paste stays in your own
+        browser and is never sent anywhere but to the model you chose;
+        desktop Chrome carries a small Gemini with no key at all, and that is
+        the default. What he does with an answer is the interesting part.
+        <strong>Make</strong> turns a name into a parts list &mdash; a boat is
+        a hull, a cabin and a mast &mdash; and the parts list is built as a
+        <em>model</em>, an ordinary thing that copies, files and can be shown
+        to a robot. <strong>Draw</strong> answers with turtle steps, which the
+        workshop already knew how to walk. Neither adds a capability: both
+        write down something the workshop could already hold.</p>
+      <h3>The puzzle game</h3>
+      <p>The original taught itself to a child through 74 puzzles, and Ken's
+        rule for bringing them back was that a puzzle must not be a new kind of
+        thing. It is not: <strong>a puzzle is a world file</strong> with a few
+        more fields &mdash; what Marty says, the goal in words, hints in order,
+        which stacks and tools the table keeps. The goal stands on the table
+        marked <em>fixed</em>, so it can be looked at and copied but never
+        taken. You answer by giving a bird your box, and the judge is a robot
+        team in an opaque house whose <em>thought bubble</em> does the judging:
+        a box matched hole by hole, in order, a number with its badge. Nothing
+        judges; something recognises.</p>
+      <p>Twenty-three of them exist now, and the last few are about robots:
+        one moves stuck numbers into a second box in reverse; one is that same
+        robot, already trained and too fussy, so Ruby is the whole puzzle; one
+        counts the letters arriving on a nest and dozes when the nest is empty;
+        two grow a number or a box for ever and have to be <em>stopped in
+        time</em>, because there is no rounds control &mdash; a robot runs until
+        its thought stops fitting.</p>
+      <p>Two small ideas came out of it that the workshop kept. Things can be
+        <strong>stuck</strong>: your fingers cannot shift them and a robot's
+        claw can, which is what makes training one worth the trouble rather
+        than moving the numbers by hand. And <strong>Dusty swallows a
+        stack</strong>: point him at the box stack and it leaves the world,
+        rule and all, which is how a puzzle comes to have fewer tools without
+        anybody editing a file.</p>
+      <p>Mimi got a face while this was going on. Her name says what she is
+        &mdash; a mime &mdash; and a mime copies what she is shown. She stands
+        at her machine, reaches up to the thing on the platform, follows the
+        scanning bar down with her hands, gathers the copy out of the air,
+        lowers it into the tray, and hands over whatever is taken off her
+        platform. The animation is driven by the copier's own steps, so she
+        keeps time with the machine at any speed.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
     <div class="rail">How it worked</div>
     <div class="body">
       <div class="head">
@@ -1337,8 +1485,10 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
             <li>Operation-only pads: backspace the digits away and the bare operation remains.</li>
             <li>Sensors — mouse, keyboard, time — the family that games are made of. Designed on the seventh day (<code>BACKS.md</code>) and deliberately not built.</li>
             <li>Insertion-point editing in numbers and pads.</li>
-            <li>ToonTalk's puzzle game, which is how the original taught itself to a child without a manual.</li>
-            <li>Pictures, sounds and video as things you can hold — the reason the backs design exists, and the first thing it would buy.</li>
+            <li>Video as a thing you can hold. Pictures and sounds arrived; moving pictures did not.</li>
+            <li>A clock, and time as something a robot can ask for — wanted as a bird that delivers from a system capability, not as a new kind of thing.</li>
+            <li>Scales that weigh rather than compare, for goals like &ldquo;a number bigger than a thousand&rdquo;.</li>
+            <li>An authoring interface for puzzles. The file is written; making one is still a text editor at the last step.</li>
             <li>Matching a robot's thought against a box of half a million holes still walks every one — per action, not per frame, but it walks them.</li>
           </ul>
         </div>
@@ -1355,9 +1505,11 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 160 commits between 16 and 25
-  August 2026, and the audit file they kept arguing with. Every prompt of the
-  conversation is in <a href="the-ledger.html">the ledger</a>.</p>
+  <p>Written from the repository's own history: 195 commits between 16 August
+  and 3 September 2026, and the audit file they kept arguing with. The figures
+  at the top are counted from the git log and from the conversation's own
+  transcript. Every prompt of the conversation is in
+  <a href="the-ledger.html">the ledger</a>.</p>
   <p>Ken Kahn's own account of the project is
   <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">here</a>.</p>
 </footer>

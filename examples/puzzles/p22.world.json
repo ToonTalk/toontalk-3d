@@ -1,18 +1,21 @@
 {
  "kind": "world",
  "v": 3,
- "name": "p6",
- "intro": "The computer needs the total of the numbers that came in the post \u2014 three of them, on that nest. Train a robot to add them up, one a round, and give the bird the total. Ruby is here if its thought is too fussy.",
- "goal": "the total of the numbers on the nest",
+ "name": "p22",
+ "intro": "Letters keep arriving for the computer, and it wants to know how many. There are four on that nest. Train a robot to count them and give the bird the count. Dusty and Ruby are here, and the robot may take a number from the stack.",
+ "goal": "the number of letters on the nest",
  "hints": [
-  "Give the robot the box with the nest in it. In its imagination, click the top number on the nest \u2014 the robot takes it \u2014 then click the zero to drop it there. A number dropped on a number adds.",
-  "Look at its thought: it wants exactly the number it saw, and exactly a zero. Wake Ruby and click those parts until they say \u201cany number\u201d.",
-  "With the thought loosened, give the robot the box again. It adds one number per round and dozes when the nest is empty.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the top number on the nest, then click the zero; leave the thought bubble. Wake Ruby, click the number in its thought and the zero in its thought. Give it the box, press Run, and when the nest is empty pick the total out of the box and give it to the bird."
+  "Counting is adding one for each letter \u2014 and the letter itself has to go, or the robot will count it again.",
+  "One round: click the top letter (the robot takes it), click one of its work spots to set it down, then wake Dusty and click it there \u2014 gone. Then click the number stack for a fresh 1 and drop it on the count. (In a lesson Dusty only takes what is standing on the robot\u2019s own things, not what is in its claw.)",
+  "Its thought will want exactly the letter it saw and exactly the count it saw. Wake Ruby and click each until they say \u201cany pad\u201d and \u201cany number\u201d.",
+  "Here\u2019s what I\u2019d do. Drop the box on the robot; click the top letter; click a work spot; wake Dusty and click the letter there; put Dusty back to sleep; click the number stack, click the count. Leave the thought bubble; wake Ruby and loosen the letter and the count. Give it the box, press Run, and when it dozes take the 4 out and give it to the bird."
  ],
  "rules": {
-  "stacks": [],
+  "stacks": [
+   "numbers"
+  ],
   "tools": [
+   "dusty",
    "ruby"
   ],
   "typing": {
@@ -28,33 +31,25 @@
     "holes": [
      {
       "kind": "nest",
-      "id": 9961,
-      "guid": "p6-pile",
+      "id": 10213,
+      "guid": "p22-pile",
       "hasEgg": false,
       "pile": [
        {
-        "kind": "number",
-        "value": {
-         "n": "2",
-         "d": "1"
-        },
-        "op": "+"
+        "kind": "text",
+        "text": "A"
        },
        {
-        "kind": "number",
-        "value": {
-         "n": "3",
-         "d": "1"
-        },
-        "op": "+"
+        "kind": "text",
+        "text": "B"
        },
        {
-        "kind": "number",
-        "value": {
-         "n": "4",
-         "d": "1"
-        },
-        "op": "+"
+        "kind": "text",
+        "text": "C"
+       },
+       {
+        "kind": "text",
+        "text": "D"
        }
       ],
       "label": "the post"
@@ -66,7 +61,7 @@
        "d": "1"
       },
       "op": "+",
-      "label": "the total"
+      "label": "the count"
      }
     ]
    },
@@ -86,8 +81,8 @@
   {
    "thing": {
     "kind": "bird",
-    "nestId": 9963,
-    "nestGuid": "p6-post",
+    "nestId": 10211,
+    "nestGuid": "p22-post",
     "label": "give me your answer"
    },
    "x": 0.0,
@@ -96,8 +91,8 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 9964,
-    "guid": "p6-reply",
+    "id": 10212,
+    "guid": "p22-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
@@ -109,7 +104,7 @@
    "thing": {
     "kind": "number",
     "value": {
-     "n": "9",
+     "n": "4",
      "d": "1"
     },
     "op": "+",
@@ -135,25 +130,25 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 9963,
-         "guid": "p6-post",
+         "id": 10211,
+         "guid": "p22-post",
          "hasEgg": false,
          "pile": [],
          "label": "the post"
         },
         {
          "kind": "bird",
-         "nestId": 9964,
-         "nestGuid": "p6-reply",
+         "nestId": 10212,
+         "nestGuid": "p22-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "The total is in \u2014 the computer can count its post now. Last: exactly 1,024."
+         "text": "Four letters \u2014 counted by a robot. Next: ten zeros, and you have to stop it."
         },
         {
          "kind": "text",
-         "text": "Not quite. Look at what we need, and try again."
+         "text": "Not quite \u2014 the count of the letters on the nest, a plain 4."
         }
        ]
       }
@@ -167,7 +162,7 @@
         {
          "kind": "number",
          "value": {
-          "n": "9",
+          "n": "4",
           "d": "1"
          },
          "op": "+"
@@ -215,7 +210,7 @@
        },
        {
         "type": "load",
-        "name": "p7"
+        "name": "p23"
        }
       ],
       "trainedOn": null,
