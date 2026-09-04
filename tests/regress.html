@@ -1390,6 +1390,18 @@ async function thoughtViewCheck(D) {
   const pRed0 = D.camera.position.clone();
   D.camStill(); await frames(D, 120);
   const redView = { moved: +D.camera.position.distanceTo(pRed0).toFixed(2), d: +dist().toFixed(2), on: onScreen(), done: !D.smartCam().showThought };
+  // 1b. Ken's case: Ruby loosens the thought, the robot runs once and stops
+  //     because the result no longer fits (red parts) -- the run's follow had
+  //     the camera close on the box, and it must pull back to the thought
+  D.rubyOn(true); D.clickCond([0, 0]); await slowSettle(D, 3000); D.clickCond([0, 1]); await slowSettle(D, 3000);
+  D.clickCond([0, 2]); await slowSettle(D, 3000); D.rubyOn(false);
+  D.camStill(); await slowSettle(D, 20000);          // it runs by itself, and stops
+  D.camStill(); await frames(D, 120);
+  const fl2 = typeof D.flagged === 'function' ? D.flagged() : D.flagged;
+  const gBox = D.mine();
+  const dGiven = gBox ? +D.camera.position.distanceTo(new D.THREE.Box3().setFromObject(gBox).getCenter(new D.THREE.Vector3())).toFixed(2) : -1;
+  const runView = { red: (typeof fl2 === 'number' ? fl2 : (fl2?.length ?? 0)) > 0, ran: D.state.mode === 'world',
+    d: +dist().toFixed(2), on: onScreen(), fromBox: dGiven, done: !D.smartCam().showThought };
   // 2. a lesson, with an UNTRAINED robot (a trained one given a box runs
   //    instead): puzzle 28's. The camera comes in on the box; leaving, it
   //    pulls back to the thought the lesson made.
@@ -1399,6 +1411,7 @@ async function thoughtViewCheck(D) {
   D.smartCam(true);
   const box2 = (() => { for (let i = 0; i < 16; i++) { const t = D.bench(i); if (!t) break;
     if (t.userData.kind === 'box' && !t.userData.fixed) return t; } return null; })();
+  D.camera.position.set(3.5, 4.5, 7.5); D.camera.lookAt(0, 1, 1);   // far from any resting view
   D.hold(box2); D.giveRobot(); await slowSettle(D, 3000);
   const lesson = D.state.mode === 'training';
   D.clickThing(D.mine([0, 0])); await slowSettle(D, 3000); D.clickHole(D.mine(), 1); await slowSettle(D, 3000);
@@ -1412,9 +1425,11 @@ async function thoughtViewCheck(D) {
   // the view is 3.4 from a point a little under the thought, so about 3.2
   // from the thought itself
   const ok = flagged && redView.moved > 0.4 && redView.on && Math.abs(redView.d - 3.2) < 0.35 && redView.done
+    && runView.red && runView.ran && runView.on && Math.abs(runView.d - 3.2) < 0.35 && runView.fromBox > 2.9 && runView.done
     && lesson && Math.abs(inLesson - 2.6) < 0.2
     && afterView.moved > 0.4 && afterView.on && Math.abs(afterView.d - 3.2) < 0.35 && afterView.done;
   put((ok ? 'PASS' : 'FAIL') + ' the camera shows the thought  (red-parts=' + flagged + ' red-view=' + JSON.stringify(redView)
+      + ' after-a-run-stops=' + JSON.stringify(runView)
       + ' in-lesson=' + inLesson + ' after-lesson=' + JSON.stringify(afterView) + ')', ok ? 'pass' : 'fail');
   return ok;
 }

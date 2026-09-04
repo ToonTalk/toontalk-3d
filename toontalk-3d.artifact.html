@@ -11196,7 +11196,18 @@ let camYield = false;       // the player took the camera: hands off until the n
 // training pull the camera back enough to see the thought bubble, and when
 // red parts appear").
 let camShowThought = false;
-function showThoughtSoon() { if (smartCam && condDisplay) camShowThought = true; }
+function showThoughtSoon() {
+  if (!smartCam || !condDisplay) return;
+  // THIS is the new occasion: the mode change that comes with it (a run
+  // ending, a lesson ending) must not be read next frame as a later one and
+  // forget the request -- Ken's robot stopped with red parts and the camera
+  // stayed where the run had left it. And a follow already at its target
+  // would snap to the new pose; a fresh glide starts from where the camera is.
+  camShowThought = true;
+  camMode = mode;
+  camYield = false;
+  camFollow = null;
+}
 let camLastMove = -1e9;     // when the pointer last moved (performance.now)
 let camWantOff = -1e9;      // when the follow last stopped wanting anything
 let camMode = null;         // the mode the last want was seen in

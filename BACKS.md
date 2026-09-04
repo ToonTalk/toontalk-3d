@@ -5414,3 +5414,14 @@ The still-mouse rule applies, and your own orbit cancels it. Measured on
 puzzle 21: a refused box marks red parts and the camera settles 3.4 from
 the thought with it on screen; a lesson ends with the camera at 2.6 from
 the box and it pulls back to the same view.
+
+Ken's screenshot, an hour later: a robot ran once, stopped with red parts,
+and the camera stayed close on its box. The run's end switches the mode
+back to the workshop in the same tick that asks for the thought view, and
+the next frame read that switch as a later occasion and forgot the
+request. The request now names itself the occasion (and starts a fresh
+glide from wherever the camera is, rather than snapping a follow already at
+its target). The suite check had passed by accident -- the test window's
+default view happens to sit at the same distance from the thought -- so it
+now starts the lesson from a far pose and includes Ken's case: a run that
+stops with red parts, camera 3.6 from the box and 3.2 from the thought.
