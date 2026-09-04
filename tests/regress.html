@@ -1451,7 +1451,7 @@ async function mentionCheck(D) {
   ] });
   await slowSettle(D, 3000);
   D.smartCam(true);
-  for (let i = 0; i < 40 && !D.helperAt('ruby'); i++) await new Promise(r => setTimeout(r, 250));   // her model may still be loading
+  for (let i = 0; i < 60 && !D.helperState().ruby; i++) await new Promise(r => setTimeout(r, 250));   // her model may still be loading
   const rubyThere = !!D.helperAt('ruby');
   const hs = D.helperState ? JSON.stringify(D.helperState()) : '?';
   const box = (() => { for (let i = 0; i < 16; i++) { const t = D.bench(i); if (!t) break;
@@ -1486,6 +1486,50 @@ async function mentionCheck(D) {
   const ok = before.on === false && after.on === true && after.moved > 0.4 && inAll;
   put((ok ? 'PASS' : 'FAIL') + ' the narration points and the camera shows  (ruby-there=' + rubyThere + ' helpers=' + hs + ' ruby-on-screen before=' + before.on + ' after=' + after.on
       + ' moved=' + after.moved + ' first=' + JSON.stringify(first.r) + ' second=' + JSON.stringify(second.r) + ' says-in-all=' + inAll + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// RUBY'S VIEW AND THE WATCHED RUN. Waking Ruby brings the camera in on the
+// thought; an erasure that makes the thought fit sends the robot off and the
+// camera out to watch it, resting there for the run.
+async function rubyViewCheck(D) {
+  // a robot that adds a fresh 1 to THE NUMBER 1, given a 5: refused until
+  // Ruby loosens the 1, then it runs for ever (stopped by the button)
+  const n1 = { kind: 'number', value: { n: '1', d: '1' }, op: '+' }, n5 = { kind: 'number', value: { n: '5', d: '1' }, op: '+' };
+  D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [
+    { thing: { kind: 'box', holes: [n5] }, x: -0.5, z: 2.0 }],
+    active: { kind: 'robot', name: 'adder', condition: { kind: 'box', holes: [n1] },
+              program: [{ type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [0] } }],
+              trainedOn: { kind: 'box', holes: [n1] }, team: [] } });
+  await slowSettle(D, 3000);
+  for (let i = 0; i < 60 && !D.helperState().ruby; i++) await new Promise(r => setTimeout(r, 250));   // her model may still be loading
+  D.smartCam(true); D.camReset();
+  const thought = () => new D.THREE.Vector3(...D.smartCam().center);
+  const dT = () => +D.camera.position.distanceTo(thought()).toFixed(2);
+  const five = (() => { for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'box') return t; } return null; })();
+  D.hold(five); D.giveRobot(); await slowSettle(D, 3000);       // refused: red, the thought view
+  D.camStill(); await frames(D, 120);
+  const d0 = dT();
+  D.rubyOn(true);                                              // Ruby wakes: in on the thought
+  D.camStill(); await frames(D, 120);
+  const close = { d: dT(), on: D.onScreen(thought()), closer: dT() < d0 - 0.5 };
+  D.clickCond([0]);                                            // the 1 becomes any number: it fits, and runs
+  await slowSettle(D, 4000);                                   // Ruby's flight and the erasure
+  const words = D.condWords();
+  for (let i = 0; i < 60 && D.state.mode !== 'replay'; i++) await frames(D, 10);
+  const hint = D.doc.getElementById('hint').textContent.slice(0, 70);
+  D.camStill(); await frames(D, 150);
+  const g = D.mine();
+  const gc = g ? new D.THREE.Box3().setFromObject(g).getCenter(new D.THREE.Vector3()) : null;
+  const rubyOn = D.helperAt('ruby') ? D.onScreen(D.helperAt('ruby')) : null;
+  const watch = { mode: D.state.mode, d: gc ? +D.camera.position.distanceTo(gc).toFixed(2) : -1,
+                  workOn: gc ? D.onScreen(gc) : false, rubyOn, resting: D.smartCam().yield, following: D.smartCam().following };
+  D.doc.getElementById('runBtn').click();                     // Stop
+  await slowSettle(D, 6000);
+  D.rubyOn(false);
+  const ok = close.on && close.closer && close.d < 2.2 && watch.mode === 'replay' && watch.d > 3.0 && watch.workOn && watch.rubyOn === true && watch.resting;
+  put((ok ? 'PASS' : 'FAIL') + ' Ruby’s view and the watched run  (thought-view=' + d0 + ' ruby-wakes=' + JSON.stringify(close)
+      + ' words=' + JSON.stringify(words) + ' hint=' + JSON.stringify(hint) + ' run=' + JSON.stringify(watch) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -3745,6 +3789,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let rvOK = true;
+  try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
+  catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
   let mnOK = true;
   try { mnOK = want('mention') ? await mentionCheck(D) : true; }
   catch (e) { mnOK = false; put('FAIL the narration points and the camera shows  ' + e.message, 'fail'); }
@@ -3853,7 +3900,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

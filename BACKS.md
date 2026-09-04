@@ -5500,3 +5500,29 @@ sorted by hand).
 **A leaning scale.** A scale with one full pan leans toward it; it used to
 sit level, as though empty. A thought that wants two numbers still does
 not fit a scale with one, so nothing that stops by balancing changes.
+
+## Ruby's view, and a run watched from a distance
+
+*Added 4 Sep. Ken: "when Ruby is activated pan and zoom into the thought
+bubble. If the erasures mean that the robot matches and will run then the
+camera should zoom out to watch the robot run."*
+
+Waking Ruby (or Dusty) brings the camera in on the thought, the same close
+view that pointing at the bubble gives, without the pointing. And when an
+erasure turns a mismatch into a match, the run that follows is watched
+from a distance -- what the robot holds, its work spot and, as Ken added,
+Ruby herself, "so the player can turn her off" -- framed together, and the
+camera rests there for the run instead of riding the claw. A run started
+with the Run button is followed as before. The close-up is a deliberate
+close look and is not pulled back for the work area or for her; the wider
+views are. Measured: the thought view at five, Ruby wakes and the camera
+comes to a length and a half from the thought; the erasure sends the robot
+off and the camera out past three from the box, work area and Ruby on
+screen, resting.
+
+Two things found on the way. The bubble's tooltip still offered "click to
+take a copy" while Ruby was awake -- Ken's "the entire contents of the
+thought bubble ended up in my hands" is what that click does when she is
+NOT awake, and the tip now says what a click does in each state. And an
+erasure silently did nothing when the helper's model was not loaded yet,
+since her flight had nothing to fly; it flies a stand-in now.

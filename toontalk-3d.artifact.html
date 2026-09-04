@@ -244,7 +244,9 @@ of the screen to lean back out — and, when Ruby or Dusty is awake, on a
 thought bubble you point at, and after a lesson or a refusal it pulls back to
 show the robot and its thought; it comes back when you point away. It keeps
 the robot's work area in the picture, and when a message names Ruby, Mimi,
-a stack, the notebook or the judge, it pulls back until that is in view. It never
+a stack, the notebook or the judge, it pulls back until that is in view.
+Waking Ruby brings it in on the thought; an erasure that sets the robot
+running sends it out to watch. It never
 moves while your mouse is moving, only a moment after it rests, and your own
 orbiting or zooming always wins: the follow lets go until the next occasion.
 The same gestures work on a touch screen. ⛶ at the end of the
@@ -11207,6 +11209,34 @@ function thoughtPose() {
   const look = centre.clone().add(new THREE.Vector3(0, -0.45, 0));
   return { at: look.clone().addScaledVector(dir, 3.4), look };
 }
+// RUBY'S VIEW: the thought up close, the moment she (or Dusty) is woken --
+// Ken: "when Ruby is activated pan and zoom into the thought bubble".
+function thoughtClosePose() {
+  // measured on the thought itself, not its cloud: the puffs are wide
+  _scBox.setFromObject(condDisplay.children[0] ?? condDisplay);
+  const centre = _scBox.getCenter(new THREE.Vector3());
+  const size = Math.max(0.6, _scBox.getSize(new THREE.Vector3()).length());
+  const dir = camera.position.clone().sub(orbit.target).normalize();
+  const d = Math.max(1.3, size / Math.tan(camera.fov * DEG / 2) * 0.55);
+  // raw: a deliberate close look, not pulled back for the work area or for her
+  return { at: centre.clone().addScaledVector(dir, d), look: centre, raw: true };
+}
+// WATCHING A RUN: when an erasure makes the thought fit and the robot sets
+// off, the camera pulls out to see it work -- the robot, what it holds and
+// its work spot -- rather than riding its claw (Ken: "if the erasures mean
+// that the robot matches and will run then the camera should zoom out to
+// watch the robot run").
+let camWatchRun = false;
+function runWatchPose() {
+  // the work, and whoever is awake to be put to sleep afterwards (Ken: "the
+  // zoom out after Ruby is finished should show Ruby so the player can turn
+  // her off"), framed together rather than by pulling straight back
+  const pts = workAreaPoints();
+  if (!pts.length) pts.push(condAnchor().add(new THREE.Vector3(0, -1.2, 0)));
+  if (rubyActive) { const q = helperPoint('ruby'); if (q) pts.push(q); }
+  if (dustyActive) { const q = helperPoint('dusty'); if (q) pts.push(q); }
+  return fitPose(pts);
+}
 // --- what the narration points at ------------------------------------------
 // Ken: "when the narration or Marty refers to anything -- Ruby, Mimi, the
 // stack of pads, or whatever -- the camera should pull back enough for that
@@ -11285,6 +11315,8 @@ function workAreaPoints() {
 }
 function withWorkArea(pose) {
   const pts = workAreaPoints();
+  if (rubyActive) { const q = helperPoint('ruby'); if (q) pts.push(q); }
+  if (dustyActive) { const q = helperPoint('dusty'); if (q) pts.push(q); }
   if (!pts.length) return pose;
   const dir = pose.at.clone().sub(pose.look);
   let d = dir.length();
@@ -11312,7 +11344,7 @@ function noteMentions(text) {
 }
 // A NEW WORLD IS A NEW OCCASION: nothing the camera was asked for carries over
 function camResetAll() {
-  camFollow = null; camShowFn = null; camYield = false; camMode = null; mentionLast = '';
+  camFollow = null; camShowFn = null; camYield = false; camMode = null; mentionLast = ''; camWatchRun = false;
 }
 function showViewSoon(fn) {
   camShowFn = fn;
@@ -11333,8 +11365,14 @@ let camLastMove = -1e9;     // when the pointer last moved (performance.now)
 let camWantOff = -1e9;      // when the follow last stopped wanting anything
 let camMode = null;         // the mode the last want was seen in
 const CAM_STILL_MS = 1500;  // the mouse must rest this long before the camera moves
+let camHelpersWere = false;
 function holdSmartCam(dt) {
   const now = performance.now();
+  // a helper waking -- by a click, a key or a check -- is an occasion: the
+  // thought up close, where her work is
+  const helpersNow = rubyActive || dustyActive;
+  if (helpersNow && !camHelpersWere && condDisplay && smartCam && !straightOn) showViewSoon(thoughtClosePose);
+  camHelpersWere = helpersNow;
   const moving = now - camLastMove < CAM_STILL_MS;
   // a moving mouse: nothing NEW starts; a glide under way finishes, its
   // target frozen where it was -- half a glide is the worst of both
@@ -11353,10 +11391,11 @@ function holdSmartCam(dt) {
   if (camYield) return;
   if (!camFollow) {
     if (!want) return;
+    const pose0 = smartCamPose();
     camFollow = { t: 0, was: { pos: camera.position.clone(), target: orbit.target.clone() },
-                  there: withWorkArea(smartCamPose()) };
+                  there: pose0.raw ? pose0 : withWorkArea(pose0) };
   }
-  if (want && !moving) camFollow.there = withWorkArea(smartCamPose());   // the subject moves; the work area stays in view
+  if (want && !moving) { const pose = smartCamPose(); camFollow.there = pose.raw ? pose : withWorkArea(pose); }   // the subject moves; the work area stays in view
   const step = Math.max(0.001, dt) / 0.7;
   camFollow.t = Math.max(0, Math.min(1, camFollow.t + (want ? step : -step)));
   const e = ease(camFollow.t);
@@ -23567,18 +23606,23 @@ function removeCondAt(path) {
       busy = false;
       say('Gone — that hole now takes anything, or nothing.');
       autoRunArmed = !fitBefore;
+      if (!fitBefore && stations.stand.occupant
+          && matchState(condition, specOf(stations.stand.occupant)) !== 'no') camWatchRun = true;
       refreshUI();
     },
   });
 }
 
 // --- Dusty ----------------------------------------------------------------
+// a stand-in for a helper whose model is not in yet: the erasure must not
+// depend on the flight (the suite's app met this; so would a slow network)
+const ghostTool = new THREE.Object3D();
 function dustyErase(path) {
   const node = condNodeAt(path);
   // Ruby does the erasing now, so SHE flies -- Dusty only when he removes
-  const tool = rubyActive && ruby ? ruby : dusty;
-  const home = rubyActive && ruby ? rubyHome : dustyHome;
-  if (!node || !tool) return;
+  const tool = (rubyActive && ruby ? ruby : dusty) ?? ghostTool;
+  const home = (rubyActive && ruby ? rubyHome : dustyHome) ?? ghostTool.position.clone();
+  if (!node) return;
   pushUndo();
   busy = true;
   // ran already before the erasure? then this is loosening for LATER, and the
@@ -23613,6 +23657,7 @@ function dustyErase(path) {
            : fits ? '' : ' Still not what is on its desk — the red parts are what to loosen next.');
       if (givenNow && !fits) sayAttn(words); else say(words);
       autoRunArmed = !fitBefore;    // the loosened thought may fit the given NOW
+      if (!fitBefore && fits) camWatchRun = true;   // and the run that follows is watched from a distance
     },
   });
   enqueue({
@@ -24923,6 +24968,7 @@ function runProgram() {
   activeBot.node.scale.setScalar(1);
   activeBot.root.scale.setScalar(1);
   mode = 'replay'; busy = true; runCount = 0;
+  if (camWatchRun) { camWatchRun = false; if (smartCam) showViewSoon(runWatchPose); }
   nextIteration();
   refreshUI();
 }
@@ -26736,6 +26782,9 @@ function tipFor(t) {
       : 'Ruby the eraser — click to wake her; she erases things in place and loosens robot thoughts.';
   }
   if (t.kind === 'cond') {
+    // with a helper awake the bubble never hands out a copy: say what a click does
+    if (rubyActive) return 'The robot’s thought. Ruby is awake: click a part to loosen it one step — a number to any number, a box to any box.';
+    if (dustyActive) return 'The robot’s thought. Dusty is awake: click a part to vacuum it into an anything, or nothing.';
     return 'The robot’s thought: the shape it must be given before it will run. '
       + (!TIP && activeBot?.trainedOn
           ? 'Click to take a copy of the very thing it was first shown. '
@@ -30885,7 +30934,7 @@ window.__nano = {
   orbitStart() { orbit.dispatchEvent({ type: 'start' }); },     // the player takes the camera
   mention(text) { noteMentions(text); },
   camReset() { camResetAll(); },
-  helperState() { return { ruby: !!ruby, rubyOn: !!ruby?.parent, dusty: !!dusty, dustyOn: !!dusty?.parent, rules: worldRules?.tools ?? null }; },
+  helperState() { return { ruby: !!ruby, rubyOn: !!ruby?.parent, dusty: !!dusty, dustyOn: !!dusty?.parent, rules: worldRules?.tools ?? null, rubyActive, dustyActive, busy, mode, condShow: !!condShow, hasCond: !!condDisplay }; },
   helperAt(name) { return helperPoint(name); },
   onScreen(p) { return onScreen(p); },
   roundsNow() { return { runCount, givenRounds }; },   // (rounds(n) is the Rounds limit)
