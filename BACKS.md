@@ -5398,3 +5398,19 @@ instead of "Loading..." forever. Not taken, for now: splitting the file
 into modules -- the single file is what makes the artifact and the chat
 build trivial, and the suite is what keeps it honest -- and binding the
 dev server to localhost, since Ken tests from a tablet on the same network.
+
+## The camera shows the thought
+
+*Added 4 Sep. Ken: "Remember that after leaving training to pull the
+camera back enough to see the thought bubble. And when red parts appear in
+the thought bubble."*
+
+After a lesson the camera was close on what the robot held, and the
+thought that lesson made sat above its head, out of the picture; and red
+parts marked in a thought are the next thing to look at. Both now pull the
+camera back to a view that holds the robot and its thought -- a glide that
+stays where it arrives rather than easing back, since it is a resting view.
+The still-mouse rule applies, and your own orbit cancels it. Measured on
+puzzle 21: a refused box marks red parts and the camera settles 3.4 from
+the thought with it on screen; a lesson ends with the camera at 2.6 from
+the box and it pulls back to the same view.

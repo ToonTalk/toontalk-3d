@@ -244,7 +244,8 @@ On a touchpad: one-finger drag orbits, pinch zooms, two-finger drag slides.
 The smart camera (a toggle in the ⋮ menu, on by default) comes in
 on what a robot works on during a lesson or a run — point at the side
 of the screen to lean back out — and, when Ruby or Dusty is awake, on a
-thought bubble you point at; it comes back when you point away. It never
+thought bubble you point at, and after a lesson or a refusal it pulls back to
+show the robot and its thought; it comes back when you point away. It never
 moves while your mouse is moving, only a moment after it rests, and your own
 orbiting or zooming always wins: the follow lets go until the next occasion.
 The same gestures work on a touch screen. ⛶ at the end of the
@@ -1844,7 +1845,7 @@ function setSmartCam(on) {
 let edgePointer = false;    // the pointer near a side of the screen: lean back out
 function smartCamWant() {
   if (!smartCam || straightOn) return false;
-  if (mode === 'world') return !!condDisplay && (rubyActive || dustyActive) && hoverBubble;
+  if (mode === 'world') return !!condDisplay && (((rubyActive || dustyActive) && hoverBubble) || camShowThought);
   // a lesson or a run: what the robot works on, unless the player is
   // reaching for the sides (the stacks, the copier, the work area)
   if (mode === 'training' || mode === 'replay') {
@@ -1867,14 +1868,29 @@ function smartCamPose() {
     return { at: look.clone().addScaledVector(dir, 2.6), look };
   }
   _scBox.setFromObject(condDisplay);
-  const look = _scBox.getCenter(new THREE.Vector3());
+  const centre = _scBox.getCenter(new THREE.Vector3());
+  if (camShowThought && !((rubyActive || dustyActive) && hoverBubble)) {
+    // the robot and its thought together: look a little below the thought,
+    // from far enough that the head is in the picture too
+    const look = centre.clone().add(new THREE.Vector3(0, -0.45, 0));
+    return { at: look.clone().addScaledVector(dir, 3.4), look };
+  }
   const size = Math.max(0.6, _scBox.getSize(new THREE.Vector3()).length());
   // close enough that the thought fills about half the height, never nearer
   // than an arm's length
   const d = Math.max(1.3, size / Math.tan(camera.fov * DEG / 2) * 0.55);
-  return { at: look.clone().addScaledVector(dir, d), look };
+  return { at: centre.clone().addScaledVector(dir, d), look: centre };
 }
 let camYield = false;       // the player took the camera: hands off until the next occasion
+// SHOW THE THOUGHT. After a lesson the camera is close on what the robot
+// held, and the thought that lesson made sits above its head, out of the
+// picture; and red parts marked in the thought are what the player must see
+// next. Both pull the camera back to a view that holds the robot and its
+// thought -- a glide that stays where it arrives (Ken: "after leaving
+// training pull the camera back enough to see the thought bubble, and when
+// red parts appear").
+let camShowThought = false;
+function showThoughtSoon() { if (smartCam && condDisplay) camShowThought = true; }
 let camLastMove = -1e9;     // when the pointer last moved (performance.now)
 let camWantOff = -1e9;      // when the follow last stopped wanting anything
 let camMode = null;         // the mode the last want was seen in
@@ -1887,8 +1903,12 @@ function holdSmartCam(dt) {
   else camWantOff = -1;
   // the yield ends with the occasion: a change of mode, or three seconds of
   // nothing to follow -- not the blink of a subject between two steps
-  if (camYield && (mode !== camMode || (camWantOff > 0 && now - camWantOff > 3000))) camYield = false;
-  if (want) camMode = mode;
+  // a change of mode is a new occasion: the yield ends, and a thought view
+  // asked for in the old mode is forgotten. (Compared every frame, from the
+  // mode first seen -- the first frame must not count as a change.)
+  if (camMode == null) camMode = mode;
+  if (mode !== camMode) { camYield = false; camShowThought = false; camMode = mode; }
+  if (camYield && camWantOff > 0 && now - camWantOff > 3000) camYield = false;
   if (camYield) return;
   if (!camFollow) {
     if (!want) return;
@@ -1903,10 +1923,15 @@ function holdSmartCam(dt) {
   orbit.target.copy(camFollow.was.target).lerp(camFollow.there.look, e);
   camera.lookAt(orbit.target);
   if (!want && camFollow.t <= 0) { camFollow = null; orbit.update(); }
+  // the thought view is a glide that STAYS: arrived, the occasion is over and
+  // the camera is left there rather than eased back
+  if (camShowThought && camFollow && camFollow.t >= 1 && !((rubyActive || dustyActive) && hoverBubble)) {
+    camShowThought = false; camFollow = null; orbit.update();
+  }
 }
 // orbiting or zooming while the camera follows takes it over: the follow lets
 // go where it is, and comes back only for the next occasion
-orbit.addEventListener('start', () => { if (camFollow) { camFollow = null; camYield = true; } });
+orbit.addEventListener('start', () => { camShowThought = false; if (camFollow) { camFollow = null; camYield = true; } });
 // is the pointer over the thought bubble? (its shell, not only the parts --
 // resolve looks through the shell while a helper is awake)
 const _scRay = new THREE.Raycaster();
@@ -14028,6 +14053,7 @@ function clearFlags() {
 }
 function flagMismatch(paths) {
   clearFlags();
+  if (paths.length && mode === 'world') showThoughtSoon();   // red parts are what to look at
   for (const p of paths) {
     condNodeAt(p)?.traverse(o => {
       if (!o.isMesh || !o.material) return;
@@ -15289,6 +15315,7 @@ function leaveTraining(restore = true) {
   clearUndo();
   mode = 'world';
   bubbleTarget = 0;
+  showThoughtSoon();           // the lesson's thought sits above the head: show it
   clearScratch(!restore);      // a rewind is about to replace the world anyway
   if (restore && preTraining) restoreWorld(preTraining);
   // The given thing stays on the robot's stand, rewound: it is set up to Run
@@ -21366,7 +21393,7 @@ window.__nano = {
     let center = null;
     if (condDisplay) { _scBox.setFromObject(condDisplay); center = _scBox.getCenter(new THREE.Vector3()).toArray(); }
     return { on: smartCam, following: !!camFollow, t: camFollow?.t ?? 0, hover: hoverBubble, edge: edgePointer, yield: camYield,
-             still: performance.now() - camLastMove,
+             still: performance.now() - camLastMove, showThought: camShowThought,
              bubble: bubble.visible, cond: !!condDisplay, center, helpers: rubyActive || dustyActive, mode };
   },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },

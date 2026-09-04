@@ -1368,6 +1368,57 @@ async function smartCamCheck(D) {
   return ok;
 }
 
+// THE THOUGHT VIEW. After a lesson, and when red parts appear, the camera
+// pulls back to hold the robot and its thought, and stays there.
+async function thoughtViewCheck(D) {
+  const rec = await (await fetch('../examples/puzzles/p21.world.json')).json();
+  D.worldIn(rec);
+  await slowSettle(D, 3000);
+  D.smartCam(true);
+  const onScreen = () => {
+    const c = new D.THREE.Vector3(...D.smartCam().center).project(D.camera);
+    return Math.abs(c.x) < 0.8 && Math.abs(c.y) < 0.8;
+  };
+  const dist = () => D.camera.position.distanceTo(new D.THREE.Vector3(...D.smartCam().center));
+  // 1. a mismatch: the box of other numbers is refused, red parts appear
+  const box = (() => { for (let i = 0; i < 16; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'box' && !t.userData.fixed) return t; } return null; })();
+  D.hold(box); D.giveRobot();
+  await slowSettle(D, 3000);
+  const fl = typeof D.flagged === 'function' ? D.flagged() : D.flagged;
+  const flagged = typeof fl === 'number' ? fl > 0 : (fl?.length ?? 0) > 0;
+  const pRed0 = D.camera.position.clone();
+  D.camStill(); await frames(D, 120);
+  const redView = { moved: +D.camera.position.distanceTo(pRed0).toFixed(2), d: +dist().toFixed(2), on: onScreen(), done: !D.smartCam().showThought };
+  // 2. a lesson, with an UNTRAINED robot (a trained one given a box runs
+  //    instead): puzzle 28's. The camera comes in on the box; leaving, it
+  //    pulls back to the thought the lesson made.
+  const rec2 = await (await fetch('../examples/puzzles/p28.world.json')).json();
+  D.worldIn(rec2);
+  await slowSettle(D, 3000);
+  D.smartCam(true);
+  const box2 = (() => { for (let i = 0; i < 16; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'box' && !t.userData.fixed) return t; } return null; })();
+  D.hold(box2); D.giveRobot(); await slowSettle(D, 3000);
+  const lesson = D.state.mode === 'training';
+  D.clickThing(D.mine([0, 0])); await slowSettle(D, 3000); D.clickHole(D.mine(), 1); await slowSettle(D, 3000);
+  D.camStill(); await frames(D, 120);
+  const given = D.mine();
+  const inLesson = +D.camera.position.distanceTo(new D.THREE.Box3().setFromObject(given).getCenter(new D.THREE.Vector3())).toFixed(2);
+  const pLesson = D.camera.position.clone();
+  D.exit(); await slowSettle(D, 4000);
+  D.camStill(); await frames(D, 120);
+  const afterView = { lesson, moved: +D.camera.position.distanceTo(pLesson).toFixed(2), d: +dist().toFixed(2), on: onScreen(), done: !D.smartCam().showThought };
+  // the view is 3.4 from a point a little under the thought, so about 3.2
+  // from the thought itself
+  const ok = flagged && redView.moved > 0.4 && redView.on && Math.abs(redView.d - 3.2) < 0.35 && redView.done
+    && lesson && Math.abs(inLesson - 2.6) < 0.2
+    && afterView.moved > 0.4 && afterView.on && Math.abs(afterView.d - 3.2) < 0.35 && afterView.done;
+  put((ok ? 'PASS' : 'FAIL') + ' the camera shows the thought  (red-parts=' + flagged + ' red-view=' + JSON.stringify(redView)
+      + ' in-lesson=' + inLesson + ' after-lesson=' + JSON.stringify(afterView) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3624,6 +3675,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let tvOK = true;
+  try { tvOK = want('thoughtView') ? await thoughtViewCheck(D) : true; }
+  catch (e) { tvOK = false; put('FAIL the camera shows the thought  ' + e.message, 'fail'); }
   let camOK = true;
   try { camOK = want('smartCam') ? await smartCamCheck(D) : true; }
   catch (e) { camOK = false; put('FAIL the smart camera waits, follows and lets go  ' + e.message, 'fail'); }
@@ -3726,7 +3780,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
