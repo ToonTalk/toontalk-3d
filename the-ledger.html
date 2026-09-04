@@ -1344,6 +1344,10 @@
     <p class="prompt">Can we improve the way thought bubbles look? Both when a robot is inside and afterwards? More cloudlike maybe? Less circular and more textured? The smart camera does a good job when beginning to train a robot but it shouldn’t turn off user camera controls (e.g. zooming out if desired).</p>
     <p class="summary">The thought’s halo is a cloud of soft sprite puffs with the thought showing through, and the lesson’s dome wears a tiled cloud texture, so both read as clouds rather than spheres. The smart camera leaves the orbit controls on: orbit or zoom and it lets go where it is, until the next lesson, run or thought you point at.</p>
   </div></li>
+  <li class="entry"><span class="n"></span><div>
+    <p class="prompt">Better smart camera, but let’s not have it do anything while a user is moving the mouse — wait a second or two after the mouse stops. ChatGPT’s review: the clouds read as luminous fog and the thought is faint and small; the camera change deserves a regression test across a run, and the yield resets on transient gaps; program descriptions are inserted as HTML; the dev server’s path check is a prefix test; disposing one robot can dispose every cloud’s texture; the cloud tile’s wrap offsets cancel; a failed model load leaves “Loading…” forever.</p>
+    <p class="summary">The camera does nothing while the mouse moves and acts a second and a half after it rests; the player’s orbit holds for the whole occasion, checked by a suite run through a complete team run. Firmer, sparser puffs and a larger thought inside. Descriptions and saved names go into the page as text, the server judges containment by relation, the cloud textures are shared, the tile has no seam, and a model that fails to load says so.</p>
+  </div></li>
 </ol>
 
 <footer class="end">

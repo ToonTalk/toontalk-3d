@@ -244,7 +244,8 @@ On a touchpad: one-finger drag orbits, pinch zooms, two-finger drag slides.
 The smart camera (a toggle in the ⋮ menu, on by default) comes in
 on what a robot works on during a lesson or a run — point at the side
 of the screen to lean back out — and, when Ruby or Dusty is awake, on a
-thought bubble you point at; it comes back when you point away. Your own
+thought bubble you point at; it comes back when you point away. It never
+moves while your mouse is moving, only a moment after it rests, and your own
 orbiting or zooming always wins: the follow lets go until the next occasion.
 The same gestures work on a touch screen. ⛶ at the end of the
 bottom row is worth pressing first on a tablet — it wins back the height the
@@ -2008,9 +2009,20 @@ function smartCamPose() {
   return { at: look.clone().addScaledVector(dir, d), look };
 }
 let camYield = false;       // the player took the camera: hands off until the next occasion
+let camLastMove = -1e9;     // when the pointer last moved (performance.now)
+let camWantOff = -1e9;      // when the follow last stopped wanting anything
+let camMode = null;         // the mode the last want was seen in
+const CAM_STILL_MS = 1500;  // the mouse must rest this long before the camera moves
 function holdSmartCam(dt) {
+  const now = performance.now();
+  if (now - camLastMove < CAM_STILL_MS) return;   // a moving mouse: the camera does nothing
   const want = smartCamWant();
-  if (!want) camYield = false;                // the occasion is over; the next one may follow
+  if (!want) { if (camWantOff < 0) camWantOff = now; }
+  else camWantOff = -1;
+  // the yield ends with the occasion: a change of mode, or three seconds of
+  // nothing to follow -- not the blink of a subject between two steps
+  if (camYield && (mode !== camMode || (camWantOff > 0 && now - camWantOff > 3000))) camYield = false;
+  if (want) camMode = mode;
   if (camYield) return;
   if (!camFollow) {
     if (!want) return;
@@ -2104,17 +2116,20 @@ const cloudTex = (() => {
   const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
   for (let i = 0; i < 140; i++) {
     const r = 12 + rnd() * 34, px = rnd() * S, py = rnd() * S;
-    const g = x.createRadialGradient(px, py, 0, px, py, r);
-    g.addColorStop(0, 'rgba(255,255,255,' + (0.35 + rnd() * 0.45) + ')');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    x.fillStyle = g;
-    // painted four times, wrapped, so the tile has no seam
-    for (const [dx, dy] of [[0, 0], [-S, 0], [0, -S], [-S, -S]]) {
-      x.beginPath(); x.arc(px + dx + (dx ? S : 0) - (dx ? 0 : 0), py + dy + (dy ? S : 0), r, 0, Math.PI * 2); x.fill();
+    const g0 = 'rgba(255,255,255,' + (0.35 + rnd() * 0.45) + ')';
+    // painted on this tile and, where it crosses an edge, on the neighbours'
+    // side too, so the tile has no seam
+    for (const dx of [-S, 0, S]) for (const dy of [-S, 0, S]) {
+      if (px + dx + r < 0 || px + dx - r > S || py + dy + r < 0 || py + dy - r > S) continue;
+      const gg = x.createRadialGradient(px + dx, py + dy, 0, px + dx, py + dy, r);
+      gg.addColorStop(0, g0); gg.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = gg;
+      x.beginPath(); x.arc(px + dx, py + dy, r, 0, Math.PI * 2); x.fill();
     }
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.__shared = true;                 // one texture for every cloud: never disposed with a thing
   return t;
 })();
 const bubbleMat = new THREE.MeshBasicMaterial({
@@ -2128,8 +2143,9 @@ const puffTex = (() => {
   c.width = c.height = S;
   const x = c.getContext('2d');
   const g0 = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
-  g0.addColorStop(0, 'rgba(255,255,255,0.95)');
-  g0.addColorStop(0.45, 'rgba(255,255,255,0.7)');
+  g0.addColorStop(0, 'rgba(255,255,255,1)');
+  g0.addColorStop(0.55, 'rgba(255,255,255,0.92)');
+  g0.addColorStop(0.8, 'rgba(255,255,255,0.4)');
   g0.addColorStop(1, 'rgba(255,255,255,0)');
   x.fillStyle = g0; x.fillRect(0, 0, S, S);
   let seed = 3;
@@ -2140,7 +2156,9 @@ const puffTex = (() => {
     g.addColorStop(0, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)');
     x.fillStyle = g; x.fillRect(0, 0, S, S);
   }
-  return new THREE.CanvasTexture(c);
+  const t = new THREE.CanvasTexture(c);
+  t.__shared = true;
+  return t;
 })();
 // A CLOUD: soft puffs round a centre, flattened a little and fuller on top,
 // the way a drawn thought bubble is. Deterministic from its seed so a rebuilt
@@ -2158,15 +2176,15 @@ function makeCloud(r, opacity = 0.32, seed = 1, tint = 0xe6f2ff) {
     sp.scale.set(pr * 2.2, pr * 1.9, 1);
     g.add(sp);
   };
-  const n = 8;
+  const n = 7;
   for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + rnd() * 0.5;
-    const d = r * (0.72 + rnd() * 0.18), pr = r * (0.5 + rnd() * 0.2);
-    puff(Math.cos(a) * d, (rnd() - 0.4) * r * 0.4, Math.sin(a) * d * 0.7, pr);
+    const a = (i / n) * Math.PI * 2 + rnd() * 0.4;
+    const d = r * (0.95 + rnd() * 0.15), pr = r * (0.42 + rnd() * 0.18);
+    puff(Math.cos(a) * d, (rnd() - 0.45) * r * 0.5, Math.sin(a) * d * 0.6, pr);
   }
-  puff(r * 0.2, r * 0.6, 0, r * 0.6);
-  puff(-r * 0.35, r * 0.5, r * 0.1, r * 0.5);
-  puff(0, -r * 0.25, 0, r * 0.7);        // a thin floor under the thought
+  puff(r * 0.25, r * 0.8, 0, r * 0.5);
+  puff(-r * 0.4, r * 0.7, r * 0.1, r * 0.45);
+  puff(0, -r * 0.55, 0, r * 0.6);        // a thin floor under the thought
   return g;
 }
 const bubble = new THREE.Group();
@@ -14042,7 +14060,7 @@ function addMiniBubble(node, cond) {
   inner.scale.setScalar(0.5);
   inner.position.y = 0.02;
   g.add(inner);
-  const halo = makeCloud(0.25, 0.3, 2);
+  const halo = makeCloud(0.3, 0.45, 2);
   g.add(halo);
   g.position.y = 1.95;
   g.scale.setScalar(1.6);
@@ -14088,9 +14106,9 @@ function rebuildCondition() {
   marks.forEach(([o, p]) => setPick(o, { kind: 'cond', path: p }));
 
   condDisplay = new THREE.Group();
-  inner.scale.setScalar(0.72);
+  inner.scale.setScalar(0.86);
   condDisplay.add(inner);
-  const halo = makeCloud(0.38, 0.34, 3);
+  const halo = makeCloud(0.48, 0.5, 3);
   // the whole bubble is a click target for taking a copy of the memory --
   // no need to hit a tiny ghost part
   halo.traverse(o => { if (o.isSprite) setPick(o, { kind: 'cond', path: [], outer: true }); });
@@ -14798,9 +14816,13 @@ function refreshLibrary(select) {
   if (!document.getElementById('robotList')) return;
   const names = Object.keys(loadLibrary()).sort();
   const sel = $('robotList');
-  sel.innerHTML = names.length
-    ? names.map(n => `<option${n === select ? ' selected' : ''}>${n}</option>`).join('')
-    : '<option value="">(none saved)</option>';
+  // saved names are text, not markup: an imported robot's name is untrusted
+  sel.replaceChildren(...(names.length ? names : [null]).map(n => {
+    const o = document.createElement('option');
+    if (n == null) { o.value = ''; o.textContent = '(none saved)'; }
+    else { o.textContent = n; o.selected = n === select; }
+    return o;
+  }));
   $('loadBtn').disabled = !names.length;
   $('delBtn').disabled = !names.length;
   $('exportBtn').disabled = !names.length;
@@ -16172,8 +16194,13 @@ function renderProgram(list = null) {
       : activeBot ? 'not trained yet' : 'no robot at the bench'}</li>`;
     return;
   }
-  ul.innerHTML = shown.map((s, i) =>
-    `<li><span class="n">${i + 1}</span><span>${describe(s)}</span></li>`).join('');
+  ul.replaceChildren(...shown.map((s, i) => {
+    const li = document.createElement('li');
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = String(i + 1);
+    const d = document.createElement('span'); d.textContent = describe(s);
+    li.append(n, d);
+    return li;
+  }));
 }
 function refreshUI() {
   if (offstage()) return;
@@ -17676,6 +17703,7 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
   // first; resolve never looks at the hand (it skips whatever is held)
   const target = (!busy && mode !== 'replay') ? resolve(ev) : null;
   hoverBubble = (rubyActive || dustyActive) && pointerOverBubble(ev);
+  camLastMove = performance.now();
   { const rr = renderer.domElement.getBoundingClientRect();
     const fx = (ev.clientX - rr.left) / rr.width;
     edgePointer = fx < 0.12 || fx > 0.88; }
@@ -17777,11 +17805,20 @@ fitViewport();
 function loadModel(name, onLoad) {
   const loader = new GLTFLoader();
   const packed = window.__TT_MODELS?.[name];
-  if (!packed) return loader.load(name, onLoad);
-  const bin = atob(packed);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  loader.parse(bytes.buffer, '', onLoad);
+  const failed = (e) => {
+    console.error('model failed to load:', name, e);
+    const veil = document.getElementById('loading');
+    if (veil && !veil.classList.contains('gone')) {
+      veil.textContent = `Could not load ${name} \u2014 ${e?.message || e?.type || 'the file is missing or damaged'}. Reload the page to try again.`;
+    } else say(`Could not load ${name}.`);
+  };
+  if (!packed) return loader.load(name, onLoad, undefined, failed);
+  try {
+    const bin = atob(packed);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    loader.parse(bytes.buffer, '', onLoad, failed);
+  } catch (e) { failed(e); }
 }
 loadModel('robot_v4.glb', (gltf) => {
   template = gltf.scene;
@@ -21456,11 +21493,14 @@ window.__nano = {
   },
   clickHole(box, index) { handleClick({ kind: 'hole', box, index }); },
   tilt(t) { return t?.userData.kind === 'scale' ? scaleTilt(t) : null; },
+  orbitStart() { orbit.dispatchEvent({ type: 'start' }); },     // the player takes the camera
+  camStill() { camLastMove = -1e9; },                            // the mouse has rested
   smartCam(on) {
     if (on != null) setSmartCam(on);
     let center = null;
     if (condDisplay) { _scBox.setFromObject(condDisplay); center = _scBox.getCenter(new THREE.Vector3()).toArray(); }
     return { on: smartCam, following: !!camFollow, t: camFollow?.t ?? 0, hover: hoverBubble, edge: edgePointer, yield: camYield,
+             still: performance.now() - camLastMove,
              bubble: bubble.visible, cond: !!condDisplay, center, helpers: rubyActive || dustyActive, mode };
   },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },

@@ -5353,3 +5353,48 @@ controls off while it follows. Orbit or zoom and the follow lets go where it
 is; the camera is yours until the next occasion -- the next lesson, run or
 thought you point at. Measured: a wheel turn mid-follow ends the follow and
 the camera stays where you put it.
+
+## A still mouse, firmer puffs, and a reviewer's five findings
+
+*Added 4 Sep. Ken: "better smart camera but let's not have it do anything
+while a user is moving the mouse, wait a second or two after the mouse
+stops moving." He also passed on a code review from ChatGPT: the clouds
+read as luminous fog rather than discrete puffs and the thought inside is
+faint and small; the camera change deserves a regression test across a
+whole run, and the yield reset on any transient gap; program descriptions
+went into the page as HTML; the dev server's path check was a prefix test;
+one robot's disposal could dispose every cloud's texture; the cloud tile's
+wrap offsets cancelled; a model that failed to load left "Loading..."
+forever; and the one-megabyte file is a maintenance risk.*
+
+**A still mouse.** The smart camera does nothing at all while the pointer
+is moving -- neither in nor out -- and acts a second and a half after it
+stops. A lesson begun with the mouse in motion leaves the camera where it
+is until the hand rests.
+
+**The yield lasts the occasion.** The player's orbit or zoom now holds
+until the mode changes or there has been nothing to follow for three
+seconds; before, the subject blinking out between two of a run's steps
+handed the camera back. A suite check runs a team through a whole run:
+still while moving, follows when still, lets go on an orbit, stays let go
+to the end, follows the next occasion.
+
+**Firmer puffs, a bigger thought.** The puff keeps a solid core and fades
+only at its rim, the seven puffs sit further apart, and the thought inside
+is a fifth larger, so the cloud is puffs rather than fog and the thought
+reads.
+
+**The reviewer's findings, taken.** Program descriptions are built from
+elements and text, never markup -- an imported robot's name or pad text
+could have carried HTML into the page; the saved-robot list likewise. The
+dev server judges containment by relation to its directory, not by prefix,
+so a neighbour named like it cannot be read. The two cloud textures are
+marked shared, so discarding a mini-robot with a preview cloud no longer
+disposes the puff every cloud uses. The cloud tile's wrapped copies are
+drawn on the neighbouring tiles' side, so the dome's texture has no seam
+(the old offsets cancelled and painted one spot four times). And a model
+that fails to load says so on the loading veil, with the file's name,
+instead of "Loading..." forever. Not taken, for now: splitting the file
+into modules -- the single file is what makes the artifact and the chat
+build trivial, and the suite is what keeps it honest -- and binding the
+dev server to localhost, since Ken tests from a tablet on the same network.

@@ -1325,6 +1325,49 @@ async function pairTeamCheck(D) {
   return ok;
 }
 
+// THE SMART CAMERA, THROUGH A RUN. It waits for a still mouse, follows the
+// work, and lets go for the rest of the occasion the moment the player
+// orbits or zooms -- a run's steps blinking the subject in and out must not
+// hand it back.
+async function smartCamCheck(D) {
+  const world = await (await fetch('p33_pair.json')).json();
+  D.worldIn(world);
+  await slowSettle(D, 2000);
+  D.smartCam(true);
+  const cv = D.renderer.domElement, r = cv.getBoundingClientRect();
+  const move = (fx) => cv.dispatchEvent(new PointerEvent('pointermove',
+    { clientX: r.left + r.width * fx, clientY: r.top + r.height / 2, bubbles: true, pointerType: 'mouse' }));
+  const boxes = [];
+  for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'box') boxes.push(t); }
+  boxes.sort((a, b) => a.position.x - b.position.x);
+  const p0 = D.camera.position.clone();
+  // 1. the mouse is moving: a lesson begins and the camera stays put
+  D.hold(boxes[0]); D.giveRobot();
+  move(0.5); await frames(D, 30); move(0.52); await frames(D, 30);
+  const stillMoving = D.camera.position.distanceTo(p0) < 0.01 && !D.smartCam().following;
+  // 2. the mouse rests: the camera follows
+  D.camStill(); await frames(D, 80);
+  const followed = D.smartCam().following && D.camera.position.distanceTo(p0) > 0.5;
+  // 3. the player takes the camera mid-run: the follow lets go and stays let go
+  //    while the run's steps come and go
+  D.orbitStart(); await frames(D, 5);
+  const pHeld = D.camera.position.clone();
+  const letGo = !D.smartCam().following && D.smartCam().yield;
+  await slowSettle(D, 20000);          // the whole run
+  const stayed = D.camera.position.distanceTo(pHeld) < 0.01 && !D.smartCam().following;
+  // 4. a new occasion (the run is over; the world's mode changed) follows again
+  D.clickThing(D.mine()); await slowSettle(D, 1500); D.clickBench(-0.9, 2.0); await slowSettle(D, 1500);
+  await slowSettle(D, 3500);
+  D.hold(boxes[1]); D.giveRobot(); D.camStill(); await frames(D, 80);
+  const again = D.smartCam().following;
+  await slowSettle(D, 20000);
+  const ok = stillMoving && followed && letGo && stayed && again;
+  put((ok ? 'PASS' : 'FAIL') + ' the smart camera waits, follows and lets go  (still-while-moving=' + stillMoving
+      + ' follows-when-still=' + followed + ' lets-go-on-orbit=' + letGo + ' stays-let-go-through-the-run=' + stayed
+      + ' follows-the-next-occasion=' + again + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3581,6 +3624,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let camOK = true;
+  try { camOK = want('smartCam') ? await smartCamCheck(D) : true; }
+  catch (e) { camOK = false; put('FAIL the smart camera waits, follows and lets go  ' + e.message, 'fail'); }
   let pairOK = true;
   try { pairOK = want('pairTeam') ? await pairTeamCheck(D) : true; }
   catch (e) { pairOK = false; put('FAIL two robots, one run  ' + e.message, 'fail'); }
@@ -3680,7 +3726,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

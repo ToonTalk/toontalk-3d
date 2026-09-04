@@ -73,8 +73,12 @@ const server = http.createServer(async (req, res) => {
 
   // static
   const rel = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
-  const file = path.join(ROOT, rel);
-  if (!file.startsWith(ROOT)) {           // no climbing out of the served dir
+  const file = path.resolve(ROOT, '.' + rel);
+  // INSIDE THE SERVED DIRECTORY, by relation rather than by prefix: a prefix
+  // test let a neighbouring directory whose name merely begins with this
+  // one's ("tt3d-private") pass (a reviewer's finding)
+  const inside = path.relative(ROOT, file);
+  if (!inside || inside.startsWith('..') || path.isAbsolute(inside)) {
     res.writeHead(403).end('forbidden');
     return;
   }
