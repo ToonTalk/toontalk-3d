@@ -5325,3 +5325,31 @@ train on, one for the team. Measured: the team leaves 4/5 alone in the left
 pan and 5/6 in the spare hole from a box tipping either way, and the
 player's route trained by clicks gives the thoughts the hints describe. The
 sorting challenge is puzzle 34.
+
+## Clouds, and a camera that lets go
+
+*Added 4 Sep. Ken: "Can we improve the way thought bubbles look? Both when
+a robot is inside and afterwards? More cloudlike maybe? Less circular and
+more textured? The smart camera does a good job when beginning to train a
+robot but it shouldn't turn off user camera controls (e.g. zooming out if
+desired)."*
+
+**Clouds.** The thought's halo above a robot's head is a cloud of soft
+puffs now: one round blob painted once, a radial fade with a little mottle,
+shown as sprites that always face you, eight round a centre and two on
+top, with a thin one underneath -- deterministic from a seed so a rebuilt
+thought keeps its shape, and thin in the middle so what the thought holds
+shows through. The first two tries were overlapping spheres: additive ones
+summed to a white glare that hid the thought, normal-blended ones kept
+their crisp circular edges and read as soap bubbles. The same cloud,
+smaller, is the mini-robot's preview. The lesson's dome keeps its shape --
+it is the whole workshop's ceiling -- and wears a tiled cloud texture,
+wrapped three times round, as an alpha map; a puffy rim tried on it read as
+grey discs where the spheres met the floor, and came off. Every puff of the
+halo is still a click target for taking a copy of the memory.
+
+**The camera lets go.** The smart camera no longer switches the orbit
+controls off while it follows. Orbit or zoom and the follow lets go where it
+is; the camera is yours until the next occasion -- the next lesson, run or
+thought you point at. Measured: a wheel turn mid-follow ends the follow and
+the camera stays where you put it.
