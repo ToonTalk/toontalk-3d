@@ -5425,3 +5425,78 @@ its target). The suite check had passed by accident -- the test window's
 default view happens to sit at the same distance from the thought -- so it
 now starts the lesson from a far pose and includes Ken's case: a run that
 stops with red parts, camera 3.6 from the box and 3.2 from the thought.
+
+## The rounds in all, what the narration points at, and the work area
+
+*Added 4 Sep. Ken: "Notice it says the robot stopped after 17 rounds when
+it should be 18 (plus 1 before using Ruby). When the narration or Marty
+refers to anything (Ruby, Mimi, the stack of pads, or whatever) then the
+camera should pull back enough for that thing to be visible." Then, with a
+screenshot of a run cut off at the bottom: "the camera should be pulled
+back because you should always be able to see the work area of the robot
+(unless the user explicitly moves the camera elsewhere)." And: "puzzle 33
+can be accomplished by one robot -- no need for a team or 2 copies of the
+box."*
+
+**The rounds in all.** "Stopped after 17 rounds" counted since Run; Ken
+counted since the robot was given the number, one round before Ruby
+loosened it and seventeen after. Both are said when they differ: "Stopped
+after 17 rounds (18 in all with this)", and "Ran 17x (18 in all with
+this)". The count in all belongs to the thing on the stand and starts
+again with a new one.
+
+**What the narration points at.** A message on the card, or a line from
+Marty, is read for the things it names -- Ruby, Dusty, Mimi and her
+copier, Marty, any of the stacks, the notebook, the judge, the bird, the
+nest, the robot's work area. Any of them off screen brings a view that
+holds them and what the player was looking at, from further back along the
+same line of sight; never closer. In a lesson or a run the camera then
+rests until the next occasion, or the follow would come straight back in
+and hide what was just shown. Measured: a lesson's camera close on the box,
+"Wake Ruby and click a red part" pulls it back until Ruby is on screen.
+
+**The work area stays in view.** Every smart pose -- following the claw,
+the thought view, a mention -- is pulled back along its own line of sight
+until what is on the robot's stand and its work spot are on screen. Ken's
+screenshot showed the still-mouse rule freezing a glide half-way, the box
+cut off at the bottom: a glide already under way now finishes, its target
+frozen, and only new moves wait for the mouse to rest.
+
+**Puzzle 33, two thoughts.** With one box, one robot did both steps and no
+team was needed. Now the two boxes tip opposite ways, and a robot remembers
+which way its scale tipped, so the one trained on the left-tipping box
+refuses the other: two thoughts, two robots, and a team that takes either.
+Both finished boxes go in a two-hole box for the bird. The team check and
+the judge check cover it.
+
+## A robot on the clipboard, supplies for the sort, and a leaning scale
+
+*Added 4 Sep. Ken: one of the untrained robots in puzzle 34 blocks the
+view of the scale the robot is working on; he picked up a team, typed
+Ctrl+C, it said copied and nothing was on the clipboard; 34 is tricky and a
+mistake means starting over -- there should be a stack of untrained robots,
+a stack of boxes for training and a stack of test boxes; a scale with an
+empty pan should lean toward the pan with something in it.*
+
+**A robot on the clipboard.** Ctrl+C with a robot in hand copied its NAME,
+and a nameless team copied nothing while the card said "Copied." Now
+Ctrl+C with a robot, a team, a box, a scale, a nest or a room in hand puts
+the thing on the clipboard as text -- the same record Save held thing
+writes -- and Ctrl+V with an empty hand reads a record back into it, so a
+team can travel between two workshops through the clipboard. The card
+says "Copied" only once the browser has taken the text; before, the
+promise was never waited for.
+
+**Supplies for the sort.** Puzzle 34's four spare robots stood on the
+back row, which is the robot's own work area, in front of the scale it was
+working on. They are gone: robots come from the stack of little robots,
+and Mimi is there to copy the practice box before a lesson, so a slip
+costs a copy rather than a fresh start. Stacks of a particular box -- a
+stack of practice boxes, a stack of test boxes -- would be a new kind of
+stack; Mimi does that job for now, and a copy she makes keeps its stuck
+numbers stuck (it did not, which would have let a copied test box be
+sorted by hand).
+
+**A leaning scale.** A scale with one full pan leans toward it; it used to
+sit level, as though empty. A thought that wants two numbers still does
+not fit a scale with one, so nothing that stops by balancing changes.

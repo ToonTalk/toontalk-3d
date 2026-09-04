@@ -39,7 +39,7 @@
 #   p30 a word dropped into a box with no holes comes apart, a letter a hole
 #   p31 the third letter of "Marty": a pad dropped on a number picks it out
 #   p32 down to one
-#   p33 two robots, one run: the first team, a swapper and a mover
+#   p33 two robots, one team: a box tipping each way, a thought for each
 #   p34 sort three: a team of four robots, trained on a practice box: a halver that weighs itself against 1 and stops
 #
 # Each is its own world file; the app carries the whole set by name (see
@@ -1155,52 +1155,53 @@ puzzle(
                       'against 1, and the ÷2 back in its hole.')),
     scenery=SCENERY)
 
-# --- p33: two robots, one run ----------------------------------------------------------
+# --- p33: two robots, one team ----------------------------------------------------------
 # The first team puzzle, kept small (Ken: 33 was too complex for the first
-# puzzle involving teams). Two stuck fractions in a scale tipping left, and a
-# spare hole: robot A (tipping LEFT) swaps the pans through the spare hole;
-# robot B (tipping RIGHT) moves the right pan -- the bigger -- to the spare
-# hole. In a team, one Run does both: A swaps, the scale tips right, B moves
-# the bigger out, the scale has one number and nothing fits. Two identical
-# boxes: one to train on, one for the team.
-PAIR = box(scale(stuck(num(5, 6)), stuck(num(4, 5))), None)   # noqa: F405
+# puzzle involving teams). Two boxes, each a scale with two stuck fractions
+# and a spare hole -- one tipping LEFT, the other RIGHT. In each the smaller
+# fraction must be left alone in the left pan and the bigger moved out to
+# the spare hole. A robot remembers which way its scale tipped, so the one
+# trained on the left-tipping box refuses the other (Ken: with one box, one
+# robot did both steps and no team was needed). Two thoughts: two robots,
+# and a team takes either box.
+PAIR_L = box(scale(stuck(num(5, 6)), stuck(num(4, 5))), None)   # noqa: F405
+PAIR_R = box(scale(stuck(num(4, 5)), stuck(num(5, 6))), None)   # noqa: F405
 PAIR_DONE = box(scale(stuck(num(4, 5)), None), stuck(num(5, 6)))   # noqa: F405
 puzzle(
     'p33',
-    'Two robots, one run. The computer wants the smaller of these two stuck '
-    'fractions left alone in the scale — the bigger one moved out to the '
-    'spare hole. That takes two different jobs: swap the pans if the bigger '
-    'one is on the left, then move the right pan out. Two robots, one for '
-    'each job, dropped one on the other, make a team — and a team does the '
-    'whole thing in one Run. Here are two of the same box: practice on one, '
-    'give the team the other.',
-    'a box holding a scale with only the smaller fraction, in its left pan, '
-    'and the bigger one in the spare hole',
+    'Two robots, one team. Here are two boxes, and in each the computer '
+    'wants the smaller of the two stuck fractions left alone in the scale, '
+    'the bigger one moved out to the spare hole. One scale tips left, the '
+    'other right — and a robot remembers which way its scale tipped, so the '
+    'robot you train on one box refuses the other. Train one robot for each, '
+    'drop one on the other to make a team, and the team takes either box. '
+    'Put both finished boxes in the two-hole box and give it to the bird.',
+    'a box holding the two finished boxes: in each, the smaller fraction '
+    'alone in the left pan and the bigger in the spare hole',
     ['A team is tried in order: the first robot whose thought fits takes the '
-     'round, and the team goes on while any thought fits.',
-     'The swapper first, as in puzzle 28: left pan to the spare hole, right '
-     'pan to the left pan, spare hole to the right pan. Leave; wake Ruby and '
-     'loosen both pans to “any number”. Its thought says tipping LEFT.',
-     'Run the swapper on the first box: it swaps once and stops, since the '
-     'scale now tips right. Train the second robot on that box: the right '
-     'pan to the spare hole. Leave; Ruby on both pans. Its thought says '
-     'tipping RIGHT.',
-     'Drop the second robot on the swapper: a team of two, the swapper '
-     'leading. Give the team the OTHER box and press Run: swap, move, stop. '
-     'Give the bird that box.'],
+     'round. Two robots with different thoughts, one for each way the scale '
+     'can tip.',
+     'On the box tipping LEFT: left pan to the spare hole, then right pan to '
+     'the left pan. Leave; wake Ruby and loosen both pans to “any number”. '
+     'Its thought says tipping left.',
+     'On the box tipping RIGHT, with the other robot: right pan to the spare '
+     'hole. Leave; Ruby on both pans. Its thought says tipping right.',
+     'Drop one robot on the other: a team of two. Give the team a box and '
+     'press Run; take the finished box out and give it the other. Put both '
+     'in the two-hole box and give the bird that box.'],
     rules(tools=['ruby']),
-    table([PAIR, PAIR, ROBOT, ROBOT],
-          fixed(PAIR_DONE, 'we need this'),
+    table([PAIR_L, PAIR_R, empty_box(2), ROBOT, ROBOT],   # noqa: F405
+          fixed(box(PAIR_DONE, PAIR_DONE), 'we need this'),   # noqa: F405
           bird(10331, 'p33-post', 'give me your answer'),    # noqa: F405
           nest(10332, 'p33-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10331, 'p33-post', 10332, 'p33-reply',
-                right=PAIR_DONE,
+                right=box(PAIR_DONE, PAIR_DONE),               # noqa: F405
                 on_right=next_note('') + [load('p34')],
-                notes=['4/5 stays, 5/6 moves out — two robots, one run. '
-                       'Next: a team of four sorts three.'],
-                sorry='Not quite — the smaller fraction alone in the left '
-                      'pan, the bigger in the spare hole, the right pan '
-                      'empty.')),
+                notes=['Both done — 4/5 stays, 5/6 moves out, whichever way '
+                       'the scale tipped. Next: a team of four sorts three.'],
+                sorry='Not quite — both boxes in the two-hole box, each with '
+                      'the smaller fraction alone in the left pan and the '
+                      'bigger in the spare hole.')),
     scenery=SCENERY)
 
 # --- p34: sort three ---------------------------------------------------------------------
@@ -1213,6 +1214,9 @@ puzzle(
 #   hole 4 full: left pan -> hole 2, right pan -> hole 3
 # Three compare-and-swaps, and the team stops by itself when the scale is
 # empty. Trained on a practice box; judged on a box of other, stuck fractions.
+# Robots come from the stack of little robots and Mimi copies the practice
+# box (Ken: spare robots on the bench stood in the robot's work area, and a
+# slip meant starting over).
 PRACTICE = box(scale(num(2, 3), num(3, 5)), num(5, 8), None, None, None)     # noqa: F405
 TO_SORT = box(scale(stuck(num(11, 15)), stuck(num(7, 9))), stuck(num(4, 5)), None, None, None)   # noqa: F405
 SORTED = box(scale(None, None), stuck(num(11, 15)), stuck(num(7, 9)), stuck(num(4, 5)), None)   # noqa: F405
@@ -1224,7 +1228,9 @@ puzzle(
     'are stuck fast, and too close to tell apart by '
     'eye. A team of four robots can do it — the swapper you know and '
     'three that each move a number — trained on the practice box at the '
-    'front, which holds other fractions.',
+    'front, which holds other fractions. Robots come from the stack of '
+    'little robots, and Mimi will copy the practice box before you train on '
+    'it, so a slip costs you a copy, not a fresh start.',
     'the box with its three fractions in order after the empty scale, '
     'smallest first',
     ['Sorting three is three compare-and-swaps. The scale compares; the '
@@ -1247,7 +1253,7 @@ puzzle(
      'Drop the robots on one another to make a team. Give the team the '
      'middle box and press Run: it swaps and moves until the scale is empty '
      'and the three are in order. Give the bird the box.'],
-    rules(tools=['ruby', 'dusty']),
+    rules(stacks=['minis'], tools=['ruby', 'dusty', 'mimi']),
     table([PRACTICE],
           fixed(SORTED, 'we need this'),
           bird(10341, 'p34-post', 'give me your answer'),    # noqa: F405
@@ -1259,6 +1265,5 @@ puzzle(
                        'you! (More puzzles are on the way.)'],
                 sorry='Not quite — the three fractions in holes 2, 3 and 4, '
                       'smallest first, both pans empty, and hole 5 empty.'),
-          extra=[{'thing': TO_SORT, 'x': 0.75, 'z': MID}]
-                + [{'thing': ROBOT, 'x': x, 'z': BACK} for x in (-0.8, -0.45, -0.1, 0.25)]),
+          extra=[{'thing': TO_SORT, 'x': 0.75, 'z': MID}]),
     scenery=SCENERY)

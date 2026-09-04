@@ -65,8 +65,8 @@ the pans balance; then 1,024 by a doubler weighed against 1,000; the biggest
 of three and a pair in order, with a scale by hand; a robot that swaps a
 scale's stuck pans; letters poured into a word and a word into letters; the
 third letter of a word picked out by a number; a halver weighed against
-1; two robots that together leave the smaller of two stuck fractions in
-the pan; and a team of four that sorts three). Marty's ship lies on the floor behind every table as `scenery`; a small
+1; two boxes tipping opposite ways, a robot for each and a team that takes
+either; and a team of four that sorts three). Marty's ship lies on the floor behind every table as `scenery`; a small
 goal carries `size` on its thing and stands larger.
 
 There is no Rounds control: a robot runs until its thought stops fitting, so

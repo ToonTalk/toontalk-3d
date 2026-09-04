@@ -1296,9 +1296,10 @@ async function badgeWeightCheck(D) {
   return ok;
 }
 
-// TWO ROBOTS, ONE RUN. Puzzle 33's team: a swapper (tipping left) and a
-// mover (tipping right) leave the smaller fraction alone in the left pan and
-// the bigger in the spare hole -- from a box tipping either way.
+// TWO ROBOTS, ONE TEAM. Puzzle 33's team: one robot for a scale tipping
+// left, one for tipping right; each leaves the smaller fraction alone in the
+// left pan and the bigger in the spare hole. A robot's thought keeps the
+// tilt, so neither alone takes both boxes.
 async function pairTeamCheck(D) {
   const world = await (await fetch('p33_pair.json')).json();
   D.worldIn(world);
@@ -1348,6 +1349,9 @@ async function smartCamCheck(D) {
   // 2. the mouse rests: the camera follows
   D.camStill(); await frames(D, 80);
   const followed = D.smartCam().following && D.camera.position.distanceTo(p0) > 0.5;
+  // ...and the work area -- what is on the stand -- is in the picture
+  const gb = D.mine();
+  const workAreaOn = gb ? D.onScreen(new D.THREE.Box3().setFromObject(gb).getCenter(new D.THREE.Vector3())) : false;
   // 3. the player takes the camera mid-run: the follow lets go and stays let go
   //    while the run's steps come and go
   D.orbitStart(); await frames(D, 5);
@@ -1361,9 +1365,9 @@ async function smartCamCheck(D) {
   D.hold(boxes[1]); D.giveRobot(); D.camStill(); await frames(D, 80);
   const again = D.smartCam().following;
   await slowSettle(D, 20000);
-  const ok = stillMoving && followed && letGo && stayed && again;
+  const ok = stillMoving && followed && workAreaOn && letGo && stayed && again;
   put((ok ? 'PASS' : 'FAIL') + ' the smart camera waits, follows and lets go  (still-while-moving=' + stillMoving
-      + ' follows-when-still=' + followed + ' lets-go-on-orbit=' + letGo + ' stays-let-go-through-the-run=' + stayed
+      + ' follows-when-still=' + followed + ' work-area-on-screen=' + workAreaOn + ' lets-go-on-orbit=' + letGo + ' stays-let-go-through-the-run=' + stayed
       + ' follows-the-next-occasion=' + again + ')', ok ? 'pass' : 'fail');
   return ok;
 }
@@ -1424,13 +1428,64 @@ async function thoughtViewCheck(D) {
   const afterView = { lesson, moved: +D.camera.position.distanceTo(pLesson).toFixed(2), d: +dist().toFixed(2), on: onScreen(), done: !D.smartCam().showThought };
   // the view is 3.4 from a point a little under the thought, so about 3.2
   // from the thought itself
-  const ok = flagged && redView.moved > 0.4 && redView.on && Math.abs(redView.d - 3.2) < 0.35 && redView.done
-    && runView.red && runView.ran && runView.on && Math.abs(runView.d - 3.2) < 0.35 && runView.fromBox > 2.9 && runView.done
-    && lesson && Math.abs(inLesson - 2.6) < 0.2
-    && afterView.moved > 0.4 && afterView.on && Math.abs(afterView.d - 3.2) < 0.35 && afterView.done;
+  const ok = flagged && redView.moved > 0.4 && redView.on && redView.d > 2.9 && redView.done
+    && runView.red && runView.ran && runView.on && runView.d > 2.9 && runView.fromBox > 2.9 && runView.done
+    && lesson && Math.abs(inLesson - 2.6) < 0.35
+    && afterView.moved > 0.4 && afterView.on && afterView.d > 2.9 && afterView.done;
   put((ok ? 'PASS' : 'FAIL') + ' the camera shows the thought  (red-parts=' + flagged + ' red-view=' + JSON.stringify(redView)
       + ' after-a-run-stops=' + JSON.stringify(runView)
       + ' in-lesson=' + inLesson + ' after-lesson=' + JSON.stringify(afterView) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// WHAT THE NARRATION POINTS AT comes into view, and the rounds are counted
+// in all. A lesson has the camera close on the box; a message naming Ruby
+// pulls it back until Ruby is on screen. A robot that never stops is
+// stopped twice, and the second stop says how many rounds in all.
+async function mentionCheck(D) {
+  // free play, where Ruby stands (a puzzle without her has nothing to show)
+  const num = (n) => ({ kind: 'number', value: { n: String(n), d: '1' } });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'box', holes: [num(0), { kind: 'scale', holes: [num(1), num(7)] }] }, x: -0.3, z: 2.0 },
+    { thing: { kind: 'robot', program: [] }, x: 0.5, z: 2.0 },
+  ] });
+  await slowSettle(D, 3000);
+  D.smartCam(true);
+  for (let i = 0; i < 40 && !D.helperAt('ruby'); i++) await new Promise(r => setTimeout(r, 250));   // her model may still be loading
+  const rubyThere = !!D.helperAt('ruby');
+  const hs = D.helperState ? JSON.stringify(D.helperState()) : '?';
+  const box = (() => { for (let i = 0; i < 16; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'box') return t; } return null; })();
+  D.hold(box); D.giveRobot(); await slowSettle(D, 3000);
+  D.camStill(); await frames(D, 120);
+  const rp = () => D.helperAt('ruby');
+  const before = { on: rp() ? D.onScreen(rp()) : null, p: D.camera.position.clone() };
+  D.mention('Wake Ruby and click a red part to loosen it.');
+  D.camStill(); await frames(D, 120);
+  const after = { on: rp() ? D.onScreen(rp()) : null, moved: +D.camera.position.distanceTo(before.p).toFixed(2), rested: D.smartCam().yield };
+  D.exit(); await slowSettle(D, 3000);
+  // rounds in all: a robot that adds a fresh 1 to any number, stopped twice
+  D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [
+    { thing: { kind: 'number', value: { n: '1', d: '1' }, op: '+' }, x: -0.5, z: 2.0 }],
+    active: { kind: 'robot', name: 'adder', condition: { kind: 'wildNumber' },
+              program: [{ type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [] } }],
+              trainedOn: { kind: 'number', value: { n: '1', d: '1' }, op: '+' }, team: [] } });
+  await slowSettle(D, 3000);
+  const one = (() => { for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'number') return t; } return null; })();
+  D.hold(one); D.giveRobot();                 // it recognises any number and sets off
+  await frames(D, 400);
+  D.doc.getElementById('runBtn').click();     // Stop
+  await slowSettle(D, 6000);
+  const first = { text: D.doc.getElementById('hint').textContent, r: D.roundsNow() };
+  D.run(); await frames(D, 400);
+  D.doc.getElementById('runBtn').click();
+  await slowSettle(D, 6000);
+  const second = { text: D.doc.getElementById('hint').textContent, r: D.roundsNow() };
+  const inAll = second.r.givenRounds > second.r.runCount && / \(\d+ in all with this\)/.test(second.text)
+    && second.r.givenRounds === first.r.givenRounds + second.r.runCount && !/in all/.test(first.text);
+  const ok = before.on === false && after.on === true && after.moved > 0.4 && inAll;
+  put((ok ? 'PASS' : 'FAIL') + ' the narration points and the camera shows  (ruby-there=' + rubyThere + ' helpers=' + hs + ' ruby-on-screen before=' + before.on + ' after=' + after.on
+      + ' moved=' + after.moved + ' first=' + JSON.stringify(first.r) + ' second=' + JSON.stringify(second.r) + ' says-in-all=' + inAll + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -3690,6 +3745,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let mnOK = true;
+  try { mnOK = want('mention') ? await mentionCheck(D) : true; }
+  catch (e) { mnOK = false; put('FAIL the narration points and the camera shows  ' + e.message, 'fail'); }
   let tvOK = true;
   try { tvOK = want('thoughtView') ? await thoughtViewCheck(D) : true; }
   catch (e) { tvOK = false; put('FAIL the camera shows the thought  ' + e.message, 'fail'); }
@@ -3795,7 +3853,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

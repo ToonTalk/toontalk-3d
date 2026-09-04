@@ -2,7 +2,7 @@
  "kind": "world",
  "v": 3,
  "name": "p34",
- "intro": "The sorting challenge. The computer wants the box on the middle row sorted: its three fractions in holes 2, 3 and 4, smallest first, the scale empty, and the fifth hole \u2014 the swapper\u2019s spare \u2014 empty too. They are stuck fast, and too close to tell apart by eye. A team of four robots can do it \u2014 the swapper you know and three that each move a number \u2014 trained on the practice box at the front, which holds other fractions.",
+ "intro": "The sorting challenge. The computer wants the box on the middle row sorted: its three fractions in holes 2, 3 and 4, smallest first, the scale empty, and the fifth hole \u2014 the swapper\u2019s spare \u2014 empty too. They are stuck fast, and too close to tell apart by eye. A team of four robots can do it \u2014 the swapper you know and three that each move a number \u2014 trained on the practice box at the front, which holds other fractions. Robots come from the stack of little robots, and Mimi will copy the practice box before you train on it, so a slip costs you a copy, not a fresh start.",
  "goal": "the box with its three fractions in order after the empty scale, smallest first",
  "hints": [
   "Sorting three is three compare-and-swaps. The scale compares; the swapper swaps when it tips left. Three more robots move numbers in and out of the pans, and each knows its turn by which hole is full: 2, 3 or 4. Hole 5 is the swapper\u2019s spare, and stays empty.",
@@ -13,10 +13,13 @@
   "Drop the robots on one another to make a team. Give the team the middle box and press Run: it swaps and moves until the scale is empty and the three are in order. Give the bird the box."
  ],
  "rules": {
-  "stacks": [],
+  "stacks": [
+   "minis"
+  ],
   "tools": [
    "ruby",
-   "dusty"
+   "dusty",
+   "mimi"
   ],
   "typing": {
    "numbers": false,
@@ -482,46 +485,6 @@
    },
    "x": 0.75,
    "z": 1.55
-  },
-  {
-   "thing": {
-    "kind": "robot",
-    "name": null,
-    "program": [],
-    "team": []
-   },
-   "x": -0.8,
-   "z": 1.2
-  },
-  {
-   "thing": {
-    "kind": "robot",
-    "name": null,
-    "program": [],
-    "team": []
-   },
-   "x": -0.45,
-   "z": 1.2
-  },
-  {
-   "thing": {
-    "kind": "robot",
-    "name": null,
-    "program": [],
-    "team": []
-   },
-   "x": -0.1,
-   "z": 1.2
-  },
-  {
-   "thing": {
-    "kind": "robot",
-    "name": null,
-    "program": [],
-    "team": []
-   },
-   "x": 0.25,
-   "z": 1.2
   }
  ],
  "stations": {},
