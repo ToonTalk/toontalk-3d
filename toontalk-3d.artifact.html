@@ -30740,6 +30740,13 @@ function toggleMartyPanel() {
     martyGreeted = true;
     martySay(`Hi${nameTag(true)}! I\u2019m Marty. Ask me anything about the workshop \u2014 or say \u201cshow me\u201d and one of: `
       + Object.keys(MARTY_DEMOS).join(', ') + '. I never build programs, but I love showing how the pieces work.');
+    // THE SPEECH INTERFACE, said once (Ken): the microphone to talk, the
+    // speaker to silence him -- the microphone only where the browser has one
+    const mic = document.getElementById('martyMic');
+    const canListen = mic && mic.style.display !== 'none' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    const speech = (canListen ? 'You can talk to me instead of typing: press the microphone 🎤 and speak. ' : '')
+      + (window.speechSynthesis ? 'I read my answers aloud — the speaker 🔊 next to my name switches my voice off and on.' : '');
+    if (speech) martySay(speech);
     if (martyNewcomer) { martySay(lookAroundOffer(false)); martyNewcomer = false; }
   }
   if (on) { martyModeLine(); document.getElementById('martyIn').focus(); }
