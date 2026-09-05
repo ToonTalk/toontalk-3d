@@ -5526,3 +5526,37 @@ thought bubble ended up in my hands" is what that click does when she is
 NOT awake, and the tip now says what a click does in each state. And an
 erasure silently did nothing when the helper's model was not loaded yet,
 since her flight had nothing to fly; it flies a stand-in now.
+
+## Marty shows how to look around, and says your name
+
+*Added 5 Sep. Ken: "I'm about to introduce ToonTalk 3D to my
+grandchildren. I'm thinking to start by explaining how to move the camera
+around. Then Marty can take over. But what about users who just visit the
+site without someone to explain things? I wonder if Marty should be
+extended to explain how to move the camera (depending upon whether they
+are using a mouse or touch). Not sure if this should be offered to new
+user names or just be a button somewhere or part of Marty's greeting. Also
+I think Marty should occasionally use the user's name now and then when it
+seems natural."*
+
+**All three, because they cost little and reach different people.** A
+name signed in here for the first time gets the offer at once, with a
+welcome; Marty's greeting, the first time his panel opens, carries the
+same offer in a sentence; and a "Look around" button sits beside Ask, Make
+and Draw for anyone, any time. Asking him "how do I look around", "how do
+I move the camera" or "zoom" is the lesson too.
+
+**The lesson is a demonstration, not a paragraph.** Marty turns the whole
+workshop, brings it closer and backs away, slides it sideways, and hands
+the camera back where it was, saying at each beat what the visitor's own
+hand does to get that -- in mouse words on a mouse (drag, the wheel, the
+right button) and in finger words on a touch screen (one finger, a pinch,
+two fingers). Which words is known for sure after the first touch or
+click, and guessed from the device before that. The smart camera stands
+aside for the demonstration, and the last line reminds that a drag of your
+own always wins.
+
+**The name.** Where a person would say it -- the greeting, the welcome,
+"Now you, Ken", a solved puzzle -- and, for the brain, an instruction to
+use it now and then and not in every reply. The solved line says it every
+third time, so it never becomes a tic.

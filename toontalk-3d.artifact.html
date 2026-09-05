@@ -238,6 +238,9 @@ Drag with the left mouse button held to orbit the camera around the
 workshop; scroll to zoom in and out (numbers show more digits and more
 of their faces up close); drag with the right button to slide sideways.
 On a touchpad: one-finger drag orbits, pinch zooms, two-finger drag slides.
+Not sure? Press Look around in Marty's panel, or ask him "how do I
+look around": he turns, zooms and slides the camera himself and tells you
+what your mouse or fingers do to get the same.
 The smart camera (a toggle in the ⋮ menu, on by default) comes in
 on what a robot works on during a lesson or a run — point at the side
 of the screen to lean back out — and, when Ruby or Dusty is awake, on a
@@ -13857,10 +13860,30 @@ function mineSet(base, v) {
 const knownUsers = () => {
   try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); } catch { return []; }
 };
+// The visitor's name where a person would say it: a greeting, a well done,
+// the end of a lesson (Ken: "Marty should occasionally use the user's name
+// now and then when it seems natural"). nameTag() gives ", Ken" every third
+// time it is asked and nothing otherwise, so it never becomes a tic.
+let nameTurn = 0;
+function nameTag(always = false) {
+  if (!currentUser) return '';
+  if (always) return ', ' + currentUser;
+  return (++nameTurn % 3 === 1) ? ', ' + currentUser : '';
+}
+let martyNewcomer = false;     // a name signed in here for the first time
 function setUser(name) {
   currentUser = String(name || '').trim().slice(0, 40);
   try {
     const known = knownUsers();
+    // A NAME HE HAS NOT MET is offered the look-around lesson at once (Ken,
+    // thinking of visitors with nobody beside them to explain the camera)
+    if (currentUser && !known.includes(currentUser)) {
+      martyNewcomer = true;
+      if (typeof martySay === 'function' && typeof martyUI !== 'undefined' && martyUI.style.display !== 'none') {
+        martySay(lookAroundOffer(true));
+        martyNewcomer = false;
+      }
+    }
     localStorage.setItem(USER_KEY, currentUser);
     const all = known.filter(n => n !== currentUser);
     if (currentUser) all.unshift(currentUser);
@@ -24690,7 +24713,10 @@ function worldIn(data) {
   // what is wanted, out loud if he is speaking, and the card says it too.
   if (!merging && !offstage() && puzzleInfo?.intro) {
     if (typeof martyUI !== 'undefined' && martyUI) martyUI.style.display = 'block';
-    if (typeof martySay === 'function') martySay(puzzleInfo.intro);
+    if (typeof martySay === 'function') {
+      martySay(puzzleInfo.intro);
+      if (martyNewcomer) { martySay(lookAroundOffer(true)); martyNewcomer = false; }
+    }
     // ONE VOICE FOR THE STORY. Marty tells you what is wanted; the card said
     // it again, word for word, so the two talked over each other. The card
     // keeps to what the card is for: where you are and what the controls do.
@@ -28461,7 +28487,86 @@ async function _mBench(x, z) {
 // where this demo is being presented from, so props keep a stable home
 let martySpot = null;
 const _mLast = () => benchThings[benchThings.length - 1];
+// does this visitor touch the screen, or point at it? Known for sure after
+// the first touch or click; guessed from the device before that.
+function touchUser() {
+  if (document.body.classList.contains('touching')) return true;
+  if (lastMoveEv) return false;
+  return navigator.maxTouchPoints > 0 && !matchMedia('(pointer: fine)').matches;
+}
+function lookAroundOffer(newcomer = false) {
+  const how = touchUser() ? 'one finger turns the workshop, two fingers pinch to zoom and drag to slide'
+                          : 'drag to turn the workshop, roll the wheel to zoom, drag with the right button to slide';
+  return (newcomer ? `Welcome${nameTag(true)}! ` : '')
+    + `To look around: ${how}. Press “Look around” (or ask me “how do I look around”) and I’ll show you.`;
+}
+// the camera moved by Marty's hand: turned about what it looks at, brought
+// closer or further, or slid sideways -- over a moment, and settled for
+// the orbit controls at the end so a drag carries on from there
+function _mCam(kind, amount, secs = 1.4) {
+  return new Promise((res) => {
+    const p0 = camera.position.clone(), t0 = orbit.target.clone();
+    const off = p0.clone().sub(t0);
+    // at Instant speed a step is only started and ended, never updated: the
+    // end applies the whole move, so the lesson still lands where it should
+    const step = {
+      __visual: true,
+      dur: secs,
+      update(t) {
+        const e = ease(t);
+        if (kind === 'turn') {
+          const o = off.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), amount * e);
+          camera.position.copy(t0).add(o);
+        } else if (kind === 'zoom') {
+          camera.position.copy(t0).addScaledVector(off, 1 + (amount - 1) * e);
+        } else if (kind === 'slide') {
+          const d = new THREE.Vector3(amount.x ?? 0, 0, amount.z ?? 0).multiplyScalar(e);
+          camera.position.copy(p0).add(d);
+          orbit.target.copy(t0).add(d);
+        }
+        camera.lookAt(orbit.target);
+      },
+      end() { step.update(1); orbit.update(); res(); },
+    };
+    enqueue(step);
+  });
+}
+// ...and back to a remembered pose, for the end of the lesson
+function _mCamTo(pos, target, secs = 1.2) {
+  return new Promise((res) => {
+    const p0 = camera.position.clone(), t0 = orbit.target.clone();
+    const step = {
+      __visual: true,
+      dur: secs,
+      update(t) {
+        const e = ease(t);
+        camera.position.lerpVectors(p0, pos, e);
+        orbit.target.lerpVectors(t0, target, e);
+        camera.lookAt(orbit.target);
+      },
+      end() { step.update(1); orbit.update(); res(); },
+    };
+    enqueue(step);
+  });
+}
 const MARTY_DEMOS = {
+  camera: { blurb: 'how to look around: turn, zoom and slide the camera', steps: [
+    { say: () => touchUser()
+        ? 'This is how to look around. Drag with ONE finger to turn the whole workshop — like this.'
+        : 'This is how to look around. Hold the left mouse button and drag to turn the whole workshop — like this.',
+      do: async (c) => { camResetAll(); camYield = true; c.pos = camera.position.clone(); c.target = orbit.target.clone();
+                         await _mCam('turn', 0.7); await _mCam('turn', -0.7); } },
+    { say: () => touchUser()
+        ? 'Pinch with two fingers to come closer or to back away — like this.'
+        : 'Roll the mouse wheel to come closer or to back away — like this.',
+      do: async () => { await _mCam('zoom', 0.55); await _mCam('zoom', 1 / 0.55); } },
+    { say: () => touchUser()
+        ? 'Drag with two fingers to slide the view sideways — like this.'
+        : 'Drag with the RIGHT mouse button to slide the view sideways — like this.',
+      do: async () => { await _mCam('slide', { x: 0.9 }); await _mCam('slide', { x: -0.9 }); } },
+    { say: () => `The camera also moves by itself to show you things — and a drag of your own always wins. Now you${nameTag(true)}: turn, zoom, slide.`,
+      do: async (c) => { if (c.pos) await _mCamTo(c.pos, c.target); camYield = false; } },
+  ] },
   fractions: { blurb: 'make an exact fraction like 1/4', near: 'numbers', steps: [
     { say: 'The stack only gives 1s — but every number here is an exact fraction underneath.', do: () => _mSt('numbers') },
     { do: () => _mBench(-0.5, 1.5) },
@@ -28633,14 +28738,15 @@ async function runMartyDemo(id) {
     const steps = demo.steps;
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
-      if (step.say) { martySay(step.say); say(step.say, 6000); }
+      const line = typeof step.say === 'function' ? step.say() : step.say;
+      if (line) { martySay(line); say(line, 6000); }
       martyPerforming = true;
       if (step.do) await step.do(ctx);
       await martyIdleWait();
       await new Promise(r => setTimeout(r, step.hold ?? (speed === Infinity ? 150 : 600)));
       martyPerforming = false;
       if (martyStopFlag) break;
-      if (step.say && i < steps.length - 1) {
+      if (line && i < steps.length - 1) {
         martyCtl('next');
         await new Promise(res => { martyNextResolve = res; });
         martyNextResolve = null;
@@ -28752,7 +28858,7 @@ function offerOrLoad(name) {
   nextWorld = name;
   const b = document.getElementById('nextBtn');
   if (b) { b.style.display = ''; b.textContent = 'Next puzzle ▸'; }
-  say('Solved! Press Next puzzle when you are ready.');
+  say(`Solved${nameTag()}! Press Next puzzle when you are ready.`);
 }
 // A NEW WORLD SILENCES THE OLD ONE. Marty was still reading out the last
 // puzzle's note when the next one opened on top of it (Ken clicked Next
@@ -29443,6 +29549,7 @@ async function martyThink(q) {
   const sysAt = (budget) => {
     const manual = manualFor(whole, q, budget);
     return MARTY_SYSTEM
+      + (currentUser ? `\nThe person you are talking with is called ${currentUser}. Use their name now and then where it comes naturally — a greeting, a well done, a nudge — and not in every reply.` : '')
       + martyActivityText()
       + puzzleContextText()
       + (manual ? '\n\n=== THE MANUAL (authoritative; answer from it, and say you are unsure rather than inventing anything it does not say) ===\n'
@@ -29526,6 +29633,12 @@ function martyThinkingStart() {
 async function askMarty(q) {
   window.speechSynthesis?.cancel();
   martySay(q, 'you');
+  // "how do I look around / move the camera / zoom" is the lesson itself
+  if (/\b(look around|move (the )?camera|turn (the )?(view|camera|workshop)|zoom|orbit|move around|camera controls?)\b/i.test(q)) {
+    martySay('Watch!');
+    setTimeout(() => runMartyDemo('camera'), 50);
+    return;
+  }
   // a puzzle's hints come from its author, one at a time, brain or no brain
   const hint = puzzleHint(q);
   if (hint) { martySay(hint); return; }
@@ -30184,7 +30297,9 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<button type="button" id="martyMakeBtn" title="Marty makes you a TOY out of solid shapes — “a red sailboat”, “a teapot”, “a dragonfly”. It arrives on your table doing nothing at all: what it does is yours to train." '
   + 'style="background:#3b4a6b;border:none;border-radius:8px;color:#e6ecf7;padding:6px 10px;cursor:pointer">Make</button>'
   + '<button type="button" id="martyDrawBtn" title="Marty draws you a PICTURE by walking a turtle \u2014 \u201ca snowflake\u201d, \u201ca spiral\u201d, \u201ca house with a tree\u201d. It arrives on a pad, and the orders he gives the turtle are the same words the turtle behaviour teaches." '
-  + 'style="background:#4a3b6b;border:none;border-radius:8px;color:#e6ecf7;padding:6px 10px;cursor:pointer">Draw</button></div>'
+  + 'style="background:#4a3b6b;border:none;border-radius:8px;color:#e6ecf7;padding:6px 10px;cursor:pointer">Draw</button>'
+  + '<button type="button" id="martyLookBtn" title="Marty shows how to look around: turn, zoom and slide the camera, with the mouse or with fingers." '
+  + 'style="background:#3b5a6b;border:none;border-radius:8px;color:#e6ecf7;padding:6px 10px;cursor:pointer">Look around</button></div>'
   + '<details style="margin-top:8px;color:#9fb0c8"><summary style="cursor:pointer">How Marty thinks</summary>'
   + '<div id="martyMode" style="margin-top:6px;color:#cdd8e8"></div>'
   + '<div style="margin-top:6px">Without a brain his replies are <b>canned lines from a '
@@ -30623,8 +30738,9 @@ function toggleMartyPanel() {
   martyUI.style.display = on ? 'block' : 'none';
   if (on && !martyGreeted) {
     martyGreeted = true;
-    martySay('Hi! I\u2019m Marty. Ask me anything about the workshop \u2014 or say \u201cshow me\u201d and one of: '
+    martySay(`Hi${nameTag(true)}! I\u2019m Marty. Ask me anything about the workshop \u2014 or say \u201cshow me\u201d and one of: `
       + Object.keys(MARTY_DEMOS).join(', ') + '. I never build programs, but I love showing how the pieces work.');
+    if (martyNewcomer) { martySay(lookAroundOffer(false)); martyNewcomer = false; }
   }
   if (on) { martyModeLine(); document.getElementById('martyIn').focus(); }
 }
@@ -30763,6 +30879,11 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
     if (wish) el.value = '';
     if (martyBusyDemo) martyStopDemo();
     martyMake(wish);
+  };
+  document.getElementById('martyLookBtn').onclick = () => {
+    if (martyBusyDemo) martyStopDemo();
+    martySay('Watch!');
+    setTimeout(() => runMartyDemo('camera'), 50);
   };
   document.getElementById('martyDrawBtn').onclick = () => {
     const el = document.getElementById('martyIn');

@@ -1533,6 +1533,37 @@ async function rubyViewCheck(D) {
   return ok;
 }
 
+// THE LOOK-AROUND LESSON: Marty turns, zooms and slides the camera and hands
+// it back where it was, in mouse words on a mouse.
+async function cameraDemoCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 2000);
+  const p0 = D.camera.position.clone();
+  const log = D.doc.getElementById('martyLog');
+  const lines0 = log ? log.children.length : 0;
+  let maxMove = 0;
+  let done = false;
+  const run = w.__marty.demo('camera').then(() => { done = true; });
+  for (let i = 0; i < 400 && !done; i++) {  // through the four beats, pressing Next as they come
+    await frames(D, 20);
+    maxMove = Math.max(maxMove, D.camera.position.distanceTo(p0));
+    w.__marty.next();
+    await new Promise(r => setTimeout(r, 60));
+  }
+  await run;
+  const d1 = D.camera.position.distanceTo(p0);
+  await frames(D, 60);
+  const d2 = D.camera.position.distanceTo(p0);
+  const back = d2 < 0.05;
+  const said = log ? [...log.children].slice(lines0).map(e => e.textContent).join(' | ') : '';
+  const beats = log ? [...log.children].slice(lines0).length : 0;
+  const mouse = /mouse/i.test(said) && !/finger/i.test(said);
+  const ok = maxMove > 0.5 && back && mouse;
+  put((ok ? 'PASS' : 'FAIL') + ' Marty shows how to look around  (moved=' + maxMove.toFixed(2) + ' back-where-it-was=' + back
+      + ' off-by=' + d2.toFixed(2) + ' beats=' + beats + ' mouse-words=' + mouse + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3789,6 +3820,9 @@ async function runOne(D, spec) {
   let wigOK = true;
   try { wigOK = want('wiggleFit') ? await wiggleFitCheck(D) : true; }
   catch (e) { wigOK = false; put('FAIL a wiggling zero takes its new size  ' + e.message, 'fail'); }
+  let cdOK = true;
+  try { cdOK = want('cameraDemo') ? await cameraDemoCheck(D, frame.contentWindow) : true; }
+  catch (e) { cdOK = false; put('FAIL Marty shows how to look around  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -3900,7 +3934,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
