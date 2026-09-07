@@ -13988,7 +13988,12 @@ function renderNotebook(nb) {
     nb.__slotNodes.push(num);
     const rec = ud.pages[ud.page + half] ?? null;
     if (!rec) continue;
-    const t = buildFromRec(rec);
+    let t = null;
+    try { t = buildFromRec(rec); }
+    catch (e) {
+      console.error('a notebook page could not be shown:', e);
+      t = makeText('(a page too big to show \u2014 Dusty can take it away)');
+    }
     if (!t) continue;
     // robots and scales lie on their backs on the page, like a catalogue
     if (rec.kind === 'robot' || rec.kind === 'scale') t.rotation.x = -Math.PI / 2;
@@ -18316,10 +18321,12 @@ function ensureMainNotebook() {
   if (mainNotebook()) return mainNotebook();
   if (new URLSearchParams(location.search).get('demo')) return null;
   let rec = null;
-  try { rec = JSON.parse(localStorage.getItem(nbKey()) || 'null'); } catch {}
+  const fresh = new URLSearchParams(location.search).has('fresh');
+  if (!fresh) { try { rec = JSON.parse(localStorage.getItem(nbKey()) || 'null'); } catch {} }
   // a notebook this browser cannot read is left untouched rather than
   // overwritten by a blank one -- the pages are still there for a newer build
   if (rec && fileTooNew(rec)) { notebookLocked = true; rec = null; }
+  if (fresh) notebookLocked = true;      // ?fresh: look, but leave the stored one alone
   const nb = makeNotebook(rec ?? { pages: [{ kind: 'notebook', pages: [], page: 0 }], page: 0 });
   nb.userData.main = true;
   putOnBench(nb, { x: 0.95, z: BENCH.z0 + 0.28 });
@@ -27579,7 +27586,16 @@ loadModel('robot_v4.glb', (gltf) => {
   // the main notebook: restored from this browser under whoever is working
   // here, or fresh with a blank notebook filed on its first page (not in the
   // manual's little demo worlds, which have no notebook and ask nobody)
-  ensureMainNotebook();
+  try { ensureMainNotebook(); }
+  catch (e) {
+    console.error('the stored notebook could not be restored:', e);
+    try {
+      const raw = localStorage.getItem(nbKey());
+      if (raw != null) { localStorage.setItem(nbKey() + '.rescued.' + Date.now(), raw); localStorage.removeItem(nbKey()); }
+    } catch {}
+    try { ensureMainNotebook(); } catch {}
+    sayAttn('Your notebook could not be read, so this is a fresh one. The old one is kept in this browser under a rescue name.');
+  }
   // the manual's little embedded workshops have no notebook, so they ask
   // nobody's name and say nothing about whose it is
   if (new URLSearchParams(location.search).get('demo')) {

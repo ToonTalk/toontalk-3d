@@ -5560,3 +5560,27 @@ own always wins.
 "Now you, Ken", a solved puzzle -- and, for the brain, an instruction to
 use it now and then and not in every reply. The solved line says it every
 third time, so it never becomes a tic.
+
+## A notebook that would not start
+
+*Added 7 Sep. Ken, on his laptop, at the published site: "The app won't
+load -- it shows 'Could not load robot_v4.glb -- Maximum call stack size
+exceeded.' I think maybe the notebook has a very large object in it. But I
+don't get to see how to enter the user name."*
+
+The message was the new loading veil doing its job for the wrong culprit:
+the model had loaded, and what overflowed was the start-up that follows,
+which the loader reports as a load failure. The site loaded cleanly in an
+empty browser, so the fault was stored state -- as Ken guessed, the
+notebook. Its two open pages are drawn at start-up by building what is
+filed on them in full, before any of the interface exists; a page holding
+something enormous, or nested too deep, overflowed the stack, and with no
+interface there was no signing in past it.
+
+Three guards now. A page that cannot be built shows a note in its place --
+"a page too big to show; Dusty can take it away" -- so the notebook and
+everything else survive. If restoring the notebook fails anyway, it is
+parked in the browser under a rescue name and a blank one takes its place,
+with a card saying so. And `?fresh` on the address makes a visit that
+ignores what the browser has stored without touching it, so a stuck visitor
+can look, sign in, and rescue at leisure.
