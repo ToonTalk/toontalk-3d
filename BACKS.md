@@ -5854,3 +5854,31 @@ even when nobody had moved them, so loading one put a moved door back. A
 world says where its doors stand only once somebody has moved one. (The
 yard door standing in its own place outside is by design: each place
 keeps its own.)
+
+## A ground of its own, a reshaped yard, a saved list, and a robot that walks home
+
+*Added 11 Sep. Ken: "I think a user should be able to make a pad as large
+as the yard so they can have a different kind of ground. Is the show/hide
+of elements setting saved when a world is saved? I think it should. The
+reshape table button should change to reshape yard if the yard is visible.
+After a robot placed something in the yard as the last step of its
+training we should see it walk back to work and not jump back there."*
+
+**A ground of its own.** The holding card, with a pad in hand, has "As
+big as the ground": the pad is sized to whatever you stand on -- the yard,
+or the table -- and laid squarely over it. What is dropped on it rides on
+it, as on a pitch, so a pad with a picture is a beach, a floor, a map. A
+pad's width and height in tablets go to forty-eight.
+
+**What is here travels.** A world saved with anything put away carries
+both lists, indoors and outside, and a world opened with them puts those
+things away here too.
+
+**Reshape yard.** The button says which it is, and the corner handles
+stretch the yard as they stretch the table: as wide as the limit allows,
+the far edge out to it, the near edge fixed where the helpers stand. The
+size is kept with the yard.
+
+**The robot walks home.** A lesson that ended out on the grass, or at the
+copier, left the robot there and snapped it home. It walks, at every
+speed but Instant.

@@ -106,7 +106,8 @@
   /* the keyboard is a touch screen's only way in; a machine with keys of its
      own has no use for the button and does not show it */
   #heldKeys, #heldTurn, #heldPanel, #heldPlus, #heldMinus, #heldRead { display: none; padding: 3px 9px; font-size: 15px; line-height: 1.2; }
-  #held.pad #heldRead { display: block; font-size: 12px; }
+  #held.pad #heldRead, #held.pad #heldFit { display: block; font-size: 12px; }
+  #heldFit { display: none; padding: 3px 9px; line-height: 1.2; }
   body.touching #heldKeys, body.touching #heldTurn { display: block; }
   /* the turn button is worth having with a mouse too -- the arrow keys are
      not a thing anybody guesses; the panel button is the door to the whole
@@ -185,6 +186,7 @@
   <span class="k">holding</span><span class="v" id="heldVal">–</span>
   <span class="k" id="heldTip">type digits to change it</span>
   <button id="heldRead" title="Read what is written on it, in full — and aloud, if Marty’s voice is on.">Read</button>
+  <button id="heldFit" title="Make the pad as big as the ground you are on — the yard, or the table — and set it down over it: a ground of its own, with a picture on it if you like.">As big as the ground</button>
   <button id="heldTurn" title="Turn it over a quarter — the arrow keys do the same, and turn it the other way too.">⟳</button>
   <button id="heldPanel" title="Open its panel — the tray where its behaviour lives. Ctrl+P does the same.">⚙</button>
   <button id="heldBack" title="Put it back exactly where you picked it up. Ctrl+B does the same.">↩</button>
@@ -1512,6 +1514,16 @@ fifteen degrees a press; standing, it rides high enough that its bottom edge
 rests on the ground, and it stays so when set down. Six presses stand a
 picture up as a backdrop in the yard. Models and pads grow to twelve times
 their size with + (Ctrl with the up arrow), doors to six.
+
+A ground of its own. With a pad in hand, As big as the
+ground on the holding card sizes it to whatever you stand on — the
+yard, or the table — and lays it squarely over it. What you drop on it
+rides on it, so a pad with a picture is a beach, a floor, a map.
+
+Reshape yard. The reshape button says which it is. Outside, the
+corner handles stretch the yard — the far edge and the sides; the near
+edge, where the helpers stand, stays — and the size is kept with the
+yard. A saved world also carries what you have put away, indoors and out.
 
 ## Puzzles
 
@@ -16650,7 +16662,7 @@ function resizeHeld(dir, axis) {
       const look = (ud.look ??= {});
       const now = axis === 'w' ? (look.w ?? 1)
         : (look.h ?? ud.aspect ?? (0.26 / 0.34));
-      const next = Math.round(Math.min(12, Math.max(0.2, now + dir * 0.25)) * 100) / 100;
+      const next = Math.round(Math.min(48, Math.max(0.2, now + dir * (now >= 4 ? 1 : 0.25))) * 100) / 100;
       look[axis] = next;
       HAND.applyLook();
       refreshUI();
@@ -19545,6 +19557,7 @@ function buildGround(on) {
   lawn.rotation.x = -Math.PI / 2;
   lawn.position.set((B.x0 + B.x1) / 2, GROUND_Y - 0.005, (B.z0 + B.z1) / 2);
   lawn.receiveShadow = true;
+  benchHandles.forEach((h, i) => h.position.copy(cornerOf(i)));   // the handles follow the grass
   setPick(lawn, { kind: 'bench' });
   scene.add(lawn);
   pickables.push(lawn);
@@ -22059,14 +22072,14 @@ function runRefusal(target) {
     return yardIn ? leaveYard() : enterYard();
   }
   if (target.kind === 'growToggle') {
-    if (yardIn) return say('Outside, the ground is as big as it is.');
     resizeMode = !resizeMode;
     // the camera stays yours while the handles are out (Ken: "no navigation
     // when desk is being enlarged"); only a corner actually in hand pins it
     if (!resizeMode && grabbedCorner !== null) releaseCorner();
     showHandles(resizeMode);
-    say(resizeMode ? 'Corner handles are out — click one to carry it, click again to set the corner.'
-                   : 'The table keeps this shape.');
+    say(resizeMode ? (yardIn ? 'Corner handles are out — drag one to stretch the yard; the near edge, where the helpers stand, stays.'
+                             : 'Corner handles are out — click one to carry it, click again to set the corner.')
+                   : (yardIn ? 'The yard keeps this shape.' : 'The table keeps this shape.'));
     return refreshUI();
   }
   if (grabbedCorner !== null) { releaseCorner(); return; }
@@ -23172,6 +23185,27 @@ function showSoftKeys(on) {
   // READ WHAT IS ON THE PAD. A long pad is a page in a small hand: the words
   // are there but not readable at arm's length. The button puts them on the
   // card in full and, if Marty's voice is on, reads them out.
+  // A GROUND OF ITS OWN: a pad the size of the yard (Ken: "a user should be
+  // able to make a pad as large as the yard so they can have a different
+  // kind of ground"). It is sized to whatever you stand on and set down
+  // squarely over it; what is dropped on it then rides on it.
+  const ft = document.getElementById('heldFit');
+  ft.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const H = inHand();
+    if (!H || H.userData.kind !== 'text' || mode !== 'world') return;
+    pushUndo();
+    const ud = H.userData;
+    const sz = ud.sz ?? 1;
+    const look = (ud.look ??= {});
+    look.w = Math.round(((BENCH.x1 - BENCH.x0) / (0.34 * sz)) * 100) / 100;
+    look.h = Math.round(((BENCH.z1 - BENCH.z0) / (0.34 * sz)) * 100) / 100;
+    H.applyLook();
+    heldTilt = 0; applyHeldTurn(); ud.aim = H.quaternion.toArray(); delete ud.up;
+    userPutOnBench({ x: (BENCH.x0 + BENCH.x1) / 2, z: (BENCH.z0 + BENCH.z1) / 2 });
+    say(yardIn ? 'As big as the yard, and laid over it — a ground of its own. What you drop on it rides on it.'
+               : 'As big as the table, and laid over it.');
+  });
   const rd = document.getElementById('heldRead');
   rd.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -24995,6 +25029,10 @@ function worldOut() {
     stations: sts,
     active: act ? botOut(act) : null,
   });
+  // ...and what has been put away, indoors and out, when anything has
+  if (!offstage() && ['indoors', 'outside'].some(k => Object.values(helperShownAll[k]).some(v => v === false))) {
+    rec.here = { indoors: { ...helperShownAll.indoors }, outside: { ...helperShownAll.outside } };
+  }
   // a world says where its doors stand only when somebody has moved one:
   // a file that carried the defaults put a moved door back (Ken)
   if (!offstage() && exitDoor && yardDoor) {
@@ -25262,6 +25300,16 @@ function worldIn(data) {
     applyRules(data.rules ?? null);
     showYardDoor();
     if (data.doors) { takeDoorPoses(data.doors); applyPlaceDoors(); }
+    if (data.here) {
+      for (const k of ['indoors', 'outside']) {
+        for (const key of Object.keys(helperShownAll[k])) helperShownAll[k][key] = true;
+        Object.assign(helperShownAll[k], data.here[k] || {});
+      }
+      try { localStorage.setItem(HELPERS_KEY, JSON.stringify(helperShownAll)); } catch {}
+      helperShown = helperShownAll[yardIn ? 'outside' : 'indoors'];
+      applyHelperShown();
+      refreshWhatHere();
+    }
   }
   nestGroupPending = [];
   const nests = new Map(), birds = [];
@@ -25461,7 +25509,16 @@ function leaveTraining(restore = true) {
   // The given thing stays on the robot's stand, rewound: it is set up to Run
   // immediately. (A finished RUN is different -- the result goes to the table.)
   preTraining = null;
-  parkRobot();
+  // WALK BACK, DON'T JUMP: a lesson that ended out on the grass (Ken) or at
+  // the copier left the robot there, and it snapped home. It walks.
+  {
+    const h = homeFor(activeBot);
+    const far = root && Math.hypot(root.position.x - h.pos.x, root.position.z - h.pos.z) > 0.15;
+    if (far && speed !== Infinity && !offstage()) {
+      enqueue(walkTo(() => ({ pos: h.pos.clone(), yaw: h.yaw })));
+      enqueue(doNow(() => parkRobot()));
+    } else parkRobot();
+  }
   renderProgram(); refreshUI();
   // SAID EVERY TIME, not only when something is left on the stand: the one
   // thing a person needs to know on the way out of a daydream is that it was
@@ -26265,7 +26322,8 @@ function refreshUI() {
   $('dustyBtn').classList.toggle('think', dustyActive);
   $('dustyBtn').disabled = !dusty || (busy && mode === 'training');
   if ($('growBtn')) {
-    $('growBtn').textContent = resizeMode ? 'Table: reshaping' : 'Reshape table';
+    $('growBtn').textContent = yardIn ? (resizeMode ? 'Yard: reshaping' : 'Reshape yard')
+                                      : (resizeMode ? 'Table: reshaping' : 'Reshape table');
     $('growBtn').classList.toggle('think', resizeMode);
     $('growBtn').disabled = running || busy;
   }
@@ -28611,6 +28669,15 @@ function dragCorner(hit) {
   const MIN = 0.8;
   // each corner owns one x edge and one z edge; clamps keep the table sane
   // and out of the robot's row of stacks
+  if (yardIn) {
+    // the yard: as wide as YARD_MAX allows, the near edge fixed where the
+    // helpers stand, the far edge out to the limit
+    if (i % 2) BENCH.x1 = Math.min(YARD_MAX.x, Math.max(BENCH.x0 + MIN, hit.x));
+    else BENCH.x0 = Math.max(-YARD_MAX.x, Math.min(BENCH.x1 - MIN, hit.x));
+    if (i >= 2) BENCH.z1 = Math.min(YARD_MAX.z, Math.max(BENCH.z0 + MIN, hit.z));
+    buildGround(true);
+    return;
+  }
   if (i % 2) BENCH.x1 = Math.min(4.2, Math.max(BENCH.x0 + MIN, hit.x));
   else BENCH.x0 = Math.max(-3.0, Math.min(BENCH.x1 - MIN, hit.x));
   if (i < 2) BENCH.z0 = Math.max(0.9, Math.min(BENCH.z1 - MIN, hit.z));
@@ -28625,8 +28692,8 @@ function releaseCorner() {
     t.position.x = Math.min(BENCH.x1 - 0.12, Math.max(BENCH.x0 + 0.12, t.position.x));
     t.position.z = Math.min(BENCH.z1 - 0.12, Math.max(BENCH.z0 + 0.12, t.position.z));
   }
-  try { localStorage.setItem(TABLE_KEY, JSON.stringify(BENCH)); } catch {}
-  say('The table keeps this shape.');
+  if (!yardIn) { try { localStorage.setItem(TABLE_KEY, JSON.stringify(BENCH)); } catch {} }   // the yard's size is kept with the yard
+  say(yardIn ? 'The yard keeps this shape.' : 'The table keeps this shape.');
   refreshUI();
 }
 
@@ -31961,6 +32028,9 @@ window.__nano = {
   get doorCarrying() { return doorCarry; },
   resetDoors() { doorPosesAll.indoors = null; doorPosesAll.outside = null; applyPlaceDoors(); },
   get heldTilt() { return heldTilt; },
+  teach(step) { go(step); },                                   // a lesson's step, as a click would record it
+  robotPos() { return root ? root.position.toArray() : null; },
+  dragCornerTo(i, at) { grabbedCorner = i; dragCorner(new THREE.Vector3(at.x, 0, at.z)); releaseCorner(); },
   get marty() { return martyNode; },
   canPaint,
   doorPoses,

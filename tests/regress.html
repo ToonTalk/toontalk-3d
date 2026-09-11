@@ -1966,6 +1966,72 @@ async function groundSpacingCheck(D, w) {
   return ok;
 }
 
+// A GROUND OF ITS OWN, a saved list, and a yard reshaped
+async function groundPadCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'text', text: 'sand' }, x: 0.2, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  D.speed('inf');
+  const pad = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'text');
+  D.clickThing(pad); await frames(D, 3);
+  D.enterYard(); await slowSettle(D, 2000);
+  D.doc.getElementById('heldFit').click();
+  await slowSettle(D, 2000);
+  const b = D.bounds();
+  const w0 = (pad.userData.look?.w ?? 1) * 0.34 * (pad.userData.sz ?? 1);
+  const covers = Math.abs(w0 - (b.x1 - b.x0)) < 0.2 && Math.abs(pad.position.x - (b.x0 + b.x1) / 2) < 0.2 && !D.heldPos();
+  // the yard reshaped by a corner
+  D.clickRaw({ kind: 'growToggle' });
+  const label = D.doc.getElementById('growBtn')?.textContent || '';
+  const x1a = D.bounds().x1;
+  D.dragCornerTo(1, { x: x1a + 1.5, z: b.z1 });
+  const wider = D.bounds().x1 > x1a + 1;
+  D.clickRaw({ kind: 'growToggle' });
+  // the list travels with the world
+  D.setHelperShown('dice', false);
+  const rec = D.worldOut();
+  const carried = rec.here?.outside?.dice === false;
+  D.setHelperShown('dice', true);
+  D.leaveYard(); await slowSettle(D, 2000);
+  D.worldIn(rec); await slowSettle(D, 1500);
+  D.enterYard(); await slowSettle(D, 2000);
+  const applied = D.helperShown.dice === false;
+  D.setHelperShown('dice', true);
+  D.leaveYard(); await slowSettle(D, 2000);
+  const ok = covers && /yard/i.test(label) && wider && carried && applied;
+  put((ok ? 'PASS' : 'FAIL') + ' a ground of its own, a reshaped yard, a saved list  (covers=' + covers + ' button=' + JSON.stringify(label) + ' wider=' + wider + ' list-saved=' + carried + ' list-applied=' + applied + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// AFTER A LESSON THE ROBOT WALKS HOME rather than jumping
+async function walkHomeCheck(D, w) {
+  const box = { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '1' }, op: '+' }, null] };
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'robot' }, x: 0.9, z: 1.5 }, { thing: box, x: -0.4, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  D.speed(4);
+  const bot = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'robot');
+  const bx = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'box');
+  D.clickThing(bx); await frames(D, 3);
+  D.clickBot(bot); await slowSettle(D, 4000);          // the lesson begins
+  D.teach({ type: 'take', at: { c: 'given', path: [0] } }); await slowSettle(D, 4000);
+  D.teach({ type: 'goOut' }); await slowSettle(D, 6000);
+  D.teach({ type: 'put', at: { c: 'ground', path: [] } }); await slowSettle(D, 6000);
+  const far0 = new D.THREE.Vector3(...D.robotPos()).length();
+  D.exit();                                              // the lesson ends out on the grass
+  let maxStep = 0, last = new D.THREE.Vector3(...D.robotPos());
+  for (let i = 0; i < 400; i++) {
+    await frames(D, 1);
+    const now = new D.THREE.Vector3(...D.robotPos());
+    maxStep = Math.max(maxStep, now.distanceTo(last));
+    last = now;
+    if (now.length() < 0.05) break;
+  }
+  const home = new D.THREE.Vector3(...D.robotPos()).length() < 0.2;
+  const walked = maxStep < 0.25;                          // no single-frame jump home
+  D.leaveYard(); await slowSettle(D, 2000);
+  const ok = far0 > 1 && home && walked;
+  put((ok ? 'PASS' : 'FAIL') + ' the robot walks home after a lesson  (was-far=' + far0.toFixed(2) + ' home=' + home + ' biggest-step=' + maxStep.toFixed(2) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4274,6 +4340,12 @@ async function runOne(D, spec) {
   let gsOK = true;
   try { gsOK = want('groundSpacing') ? await groundSpacingCheck(D, frame.contentWindow) : true; }
   catch (e) { gsOK = false; put('FAIL room for the whole thing  ' + e.message, 'fail'); }
+  let gdOK = true;
+  try { gdOK = want('groundPad') ? await groundPadCheck(D, frame.contentWindow) : true; }
+  catch (e) { gdOK = false; put('FAIL a ground of its own  ' + e.message, 'fail'); }
+  let whmOK = true;
+  try { whmOK = want('walkHome') ? await walkHomeCheck(D, frame.contentWindow) : true; }
+  catch (e) { whmOK = false; put('FAIL the robot walks home  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4385,7 +4457,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
