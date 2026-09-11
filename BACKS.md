@@ -5785,3 +5785,37 @@ thing is not something a robot can be told without a new address), and
 walking or wandering behaviours for animals -- though the behaviours that
 exist (moving, bouncing, following) already bind to an animal in the yard,
 since the ground is the table while you are out there.
+
+## A place keeps its own, and a robot goes out through the back door
+
+*Added 11 Sep. Ken: "When I clicked on What is Here the menu disappeared.
+The door ended up far away when I started free play -- the door
+repositioning should only apply to the context (yard or workshop). I meant
+other objects should have a much larger maximum size -- e.g. 3d models and
+pads. When Dusty removed a label he doesn't move to remove it. Typing to
+3d model while held should edit its label. Saving worlds should have
+different default file names depending upon yard or workshop. Why did I
+hear 'setting it down and it says so' twice while standing up a pad?
+Hiding/showing items should be specific to the context. I thought a robot
+could move to a yard (holding whatever is in its hand) to place things
+there -- when I clicked on the door while training a robot it said to wait
+for work to finish first."*
+
+**A place keeps its own.** Where the doors stand, and what is put away,
+belong to the place you are in: moved in the yard, a door is moved in the
+yard, and indoors it is where it was; a stack put away indoors is out on
+the grass. The list in the menu says which place it is for, and both are
+remembered and saved.
+
+**A robot goes out.** The back door is a step: shown through it while
+training, a robot goes out to the yard with whatever it holds -- and you
+with it -- sets things down on the grass, and comes back in through the
+same door. The run follows it there and back.
+
+**Smaller things.** The menu stays open for What is here. Models and pads
+grow to twelve times, in quarter steps to twice and halves after. Dusty
+goes over to a name plate to take the name off and comes home. Typing
+while holding a model names it. The saved file is yard.world.json when
+saved from the yard. The tilt line is said in full once per hold and
+briefly after; the reader keeps one line waiting, which is how the tail
+of it was heard twice.

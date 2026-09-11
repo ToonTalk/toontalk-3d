@@ -682,7 +682,9 @@ Two helpers live in front of the table. Dusty the vacuum removes:
 click him to wake him, then click things to vacuum them away, entries off
 notebook pages, or parts of a robot's thought (leaving an empty hole, which
 then matches anything). Click a thing's name plate with him awake and
-he takes just the name off; the thing stays. Ruby the eraser generalises: wake her and
+he goes over and takes just the name off; the thing stays. Typing while
+holding a model, a bird, a nest, a house, a sound, a scale or a notebook
+names it. Ruby the eraser generalises: wake her and
 click a part of a thought — a 7 becomes any number, then
 anything. She also erases real things in place: an erased number
 stands for any number, which is how you build a robot's expectations by hand.
@@ -1493,7 +1495,15 @@ What is here. What is here… in the ⋮ menu
 is a list of boxes to tick: Marty (his panel stays), Dusty, Mimi and her
 machine, Ruby, the back door, and each stack. Unticked, a thing is gone until
 you tick it again, and the browser remembers. A puzzle's rules still decide
-what is there at all. Ruby stays indoors when you are in the yard.
+what is there at all. Ruby stays indoors when you are in the yard. The list
+is the place's own: what is put away indoors is put away indoors, and
+the yard has its own list. So are the doors: moved in the yard, a door is
+moved in the yard, and indoors it stands where it stood.
+
+A robot goes out. While training, click the back door and the
+robot goes out to the yard with whatever it holds — and you with it.
+Set things down on the grass, click the door again to come back in. The run
+follows the robot there and back.
 
 The yard grows. Set something down within half a pace of an edge
 and that edge moves out two paces, up to a limit; the size is the yard's own
@@ -1502,8 +1512,8 @@ and is saved with it.
 A backdrop. Holding a pad, the up and down arrows tilt it
 fifteen degrees a press; standing, it rides high enough that its bottom edge
 rests on the ground, and it stays so when set down. Six presses stand a
-picture up as a backdrop in the yard. Doors can be made up to six times their
-size.
+picture up as a backdrop in the yard. Models and pads grow to twelve times
+their size with + (Ctrl with the up arrow), doors to six.
 
 ## Puzzles
 
@@ -4277,7 +4287,7 @@ function makeText(str) {
     // down to a quarter, not stopping at 1: a pad that has been TOLD it is
     // six tablets wide (a pong pitch) has every reason to shrink, and the
     // held card's minus button was silently doing nothing to it
-    sz = Math.min(3, Math.max(0.25, Math.round(sz * 4) / 4));
+    sz = Math.min(12, Math.max(0.25, Math.round(sz * 4) / 4));
     g.userData.sz = sz === 1 ? undefined : sz;
     g.applyLook();
   };
@@ -7335,7 +7345,7 @@ function resizeHeld(dir, axis) {
       return say(`${axis === 'w' ? 'Width' : 'Height'} ${next} \u2014 in tablets. `
         + 'Ctrl with the left and right arrows sets the width, up and down the height.');
     }
-    HAND.setPadSize((ud.sz ?? 1) + dir * 0.25);
+    HAND.setPadSize((ud.sz ?? 1) + dir * ((ud.sz ?? 1) >= 2 ? 0.5 : 0.25));
     return refreshUI();
   }
   if (ud.panel) {
@@ -7352,7 +7362,10 @@ function resizeHeld(dir, axis) {
   if (ud.kind === 'robot') return say('Robots come in one size — they grow when they work.');
   if (ud.kind === 'room') return say('A house is its size — a panel resizes, a house does not.');
   if (ud.kind === 'notebook') return say('Notebooks keep their size.');
-  const sz = Math.min(3, Math.max(0.5, (ud.sz ?? 1) + dir * 0.25));
+  // up to twelve times (Ken: a backdrop, a house to walk round) -- in
+  // quarter steps to twice, then halves
+  const was = ud.sz ?? 1;
+  const sz = Math.min(12, Math.max(0.5, was + dir * (was >= 2 ? 0.5 : 0.25)));
   ud.sz = sz === 1 ? undefined : sz;
   HAND.scale.setScalar(sz);
   refreshUI();
@@ -10130,21 +10143,37 @@ let yardIn = null;        // while outside: the table's things, bounds and heigh
 // stand is remembered in this browser and saved with a world.
 let doorCarry = null, doorCarryWas = null;
 const DOORS_KEY = 'nano-toontalk.doors';
+// WHERE THE DOORS STAND IS A PLACE'S OWN: moved in the yard, they are moved
+// in the yard; indoors they are where they were (Ken's screenshot: the door
+// far out on the floor after a move made outside). One pose per place.
+const DOOR_DEFAULTS = { exit: { x: -2.75, z: 1.15, ry: 0.9, s: 1 }, yard: { x: -3.2, z: 2.95, ry: 0.9, s: 1 } };
+const doorPosesAll = { indoors: null, outside: null };
+const placeKey = () => (yardIn ? 'outside' : 'indoors');
+function applyPlaceDoors() { applyDoorPoses(doorPosesAll[placeKey()] ?? DOOR_DEFAULTS); }
 const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const poseOfDoor = (d) => ({ x: +d.position.x.toFixed(3), z: +d.position.z.toFixed(3),
                              ry: +d.rotation.y.toFixed(3), s: +d.scale.x.toFixed(3) });
 function doorPoses() { return { exit: poseOfDoor(exitDoor), yard: poseOfDoor(yardDoor) }; }
 function applyDoorPoses(p) {
-  for (const [d, q] of [[exitDoor, p?.exit], [yardDoor, p?.yard]]) {
+  for (const [d, q] of [[exitDoor, p?.exit ?? DOOR_DEFAULTS.exit], [yardDoor, p?.yard ?? DOOR_DEFAULTS.yard]]) {
     if (!d || !q) continue;
     d.position.set(q.x ?? d.position.x, 0, q.z ?? d.position.z);
     d.rotation.y = q.ry ?? d.rotation.y;
     d.scale.setScalar(Math.min(6, Math.max(0.5, q.s ?? 1)));
   }
 }
-function saveDoorPoses() { try { localStorage.setItem(DOORS_KEY, JSON.stringify(doorPoses())); } catch {} }
+function saveDoorPoses() {
+  doorPosesAll[placeKey()] = doorPoses();
+  try { localStorage.setItem(DOORS_KEY, JSON.stringify(doorPosesAll)); } catch {}
+}
+function takeDoorPoses(p) {
+  if (!p) return;
+  if ('indoors' in p || 'outside' in p) { doorPosesAll.indoors = p.indoors ?? null; doorPosesAll.outside = p.outside ?? null; }
+  else doorPosesAll.indoors = p;                 // the older, one-place shape
+}
 function restoreDoorPoses() {
-  try { const p = JSON.parse(localStorage.getItem(DOORS_KEY) || 'null'); if (p) applyDoorPoses(p); } catch {}
+  try { takeDoorPoses(JSON.parse(localStorage.getItem(DOORS_KEY) || 'null')); } catch {}
+  applyPlaceDoors();
 }
 function setDoorDown() {
   if (!doorCarry) return;
@@ -10223,11 +10252,13 @@ function showYardDoor() {
   const tools = (typeof worldRules !== 'undefined' && worldRules?.tools) || null;
   yardDoor.visible = !offstage() && (!tools || tools.includes('yard')) && helperShown.yard !== false;
 }
-function enterYard() {
+function enterYard(byRobot = false) {
   if (yardIn) return;
-  if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
+  if (!byRobot) {
+    if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
+    clearUndo();
+  }
   if (resizeMode) { resizeMode = false; if (grabbedCorner !== null) releaseCorner(); showHandles(false); }
-  clearUndo();
   camResetAll();
   sfx('whoosh');
   const yard = (curCtx.yard ??= { things: [] });
@@ -10244,17 +10275,18 @@ function enterYard() {
   yard.things.length = 0;
   if (exitDoor) exitDoor.visible = false;
   paintYardSign();
-  applyHelperShown();                 // Ruby stays indoors
-  say('You step outside — the ground is yours: set things down anywhere. The door on the left leads back in.');
+  placeChanged();                     // the yard's own list and doors; Ruby stays indoors
+  say(byRobot ? 'The robot goes out through the back door — and you with it.'
+              : 'You step outside — the ground is yours: set things down anywhere. The door on the left leads back in.');
   glideCameraTo(new THREE.Vector3(0.4, 5.4, 11.2), new THREE.Vector3(0, 0.2, 3.4));
   refreshUI();
 }
-function leaveYard(quiet = false) {
+function leaveYard(quiet = false, byRobot = false) {
   if (!yardIn) return;
-  if (!quiet) {
+  if (!quiet && !byRobot) {
     if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
-    if (worldTrail.length !== yardIn.depth) return say('Step back out of the house first.');
   }
+  if (!quiet && worldTrail.length !== yardIn.depth) return say('Step back out of the house first.');
   const yard = (yardIn.ctx.yard ??= { things: [] });
   for (const t of benchThings.splice(0)) { t.removeFromParent(); movers.delete(t); yard.things.push(t); }
   yard.bounds = { x0: BENCH.x0, x1: BENCH.x1, z0: BENCH.z0, z1: BENCH.z1 };
@@ -10266,8 +10298,13 @@ function leaveYard(quiet = false) {
   yardIn = null;
   if (exitDoor) exitDoor.visible = worldTrail.length > 0;
   paintYardSign();
-  applyHelperShown();
-  if (!quiet) { clearUndo(); camResetAll(); sfx('whoosh'); say('You step back inside.'); glideCameraHome(); }
+  placeChanged();
+  if (!quiet) {
+    if (!byRobot) clearUndo();
+    camResetAll(); sfx('whoosh');
+    say(byRobot ? 'The robot comes back inside — and you with it.' : 'You step back inside.');
+    glideCameraHome();
+  }
   refreshUI();
 }
 const topCtx = newWorldCtx();
@@ -10624,8 +10661,18 @@ let ruby = null, rubyActive = false, rubyHome = null;
 // still decide what is there at all. Outside, Ruby stays in (Ken: no need
 // for her in the yard) -- there is no thought bubble on the grass.
 const HELPERS_KEY = 'nano-toontalk.helpers';
-const helperShown = { dusty: true, mimi: true, ruby: true };
-try { Object.assign(helperShown, JSON.parse(localStorage.getItem(HELPERS_KEY) || '{}')); } catch {}
+// ...and per PLACE: what is put away indoors is put away indoors; the yard
+// has its own list (Ken). `helperShown` is the current place's.
+const helperShownAll = { indoors: { dusty: true, mimi: true, ruby: true }, outside: { dusty: true, mimi: true, ruby: true } };
+try {
+  const got = JSON.parse(localStorage.getItem(HELPERS_KEY) || '{}');
+  if (got && ('indoors' in got || 'outside' in got)) {
+    Object.assign(helperShownAll.indoors, got.indoors || {});
+    Object.assign(helperShownAll.outside, got.outside || {});
+  } else Object.assign(helperShownAll.indoors, got || {});
+} catch {}
+let helperShown = helperShownAll.indoors;
+let refreshWhatHere = () => {};
 function applyHelperShown() {
   const tools = (typeof worldRules !== 'undefined' && worldRules?.tools) || null;
   const allowed = (n) => !tools || tools.includes(n);
@@ -10650,9 +10697,16 @@ function applyHelperShown() {
 }
 function setHelperShown(name, on) {
   helperShown[name] = !!on;
-  try { localStorage.setItem(HELPERS_KEY, JSON.stringify(helperShown)); } catch {}
+  try { localStorage.setItem(HELPERS_KEY, JSON.stringify(helperShownAll)); } catch {}
   applyHelperShown();
   refreshUI();
+}
+// stepping through the back door changes whose list is in force
+function placeChanged() {
+  helperShown = helperShownAll[yardIn ? 'outside' : 'indoors'];
+  applyHelperShown();
+  applyPlaceDoors();
+  refreshWhatHere();
 }
 let rubyT = 0, rubyBase = null;
 let runCount = 0;
@@ -11430,9 +11484,6 @@ function actionPut(at, side, backTo) {
   // chosen pose's claw meets the top, aim slightly above it, and release
   // there -- not at desk height beside the stack, leaving the number to
   // float sideways into place.
-  if (at.c === 'ground' && !yardIn) {
-    return enqueue(doNow(() => abort('This robot sets things down on the ground, and there is no ground in here — take it outside.')));
-  }
   const windowP = at.c === 'ground' ? false : looksThroughNest(runTrained, at);
   const putTopOf = () => {
     let host = null;
@@ -11446,8 +11497,14 @@ function actionPut(at, side, backTo) {
   };
   const drop = { sh: reach.sh, el: reach.el };
   enqueue(walkTo(() => {
-    // the ground: a free patch of it, chosen now and walked to
+    // the ground: a free patch of it, chosen now and walked to -- and judged
+    // NOW, not when the round was queued: the step before may have been the
+    // back door
     if (at.c === 'ground') {
+      if (!yardIn) {
+        abort('This robot sets things down on the ground, and there is no ground in here — take it outside.');
+        return homeFor(activeBot);
+      }
       at = { ...at, spot: freeSpotNear(benchSpot(), clawHeld?.userData.width ?? 0.3) };
       return standForPoint(new THREE.Vector3(at.spot.x, GROUND_Y, at.spot.z));
     }
@@ -12681,6 +12738,7 @@ function runRefusal(target) {
     return leaveRoom();
   }
   if (target.kind === 'yardDoor') {
+    if (mode === 'training') return directRobot(target);   // a robot can be shown the door
     return yardIn ? leaveYard() : enterYard();
   }
   if (target.kind === 'growToggle') {
@@ -12964,8 +13022,11 @@ function runRefusal(target) {
       const t = target.thing;
       if (fixedRoot(t)) return say(FIXED_WORDS);
       pushUndo();
-      setThingLabel(t, null);
-      say('Dusty takes the name off — the thing stays.');
+      const plate = t.__labelNode ?? (t.__labelPlates || [])[0] ?? t;
+      dustyFlyTo(() => plate.getWorldPosition(new THREE.Vector3()), () => {
+        setThingLabel(t, null);
+        say('Dusty takes the name off — the thing stays.');
+      });
       return refreshUI();
     }
     const victim = target.kind === 'thing' ? target.thing
@@ -13371,6 +13432,9 @@ function directRobot(target) {
     if (!clawHeld) return say('It is not holding anything to set down.');
     return go({ type: 'put', at: { c: 'ground', path: [] } });
   }
+  // THE BACK DOOR IS A STEP: a robot shown through it goes out to the yard
+  // (or back in), whatever it is holding, and the run follows it there.
+  if (target.kind === 'yardDoor') return go({ type: yardIn ? 'goIn' : 'goOut' });
   const st = target.kind === 'station' ? stations[target.id] : null;
   if (st?.kind === 'stack') {
     if (clawHeld) return say('It is already holding something.');
@@ -13854,7 +13918,7 @@ function putBackHeld() {
 }
 function noteHeld(t = inHand()) {
   document.getElementById('held')?.classList.toggle('pad', t?.userData?.kind === 'text');
-  heldYaw = 0; heldPitch = 0; heldTilt = 0;   // whatever was turned before, this is new
+  heldYaw = 0; heldPitch = 0; heldTilt = 0; heldTiltSaid = false;   // whatever was turned before, this is new
   if (t) delete t.__faceBuf;           // typing on a die starts a fresh count
   valueAtPickup = t?.userData.value ?? null;
   opAtPickup = t?.userData.op ?? '+';
@@ -14417,6 +14481,10 @@ function runStep(step) {
   // robot had: the next puzzle by name. Honoured at the top of a frame, since
   // this robot is standing in the very world about to be replaced.
   else if (step.type === 'load') enqueue(doNow(() => offerOrLoad(step.name)));
+  else if (step.type === 'goOut' || step.type === 'goIn') {
+    if (yardDoor) enqueue(walkTo(() => standForPoint(yardDoor.position.clone())));
+    enqueue(doNow(() => { if (step.type === 'goOut') enterYard(true); else leaveYard(false, true); }));
+  }
   else if (step.type === 'setHoles') {
     enqueue({ dur: 0.3, start() { if (clawHeld?.userData.kind === 'box') resizeHeldBox(step.n, true); } });
   } else if (step.type === 'setOp') {
@@ -15132,6 +15200,35 @@ function emptyDustyBag() {
   dustyBag.splice(0).forEach(t => { t.removeFromParent(); disposeThing(t); });
   layoutDustyBag();
 }
+// DUSTY GOES OVER, does something there, and comes home -- the flight of a
+// vacuuming without the bag, for taking a name off a thing that stays.
+function dustyFlyTo(getPoint, then) {
+  if (!dusty) { enqueue({ dur: 0, end() { then(); refreshUI(); } }); return; }
+  busy = true;
+  sfx('vacuum');
+  let dest = null;
+  enqueue({
+    dur: 0.6,
+    start() { dest = getPoint(); dest.y = Math.max(0, dest.y - 0.42); dest.z += 0.36; },
+    update(t) {
+      if (!dest) return;
+      const e = ease(t);
+      dusty.position.lerpVectors(dustyHome, dest, e);
+      dusty.position.y += 0.5 * Math.sin(Math.PI * e);
+    },
+  });
+  enqueue({ dur: 0.3, start() { if (dest) flash(getPoint()); }, end() { then(); refreshUI(); } });
+  enqueue({
+    dur: 0.45,
+    update(t) {
+      if (!dest) return;
+      const e = ease(t);
+      dusty.position.lerpVectors(dest, dustyHome, e);
+      dusty.position.y += 0.5 * Math.sin(Math.PI * e);
+    },
+    end() { dusty.position.copy(dustyHome); refreshUI(); },
+  });
+}
 function dustySuck(getVictim) {
   // No mascot in this build (a demo frame strips the machines) -- but the
   // SEMANTICS are not the mesh's to keep: the thing is still taken, switched
@@ -15581,7 +15678,7 @@ function worldOut() {
     stations: sts,
     active: act ? botOut(act) : null,
   });
-  if (!offstage() && exitDoor && yardDoor) rec.doors = doorPoses();
+  if (!offstage() && exitDoor && yardDoor) rec.doors = { ...doorPosesAll, [placeKey()]: doorPoses() };
   const yardBounds = outsideHere ? { x0: BENCH.x0, x1: BENCH.x1, z0: BENCH.z0, z1: BENCH.z1 } : (curCtx.yard?.bounds ?? null);
   if (yardThings.length || yardBounds) {
     rec.yard = { bench: yardThings.map(t => ({ thing: thingOut(t),
@@ -15840,7 +15937,7 @@ function worldIn(data) {
     hintCounter = 0;
     applyRules(data.rules ?? null);
     showYardDoor();
-    if (data.doors) applyDoorPoses(data.doors);
+    if (data.doors) { takeDoorPoses(data.doors); applyPlaceDoors(); }
   }
   nestGroupPending = [];
   const nests = new Map(), birds = [];
@@ -16757,6 +16854,8 @@ function describe(s) {
        : s.type === 'newRoom' ? 'take a new room'
        : s.type === 'newDie' ? 'take a new die'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
+       : s.type === 'goOut' ? 'go out through the back door to the yard'
+       : s.type === 'goIn' ? 'come back inside through the back door'
        : s.type === 'load' ? `open the world \u201c${s.name}\u201d`
        : s.type === 'take' ? (s.at.nbHalf != null ? `take a copy from ${holeName(s.at)}`
            : s.at.nest ? `take the top of ${holeName(s.at)}`
@@ -17143,8 +17242,8 @@ addEventListener('drop', (e) => {
 $('exportWorldBtn').onclick = () => {
   if (busy || mode !== 'world') return say('Leave the thought bubble first.');
   if (held) stowHeld();
-  saveFile('workshop.world.json', JSON.stringify(worldOut(), null, 2),
-           'Saved the whole workshop to a file.');
+  saveFile(yardIn ? 'yard.world.json' : 'workshop.world.json', JSON.stringify(worldOut(), null, 2),
+           yardIn ? 'Saved the whole workshop, yard and all, to a file.' : 'Saved the whole workshop to a file.');
 };
 $('speed').onchange = (e) => {
   speed = e.target.value === 'inf' ? Infinity : +e.target.value;
@@ -17176,6 +17275,7 @@ const QUARTER = Math.PI / 2;
 // can be REASONED about: which way round it is, and how far it may go.
 let heldYaw = 0, heldPitch = 0;
 let heldTilt = 0;      // a PAD's tilt in degrees: up stands it, down lays it back
+let heldTiltSaid = false;   // the long line once per hold; Ken heard it twice
 const heldBaseQ = new THREE.Quaternion();   // how the held thing was turned when picked up
 let lastMismatchSaid = null;      // the refusal said last, so it is not said twice running
 function applyHeldTurn() {
@@ -17296,7 +17396,11 @@ function turnHeld(kind, dir) {
     const lift = Math.abs(Math.sin(THREE.MathUtils.degToRad(heldTilt))) * d / 2;
     if (lift > 0.005) HAND.userData.up = +lift.toFixed(3); else delete HAND.userData.up;
     sfx('type');
-    say(heldTilt === 0 ? 'Flat again.' : `Tilted ${Math.abs(heldTilt)}° — ${heldTilt < 0 ? 'standing up toward you' : 'leaning back'}. Set it down and it stays so.`);
+    // one short line per press; the explanation once per hold, since the
+    // reader keeps one line waiting and Ken heard the tail of it twice
+    if (heldTilt === 0) say('Flat again.');
+    else if (!heldTiltSaid) { heldTiltSaid = true; say(`Tilted ${Math.abs(heldTilt)}° — up stands it, down lays it back; set down, it stays so.`); }
+    else say(`Tilted ${Math.abs(heldTilt)}°.`);
     return;
   }
   if (kind === 'pitch') {
@@ -17765,7 +17869,7 @@ addEventListener('keydown', (e) => {
   // the name rubbed out again with Backspace. Sounds, scales and notebooks
   // were left out, so a world could hand you a sound called "the tune" that
   // you could neither rename nor clear.
-  if (['bird', 'nest', 'room', 'sound', 'scale', 'notebook'].includes(H.userData.kind)) {
+  if (['bird', 'nest', 'room', 'sound', 'scale', 'notebook', 'model', 'trail'].includes(H.userData.kind)) {
     editLabel();
     return;
   }
@@ -18829,6 +18933,7 @@ loadModel('robot_v4.glb', (gltf) => {
       const cbx = document.createElement('input');
       cbx.type = 'checkbox';
       cbx.checked = helperShown[name] !== false;
+      cbx.__name = name;
       cbx.onchange = () => {
         setHelperShown(name, cbx.checked);
         say(cbx.checked ? `${label[0].toUpperCase()}${label.slice(1)} is back.` : `${label[0].toUpperCase()}${label.slice(1)} is put away — tick the box to bring it back.`);
@@ -18836,6 +18941,10 @@ loadModel('robot_v4.glb', (gltf) => {
       lab.append(cbx, document.createTextNode(label));
       what.appendChild(lab);
     }
+    refreshWhatHere = () => {
+      what.querySelectorAll('input').forEach(c2 => { c2.checked = helperShown[c2.__name] !== false; });
+      wb.textContent = (yardIn ? '\u{1F33F} What is here, outside…' : '\u{1F3E0} What is here…');
+    };
     wb.textContent = '\u{1F3E0} What is here…';
     wb.onclick = () => { what.style.display = what.style.display === 'none' ? 'flex' : 'none'; };
     menu.appendChild(wb);
@@ -18884,7 +18993,8 @@ loadModel('robot_v4.glb', (gltf) => {
     dots.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('on'); };
     menu.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (e.target.tagName === 'BUTTON') close();
+      // "What is here" opens a list INSIDE the menu: the menu stays for it
+      if (e.target.tagName === 'BUTTON' && e.target.id !== 'whatBtn') close();
     });
     addEventListener('pointerdown', (e) => { if (!menu.contains(e.target) && e.target !== dots) close(); });
     addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
@@ -22518,8 +22628,9 @@ window.__nano = {
   orbitOn() { return orbit.enabled; },
   exitSign() { return exitDoorText(); },
   enterYard, leaveYard,
-  setHelperShown, helperShown,
+  setHelperShown, get helperShown() { return helperShown; },
   get doorCarrying() { return doorCarry; },
+  resetDoors() { doorPosesAll.indoors = null; doorPosesAll.outside = null; applyPlaceDoors(); },
   get heldTilt() { return heldTilt; },
   get marty() { return martyNode; },
   canPaint,
