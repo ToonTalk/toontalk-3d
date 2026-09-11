@@ -48,7 +48,7 @@
 # THE LAYOUT, the same on every table: what you work with at the FRONT (near
 # you), the bird in the middle, the reply nest beside her, the goal and the
 # judge at the back where they are seen and not in the way -- and Marty's
-# ship, lying where it came down on the floor behind the table, big enough
+# ship, standing where it landed on the floor behind the table, big enough
 # for him to have travelled in, so the story has something to point at.
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -60,59 +60,31 @@ BACK = 1.2
 
 
 def ship():
-    """Marty's ship, on its side on the floor behind the table: the reason
-    for every puzzle. It came down HARD (Ken: "the broken spaceship can look
-    more broken"): the nose is scorched and bent off the line of the hull,
-    a gash runs along the side, the hull is dented, one fin snapped off and
-    lies where it fell, a stripe is torn, bits of it are scattered about, and
-    it still smokes. Scenery -- nothing runs into it, and nobody lifts it.
-    Built at hand size and scaled up in SCENERY."""
-    white, scorch, red, dark, glass = '#e9e4d8', '#3a3a3a', '#c0392b', '#1a1a1a', '#7fd4ff'
+    """Marty's ship, standing on its fins behind the table, leaning a little
+    on the one that took the landing: the reason for every puzzle. It used
+    to lie on its side, nose bent, a fin snapped off, smoking -- and Ken's
+    grandson asked what the crashed rocket was. A landing gone badly, not a
+    crash: a scorched tail, a bent fin, a dent, and a lean (the SCENERY entry
+    tilts it). Scenery -- nothing runs into it, and nobody lifts it. Built at
+    hand size and scaled up in SCENERY."""
+    white, red, glass = '#e9e4d8', '#c0392b', '#7fd4ff'
     parts = [
-        # the hull, on its side
-        {'shape': 'cylinder', 'size': [0.055, 0.05, 0.30], 'at': [0, 0.06, 0],
-         'rot': [0, 0, 90], 'color': white},
-        # a scorched band where the nose burnt
-        {'shape': 'cylinder', 'size': [0.057, 0.052, 0.07], 'at': [0.12, 0.06, 0],
-         'rot': [0, 0, 90], 'color': '#5a4a3a'},
-        # the nose: bent up and to one side, off the line of the hull
-        {'shape': 'cone', 'size': [0.05, 0.12], 'at': [0.21, 0.08, 0.02],
-         'rot': [10, 0, -70], 'color': scorch},
-        # a gash torn along the side, three dark slivers
-        {'shape': 'box', 'size': [0.10, 0.012, 0.03], 'at': [-0.02, 0.085, 0.045],
-         'rot': [0, 0, 8], 'color': dark},
-        {'shape': 'box', 'size': [0.06, 0.012, 0.03], 'at': [0.07, 0.10, 0.03],
-         'rot': [0, 0, -14], 'color': dark},
-        {'shape': 'box', 'size': [0.04, 0.010, 0.03], 'at': [-0.10, 0.07, 0.05],
-         'rot': [0, 0, 20], 'color': dark},
-        # dents: dark flattened bumps on the hull
-        {'shape': 'sphere', 'size': [0.022], 'at': [0.04, 0.045, -0.04], 'color': '#6b6b6b'},
-        {'shape': 'sphere', 'size': [0.018], 'at': [-0.07, 0.10, -0.02], 'color': '#6b6b6b'},
-        # one fin still on, bent
-        {'shape': 'box', 'size': [0.08, 0.02, 0.12], 'at': [-0.15, 0.06, 0.05],
-         'rot': [0, 0, 32], 'color': red},
-        # ...the other snapped off, lying on the ground behind
-        {'shape': 'box', 'size': [0.08, 0.02, 0.12], 'at': [-0.26, 0.012, -0.14],
-         'rot': [0, 35, 0], 'color': red},
-        # the stripe, torn in two
-        {'shape': 'box', 'size': [0.06, 0.03, 0.10], 'at': [-0.05, 0.06, 0], 'color': red},
-        {'shape': 'box', 'size': [0.05, 0.03, 0.10], 'at': [0.04, 0.062, 0.006],
-         'rot': [0, 0, 6], 'color': red},
-        # a porthole, cracked (a dark line across it)
-        {'shape': 'sphere', 'size': [0.028], 'at': [0.05, 0.10, 0.045], 'color': glass},
-        {'shape': 'box', 'size': [0.05, 0.004, 0.004], 'at': [0.05, 0.115, 0.06],
-         'rot': [0, 0, 30], 'color': dark},
-        # bits of it scattered where it slid
-        {'shape': 'box', 'size': [0.03, 0.01, 0.02], 'at': [0.30, 0.005, 0.10],
-         'rot': [0, 25, 0], 'color': white},
-        {'shape': 'box', 'size': [0.025, 0.01, 0.02], 'at': [0.24, 0.005, -0.12],
-         'rot': [0, -40, 0], 'color': scorch},
-        {'shape': 'box', 'size': [0.02, 0.008, 0.035], 'at': [-0.05, 0.004, 0.16],
-         'rot': [0, 60, 0], 'color': red},
-        # smoke, still rising from the nose
-        {'shape': 'sphere', 'size': [0.05], 'at': [0.24, 0.16, 0.02], 'color': '#5e5e5e'},
-        {'shape': 'sphere', 'size': [0.038], 'at': [0.29, 0.24, -0.02], 'color': '#7a7a7a'},
-        {'shape': 'sphere', 'size': [0.026], 'at': [0.33, 0.31, 0.01], 'color': '#939393'},
+        # the hull, standing on its fins
+        {'shape': 'cylinder', 'size': [0.05, 0.055, 0.30], 'at': [0, 0.21, 0], 'color': white},
+        # the tail, scorched where the flame licked it coming down
+        {'shape': 'cylinder', 'size': [0.056, 0.058, 0.05], 'at': [0, 0.085, 0], 'color': '#5a4a3a'},
+        # the nose
+        {'shape': 'cone', 'size': [0.05, 0.12], 'at': [0, 0.42, 0], 'color': red},
+        # a stripe round the middle, and a porthole
+        {'shape': 'cylinder', 'size': [0.052, 0.052, 0.03], 'at': [0, 0.27, 0], 'color': red},
+        {'shape': 'sphere', 'size': [0.022], 'at': [0, 0.31, 0.045], 'color': glass},
+        # three fins: two straight, one bent where it took the weight
+        {'shape': 'box', 'size': [0.02, 0.12, 0.09], 'at': [0, 0.06, 0.075], 'color': red},
+        {'shape': 'box', 'size': [0.09, 0.12, 0.02], 'at': [-0.075, 0.06, 0], 'color': red},
+        {'shape': 'box', 'size': [0.09, 0.12, 0.02], 'at': [0.07, 0.05, -0.01],
+         'rot': [0, 0, 18], 'color': red},
+        # a dent low on the hull
+        {'shape': 'sphere', 'size': [0.02], 'at': [0.045, 0.14, 0.02], 'color': '#6b6b6b'},
     ]
     return {'kind': 'model', 'parts': parts, 'fixed': True, 'ghost': True,
             'label': 'Marty’s ship'}
@@ -178,8 +150,9 @@ def next_note(text):
 ROBOT = {'kind': 'robot', 'name': None, 'program': [], 'team': []}
 
 # Where it came down: on the floor beyond the far side of the table, nose
-# toward the room, seven times hand size -- a ship Marty could sit in.
-SCENERY = [{'thing': ship(), 'x': 3.1, 'y': 0.0, 'z': -3.4, 'ry': 35, 'sz': 7}]
+# toward the room, seven times hand size -- a ship Marty could sit in --
+# and leaning seven degrees onto its bent fin.
+SCENERY = [{'thing': ship(), 'x': 3.1, 'y': 0.02, 'z': -3.4, 'ry': 35, 'rz': -7, 'sz': 7}]
 
 # --- p7: exactly 1024 -- and it is you who has to stop the robot ------------
 # No box: a robot can set a thing down on its own desk where its given thing
@@ -354,8 +327,8 @@ P2 = puzzle(
 # --- p1: we need a box with 1 and 2 in it -----------------------------------
 puzzle(
     'p1',
-    'Thanks for coming to help me. My ship came down hard — that’s it lying '
-    'on the floor behind the table with its nose burnt — and its computer is broken. First it '
+    'Thanks for coming to help me. My ship landed badly — that’s it leaning '
+    'behind the table, with a bent fin and a scorched tail — and its computer is broken. First it '
     'needs numbers to work. Can you make a box with 1 and 2 in it, and give '
     'it to the bird? If you get stuck, ask me for a hint.',
     'a box with 1 and 2 in it, in that order',
