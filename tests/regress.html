@@ -1936,6 +1936,36 @@ async function placeOwnCheck(D, w) {
   return ok;
 }
 
+// ROOM FOR THE WHOLE THING: houses a robot sets down on the grass, shown at
+// twice hand size, stand clear of one another
+async function groundSpacingCheck(D, w) {
+  const house = { kind: 'model', parts: [{ shape: 'box', size: [0.4, 0.3, 0.4], color: '#8fb0d9' }], sz: 2 };
+  const box = { kind: 'box', holes: [house, house, house, house] };
+  const prog = [{ type: 'take', at: { c: 'given', path: [0] } }, { type: 'put', at: { c: 'ground', path: [] } },
+    { type: 'take', at: { c: 'given', path: [1] } }, { type: 'put', at: { c: 'ground', path: [] } },
+    { type: 'take', at: { c: 'given', path: [2] } }, { type: 'put', at: { c: 'ground', path: [] } },
+    { type: 'take', at: { c: 'given', path: [3] } }, { type: 'put', at: { c: 'ground', path: [] } }];
+  D.worldIn({ kind: 'world', v: 4, stations: { stand: box }, active: { kind: 'robot', name: 'builder',
+    condition: { kind: 'anyBox' }, trainedOn: box, program: prog }, bench: [] });
+  await slowSettle(D, 1500);
+  D.speed('inf');
+  D.enterYard(); await slowSettle(D, 2000);
+  D.rounds(1); D.run();
+  await slowSettle(D, 60000);
+  const houses = [0, 1, 2, 3, 4, 5].map(i => D.bench(i)).filter(Boolean).filter(t => t.userData.kind === 'model');
+  let minGap = Infinity;
+  for (let i = 0; i < houses.length; i++) for (let j = i + 1; j < houses.length; j++) {
+    const a = houses[i], b = houses[j];
+    const need = (a.userData.width * a.scale.x + b.userData.width * b.scale.x) / 2;
+    minGap = Math.min(minGap, Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z) - need);
+  }
+  const inBounds = houses.every(t => t.position.z >= D.bounds().z0 - 0.01);
+  D.leaveYard(); await slowSettle(D, 2000);
+  const ok = houses.length === 4 && minGap > -0.03 && inBounds;
+  put((ok ? 'PASS' : 'FAIL') + ' room for the whole thing on the grass  (houses=' + houses.length + ' closest-gap=' + (minGap === Infinity ? 'n/a' : minGap.toFixed(2)) + ' on-the-grass=' + inBounds + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4241,6 +4271,9 @@ async function runOne(D, spec) {
   let poOK = true;
   try { poOK = want('placeOwn') ? await placeOwnCheck(D, frame.contentWindow) : true; }
   catch (e) { poOK = false; put('FAIL a place keeps its own  ' + e.message, 'fail'); }
+  let gsOK = true;
+  try { gsOK = want('groundSpacing') ? await groundSpacingCheck(D, frame.contentWindow) : true; }
+  catch (e) { gsOK = false; put('FAIL room for the whole thing  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4352,7 +4385,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

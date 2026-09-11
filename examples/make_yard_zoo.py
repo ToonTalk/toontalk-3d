@@ -97,7 +97,7 @@ flamingo = model('flamingo', [
 # each animal is shown at twice hand size, so a child can see them from the door
 def on_ground(thing, x, z):
     t = dict(thing); t['sz'] = 2
-    return {'thing': t, 'x': x, 'z': z}
+    return {'thing': t, 'x': x, 'z': z + 1.4}      # the ground begins past the helpers
 
 sign = {'kind': 'text', 'text': 'Welcome to the zoo!\n\nAsk Marty for more animals,\nor copy one on Mimi.'}
 
@@ -106,7 +106,7 @@ world = {
     'name': 'yard-zoo',
     'bench': [],
     'yard': {'bench': [
-        {'thing': sign, 'x': -2.6, 'z': 4.6},
+        {'thing': sign, 'x': -2.6, 'z': 6.0},
         on_ground(elephant, -1.6, 2.4),
         on_ground(giraffe, 0.4, 2.2),
         on_ground(lion, 2.2, 2.6),

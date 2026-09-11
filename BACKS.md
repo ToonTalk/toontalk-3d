@@ -5819,3 +5819,38 @@ while holding a model names it. The saved file is yard.world.json when
 saved from the yard. The tilt line is said in full once per hold and
 briefly after; the reader keeps one line waiting, which is how the tail
 of it was heard twice.
+
+## The camera follows onto the grass, room for the whole thing, and the helpers behind the yard
+
+*Added 11 Sep. Ken: "The camera doesn't follow a robot when placing things
+on a yard. I moved the door to the yard in the workshop but when I loaded a
+saved world the door went back to where it was. And yet when I entered the
+yard the door was back to the default place. Screenshot shows how when the
+robot places 3d objects in the yard they overlap -- they should only be
+placed on spaces with enough room for the object. Instead of putting Marty,
+Dusty and Mimi on the yard they should be behind the yard as they are in
+the workshop."*
+
+**The camera outside follows the subject.** Indoors the smart camera keeps
+the desk and the work spots in the picture while it follows the claw; on
+the grass that pulled it back until a robot setting a house down was a
+speck. Outside, the work area is the ground, and it follows what the claw
+carries. A robot's own walk out through the door no longer starts a camera
+glide of its own that the follow would fight.
+
+**Room for the whole thing.** A free spot was found by a thing's width
+before the size it wears, so two houses shown at twice hand size were set
+as if small and stood through each other. The footprint now includes the
+scale, the search rings are sized to the thing, and there are enough of
+them for a yard. The end-of-run sweep uses the same measure.
+
+**The helpers stand behind the yard.** The ground begins past Marty,
+Dusty and Mimi, who then stand between the stacks and the grass as they
+stand beside the table. The near edge never grows. The zoo sample moved
+with it.
+
+**Doors in a saved world.** A world file carried where its doors stood
+even when nobody had moved them, so loading one put a moved door back. A
+world says where its doors stand only once somebody has moved one. (The
+yard door standing in its own place outside is by design: each place
+keeps its own.)
