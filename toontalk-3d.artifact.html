@@ -622,6 +622,11 @@ scratch space, cleared onto the table when it finishes, so nothing left there
 is ever lost. A spot sizes what you set on it the way a hole does: something
 too wide, a box of eight holes say, sits there smaller rather than hanging over
 its neighbours, and comes back to full size the moment it is picked up.
+A robot shown setting something down on an empty spot uses the next
+free spot when that one is taken — a house-maker's copies stand in a
+row rather than going inside the first house — while a drop onto what
+already stands on a spot combines with it, exactly as it did when you showed
+it.
 
 You need not keep the difference between the stand and the work spots in
 your head while you work. If a round leaves the stand empty — because
@@ -1369,7 +1374,10 @@ Next to Ask in Martys panel is Make. Type what you want
 and he builds it out of solid shapes and sets it on your table. It is an
 ordinary thing from the moment it lands: pick it up, copy it on Mimi, drop a
 behaviour on it, file it in your notebook, save it with the world. If you did
-not want it, Undo takes it away.
+not want it, Undo takes it away. You need not find the button: a wish
+that starts with the word — make me a lion, typed into
+Ask or spoken into the microphone — is Make, and draw a
+cat is Draw.
 
 Say what is wrong with it and he makes it over. He remembers the
 last toy he made, so good, but it should have six legs or
@@ -19297,11 +19305,31 @@ function makeMiniDesk(topY, w, d, topColor) {
   }
   return g;
 }
+// WHERE THE WORK SPOTS RISE. Three to a row going back was fine for a few;
+// a robot making a village (Ken's grandson) filled ten and more, and rows
+// four and five stood in the stacks. The first nine are where they always
+// were; then the right of the stand, two more behind, and the wings -- every
+// one measured at least 0.5 from where a stack stands. Past those the front
+// row runs on outward, never back.
+const SCRATCH_SPOTS = [
+  [-0.45, 0], [-0.95, 0], [-1.45, 0],
+  [-0.45, -0.62], [-0.95, -0.62], [-1.45, -0.62],
+  [-0.45, -1.24], [-0.95, -1.24], [-1.45, -1.24],
+  [0.95, 0], [1.45, 0], [1.95, 0],
+  [0.95, -0.62], [1.45, -0.62],
+  [0.95, -1.24], [1.45, -1.24],
+  [-0.45, -1.86], [0.45, -1.86],
+  [-1.95, 0], [-2.45, 0], [2.45, 0],
+];
 function scratchPoint(i) {
-  return new THREE.Vector3(
-    -0.45 - (i % 3) * 0.5,
-    reachLocal.y,
-    reachLocal.z - Math.floor(i / 3) * 0.62);
+  let x, dz;
+  if (i < SCRATCH_SPOTS.length) [x, dz] = SCRATCH_SPOTS[i];
+  else {
+    const k = i - SCRATCH_SPOTS.length, n = Math.floor(k / 2) + 1;
+    x = k % 2 ? 2.45 + 0.5 * n : -2.45 - 0.5 * n;
+    dz = 0;
+  }
+  return new THREE.Vector3(x, reachLocal.y, reachLocal.z + dz);
 }
 function ensureScratchStation(i, animate = false) {
   const id = 's' + i;
@@ -20365,6 +20393,12 @@ function actionPut(at, side, backTo) {
   };
   const drop = { sh: reach.sh, el: reach.el };
   enqueue(walkTo(() => {
+    // the spot it was shown was empty then; taken now, the next free one
+    if (at.free && /^s\d+$/.test(at.c) && stationOf(at.c)?.occupant) {
+      const free = Object.values(stations).find(s2 => s2.kind === 'scratch' && !s2.occupant)
+        ?? ensureScratchStation(scratchObjs.length, true);
+      if (free) at = { ...at, c: free.id };
+    }
     const top = putTopOf();
     if (top && reachTable.length) {
       const tp = top.getWorldPosition(new THREE.Vector3());
@@ -21576,7 +21610,8 @@ function runRefusal(target) {
   }
   if (target.kind === 'growToggle') {
     resizeMode = !resizeMode;
-    orbit.enabled = !resizeMode;      // dragging a handle must not spin the camera
+    // the camera stays yours while the handles are out (Ken: "no navigation
+    // when desk is being enlarged"); only a corner actually in hand pins it
     if (!resizeMode && grabbedCorner !== null) releaseCorner();
     showHandles(resizeMode);
     say(resizeMode ? 'Corner handles are out — click one to carry it, click again to set the corner.'
@@ -22278,7 +22313,15 @@ function directRobot(target) {
   if (c) {
     if (clawHeld) {
       if (st.occupant?.userData.kind === 'box') return say('Click one of its holes.');
-      return go({ type: 'put', at: { c, path: [] } });
+      // A DROP ON AN EMPTY WORK SPOT means "set it down somewhere in my work
+      // area": the step remembers the spot was free, and a run that finds
+      // it taken uses the next free one rather than dropping onto -- or
+      // into -- whatever is there. Ken's grandson's house-maker set every
+      // copy down on spot 1, and copies two onward went INSIDE copy one,
+      // leaving a row of empty spots. A drop onto what already stands
+      // there is recorded without the flag and still combines, as every
+      // saved program expects (the doubler adds onto spot 1 on purpose).
+      return go({ type: 'put', at: { c, path: [], ...(st.kind === 'scratch' && !st.occupant ? { free: true } : {}) } });
     }
     if (!st.occupant) return say('Nothing there.');
     return go({ type: 'take', at: { c, path: [] } });
@@ -25585,7 +25628,7 @@ function describe(s) {
        : s.type === 'put' ? (s.at.path.length ? `put it in ${holeName(s.at)}`
            : s.at.c === 'in' ? 'put it on the copier'
            : s.at.c === 'given' ? 'drop it on what it was given'
-           : `set it down on ${containerText(s.at.c)}`)
+           : `set it down on ${containerText(s.at.c)}${s.at.free ? ' (or the next free spot)' : ''}`)
        : s.type === 'setOp' ? ({ '+': 'make it add', '-': 'make it subtract',
            '*': 'make it multiply', '/': 'make it divide',
            '^': 'make it raise to a power', 'mod': 'make it leave a remainder',
@@ -27086,12 +27129,17 @@ renderer.domElement.addEventListener('pointerdown', (ev) => {
   const t = resolve(ev);
   if (t?.kind === 'benchHandle') {
     grabbedCorner = t.corner;
+    orbit.enabled = false;            // dragging a handle must not spin the camera
     say('Drag to stretch the table — let go to set it.');
   }
 });
 addEventListener('pointerup', () => {
   if (grabbedCorner !== null) releaseCorner();
 });
+// a drag that ends off the window still lets go of the corner -- and of the camera
+for (const ev of ['pointercancel', 'blur']) {
+  addEventListener(ev, () => { if (grabbedCorner !== null) releaseCorner(); });
+}
 const tipEl = document.getElementById('tip');
 // Which it is decides everything above: a mouse or a stylus hovers and can
 // lead the hand, a finger cannot. Decided per event, so a tablet with a mouse
@@ -27867,6 +27915,7 @@ function dragCorner(hit) {
 }
 function releaseCorner() {
   grabbedCorner = null;
+  if (!straightOn) orbit.enabled = true;
   // anything the shrink left overboard slides back onto the top
   for (const t of benchThings) {
     t.position.x = Math.min(BENCH.x1 - 0.12, Math.max(BENCH.x0 + 0.12, t.position.x));
@@ -28755,7 +28804,9 @@ async function runMartyDemo(id) {
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
       const line = typeof step.say === 'function' ? step.say() : step.say;
-      if (line) { martySay(line); say(line, 6000); }
+      // said ONCE aloud: the card shows the line too, but does not read it
+      // out on top of him (Ken: "Marty and narration repeated some instructions")
+      if (line) { martySay(line); if (martyVoiceOn) hintLastSpoken = line; say(line, 6000); }
       martyPerforming = true;
       if (step.do) await step.do(ctx);
       await martyIdleWait();
@@ -29210,6 +29261,8 @@ const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who l
 Rules for you:
 - The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
 - Answer in one to three short, warm sentences, for a child or a teacher.
+- You ARE Marty. Speak as yourself, in the first person — “press Make and tell me what you want”, never “ask Marty”.
+- Plain spoken sentences only: no markdown, no asterisks, no bullet lists, no headings — your words are read aloud.
 - When asked what a robot, a team, or a behaviour DOES, answer with its PURPOSE \u2014 the effect of the whole loop on the world, in one or two plain sentences (\u201cit keeps the ball bouncing off the walls, and rings the score when one slips past\u201d). Work that out from the facts under \u201cOn the table right now\u201d; recite the individual steps only when asked HOW it works, step by step.
 - NEVER write, design, or plan programs for the visitor, even if they insist. Building it themselves is the whole point. Offer a demonstration of the pieces instead.
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
@@ -29648,6 +29701,17 @@ function martyThinkingStart() {
 }
 async function askMarty(q) {
   window.speechSynthesis?.cancel();
+  // "MAKE ME A LION" IS THE MAKE BUTTON, however it arrives -- typed into
+  // Ask, or spoken (Sisi asked by voice for an animal and was told, in
+  // markdown, to "ask Marty"). The same for "draw a cat". A question about
+  // making ("how do I make a robot?") does not begin with the verb and goes
+  // to the brain as before; wishes for robots, programs or copies do too,
+  // since those are the things he must not build.
+  const mk = q.match(/^\s*(?:(?:please|marty|hey marty|hi marty|ok marty)[,\s]+)*(?:(?:can|could|would|will)\s+you\s+)?(?:please\s+)?(make|build|create|construct|draw|paint)\s+(?:me\s+|us\s+)?(?:please\s+)?(.+?)[.!?\s]*$/i);
+  if (mk && !/\b(robots?|programs?|teams?|cop(y|ies))\b/i.test(mk[2])) {
+    if (/^(draw|paint)$/i.test(mk[1])) martyDraw(mk[2]); else martyMake(mk[2]);
+    return;
+  }
   martySay(q, 'you');
   // "how do I look around / move the camera / zoom" is the lesson itself
   if (/\b(look around|move (the )?camera|turn (the )?(view|camera|workshop)|zoom|orbit|move around|camera controls?)\b/i.test(q)) {
@@ -30388,7 +30452,19 @@ function martySpeak(text) {
     speechSynthesis.speak(u);
   });
 }
+// A BRAIN'S ANSWER, in plain words. Models drift into markdown -- **Make**,
+// bullet lists -- and a child saw the asterisks (Sisi did). His lines are
+// read aloud as well as shown, so the marks come off before either.
+function plainWords(s) {
+  return String(s ?? '')
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/__([^_\n]+)__/g, '$1')
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,!?;:]|$)/g, '$1$2')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*]\s+/gm, '');
+}
 function martySay(text, who = 'marty') {
+  if (who !== 'you') text = plainWords(text);
   const log = document.getElementById('martyLog');
   const line = document.createElement('div');
   line.style.cssText = who === 'you'
@@ -30947,7 +31023,7 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
     martyUI.addEventListener(ev, (e) => e.stopPropagation());
   }
 }
-window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_DEMOS),
+window.__marty = { ask: askMarty, demo: runMartyDemo, demos: Object.keys(MARTY_DEMOS), plain: plainWords,
                    world: martyWorldText, offline: martyOffline, offer: martyOfferDemo,
                    next: () => { if (martyNextResolve) { const r = martyNextResolve; martyNextResolve = null; r(); } },
                    stop: martyStopDemo, brain: martyBrainText,
@@ -31093,6 +31169,9 @@ window.__nano = {
   },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
   scratch() { return Object.values(stations).filter(s2 => s2.kind === 'scratch').map(s2 => s2.occupant); },
+  spotPoint(i) { return scratchPoint(i).toArray(); },
+  stackAt(id) { return stackPoint(id)?.toArray() ?? null; },
+  orbitOn() { return orbit.enabled; },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
   scrollPile, apartText, repeatLength, factorText, drawContFrac,
 

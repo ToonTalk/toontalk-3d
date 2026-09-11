@@ -5584,3 +5584,53 @@ parked in the browser under a rescue name and a blank one takes its place,
 with a card saying so. And `?fresh` on the address makes a visit that
 ignores what the browser has stored without touching it, so a stuck visitor
 can look, sign in, and rescue at leisure.
+
+## A village of houses, a table that keeps the camera, and Marty in plain words
+
+*Added 11 Sep. Ken, after his grandchildren played: "My grandson wanted to
+make a town/village (like in original ToonTalk). We tried to have a robot
+make lots of houses but that didn't work well. Lots of platforms appeared
+but most were empty. And some of the platforms intersected with stacks of
+elements. ... Marty and narration repeated some instructions. At some point
+I couldn't navigate anymore but tooltips appeared I think I could pick up
+and drop things. No navigation when desk is being enlarged. My
+granddaughter ... tried to ask Marty to make something using voice it
+replied: 'Yes, Sisi! Use **Make** and ask Marty for a person or people'.
+Also notice the markdown."*
+
+**The empty platforms, measured.** A robot trained to copy a house on Mimi
+and set the copy down on an empty work spot repeats "set it down on spot 1".
+Spot 1 is taken by the first copy on round two, and a drop onto a house is
+"put it inside" -- so every copy from the second onward went inside the
+first, each landing raised a fresh spot, and the spots stood empty in a
+row. Twelve rounds: one house on the table, eleven inside it.
+
+**A drop on an empty spot now remembers that the spot was empty.** The step
+reads "set it down on spot 1 (or the next free spot)", and a run that finds
+the spot taken uses the next free one. A drop onto what already stands on a
+spot is recorded as before and still combines -- the doubler adds onto its
+spot on purpose, and forty saved programs do the like -- so nothing already
+trained changes its meaning. Twelve rounds now: twelve houses in a row on
+the table, none inside another.
+
+**The spots keep clear of the stacks.** Three to a row going back was fine
+for a few; the fourth and fifth rows stood among the stacks. The first nine
+spots are where they always were; the rest fill the right of the stand,
+two behind, and the wings, each measured at least half a unit from where a
+stack stands, and past those the front row runs on outward, never back.
+
+**Reshaping the table no longer takes the camera.** Only a corner actually
+in hand pins it, and letting go anywhere -- off the window included -- gives
+it back. Handles left out for an afternoon were the likeliest reason the
+workshop stopped turning while everything else still worked.
+
+**Marty says it once, plainly, as himself.** A demonstration's line is read
+aloud by Marty or by the card, not both. Whatever a brain sends comes off
+its markdown before it is shown or spoken, and the brain is told it IS
+Marty, in the first person, in spoken sentences. And "make me a lion",
+typed or said into Ask, is the Make button; "draw a cat" is Draw.
+
+**The scene itself is the real answer** to a village or a zoo, and it is a
+design rather than a fix: a ground you can enter like a room, where things
+stand where you put them and a robot on a thing's panel is how it behaves.
+Brainstormed with Ken; not yet built.

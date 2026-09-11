@@ -1564,6 +1564,75 @@ async function cameraDemoCheck(D, w) {
   return ok;
 }
 
+// A ROBOT MAKING A VILLAGE: copies set down on a work spot it was shown
+// empty go to the next free spot when that one is taken -- not inside the
+// house already there -- and the spots keep clear of the stacks.
+async function villageCheck(D, w) {
+  const room = { kind: 'room' };
+  const prog = [
+    { type: 'take', at: { c: 'given', path: [] } }, { type: 'put', at: { c: 'in', path: [] } },
+    { type: 'take', at: { c: 'out', path: [] } }, { type: 'put', at: { c: 's0', path: [], free: true } },
+    { type: 'take', at: { c: 'in', path: [] } }, { type: 'put', at: { c: 'given', path: [] } }];
+  D.worldIn({ kind: 'world', v: 4, stations: { stand: room }, active: { kind: 'robot', name: 'builder',
+    condition: { kind: 'anyRoom' }, trainedOn: room, program: prog }, bench: [] });
+  await slowSettle(D, 3000);
+  D.speed('inf'); D.rounds(5); D.run();
+  let gaps = 0, most = 0;
+  for (let k = 0; k < 600; k++) {
+    const n = D.settle(20);
+    const sp = D.scratch();
+    const occ = sp.filter(Boolean).length;
+    most = Math.max(most, occ);
+    if (sp.length - occ > 1) gaps++;
+    if (n < 20) break;
+  }
+  await slowSettle(D, 3000);
+  let houses = 0, nested = 0;
+  for (let i = 0; i < 60; i++) {
+    const b = D.bench(i); if (!b) break;
+    if (b.userData.kind !== 'room') continue;
+    houses++;
+    b.traverse(o => { if (o !== b && o.userData?.kind === 'room') nested++; });
+  }
+  const stacks = ['rooms', 'texts', 'nests', 'scales', 'dice', 'sounds', 'minis', 'numbers', 'boxes']
+    .map(id => D.stackAt(id)).filter(Boolean);
+  let near = 0;
+  for (let i = 0; i < 22; i++) {
+    const p = D.spotPoint(i);
+    for (const st of stacks) if (Math.hypot(p[0] - st[0], p[2] - st[2]) < 0.5) near++;
+  }
+  const ok = houses === 5 && nested === 0 && gaps === 0 && most >= 5 && near === 0;
+  put((ok ? 'PASS' : 'FAIL') + ' a robot making a village  (houses=' + houses + ' nested=' + nested
+    + ' empty-spot-gaps=' + gaps + ' most-on-spots=' + most + ' spots-in-stacks=' + near + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// RESHAPING THE TABLE leaves the camera yours
+async function reshapeCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1000);
+  D.clickRaw({ kind: 'growToggle' });
+  const during = D.orbitOn();
+  D.clickRaw({ kind: 'growToggle' });
+  const after = D.orbitOn();
+  const ok = during && after;
+  put((ok ? 'PASS' : 'FAIL') + ' reshaping the table keeps the camera  (handles-out=' + during + ' after=' + after + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// MARTY IN PLAIN WORDS, and "make me a lion" goes to Make
+async function martyPlainCheck(D, w) {
+  const plain = w.__marty.plain('Yes, Sisi! Use **Make** and ask *Marty* for `people`.\n- one\n## two');
+  const p1 = plain === 'Yes, Sisi! Use Make and ask Marty for people.\none\ntwo';
+  const log = D.doc.getElementById('martyLog');
+  const n0 = log ? log.children.length : 0;
+  w.__marty.ask('Marty, can you make me a lion?');
+  await frames(D, 30);
+  const said = log ? [...log.children].slice(n0).map(e => e.textContent).join(' | ') : '';
+  const routed = /Make me: a lion/.test(said);
+  const ok = p1 && routed;
+  put((ok ? 'PASS' : 'FAIL') + ' Marty in plain words, and a wish is Make  (plain=' + p1 + ' routed=' + routed + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3823,6 +3892,15 @@ async function runOne(D, spec) {
   let cdOK = true;
   try { cdOK = want('cameraDemo') ? await cameraDemoCheck(D, frame.contentWindow) : true; }
   catch (e) { cdOK = false; put('FAIL Marty shows how to look around  ' + e.message, 'fail'); }
+  let vgOK = true;
+  try { vgOK = want('village') ? await villageCheck(D, frame.contentWindow) : true; }
+  catch (e) { vgOK = false; put('FAIL a robot making a village  ' + e.message, 'fail'); }
+  let rsOK = true;
+  try { rsOK = want('reshape') ? await reshapeCheck(D) : true; }
+  catch (e) { rsOK = false; put('FAIL reshaping the table keeps the camera  ' + e.message, 'fail'); }
+  let mpOK = true;
+  try { mpOK = want('martyPlain') ? await martyPlainCheck(D, frame.contentWindow) : true; }
+  catch (e) { mpOK = false; put('FAIL Marty in plain words  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -3934,7 +4012,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
