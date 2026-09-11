@@ -2032,6 +2032,31 @@ async function walkHomeCheck(D, w) {
   return ok;
 }
 
+// WANDERING: the zoo's behaviour dropped on the flamingo and switched on
+// moves it about the grass
+async function wanderCheck(D, w) {
+  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  D.worldIn(zoo); await slowSettle(D, 2000);
+  D.speed('inf');
+  D.enterYard(); await slowSettle(D, 2000);
+  const all = []; for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const fl = all.find(t => t.userData.label === 'flamingo');
+  const gad = all.find(t => t.userData.gadget);
+  const p0 = fl.position.clone();
+  D.clickThing(gad); await frames(D, 3);
+  D.clickThing(fl); await slowSettle(D, 1000);
+  const bound = !!gad.userData.boundTo && gad.userData.boundTo === fl.userData.lid;
+  D.press(gad, ' '); await frames(D, 5);
+  for (let i = 0; i < 400; i++) { D.frame(1, fnow()); if ((i & 31) === 31) await breathe(); }
+  const moved = p0.distanceTo(fl.position);
+  const onGrass = fl.position.z >= D.bounds().z0 - 0.01;
+  D.press(gad, '.'); await frames(D, 5);
+  D.leaveYard(); await slowSettle(D, 2000);
+  const ok = !!gad && bound && moved > 0.1 && onGrass;
+  put((ok ? 'PASS' : 'FAIL') + ' the flamingo wanders  (gadget-on-grass=' + !!gad + ' bound=' + bound + ' moved=' + moved.toFixed(2) + ' on-the-grass=' + onGrass + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4346,6 +4371,9 @@ async function runOne(D, spec) {
   let whmOK = true;
   try { whmOK = want('walkHome') ? await walkHomeCheck(D, frame.contentWindow) : true; }
   catch (e) { whmOK = false; put('FAIL the robot walks home  ' + e.message, 'fail'); }
+  let wnOK = true;
+  try { wnOK = want('wander') ? await wanderCheck(D, frame.contentWindow) : true; }
+  catch (e) { wnOK = false; put('FAIL the flamingo wanders  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4457,7 +4485,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

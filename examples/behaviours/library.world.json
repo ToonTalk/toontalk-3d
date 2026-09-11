@@ -7312,6 +7312,357 @@
   {
    "thing": {
     "kind": "text",
+    "text": "wandering",
+    "gadget": true,
+    "lid": "G913",
+    "evt": "evt-G913",
+    "look": {
+     "bg": "#2a2135",
+     "ink": "#e8d7ff",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "G913",
+         "label": "my thing"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "across"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "30"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "away"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "30"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "die",
+         "faces": 3
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "-2",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "25"
+         },
+         "op": "*"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Wanderer",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "wildDie"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          5
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          5
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          2,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "G913"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "across"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "30"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "away"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "30"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "die",
+         "faces": 3
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "-2",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "25"
+         },
+         "op": "*"
+        }
+       ]
+      },
+      "team": []
+     }
+    }
+   },
+   "x": 0.7,
+   "z": 1.15
+  },
+  {
+   "thing": {
+    "kind": "text",
     "text": "THE SHELF\n\nTwelve behaviours. Each is one\npad; its panel carries the\nrobots.\n\nSet one down and press SPACE\nand it does its thing to\nITSELF -- because \"my thing\"\nmeans itself until somebody\nsays otherwise. That is the\nself-demonstration, and it\ncosts nothing."
    },
    "x": -1.45,
@@ -7336,7 +7687,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "THE SECOND SIX\n\nand a fifteenth:\nreverse a speed on\ncollision -- fills in ONE\nhole of the speed and\nleaves the other EMPTY, so\nit shares a thing with\nbouncing at a speed without\nthe two arguing\n\nand a fourteenth:\nbouncing at a speed --\n  sets a speed once, then\n  sleeps until a wall, where\n  one x-1 flips one number.\n  The clock does the moving,\n  so it never stutters and\n  costs nothing between\n  bounces\n\nand a thirteenth:\nfollowing up and down --\n  the pointer's AWAY only,\n  so it keeps its own place\n  across the table (a bat),\n  and can still be pointed\n  at to stop it\n\ngrow / shrink when bumped\n  doze on the bump channel;\n  a hit is [move | size | 1/4]\n\nmake a sound on hit\n  gives \"play\" to its bell\n\nreverse on collision\n  sets the step away from\n  what it hit, like the ball\n\nspeed limit\n  weighs the speed against\n  the limit on a SCALE: the\n  scale is the if\n\nsend 1 to the score on hit\n  a badged +1 to its bird"
+    "text": "THE SECOND SIX\n\nand a sixteenth:\nwandering -- a die of 3, a\n  -2 and a x1/25 land on\n  each step in turn, and a\n  copy goes to the bird;\n  drop it on a zoo animal\n\nand a fifteenth:\nreverse a speed on\ncollision -- fills in ONE\nhole of the speed and\nleaves the other EMPTY, so\nit shares a thing with\nbouncing at a speed without\nthe two arguing\n\nand a fourteenth:\nbouncing at a speed --\n  sets a speed once, then\n  sleeps until a wall, where\n  one x-1 flips one number.\n  The clock does the moving,\n  so it never stutters and\n  costs nothing between\n  bounces\n\nand a thirteenth:\nfollowing up and down --\n  the pointer's AWAY only,\n  so it keeps its own place\n  across the table (a bat),\n  and can still be pointed\n  at to stop it\n\ngrow / shrink when bumped\n  doze on the bump channel;\n  a hit is [move | size | 1/4]\n\nmake a sound on hit\n  gives \"play\" to its bell\n\nreverse on collision\n  sets the step away from\n  what it hit, like the ball\n\nspeed limit\n  weighs the speed against\n  the limit on a SCALE: the\n  scale is the if\n\nsend 1 to the score on hit\n  a badged +1 to its bird"
    },
    "x": 0.65,
    "z": 2.28

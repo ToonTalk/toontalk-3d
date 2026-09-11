@@ -5882,3 +5882,29 @@ size is kept with the yard.
 **The robot walks home.** A lesson that ended out on the grass, or at the
 copier, left the robot there and snapped it home. It walks, at every
 speed but Instant.
+
+## Wandering: a behaviour for animals
+
+*Added 11 Sep. Ken: "go ahead with the wandering behaviors for animals".*
+
+**Nothing here is about wandering.** The Wanderer is handed [a bird to my
+thing, an across step, an away step, a die of three, a -2, a x1/25]. Each
+round, on each step: a copy of the die lands on the step's number (1, 2 or
+3), a copy of the -2 lands on it (-1, 0 or 1), a copy of the x1/25 lands
+on it (a small step, or none), and a copy of the step goes to the bird.
+The same four gestures a child makes by hand -- a die re-rolls a number,
+a number is added, a number is multiplied, a bird carries a message -- and
+an animal wanders. Hold the die and type 5 and it wanders further one way
+than the other, which is a question worth asking a child.
+
+**Where it lives.** `examples/behaviours/wandering.world.json` lays it out
+in the open with a star to drift; the shelf (`library.world.json`) has it
+as its sixteenth gadget; and the zoo has one on the grass, ready to drop
+on an animal. Measured: bound to the flamingo and switched on, the
+flamingo moves; in the open world the star drifts round by round and, at
+the table's edge, says so and keeps rolling until a roll takes it away.
+
+**Slow by the round, quick on a panel.** Sixteen steps a round means a
+walk to Mimi and back six times, so in the open the star drifts at a
+robot's pace even at Instant; folded into its panel, as a gadget is, the
+rounds run offstage and it drifts at a frame's pace.

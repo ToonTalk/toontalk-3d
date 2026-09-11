@@ -4,7 +4,9 @@
 # its name on a sign, and a welcome pad by the door. Open it, step through
 # the green back door, and there they are. Run this to regenerate
 # yard-zoo.world.json; the app carries no copy of it.
-import io, json, os
+import io, json, os, sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'behaviours'))
+from make_wandering import wandering            # noqa: E402
 
 def part(shape, size, at, color, rot=None):
     d = {'shape': shape, 'size': size, 'at': at, 'color': color}
@@ -99,7 +101,7 @@ def on_ground(thing, x, z):
     t = dict(thing); t['sz'] = 2
     return {'thing': t, 'x': x, 'z': z + 1.4}      # the ground begins past the helpers
 
-sign = {'kind': 'text', 'text': 'Welcome to the zoo!\n\nAsk Marty for more animals,\nor copy one on Mimi.'}
+sign = {'kind': 'text', 'text': 'Welcome to the zoo!\n\nAsk Marty for more animals,\nor copy one on Mimi.\n\nDrop the wandering pad on an\nanimal and press SPACE on it.'}
 
 world = {
     'kind': 'world', 'v': 4, 'stations': {}, 'active': None,
@@ -114,6 +116,8 @@ world = {
         on_ground(penguin, 1.4, 4.4),
         on_ground(crocodile, 3.2, 4.2),
         on_ground(flamingo, -2.8, 2.8),
+        # a behaviour on the grass: drop it on an animal, press SPACE, and it wanders
+        {'thing': wandering('G914'), 'x': 3.6, 'z': 6.4},
     ]},
 }
 here = os.path.dirname(os.path.abspath(__file__))

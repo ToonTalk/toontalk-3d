@@ -1492,7 +1492,11 @@ you. A nest set on the grass takes the bird's deliveries, and the pile is
 yours to arrange where it lies. A robot copying a house makes a village;
 asking Marty for animal after animal makes a zoo — and I want
 another lion is a wish he makes, the same as make me a
-lion.
+lion. To make an animal wander, drop the wandering
+behaviour on it (there is one on the zoo's grass, and one on the shelf in
+the behaviours library) and press SPACE on the pad: each round a die, a
+−2 and a ×1/25 land on its step in turn, and a copy goes to the
+bird. Copy the pad on Mimi for the next animal.
 
 What is here. What is here… in the ⋮ menu
 is a list of boxes to tick: Marty (his panel stays), Dusty, Mimi and her
@@ -22856,6 +22860,11 @@ window.__nano = {
   get doorCarrying() { return doorCarry; },
   resetDoors() { doorPosesAll.indoors = null; doorPosesAll.outside = null; applyPlaceDoors(); },
   get heldTilt() { return heldTilt; },
+  queueInfo() {
+    const name = (st) => st ? (st.__name || st.__label || (st.update ? 'anim' : st.end ? 'end' : 'step') + ':' + (st.dur ?? '?')) : null;
+    return { current: name(current), tCur, queue: queue.length, next: queue.slice(0, 4).map(name), busy, mode,
+             roomWorkBusy: typeof roomWorkBusy !== 'undefined' ? roomWorkBusy : null, pendingAfter: !!pendingAfter, clawHeld: clawHeld?.userData?.kind ?? null };
+  },
   teach(step) { go(step); },                                   // a lesson's step, as a click would record it
   robotPos() { return root ? root.position.toArray() : null; },
   dragCornerTo(i, at) { grabbedCorner = i; dragCorner(new THREE.Vector3(at.x, 0, at.z)); releaseCorner(); },

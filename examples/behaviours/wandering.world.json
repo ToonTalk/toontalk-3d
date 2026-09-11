@@ -1,0 +1,382 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "text",
+    "text": "*",
+    "look": {
+     "bg": "#1b2233",
+     "ink": "#ffd23f",
+     "font": "sans"
+    },
+    "lid": "L9513",
+    "evt": "evt-L9513"
+   },
+   "x": -1.3,
+   "z": 1.2
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "Wanderer",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "anyBird"
+      },
+      {
+       "kind": "anyBox"
+      },
+      {
+       "kind": "anyBox"
+      },
+      {
+       "kind": "wildDie"
+      },
+      {
+       "kind": "wildNumber"
+      },
+      {
+       "kind": "wildNumber"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        2,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        2,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        2,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "bird",
+       "nestId": 0,
+       "nestGuid": null,
+       "liveId": "L9513"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "move"
+        },
+        {
+         "kind": "text",
+         "text": "across"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "30"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "move"
+        },
+        {
+         "kind": "text",
+         "text": "away"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "30"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      {
+       "kind": "die",
+       "faces": 3
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "-2",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "1",
+        "d": "25"
+       },
+       "op": "*"
+      }
+     ]
+    },
+    "team": []
+   },
+   "x": -1.45,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "bird",
+      "nestId": 0,
+      "nestGuid": null,
+      "liveId": "L9513",
+      "label": "my thing"
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "text",
+        "text": "move"
+       },
+       {
+        "kind": "text",
+        "text": "across"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "30"
+        },
+        "op": "+"
+       }
+      ]
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "text",
+        "text": "move"
+       },
+       {
+        "kind": "text",
+        "text": "away"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "30"
+        },
+        "op": "+"
+       }
+      ]
+     },
+     {
+      "kind": "die",
+      "faces": 3
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "-2",
+       "d": "1"
+      },
+      "op": "+"
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "1",
+       "d": "25"
+      },
+      "op": "*"
+     }
+    ]
+   },
+   "x": -0.45,
+   "z": 1.62
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WANDERING\n\n[my thing, across, away,\n a die of 3, a -2, a x1/25]\n\nEach round, on each step:\n  the die lands on it: 1..3\n  the -2 lands on it: -1..1\n  the x1/25 lands on it\n  a copy goes to the bird\n\nThat is all wandering is."
+   },
+   "x": -1.45,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nSet Speed to Instant and\ngive the work box to the\nWanderer.\n\nThe star drifts about the\ntable, nowhere in\nparticular.\n\nHold the die and type 5:\nit wanders further to the\nright and down than left\nand up. Why?"
+   },
+   "x": -0.75,
+   "z": 2.15
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "IN THE YARD\n\nSet the zoo out, carry this\npad through the back door,\ndrop it on an animal and\npress SPACE on the pad.\n\nThe animal wanders. Copy the\npad on Mimi for the next one.\n\nNothing here is about\nanimals: a die re-rolls a\nnumber, and a bird carries\na message."
+   },
+   "x": -0.05,
+   "z": 2.15
+  }
+ ],
+ "stations": {},
+ "active": null
+}

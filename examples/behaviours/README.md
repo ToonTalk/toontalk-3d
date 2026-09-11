@@ -51,6 +51,7 @@ The shelf: six gadgets and a star to try them on.
 | wrapping at the edges | the same shape, but sends `[set \| across \| ∓3/2]` instead of flipping |
 | following the pointer | the pointer device gives `[across \| away]`; a thing takes `[set \| position \| …]`; the robot puts one inside the other |
 | moving with the arrow keys | five robots on the keyboard nest, one per arrow and one that swallows anything else so a stray key cannot stop the team |
+| wandering | one robot: a die of 3, a −2 and a ×1/25 land on each step in turn, and a copy goes to the bird — drop it on a zoo animal (`make_wandering.py`) |
 
 Six, not the twelve the plan calls for. The remaining six in the starter set —
 grow and shrink when touched, make a sound on hit, reverse on collision, a

@@ -179,6 +179,9 @@ arrows = gadget('moving with the arrow keys', ARROW, a_lead, a_work)
 
 # ---------------------------------------------------------------- 7..12
 from make_library2 import SIX                                # noqa: E402
+from make_wandering import wandering                        # noqa: E402
+
+wandering_g = wandering()
 
 # ----------------------------------------------------------------------------
 ABOUT = ('THE SHELF\n\n'
@@ -220,6 +223,12 @@ WHY = ('WHAT IS NOT BUILT IN\n\n'
        'a number.')
 
 NEW = ('THE SECOND SIX\n\n'
+       'and a sixteenth:\n'
+       'wandering -- a die of 3, a\n'
+       '  -2 and a x1/25 land on\n'
+       '  each step in turn, and a\n'
+       '  copy goes to the bird;\n'
+       '  drop it on a zoo animal\n\n'
        'and a fifteenth:\n'
        'reverse a speed on\n'
        'collision -- fills in ONE\n'
@@ -280,6 +289,7 @@ bench = [
     {'thing': SIX['limiting'], 'x': 0.15, 'z': 1.81},
     {'thing': SIX['scoring'], 'x': 0.70, 'z': 1.48},
     {'thing': SIX['reversing_speed'], 'x': 0.15, 'z': 1.48},
+    {'thing': wandering_g, 'x': 0.70, 'z': 1.15},
 
     {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.28},           # noqa: F405
     {'thing': txt(USE), 'x': -0.75, 'z': 2.28},             # noqa: F405
