@@ -681,7 +681,8 @@ stays empty: copies are independent.
 Two helpers live in front of the table. Dusty the vacuum removes:
 click him to wake him, then click things to vacuum them away, entries off
 notebook pages, or parts of a robot's thought (leaving an empty hole, which
-then matches anything). Ruby the eraser generalises: wake her and
+then matches anything). Click a thing's name plate with him awake and
+he takes just the name off; the thing stays. Ruby the eraser generalises: wake her and
 click a part of a thought — a 7 becomes any number, then
 anything. She also erases real things in place: an erased number
 stands for any number, which is how you build a robot's expectations by hand.
@@ -1401,6 +1402,12 @@ again. The file is laid out to be read: one part to a line, with its numbers
 kept together.
 
 Asking Marty for a picture
+Where the brain can paint, Draw paints. With OpenAI or Gemini as
+Marty's brain, Draw asks for a picture and it arrives on a pad; Claude and
+the brain inside Chrome cannot paint, and Marty draws with the turtle
+instead. The key goes to its own provider and nowhere else, exactly as it
+does for words.
+
 Beside Make is Draw. Type what you want — a
 snowflake, a spiral, a house with a tree — and it
 arrives on a pad on your table, an ordinary pad you can pick up, caption, copy
@@ -1482,10 +1489,21 @@ asking Marty for animal after animal makes a zoo — and I want
 another lion is a wish he makes, the same as make me a
 lion.
 
-Helpers put away. Dusty, Mimi with her machine, and Ruby each have
-a switch in the ⋮ menu; put away, they are gone until you bring
-them back, and the browser remembers. Ruby stays indoors when you are in the
-yard.
+What is here. What is here… in the ⋮ menu
+is a list of boxes to tick: Marty (his panel stays), Dusty, Mimi and her
+machine, Ruby, the back door, and each stack. Unticked, a thing is gone until
+you tick it again, and the browser remembers. A puzzle's rules still decide
+what is there at all. Ruby stays indoors when you are in the yard.
+
+The yard grows. Set something down within half a pace of an edge
+and that edge moves out two paces, up to a limit; the size is the yard's own
+and is saved with it.
+
+A backdrop. Holding a pad, the up and down arrows tilt it
+fifteen degrees a press; standing, it rides high enough that its bottom edge
+rests on the ground, and it stays so when set down. Six presses stand a
+picture up as a backdrop in the yard. Doors can be made up to six times their
+size.
 
 ## Puzzles
 
@@ -3918,6 +3936,7 @@ function setThingLabel(thing, text) {
   else plate.position.set(0, 0.27, 0.06);
   thing.add(plate);
   thing.__labelNode = plate;
+  setPick(plate, { kind: 'label', thing });     // Dusty can take the name alone
 }
 
 // A box is an array, and joining must work at any size -- a robot that copies
@@ -5216,6 +5235,7 @@ function paintRoomLabel(room) {
     if (sp.rx != null) { plate.rotation.x = sp.rx; plate.renderOrder = 2; }
     room.add(plate);
     room.__labelPlates.push(plate);
+    setPick(plate, { kind: 'label', thing: room });
   }
 }
 function makeRoom(data = null) {
@@ -9954,6 +9974,7 @@ function putOnBench(thing, at, byUser = false) {
   if (thing.userData.kind === 'robot') {
     addMiniBubble(thing, thing.__bot?.program.length ? thing.__bot.condition : null);
   }
+  growYardIfNeeded(thing);
 }
 
 // A work spot is a small desk. Something too wide for it -- a box of eight
@@ -10118,7 +10139,7 @@ function applyDoorPoses(p) {
     if (!d || !q) continue;
     d.position.set(q.x ?? d.position.x, 0, q.z ?? d.position.z);
     d.rotation.y = q.ry ?? d.rotation.y;
-    d.scale.setScalar(Math.min(2.5, Math.max(0.5, q.s ?? 1)));
+    d.scale.setScalar(Math.min(6, Math.max(0.5, q.s ?? 1)));
   }
 }
 function saveDoorPoses() { try { localStorage.setItem(DOORS_KEY, JSON.stringify(doorPoses())); } catch {} }
@@ -10155,17 +10176,31 @@ function grassTexture() {
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+// THE GROUND GROWS to make room: a thing set down within half a pace of an
+// edge pushes that edge out two paces, up to a limit; never toward the
+// stacks. The size is the yard's own, kept with its things.
+const YARD_MAX = { x: 9, z: 12.5 };
+function growYardIfNeeded(t) {
+  if (!yardIn) return;
+  const m = 0.5;
+  let grew = false;
+  if (t.position.x < BENCH.x0 + m && BENCH.x0 > -YARD_MAX.x) { BENCH.x0 = Math.max(-YARD_MAX.x, BENCH.x0 - 2); grew = true; }
+  if (t.position.x > BENCH.x1 - m && BENCH.x1 < YARD_MAX.x) { BENCH.x1 = Math.min(YARD_MAX.x, BENCH.x1 + 2); grew = true; }
+  if (t.position.z > BENCH.z1 - m && BENCH.z1 < YARD_MAX.z) { BENCH.z1 = Math.min(YARD_MAX.z, BENCH.z1 + 2); grew = true; }
+  if (grew) { buildGround(true); sfx('grow'); say('The yard grows to make room.'); }
+}
 function buildGround(on) {
-  groundParts.forEach(p => p.removeFromParent());
+  groundParts.forEach(p => { p.removeFromParent(); const i = pickables.indexOf(p); if (i >= 0) pickables.splice(i, 1); });
   groundParts.length = 0;
   if (!on) return;
   grassTex ??= sharedTex(grassTexture());
-  const w = YARD.x1 - YARD.x0, d = YARD.z1 - YARD.z0;
+  const B = BENCH;                     // the yard's own bounds while outside
+  const w = B.x1 - B.x0, d = B.z1 - B.z0;
   grassTex.repeat.set(w / 1.2, d / 1.2);
-  const lawn = new THREE.Mesh(geo('PlaneGeometry', w, d),
+  const lawn = new THREE.Mesh(geo('PlaneGeometry', +w.toFixed(3), +d.toFixed(3)),
     new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.95 }));
   lawn.rotation.x = -Math.PI / 2;
-  lawn.position.set((YARD.x0 + YARD.x1) / 2, GROUND_Y - 0.005, (YARD.z0 + YARD.z1) / 2);
+  lawn.position.set((B.x0 + B.x1) / 2, GROUND_Y - 0.005, (B.z0 + B.z1) / 2);
   lawn.receiveShadow = true;
   setPick(lawn, { kind: 'bench' });
   scene.add(lawn);
@@ -10182,7 +10217,11 @@ function paintYardSign() { if (yardDoor?.__sign) yardDoor.__sign.__paint(yardDoo
 // the back door shows wherever there is a yard to go to: not offstage, and
 // not in a puzzle, whose table is the whole of the lesson
 function showYardDoor() {
-  if (yardDoor) yardDoor.visible = !offstage() && !(typeof puzzleInfo !== 'undefined' && puzzleInfo);
+  if (!yardDoor) return;
+  // a puzzle whose rules list its tools without the yard has none; anything
+  // else has the back door, unless it was put away from the more-menu
+  const tools = (typeof worldRules !== 'undefined' && worldRules?.tools) || null;
+  yardDoor.visible = !offstage() && (!tools || tools.includes('yard')) && helperShown.yard !== false;
 }
 function enterYard() {
   if (yardIn) return;
@@ -10198,7 +10237,7 @@ function enterYard() {
   benchParts.forEach(p => { p.visible = false; });
   benchHandles.forEach(h => { h.visible = false; });
   yardIn = { ctx: curCtx, things: tableThings, BENCH: { ...BENCH }, top: BENCH_TOP, depth: worldTrail.length };
-  Object.assign(BENCH, YARD);
+  Object.assign(BENCH, yard.bounds ?? YARD);
   BENCH_TOP = GROUND_Y;
   buildGround(true);
   for (const t of yard.things) { benchRoot.add(t); benchThings.push(t); if (t.userData.speed) movers.add(t); }
@@ -10218,6 +10257,7 @@ function leaveYard(quiet = false) {
   }
   const yard = (yardIn.ctx.yard ??= { things: [] });
   for (const t of benchThings.splice(0)) { t.removeFromParent(); movers.delete(t); yard.things.push(t); }
+  yard.bounds = { x0: BENCH.x0, x1: BENCH.x1, z0: BENCH.z0, z1: BENCH.z1 };
   buildGround(false);
   Object.assign(BENCH, yardIn.BENCH);
   BENCH_TOP = yardIn.top;
@@ -10589,6 +10629,18 @@ try { Object.assign(helperShown, JSON.parse(localStorage.getItem(HELPERS_KEY) ||
 function applyHelperShown() {
   const tools = (typeof worldRules !== 'undefined' && worldRules?.tools) || null;
   const allowed = (n) => !tools || tools.includes(n);
+  // Marty too (his panel stays), and each stack: a general way to take
+  // anything out of the workshop and bring it back (Ken)
+  if (typeof martyNode !== 'undefined' && martyNode) martyNode.visible = helperShown.marty !== false;
+  const stacks = (typeof worldRules !== 'undefined' && worldRules?.stacks) || null;
+  for (const id of (typeof STACK_IDS !== 'undefined' ? STACK_IDS : [])) {
+    const st = stations[id];
+    if (!st) continue;
+    const on = (!stacks || stacks.includes(id)) && helperShown[id] !== false;
+    if (st.__plinth) st.__plinth.visible = on;
+    st.cubes.forEach(c => { c.visible = on; });
+  }
+  if (typeof showYardDoor === 'function') showYardDoor();
   if (dusty) dusty.visible = helperShown.dusty && allowed('dusty');
   if (ruby) ruby.visible = helperShown.ruby && allowed('ruby') && !yardIn;
   const machine = stations.copyOut?.__node;
@@ -12341,7 +12393,8 @@ function resolve(ev) {
     }
     if (inMini) continue;
     let o = h.object;
-    while (o && !o.__pick) o = o.parent;
+    // a name plate is its thing's, except to Dusty, who can take the name alone
+    while (o && (!o.__pick || (o.__pick.kind === 'label' && !dustyActive))) o = o.parent;
     if (!o) continue;
     // the thought bubble floats over the bench; it takes clicks when Dusty is
     // awake to erase, or when an empty hand can take a copy of the memory.
@@ -12904,6 +12957,16 @@ function runRefusal(target) {
     // like anything else, and comes back if you click him.
     if (target.kind === 'station' && stations[target.id]?.kind === 'stack') {
       return dustyTakeStack(target.id);
+    }
+    // A NAME ALONE. Ken: "I like the idea that Dusty can remove labels but
+    // it didn't work on a 3D model -- the whole model was vacuumed."
+    if (target.kind === 'label') {
+      const t = target.thing;
+      if (fixedRoot(t)) return say(FIXED_WORDS);
+      pushUndo();
+      setThingLabel(t, null);
+      say('Dusty takes the name off — the thing stays.');
+      return refreshUI();
     }
     const victim = target.kind === 'thing' ? target.thing
       : target.kind === 'botThing' && target.bot !== activeBot ? target.bot.node
@@ -13791,7 +13854,7 @@ function putBackHeld() {
 }
 function noteHeld(t = inHand()) {
   document.getElementById('held')?.classList.toggle('pad', t?.userData?.kind === 'text');
-  heldYaw = 0; heldPitch = 0;          // whatever was turned before, this is new
+  heldYaw = 0; heldPitch = 0; heldTilt = 0;   // whatever was turned before, this is new
   if (t) delete t.__faceBuf;           // typing on a die starts a fresh count
   valueAtPickup = t?.userData.value ?? null;
   opAtPickup = t?.userData.op ?? '+';
@@ -15519,9 +15582,11 @@ function worldOut() {
     active: act ? botOut(act) : null,
   });
   if (!offstage() && exitDoor && yardDoor) rec.doors = doorPoses();
-  if (yardThings.length) {
+  const yardBounds = outsideHere ? { x0: BENCH.x0, x1: BENCH.x1, z0: BENCH.z0, z1: BENCH.z1 } : (curCtx.yard?.bounds ?? null);
+  if (yardThings.length || yardBounds) {
     rec.yard = { bench: yardThings.map(t => ({ thing: thingOut(t),
       x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })) };
+    if (yardBounds) rec.yard.bounds = yardBounds;
   }
   // the puzzle's own words and rules ride along, so saving a puzzle keeps it one
   if (worldName) rec.name = worldName;
@@ -15679,7 +15744,7 @@ function thingInRaw(o, nests, birds) {
 function clearWorld() {
   if (yardIn && !offstage()) leaveYard(true);      // a new world starts indoors
   for (const t of curCtx.yard?.things ?? []) t.removeFromParent();
-  if (curCtx.yard) curCtx.yard.things.length = 0;
+  if (curCtx.yard) { curCtx.yard.things.length = 0; curCtx.yard.bounds = null; }
   dropQueue();
   attnHeld = false;      // an explanation of the old world explains nothing here
   clearUndo();
@@ -15788,6 +15853,7 @@ function worldIn(data) {
   });
   // the yard's things: built the way bench things are, then set aside on the
   // ground's own list until the back door is opened
+  if (data.yard?.bounds) (curCtx.yard ??= { things: [] }).bounds = { ...data.yard.bounds };
   if (data.yard?.bench?.length) {
     const yard = (curCtx.yard ??= { things: [] });
     for (const b of data.yard.bench) {
@@ -17109,6 +17175,7 @@ const QUARTER = Math.PI / 2;
 // Turning is kept as two counters rather than piled-up rotations, so that it
 // can be REASONED about: which way round it is, and how far it may go.
 let heldYaw = 0, heldPitch = 0;
+let heldTilt = 0;      // a PAD's tilt in degrees: up stands it, down lays it back
 const heldBaseQ = new THREE.Quaternion();   // how the held thing was turned when picked up
 let lastMismatchSaid = null;      // the refusal said last, so it is not said twice running
 function applyHeldTurn() {
@@ -17116,8 +17183,9 @@ function applyHeldTurn() {
   if (!HAND) return;
   // Y outermost, so left and right always spin about the upright axis however
   // far it happens to be tipped
+  const pitch = HAND.userData.kind === 'text' ? THREE.MathUtils.degToRad(heldTilt) : heldPitch * QUARTER;
   HAND.quaternion.copy(heldBaseQ).premultiply(new THREE.Quaternion().setFromEuler(
-    new THREE.Euler(heldPitch * QUARTER, heldYaw * QUARTER, 0, 'YXZ')));
+    new THREE.Euler(pitch, heldYaw * QUARTER, 0, 'YXZ')));
   uprightHeld();
 }
 // Turning a cube by quarters lands the face you asked for in front of you --
@@ -17217,6 +17285,20 @@ const TIPPABLE = ['number', 'model', 'trail'];
 function turnHeld(kind, dir) {
   const HAND = inHand();
   if (!HAND) return;
+  if (kind === 'pitch' && HAND.userData.kind === 'text') {
+    // A PAD TILTS by fifteen degrees a press (Ken: "a few clicks and one can
+    // put up a background image in the yard"). Standing, it rides high
+    // enough that its bottom edge rests on the ground.
+    heldTilt = Math.max(-90, Math.min(90, heldTilt + dir * 15));
+    applyHeldTurn();
+    HAND.userData.aim = HAND.quaternion.toArray();
+    const { d } = padFaceSize(HAND);
+    const lift = Math.abs(Math.sin(THREE.MathUtils.degToRad(heldTilt))) * d / 2;
+    if (lift > 0.005) HAND.userData.up = +lift.toFixed(3); else delete HAND.userData.up;
+    sfx('type');
+    say(heldTilt === 0 ? 'Flat again.' : `Tilted ${Math.abs(heldTilt)}° — ${heldTilt < 0 ? 'standing up toward you' : 'leaning back'}. Set it down and it stays so.`);
+    return;
+  }
   if (kind === 'pitch') {
     if (!TIPPABLE.includes(HAND.userData.kind)) {
       return say('Tipping makes sense for a number, whose every face says the '
@@ -17291,10 +17373,10 @@ addEventListener('keydown', (e) => {
       doorCarry.rotation.y += (e.key === 'ArrowLeft' ? 1 : -1) * Math.PI / 12; e.preventDefault(); return;
     }
     if (e.key === '+' || e.key === '=' || e.key === 'ArrowUp') {
-      doorCarry.scale.setScalar(Math.min(2.5, doorCarry.scale.x * 1.1)); e.preventDefault(); return;
+      doorCarry.scale.setScalar(Math.min(6, doorCarry.scale.x * 1.15)); e.preventDefault(); return;
     }
     if (e.key === '-' || e.key === '_' || e.key === 'ArrowDown') {
-      doorCarry.scale.setScalar(Math.max(0.5, doorCarry.scale.x / 1.1)); e.preventDefault(); return;
+      doorCarry.scale.setScalar(Math.max(0.5, doorCarry.scale.x / 1.15)); e.preventDefault(); return;
     }
     if (e.key === 'Escape') {
       applyDoorPoses(doorCarry === exitDoor ? { exit: doorCarryWas } : { yard: doorCarryWas });
@@ -17935,7 +18017,7 @@ function tipFor(t) {
   if (t.kind === 'dusty') {
     return dustyActive
       ? 'Dusty is awake — click a part of the robot’s thought to vacuum it away.'
-      : 'Dusty the vacuum — click to wake him, then click parts of a robot’s thought to erase them.';
+      : 'Dusty the vacuum — click to wake him, then click a thing to vacuum it away, its name to take just the name off, or a part of a robot’s thought to remove that part.';
   }
   if (t.kind === 'miniCond') {
     return 'Its little thought — click to take a copy of the very thing it was first shown.';
@@ -17944,6 +18026,9 @@ function tipFor(t) {
       || (t.kind === 'thing' && t.thing?.userData.kind === 'room'
           && !t.thing.userData.panel))) {
     return 'Drop to send that inside — it lands on the desk, and the room’s robot gets to work.';
+  }
+  if (t.kind === 'label') {
+    return 'Its name — click to have Dusty take just the name off; the thing stays.';
   }
   if ((t.kind === 'exitDoor' || t.kind === 'yardDoor') && t.part === 'frame') {
     return 'The door frame — click to carry the door somewhere else: it follows the pointer, the arrows turn it, + and − resize it, and a click sets it down.';
@@ -18723,23 +18808,38 @@ loadModel('robot_v4.glb', (gltf) => {
     };
     menu.appendChild(cb);
     refreshCam();
-    // the helpers, each with a switch: put away when not wanted, back when they are
-    for (const [name, label, tip] of [
-      ['dusty', '\u{1F9F9} Dusty', 'Dusty the vacuum: put him away, or bring him back.'],
-      ['mimi', '\u{1F4E0} Mimi', 'Mimi the copier and her machine: put them away, or bring them back.'],
-      ['ruby', '\u{1F9FD} Ruby', 'Ruby the eraser: put her away, or bring her back. (She stays indoors when you are in the yard.)'],
-    ]) {
-      const b = document.createElement('button');
-      b.id = 'helper_' + name;
-      b.title = tip;
-      const paint = () => { b.textContent = label + ': ' + (helperShown[name] ? 'here' : 'put away'); };
-      b.onclick = () => {
-        setHelperShown(name, !helperShown[name]); paint();
-        say(helperShown[name] ? `${label.slice(3)} is back.` : `${label.slice(3)} is put away — this menu brings ${name === 'ruby' || name === 'mimi' ? 'her' : 'him'} back.`);
+    // WHAT IS HERE: Marty, the helpers, the stacks and the back door, each
+    // with a box to tick -- a general way to take anything out of the
+    // workshop when it is not wanted, and to bring it back (Ken). Remembered
+    // in this browser; a puzzle's rules still decide what is there at all.
+    const wb = document.createElement('button');
+    wb.id = 'whatBtn';
+    wb.title = 'Choose what stands in the workshop: Marty, Dusty, Mimi, Ruby, each stack, the back door. Put away, a thing is gone until you tick it again.';
+    const what = document.createElement('div');
+    what.id = 'whatHere';
+    what.style.cssText = 'display:none;flex-direction:column;gap:4px;padding:4px 6px 6px 14px;font-size:12px';
+    const rows = [
+      ['marty', 'Marty (his panel stays)'], ['dusty', 'Dusty'], ['mimi', 'Mimi and her machine'],
+      ['ruby', 'Ruby (indoors only)'], ['yard', 'the back door to the yard'],
+      ...STACK_IDS.map(id => [id, stations[id]?.label ?? id]),
+    ];
+    for (const [name, label] of rows) {
+      const lab = document.createElement('label');
+      lab.style.cssText = 'display:flex;align-items:center;gap:6px;cursor:pointer';
+      const cbx = document.createElement('input');
+      cbx.type = 'checkbox';
+      cbx.checked = helperShown[name] !== false;
+      cbx.onchange = () => {
+        setHelperShown(name, cbx.checked);
+        say(cbx.checked ? `${label[0].toUpperCase()}${label.slice(1)} is back.` : `${label[0].toUpperCase()}${label.slice(1)} is put away — tick the box to bring it back.`);
       };
-      paint();
-      menu.appendChild(b);
+      lab.append(cbx, document.createTextNode(label));
+      what.appendChild(lab);
     }
+    wb.textContent = '\u{1F3E0} What is here…';
+    wb.onclick = () => { what.style.display = what.style.display === 'none' ? 'flex' : 'none'; };
+    menu.appendChild(wb);
+    menu.appendChild(what);
     // The single-file build travels alone: opened from disk or published as
     // an artifact there is no manual.html or infinity.html sitting beside it,
     // so a companion page is fetched from the site instead of a 404.
@@ -19957,6 +20057,7 @@ async function runMartyDemo(id) {
   martyBusyDemo = true;
   martyStopFlag = false;
   martyPendingDemo = null;
+  if (helperShown.marty === false) setHelperShown('marty', true);   // he cannot show from the cupboard
   martyCtl();
   // Where this demonstration will be laid out. He does NOT walk here first:
   // _mBench anchors every drop on this spot rather than on where he stands,
@@ -20178,7 +20279,7 @@ function startWorldOver() {
 // THE RULES OF THE PLACE, applied. null means the whole workshop: every stack,
 // every tool, the keyboard everywhere, Undo. A puzzle lists what it keeps.
 const STACK_IDS = ['rooms', 'texts', 'nests', 'scales', 'dice', 'sounds', 'minis', 'numbers', 'boxes'];
-const TOOL_IDS = ['mimi', 'dusty', 'ruby', 'notebook', 'save', 'import', 'devices'];
+const TOOL_IDS = ['mimi', 'dusty', 'ruby', 'notebook', 'save', 'import', 'devices', 'yard'];
 function applyRules(rules) {
   worldRules = rules || null;
   const stacks = rules?.stacks ?? STACK_IDS;
@@ -20195,6 +20296,7 @@ function applyRules(rules) {
   show(dusty, tools.includes('dusty'));
   show(ruby, tools.includes('ruby'));
   applyHelperShown();                 // ...and then whoever was put away stays away
+  showYardDoor();
   show(mainNotebook(), tools.includes('notebook'));
   const btn = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
   btn('exportHeldBtn', tools.includes('save'));
@@ -20787,6 +20889,7 @@ async function martyThink(q) {
     const manual = manualFor(whole, q, budget);
     return MARTY_SYSTEM
       + (currentUser ? `\nThe person you are talking with is called ${currentUser}. Use their name now and then where it comes naturally — a greeting, a well done, a nudge — and not in every reply.` : '')
+      + (yardIn ? '\nThe visitor is OUTSIDE, in the yard behind the workshop: open ground where things stand where they are put (a village, a zoo). What is listed as on the table stands on the grass; the table itself waits indoors. The green door on the left leads back in.' : '')
       + martyActivityText()
       + puzzleContextText()
       + (manual ? '\n\n=== THE MANUAL (authoritative; answer from it, and say you are unsure rather than inventing anything it does not say) ===\n'
@@ -21490,6 +21593,59 @@ function applyDrawReply(wish, reply) {
          + ', drawn by walking a turtle about.'))));
   return { made, thing };
 }
+// WHERE THE BRAIN CAN PAINT, it paints. OpenAI and Gemini both make pictures
+// from words; Claude and the little brain in Chrome do not, and they keep the
+// turtle. The key goes to its own provider and nowhere else, exactly as it
+// does for words. A painter that will not -- the wrong model name, a busy
+// mothership -- hands the wish to the turtle with a word about why.
+async function paintWithBrain(prov, wish) {
+  const key = martyKeyOf(prov);
+  const prompt = 'A simple, bright, friendly picture for a child, on a plain background: ' + wish;
+  let src = null;
+  if (prov === 'openai') {
+    const res = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'authorization': 'Bearer ' + key, 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, n: 1, size: '1024x1024', quality: 'low' }),
+    });
+    if (!res.ok) throw new Error('OpenAI said ' + res.status + apiWhy(await res.text()));
+    const data = await res.json();
+    const b64 = data.data?.[0]?.b64_json;
+    if (!b64) throw new Error('no picture in the answer');
+    src = 'data:image/png;base64,' + b64;
+  } else {
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key='
+      + encodeURIComponent(key);
+    const res = await fetch(url, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { responseModalities: ['IMAGE', 'TEXT'] } }),
+    });
+    if (!res.ok) throw new Error('Gemini said ' + res.status + apiWhy(await res.text()));
+    const data = await res.json();
+    const part = (data.candidates?.[0]?.content?.parts || []).find(p2 => p2.inlineData?.data);
+    if (!part) throw new Error('no picture in the answer');
+    src = 'data:' + (part.inlineData.mimeType || 'image/png') + ';base64,' + part.inlineData.data;
+  }
+  return shrinkPicture(src, 640);
+}
+function shrinkPicture(src, max) {
+  return new Promise((res) => {
+    const im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, max / Math.max(im.width, im.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k);
+      cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+      let out = cv.toDataURL('image/png');
+      if (out.length > 600000) out = cv.toDataURL('image/jpeg', 0.86);
+      res(out);
+    };
+    im.onerror = () => res(src);
+    im.src = src;
+  });
+}
+const canPaint = () => { const p2 = martyProv(); return (p2 === 'openai' || p2 === 'gemini') && !!martyKeyOf(p2); };
 let martyDrawing = false;
 async function martyDraw(want) {
   if (martyDrawing || martyMaking || martyThinking) return;
@@ -21499,6 +21655,21 @@ async function martyDraw(want) {
       + '\u201ca house with a tree\u201d \u2014 then press Draw.');
   }
   martySay('Draw me: ' + wish, 'you');
+  if (canPaint()) {
+    martyDrawing = true;
+    const doneThinking = martyThinkingStart();
+    let src = null, why = null;
+    try { src = await paintWithBrain(martyProv(), wish); }
+    catch (e) { why = e; console.error('[marty] the painter refused:', martyProv(), e); }
+    finally { doneThinking(); martyDrawing = false; }
+    if (src) {
+      const thing = landMartyDrawing({ src, name: wish });
+      martyDrawHistory = [];
+      martySay('Here it is — ' + wish + ', painted.');
+      return { made: { src, name: wish }, thing };
+    }
+    martySay('The painter would not — ' + (why?.message || 'no picture came back') + '. The turtle will draw it instead.');
+  }
   martyDrawing = true;
   const doneThinking = martyThinkingStart();
   let reply = null, trouble = null;
@@ -22349,6 +22520,9 @@ window.__nano = {
   enterYard, leaveYard,
   setHelperShown, helperShown,
   get doorCarrying() { return doorCarry; },
+  get heldTilt() { return heldTilt; },
+  get marty() { return martyNode; },
+  canPaint,
   doorPoses,
   get outside() { return !!yardIn; },
   yardDoorNode() { return yardDoor; },

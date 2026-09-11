@@ -1808,6 +1808,94 @@ async function groundPutCheck(D, w) {
   return ok;
 }
 
+// DUSTY TAKES A NAME OFF, and the thing stays
+async function labelVacuumCheck(D, w) {
+  const toy = { kind: 'model', parts: [{ shape: 'box', size: [0.2, 0.15, 0.2], color: '#d9b38c' }], label: 'Shed' };
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: toy, x: 0.2, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  const m = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'model');
+  const plate = m.__labelNode;
+  D.dustyOn(true);
+  D.clickRaw({ kind: 'label', thing: m });
+  await frames(D, 5);
+  const gone = !m.userData.label && !m.__labelNode;
+  const stays = [0, 1, 2].map(i => D.bench(i)).includes(m);
+  D.dustyOn(false);
+  const ok = !!plate && gone && stays;
+  put((ok ? 'PASS' : 'FAIL') + ' Dusty takes a name off  (had-plate=' + !!plate + ' name-gone=' + gone + ' thing-stays=' + stays + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// A PAD IN HAND TILTS by fifteen degrees a press, and stands where it is set
+async function padTiltCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'text', text: 'sky' }, x: 0.2, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  const pad = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'text');
+  D.clickThing(pad);
+  await frames(D, 3);
+  const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  for (let i = 0; i < 6; i++) key('ArrowUp');
+  const tilt = D.heldTilt;
+  const up = pad.userData.up ?? 0;
+  D.speed('inf');
+  D.clickBench(0.6, 1.9);
+  await slowSettle(D, 2000);
+  const e = new D.THREE.Euler().setFromQuaternion(pad.quaternion, 'YXZ');
+  const standing = Math.abs(Math.abs(e.x) - Math.PI / 2) < 0.05;
+  const raised = pad.position.y > (D.bounds().top + 0.08);
+  const rec = D.worldOut();
+  const saved = rec.bench.some(b => b.thing.kind === 'text' && b.thing.aim && b.thing.up > 0.05);
+  const ok = tilt === -90 && up > 0.05 && standing && raised && saved;
+  put((ok ? 'PASS' : 'FAIL') + ' a pad tilts in the hand and stands where it is set  (tilt=' + tilt + ' up=' + up.toFixed(3) + ' standing=' + standing + ' raised=' + raised + ' saved=' + saved + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// THE YARD GROWS when something is set down at its edge, and the size is kept
+async function yardGrowCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'number', value: { n: '7', d: '1' }, op: '+' }, x: -0.6, z: 1.6 }] });
+  await slowSettle(D, 1500);
+  D.speed('inf');
+  const seven = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'number');
+  D.clickThing(seven); await frames(D, 3);
+  D.enterYard(); await slowSettle(D, 2000);
+  const x1a = D.bounds().x1;
+  D.clickBench(x1a - 0.2, 4.0); await slowSettle(D, 2000);
+  const x1b = D.bounds().x1;
+  const grew = x1b > x1a + 1;
+  D.leaveYard(); await slowSettle(D, 2000);
+  const rec = D.worldOut();
+  const kept = rec.yard?.bounds?.x1 === x1b;
+  D.worldIn(rec); await slowSettle(D, 1500);
+  D.enterYard(); await slowSettle(D, 2000);
+  const again = D.bounds().x1 === x1b;
+  D.leaveYard(); await slowSettle(D, 2000);
+  const ok = grew && kept && again;
+  put((ok ? 'PASS' : 'FAIL') + ' the yard grows to make room  (grew=' + grew + ' ' + x1a + '->' + x1b + ' saved=' + kept + ' restored=' + again + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// WHAT IS HERE: a stack and Marty put away and brought back; the back door
+// follows a puzzle's tools
+async function whatIsHereCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const st = D.stations.numbers;
+  D.setHelperShown('numbers', false);
+  const stackAway = st.__plinth && st.__plinth.visible === false && st.cubes.every(c => !c.visible);
+  D.setHelperShown('numbers', true);
+  const stackBack = st.__plinth.visible === true && st.cubes.every(c => c.visible);
+  D.setHelperShown('marty', false);
+  const martyAway = D.marty && D.marty.visible === false;
+  D.setHelperShown('marty', true);
+  const doorFree = D.yardDoorNode().visible;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [], name: 'tools-test', rules: { tools: ['dusty'] } });
+  await slowSettle(D, 1000);
+  const doorRuled = D.yardDoorNode().visible === false;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1000);
+  const doorAgain = D.yardDoorNode().visible;
+  const ok = stackAway && stackBack && martyAway && doorFree && doorRuled && doorAgain;
+  put((ok ? 'PASS' : 'FAIL') + ' what is here  (stack-away=' + stackAway + ' stack-back=' + stackBack + ' marty-away=' + martyAway + ' door-free=' + doorFree + ' door-ruled-out=' + doorRuled + ' door-again=' + doorAgain + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4098,6 +4186,18 @@ async function runOne(D, spec) {
   let gpOK = true;
   try { gpOK = want('groundPut') ? await groundPutCheck(D, frame.contentWindow) : true; }
   catch (e) { gpOK = false; put('FAIL a robot sets things down on the ground  ' + e.message, 'fail'); }
+  let lvOK = true;
+  try { lvOK = want('labelVacuum') ? await labelVacuumCheck(D, frame.contentWindow) : true; }
+  catch (e) { lvOK = false; put('FAIL Dusty takes a name off  ' + e.message, 'fail'); }
+  let ptOK = true;
+  try { ptOK = want('padTilt') ? await padTiltCheck(D, frame.contentWindow) : true; }
+  catch (e) { ptOK = false; put('FAIL a pad tilts in the hand  ' + e.message, 'fail'); }
+  let ygOK = true;
+  try { ygOK = want('yardGrow') ? await yardGrowCheck(D, frame.contentWindow) : true; }
+  catch (e) { ygOK = false; put('FAIL the yard grows  ' + e.message, 'fail'); }
+  let whOK = true;
+  try { whOK = want('whatIsHere') ? await whatIsHereCheck(D, frame.contentWindow) : true; }
+  catch (e) { whOK = false; put('FAIL what is here  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4209,7 +4309,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
