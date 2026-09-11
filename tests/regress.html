@@ -1633,6 +1633,120 @@ async function martyPlainCheck(D, w) {
   return ok;
 }
 
+// A FINGER ON THE THING IN HAND DRAGS IT: touch pointer events on the held
+// thing carry it and drop it where the finger lifts; the camera comes back.
+async function touchCarryCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+    bench: [{ thing: { kind: 'number', value: { n: '7', d: '1' }, op: '+' }, x: -0.6, z: 1.6 }] });
+  await slowSettle(D, 1500);
+  D.speed('inf');
+  await slowSettle(D, 3000);
+  const seven = D.bench(0).userData.kind === 'number' ? D.bench(0) : D.bench(1);
+  D.clickThing(seven);
+  await frames(D, 5);
+  const el = D.renderer.domElement, r = el.getBoundingClientRect();
+  const toScreen = (v) => { const p = v.clone().project(D.camera);
+    return { x: r.left + (p.x + 1) / 2 * r.width, y: r.top + (1 - p.y) / 2 * r.height }; };
+  const ev = (type, at, target = el) => target.dispatchEvent(new w.PointerEvent(type, {
+    pointerType: 'touch', pointerId: 7, isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: at.x, clientY: at.y, bubbles: true, cancelable: true }));
+  // a first touch anywhere tells the workshop this is a finger (the hand parks)
+  el.dispatchEvent(new w.PointerEvent('pointerenter', { pointerType: 'touch', bubbles: false }));
+  ev('pointerdown', { x: r.left + 20, y: r.top + 20 }); ev('pointerup', { x: r.left + 20, y: r.top + 20 });
+  await frames(D, 3);
+  const inHand = !!D.heldPos();
+  const from = toScreen(new D.THREE.Vector3(...D.heldPos()));
+  const ray0 = new D.THREE.Raycaster();
+  ray0.setFromCamera(new D.THREE.Vector2(((from.x - r.left) / r.width) * 2 - 1, -((from.y - r.top) / r.height) * 2 + 1), D.camera);
+  const hits = ray0.intersectObject(seven, true).length;
+  const st0 = D.helperState();
+  const dest = new D.THREE.Vector3(0.9, D.benchTop ?? 0.84, 1.9);
+  const to = toScreen(dest);
+  ev('pointerdown', from);
+  const offDuring = !D.orbitOn();
+  for (let i = 1; i <= 6; i++) ev('pointermove', { x: from.x + (to.x - from.x) * i / 6, y: from.y + (to.y - from.y) * i / 6 });
+  await frames(D, 2);
+  ev('pointerup', to);
+  await slowSettle(D, 2000);
+  const dropped = !D.heldPos();
+  const near = Math.hypot(seven.position.x - dest.x, seven.position.z - dest.z) < 0.35;
+  const back = D.orbitOn();
+  const ok = inHand && offDuring && dropped && near && back;
+  put((ok ? 'PASS' : 'FAIL') + ' a finger drags the thing in hand  (in-hand=' + inHand + ' camera-off-while=' + offDuring
+    + ' dropped=' + dropped + ' near-finger=' + near + ' camera-back=' + back + ' hits=' + hits + ' busy=' + st0.busy + ' mode=' + st0.mode + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// DOORS WITH NAMES: the tall door says where it leads; typing while pointing
+// at a door names it, and the words are kept with the house.
+async function doorLabelCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+    bench: [{ thing: { kind: 'room' }, x: -0.4, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  const room = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'room');
+  const door = room.children.find(o => o.__pick?.kind === 'roomDoor');
+  D.press(door, 'S'); D.press(door, 'h'); D.press(door, 'e'); D.press(door, 'd');
+  await frames(D, 2);
+  const named = room.userData.label === 'Shed';
+  D.enter(room);
+  await slowSettle(D, 3000);
+  const sign0 = D.exitSign();
+  D.press(D.exitDoorNode().__leaf, 'Backspace');
+  await frames(D, 2);
+  const sign1 = D.exitSign();
+  D.leave();
+  await slowSettle(D, 3000);
+  const rec = D.worldOut();
+  const kept = JSON.stringify(rec).includes('"exitLabel":"Back to the worksho"');
+  const ok = named && sign0 === 'Back to the workshop' && sign1 === 'Back to the worksho' && kept;
+  put((ok ? 'PASS' : 'FAIL') + ' doors with names  (house-named=' + named + ' sign=' + JSON.stringify(sign0)
+    + ' after-backspace=' + JSON.stringify(sign1) + ' saved=' + kept + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE YARD: through the back door the table stays indoors and the ground
+// takes its place; what is set down there waits while you are inside, is
+// saved with the world, and is there again on the way back out.
+async function yardCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+    bench: [{ thing: { kind: 'number', value: { n: '7', d: '1' }, op: '+' }, x: -0.6, z: 1.6 }] });
+  await slowSettle(D, 1500);
+  D.speed('inf');
+  const indoors = [0, 1, 2].map(i => D.bench(i)).filter(Boolean).length;
+  const seven = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'number');
+  D.clickThing(seven);                                   // carried out through the back door
+  await frames(D, 3);
+  D.enterYard();
+  await slowSettle(D, 2000);
+  const out = D.outside;
+  const tableGone = ![0, 1, 2].map(i => D.bench(i)).filter(Boolean).some(t => t.userData.kind === 'notebook');
+  const wide = D.bounds().x1 - D.bounds().x0 > 8 && D.bounds().top < 0.1;
+  const inHand = !!D.heldPos();
+  D.clickBench(2.5, 4.0);
+  await slowSettle(D, 2000);
+  const onGround = [0, 1, 2].map(i => D.bench(i)).filter(Boolean)
+    .find(t => t.userData.kind === 'number' && Math.abs(t.position.x - 2.5) < 0.3 && Math.abs(t.position.z - 4.0) < 0.3);
+  const low = onGround ? onGround.position.y < 0.2 : false;
+  D.leaveYard();
+  await slowSettle(D, 2000);
+  const backIn = !D.outside && [0, 1, 2].map(i => D.bench(i)).filter(Boolean).length === indoors - 1;
+  const waiting = D.yardThings().length === 1;
+  const rec = D.worldOut();
+  const saved = rec.yard?.bench?.length === 1 && !rec.bench.some(b => b.thing.kind === 'number');
+  D.worldIn(rec);
+  await slowSettle(D, 1500);
+  const reloaded = D.yardThings().length === 1;
+  D.enterYard();
+  await slowSettle(D, 2000);
+  const again = [0, 1, 2].map(i => D.bench(i)).filter(Boolean).some(t => t.userData.kind === 'number' && Math.abs(t.position.x - 2.5) < 0.3);
+  D.leaveYard();
+  await slowSettle(D, 2000);
+  const ok = out && tableGone && wide && inHand && !!onGround && low && backIn && waiting && saved && reloaded && again;
+  put((ok ? 'PASS' : 'FAIL') + ' the yard behind the workshop  (outside=' + out + ' table-stays-in=' + tableGone + ' ground-wide-and-low=' + wide
+    + ' number-in-hand=' + inHand + ' set-on-ground=' + !!onGround + ' low=' + low + ' back-in=' + backIn + ' waits=' + waiting
+    + ' saved=' + saved + ' reloaded=' + reloaded + ' there-again=' + again + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3901,6 +4015,15 @@ async function runOne(D, spec) {
   let mpOK = true;
   try { mpOK = want('martyPlain') ? await martyPlainCheck(D, frame.contentWindow) : true; }
   catch (e) { mpOK = false; put('FAIL Marty in plain words  ' + e.message, 'fail'); }
+  let tcOK = true;
+  try { tcOK = want('touchCarry') ? await touchCarryCheck(D, frame.contentWindow) : true; }
+  catch (e) { tcOK = false; put('FAIL a finger drags the thing in hand  ' + e.message, 'fail'); }
+  let dlOK = true;
+  try { dlOK = want('doorLabel') ? await doorLabelCheck(D, frame.contentWindow) : true; }
+  catch (e) { dlOK = false; put('FAIL doors with names  ' + e.message, 'fail'); }
+  let ydOK = true;
+  try { ydOK = want('yard') ? await yardCheck(D, frame.contentWindow) : true; }
+  catch (e) { ydOK = false; put('FAIL the yard behind the workshop  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4012,7 +4135,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

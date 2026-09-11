@@ -289,8 +289,10 @@ A finger is not a pointer: it is only anywhere at all while it is touching,
 and while it is touching it covers the very thing it is over. So on a touch
 screen what you are carrying does not follow your finger — it waits at one
 spot, left of centre and a little low, where you can always see it. Tap where
-you want it and it goes there, exactly as a click does. Turning the camera
-turns the thing in your hand rather than carrying it off the screen.
+you want it and it goes there, exactly as a click does. Or put your finger
+on the thing itself and drag: it follows, and goes where you lift your
+finger. Turning the camera turns the thing in your hand rather than carrying
+it off the screen.
 
 Typing works there too, though nothing on the screen looks like a place to
 type: the ⌨ button on the holding card raises your keyboard, and
@@ -1434,6 +1436,31 @@ is checked before it is built: only boxes, balls, tubes and cones, only real
 colours, and always a size your hand can pick up, so a strange answer makes a
 strange toy and never a broken workshop.
 
+## The yard
+
+Behind every place — the workshop, and every house — is open
+ground. The green back door stands beside the tall door out. Through
+it your table stays indoors and the ground takes its place: grass
+underfoot, ten paces by five, at floor level, where things stand wherever
+you put them. Your hand, the stacks, the robot's desk and Mimi come along,
+exactly as they do into a house, so whatever a robot sweeps off its work
+spots at the end of a run, and whatever Marty makes, lands on the grass. A
+robot copying a house makes a village; Marty asked for animal after animal
+makes a zoo.
+
+Whatever you are carrying comes through the door with you, either way.
+What you set down outside waits while you are indoors, is saved with
+the world, and a house's yard folds into the house. The sign on the door
+says Outside; from the yard it says Inside, or Back to the
+workshop. A yard entered from inside a house is that house's own, and
+the house is left from indoors.
+
+Doors have names. The tall door out wears a sign saying where it
+leads — Back to the workshop, Back to Add 1.
+Point at any door and type to change what it says: a house's door carries
+the house's name; the tall door's words are kept with the house. Backspace
+rubs a letter out.
+
 ## Puzzles
 
 The story is the original ToonTalks: Martys ship landed
@@ -1694,10 +1721,11 @@ let userMoved = false;
 // because the door's own zoom ends low and close where the robot's body hides
 // its work -- "seeing his back isn't helpful".
 function glideCameraHome() {
+  glideCameraTo(new THREE.Vector3(0.40, 3.05, 5.45), new THREE.Vector3(0, 0.68, 0.95));
+}
+function glideCameraTo(p1, t1) {
   const p0 = camera.position.clone();
   const t0 = orbit.target.clone();
-  const p1 = new THREE.Vector3(0.40, 3.05, 5.45);
-  const t1 = new THREE.Vector3(0, 0.68, 0.95);
   enqueue({
     __visual: true,
     dur: 0.7,
@@ -3736,6 +3764,75 @@ function paintHoleLabels(box) {
     box.__holeLabels.push(plate);
   });
 }
+// A SIGN: a plate with words on it that can be repainted -- the tall door's
+// "Back to the workshop", a back door's "Outside".
+function makeSign(text, w = 0.56) {
+  const c = document.createElement('canvas');
+  c.width = 448; c.height = 112;
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const plate = new THREE.Mesh(geo('PlaneGeometry', w, w / 4),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
+  plate.__paint = (t2) => {
+    const g2 = c.getContext('2d');
+    g2.fillStyle = '#f6eed9'; g2.fillRect(0, 0, c.width, c.height);
+    g2.strokeStyle = '#8a6a3b'; g2.lineWidth = 8; g2.strokeRect(4, 4, c.width - 8, c.height - 8);
+    g2.fillStyle = '#3b2f1d'; g2.textAlign = 'center'; g2.textBaseline = 'middle';
+    let px = 60;
+    g2.font = `bold ${px}px Georgia, serif`;
+    while (px > 14 && g2.measureText(t2 || '').width > c.width - 40) {
+      px = Math.floor(px * 0.88);
+      g2.font = `bold ${px}px Georgia, serif`;
+    }
+    g2.fillText(t2 || '', c.width / 2, c.height / 2 + 2);
+    tex.needsUpdate = true;
+    plate.visible = !!t2;
+  };
+  plate.__paint(text);
+  return plate;
+}
+// A TALL DOOR standing clear of the table: cream frame, wooden leaf, brass
+// knob, and a sign over it saying where it leads.
+function makeTallDoor(kind, x, z, ry) {
+  const g = new THREE.Group();
+  const frame = new THREE.Mesh(geo('BoxGeometry', 0.62, 1.62, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xf2ede2, roughness: 0.8 }));
+  frame.position.y = 0.81;
+  g.add(frame);
+  const leaf = new THREE.Mesh(geo('BoxGeometry', 0.5, 1.44, 0.08),
+    new THREE.MeshStandardMaterial({ color: kind === 'yardDoor' ? 0x3f6b2a : 0x6b3f1d, roughness: 0.6,
+      map: (woodTex ??= sharedTex(woodTexture())) }));
+  leaf.position.set(0, 0.75, 0.03);
+  g.add(leaf);
+  const knob = new THREE.Mesh(geo('SphereGeometry', 0.045, 12, 10),
+    new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.35, metalness: 0.7 }));
+  knob.position.set(0.17, 0.78, 0.09);
+  g.add(knob);
+  const sign = makeSign('');
+  sign.position.set(0, 1.74, 0.06);
+  g.add(sign);
+  g.__sign = sign;
+  g.__leaf = leaf;
+  g.traverse(o => { o.castShadow = true; setPick(o, { kind }); });
+  setPick(g, { kind });
+  g.position.set(x, 0, z);
+  g.rotation.y = ry;
+  scene.add(g);
+  pickables.push(g);
+  return g;
+}
+// What the tall door says: where it leads. A house may have been given its
+// own words for it (type while pointing at the door); otherwise the name of
+// the place you came from.
+function exitDoorText() {
+  const here = worldTrail[worldTrail.length - 1];
+  if (!here) return '';
+  if (here.room.userData.exitLabel) return here.room.userData.exitLabel;
+  const prev = worldTrail[worldTrail.length - 2]?.room;
+  if (!prev) return 'Back to the workshop';
+  return prev.userData.label ? `Back to ${prev.userData.label}` : 'Back out';
+}
+function paintExitSign() { if (exitDoor?.__sign) exitDoor.__sign.__paint(exitDoorText()); }
 function setThingLabel(thing, text) {
   thing.userData.label = text || null;
   if (thing.userData.kind === 'room') return paintRoomLabel(thing);
@@ -5168,7 +5265,7 @@ function makeRoom(data = null) {
   const id = data?.id ?? nextRoomId++;
   nextRoomId = Math.max(nextRoomId, id + 1);
   g.userData = { kind: 'room', rest: 0, width: 0.5, world: data?.world ?? null,
-                 opaque: data?.opaque ?? true, id,
+                 opaque: data?.opaque ?? true, id, exitLabel: data?.exitLabel ?? null,
                  dirty: !!data?.dirty, judge: !!data?.judge };
   // a house saved while it was RUNNING is one somebody switched on, and post
   // may go on waking it -- see nestReceived
@@ -8145,7 +8242,9 @@ function enterRoom(room) {
     innerCtx.root.rotation.y = 0;
     scene.add(innerCtx.root);
     loadCtx(innerCtx);
-    if (exitDoor) exitDoor.visible = true;
+    if (exitDoor) exitDoor.visible = !yardIn;
+    paintExitSign();
+    showYardDoor(); paintYardSign();
     // HE TURNS ROUND WHEN SOMEBODY WALKS IN. A robot's yaw is wherever its
     // last walk left it, and standForPoint turns it right round to reach the
     // stacks behind -- so half the time you stepped through the door and met
@@ -8184,6 +8283,7 @@ function enterRoom(room) {
 function leaveRoom() {
   const entry = worldTrail[worldTrail.length - 1];
   if (!entry) return;
+  if (yardIn && worldTrail.length === yardIn.depth) return say('Step back inside first — a house is left from indoors.');
   if (held) return say('Empty your hand to step back out.');
   if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
   worldTrail.pop();
@@ -8206,7 +8306,9 @@ function leaveRoom() {
   curCtx.root.position.set(0, 0, 0);
   scene.add(curCtx.root);
   loadCtx(curCtx);
-  if (exitDoor) exitDoor.visible = worldTrail.length > 0;
+  if (exitDoor) exitDoor.visible = worldTrail.length > 0 && !yardIn;
+  paintExitSign();
+  showYardDoor(); paintYardSign();
   say(room.userData.dirty
     ? 'You step back out — the house keeps working behind you.'
     : 'You step back out.');
@@ -9396,7 +9498,7 @@ function copyThingRaw(t) {
     // contents, but nests inside keep their guids, so copied worlds stay
     // wired to the same flocks
     const rec = t.__ctx ? ctxToRec(t) : (ud.world ? JSON.parse(JSON.stringify(ud.world)) : null);
-    c = makeRoom({ world: rec, opaque: ud.opaque, dirty: ud.dirty });
+    c = makeRoom({ world: rec, opaque: ud.opaque, dirty: ud.dirty, exitLabel: ud.exitLabel });
   }
   else if (ud.kind === 'bird') {
     c = makeBird(t.__nest);
@@ -9939,7 +10041,8 @@ function newWorldCtx() {
   const root = new THREE.Group();
   root.name = 'worldRoot';
   return { root, bench: [], occ: {}, activeBot: null, waiters: [],
-           hatching: [], asides: [], standSt: null };
+           hatching: [], asides: [], standSt: null,
+           yard: { things: [] } };     // the ground behind this place, while you are indoors
 }
 // The table, the desk, the stacks and the tools are YOURS -- one workshop,
 // shared by every world. A house is only a robot's domain: the robot, the
@@ -9949,6 +10052,112 @@ const benchRoot = new THREE.Group();
 benchRoot.name = 'benchRoot';
 const worldTrail = [];    // the houses you are standing inside, outermost first
 let exitDoor = null;      // the way back out, visible while the trail is deep
+// THE YARD. Behind every place -- the workshop, and every house -- is open
+// ground where things stand where you put them: a village of houses, a zoo
+// of Marty's animals. Ken's grandchildren wanted both, and the desk was the
+// wrong place for either. Through the back door your TABLE stays indoors and
+// the ground takes its place: your hand, the stacks, the robot's desk and
+// Mimi all come along, exactly as they do into a house, so whatever a robot
+// sweeps off its work spots, and whatever Marty makes, lands on the grass.
+// The yard's things wait on the place's context while you are indoors, and
+// travel with the place -- a house's yard folds into the house.
+let yardDoor = null;
+let yardIn = null;        // while outside: the table's things, bounds and height, kept indoors
+const YARD = { x0: -5.0, x1: 5.0, z0: 1.0, z1: 6.6 };
+const GROUND_Y = 0.02;
+const groundParts = [];
+let grassTex = null;
+function grassTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 256;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#5f8f3c'; c.fillRect(0, 0, 256, 256);
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 2600; i++) {
+    const g = 120 + rnd() * 70 | 0;
+    c.fillStyle = `rgba(${50 + rnd() * 40 | 0},${g},${30 + rnd() * 30 | 0},${0.35 + rnd() * 0.5})`;
+    const x = rnd() * 256, y = rnd() * 256;
+    c.fillRect(x, y, 1 + rnd() * 2, 2 + rnd() * 5);
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+function buildGround(on) {
+  groundParts.forEach(p => p.removeFromParent());
+  groundParts.length = 0;
+  if (!on) return;
+  grassTex ??= sharedTex(grassTexture());
+  const w = YARD.x1 - YARD.x0, d = YARD.z1 - YARD.z0;
+  grassTex.repeat.set(w / 1.2, d / 1.2);
+  const lawn = new THREE.Mesh(geo('PlaneGeometry', w, d),
+    new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.95 }));
+  lawn.rotation.x = -Math.PI / 2;
+  lawn.position.set((YARD.x0 + YARD.x1) / 2, GROUND_Y - 0.005, (YARD.z0 + YARD.z1) / 2);
+  lawn.receiveShadow = true;
+  setPick(lawn, { kind: 'bench' });
+  scene.add(lawn);
+  pickables.push(lawn);
+  groundParts.push(lawn);
+}
+function yardDoorText() {
+  if (!yardIn) return 'Outside';
+  const here = worldTrail[worldTrail.length - 1]?.room;
+  if (!here) return 'Back to the workshop';
+  return here.userData.label ? `Inside ${here.userData.label}` : 'Inside';
+}
+function paintYardSign() { if (yardDoor?.__sign) yardDoor.__sign.__paint(yardDoorText()); }
+// the back door shows wherever there is a yard to go to: not offstage, and
+// not in a puzzle, whose table is the whole of the lesson
+function showYardDoor() {
+  if (yardDoor) yardDoor.visible = !offstage() && !(typeof puzzleInfo !== 'undefined' && puzzleInfo);
+}
+function enterYard() {
+  if (yardIn) return;
+  if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
+  if (resizeMode) { resizeMode = false; if (grabbedCorner !== null) releaseCorner(); showHandles(false); }
+  clearUndo();
+  camResetAll();
+  sfx('whoosh');
+  const yard = (curCtx.yard ??= { things: [] });
+  // the table and everything on it stays indoors
+  const tableThings = benchThings.splice(0);
+  for (const t of tableThings) { t.removeFromParent(); movers.delete(t); }
+  benchParts.forEach(p => { p.visible = false; });
+  benchHandles.forEach(h => { h.visible = false; });
+  yardIn = { ctx: curCtx, things: tableThings, BENCH: { ...BENCH }, top: BENCH_TOP, depth: worldTrail.length };
+  Object.assign(BENCH, YARD);
+  BENCH_TOP = GROUND_Y;
+  buildGround(true);
+  for (const t of yard.things) { benchRoot.add(t); benchThings.push(t); if (t.userData.speed) movers.add(t); }
+  yard.things.length = 0;
+  if (exitDoor) exitDoor.visible = false;
+  paintYardSign();
+  say('You step outside — the ground is yours: set things down anywhere. The door on the left leads back in.');
+  glideCameraTo(new THREE.Vector3(0.4, 5.4, 11.2), new THREE.Vector3(0, 0.2, 3.4));
+  refreshUI();
+}
+function leaveYard(quiet = false) {
+  if (!yardIn) return;
+  if (!quiet) {
+    if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
+    if (worldTrail.length !== yardIn.depth) return say('Step back out of the house first.');
+  }
+  const yard = (yardIn.ctx.yard ??= { things: [] });
+  for (const t of benchThings.splice(0)) { t.removeFromParent(); movers.delete(t); yard.things.push(t); }
+  buildGround(false);
+  Object.assign(BENCH, yardIn.BENCH);
+  BENCH_TOP = yardIn.top;
+  benchParts.forEach(p => { p.visible = true; });
+  for (const t of yardIn.things) { benchRoot.add(t); benchThings.push(t); if (t.userData.speed) movers.add(t); }
+  yardIn = null;
+  if (exitDoor) exitDoor.visible = worldTrail.length > 0;
+  paintYardSign();
+  if (!quiet) { clearUndo(); camResetAll(); sfx('whoosh'); say('You step back inside.'); glideCameraHome(); }
+  refreshUI();
+}
 const topCtx = newWorldCtx();
 let curCtx = topCtx;
 let WROOT = topCtx.root;
@@ -12302,7 +12511,11 @@ function runRefusal(target) {
   if (target.kind === 'exitDoor') {
     return leaveRoom();
   }
+  if (target.kind === 'yardDoor') {
+    return yardIn ? leaveYard() : enterYard();
+  }
   if (target.kind === 'growToggle') {
+    if (yardIn) return say('Outside, the ground is as big as it is.');
     resizeMode = !resizeMode;
     // the camera stays yours while the handles are out (Ken: "no navigation
     // when desk is being enlarged"); only a corner actually in hand pins it
@@ -13090,6 +13303,11 @@ let handParked = false;
 // it". It waits at the visible spot instead, until the pointer next moves over
 // the workshop and takes the lead again.
 let parkOnce = false;
+// A finger drawn across the thing in hand carries it (see the pointerdown
+// below); a drop made that way must not be made twice by the click that
+// may follow the same finger.
+let touchCarry = null, swallowClick = false;
+let doorTyping = null;           // a door's name being typed, letter by letter
 // Left of centre and a little low: clear of the title card at the top left,
 // the trained-actions panel at the top right, and the two along the bottom.
 const PARK_NDC = { x: -0.5, y: -0.22 };
@@ -13118,7 +13336,7 @@ function moveHand(ev, hoverY = null) {
   if (!reachLocal || pointerOff) return;
   // The finger does not lead the hand -- except when it is dragging a corner
   // of the table, which is a drag and does follow.
-  if ((handParked || parkOnce) && grabbedCorner === null) return;
+  if ((handParked || parkOnce) && grabbedCorner === null && !touchCarry) return;
   // Only just above working height: the higher this plane, the further the
   // carried thing drifts from whatever you clicked, since the camera looks in
   // at an angle. But a tall pile would swallow whatever you took off it, so
@@ -15096,6 +15314,7 @@ function thingOutRaw(t) {
   if (ud.kind === 'sound') return { kind: 'sound', sound: ud.sound };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
+                                   exitLabel: ud.exitLabel ?? undefined,
                                    opaque: ud.opaque,
                                    dirty: ud.dirty, id: ud.id, label: ud.label ?? undefined,
                                    judge: ud.judge || undefined };
@@ -15139,9 +15358,14 @@ function worldOut() {
   // its owner's record (thingOut reads the live tray). And the MAIN notebook
   // is furniture -- ensureMainNotebook recreates it per person, so saving it
   // gave every loaded world a second book on top of the first.
+  // while you are outside, the table's things wait in yardIn and the ground's
+  // are benchThings: each is saved as what it is
+  const outsideHere = yardIn && yardIn.ctx === curCtx;
   const bench = offstage() ? []
-    : benchThings.filter(t => !t.userData.panel
+    : (outsideHere ? yardIn.things : benchThings).filter(t => !t.userData.panel
         && !(t.userData.kind === 'notebook' && t.userData.main));
+  const yardThings = (outsideHere ? benchThings : (curCtx.yard?.things ?? []))
+    .filter(t => !t.userData.panel);
   // dozing robots and their desks are not on the bench: save them as bench
   // things so nothing is lost (they wake benched rather than waiting)
   for (const b of [...waiters]) {
@@ -15161,6 +15385,10 @@ function worldOut() {
     stations: sts,
     active: act ? botOut(act) : null,
   });
+  if (yardThings.length) {
+    rec.yard = { bench: yardThings.map(t => ({ thing: thingOut(t),
+      x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })) };
+  }
   // the puzzle's own words and rules ride along, so saving a puzzle keeps it one
   if (worldName) rec.name = worldName;
   if (sceneryNodes.length) {
@@ -15315,6 +15543,9 @@ function thingInRaw(o, nests, birds) {
   return t;
 }
 function clearWorld() {
+  if (yardIn && !offstage()) leaveYard(true);      // a new world starts indoors
+  for (const t of curCtx.yard?.things ?? []) t.removeFromParent();
+  if (curCtx.yard) curCtx.yard.things.length = 0;
   dropQueue();
   attnHeld = false;      // an explanation of the old world explains nothing here
   clearUndo();
@@ -15409,6 +15640,7 @@ function worldIn(data) {
       hints: Array.isArray(data.hints) ? data.hints.slice() : [] } : null;
     hintCounter = 0;
     applyRules(data.rules ?? null);
+    showYardDoor();
   }
   nestGroupPending = [];
   const nests = new Map(), birds = [];
@@ -15419,6 +15651,21 @@ function worldIn(data) {
     const t = thingIn(b.thing, nests, birds);
     if (t) putOnBench(t, { x: b.x, z: b.z });
   });
+  // the yard's things: built the way bench things are, then set aside on the
+  // ground's own list until the back door is opened
+  if (data.yard?.bench?.length) {
+    const yard = (curCtx.yard ??= { things: [] });
+    for (const b of data.yard.bench) {
+      const t = thingIn(b.thing, nests, birds);
+      if (!t) continue;
+      putOnBench(t, { x: b.x, z: b.z }, true);
+      const i = benchThings.indexOf(t);
+      if (i >= 0) benchThings.splice(i, 1);
+      t.removeFromParent(); movers.delete(t);
+      t.position.set(b.x, GROUND_Y + (t.userData.rest ?? 0) * t.scale.y, b.z);
+      yard.things.push(t);
+    }
+  }
   for (const [id, o] of Object.entries(data.stations || {})) {
     const s2 = stations[id] ?? (/^s\d+$/.test(id) ? ensureScratchStation(+id.slice(1)) : null);
     if (!s2 || s2.kind === 'stack' || !o) continue;
@@ -16903,6 +17150,32 @@ addEventListener('keydown', (e) => {
     }
     return;
   }
+  // TYPING WHILE POINTING AT A DOOR names it (Ken: "a way for users to edit
+  // the label on a door"): a house's door carries the house's name, the tall
+  // door carries where it leads. A space joins a name being typed and is the
+  // usual "click" otherwise; Backspace rubs a letter out.
+  if (!held && mode === 'world' && !busy && lastMoveEv && !e.ctrlKey && !e.metaKey && !e.altKey
+      && (e.key === 'Backspace' || (e.key.length === 1
+          && (e.key !== ' ' || (doorTyping && performance.now() - doorTyping.at < 3000))))) {
+    const t = resolve(lastMoveEv);
+    const door = t?.kind === 'exitDoor' ? (worldTrail[worldTrail.length - 1]?.room ?? null)
+      : t?.kind === 'roomDoor' ? t.room : null;
+    if (door) {
+      e.preventDefault();
+      pushUndo();
+      if (t.kind === 'roomDoor') {
+        const was = door.userData.label || '';
+        setThingLabel(door, e.key === 'Backspace' ? was.slice(0, -1) : was + e.key);
+      } else {
+        const was = door.userData.exitLabel ?? exitDoorText();
+        door.userData.exitLabel = (e.key === 'Backspace' ? was.slice(0, -1) : was + e.key) || null;
+        paintExitSign();
+      }
+      doorTyping = { at: performance.now() };
+      refreshUI();
+      return;
+    }
+  }
   // arrows turn a NOTEBOOK's pages while pointing at it, hands empty
   if (!held && ['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(e.key)
       && mode === 'world' && !busy && lastMoveEv) {
@@ -17519,10 +17792,15 @@ function tipFor(t) {
     return 'Drop to send that inside — it lands on the desk, and the room’s robot gets to work.';
   }
   if (t.kind === 'roomDoor') {
-    return 'The door — click to step inside. Your table and everything on it comes with you; only the robot\u2019s domain changes.';
+    return 'The door — click to step inside. Your table and everything on it comes with you; only the robot\u2019s domain changes. Point at the door and type to name the house.';
   }
   if (t.kind === 'exitDoor') {
-    return 'The way out — click to step back to where you came from.';
+    return `The way out — “${exitDoorText()}”. Click to go; point at it and type to change what it says.`;
+  }
+  if (t.kind === 'yardDoor') {
+    return yardIn
+      ? `The door back inside — “${yardDoorText()}”. Click to go in; the ground and what stands on it wait here.`
+      : 'The back door to the yard — open ground where things stand where you put them: a village, a zoo. Your hand, the stacks and the robot come with you; the table stays indoors.';
   }
   if (t.kind === 'pileScroll') {
     return t.dir > 0
@@ -17834,6 +18112,36 @@ addEventListener('pointerup', () => {
 for (const ev of ['pointercancel', 'blur']) {
   addEventListener(ev, () => { if (grabbedCorner !== null) releaseCorner(); });
 }
+// A FINGER ON THE THING IN HAND DRAGS IT. On a touch screen the hand parks
+// and a tap says where the thing goes -- but a child who has forgotten he is
+// holding something reaches for it where it sits, and a finger drawn across
+// the screen turned the camera instead (Ken's grandson). A touch that lands
+// on the held thing carries it: it follows the finger and goes where the
+// finger lifts. A tap on it, and a tap anywhere else, work as they did.
+renderer.domElement.addEventListener('pointerdown', (ev) => {
+  swallowClick = false;
+  if (ev.pointerType !== 'touch' || !held || grabbedCorner !== null || busy || mode !== 'world') return;
+  const r = renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1,
+                                -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  if (!ray.intersectObject(held, true).length) return;
+  touchCarry = { x0: ev.clientX, y0: ev.clientY, moved: false };
+  orbit.enabled = false;             // the finger has the thing, not the camera
+});
+renderer.domElement.addEventListener('pointermove', (ev) => {
+  if (!touchCarry) return;
+  if (Math.hypot(ev.clientX - touchCarry.x0, ev.clientY - touchCarry.y0) > 8) touchCarry.moved = true;
+}, true);
+addEventListener('pointerup', (ev) => {
+  if (!touchCarry) return;
+  const carried = touchCarry; touchCarry = null;
+  if (!straightOn) orbit.enabled = true;
+  if (!carried.moved) return;        // a tap: the click that follows does its usual work
+  swallowClick = true;
+  if (held && mode === 'world' && !busy) handleClick(resolve(ev));
+  parkHand();                        // still in hand (a refused drop): back to its spot
+});
 const tipEl = document.getElementById('tip');
 // Which it is decides everything above: a mouse or a stylus hovers and can
 // lead the hand, a finger cannot. Decided per event, so a tablet with a mouse
@@ -17972,7 +18280,10 @@ renderer.domElement.addEventListener('pointerleave', () => {
   setWiggle(null);
 });
 addEventListener('blur', () => { tipEl.style.display = 'none'; setWiggle(null); });
-renderer.domElement.addEventListener('click', (ev) => handleClick(resolve(ev)));
+renderer.domElement.addEventListener('click', (ev) => {
+  if (swallowClick) { swallowClick = false; return; }   // a finger-drag already dropped it
+  handleClick(resolve(ev));
+});
 // How tall the bottom bar is right now -- it wraps to more rows on a narrow
 // screen, so it is measured rather than guessed, and the world's floor rises
 // to meet it.
@@ -18194,32 +18505,13 @@ loadModel('robot_v4.glb', (gltf) => {
   scene.add(defaultStand.obj);
   stations.stand = defaultStand;
 
-  // The way out of a house: a tall door standing clear of the table. It only
-  // shows while you are inside somewhere.
-  {
-    const g = new THREE.Group();
-    const frame = new THREE.Mesh(geo('BoxGeometry', 0.62, 1.62, 0.1),
-      new THREE.MeshStandardMaterial({ color: 0xf2ede2, roughness: 0.8 }));
-    frame.position.y = 0.81;
-    g.add(frame);
-    const leaf = new THREE.Mesh(geo('BoxGeometry', 0.5, 1.44, 0.08),
-      new THREE.MeshStandardMaterial({ color: 0x6b3f1d, roughness: 0.6,
-        map: (woodTex ??= sharedTex(woodTexture())) }));
-    leaf.position.set(0, 0.75, 0.03);
-    g.add(leaf);
-    const knob = new THREE.Mesh(geo('SphereGeometry', 0.045, 12, 10),
-      new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.35, metalness: 0.7 }));
-    knob.position.set(0.17, 0.78, 0.09);
-    g.add(knob);
-    g.traverse(o => { o.castShadow = true; setPick(o, { kind: 'exitDoor' }); });
-    setPick(g, { kind: 'exitDoor' });
-    g.position.set(-2.75, 0, 1.15);
-    g.rotation.y = 0.9;
-    g.visible = false;
-    scene.add(g);
-    pickables.push(g);
-    exitDoor = g;
-  }
+  // The way out of a house: a tall door standing clear of the table, which
+  // only shows while you are inside somewhere -- and the back door beside
+  // it, out to the yard, which is always there.
+  exitDoor = makeTallDoor('exitDoor', -2.75, 1.15, 0.9);
+  exitDoor.visible = false;
+  yardDoor = makeTallDoor('yardDoor', -3.2, 2.95, 0.9);
+  paintYardSign();
 
   // One scratch desk to begin with; more grow beside it as they are needed.
   ensureScratchStation(0);
@@ -21870,6 +22162,13 @@ window.__nano = {
   spotPoint(i) { return scratchPoint(i).toArray(); },
   stackAt(id) { return stackPoint(id)?.toArray() ?? null; },
   orbitOn() { return orbit.enabled; },
+  exitSign() { return exitDoorText(); },
+  enterYard, leaveYard,
+  get outside() { return !!yardIn; },
+  yardDoorNode() { return yardDoor; },
+  yardThings() { return (curCtx.yard?.things ?? []).slice(); },
+  bounds() { return { ...BENCH, top: BENCH_TOP }; },
+  exitDoorNode() { return exitDoor; },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },
   scrollPile, apartText, repeatLength, factorText, drawContFrac,
 

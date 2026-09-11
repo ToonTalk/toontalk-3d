@@ -5634,3 +5634,55 @@ typed or said into Ask, is the Make button; "draw a cat" is Draw.
 design rather than a fix: a ground you can enter like a room, where things
 stand where you put them and a robot on a thing's panel is how it behaves.
 Brainstormed with Ken; not yet built.
+
+## The yard, doors with names, a finger that drags, and a rocket that landed
+
+*Added 11 Sep. Ken: "How about the idea that when you enter a house there
+is an additional door that takes you to a room for making scenes. I'm not
+sure what to call it... Model world, scene maker, microworld. I wonder if
+there should be a way for users to edit the label on a door. The door to
+return should have an appropriate label. By the way my grandson asked me
+what the crashed rocket was. Maybe it should not be so broken." Then: "go
+ahead with all of these. I think yard is best name since garden may cause
+an expectation of finding flowers and other plants. Another issue is when
+using a touch interface my grandson didn't realize he was still holding
+something and when he moved his finger over to the thing he was indeed
+holding he caused the camera to rotate which was confusing."*
+
+**The yard.** Behind every place -- the workshop, and every house -- is
+open ground. The back door stands beside the tall door out; through it
+your table stays indoors and the ground takes its place, ten by five and a
+half, at floor level, grass underfoot. Your hand, the stacks, the robot's
+desk and Mimi all come along, exactly as they do into a house, so
+whatever a robot sweeps off its work spots at the end of a run, and
+whatever Marty makes, lands on the grass -- a village from a house-maker,
+a zoo from a Make. What you carry through the door comes too, in either
+direction; what you set down out there waits while you are inside, is
+saved with the world, and folds into a house with the house. The sign on
+the door says Outside, and from the yard, Inside, or Back to the workshop.
+
+**Not a room.** A room is a copy of the workshop with a desk and stacks,
+the wrong furniture for a zoo; and "your table came with you" is the
+app's one rule about places, so the yard keeps it by swapping the table
+for the ground rather than inventing a third kind of place. A yard
+entered from inside a house is that house's own; leaving the house is
+done from indoors, and the tall door says so.
+
+**Doors with names.** The tall door wears a sign saying where it leads --
+Back to the workshop, Back to “Add 1” -- and pointing at any door and
+typing changes what it says: a house's door carries the house's name, the
+tall door's words are kept with the house. A space joins a name being
+typed and is the usual click otherwise.
+
+**A finger drags the thing in hand.** On a touch screen the hand parks and
+a tap says where the thing goes; a child who has forgotten he is holding
+something reaches for it where it sits, and the finger turned the camera
+instead. A touch that lands on the held thing now carries it, and the
+thing goes where the finger lifts; a tap on it, and a tap anywhere else,
+work as they did. Measured with synthetic touch events: the camera is off
+while the finger is down and back the moment it lifts.
+
+**The rocket.** It stood for a crash: on its side, nose bent, a fin
+snapped off, smoking. It stands on its fins now, leaning seven degrees on
+the one that took the landing, tail scorched, and Marty says he "landed
+badly". Asked what the rocket is, he tells you.
