@@ -1690,149 +1690,15 @@ front.
 <div id="loading">Loading…</div>
 <div id="tip"></div>
 
-<script>
-// The models are not in this file -- it would not publish if they were. They
-// are asked for once, kept here afterwards, and handed to the app before it
-// starts. Everything below runs before the module, which waits on the promise
-// left in window.__TT_PACK_READY.
-//
-// Kept GZIPPED: the pack is 973 KB of base64 and an artifact's storage quota is
-// tight enough to refuse that; compressed it is about 412 KB. If the browser
-// refuses even so, that is not a failure -- the workshop runs perfectly well
-// having to ask again -- but the reader is told, rather than left to wonder
-// why it asks every time.
-(function () {
-  var KEY = 'tt3d.models.toontalk-3d-models-1.gz';
-  var PACK_URL =
-    'https://raw.githubusercontent.com/ToonTalk/toontalk-3d/main/toontalk-3d-models.json';
-  var el = document.getElementById('loading');
-  var say = function (html) { if (el) el.innerHTML = html; };
-  var note = function (m) {
-    var e = document.getElementById('ttErr');
-    if (e) e.textContent = m;
-  };
-
-  var b64 = {
-    from: function (bytes) {
-      var s = '', CH = 0x8000;                 // apply() dies on a long array
-      for (var i = 0; i < bytes.length; i += CH) {
-        s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
-      }
-      return btoa(s);
-    },
-    to: function (str) {
-      var bin = atob(str), out = new Uint8Array(bin.length);
-      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-      return out;
-    },
-  };
-  var gzip = function (text) {
-    return new Response(new Blob([text]).stream()
-      .pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
-  };
-  var gunzip = function (bytes) {
-    return new Response(new Blob([bytes]).stream()
-      .pipeThrough(new DecompressionStream('gzip'))).text();
-  };
-
-  function unpack(text) {
-    var data = JSON.parse(text);
-    if (!data || data.format !== 'toontalk-3d-models-1' || !data.models) {
-      throw new Error('that is not the ToonTalk 3D model pack');
-    }
-    window.__TT_MODELS = data.models;
-    return data;
-  }
-
-  window.__TT_PACK_READY = new Promise(function (done) {
-    var kept = null;
-    try { kept = localStorage.getItem(KEY); } catch (e) {}
-
-    var fresh = function () {
-      say(
-        '<div style="max-width:30rem;margin:0 auto;text-align:center;line-height:1.55">'
-        + '<div style="font-size:15px;color:#e6ecf7;margin-bottom:10px">'
-        + 'ToonTalk 3D needs its characters</div>'
-        + '<div style="margin-bottom:14px">Robby the robot and Dusty the vacuum are '
-        + 'about 700&nbsp;KB of 3D models — more than an artifact may carry. '
-        + 'Hand them over once and this browser will remember them.</div>'
-        + '<div style="margin-bottom:14px">Drop <a href="' + PACK_URL + '" '
-        + 'target="_blank" rel="noopener" style="color:#7fd3c6">'
-        + 'toontalk-3d-models.json</a> anywhere on this page, or</div>'
-        + '<button id="ttPick" style="font:inherit;font-size:13px;color:#eafff0;'
-        + 'background:#2f6b43;border:none;border-radius:8px;padding:8px 16px;'
-        + 'cursor:pointer">Choose the file…</button>'
-        + '<div id="ttErr" style="margin-top:12px;color:#f0b429;min-height:1.2em">'
-        + '</div>'
-        + '<div style="margin-top:18px;font-size:12px;color:#8b93a1">It comes '
-        + 'with the source, at<br>' + PACK_URL + '</div>'
-        + '</div>');
-    };
-
-    var accept = function (text) {
-      unpack(text);                                   // throws if it is wrong
-      say('Loading…');
-      done();
-      // the keep happens after the app has what it needs, so a refusal here
-      // delays nothing
-      gzip(text)
-        .then(function (buf) {
-          localStorage.setItem(KEY, b64.from(new Uint8Array(buf)));
-        })
-        .catch(function (e) {
-          console.warn('models not kept in this browser:', e && e.message);
-        });
-    };
-
-    if (kept) {
-      gunzip(b64.to(kept))
-        .then(function (text) { unpack(text); say('Loading…'); done(); })
-        .catch(function () {
-          try { localStorage.removeItem(KEY); } catch (e) {}
-          fresh();
-        });
-      return;
-    }
-    fresh();
-
-    var read = function (file) {
-      if (!file) return;
-      note('Reading…');
-      file.text().then(accept).catch(function (e) {
-        note(String((e && e.message) || e));
-      });
-    };
-
-    // A dynamically created, never-attached input: a static hidden one never
-    // opens a picker in the app's own web view.
-    document.addEventListener('click', function (ev) {
-      if (!ev.target || ev.target.id !== 'ttPick') return;
-      var inp = document.createElement('input');
-      inp.type = 'file';
-      inp.accept = '.json,application/json';
-      inp.onchange = function () { read(inp.files && inp.files[0]); };
-      inp.click();
-    });
-    // Drag and drop is desktop only; the button above is the path everywhere else.
-    addEventListener('dragover', function (ev) { ev.preventDefault(); });
-    addEventListener('drop', function (ev) {
-      ev.preventDefault();
-      read(ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]);
-    });
-  });
-})();
-</script>
 <script type="importmap">
 { "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.185.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.0/examples/jsm/"
+    "three": "https://unpkg.com/three@0.185.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.185.0/examples/jsm/"
 } }
 </script>
 
 <script type="module">
 import * as THREE from 'three';
-// nothing here can run until the reader has handed over the models
-await window.__TT_PACK_READY;
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
@@ -2247,13 +2113,6 @@ function showViewSoon(fn) {
 }
 function showThoughtSoon() {
   if (!smartCam || !condDisplay) return;
-  // A HOUSE HAS NO CAMERA. Its robot's thought is built in the house's own
-  // world and swapped away with it; an ask made in there was carried out to
-  // the desk, where the thought it named was null, and the next stepped
-  // frame's glide dereferenced it (the golden replay of live-account, whose
-  // Tenner flags a mismatch inside its house). The desk's camera answers to
-  // the desk's occasions only.
-  if (worldStack.length) return;
   // THIS is the new occasion: the mode change that comes with it (a run
   // ending, a lesson ending) must not be read next frame as a later one and
   // forget the request -- Ken's robot stopped with red parts and the camera
@@ -2273,12 +2132,6 @@ function holdSmartCam(dt) {
   const helpersNow = rubyActive || dustyActive;
   if (helpersNow && !camHelpersWere && condDisplay && smartCam && !straightOn) showViewSoon(thoughtClosePose);
   camHelpersWere = helpersNow;
-  // a thought view outlives its thought when the bubble is rebuilt away
-  // between the ask and the glide (a run ending, a robot let go, a world
-  // swapped): there is nothing to frame, so the occasion is over
-  if ((camShowFn === thoughtPose || camShowFn === thoughtClosePose) && !condDisplay) {
-    camShowFn = null; camFollow = null;
-  }
   const moving = now - camLastMove < CAM_STILL_MS;
   // a moving mouse: nothing NEW starts; a glide under way finishes, its
   // target frozen where it was -- half a glide is the worst of both

@@ -1747,6 +1747,67 @@ async function yardCheck(D, w) {
   return ok;
 }
 
+// HELPERS PUT AWAY, and Ruby indoors while you are out
+async function helpersCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const mimi = D.stations.copyOut.__node;
+  D.setHelperShown('mimi', false);
+  const away = mimi && mimi.visible === false;
+  D.setHelperShown('mimi', true);
+  const back = mimi && mimi.visible === true;
+  D.setHelperShown('dusty', false);
+  const kept = (() => { try { return JSON.parse(w.localStorage.getItem('nano-toontalk.helpers')).dusty === false; } catch { return false; } })();
+  D.setHelperShown('dusty', true);
+  const ok = away && back && kept;
+  put((ok ? 'PASS' : 'FAIL') + ' helpers put away and brought back  (mimi-away=' + away + ' mimi-back=' + back + ' remembered=' + kept + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// A DOOR CARRIED BY ITS FRAME: it follows, turns, resizes, and sets down
+async function doorCarryCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const door = D.yardDoorNode();
+  const ry0 = door.rotation.y, s0 = door.scale.x;
+  D.clickRaw({ kind: 'yardDoor', part: 'frame' });
+  const carrying = D.doorCarrying === door && !D.orbitOn();
+  const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  key('ArrowLeft'); key('+');
+  const turned = Math.abs(door.rotation.y - ry0) > 0.2 && door.scale.x > s0 * 1.05;
+  const el = D.renderer.domElement, r = el.getBoundingClientRect();
+  el.dispatchEvent(new w.PointerEvent('pointermove', { clientX: r.left + r.width * 0.5, clientY: r.top + r.height * 0.7, bubbles: true }));
+  const moved = Math.abs(door.position.x - (-3.2)) > 0.3 || Math.abs(door.position.z - 2.95) > 0.3;
+  el.dispatchEvent(new w.MouseEvent('click', { clientX: r.left + r.width * 0.5, clientY: r.top + r.height * 0.7, bubbles: true }));
+  const down = !D.doorCarrying && D.orbitOn();
+  const saved = (() => { try { return !!JSON.parse(w.localStorage.getItem('nano-toontalk.doors')).yard; } catch { return false; } })();
+  door.position.set(-3.2, 0, 2.95); door.rotation.y = ry0; door.scale.setScalar(s0);   // put back for the checks after
+  try { w.localStorage.removeItem('nano-toontalk.doors'); } catch {}
+  const ok = carrying && turned && moved && down && saved;
+  put((ok ? 'PASS' : 'FAIL') + ' a door carried by its frame  (carrying=' + carrying + ' turned-and-grew=' + turned + ' followed=' + moved + ' set-down=' + down + ' remembered=' + saved + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// A ROBOT SETS THINGS DOWN ON THE GROUND: taught outside with a box of
+// numbers, it unpacks one per round onto the grass
+async function groundPutCheck(D, w) {
+  const box = { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '1' }, op: '+' }, { kind: 'number', value: { n: '2', d: '1' }, op: '+' }] };
+  const prog = [{ type: 'take', at: { c: 'given', path: [0] } }, { type: 'put', at: { c: 'ground', path: [] } }];
+  D.worldIn({ kind: 'world', v: 4, stations: { stand: box }, active: { kind: 'robot', name: 'unpacker',
+    condition: { kind: 'box', holes: [{ kind: 'wildNumber' }, { kind: 'wild' }] }, trainedOn: box, program: prog }, bench: [] });
+  await slowSettle(D, 1500);
+  D.speed('inf');
+  D.enterYard();
+  await slowSettle(D, 2000);
+  D.rounds(1); D.run();
+  await slowSettle(D, 60000);
+  const onGround = [0, 1, 2, 3].map(i => D.bench(i)).filter(Boolean).filter(t => t.userData.kind === 'number');
+  const low = onGround.length === 1 && onGround[0].position.y < 0.2 && onGround[0].position.z > 1.0;
+  D.leaveYard();
+  await slowSettle(D, 2000);
+  const ok = low;
+  put((ok ? 'PASS' : 'FAIL') + ' a robot sets things down on the ground  (numbers-on-grass=' + onGround.length + ' low-and-out=' + low + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3866,6 +3927,10 @@ async function runOne(D, spec) {
     } catch (e) {
       dumps[spec.name] = 'ERR ' + e.message;
       put(`ERR  ${spec.name}  ${e.message}`, 'fail');
+      // WHERE, not just what: a "cannot read null" with no stack is a day's
+      // guessing. The stack goes into the verdict lines, one frame per line,
+      // so a headless run names the throwing site.
+      for (const l of String(e.stack || '').split('\n').slice(0, 12)) put('ERR   ' + l.trim(), 'dim');
     }
   }
 
@@ -4024,6 +4089,15 @@ async function runOne(D, spec) {
   let ydOK = true;
   try { ydOK = want('yard') ? await yardCheck(D, frame.contentWindow) : true; }
   catch (e) { ydOK = false; put('FAIL the yard behind the workshop  ' + e.message, 'fail'); }
+  let hpOK = true;
+  try { hpOK = want('helpers') ? await helpersCheck(D, frame.contentWindow) : true; }
+  catch (e) { hpOK = false; put('FAIL helpers put away  ' + e.message, 'fail'); }
+  let dcOK = true;
+  try { dcOK = want('doorCarry') ? await doorCarryCheck(D, frame.contentWindow) : true; }
+  catch (e) { dcOK = false; put('FAIL a door carried by its frame  ' + e.message, 'fail'); }
+  let gpOK = true;
+  try { gpOK = want('groundPut') ? await groundPutCheck(D, frame.contentWindow) : true; }
+  catch (e) { gpOK = false; put('FAIL a robot sets things down on the ground  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4135,7 +4209,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
