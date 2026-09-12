@@ -6060,3 +6060,34 @@ Zeno's halver and totaller (five deliveries, a total of 31/32) and
 Melody's Singer (ten steps, eight notes off the nest). That is the
 beginning of an answer to "how readily can a learner construct the same
 programs through demonstration": these two can be.
+
+## The house stack, a robot that takes out a panel, and a crocodile seen in its hole
+
+*Added 12 Sep. Ken: "I wonder if the tick to show the 'room stack' should
+refer to rooms as houses since that's what they look like. Tooltip too.
+When training a robot to obtain the panel of an object it says to leave
+the thought bubble first -- why can't the panel just float to a work area
+of the robot? I want to train a robot that will give an object a behavior
+by obtaining the panel (or a copy) and adding to another panel. Screenshot
+1 shows that a 3d object just looks like its label when in a box;
+screenshot 2 shows when zoomed and rotated nothing appears in hole 2."*
+
+**The house stack.** The stack's label and tooltip say house now; the
+manual's section keeps its name.
+
+**A panel is a step.** In a lesson, ⚙ with something in the claw takes
+out that thing's panel onto a free work spot, where the robot can take it
+and drop it on another panel -- a panel dropped on a panel nests whole,
+and the behaviour inside works on that thing. The step reads "take out
+the panel of what it holds, onto a work spot". Measured: a robot given
+[the wandering behaviour, a crocodile] takes out both panels and drops one
+on the other, and the crocodile's panel holds the behaviour. (Dropping the
+behaviour pad itself on the thing binds it too, in one step; the panel
+route is for grouping behaviours inside a thing's own panel.) Mimi cannot
+copy a panel; copy the behaviour pad instead.
+
+**The crocodile in its hole.** Measured: the model was there, shrunk to a
+third, and its name plate was scaled back up to stay readable -- so the
+plate covered the model face-on, and turned edge-on left a model too small
+to notice. In a hole a model now shows itself and not its plate; the
+tooltip still names it, and the plate is back when it comes out.

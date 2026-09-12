@@ -2233,6 +2233,36 @@ async function melodyByHandCheck(D, w) {
   return ok;
 }
 
+// A ROBOT GIVES A THING A BEHAVIOUR: it takes out the behaviour's panel and
+// the thing's panel, and drops one on the other; the behaviour then works
+// on the thing. And a model in a hole shows itself, not its name plate.
+async function panelStepCheck(D, w) {
+  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const gad = zoo.yard.bench.find(b => b.thing.gadget).thing;
+  const croc = zoo.yard.bench.find(b => b.thing.label === 'crocodile').thing;
+  const prog = [
+    { type: 'take', at: { c: 'given', path: [0] } }, { type: 'panel' }, { type: 'put', at: { c: 'given', path: [0] } },
+    { type: 'take', at: { c: 'given', path: [1] } }, { type: 'panel' }, { type: 'put', at: { c: 'given', path: [1] } },
+    { type: 'take', at: { c: 's0', path: [] } }, { type: 'put', at: { c: 's1', path: [] } }];
+  D.worldIn({ kind: 'world', v: 4, stations: { stand: { kind: 'box', holes: [gad, croc] } },
+    active: { kind: 'robot', name: 'the fitter', condition: { kind: 'box', holes: [{ kind: 'wild' }, { kind: 'wild' }] },
+      trainedOn: { kind: 'box', holes: [gad, croc] }, program: prog }, bench: [] });
+  await slowSettle(D, 2000);
+  D.speed('inf');
+  const model = D.mine([1]);
+  const plateHidden = model && model.__labelNode && model.__labelNode.visible === false;
+  D.rounds(1); D.run(); await slowSettle(D, 60000);
+  const m2 = D.mine([1]);
+  const tray = m2 ? D.panelOf(m2) : null;
+  let nested = false;
+  if (tray?.__ctx?.root) tray.__ctx.root.traverse(o => { if (o.userData?.gadget) nested = true; });
+  const bound = !!(m2?.userData.lid) && [0, 1, 2, 3, 4, 5].map(i => D.bench(i)).filter(Boolean).concat(tray ? [] : [])
+    .some(t => t.userData.gadget && t.userData.boundTo === m2.userData.lid) || nested;
+  const ok = plateHidden && !!tray && (nested || bound);
+  put((ok ? 'PASS' : 'FAIL') + ' a robot gives a thing a behaviour by its panel  (model-plate-hidden-in-hole=' + plateHidden + ' panel-out=' + !!tray + ' behaviour-inside=' + nested + ' bound=' + bound + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4568,6 +4598,9 @@ async function runOne(D, spec) {
   let mhOK = true;
   try { mhOK = want('melodyByHand') ? await melodyByHandCheck(D, frame.contentWindow) : true; }
   catch (e) { mhOK = false; put('FAIL Melody taught by hand  ' + e.message, 'fail'); }
+  let psOK = true;
+  try { psOK = want('panelStep') ? await panelStepCheck(D, frame.contentWindow) : true; }
+  catch (e) { psOK = false; put('FAIL a robot gives a thing a behaviour  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4679,7 +4712,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

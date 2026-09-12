@@ -661,6 +661,14 @@ Try it: drop the 5 on the mini robot. In the thought
 bubble, click the number stack, then click a work spot; leave the bubble and
 it will run. Then erase its thought with Ruby and give it anything.
 
+A robot can take out a panel. In a lesson, with something in
+the robot's claw, press ⚙ and that thing's panel comes out onto a free work
+spot. The robot can then take the panel and drop it on another thing's panel
+— a panel dropped on a panel nests whole, and the behaviour inside
+works on that thing. That is how to train a robot that gives things a
+behaviour. (Dropping the behaviour pad itself on a thing binds it in one
+step; the panel route groups behaviours inside a thing's own panel.)
+
 The little desks beside the robot are its work spots — its own
 scratch space, cleared onto the table when it finishes, so nothing left there
 is ever lost. A spot sizes what you set on it the way a hole does: something
@@ -7662,7 +7670,15 @@ function resizeHeld(dir, axis) {
 function openHeldPanel() {
   const HAND = inHand();
   if (!HAND) return say('Hold the thing whose panel you want, then press ⚙.');
-  if (mode === 'training') return say('Leave the thought bubble first.');
+  // IN A LESSON, ⚙ IS A STEP: the panel of what the claw holds comes out onto
+  // a free work spot, where the robot can take it, and drop it on another
+  // panel to make it part of that thing's behaviour (Ken: "train a robot
+  // that will give an object a behavior by obtaining the panel and adding
+  // to another panel"). It used to say "leave the thought bubble first".
+  if (mode === 'training') {
+    if (!clawHeld) return say('Have the robot pick the thing up first, then press ⚙ for its panel.');
+    return go({ type: 'panel' });
+  }
   const X = HAND;
   if (X.userData.panel) return say('A panel has no panel of its own.');
   if (X.userData.main && X.userData.kind === 'notebook') {
@@ -10291,6 +10307,7 @@ function putOnBench(thing, at, byUser = false) {
   if (thing.userData.kind === 'robot') {
     addMiniBubble(thing, thing.__bot?.program.length ? thing.__bot.condition : null);
   }
+  if (thing.__labelNode) thing.__labelNode.visible = true;   // out of a hole, the name is back
   growYardIfNeeded(thing);
 }
 
@@ -10302,6 +10319,7 @@ const spotScale = (thing) =>
   Math.max(0.35, Math.min(1, (SPOT_W * 0.95) / (thing.userData.width || 0.3)));
 function putOnStation(st, thing) {
   WROOT.add(thing);
+  if (thing.__labelNode) thing.__labelNode.visible = true;
   thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI
     : st.kind === 'scratch' ? spotScale(thing) : 1);
   thing.quaternion.identity();
@@ -10330,6 +10348,11 @@ function putInHole(hole, thing) {
     const base = thing.__labelNode.geometry.parameters.width || 0.3;
     // the width it ENDS UP with is base x s x scale, and that is what must fit
     thing.__labelNode.scale.setScalar(Math.min(1, (room * 0.94) / base) / s);
+    // A MODEL IN A HOLE shows itself, not its name: the plate, kept readable
+    // while the model shrank to a third, covered the model face-on and, once
+    // turned edge-on, left nothing to see (Ken's crocodile). The tooltip
+    // still names it.
+    if (thing.userData.kind === 'model') thing.__labelNode.visible = false;
   }
   // A nest is a shallow ring with nothing under it: left at the pocket floor
   // it disappears into the shadow and the hole reads as empty. It sits on the
@@ -10393,7 +10416,7 @@ const HELPERS = {
 };
 const STATION_DEFS = [
   ...[
-    { id: 'rooms',   label: 'the room stack',   kind: 'stack' },
+    { id: 'rooms',   label: 'the house stack',  kind: 'stack' },
     { id: 'texts',   label: 'the pad stack',   kind: 'stack' },
     { id: 'nests',   label: 'the nest stack',   kind: 'stack' },
     { id: 'scales',  label: 'the scale stack',  kind: 'stack' },
@@ -14832,6 +14855,7 @@ function runStep(step) {
   else if (step.type === 'copy') actionCopy(step.at);
   else if (step.type === 'put') actionPut(step.at, step.side);
   else if (step.type === 'vacuum') actionVacuum(step.at);
+  else if (step.type === 'panel') actionPanel();
   // OPEN ANOTHER WORLD. The one step a robot in a judge's house needs that no
   // robot had: the next puzzle by name. Honoured at the top of a frame, since
   // this robot is standing in the very world about to be replaced.
@@ -15660,6 +15684,31 @@ function dustySuck(getVictim) {
   });
 }
 // The trainable form: vacuum whatever the address names.
+// The panel of what the claw holds, out onto a free work spot. The claw
+// keeps the thing; the panel is a thing of the robot's own area now, to be
+// taken, and dropped on another panel (a panel dropped on a panel nests
+// whole, and the behaviour inside works on that thing).
+function actionPanel() {
+  enqueue(doNow(() => {
+    const X = clawHeld;
+    if (!X) return abort('Nothing in its claw to take the panel of.');
+    if (X.userData.panel) return abort('A panel has no panel of its own.');
+    if (X.userData.kind === 'notebook' && X.userData.main) return abort('Your own notebook has no panel.');
+    const tray = bringOutPanel(X, true);             // made without the journey
+    if (!tray) return abort('That has no panel.');
+    const i = benchThings.indexOf(tray);
+    if (i >= 0) benchThings.splice(i, 1);
+    tray.removeFromParent();
+    tray.visible = true; tray.__closed = false;
+    const spot = Object.values(stations).find(s2 => s2.kind === 'scratch' && !s2.occupant)
+      ?? ensureScratchStation(scratchObjs.length, true);
+    const from = X.getWorldPosition(new THREE.Vector3());
+    putOnStation(spot, tray);
+    enqueueNext(settleInto(tray, from, 0.4));
+    sfx('grow');
+    refreshUI();
+  }));
+}
 function actionVacuum(at) {
   dustySuck(() => {
     const v = thingAt(at);
@@ -17245,6 +17294,7 @@ function describe(s) {
        : s.type === 'newNest' ? 'take a new nest'
        : s.type === 'newRoom' ? 'take a new room'
        : s.type === 'newDie' ? 'take a new die'
+       : s.type === 'panel' ? 'take out the panel of what it holds, onto a work spot'
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
        : s.type === 'goOut' ? 'go out through the back door to the yard'
        : s.type === 'goIn' ? 'come back inside through the back door'
@@ -18508,7 +18558,7 @@ function tipForInner(t) {
         : 'The number stack — click to take a 1, then type digits to change it.';
       if (t.id === 'rooms') return training
         ? 'Click to have the robot take a fresh room.'
-        : 'The room stack — each holds a whole workshop. Drop a robot in, then things for it to work on; click its door to step inside.';
+        : 'The house stack — each house holds a whole workshop. Drop a robot in, then things for it to work on; click its door to step inside.';
       if (t.id === 'texts') return training
         ? 'Click to have the robot take a fresh pad.'
         : 'The pad stack — take a blank pad and type on it.';
