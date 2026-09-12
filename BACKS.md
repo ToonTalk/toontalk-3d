@@ -5953,3 +5953,58 @@ built", and the claim that copyable documentation "cannot rot" now says
 what is true: it is hard to leave rotten. And the manual gained a first
 project -- a robot that counts, eight steps, meeting the lesson, the
 thought and Ruby -- which the suite replays step for step.
+
+## Computing words, commentary, a question that finds its thing, and a bird that is seen to fly
+
+*Added 12 Sep. Ken: "I'm worried older learners and teachers won't know
+how to get Marty to use computing words. Maybe a switch in Marty's
+interface? When I entered the wandering panel when the robot dropped
+something on the bird I didn't see it fly away and return. Redo the
+wandering behavior to use the turtle commands instead. When the user is
+watching a robot work let's add an option to Marty to provide a high-level
+commentary. Ideally like good comments and not just a description of the
+basic events. Also if a user asks about a robot, house, or panel (either
+that they are holding or by label (or pad text)) Marty suggests running it
+with commentary. The current response is inadequate."*
+
+**Words.** A switch in How Marty thinks, per person: the workshop's words,
+or computing words too. With it on, the first time a workshop word comes
+up in an answer the programmer's word stands beside it in brackets -- a
+thought (its condition, a pattern), a lesson (a program), a team (a case
+analysis), a bird (a message), a nest (a mailbox), a house (a process),
+Ruby (generalising), Mimi (cloning). One vocabulary for everyone, and a
+second laid beside it for those who ask.
+
+**Why the answer was inadequate.** Marty was told "copy what is in hole 4
+of what it was given" without being told what hole 4 held, and so had to
+guess. He is now told the work box hole by hole -- "[a bird to my thing |
+[move | forward | 1/25] | [move | yaw | 0] | a die (1 to 3) | the number
+-2 | the number badged × 30]" -- and every step names what it touches:
+"copy what is in hole 3 (a die (1 to 3))". Purpose follows from that.
+
+**A question finds its thing.** Asked about a robot, a behaviour or a
+house -- the one in the hand, or one on the table named by its label, its
+name or its words -- Marty answers, and a button appears under the answer:
+run it with commentary.
+
+**Commentary.** A box to tick in How Marty thinks: while a robot works,
+Marty says what it is trying to achieve and the trick it uses -- as a good
+comment would, purpose first, never a transcript -- at the start of a run,
+when it stops (and why), and when a behaviour is switched on. It needs a
+brain; the phrasebook stays quiet.
+
+**The bird is seen to fly.** A panel's rounds run offstage, and the
+miniature only mimes the walk to each hole afterwards. Two things stood in
+the way. The mime's list was replaced by every round, and a ticker runs a
+round every turn, so a ten-step round never got past its first few steps
+(the older gadgets have two to four); a mime in progress now finishes before
+the next round's list takes its turn. And a drop on the bird is now a flight
+in that mime: a stand-in bird goes out to the thing she is addressed to and
+comes back, in world space, while the bird in the hole hides -- the box is
+redrawn each round, so the bird's own parent cannot be trusted for the
+length of a flight.
+
+**Wandering, in the turtle's words.** The Wanderer now sends [move | yaw |
+a] and [move | forward | 1/25]: a die of three, a -2 and a ×30 land on the
+turn in turn (−30, 0 or 30 degrees), a copy of the turn goes to the bird,
+then a copy of the step -- so an animal faces where it goes.

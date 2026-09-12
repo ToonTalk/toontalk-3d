@@ -1409,7 +1409,16 @@ How Marty thinks also sets how far he goes: hints and
 demonstrations only keeps the building yours (the default); may plan
 and write programs when asked lets him lay out a program step by step in
 the workshop's own gestures, saying the idea first so you can stop him and
-build it yourself. He never builds it for you either way.
+build it yourself. He never builds it for you either way. Words
+chooses the workshop's words, or computing words too: with the second, the
+programmer's word stands beside each workshop word the first time it comes
+up — a thought (its condition), a bird (a message), a house (a
+process). Commentary while a robot works has him say, at the start of
+a run, when it stops and when a behaviour is switched on, what the robot is
+trying to achieve and the trick it uses — as a good comment would, not
+a transcript. Ask him about a robot, a behaviour or a house — the one
+in your hand, or one on the table by its name or its words — and a
+button under his answer runs it with commentary.
 How Marty thinks lets you pick which of your browser's voices he uses
 — the list puts the ones that speak your language first, since a voice meant
 for another language reads English with an accent. Left alone he takes a
@@ -1574,6 +1583,31 @@ Reshape yard. The reshape button says which it is. Outside, the
 corner handles stretch the yard — the far edge and the sides; the near
 edge, where the helpers stand, stays — and the size is kept with the
 yard. A saved world also carries what you have put away, indoors and out.
+
+## What a programmer would call it
+
+The workshop has one set of words for everyone. For older learners and
+teachers, here is the second set, the one Marty uses beside the first when
+his Words switch says computing words too.
+
+in the workshopa programmer would say
+a robot's thoughtits condition: a pattern the input must match
+a lessona program, recorded by demonstration
+a run, one round after anotherexecuting it; each round is one pass of a loop
+a teama case analysis: the first member whose pattern matches runs
+a box, a holea record or tuple; a field
+a pada string
+a numberan exact rational (approximate ones say so)
+a birdsending a message
+a nesta mailbox or queue; a robot dozing on an empty nest is blocked on input
+a housea process running on its own
+a panel, a behavioura component's behaviour; an actor attached to an object
+Mimicopy, or clone
+Rubygeneralising: a constant becomes a variable or wildcard
+Dustydelete
+a scalea comparison
+a diea random number
+the notebooka library, looked up by name
 
 ## Puzzles
 
@@ -4785,6 +4819,52 @@ const MARTY_VOICE = 'tt3d.marty-voice';
 // asked, step by step). Astra's review argued the boundary should be the
 // learner's chosen level of help; Ken agreed, with guide as the default.
 const MARTY_HELP = 'tt3d.marty-help';
+// WHICH WORDS. Older learners and teachers want the computing words too, and
+// would not know to ask for them (Ken) -- so it is a switch, per person, and
+// with it on Marty pairs each workshop word with the programmer's word.
+const MARTY_WORDS = 'tt3d.marty-words';
+const martyWords = () => (typeof mineGet === 'function' && mineGet(MARTY_WORDS)) || 'workshop';
+const COMPUTING_WORDS = 'THIS VISITOR WANTS COMPUTING WORDS TOO. Keep the workshop’s names and, the first time each comes up in an answer, give the programmer’s word beside it, in brackets: a robot’s thought (its condition, a pattern to match); a lesson (a program, recorded by demonstration); a run (executing it, one round per loop); a team (a case analysis: the first member whose pattern matches runs); a box (a record or tuple; a hole is a field); a pad (a string); a number (an exact rational); a bird (sending a message); a nest (a mailbox or queue; a robot dozing on an empty nest is blocked on input); a house (a process running on its own); a panel (a component’s behaviour); a behaviour bound to a thing (an actor attached to an object); Mimi (copy or clone); Ruby (generalising: a constant becomes a variable or wildcard); Dusty (delete); a scale (a comparison); a die (a random number); the notebook (a library, looked up by name); Marty’s Make (building a model from a parts list).';
+// COMMENTARY. While a robot works, Marty may say what it is trying to
+// achieve -- as a good comment would, not a transcript -- at the start of a
+// run, when it stops, and when a behaviour is switched on (Ken).
+const MARTY_COMMENT = 'tt3d.marty-commentary';
+const martyCommentOn = () => (typeof mineGet === 'function' && mineGet(MARTY_COMMENT)) === '1';
+const MARTY_COMMENT_SYSTEM = 'You are Marty the Martian, the green helper in ToonTalk 3D, commenting on a robot at work for a child or a teacher. Speak as yourself, in plain spoken sentences, no markdown, no lists. A comment says PURPOSE and IDEA — what the robot is trying to achieve and the trick it uses — never a transcript of its steps. Work it out from the facts below: the work box says what each hole holds, and the steps say what is copied where. Two or three sentences at most.';
+let martyCommentBusy = false;
+function martyCanThink() {
+  const p2 = martyProv();
+  return p2 === 'nano' || p2 === 'here' || (!!p2 && !!martyKeyOf(p2));
+}
+async function martyCommentary(kind, subject) {
+  if (!martyCommentOn() || martyCommentBusy || offstage()) return;
+  if (typeof martyUI === 'undefined' || !martyUI || !martyCanThink()) return;
+  let facts = null;
+  if (kind === 'gadget' && subject) facts = gadgetFacts(subject);
+  else if (activeBot?.program.length) {
+    facts = botFacts(activeBot, 'The robot at the bench', stations.stand.occupant ? specOf(stations.stand.occupant) : null)
+      + '\nOn its desk now: ' + (stations.stand.occupant ? holeWords(specOf(stations.stand.occupant)) : 'nothing');
+  }
+  if (!facts) return;
+  const ask = kind === 'stop'
+    ? `The run has just stopped after ${roundsSaid()}. Say, as a good comment would, what it achieved and why it stopped now — two sentences at most.`
+    : kind === 'gadget'
+    ? 'This behaviour has just been switched on. Say what it is for and the trick its robot uses — purpose first, no step list.'
+    : 'This robot has just been set running. Say what it is trying to achieve and how — purpose first, no step list.';
+  martyCommentBusy = true;
+  try {
+    const reply = await askBrain(MARTY_COMMENT_SYSTEM + (martyWords() === 'computing' ? '\n' + COMPUTING_WORDS : ''),
+                                 facts + '\n\n' + ask, [], 500);
+    if (reply) {
+      let words = String(reply).trim();
+      const m = words.match(/"say"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      if (m) words = m[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
+      martyUI.style.display = 'block';
+      martySay(words.slice(0, 700));
+    }
+  } catch (e) { console.error('[marty] commentary:', e); }
+  finally { martyCommentBusy = false; }
+}
 const martyHelp = () => (typeof mineGet === 'function' && mineGet(MARTY_HELP)) || 'guide';
 const MARTY_VOICE_NAME = 'tt3d.marty-voice-name';
 const MINE_KEYS = [HINT_SAY, HINT_VOICE, MARTY_VOICE, MARTY_VOICE_NAME];
@@ -7500,6 +7580,7 @@ function switchScene(node, on) {
 function switchGadget(node, on, quiet = false) {
   const tray = bringOutPanel(node, true);   // working, not on display
   if (!tray) return quiet || say('That behaviour has no panel yet.');
+  if (on && !quiet) martyCommentary('gadget', node);
   // STOPPED is not the same as idle: a panel with nothing to do this instant
   // must still be woken by post, and one a person switched off must not be.
   // Without the difference, a behaviour listening to the pointer could never
@@ -7960,10 +8041,24 @@ function runRoomWork(room, depth = 0, miOverride = null, chunkMax = null) {
           if (prop) { perf.push({ anchor: prop }); continue; }
           const at3 = st3.at;
           if (at3?.c === 'given' && occ2?.userData.holes?.[at3.path?.[0]]?.anchor) {
-            perf.push({ anchor: occ2.userData.holes[at3.path[0]].anchor });
+            const hole3 = occ2.userData.holes[at3.path[0]];
+            // A DROP ON THE BIRD IS A FLIGHT: she goes to the thing she is
+            // addressed to and comes back, so the watcher sees the message
+            // leave (Ken: "I didn't see it fly away and return")
+            const bird3 = st3.type === 'put' && at3.path.length === 1 && hole3.thing?.userData.kind === 'bird' ? hole3.thing : null;
+            let to3 = null;
+            if (bird3) {
+              const X3 = liveOwnerOf(bird3) ?? bird3.__nest ?? null;
+              if (X3?.getWorldPosition) { to3 = X3.getWorldPosition(new THREE.Vector3()); to3.y += 0.25; }
+            }
+            perf.push({ anchor: hole3.anchor, bird: bird3, to: to3 });
           }
         }
-        if (perf.length) room.__perf = perf;
+        // A MIME IN PROGRESS FINISHES. A ticker runs a round every turn and
+        // used to replace the list every time, so a ten-step round never got
+        // past its first few steps -- the bird, eighth and tenth, was never
+        // seen to fly (Ken). The next round's list waits its turn.
+        if (perf.length && !room.__perf) room.__perf = perf;
       }
       // Houses inside this house work too, live all the way down -- but a
       // PANEL does not go looking. The bench is global, so from inside a
@@ -11183,7 +11278,31 @@ function advanceWorldClocks(dt, worldRuns = true) {
           const lp = mini2.parent.worldToLocal(cur.anchor.getWorldPosition(_lodV).clone());
           const dx2 = lp.x - mini2.position.x, dz2 = lp.z - mini2.position.z;
           const d2 = Math.hypot(dx2, dz2);
-          if (d2 < 0.06) {
+          if (d2 < 0.06 && cur.bird && cur.to && cur.bird.parent) {
+            // OUT TO THE THING AND BACK, in world space: a stand-in flies
+            // while the bird in the hole hides, since the box is redrawn
+            // each round and the bird's own parent cannot be trusted to
+            // stay put for the length of a flight
+            if (!cur.ghost) {
+              cur.homeW = cur.bird.getWorldPosition(new THREE.Vector3());
+              cur.ghost = cur.bird.clone();
+              cur.ghost.position.copy(cur.homeW);
+              cur.ghost.quaternion.copy(cur.bird.getWorldQuaternion(new THREE.Quaternion()));
+              const ws = cur.bird.getWorldScale(new THREE.Vector3()).x;
+              cur.ghost.scale.setScalar(Math.max(ws, 0.16));
+              cur.ghost.traverse(o => { o.__pick = null; });
+              scene.add(cur.ghost);
+              t.__ghost = cur.ghost;
+              cur.bird.visible = false;
+              cur.fl = 0;
+            }
+            cur.fl += dt / 0.9;
+            const f = Math.max(0, Math.min(1, cur.fl));
+            const e = f < 0.5 ? f * 2 : (1 - f) * 2;
+            cur.ghost.position.lerpVectors(cur.homeW, cur.to, e);
+            cur.ghost.position.y += Math.sin(Math.PI * f) * 0.35;
+            if (cur.fl >= 1) { cur.ghost.removeFromParent(); t.__ghost = null; cur.bird.visible = true; pf.shift(); }
+          } else if (d2 < 0.06) {
             pf.shift();
             mini2.position.y = mini2.__baseY - 0.01;   // a little bow at the hole
           } else {
@@ -16416,6 +16535,7 @@ function runProgram() {
   activeBot.root.scale.setScalar(1);
   mode = 'replay'; busy = true; runCount = 0;
   if (camWatchRun) { camWatchRun = false; if (smartCam) showViewSoon(runWatchPose); }
+  if (!offstage()) martyCommentary('start');
   nextIteration();
   refreshUI();
 }
@@ -16687,6 +16807,7 @@ function stowHeld() {
 }
 function finishRun(msg) {
   highlight(-1);
+  if (!offstage() && runCount) martyCommentary('stop');
   mode = 'world';
   condShow = null;          // the bubble belongs to the leader again
   stowHeld();
@@ -20366,6 +20487,41 @@ const martyIdleWait = () => new Promise((res) => {
 // A demonstration moves one narrated beat at a time: after each thing Marty
 // says and does, he waits for “Next” — nobody learns from a firehose.
 let martyPendingDemo = null, martyNextResolve = null, martyStopFlag = false;
+// THE THING A QUESTION IS ABOUT: what is in the hand, or a thing on the table
+// named in the question by its label, its name or its words -- if it is a
+// robot with a lesson, a behaviour, or a house with a worker. The answer
+// then comes with a button to run it with commentary.
+let martyPendingRun = null;
+function martySubjectOf(q) {
+  const runnable = (t) => !!t && (
+    (t.userData.kind === 'robot' && t.__bot?.program?.length)
+    || (isGadget(t) && (t.__panelTray?.__ctx?.activeBot?.program?.length || t.userData.panelWorld?.active?.program?.length))
+    || (t.userData.kind === 'room' && roomHasWorker(t)));
+  if (runnable(held)) return held;
+  const words = String(q || '').toLowerCase();
+  const named = (t) => [t.userData.label, t.__bot?.name, isGadget(t) ? t.userData.text : null]
+    .filter(Boolean).map(x => String(x).toLowerCase());
+  for (const t of benchThings) {
+    if (!runnable(t)) continue;
+    if (named(t).some(n => n && words.includes(n))) return t;
+  }
+  return null;
+}
+function martyRunWithCommentary() {
+  const t = martyPendingRun;
+  martyPendingRun = null;
+  martyCtl();
+  if (!t || !t.parent) return martySay('It is not on the table any more.');
+  mineSet(MARTY_COMMENT, '1');
+  const cc = document.getElementById('martyCommentCb'); if (cc) cc.checked = true;
+  if (held === t) stowHeld();
+  if (isGadget(t)) return switchGadget(t, true);
+  if (t.userData.kind === 'room') return handleClick({ kind: 'roomLever', room: t });
+  if (t.userData.kind === 'robot') {
+    if (activeBot?.node === t && stations.stand.occupant) return runProgram();
+    return martySay('Give it something to work on first — drop a box on it — and I will talk you through the run.');
+  }
+}
 function martyOfferDemo(id) {
   martyPendingDemo = id;
   martyCtl();
@@ -20658,14 +20814,47 @@ function puzzleHint(q) {
 // The FACTS of what a robot or behaviour does -- condition, steps in words,
 // team shape -- for Marty to abstract a PURPOSE from. Marty's job is the
 // summary; this is the evidence it must come from.
-function botFacts(b, label) {
+// WHAT A RECORD HOLDS, hole by hole: "[a bird to my thing | [move | forward
+// | 1/25] | a die (1 to 3) | the number -2 | the number ×30]". Without it
+// Marty was told "copy what is in hole 4" and had to guess what hole 4 was.
+function holeWords(rec, depth = 0) {
+  if (!rec) return 'empty';
+  if (rec.kind === 'box' || rec.kind === 'scale') {
+    if (depth > 2) return pageWords(rec);
+    const inner = (rec.holes || []).map(h => holeWords(h, depth + 1));
+    return (rec.kind === 'scale' ? 'a scale ' : '') + '[' + inner.join(' | ') + ']';
+  }
+  if (rec.kind === 'number') {
+    const v = rec.value ? ratText(ratIn(rec.value)) : '?';
+    if (rec.op && rec.op !== '+' && OP_READS[rec.op]) return 'the number badged “' + OP_READS[rec.op](v) + '”' + (rec.label ? ' called “' + rec.label + '”' : '');
+    return 'the number ' + v + (rec.label ? ' called “' + rec.label + '”' : '');
+  }
+  if (rec.kind === 'text') return rec.text ? '“' + rec.text.slice(0, 30) + '”' : 'a blank pad';
+  if (rec.kind === 'bird') return rec.liveId ? 'a bird to my thing' : 'a bird';
+  if (rec.kind === 'nest') return 'a nest' + (rec.label ? ' “' + rec.label + '”' : '') + ((rec.pile || []).length ? ' holding ' + holeWords(rec.pile[rec.pile.length - 1]) : ', empty');
+  return pageWords(rec);
+}
+function stepWordsIn(step, trained) {
+  const base = describe(step);
+  const at = step.at;
+  if (!at || !trained || at.c !== 'given') return base;
+  try {
+    const t = at.path?.length ? trainedAtPath(trained, at.path) : trained;
+    if (t && step.type !== 'put') return base + ' (' + holeWords(t) + ')';
+    if (t && step.type === 'put') return base + ' (onto ' + holeWords(t) + ')';
+  } catch {}
+  return base;
+}
+function botFacts(b, label, work) {
   const members = [b, ...(b.team || [])].slice(0, 9);
   const one = members.length === 1;
   const lines = members.map((m, i) =>
     (one ? 'It' : 'Member ' + (i + 1)) + ' runs on ' + condText(m.condition) + ' and then: '
-    + ((m.program || []).slice(0, 10).map(describe).join(', ') || '(untrained)') + '.');
-  return label + ' \u2014 ' + (one ? 'one robot'
+    + ((m.program || []).slice(0, 16).map(st => stepWordsIn(st, m.trainedOn ?? work)).join(', ') || '(untrained)') + '.');
+  const box = work ?? b.trainedOn;
+  return label + ' — ' + (one ? 'one robot'
     : 'a team of ' + members.length + '; each pass, the first member that recognises the thing runs')
+    + (box ? '. Its work box: ' + holeWords(box) : '')
     + ':\n' + lines.join('\n');
 }
 function gadgetFacts(t) {
@@ -20677,12 +20866,12 @@ function gadgetFacts(t) {
     : t.__padParent === held ? ' \u2014 riding on the pad in the visitor\u2019s hand'
     : t.__padParent ? ' \u2014 riding on ' + panelName(t.__padParent)
     : '';
-  const plain = (o) => ({ name: o.name, condition: condIn(o.condition),
+  const plain = (o) => ({ name: o.name, condition: condIn(o.condition), trainedOn: o.trainedOn ?? null,
     program: (o.program || []).map(stepIn), team: (o.team || []).map(plain) });
   const state = (tray?.userData.dirty ? 'switched ON' : 'switched off')
     + (t.userData.speed ? ', moving under its own speed' : '')
     + (t.userData.boundTo ? ', bound to work on ' + (liveReg.get(t.userData.boundTo) ? panelName(liveReg.get(t.userData.boundTo)) : 'something that is gone') : '');
-  return botFacts(plain(rec.active), 'The behaviour of ' + panelName(t) + where + ' (' + state + ')');
+  return botFacts(plain(rec.active), 'The behaviour of ' + panelName(t) + where + ' (' + state + ')', rec.stations?.stand ?? null);
 }
 function martyWorldText() {
   // WHAT IS ATTACHED TO A THING is part of what the thing IS, and Marty was
@@ -21218,6 +21407,8 @@ async function martyThink(q) {
   const sysAt = (budget) => {
     const manual = manualFor(whole, q, budget);
     return MARTY_SYSTEM
+      + (martyWords() === 'computing' ? '\n' + COMPUTING_WORDS : '')
+      + '\n- When asked what a robot, a behaviour or a house DOES, work its purpose out from the facts (the work box says what each hole holds; the steps say what goes where) and say the purpose in a sentence or two. A button to run it with your commentary appears under your answer; mention that they can press it.'
       + (martyHelp() === 'programs'
         ? '\nTHIS VISITOR HAS ASKED FOR MORE HELP: the rule about never writing programs is lifted for them. When they ask for a program, you MAY plan one — as short numbered steps in the workshop’s own gestures (take a number from the stack, drop it on the robot, in the thought bubble click the copier…), naming which robot does what and why — and still say the idea first, in a sentence, so they can stop you and build it themselves. Two different ways of doing the same thing, compared, is a good answer. Never claim to have built anything: you write, they build.'
         : '')
@@ -21331,6 +21522,7 @@ async function askMarty(q) {
   // a puzzle's hints come from its author, one at a time, brain or no brain
   const hint = puzzleHint(q);
   if (hint) { martySay(hint); return; }
+  martyPendingRun = martySubjectOf(q);      // an answer about a thing that runs comes with a button
   if (puzzleInfo && /\b(start (over|again)|restart|reset)\b/i.test(q)) {
     martySay('Here it is again from the beginning.');
     startWorldOver();
@@ -21404,6 +21596,7 @@ async function askMarty(q) {
   if (martyHistory.length > 12) martyHistory = martyHistory.slice(-12);
   if (text) martySay(text);
   if (demo && MARTY_DEMOS[demo]) martyOfferDemo(demo);
+  else martyCtl();                           // the run-with-commentary button, if there is a subject
 }
 
 // --- Marty makes THINGS ------------------------------------------------------
@@ -22081,6 +22274,11 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
   + '<option value="guide">hints and demonstrations only</option>'
   + '<option value="programs">may plan and write programs when asked</option></select></div>'
+  + '<div style="margin-top:8px">Words: <select id="martyWordsSel" title="The workshop’s own words, or the programmer’s words beside them — a thought (its condition), a bird (a message), a house (a process)." '
+  + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
+  + '<option value="workshop">the workshop’s words</option>'
+  + '<option value="computing">computing words too</option></select></div>'
+  + '<label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer"><input type="checkbox" id="martyCommentCb"> Commentary while a robot works</label>'
   + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
   + '<input id="martyKey" type="text" autocomplete="off" spellcheck="false" placeholder="API key\u2026" '
@@ -22177,7 +22375,10 @@ function martyCtl(state) {
     el.appendChild(btn('Stop', martyStopDemo, false));
     el.style.display = 'flex';
   } else if (martyPendingDemo) {
-    el.appendChild(btn('\u25b8 Show me: ' + martyPendingDemo, () => runMartyDemo(martyPendingDemo), true));
+    el.appendChild(btn('▸ Show me: ' + martyPendingDemo, () => runMartyDemo(martyPendingDemo), true));
+    el.style.display = 'flex';
+  } else if (martyPendingRun && martyPendingRun.parent) {
+    el.appendChild(btn('▸ Run ' + panelName(martyPendingRun) + ' with commentary', () => martyRunWithCommentary(), true));
     el.style.display = 'flex';
   } else {
     el.style.display = 'none';
@@ -22543,6 +22744,26 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   // Dictation, where the browser offers it -- and where it does not, the
   // button simply is not shown.
   {
+    const ws = document.getElementById('martyWordsSel');
+    if (ws) {
+      ws.value = martyWords();
+      ws.onchange = () => {
+        mineSet(MARTY_WORDS, ws.value);
+        martySay(ws.value === 'computing'
+          ? 'Computing words too, then: a thought is a condition, a bird is a message, a house is a process. I will say both.'
+          : 'The workshop’s own words.');
+      };
+    }
+    const cc = document.getElementById('martyCommentCb');
+    if (cc) {
+      cc.checked = martyCommentOn();
+      cc.onchange = () => {
+        mineSet(MARTY_COMMENT, cc.checked ? '1' : '0');
+        martySay(cc.checked ? 'I will say what a robot is up to as it works — the idea, not the steps.' : 'No commentary.');
+      };
+    }
+  }
+  {
     const hs = document.getElementById('martyHelp');
     if (hs) {
       hs.value = martyHelp();
@@ -22871,6 +23092,8 @@ window.__nano = {
   get doorCarrying() { return doorCarry; },
   resetDoors() { doorPosesAll.indoors = null; doorPosesAll.outside = null; applyPlaceDoors(); },
   get heldTilt() { return heldTilt; },
+  holeWords, botFacts, gadgetFacts, martySubjectOf,
+  get martyPendingRun() { return martyPendingRun; },
   arith(a, op, b) { const r = applyOp(rat(BigInt(a[0]), BigInt(a[1]), !!a[2]), op, rat(BigInt(b[0]), BigInt(b[1]), !!b[2])); return r ? { n: String(r.n), d: String(r.d), x: !!r.x } : null; },
   dropMeaning(t) { return dropMeaning(t); },
   martyHelp,

@@ -59,7 +59,7 @@
       "at": {
        "c": "given",
        "path": [
-        1,
+        2,
         2
        ]
       }
@@ -78,7 +78,7 @@
       "at": {
        "c": "given",
        "path": [
-        1,
+        2,
         2
        ]
       }
@@ -97,7 +97,7 @@
       "at": {
        "c": "given",
        "path": [
-        1,
+        2,
         2
        ]
       }
@@ -107,7 +107,7 @@
       "at": {
        "c": "given",
        "path": [
-        1
+        2
        ]
       }
      },
@@ -125,64 +125,7 @@
       "at": {
        "c": "given",
        "path": [
-        3
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        2,
-        2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        4
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        2,
-        2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        5
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        2,
-        2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        2
+        1
        ]
       }
      },
@@ -214,13 +157,13 @@
         },
         {
          "kind": "text",
-         "text": "across"
+         "text": "forward"
         },
         {
          "kind": "number",
          "value": {
           "n": "1",
-          "d": "30"
+          "d": "25"
          },
          "op": "+"
         }
@@ -235,13 +178,13 @@
         },
         {
          "kind": "text",
-         "text": "away"
+         "text": "yaw"
         },
         {
          "kind": "number",
          "value": {
-          "n": "1",
-          "d": "30"
+          "n": "0",
+          "d": "1"
          },
          "op": "+"
         }
@@ -262,8 +205,8 @@
       {
        "kind": "number",
        "value": {
-        "n": "1",
-        "d": "25"
+        "n": "30",
+        "d": "1"
        },
        "op": "*"
       }
@@ -294,13 +237,13 @@
        },
        {
         "kind": "text",
-        "text": "across"
+        "text": "forward"
        },
        {
         "kind": "number",
         "value": {
          "n": "1",
-         "d": "30"
+         "d": "25"
         },
         "op": "+"
        }
@@ -315,13 +258,13 @@
        },
        {
         "kind": "text",
-        "text": "away"
+        "text": "yaw"
        },
        {
         "kind": "number",
         "value": {
-         "n": "1",
-         "d": "30"
+         "n": "0",
+         "d": "1"
         },
         "op": "+"
        }
@@ -342,8 +285,8 @@
      {
       "kind": "number",
       "value": {
-       "n": "1",
-       "d": "25"
+       "n": "30",
+       "d": "1"
       },
       "op": "*"
      }
@@ -355,7 +298,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "WANDERING\n\n[my thing, across, away,\n a die of 3, a -2, a x1/25]\n\nEach round, on each step:\n  the die lands on it: 1..3\n  the -2 lands on it: -1..1\n  the x1/25 lands on it\n  a copy goes to the bird\n\nThat is all wandering is."
+    "text": "WANDERING\n\n[my thing, forward, turn,\n a die of 3, a -2, a x30]\n\nEach round, on the turn:\n  the die lands on it: 1..3\n  the -2 lands on it: -1..1\n  the x30 lands on it\n  a copy goes to the bird\nthen a copy of forward goes\nto the bird.\n\nyaw and forward are the\nturtle's own words."
    },
    "x": -1.45,
    "z": 2.15
@@ -363,7 +306,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nSet Speed to Instant and\ngive the work box to the\nWanderer.\n\nThe star drifts about the\ntable, nowhere in\nparticular.\n\nHold the die and type 5:\nit wanders further to the\nright and down than left\nand up. Why?"
+    "text": "TO RUN IT\n\nSet Speed to Instant and\ngive the work box to the\nWanderer.\n\nThe star drifts about the\ntable, nowhere in\nparticular.\n\nHold the die and type 5:\nit turns right more often\nthan left, and circles. Why?"
    },
    "x": -0.75,
    "z": 2.15

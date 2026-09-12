@@ -1,42 +1,41 @@
-# wandering -- a behaviour that goes nowhere in particular.
+# wandering -- a behaviour that goes nowhere in particular, in the turtle's
+# own words.
 #
-# The Wanderer is handed [a bird to my thing, an across step, an away step,
-# a die of three, a -2, a x1/25]. Each round, for each step:
+# The Wanderer is handed [a bird to my thing, a forward step, a turn, a die
+# of three, a -2, a x30]. Each round:
 #
-#     a copy of the die lands on the step's number   -> 1, 2 or 3
+#     a copy of the die lands on the turn's number   -> 1, 2 or 3
 #     a copy of the -2 lands on it                    -> -1, 0 or 1
-#     a copy of the x1/25 lands on it                 -> a small step, or none
-#     a copy of the step goes to the bird             -> [move | across | dx]
+#     a copy of the x30 lands on it                   -> -30, 0 or 30 degrees
+#     a copy of the turn goes to the bird             -> [move | yaw | a]
+#     a copy of the step goes to the bird             -> [move | forward | 1/25]
 #
-# and the same again for away. Nothing here is about wandering: a die
-# re-rolls a number, a -2 is added, a x1/25 is multiplied, a message is
-# sent -- the same four gestures a child makes by hand. Drop it on an animal
-# in the yard and press SPACE, and the animal wanders.
+# yaw and forward are the 3D turtle's orders (make_turtle3d.py): a turn about
+# its own upright, and a step along the way it is pointing -- so an animal
+# faces where it goes. Nothing here is about wandering: a die re-rolls a
+# number, a -2 is added, a x30 is multiplied, two messages are sent -- the
+# same gestures a child makes by hand.
 from _beh import *                                          # noqa: F403
 
 WANDER = 'G913'
 
 
 def wandering(lid=WANDER):
-    across = msg('move', 'across', num(1, 30))               # noqa: F405
-    away = msg('move', 'away', num(1, 30))                   # noqa: F405
+    step = msg('move', 'forward', num(1, 25))                # noqa: F405
+    turn = msg('move', 'yaw', num(0))                        # noqa: F405
     die = {'kind': 'die', 'faces': 3}
     minus2 = num(-2)                                         # noqa: F405
-    small = num(1, 25, '*')                                  # noqa: F405
-    work = box(to(lid, 'my thing'), across, away, die, minus2, small)   # noqa: F405
-    trained = box(to(lid), across, away, die, minus2, small)            # noqa: F405
-
-    def roll(hole):
-        # the die, the -2 and the x1/25 land on the step's number in turn,
-        # then a copy of the step goes to the bird
-        return [copy('given', 3), put('given', hole, 2),     # noqa: F405
-                copy('given', 4), put('given', hole, 2),     # noqa: F405
-                copy('given', 5), put('given', hole, 2),     # noqa: F405
-                copy('given', hole), put('given', 0)]        # noqa: F405
-
+    times30 = num(30, 1, '*')                                # noqa: F405
+    work = box(to(lid, 'my thing'), step, turn, die, minus2, times30)      # noqa: F405
+    trained = box(to(lid), step, turn, die, minus2, times30)               # noqa: F405
+    program = [copy('given', 3), put('given', 2, 2),         # noqa: F405
+               copy('given', 4), put('given', 2, 2),         # noqa: F405
+               copy('given', 5), put('given', 2, 2),         # noqa: F405
+               copy('given', 2), put('given', 0),            # noqa: F405
+               copy('given', 1), put('given', 0)]            # noqa: F405
     bot = robot('Wanderer',                                  # noqa: F405
                 box(ANYBIRD, ANYBOX, ANYBOX, {'kind': 'wildDie'}, ANYNUM, ANYNUM),   # noqa: F405
-                roll(1) + roll(2), trained_on=trained)
+                program, trained_on=trained)
     return gadget('wandering', lid, bot, work)
 
 
@@ -52,14 +51,17 @@ if __name__ == '__main__':
     bot['trainedOn']['holes'][0] = to(STAR)
 
     ABOUT = ('WANDERING\n\n'
-             '[my thing, across, away,\n'
-             ' a die of 3, a -2, a x1/25]\n\n'
-             'Each round, on each step:\n'
+             '[my thing, forward, turn,\n'
+             ' a die of 3, a -2, a x30]\n\n'
+             'Each round, on the turn:\n'
              '  the die lands on it: 1..3\n'
              '  the -2 lands on it: -1..1\n'
-             '  the x1/25 lands on it\n'
-             '  a copy goes to the bird\n\n'
-             'That is all wandering is.')
+             '  the x30 lands on it\n'
+             '  a copy goes to the bird\n'
+             'then a copy of forward goes\n'
+             'to the bird.\n\n'
+             'yaw and forward are the\n'
+             'turtle\'s own words.')
 
     RUN = ('TO RUN IT\n\n'
            'Set Speed to Instant and\n'
@@ -69,9 +71,8 @@ if __name__ == '__main__':
            'table, nowhere in\n'
            'particular.\n\n'
            'Hold the die and type 5:\n'
-           'it wanders further to the\n'
-           'right and down than left\n'
-           'and up. Why?')
+           'it turns right more often\n'
+           'than left, and circles. Why?')
 
     WHY = ('IN THE YARD\n\n'
            'Set the zoo out, carry this\n'
