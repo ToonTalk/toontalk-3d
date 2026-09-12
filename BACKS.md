@@ -1,9 +1,13 @@
 # The back of things
 
-**Status: designed, not built; build plan in `PLAN.md`.** This is the
-spec settled in conversation (Ken Kahn and Claude, 21–24 August 2026). DIVERGENCE.md stays the audit of
-the original; this file is a design of our own — what replaces the
-original's sensor family, and why it is smaller than what it replaces.
+**Status: built, and still growing.** The first sections are the spec
+settled in conversation (Ken Kahn and Claude, 21–24 August 2026); the dated
+sections after them are the record of every round since — what Ken
+reported, what was measured, what changed. The manual (`manual.html`)
+describes the workshop as it is now; this file keeps the history and the
+reasons. DIVERGENCE.md stays the audit of the original; the design here is
+our own — what replaces the original's sensor family, and why it is
+smaller than what it replaces.
 
 ## The problem it solves
 
@@ -97,7 +101,8 @@ be a manual page about the workshop — it should be the workshop's own
 gesture. **A panel's documentation is a notebook**, and notebooks already
 have the right property: what you take from a page is a *copy*. So the
 docs are pages of **live example boxes** — take one out, edit the numbers,
-give it to the bird. Documentation that can be copied and run cannot rot,
+give it to the bird. Documentation that can be copied and run is hard to
+leave rotten -- a stale example fails in your hands rather than in prose --
 and cannot be misread, because the example IS the format.
 
 The page layout is Miki's, from the anima-gadgets notebook of 1999: pairs
@@ -5908,3 +5913,43 @@ the table's edge, says so and keeps rolling until a roll takes it away.
 walk to Mimi and back six times, so in the open the star drifts at a
 robot's pace even at Instant; folded into its panel, as a gadget is, the
 rounds run offstage and it drifts at a frame's pace.
+
+## Contagion through the root, drop hints, how far Marty goes, and a manual that agrees with itself
+
+*Added 12 Sep. Ken, on Astra's review: "go ahead with contagion rule and
+manual update. Happy to experiment with preview and then decide whether to
+keep it. I like the idea of a setting to remove Marty's restriction on
+creating programs for the user. And as you suggest the default should be
+the current setting. Consistent wording is important."*
+
+**The root keeps the approximation.** The root branch of `applyOp`
+returned before the contagion rule could touch it, so a square root of an
+approximate 4 came out an exact 2 while raising the same 4 to a half kept
+the mark. It applies the rule itself now, and a check walks every
+operation with an approximate input and expects the mark on every answer
+-- and still no mark on the root of an exact 4.
+
+**Drop hints.** While you carry something, the tooltip's first line says
+what letting go here will do, in the drop's own readings: rides on this,
+joins this on the right, goes inside the room, × 5 on the number, picks
+letter 2, re-rolls it, is a lesson for the robot. A switch in the more-menu
+(on, for the experiment). Astra's point was that a newcomer should be able
+to predict a gesture; the wiggle said where, not what.
+
+**How far Marty goes.** A setting in How Marty thinks, per person: hints
+and demonstrations only (the default, as before), or he may plan and write
+programs when asked -- as short numbered steps in the workshop's own
+gestures, saying the idea first so the visitor can stop him and build it
+themselves, and never claiming to have built anything. Astra argued the
+boundary should be the learner's chosen level of help rather than "toys
+yes, programs no"; Ken agreed with the current setting as the default.
+
+**A manual that agrees with itself.** Two contradictions Astra found are
+gone: the pads section said a number dropped on a pad shifts a letter (it
+rides, measured), and the pen paragraph said strokes cannot be picked up
+or saved while a later one explained that a trail is a thing (it is). The
+history moved here. This file's opening no longer says "designed, not
+built", and the claim that copyable documentation "cannot rot" now says
+what is true: it is hard to leave rotten. And the manual gained a first
+project -- a robot that counts, eight steps, meeting the lesson, the
+thought and Ruby -- which the suite replays step for step.

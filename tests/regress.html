@@ -2057,6 +2057,79 @@ async function wanderCheck(D, w) {
   return ok;
 }
 
+// CONTAGION: every operation with an approximate input answers with an
+// approximation -- the root included, which used to come out exact when the
+// root came out whole
+async function contagionCheck(D, w) {
+  const four = ['4', '1', true], two = ['2', '1', false], half = ['1', '2', false];
+  const cases = [['+', two], ['-', two], ['*', two], ['/', two], ['mod', two], ['^', two], ['^', half], ['root', two], ['sin', two], ['cos', two]];
+  const bad = [];
+  for (const [op, b] of cases) {
+    const r = D.arith(four, op, b);
+    if (!r || !r.x) bad.push(op + (r ? '=' + r.n + '/' + r.d : '=null'));
+  }
+  const exactRoot = D.arith(['4', '1', false], 'root', two);
+  const stillExact = exactRoot && !exactRoot.x && exactRoot.n === '2';
+  const ok = bad.length === 0 && stillExact;
+  put((ok ? 'PASS' : 'FAIL') + ' approximation is contagious through every operation  (loses-it=' + JSON.stringify(bad) + ' exact-root-still-exact=' + stillExact + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+// DROP HINTS: the tooltip says what letting go will do, using the drop's own readings
+async function dropHintCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'text', text: 'Toon' }, x: -0.6, z: 1.6 },
+    { thing: { kind: 'text', text: 'Talk' }, x: 0.4, z: 1.6 },
+    { thing: { kind: 'number', value: { n: '5', d: '1' }, op: '*' }, x: 1.0, z: 1.9 },
+    { thing: { kind: 'number', value: { n: '3', d: '1' }, op: '+' }, x: -1.2, z: 1.9 },
+    { thing: { kind: 'room' }, x: -1.2, z: 2.2 } ] });
+  await slowSettle(D, 1500);
+  const all = []; for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const toon = all.find(t => t.userData.text === 'Toon'), talk = all.find(t => t.userData.text === 'Talk');
+  const five = all.find(t => t.userData.kind === 'number' && t.userData.op === '*');
+  const three = all.find(t => t.userData.kind === 'number' && t.userData.op === '+');
+  const room = all.find(t => t.userData.kind === 'room');
+  const at = (x, off) => { const p = x.getWorldPosition(new D.THREE.Vector3()); p.x += off; return p; };
+  D.clickThing(talk); await frames(D, 2);
+  const m1 = D.dropMeaning({ kind: 'thing', thing: toon, point: at(toon, 0.15) });
+  const m2 = D.dropMeaning({ kind: 'thing', thing: toon, point: at(toon, 0) });
+  const m3 = D.dropMeaning({ kind: 'thing', thing: room, point: at(room, 0) });
+  D.clickBench(0.4, 1.6); await slowSettle(D, 1000);
+  D.clickThing(five); await frames(D, 2);
+  const m4 = D.dropMeaning({ kind: 'thing', thing: three, point: at(three, 0) });
+  D.clickBench(1.0, 1.9); await slowSettle(D, 1000);
+  const ok = /joins .*right/.test(m1 || '') && /rides on/.test(m2 || '') && /goes inside/.test(m3 || '') && /× 5/.test(m4 || '');
+  put((ok ? 'PASS' : 'FAIL') + ' drop hints say what letting go will do  (' + JSON.stringify([m1, m2, m3, m4]) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE MANUAL'S FIRST PROJECT, step for step: a robot taught to add a 1
+// stops after one round; Ruby loosens its thought and it counts on
+async function firstProjectCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '1', d: '1' }, op: '+' }, x: -0.4, z: 1.7 },
+    { thing: { kind: 'robot' }, x: 0.9, z: 1.5 } ] });
+  await slowSettle(D, 1500);
+  D.speed('inf');
+  const one = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'number');
+  const bot = [0, 1, 2].map(i => D.bench(i)).find(t => t?.userData.kind === 'robot');
+  D.clickThing(one); await frames(D, 3);
+  D.clickBot(bot); await slowSettle(D, 4000);                       // the lesson begins
+  const teaching = D.helperState().mode === 'training';
+  D.teach({ type: 'newNumber' }); await slowSettle(D, 4000);
+  D.teach({ type: 'put', at: { c: 'given', path: [] } }); await slowSettle(D, 4000);
+  D.exit(); await slowSettle(D, 4000);
+  const rewound = String(D.mine()?.userData.value.n) === '1';
+  D.rounds(20); D.run(); await slowSettle(D, 60000);
+  const once = D.roundsNow().runCount === 1 && String(D.mine()?.userData.value.n) === '2';
+  D.rubyOn(true); D.clickCond([]); await frames(D, 5); D.rubyOn(false);
+  const loosened = D.condWords ? /any number|anything/i.test(String(D.condWords())) : true;
+  D.rounds(6); D.run(); await slowSettle(D, 60000);
+  const counted = D.roundsNow().runCount >= 5 && Number(D.mine()?.userData.value.n) >= 7;
+  const ok = teaching && rewound && once && loosened && counted;
+  put((ok ? 'PASS' : 'FAIL') + ' the manual’s first project  (teaching=' + teaching + ' rewound=' + rewound + ' ran-once=' + once + ' loosened=' + loosened + ' counted=' + counted + ' value=' + String(D.mine()?.userData.value.n) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4374,6 +4447,15 @@ async function runOne(D, spec) {
   let wnOK = true;
   try { wnOK = want('wander') ? await wanderCheck(D, frame.contentWindow) : true; }
   catch (e) { wnOK = false; put('FAIL the flamingo wanders  ' + e.message, 'fail'); }
+  let cgOK = true;
+  try { cgOK = want('contagion') ? await contagionCheck(D, frame.contentWindow) : true; }
+  catch (e) { cgOK = false; put('FAIL approximation is contagious  ' + e.message, 'fail'); }
+  let dhOK = true;
+  try { dhOK = want('dropHint') ? await dropHintCheck(D, frame.contentWindow) : true; }
+  catch (e) { dhOK = false; put('FAIL drop hints  ' + e.message, 'fail'); }
+  let fpOK = true;
+  try { fpOK = want('firstProject') ? await firstProjectCheck(D, frame.contentWindow) : true; }
+  catch (e) { fpOK = false; put('FAIL the manual’s first project  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4485,7 +4567,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

@@ -119,7 +119,11 @@ bottom row is worth pressing first on a tablet — it wins back the height the
 browser's own bars take, and asks to stay landscape while you are in it.</p>
 <h3>Handling things</h3>
 <p>You do everything with single clicks: <b>click a thing to pick it up</b>, and
-it follows your pointer; <b>click where you want it</b> to set it down. The row of dark
+it follows your pointer; <b>click where you want it</b> to set it down. While
+you carry something, the tooltip's first line says what letting go here
+will do &mdash; <em>rides on this</em>, <em>joins this on the right</em>,
+<em>goes inside the room</em>, <em>× 5 on the number</em> &mdash; before it
+happens (<b>Drop hints</b>, a switch in the &#8942; menu). The row of dark
 pedestals in a semicircle behind the robot's work area are <b>stacks</b> — endless
 supplies of numbers, pads, boxes, scales, nests, rooms and little robots.
 Click a stack to take the top one.</p>
@@ -159,6 +163,34 @@ exactly as <b>*</b>, <b>/</b> and <b>-</b> do.</p>
 <div class="tip">Everything in the manual's little windows below is the real
 workshop — click things, carry them, try it.</div>
 
+<h3 id="first">Your first project: a robot that counts</h3>
+<p>Ten minutes, and it meets everything that matters. You will teach a robot
+one step, watch it stop, and loosen its thought so it never stops.</p>
+<ol>
+  <li>Click the <b>number stack</b> (the pedestal of 1s behind the table) and
+  set the 1 down on the table.</li>
+  <li>Click the <b>robot stack</b> and set a little robot down on the table.</li>
+  <li>Pick up the 1 and <b>drop it on the robot</b>. The robot grows, steps
+  behind its desk, and its <b>thought bubble</b> opens with the 1 in it: you
+  are teaching it, and everything you make it do now is a step it remembers.</li>
+  <li>In the bubble, click the <b>number stack</b>: the robot takes a fresh 1
+  in its claw. Now click the 1 it was given: the robot drops the new 1 on it,
+  and 1 + 1 = 2.</li>
+  <li>Press <b>Leave thought bubble</b>. The daydream rewinds — the 2 is a 1
+  again — and the robot keeps the lesson: <em>take a 1, add it to what I was
+  given</em>.</li>
+  <li>Press <b>Run what it learned</b>. It does the step once and stops:
+  <em>Ran 1×</em>. Its thought says it is waiting for a <b>1</b>, and what it
+  holds is now a 2, so the thought no longer fits.</li>
+  <li>Wake <b>Ruby the eraser</b> (click her, beside the copier) and click the
+  1 in the thought bubble. It becomes <em>any number</em>.</li>
+  <li>Press <b>Run</b> again. It counts: 3, 4, 5… as long as what it holds is
+  a number, which is always. <b>Pause</b> holds it still.</li>
+</ol>
+<p>That is the whole language in one robot: a lesson is a thing shown once,
+a thought is the shape it waits for, and Ruby turns one example into a rule.
+Everything below is more things to show it.</p>
+
 <h2 id="numbers">Numbers</h2>
 <p>Numbers come off their stack as <b>1</b>s. While holding one, type digits to
 set its value, <kbd>-</kbd> to make it negative, and <kbd>*</kbd> <kbd>/</kbd>
@@ -190,8 +222,8 @@ cleanly: as soon as the last few you typed spell a name, the number takes it.</p
 for a new line, <kbd>Ctrl</kbd>+<kbd>V</kbd> pastes). Drop one pad on
 <em>the left edge</em> of another and it reads first; on <em>the right edge</em>
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
-A whole number dropped on a written pad shifts its first or last letter along
-the alphabet; on a blank pad, the number writes itself out as digits.</p>
+Dropped in the <em>middle</em> of another it rides on it, part of its scene
+(see <a href="#behaviours">Behaviours</a>).</p>
 <p>Typing on a pad <b>adds</b> to what it says, and that is what a robot shown
 it remembers — not the words it ended up with. Train one on a blank pad by
 typing "Ken " and it goes on adding "Ken " each round: "Ken Ken Ken ". A robot
@@ -204,13 +236,11 @@ reading "a". The number is spent saying which letter you meant.</p>
 middle of another does: a score across a field, a count beside a picture. Move
 the pad and the number goes with it; a robot can change it where it sits. A
 riding number shows its <em>value</em> and nothing else — no operation badge
-and no frame — and is kept inside the edges of the pad it is on.
-(It used to shift the pad's first or last letter along the alphabet. That was
-ToonTalk's own idea and, on reflection, not a good one.)</p>
+and no frame — and is kept inside the edges of the pad it is on.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> pick up "Talk" and drop it on the right edge
   of "Toon". Take a 1 from the number stack, type <kbd>2</kbd>, and drop it on a
-  pad's left edge to shift a letter — or drop a pad on it to pick out letter 2.</div>
+  pad: it rides there. Or drop a pad on the 2 to pick out its second letter.</div>
   <iframe loading="lazy" src="toontalk-3d.html?demo=pads"></iframe>
 </div>
 
@@ -747,9 +777,10 @@ because that is you doing it.</p>
 every move leaves a chalk stroke from where it was to where it is, on the
 table or on the field it rides. <b>[set | pen | up]</b> lifts it,
 <b>[set | pen | clear]</b> rubs its lines out, <b>[query | pen | bird]</b>
-answers “down” or “up”. The strokes are chalk, not things: they cannot be
-picked up and they do not save. The turtle answers the words
-<b>pendown</b> and <b>penup</b> posted to its letterbox.</p>
+answers “down” or “up”. A finished trail, from pen down to pen up, is a
+<b>thing</b> of its own (see <em>A trail is a thing</em>, below): Dusty can
+take it, a robot can be shown it, and it is saved with the world. The turtle
+answers the words <b>pendown</b> and <b>penup</b> posted to its letterbox.</p>
 
 <p><b>A turtle, and it is not built in.</b> `examples/behaviours/turtle`
 takes Logo’s two orders — <b>[forward | 3/10]</b> and <b>[right | 90]</b> —
@@ -1165,6 +1196,11 @@ is written here rather than what a model imagines a workshop like this might
 do. If the manual does not say, he is asked to admit he is unsure.</p>
 <p>Marty can also <b>speak and listen</b>. The 🔊 button has him read his
 replies aloud, a little high and quick with a drift between sentences.
+<em>How Marty thinks</em> also sets <b>how far he goes</b>: <em>hints and
+demonstrations only</em> keeps the building yours (the default); <em>may plan
+and write programs when asked</em> lets him lay out a program step by step in
+the workshop's own gestures, saying the idea first so you can stop him and
+build it yourself. He never builds it for you either way.
 <em>How Marty thinks</em> lets you pick which of your browser's voices he uses
 — the list puts the ones that speak your language first, since a voice meant
 for another language reads English with an accent. Left alone he takes a

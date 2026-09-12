@@ -263,7 +263,11 @@ browser's own bars take, and asks to stay landscape while you are in it.
 
 Handling things
 You do everything with single clicks: click a thing to pick it up, and
-it follows your pointer; click where you want it to set it down. The row of dark
+it follows your pointer; click where you want it to set it down. While
+you carry something, the tooltip's first line says what letting go here
+will do — rides on this, joins this on the right,
+goes inside the room, × 5 on the number — before it
+happens (Drop hints, a switch in the ⋮ menu). The row of dark
 pedestals in a semicircle behind the robot's work area are stacks — endless
 supplies of numbers, pads, boxes, scales, nests, rooms and little robots.
 Click a stack to take the top one.
@@ -308,6 +312,41 @@ exactly as *, / and - do.
 Everything in the manual's little windows below is the real
 workshop — click things, carry them, try it.
 
+Your first project: a robot that counts
+Ten minutes, and it meets everything that matters. You will teach a robot
+one step, watch it stop, and loosen its thought so it never stops.
+
+- Click the number stack (the pedestal of 1s behind the table) and
+set the 1 down on the table.
+
+- Click the robot stack and set a little robot down on the table.
+
+- Pick up the 1 and drop it on the robot. The robot grows, steps
+behind its desk, and its thought bubble opens with the 1 in it: you
+are teaching it, and everything you make it do now is a step it remembers.
+
+- In the bubble, click the number stack: the robot takes a fresh 1
+in its claw. Now click the 1 it was given: the robot drops the new 1 on it,
+and 1 + 1 = 2.
+
+- Press Leave thought bubble. The daydream rewinds — the 2 is a 1
+again — and the robot keeps the lesson: take a 1, add it to what I was
+given.
+
+- Press Run what it learned. It does the step once and stops:
+Ran 1×. Its thought says it is waiting for a 1, and what it
+holds is now a 2, so the thought no longer fits.
+
+- Wake Ruby the eraser (click her, beside the copier) and click the
+1 in the thought bubble. It becomes any number.
+
+- Press Run again. It counts: 3, 4, 5… as long as what it holds is
+a number, which is always. Pause holds it still.
+
+That is the whole language in one robot: a lesson is a thing shown once,
+a thought is the shape it waits for, and Ruby turns one example into a rule.
+Everything below is more things to show it.
+
 ## Numbers
 
 Numbers come off their stack as 1s. While holding one, type digits to
@@ -340,8 +379,8 @@ Pads are paper for words. Type on a held pad to write (Enter
 for a new line, Ctrl+V pastes). Drop one pad on
 the left edge of another and it reads first; on the right edge
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
-A whole number dropped on a written pad shifts its first or last letter along
-the alphabet; on a blank pad, the number writes itself out as digits.
+Dropped in the middle of another it rides on it, part of its scene
+(see Behaviours).
 
 Typing on a pad adds to what it says, and that is what a robot shown
 it remembers — not the words it ended up with. Train one on a blank pad by
@@ -358,12 +397,10 @@ middle of another does: a score across a field, a count beside a picture. Move
 the pad and the number goes with it; a robot can change it where it sits. A
 riding number shows its value and nothing else — no operation badge
 and no frame — and is kept inside the edges of the pad it is on.
-(It used to shift the pad's first or last letter along the alphabet. That was
-ToonTalk's own idea and, on reflection, not a good one.)
 
 Try it: pick up "Talk" and drop it on the right edge
 of "Toon". Take a 1 from the number stack, type 2, and drop it on a
-pad's left edge to shift a letter — or drop a pad on it to pick out letter 2.
+pad: it rides there. Or drop a pad on the 2 to pick out its second letter.
 
 Pictures
 A pad's face can carry a picture as well as words. Drag an image file
@@ -942,9 +979,10 @@ The pen. [set | pen | down] makes a thing draw as it moves:
 every move leaves a chalk stroke from where it was to where it is, on the
 table or on the field it rides. [set | pen | up] lifts it,
 [set | pen | clear] rubs its lines out, [query | pen | bird]
-answers “down” or “up”. The strokes are chalk, not things: they cannot be
-picked up and they do not save. The turtle answers the words
-pendown and penup posted to its letterbox.
+answers “down” or “up”. A finished trail, from pen down to pen up, is a
+thing of its own (see A trail is a thing, below): Dusty can
+take it, a robot can be shown it, and it is saved with the world. The turtle
+answers the words pendown and penup posted to its letterbox.
 
 A turtle, and it is not built in. `examples/behaviours/turtle`
 takes Logo’s two orders — [forward | 3/10] and [right | 90] —
@@ -1367,6 +1405,11 @@ do. If the manual does not say, he is asked to admit he is unsure.
 
 Marty can also speak and listen. The 🔊 button has him read his
 replies aloud, a little high and quick with a drift between sentences.
+How Marty thinks also sets how far he goes: hints and
+demonstrations only keeps the building yours (the default); may plan
+and write programs when asked lets him lay out a program step by step in
+the workshop's own gestures, saying the idea first so you can stop him and
+build it yourself. He never builds it for you either way.
 How Marty thinks lets you pick which of your browser's voices he uses
 — the list puts the ones that speak your language first, since a voice meant
 for another language reads English with an accent. Left alone he takes a
@@ -2817,7 +2860,11 @@ function applyOp(a, op, b) {
   if (op === 'root') {
     if (b.d !== 1n) return null;                   // a whole root, or none
     r = rootRat(a, b.n);
-    return r && !tooBig(r) ? r : null;
+    if (!r || tooBig(r)) return null;
+    // CONTAGION HOLDS HERE TOO: the square root of an approximate 4 is an
+    // approximate 2, not an exact one (Astra's review found this branch
+    // returning before the rule below could touch it)
+    return (a.x || b.x) && !r.x ? rat(r.n, r.d, true) : r;
   }
   // CONTAGION: touch an approximation and the answer is an approximation.
   const soft = !!a.x || !!b.x;
@@ -4867,6 +4914,12 @@ const nbKey = () => (currentUser ? NB_KEY + '.' + currentUser : NB_KEY);
 const HINT_SAY = 'tt3d.hint-say';
 const HINT_VOICE = 'tt3d.hint-voice';
 const MARTY_VOICE = 'tt3d.marty-voice';
+// HOW FAR MARTY GOES, per person: "guide" (hints and demonstrations; the
+// building stays the visitor's) or "programs" (he may plan a program when
+// asked, step by step). Astra's review argued the boundary should be the
+// learner's chosen level of help; Ken agreed, with guide as the default.
+const MARTY_HELP = 'tt3d.marty-help';
+const martyHelp = () => (typeof mineGet === 'function' && mineGet(MARTY_HELP)) || 'guide';
 const MARTY_VOICE_NAME = 'tt3d.marty-voice-name';
 const MINE_KEYS = [HINT_SAY, HINT_VOICE, MARTY_VOICE, MARTY_VOICE_NAME];
 const mineKey = (base) => (currentUser ? base + '.' + currentUser : base);
@@ -18200,7 +18253,67 @@ function wiggleTargetOf(t) {
   }
   return null;
 }
+// WHAT A DROP WILL MEAN, before it lands (Astra's review: "whether a
+// newcomer can predict what a gesture will mean" -- the wiggle says where
+// a click lands, not what it does). The same readings the drop itself uses:
+// the pad's zones, whether the thing in hand is a behaviour, what the target
+// is. A line at the top of the tooltip; a switch in the more-menu.
+let dropHints = true;
+try { const v = localStorage.getItem('nano-toontalk.drophints'); if (v != null) dropHints = v === '1'; } catch {}
+function dropMeaning(t) {
+  const H = inHand();
+  if (!H || !t || mode === 'replay') return null;
+  const hk = H.userData.kind;
+  const name = (x) => panelName(x);
+  if (t.kind === 'bench') {
+    if (hk === 'box' || hk === 'text') {
+      const j = t.point ? edgeJoinTarget({ x: t.point.x, z: t.point.z }) : null;
+      if (j) return `joins the ${j.side === 'L' ? 'left' : 'right'} edge of ${name(j.thing)}`;
+    }
+    return yardIn ? 'stands here on the grass' : 'stands here on the table';
+  }
+  if (t.kind === 'hole') {
+    const box = t.box, occ = box?.userData?.holes?.[t.index]?.thing;
+    if (box?.userData?.kind === 'scale') return occ ? `goes into the ${t.index ? 'right' : 'left'} pan with ${name(occ)}` : `goes into the ${t.index ? 'right' : 'left'} pan`;
+    return occ ? `lands on ${name(occ)} in hole ${t.index + 1}` : `goes into hole ${t.index + 1}`;
+  }
+  if (t.kind !== 'thing' || !t.thing) return null;
+  const X = t.thing, xk = X.userData.kind;
+  if (isGadget(H)) {
+    if (xk === 'text' && t.point && padZone(X, t.point) === 'M') return `rides on ${name(X)} as part of its scene`;
+    return `gives ${name(X)} this behaviour`;
+  }
+  if (xk === 'room') return `goes inside ${name(X)}`;
+  if (xk === 'robot') return X.__bot?.program?.length ? `is given to ${name(X)} to work on` : `is a lesson for ${name(X)}`;
+  if (xk === 'bird') return `is carried by ${name(X)} to her nest`;
+  if (xk === 'nest') return `lands on ${name(X)}`;
+  if (xk === 'notebook') return 'is filed on the page';
+  if (xk === 'text' && hk === 'text') {
+    const z = t.point ? padZone(X, t.point) : 'R';
+    return z === 'M' ? `rides on ${name(X)}` : `joins ${name(X)} on the ${z === 'L' ? 'left, reading first' : 'right, reading last'}`;
+  }
+  if (xk === 'text' && hk === 'number') return `rides on ${name(X)}`;
+  if (xk === 'number' && hk === 'text') return `picks letter ${X.userData.value?.n ?? '?'} out of the words`;
+  if (xk === 'number' && hk === 'die') return `re-rolls ${name(X)}`;
+  if (xk === 'number' && hk === 'number') {
+    const read = OP_READS[H.userData.op || '+'];
+    return read ? `${read(ratShort(H.userData.value))} — on ${name(X)}` : `combines with ${name(X)}`;
+  }
+  if (xk === 'sound' && hk === 'number') return `${(OP_READS[H.userData.op || '+'] || (() => 'acts'))(ratShort(H.userData.value))} — on the sound`;
+  if (xk === 'scale') return `goes into the ${t.point && sideOf(X, t.point) === 'L' ? 'left' : 'right'} pan`;
+  if (xk === 'box') return `goes into ${name(X)}`;
+  if (xk === 'model' && hk === 'text' && t.point) return `rides on ${name(X)}`;
+  return null;
+}
 function tipFor(t) {
+  const base = tipForInner(t);
+  if (!dropHints || !inHand()) return base;
+  let m = null;
+  try { m = dropMeaning(t); } catch { m = null; }
+  if (!m) return base;
+  return 'Drop → ' + m + (base ? '\n' + base : '');
+}
+function tipForInner(t) {
   if (!t) return null;
   const TIP = inHand();
   const training = mode === 'training';
@@ -19131,6 +19244,19 @@ loadModel('robot_v4.glb', (gltf) => {
     };
     menu.appendChild(cb);
     refreshCam();
+    // what a drop will mean, said at the top of the tooltip before it lands
+    const dh = document.createElement('button');
+    dh.id = 'dropHintBtn';
+    dh.title = 'Drop hints — while you carry something, the tooltip says first what letting go here will do: rides on, joins, goes inside, gives its behaviour.';
+    const refreshDh = () => { dh.textContent = '\u{1F449} Drop hints: ' + (dropHints ? 'on' : 'off'); };
+    dh.onclick = () => {
+      dropHints = !dropHints; refreshDh();
+      try { localStorage.setItem('nano-toontalk.drophints', dropHints ? '1' : '0'); } catch {}
+      say(dropHints ? 'Drop hints on — while you carry something, the tooltip says first what letting go will do.'
+                    : 'Drop hints off.');
+    };
+    menu.appendChild(dh);
+    refreshDh();
     // WHAT IS HERE: Marty, the helpers, the stacks and the back door, each
     // with a box to tick -- a general way to take anything out of the
     // workshop when it is not wanted, and to bring it back (Ken). Remembered
@@ -21226,6 +21352,9 @@ async function martyThink(q) {
   const sysAt = (budget) => {
     const manual = manualFor(whole, q, budget);
     return MARTY_SYSTEM
+      + (martyHelp() === 'programs'
+        ? '\nTHIS VISITOR HAS ASKED FOR MORE HELP: the rule about never writing programs is lifted for them. When they ask for a program, you MAY plan one — as short numbered steps in the workshop’s own gestures (take a number from the stack, drop it on the robot, in the thought bubble click the copier…), naming which robot does what and why — and still say the idea first, in a sentence, so they can stop you and build it themselves. Two different ways of doing the same thing, compared, is a good answer. Never claim to have built anything: you write, they build.'
+        : '')
       + (currentUser ? `\nThe person you are talking with is called ${currentUser}. Use their name now and then where it comes naturally — a greeting, a well done, a nudge — and not in every reply.` : '')
       + (yardIn ? '\nThe visitor is OUTSIDE, in the yard behind the workshop: open ground where things stand where they are put (a village, a zoo). What is listed as on the table stands on the grass; the table itself waits indoors. The green door on the left leads back in.' : '')
       + martyActivityText()
@@ -22082,6 +22211,10 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '<div id="martyNano" style="margin-top:6px;display:none"></div>'
   + '<div id="martyHere" style="margin-top:6px;display:none"></div>'
+  + '<div style="margin-top:8px">Help: <select id="martyHelp" title="How far Marty goes. Hints and demonstrations keep the building yours; the other setting lets him plan a program when asked, step by step, in the workshop’s own gestures." '
+  + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
+  + '<option value="guide">hints and demonstrations only</option>'
+  + '<option value="programs">may plan and write programs when asked</option></select></div>'
   + '<div style="margin-top:8px">Voice: <select id="martyVoiceSel" '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit"></select></div>'
   + '<input id="martyKey" type="text" autocomplete="off" spellcheck="false" placeholder="API key\u2026" '
@@ -22543,6 +22676,18 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   };
   // Dictation, where the browser offers it -- and where it does not, the
   // button simply is not shown.
+  {
+    const hs = document.getElementById('martyHelp');
+    if (hs) {
+      hs.value = martyHelp();
+      hs.onchange = () => {
+        mineSet(MARTY_HELP, hs.value);
+        martySay(hs.value === 'programs'
+          ? 'All right — ask me for a program and I will plan it with you, step by step. You still build it.'
+          : 'Back to hints and demonstrations: the building is yours.');
+      };
+    }
+  }
   const sel = document.getElementById('martyVoiceSel');
   const fillVoices = () => {
     const all = speechSynthesis.getVoices?.() || [];
@@ -22860,6 +23005,9 @@ window.__nano = {
   get doorCarrying() { return doorCarry; },
   resetDoors() { doorPosesAll.indoors = null; doorPosesAll.outside = null; applyPlaceDoors(); },
   get heldTilt() { return heldTilt; },
+  arith(a, op, b) { const r = applyOp(rat(BigInt(a[0]), BigInt(a[1]), !!a[2]), op, rat(BigInt(b[0]), BigInt(b[1]), !!b[2])); return r ? { n: String(r.n), d: String(r.d), x: !!r.x } : null; },
+  dropMeaning(t) { return dropMeaning(t); },
+  martyHelp,
   queueInfo() {
     const name = (st) => st ? (st.__name || st.__label || (st.update ? 'anim' : st.end ? 'end' : 'step') + ':' + (st.dur ?? '?')) : null;
     return { current: name(current), tCur, queue: queue.length, next: queue.slice(0, 4).map(name), busy, mode,
