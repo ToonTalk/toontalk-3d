@@ -6091,3 +6091,48 @@ third, and its name plate was scaled back up to stay readable -- so the
 plate covered the model face-on, and turned edge-on left a model too small
 to notice. In a hole a model now shows itself and not its plate; the
 tooltip still names it, and the plate is back when it comes out.
+
+## The crocodile on the rim, and a panel dropped in a hole
+
+*Added 12 Sep. Ken: "crocodile in hole still not fixed. I still couldn't
+train a robot to put a behavior on the crocodile. I was able to obtain
+both panels but when I picked up one I couldn't put it back or onto
+another platform. And when I dropped the panel in a box hole it
+disappeared. And I couldn't drop a panel in a box hole even when not
+training."*
+
+**The crocodile.** Measured: the model was shrunk to a third and set on
+the pocket FLOOR, 0.05 below the rim -- and the crocodile is 0.017 tall,
+so from every angle but straight down the pocket wall hid it. A model in
+a hole now rests on the rim, as boxes, sounds and nests already did.
+Measured: its underside is at the rim; the screenshot shows it.
+
+**Dropping the panel on the crocodile.** Reproduced with real pointer
+events in the lesson: the wandering behaviour's panel, dropped on the
+crocodile in its hole, DID bind the behaviour to the crocodile -- and
+then the tray went to the user's bench, out of the robot's area and out
+of the lesson's camera. That is what "disappeared" was. In a lesson or a
+run the tray now lands on a free work spot; by hand it goes back beside
+its thing. The lesson also records "put it in hole 2", so the trained
+robot gives the crocodile the behaviour by that step alone -- no second
+panel needed.
+
+**Dropping a panel in an empty hole.** By hand it was refused with a
+message about the bench; in a lesson it became a step that ABORTED,
+which ended the lesson with the tray in your hand. Now: by hand, "A panel
+does not go in a hole -- it goes back beside its thing. Put the thing
+itself in, or drop the panel on a thing to give it the behaviour inside";
+in a lesson the same words, and no step is recorded. By hand, the panel
+dropped on a thing sitting in a hole binds now, the same as on the table
+(it used to be refused there too).
+
+**Putting the panel back.** With real clicks, at normal speed and with
+the smart camera on, the tray taken off a work spot went back onto that
+spot, onto another, and onto the other panel (nesting whole) every time;
+this part is not reproduced. If it happens again, a screenshot of the
+moment would help.
+
+**Found on the way.** A pad dropped on its own open panel went INSIDE
+its own panel -- a loop that every save, undo and copy walked until the
+stack ran out. Refused now: "That is its own panel -- a thing does not go
+inside itself."

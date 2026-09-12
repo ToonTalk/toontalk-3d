@@ -2263,6 +2263,68 @@ async function panelStepCheck(D, w) {
   return ok;
 }
 
+// A PANEL AND A HOLE. In a lesson, the behaviour's panel dropped on the
+// crocodile in its hole binds the behaviour to the crocodile and the tray
+// lands on a work spot (not on the bench, where the lesson cannot see it).
+// By hand, the same drop binds too; a panel dropped in an EMPTY hole is
+// refused and set back on the table. And a model in a hole rests on the rim.
+async function panelHoleCheck(D, w) {
+  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const gad = zoo.yard.bench.find(b => b.thing.gadget).thing;
+  const croc = zoo.yard.bench.find(b => b.thing.label === 'crocodile').thing;
+  const name = (o) => !o ? '.' : o.userData.panel ? 'P' : (o.userData.label || o.userData.text || o.userData.kind);
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+    bench: [{ thing: { kind: 'box', holes: [gad, croc, null] }, x: -0.4, z: 1.7 }, { thing: { kind: 'robot' }, x: 0.9, z: 1.5 }] });
+  await slowSettle(D, 2000); D.speed('inf');
+  const all = []; for (let i = 0; i < 6; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const given = all.find(t => t.userData.kind === 'box'), bot = all.find(t => t.userData.kind === 'robot');
+  // the crocodile rests on the rim of its hole
+  const crocNode = given.userData.holes[1].thing;
+  D.scene.updateMatrixWorld(true);
+  const bb = new D.THREE.Box3().setFromObject(crocNode);
+  const rim = given.userData.holes[1].anchor.getWorldPosition(new D.THREE.Vector3()).y + 0.045;
+  const onRim = bb.min.y >= rim - 0.005;
+  // the lesson: take the behaviour, take out its panel, drop the panel on the crocodile
+  D.clickThing(given); await frames(D, 3); D.clickBot(bot); await slowSettle(D, 4000);
+  D.teach({ type: 'take', at: { c: 'given', path: [0] } }); await slowSettle(D, 4000);
+  D.openHeldPanel(); await slowSettle(D, 4000);
+  const tray = D.scratch()[0];
+  // the behaviour back in its hole; the tray off its spot; the tray onto the crocodile
+  D.teach({ type: 'put', at: { c: 'given', path: [0] } }); await slowSettle(D, 4000);
+  const traySpot = Object.values(D.stations).find(s2 => s2.kind === 'scratch' && s2.occupant === tray);
+  D.clickRaw({ kind: 'station', id: traySpot.id }); await slowSettle(D, 4000);
+  D.teach({ type: 'put', at: { c: 'given', path: [1] } }); await slowSettle(D, 6000);
+  const gadNode = given.userData.holes[0].thing;
+  const boundInLesson = !!gadNode?.userData.boundTo && gadNode.userData.boundTo === crocNode.userData.lid;
+  const trayOnSpot = !!tray && Object.values(D.stations).some(s2 => s2.kind === 'scratch' && s2.occupant === tray);
+  const trayOnBench = !!tray && tray.parent === D.benchRoot;
+  D.exit(); await slowSettle(D, 4000);
+  // by hand: the panel dropped on a thing in a hole binds; dropped in an empty hole it is refused
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+    bench: [{ thing: gad, x: -0.9, z: 1.7 }, { thing: { kind: 'box', holes: [croc, null] }, x: 0.4, z: 1.7 }] });
+  await slowSettle(D, 2000);
+  const all2 = []; for (let i = 0; i < 6; i++) { const t = D.bench(i); if (!t) break; all2.push(t); }
+  const pad = all2.find(t => t.userData.gadget), box2 = all2.find(t => t.userData.kind === 'box');
+  D.clickThing(pad); await frames(D, 3); D.openHeldPanel(); await slowSettle(D, 4000);
+  const tray2 = all2.concat([0, 1, 2, 3, 4, 5, 6].map(i => D.bench(i))).filter(Boolean).find(t => t.userData.panel && t.__owner === pad);
+  // the pad, still in hand, dropped on its OWN tray: refused, and it stays out of its panel
+  D.clickThing(tray2); await slowSettle(D, 3000);
+  const insideSelf = (() => { for (let q = pad.parent; q; q = q.parent) if (q === tray2) return true; return false; })();
+  const ownPanelRefused = !insideSelf && pad.parent === D.benchRoot;
+  if (pad.parent !== D.benchRoot) { D.clickBench(-1.2, 1.9); await slowSettle(D, 3000); }
+  D.clickThing(tray2); await frames(D, 3);
+  const hint0 = D.hintText ? D.hintText() : w.document.getElementById('hint').textContent;
+  D.clickHole(box2, 1); await slowSettle(D, 3000);
+  const hintEmpty = w.document.getElementById('hint').textContent;
+  const refusedEmpty = /does not go in a hole/i.test(hintEmpty) && tray2.parent === D.benchRoot && !box2.userData.holes[1].thing;
+  D.clickThing(tray2); await frames(D, 3); D.clickHole(box2, 0); await slowSettle(D, 3000);
+  const croc2 = box2.userData.holes[0].thing;
+  const boundByHand = !!pad.userData.boundTo && pad.userData.boundTo === croc2?.userData.lid && tray2.parent === D.benchRoot;
+  const ok = onRim && boundInLesson && trayOnSpot && !trayOnBench && refusedEmpty && boundByHand && ownPanelRefused;
+  put((ok ? 'PASS' : 'FAIL') + ' a panel and a hole  (crocodile-on-rim=' + onRim + ' lesson-bound=' + boundInLesson + ' tray-on-work-spot=' + trayOnSpot + ' tray-on-bench=' + trayOnBench + ' empty-hole-refused=' + refusedEmpty + ' bound-by-hand=' + boundByHand + ' own-panel-refused=' + ownPanelRefused + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4601,6 +4663,9 @@ async function runOne(D, spec) {
   let psOK = true;
   try { psOK = want('panelStep') ? await panelStepCheck(D, frame.contentWindow) : true; }
   catch (e) { psOK = false; put('FAIL a robot gives a thing a behaviour  ' + e.message, 'fail'); }
+  let phOK = true;
+  try { phOK = want('panelHole') ? await panelHoleCheck(D, frame.contentWindow) : true; }
+  catch (e) { phOK = false; put('FAIL a panel and a hole  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4712,7 +4777,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
