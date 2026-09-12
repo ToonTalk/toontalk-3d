@@ -6177,3 +6177,19 @@ panel's contents are centred on its floor now.
 
 **The box.** Typing a digit on a held box makes a new box; the words read
 the old one's count. They say the count typed.
+
+## A way back from a panel entered in the yard, and Ruby on the grass
+
+*Added 12 Sep. Ken: "I can't go back inside after entering a panel while
+in the yard." And: "I think I was wrong about Ruby since you can train a
+robot while in the yard so it should say 'Ruby (inside only)'."*
+
+**The door.** Measured: walking into a panel from the grass, the tall exit
+door was hidden -- it was switched off whenever the yard was open, because
+the yard itself has no exit door (its way back is the back door). Only the
+yard is without one now; a house or panel entered from the grass shows the
+door, its sign reads "Back to the yard", and it leads there.
+
+**Ruby.** She stayed indoors when the yard was open ("no need for her in
+the yard"). A robot can be trained on the grass, and a thought is where
+she works, so she comes out too, and the list of what is here calls her plain "Ruby".
