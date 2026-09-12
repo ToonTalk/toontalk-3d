@@ -12,6 +12,8 @@
 #   [move  | across   | n]   [move | away | n]   [move | position | [dx|dz]]
 #   [query | across   | bird]                    [query| position | bird]
 #   [listen| position | bird]  [listen | edge | bird]  [listen | touch | bird]
+#   [listen| touches  | bird]  (a scene: every pair of riders that meets)
+#   [set   | shown | no]   [vanish]   [drop | thing | [across | away]]
 #   [set   | background | grey]  [set | colour | white]  [set | font | sans]
 #   [set   | width | 2]          [set | height | 1/3]
 import sys, os
@@ -56,6 +58,40 @@ def msg(*words):
 
 def look(**kw):
     return kw
+
+
+# --- the touch reading, four holes since 12 Sep 2026 -------------------------
+#   [what I ran into | which side of me | its name | which way, [across|away]]
+def touch_reading(thing=None, side='none', name='nothing', normal=(0, 0)):
+    return box(thing or txt('nothing'), txt(side), txt(name),   # noqa: F405
+               box(num(normal[0]), num(normal[1])))              # noqa: F405
+
+
+def touch_nest(lid, nid, thing=None, side='none', name='nothing', empty=False):
+    """A thing's touch channel. empty=True is the dozing idiom: the team
+    sleeps until a real announcement arrives."""
+    pile = [] if empty else [touch_reading(thing, side, name)]
+    return {'kind': 'nest', 'id': nid, 'guid': 'evt-' + lid + '#touch',
+            'hasEgg': False, 'label': 'touching', 'pile': pile}
+
+
+def touch_cond(side=None, name=None):
+    """A thought about the reading: any bird (or anything), this side, this
+    name -- each None for never-mind."""
+    return box(WILD, txt(side) if side else WILDTEXT,            # noqa: F405
+               txt(name) if name else WILDTEXT, WILD)            # noqa: F405
+
+
+def touches_nest(lid, nid):
+    """A scene's own channel: every pair of riders that starts touching, as
+    [bird | name | bird | name | normal]. Starts empty -- a referee dozes."""
+    return {'kind': 'nest', 'id': nid, 'guid': 'evt-' + lid + '#touches',
+            'hasEgg': False, 'label': 'touches', 'pile': []}
+
+
+def touches_cond(name_a=None, name_b=None):
+    return box(WILD, txt(name_a) if name_a else WILDTEXT,        # noqa: F405
+               WILD, txt(name_b) if name_b else WILDTEXT, WILD)  # noqa: F405
 
 
 def pad(text, **look_kw):

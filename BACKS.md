@@ -6193,3 +6193,69 @@ door, its sign reads "Back to the yard", and it leads there.
 **Ruby.** She stayed indoors when the yard was open ("no need for her in
 the yard"). A robot can be trained on the grass, and a thought is where
 she works, so she comes out too, and the list of what is here calls her plain "Ruby".
+
+## Who ran into whom, a scene's own referee, and Space Invaders with its back readable
+
+*Added 12 Sep. Ken: "Let's postpone the broker house. Please add the 3
+enrichments. One thing I'd like to address is that the anima-gadgets of
+original ToonTalk were much easier to see... How can we make a space
+invader game that when the panel is obtained is readable as a collection
+of gadgets and that gadgets are easy to inspect as in the attached
+photos? Try to make a space invader game example and see how inspectable
+you can make it."*
+
+**The touch reading grew.** `[listen | touch | bird]` hands over four
+holes now: the bird to what was run into, the side, the NAME of the thing
+(its name, or what kind of thing it is), and which way it is, an
+`[across | away]` box of length one from your middle to the other's. The
+name is the original's "Touching Who?" matched by an erased picture, as a
+word in a hole: a robot trained on "bullet" fires for bullets, and Ruby
+loosens it. The normal is what a bounce that is not square-on needs. A
+reading saved with two holes grows the other two on the way in, and a
+robot's thought the two wildcards, so every bounce trained before still
+matches (the pong ball's thoughts, measured).
+
+**A scene's own listener.** `[listen | touches | bird]` sent to a pad with
+things riding on it announces every pair of riders that starts touching,
+once, as `[bird | name | bird | name | normal]`: what met what, with no
+behaviour on either. That is the house every object was going to report
+to, done by the workshop itself and costing nothing until asked; the
+game's referee card keeps the score with it.
+
+**Three the original's pictures had.** `[set | shown | no]` and `yes`;
+`[vanish]`, gone for good the way a vacuumed thing goes (nothing keeps it
+-- Dusty's bag is the undo for a gesture of yours); and `[drop | thing |
+[across | away]]`, the thing in the message set down beside my thing, on
+its field, arriving with its own behaviours switched on. That is how the
+ship fires: a copy of the bullet kept in its work box, dropped in the
+message.
+
+**Space Invaders (examples/games).** Eight invaders, a ship, a dark field,
+a score. Every picture is a pad with its behaviours on its BACK as cards
+whose faces are sentences -- "I explode when a bullet hits me: a bang, and
+I vanish." -- the way the original's Space Behaviours laid its gadgets
+out. Point at an invader and press the gear: its panel comes out with the
+two cards standing on it, magnified to read; Enter on the panel looks
+straight down at it, framed like a page. Point at a card there and press
+the gear again: the card's own panel comes out beside, with its robot at
+the box it works on, and Enter there looks from the front. The knob folds
+each one home. Measured end to end: SPACE starts ten parts, the arrows
+steer, the up arrow fires, the bullet flies, meets an invader, both
+vanish, and the score reads 1.
+
+**What had to change to make it readable.** A panel dropped on a panel
+used to nest as a miniature tray -- bird, knob and plaque and all; now the
+tray folds into its card first and the card alone goes in. A panel's
+contents are measured by what can be SEEN (a folded tray is invisible and
+was still solid to the fit, which put the cards at the back of the floor)
+and a page of cards is magnified to fill its floor; a card's own back,
+with a robot on it, keeps toy scale so the robot never looms. The gear
+works on what the pointer is over, not only on what is held, and in an
+Enter view the flip goes on into the card's panel.
+
+**A hang, found on the way.** Checking the waiters serialised any open
+panel in a dozing robot's work box, which swapped worlds and rebuilt the
+very Set being iterated -- for ever. The ship's fire card, dozing on the
+keyboard with the switched-on bullet in its box, hung the whole workshop
+at its first turn. The loop walks a snapshot now, and a gadget sitting in
+a hole is a thing to work on, not a part to switch on.

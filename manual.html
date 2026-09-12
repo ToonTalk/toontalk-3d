@@ -501,7 +501,18 @@ lesson or by hand &mdash; put the thing itself in, or drop the panel on a
 thing. <b>The knob is a step too:</b> in a lesson, the knob on a panel
 standing on a work spot records "put away the panel on that spot, back
 inside its thing", and the robot does it in a run wherever the thing is by
-then. A panel dropped on a panel nests whole and sits on the host's floor.</p>
+then. A panel dropped on a panel goes in as its <b>card</b>: the tray folds
+into the card first, and the card stands on the host's floor with its
+sentence readable.</p>
+<p><b>Reading a thing's back.</b> Point at anything and press ⚙ with an
+empty hand: its panel comes out. On a panel that groups behaviours, the
+cards stand magnified on its floor, like the gadgets on the back of one of
+the original ToonTalk's pictures; press <kbd>Enter</kbd> while pointing at
+the panel and the camera looks straight down at it, framed like a page.
+Point at a card there and press ⚙ again: the card's own panel comes out
+beside, its robot at the box it works on, and Enter there looks from the
+front. The knob folds each one home. <em>examples/games/space-invaders</em>
+is built to be read this way.</p>
 <p>The little desks beside the robot are its <b>work spots</b> — its own
 scratch space, cleared onto the table when it finishes, so nothing left there
 is ever lost. A spot sizes what you set on it the way a hole does: something
@@ -679,11 +690,42 @@ interesting question, which is what to do when it hits something.</p>
 which edge of the table — or of its field — it is against:
 <em>left</em>, <em>right</em>, <em>near</em>, <em>far</em>, or <em>none</em>.
 A <b>reading</b>, so it is never empty</td></tr>
-<tr><td><code>[listen | touch | bird]</code></td><td>a box of two:
-<code>[a live bird to what it has run into | which side of it that is on]</code>,
-or <code>[nothing | none]</code>. The <em>side</em> is the half that makes it
-usable: run into something on your <em>left</em> and the thing to change is
-which way you are going across, not away. Also a reading</td></tr>
+<tr><td><code>[listen | touch | bird]</code></td><td>a box of four:
+<code>[a live bird to what it has run into | which side of it that is on |
+its name | which way it is]</code>, or <code>[nothing | none | nothing |
+[0 | 0]]</code>. The <em>side</em> is what makes a plain bounce writable: run
+into something on your <em>left</em> and the thing to change is which way you
+are going across, not away. The <em>name</em> is the thing's name, or what
+kind of thing it is &mdash; so a robot can be trained on "when I touch a
+<em>bullet</em>", the way the original's "Touching Who?" matched an erased
+picture, and Ruby loosens it to anything. The <em>normal</em> is an
+<code>[across | away]</code> box, length one, pointing from your middle to
+the other thing's: two round things meet along exactly that line, so a
+bounce that is not square-on has the number it needs. Also a reading</td></tr>
+<tr><td><code>[listen | touches | bird]</code></td><td>sent to a <b>scene</b>
+&mdash; a pad with things riding on it &mdash; every pair of its riders that
+<em>starts</em> touching is announced once, as <code>[bird | name | bird |
+name | normal]</code>: what met what, with no behaviour on either. That is
+the referee's reading, for a score or a rule about the whole game; the
+things themselves keep their own <code>touch</code>. The nest keeps the last
+eight, oldest on top</td></tr>
+</table>
+<p>And three the original's pictures had, for things that come and go:</p>
+<table>
+<tr><th>message</th><th>what it does</th></tr>
+<tr><td><code>[set | shown | no]</code></td><td>out of sight and out of the way
+&mdash; nothing can run into it; <code>[set | shown | yes]</code> brings it
+back where it was, <code>[query | shown | bird]</code> asks</td></tr>
+<tr><td><code>[vanish]</code></td><td>gone for good: off its field or the
+table, its behaviours at rest, shrinking away where it stood. A bullet at
+the edge, an invader that was hit. Nothing keeps it &mdash; Dusty's bag is the
+undo for a gesture of <em>yours</em></td></tr>
+<tr><td><code>[drop | <i>a thing</i> | [across | away]]</code></td><td>the
+thing in the message is set down beside <em>my thing</em>, that far across and
+away from it &mdash; on the same field if it rides one &mdash; and it arrives
+<b>working</b>, its own behaviours switched on. That is how a ship fires: its
+robot copies the bullet from its work box, drops the copy in the message,
+and sends it</td></tr>
 </table>
 
 <h2 id="behaviours">Behaviours</h2>

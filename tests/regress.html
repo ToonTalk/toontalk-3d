@@ -2356,9 +2356,13 @@ async function panelLessonCheck(D, w) {
   const stillTraining = D.helperState().mode === 'training' && w.getComputedStyle(w.document.getElementById('exitBtn')).display !== 'none';
   // the nested panel sits on the host's floor, inside its edges
   D.scene.updateMatrixWorld(true);
-  const local = crocTray.worldToLocal(wandTray.getWorldPosition(new D.THREE.Vector3()));
-  const onFloor = wandTray.parent === crocTray.__ctx?.root && Math.abs(local.x) < crocTray.userData.pw / 2 && Math.abs(local.z) < crocTray.userData.pd / 2;
-  const oneRoot = wandTray.children.filter(c => c.name === 'worldRoot').length === 1;
+  // the CARD goes in and its tray folds: the group's floor shows cards, not trays
+  const gadNode = given.userData.holes[0].thing ?? null;   // gone from the box...
+  let card = null; crocTray.__ctx?.root?.traverse(o => { if (!card && o.userData?.gadget) card = o; });
+  const local = card ? crocTray.worldToLocal(card.getWorldPosition(new D.THREE.Vector3())) : null;
+  const onFloor = !!card && !gadNode && Math.abs(local.x) < crocTray.userData.pw / 2 && Math.abs(local.z) < crocTray.userData.pd / 2
+    && (!wandTray.parent || wandTray.__closed === true || !wandTray.visible);
+  const oneRoot = card.children.filter(c => c.name === 'worldRoot').length <= 1;
   // the knob in a lesson: a step
   D.clickRaw({ kind: 'panelClose', tray: crocTray }); await slowSettle(D, 6000);
   const folded = !crocSpot.occupant && stillTraining && D.helperState().mode === 'training';
@@ -2405,6 +2409,126 @@ async function yardPanelDoorCheck(D, w) {
   D.leaveYard(); await slowSettle(D, 3000);
   const ok = inside && back;
   put((ok ? 'PASS' : 'FAIL') + ' a panel entered from the yard has a way back  (door-inside=' + inside + ' back-in-yard=' + back + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE TOUCH READING GREW: [touching | side | name | normal]; a scene's own
+// [listen | touches | bird] announces every pair of riders that meets; a
+// thing can be told to vanish, to be shown or not, and to drop a thing
+// beside itself that arrives working. And a reading saved with two holes
+// still matches: the pong ball's thoughts are loaded with the two extra
+// wildcards.
+async function touchReadingCheck(D, w) {
+  const num = (n, d = 1) => ({ kind: 'number', value: { n: String(n), d: String(d) }, op: '+' });
+  const txt = (t) => ({ kind: 'text', text: t });
+  const box = (...h) => ({ kind: 'box', holes: h });
+  const val = (t) => t?.userData.value ? Number(t.userData.value.n) / Number(t.userData.value.d) : null;
+  D.speed(1);
+  const A = { kind: 'text', text: '', look: { bg: '#ffd23f', w: 0.4, h: 0.4 }, lid: 'P1', evt: 'evt-P1', label: 'ball', speed: { x: 0.5, z: 0 } };
+  const B = { kind: 'text', text: '', look: { bg: '#7ee787', w: 0.2, h: 0.8 }, lid: 'P2', evt: 'evt-P2', label: 'wall' };
+  const nestA = { kind: 'nest', id: 9703, guid: 'evt-P1#touch', hasEgg: false, label: 'touching', pile: [] };
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: A, x: -0.3, z: 1.7 }, { thing: B, x: 0.3, z: 1.7 }, { thing: nestA, x: 1.2, z: 2.2 }] });
+  await slowSettle(D, 1500);
+  const touchN = [0, 1, 2, 3, 4].map(i => D.bench(i)).filter(t => t?.userData.kind === 'nest')[0];
+  await frames(D, 60);
+  const t = touchN.userData.pile[0];
+  const four = !!t && t.userData.holes.length === 4 && t.userData.holes[0].thing?.userData.kind === 'bird'
+    && ['left', 'right'].includes(t.userData.holes[1].thing?.userData.text) && t.userData.holes[2].thing?.userData.text === 'wall';
+  const nrm = t?.userData.holes[3].thing?.userData.holes?.map(h => val(h.thing)) ?? [0, 0];
+  const normalOK = Math.abs(Math.hypot(nrm[0], nrm[1]) - 1) < 0.01 && Math.abs(nrm[0]) > 0.9;
+  // shown, vanish, drop
+  const a = D.liveNode('P1'), b = D.liveNode('P2');
+  D.post('P2', box(txt('set'), txt('shown'), txt('no'))); D.frame(2); const hidden = b.visible === false;
+  D.post('P1', txt('vanish')); await frames(D, 60); const gone = !a.parent && !!a.__gone;
+  D.post('P2', box(txt('drop'), { kind: 'text', text: '', look: { bg: '#ff6b6b', w: 0.2, h: 0.2 }, label: 'bullet', speed: { x: 0, z: -0.3 } }, box(num(0), num(-1, 2))));
+  await frames(D, 30);
+  const bullet = [0, 1, 2, 3, 4, 5, 6].map(i => D.bench(i)).filter(Boolean).find(t2 => t2.userData.label === 'bullet');
+  const dropped = !!bullet && Math.abs(bullet.position.x - b.position.x) < 0.02 && bullet.position.z < b.position.z - 0.3 && bullet.parent === D.benchRoot;
+  // a scene's pairs
+  const A2 = { kind: 'text', text: '', look: { bg: '#ffd23f', w: 0.4, h: 0.4 }, lid: 'P1', evt: 'evt-P1', label: 'ball', speed: { x: 0.5, z: 0.1 } };
+  const B2 = { kind: 'text', text: '', look: { bg: '#7ee787', w: 0.2, h: 0.8 }, lid: 'P2', evt: 'evt-P2', label: 'wall' };
+  const F = { kind: 'text', text: '', look: { bg: '#203050', w: 3, h: 2 }, lid: 'P3', evt: 'evt-P3', label: 'pitch', subs: [{ thing: A2, at: { u: -0.25, v: 0 } }, { thing: B2, at: { u: 0.15, v: 0 } }] };
+  const nestF = { kind: 'nest', id: 9702, guid: 'evt-P3#touches', hasEgg: false, label: 'touches', pile: [] };
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: F, x: 0, z: 1.6 }, { thing: nestF, x: -1.4, z: 2.2 }] });
+  await slowSettle(D, 1500);
+  const pairsN = [0, 1, 2, 3, 4].map(i => D.bench(i)).filter(t2 => t2?.userData.kind === 'nest')[0];
+  await frames(D, 240);
+  const p = pairsN.userData.pile[0];
+  const names = p ? [p.userData.holes[1].thing?.userData.text, p.userData.holes[3].thing?.userData.text].sort() : [];
+  const pair = !!p && p.userData.holes.length === 5 && names.join('+') === 'ball+wall'
+    && p.userData.holes[0].thing?.userData.kind === 'bird' && p.userData.holes[2].thing?.userData.kind === 'bird';
+  // the old pong still bounces: its ball's thoughts were saved with two-hole readings
+  const pong = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  D.worldIn(pong); await slowSettle(D, 2000);
+  const byLid = {}; for (let i = 0; i < 20; i++) { const x = D.bench(i); if (!x) break; if (x.userData.lid) byLid[x.userData.lid] = x; }
+  const ball = byLid.P901;
+  if (ball) { D.switchGadget(ball, true); D.frame(3); }
+  const upgraded = !!ball && (() => { const tray = D.panelOf(ball); const bot = tray?.__ctx?.activeBot; const cond = bot?.condition?.holes?.[4]; return cond?.kind === 'box' && cond.holes.length === 4; })();
+  if (ball) D.switchGadget(ball, false);
+  const ok = four && normalOK && hidden && gone && dropped && pair && upgraded;
+  put((ok ? 'PASS' : 'FAIL') + ' the touch reading grew  (four-holes=' + four + ' normal=' + normalOK + ' shown-no=' + hidden + ' vanish=' + gone + ' drop-beside=' + dropped + ' scene-pair=' + pair + ' old-thought-upgraded=' + upgraded + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// SPACE INVADERS, end to end: SPACE on the field starts every part; the
+// arrows move the ship; the up arrow fires -- a copy of the bullet, dropped
+// beside the ship by message, arriving working; it flies, meets an invader,
+// both vanish, and the field's referee card counts one on the score.
+async function spaceInvadersCheck(D, w) {
+  const name = (o) => !o ? '.' : (o.userData.label || (o.userData.text || '').slice(0, 14) || o.userData.kind);
+  const world = await (await fetch('../examples/games/space-invaders.world.json')).json();
+  D.worldIn(world); await slowSettle(D, 2000); D.speed(1);
+  const field = D.liveNode('P940'), ship = D.liveNode('P941'), score = D.liveNode('P942');
+  const invaders = () => (field?.__subs || []).filter(t => t.userData.label === 'invader').length;
+  const eight = invaders() === 8 && !!ship && Number(score.userData.value.n) === 0;
+  D.switchScene(field, true); await frames(D, 10);
+  const key = (k) => { w.document.activeElement?.blur?.(); w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); };
+  const u0 = ship.userData.at.u; key('ArrowLeft'); await frames(D, 8); const steered = ship.userData.at.u < u0 - 0.02;
+  key('ArrowUp');
+  // ten panels share the scheduler's slice of each frame, so the fire card's
+  // turn -- and the bullet -- can be a few frames away
+  let bullet = null; for (let j = 0; j < 40 && !bullet; j++) { await frames(D, 3); bullet = (field.__subs || []).find(t => t.userData.label === 'bullet'); }
+  const fired = !!bullet && bullet.userData.speed?.z < 0 && !!bullet.__panelTray?.userData.dirty;
+  const trayOnTable = !!bullet && bullet.__panelTray?.parent === D.benchRoot;
+  let k = 0; for (; k < 80 && invaders() === 8; k++) await frames(D, 5);
+  const hit = !!bullet && invaders() === 7 && Number(score.userData.value.n) === 1 && (!bullet.parent || !!bullet.__gone);
+  D.switchScene(field, false); await frames(D, 3);
+  const ok = eight && steered && fired && trayOnTable && hit;
+  put((ok ? 'PASS' : 'FAIL') + ' space invaders  (eight-and-a-ship=' + eight + ' steered=' + steered + ' fired=' + fired + ' bullet-tray-on-table=' + trayOnTable + ' hit-and-scored=' + hit + ' frames-to-hit=' + (k * 5) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A PICTURE'S BACK IS A PAGE OF CARDS. The gear over an invader brings out
+// its panel; the cards stand on the panel's floor, magnified to read; Enter
+// on the panel looks straight down at it, framed. The gear over a card on
+// that floor brings out the card's own panel onto the table beside, its
+// robot at toy scale, and Enter there looks from the front; the knob folds
+// it home into the card.
+async function panelCardsCheck(D, w) {
+  const world = await (await fetch('../examples/games/space-invaders.world.json')).json();
+  D.worldIn(world); await slowSettle(D, 2000); D.speed('inf');
+  const inv = D.liveNode('P950');
+  const tray = D.panelOut(inv); await slowSettle(D, 3000);
+  D.scene.updateMatrixWorld(true);
+  const cards = []; tray.__ctx.root.traverse(o => { if (o.userData?.gadget) cards.push(o); });
+  const tb = new D.THREE.Box3().setFromObject(tray);
+  const onFloor = cards.length === 2 && cards.every(c => { const p = c.getWorldPosition(new D.THREE.Vector3()); return p.x > tb.min.x && p.x < tb.max.x && p.z > tb.min.z && p.z < tb.max.z; });
+  const magnified = tray.__ctx.root.scale.x > 0.4;
+  D.lookAt(tray, true);
+  const c1 = tb.getCenter(new D.THREE.Vector3());
+  const above = D.camera.position.y > c1.y + 0.3 && Math.abs(D.camera.position.x - c1.x) < 0.05 && Math.abs(D.camera.position.z - c1.z) < 0.05;
+  const card = cards.find(c => /explode/.test(c.userData.text));
+  const ct = D.panelOut(card); await slowSettle(D, 3000); D.scene.updateMatrixWorld(true);
+  const bot = ct.__ctx.activeBot?.node;
+  const cardTray = !!ct && ct.parent === D.benchRoot && !!bot && bot.getWorldScale(new D.THREE.Vector3()).x < 0.3;
+  D.lookAt(ct, true);
+  const c2 = new D.THREE.Box3().setFromObject(ct).getCenter(new D.THREE.Vector3());
+  const front = D.camera.position.z > c2.z + 0.2 && D.camera.position.y > c2.y;
+  D.camReset();
+  D.clickRaw({ kind: 'panelClose', tray: ct }); await slowSettle(D, 4000);
+  const folded = !ct.parent || ct.__closed === true || ct.visible === false;
+  const ok = onFloor && magnified && above && cardTray && front && folded;
+  put((ok ? 'PASS' : 'FAIL') + ' a picture’s back is a page of cards  (cards-on-floor=' + onFloor + ' magnified=' + magnified + ' enter-looks-down=' + above + ' card-panel-on-table=' + cardTray + ' enter-looks-front=' + front + ' knob-folds=' + folded + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -4755,6 +4879,15 @@ async function runOne(D, spec) {
   let ypdOK = true;
   try { ypdOK = want('yardPanelDoor') ? await yardPanelDoorCheck(D, frame.contentWindow) : true; }
   catch (e) { ypdOK = false; put('FAIL a panel entered from the yard has a way back  ' + e.message, 'fail'); }
+  let trOK = true;
+  try { trOK = want('touchReading') ? await touchReadingCheck(D, frame.contentWindow) : true; }
+  catch (e) { trOK = false; put('FAIL the touch reading grew  ' + e.message, 'fail'); }
+  let siOK = true;
+  try { siOK = want('spaceInvaders') ? await spaceInvadersCheck(D, frame.contentWindow) : true; }
+  catch (e) { siOK = false; put('FAIL space invaders  ' + e.message, 'fail'); }
+  let pcOK = true;
+  try { pcOK = want('panelCards') ? await panelCardsCheck(D, frame.contentWindow) : true; }
+  catch (e) { pcOK = false; put('FAIL a picture’s back is a page of cards  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4866,7 +4999,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
