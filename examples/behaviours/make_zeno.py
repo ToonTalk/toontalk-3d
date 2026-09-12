@@ -63,7 +63,7 @@ ABOUT = ('ZENO\'S POSTMAN\n\n'
          'ADDS -- the total IS the\n'
          'arithmetic.')
 
-WHY = ('WHY IT NEVER GETS TO 1\n\n'
+WHY = ('WHY NO TOTAL GETS TO 1\n\n'
        'These numbers are EXACT.\n'
        'After 20 deliveries the\n'
        'total is not 0.99999-ish,\n'
@@ -74,10 +74,29 @@ WHY = ('WHY IT NEVER GETS TO 1\n\n'
        'Read it off the block: the\n'
        'bottom doubles each time\n'
        'and the top stays one\n'
-       'behind it. That missing\n'
-       'ONE PART is why the total\n'
-       'creeps toward 1 for ever\n'
-       'and never arrives.')
+       'behind it. No delivery ever\n'
+       'closes that one part -- and\n'
+       'yet the whole endless\n'
+       'series adds up to exactly\n'
+       '1. Two different claims:\n'
+       'keep them apart.')
+
+GAP = ('THE GAP: A CHALLENGE\n\n'
+       'Build the distance still\n'
+       'to go: a 1 that each\n'
+       'delivery is taken away\n'
+       'from (drop a x-1 badge on\n'
+       'a copy, then drop that on\n'
+       'the 1). Or take the total\n'
+       'from 1 each round.\n\n'
+       'Put the gap on one pan of\n'
+       'a scale and the LAST\n'
+       'delivery on the other.\n\n'
+       'What do you see, every\n'
+       'round without fail? That\n'
+       'is an invariant -- a fact\n'
+       'the run keeps true. Say\n'
+       'it in one sentence.')
 
 RUN = ('TO RUN IT\n\n'
        'Pull the lever on each\n'
@@ -95,9 +114,10 @@ bench = [
     {'thing': halver, 'x': -0.85, 'z': 1.45},
     {'thing': totaller, 'x': 0.55, 'z': 1.45},
 
-    {'thing': txt(ABOUT), 'x': -0.75, 'z': 2.25},           # noqa: F405
-    {'thing': txt(WHY), 'x': -0.05, 'z': 2.25},             # noqa: F405
-    {'thing': txt(RUN), 'x': 0.65, 'z': 2.25},              # noqa: F405
+    {'thing': txt(RUN), 'x': -1.10, 'z': 2.25},             # noqa: F405
+    {'thing': txt(ABOUT), 'x': -0.40, 'z': 2.25},           # noqa: F405
+    {'thing': txt(WHY), 'x': 0.30, 'z': 2.25},              # noqa: F405
+    {'thing': txt(GAP), 'x': 1.00, 'z': 2.25},              # noqa: F405
 ]
 
 write_beh('zeno', bench)                                     # noqa: F405

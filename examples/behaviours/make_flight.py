@@ -121,6 +121,19 @@ TRY = ('TRY THIS\n\n'
        'table, level and facing the\n'
        'far edge.')
 
+ROUND = ('IS IT A CIRCLE?\n\n'
+         'Look at the path: twelve\n'
+         'straight strides with a\n'
+         'corner after every two.\n'
+         'That is a twelve-sided\n'
+         'loop, not a circle.\n\n'
+         'Halve both: move 5, move\n'
+         '5, pitch 15. Rounder. Halve\n'
+         'again. When does it stop\n'
+         'looking like corners -- and\n'
+         'does it ever become a\n'
+         'circle, or only get closer?')
+
 def scenery(t):
     """Not solid: a loop passes THROUGH the cards rather than bumping them."""
     return dict(t, ghost=True)
@@ -142,9 +155,11 @@ bench = [
     {'thing': home, 'x': -1.05, 'z': 1.62},
     {'thing': penup, 'x': -0.65, 'z': 1.62},
 
-    {'thing': scenery(txt(ABOUT)), 'x': -0.75, 'z': 2.30},           # noqa: F405
-    {'thing': scenery(txt(HOW)), 'x': -0.05, 'z': 2.30},             # noqa: F405
-    {'thing': scenery(txt(TRY)), 'x': 0.65, 'z': 2.30},              # noqa: F405
+    # the experiment first (Astra's review): what to change, then how it works
+    {'thing': scenery(txt(ABOUT)), 'x': -1.45, 'z': 2.30},           # noqa: F405
+    {'thing': scenery(txt(TRY)), 'x': -0.75, 'z': 2.30},             # noqa: F405
+    {'thing': scenery(txt(ROUND)), 'x': -0.05, 'z': 2.30},           # noqa: F405
+    {'thing': scenery(txt(HOW)), 'x': 0.65, 'z': 2.30},              # noqa: F405
 ]
 
 write_beh('airplane-flight', bench)                          # noqa: F405

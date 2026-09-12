@@ -2,7 +2,7 @@
  "kind": "world",
  "v": 3,
  "name": "p25",
- "intro": "Remember 1,024, and how you had to stop the robot yourself? This time the robot should stop on its own. The number is in the left pan of a scale and 1,000 is in the right; the computer wants the first doubling that tips the scale the other way \u2014 which is 1,024.",
+ "intro": "Remember 1,024, and how you had to stop the robot yourself? This time the robot should stop on its own. The number is in the left pan of a scale and 1,000 is in the right; the computer wants the first doubling that tips the scale the other way \u2014 which is 1,024. There is a light on in the porthole: the computer is coming back to life.",
  "goal": "exactly 1,024, from a robot that stopped by itself",
  "hints": [
   "The scale tips right while the number is smaller than 1,000. A thought that says \u201ctipping right\u201d fits only then.",
@@ -450,7 +450,7 @@
        0.31,
        0.045
       ],
-      "color": "#7fd4ff"
+      "color": "#fff1a8"
      },
      {
       "shape": "box",
@@ -510,6 +510,18 @@
        0.02
       ],
       "color": "#6b6b6b"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.012
+      ],
+      "at": [
+       0,
+       0.485,
+       0
+      ],
+      "color": "#5a4a3a"
      }
     ],
     "fixed": true,
@@ -520,7 +532,7 @@
    "y": 0.02,
    "z": -3.4,
    "ry": 35,
-   "rz": -7,
+   "rz": 0,
    "sz": 7
   }
  ]

@@ -91,8 +91,8 @@ if __name__ == '__main__':
         {'thing': bot, 'x': -1.45, 'z': 1.62},
         {'thing': work, 'x': -0.45, 'z': 1.62},
 
-        {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.15},        # noqa: F405
-        {'thing': txt(RUN), 'x': -0.75, 'z': 2.15},          # noqa: F405
-        {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},          # noqa: F405
+        {'thing': txt(RUN), 'x': -1.45, 'z': 2.15},          # noqa: F405
+        {'thing': txt(WHY), 'x': -0.75, 'z': 2.15},          # noqa: F405
+        {'thing': txt(ABOUT), 'x': -0.05, 'z': 2.15},        # noqa: F405
     ]
     write_beh('wandering', bench)

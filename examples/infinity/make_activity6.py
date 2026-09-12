@@ -96,11 +96,18 @@ RUN = ('TO RUN IT\n\n'
        'arrived. That is fairness, and\n'
        'fairness is what makes the\n'
        'count work.\n\n'
-       'Does 1 itself ever appear? Does\n'
-       'any number appear twice? What\n'
-       'would you have to add to stop\n'
-       'that -- and does it matter to\n'
-       'the argument?')
+       'The last nest says \"every\n'
+       'positive rational?\" -- a claim\n'
+       'to investigate, not a result.\n'
+       'Does 1 itself ever appear?\n'
+       '(All Fractions only hands out\n'
+       'n/d while n is below d; and the\n'
+       'reciprocal of 1 is 1.) If it is\n'
+       'missing, where would you add\n'
+       'it, and what must Merge do\n'
+       'differently? Does any number\n'
+       'appear twice? Does that matter\n'
+       'to the argument?')
 
 bench = [
     {'thing': room('All Fractions',
@@ -119,7 +126,7 @@ bench = [
                        nest(*BIG_W, label='above 1'), bird(*ALL, label='Out')),
                    merge), 'x': 1.05, 'z': 1.45},
 
-    {'thing': nest(*ALL, label='every positive rational'), 'x': 0.75, 'z': 2.20},
+    {'thing': nest(*ALL, label='every positive rational?'), 'x': 0.75, 'z': 2.20},
 
     {'thing': txt(ABOUT), 'x': -1.25, 'z': 2.35},
     {'thing': txt(RUN), 'x': 0.05, 'z': 2.90},

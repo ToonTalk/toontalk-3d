@@ -425,6 +425,13 @@
   <p class="box-say">Keep your answers — Activity 4 onward will test them.
   (Question 5 is the deepest one; the original sequence reaches it in an
   eighth activity, on Cantor's diagonal, not yet ported here.)</p>
+  <p>Question 3 has a robot answer: train one that gives back 5 whatever it
+  is handed, and run it into Match Maker. Every <em>position</em> gets a
+  partner — 1 with 5, 2 with 5, 3 with 5 — so the sequence 5, 5, 5, … pairs
+  with the naturals as well as 1, 2, 3, … does. But its <em>set</em> of
+  values is {5}. A sequence and the set of its values are two different
+  things, and it is the sequence <em>without duplicates</em> that makes a
+  one-to-one pairing of sets.</p>
 
   <div class="peek">The finished world runs Squares into Match Maker: the
     pairs nest fills with [1|1], [2|4], [3|9], … — the pairing made visible.
@@ -607,8 +614,11 @@
     If not, what is still missing?</p></div>
 
   <div class="peek">The finished world is five rooms and one lever: All
-    Fractions → Box to Number → Divides 1 → Merge, every positive rational
-    on the last nest.
+    Fractions → Box to Number → Divides 1 → Merge, and the last nest is
+    labelled "every positive rational?" — a claim to check. One number is
+    missing; the Think box above has already asked you about it. Repairing
+    that is a challenge worth taking: where does it go in, and what must
+    Merge do differently?
     <button class="load" data-world="examples/infinity/activity6-all-rationals.world.json">Peek at the finished world</button>
     <span class="note"></span></div>
 </section>
@@ -660,7 +670,10 @@
 
   <div class="peek">The finished world feeds one stream of fractions to three
     rooms at once — ×2, +10, ÷2 — and the three nests fill between 0 and 2,
-    10 and 11, 0 and ½, all at the same rate.
+    10 and 11, 0 and ½, all at the same rate. The same rate shows the
+    pairing; the argument is that each step can be undone (halve, take 10
+    away, double) and reaches every number in its interval — nothing missed,
+    nothing hit twice.
     <button class="load" data-world="examples/infinity/activity7-any-interval.world.json">Peek at the finished world</button>
     <span class="note"></span></div>
 </section>

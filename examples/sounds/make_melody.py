@@ -75,7 +75,7 @@ RUN = ('TO RUN IT\n\n'
        'afterwards to hear it whole,\n'
        '"." to stop it.')
 
-WHY = ('THEN CHANGE IT\n\n'
+WHY = ('CHANGE IT\n\n'
        'Write "square" over "sine"\n'
        'in the recipe and run it\n'
        'again: same tune, new\n'
@@ -91,9 +91,11 @@ WHY = ('THEN CHANGE IT\n\n'
 bench = [
     {'thing': work, 'x': -0.70, 'z': 1.35},
     {'thing': singer, 'x': -1.50, 'z': 1.30},
-    {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.15},
-    {'thing': txt(RUN), 'x': -0.75, 'z': 2.15},
-    {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},
+    # the experiment before the explanation (Astra's review): run it, change
+    # it, and only then read what it is
+    {'thing': txt(RUN), 'x': -1.45, 'z': 2.15},
+    {'thing': txt(WHY), 'x': -0.75, 'z': 2.15},
+    {'thing': txt(ABOUT), 'x': -0.05, 'z': 2.15},
 ]
 
 write_sounds('melody', bench)

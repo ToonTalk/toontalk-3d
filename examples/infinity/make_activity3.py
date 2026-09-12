@@ -77,7 +77,15 @@ RUN = ('TO RUN IT\n\n'
        'something else -- thirds, or\n'
        'powers of two -- and put it in\n'
        'the Squares room instead.\n'
-       'Match Maker will not notice.')
+       'Match Maker will not notice.\n\n'
+       'Then try a robot that gives\n'
+       'back 5 whatever it is handed:\n'
+       '5, 5, 5, ... Every position\n'
+       'still gets a dancing partner.\n'
+       'How many DIFFERENT numbers\n'
+       'are in that sequence? A\n'
+       'sequence and the set of its\n'
+       'values are two things.')
 
 bench = [
     {'thing': room('Add 1', box(num(1), bird(*NAT, label='Numbers')),

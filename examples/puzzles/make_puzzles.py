@@ -59,7 +59,27 @@ MID = 1.55
 BACK = 1.2
 
 
-def ship():
+# THE SHIP REPAIRS AS THE PUZZLES ARE SOLVED (Astra's review: "having a
+# few results visibly repair, steer, decorate, or animate the ship would
+# give the constructions consequences"). Each puzzle stands the ship at a
+# stage: leaning seven degrees at first, straighter from puzzle 10, upright
+# from 20, a light in the porthole from 25, the nose beacon lit from 30,
+# and Marty says so on arriving at each of those.
+def ship_stage(n):
+    return {'lean': -7 if n < 10 else -4 if n < 20 else 0,
+            'porthole': n >= 25, 'beacon': n >= 30}
+
+
+SHIP_NOTES = {
+    'p10': ' Look at the ship: it has begun to straighten up.',
+    'p20': ' The ship stands straight now — what you have built is holding it.',
+    'p25': ' There is a light on in the porthole: the computer is coming back to life.',
+    'p30': ' The beacon on the nose is lit. It could fly again.',
+    'p34': ' The ship is whole. Whatever you make from here, it is yours.',
+}
+
+
+def ship(stage=None):
     """Marty's ship, standing on its fins behind the table, leaning a little
     on the one that took the landing: the reason for every puzzle. It used
     to lie on its side, nose bent, a fin snapped off, smoking -- and Ken's
@@ -67,7 +87,8 @@ def ship():
     crash: a scorched tail, a bent fin, a dent, and a lean (the SCENERY entry
     tilts it). Scenery -- nothing runs into it, and nobody lifts it. Built at
     hand size and scaled up in SCENERY."""
-    white, red, glass = '#e9e4d8', '#c0392b', '#7fd4ff'
+    stage = stage or ship_stage(0)
+    white, red, glass = '#e9e4d8', '#c0392b', ('#fff1a8' if stage['porthole'] else '#7fd4ff')
     parts = [
         # the hull, standing on its fins
         {'shape': 'cylinder', 'size': [0.05, 0.055, 0.30], 'at': [0, 0.21, 0], 'color': white},
@@ -85,6 +106,8 @@ def ship():
          'rot': [0, 0, 18], 'color': red},
         # a dent low on the hull
         {'shape': 'sphere', 'size': [0.02], 'at': [0.045, 0.14, 0.02], 'color': '#6b6b6b'},
+        # the beacon on the nose: dark until the last puzzles
+        {'shape': 'sphere', 'size': [0.012], 'at': [0, 0.485, 0], 'color': ('#ffd23f' if stage['beacon'] else '#5a4a3a')},
     ]
     return {'kind': 'model', 'parts': parts, 'fixed': True, 'ghost': True,
             'label': 'Marty’s ship'}
@@ -153,6 +176,21 @@ ROBOT = {'kind': 'robot', 'name': None, 'program': [], 'team': []}
 # toward the room, seven times hand size -- a ship Marty could sit in --
 # and leaning seven degrees onto its bent fin.
 SCENERY = [{'thing': ship(), 'x': 3.1, 'y': 0.02, 'z': -3.4, 'ry': 35, 'rz': -7, 'sz': 7}]
+
+
+def scenery_at(name):
+    n = int(name[1:]) if name[1:].isdigit() else 0
+    st = ship_stage(n)
+    return [{'thing': ship(st), 'x': 3.1, 'y': 0.02, 'z': -3.4, 'ry': 35, 'rz': st['lean'], 'sz': 7}]
+
+
+# every puzzle gets the ship at its own stage, and Marty's note at a milestone
+_puzzle = puzzle                                                # noqa: F405
+
+
+def puzzle(name, intro, *rest, **kw):                           # noqa: F811
+    kw['scenery'] = scenery_at(name)
+    return _puzzle(name, intro + SHIP_NOTES.get(name, ''), *rest, **kw)
 
 # --- p7: exactly 1024 -- and it is you who has to stop the robot ------------
 # No box: a robot can set a thing down on its own desk where its given thing

@@ -6008,3 +6008,55 @@ length of a flight.
 a] and [move | forward | 1/25]: a die of three, a -2 and a ×30 land on the
 turn in turn (−30, 0 or 30 degrees), a copy of the turn goes to the bird,
 then a copy of the step -- so an animal faces where it goes.
+
+## The examples after Astra: a gap to find, claims to investigate, experiments first, a ship that repairs
+
+*Added 12 Sep. Ken: "go ahead and make all those changes. regarding
+infinity exercises have you seen https://toontalk.com/Tools/Infinity/Doc/
+index.htm and its links (including teacher guidance and the worksheets)?"*
+
+**Ken's own worksheets first.** The guidance lives in Word comments in the
+eight cardinality worksheets. Two of them settle two of Astra's points in
+Ken's own words: the Activity 6 note says the fraction robot "only does so
+if the denominator is less than the numerator, so it will never produce
+1", and the reciprocal of 1 is 1; the Activity 3 note sets 1, 1, 1, ...
+against 1, 2, 3, ... -- the same cardinality as sequences, {1} against
+{1, 2, 3, ...} as sets -- and says that a program for a sequence without
+duplicates is a one-to-one mapping. The edits below echo those.
+
+**Zeno.** A fourth pad, The gap: build the distance still to go, put it on
+one pan of a scale and the last delivery on the other, and say what is
+true every round without fail -- an invariant, found rather than watched.
+The Why pad keeps two claims apart: no delivery ever closes the gap, and
+the whole endless series adds up to exactly 1.
+
+**The activities.** Activity 3 asks for a robot that gives back 5 whatever
+it is handed -- every position gets a partner, the set of values is {5},
+a sequence and its set are two things -- on the pad, on the sheet, and in
+Marty's brief. Activity 4 says the walk by denominator COVERS every
+fraction, some more than once, and asks whether repeats make the count
+wrong or only untidy (the original's No Copies robot, which tests for
+lowest terms, is named). Activity 6's last nest is labelled "every positive
+rational?", a claim to investigate; the pad says why 1 never arrives and
+asks where it would go in. Activity 7 no longer calls three nests filling
+at the same rate "the whole argument": the same rate shows the pairing,
+and reversibility is the argument.
+
+**Experiments before explanations.** Melody, the airplane and wandering
+lay their pads out as run it, change it, then what it is. The airplane
+gained Is it a circle?: twelve strides with a corner after every two, and
+what halving both the stride and the turn does -- approximation by a
+repeated process, on the table.
+
+**The ship repairs.** Each puzzle stands the ship at a stage: leaning
+seven degrees at first, straighter from puzzle 10, upright from 20, a
+light in the porthole from 25, the nose beacon lit from 30, and Marty
+says so on arriving at each. The constructions have a consequence you
+can see behind the table.
+
+**Built by demonstration.** Two of the examples Astra picked are now
+trained in the suite through the lesson path, step by step, and run:
+Zeno's halver and totaller (five deliveries, a total of 31/32) and
+Melody's Singer (ten steps, eight notes off the nest). That is the
+beginning of an answer to "how readily can a learner construct the same
+programs through demonstration": these two can be.
