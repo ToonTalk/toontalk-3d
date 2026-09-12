@@ -6136,3 +6136,44 @@ moment would help.
 its own panel -- a loop that every save, undo and copy walked until the
 stack ran out. Refused now: "That is its own panel -- a thing does not go
 inside itself."
+
+## A lesson that survived a binding, the knob as a step, and a panel on the floor of a panel
+
+*Added 12 Sep. Ken, with three screenshots and the robot he saved: "after
+picking up the crocodile's panel I couldn't set it down on a work area.
+When I picked up a fresh 2-hole box and typed 3 it worked fine but the
+narration said it was a 2 hole box. Dropping the wandering panel on the
+crocodile's panel worked but is displaced to the side away from the
+panel. I'm training but the 'run what is learned' button is available
+instead of the stop training button. I think it was because at the end I
+clicked on the gold knob to return the panel to the crocodile. Attaching
+the robot but it doesn't have the knob click or the rest."*
+
+**One cause for three of them.** Measured, frame by frame: the moment a
+panel dropped on another panel bound its behaviour, the mode went from
+"training" to "world" -- badge "your workshop", Run button up, the thought
+bubble still on screen (screenshot 3). Binding rebuilt the panel's live
+world from its record, and to throw the old one away it called the
+routine that stashes a world's mode, queue and hands -- one half of a
+push, run on the OUTER world, which was the lesson. So the lesson ended
+silently at that step: the knob click and everything after it were never
+recorded (the saved robot stops at "put on spot 1"), and a panel picked up
+afterwards was in Ken's own hand, which cannot go on a work spot
+(screenshot 1). The old world root also stayed mounted, so a bound panel
+showed its things twice -- the stray little robot beside the nested panel
+in screenshot 2. The discard is a discard now; the lesson goes on.
+
+**The knob is a step.** In a lesson, the knob on a panel standing on a
+work spot records "put away the panel on spot N, back inside its thing",
+and the robot does it in a run, wherever the thing is by then. A panel
+with work still going inside is kept hidden on the bench, as the knob does
+by hand. Measured: Ken's lesson, taught by hooks and then run on a fresh
+box, ends with the wandering behaviour inside the crocodile's panel.
+
+**On the floor of the panel.** Inside a pushed world "the bench" routed to
+that world's work spots, whose points are the outer desk's -- a nested
+panel sat 0.95 to the left of its host's centre, past the tray's edge. A
+panel's contents are centred on its floor now.
+
+**The box.** Typing a digit on a held box makes a new box; the words read
+the old one's count. They say the count typed.

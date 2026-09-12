@@ -2325,6 +2325,64 @@ async function panelHoleCheck(D, w) {
   return ok;
 }
 
+// A LESSON SURVIVES A BINDING. Nesting one panel in another during a lesson
+// used to end the lesson silently (bindGadget stashed the outer world's mode
+// and hands into a context it was throwing away). Now the lesson goes on,
+// the knob is a step that puts the panel away, the nested panel sits ON the
+// host's floor, a bound panel has one world root (not a stale second one),
+// and the trained robot repeats it all on a fresh box.
+async function panelLessonCheck(D, w) {
+  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const gad = zoo.yard.bench.find(b => b.thing.gadget).thing;
+  const croc = zoo.yard.bench.find(b => b.thing.label === 'crocodile').thing;
+  const name = (o) => !o ? '.' : o.userData.panel ? 'P' : (o.userData.label || o.userData.text || o.userData.kind);
+  const spots = () => Object.values(D.stations).filter(s2 => s2.kind === 'scratch');
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+    bench: [{ thing: { kind: 'box', holes: [gad, croc, { kind: 'bird' }] }, x: -0.4, z: 1.7 }, { thing: { kind: 'robot' }, x: 0.9, z: 1.5 }] });
+  await slowSettle(D, 2000); D.speed('inf');
+  const all = []; for (let i = 0; i < 6; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
+  const given = all.find(t => t.userData.kind === 'box'), bot = all.find(t => t.userData.kind === 'robot');
+  D.clickThing(given); await frames(D, 3); D.clickBot(bot); await slowSettle(D, 4000);
+  for (const i of [1, 0]) {
+    D.teach({ type: 'take', at: { c: 'given', path: [i] } }); await slowSettle(D, 4000);
+    D.openHeldPanel(); await slowSettle(D, 4000);
+    D.teach({ type: 'put', at: { c: 'given', path: [i] } }); await slowSettle(D, 4000);
+  }
+  const crocSpot = spots().find(s2 => s2.occupant?.__owner?.userData.label === 'crocodile');
+  const wandSpot = spots().find(s2 => s2.occupant?.__owner?.userData.text === 'wandering');
+  const crocTray = crocSpot?.occupant, wandTray = wandSpot?.occupant;
+  D.clickRaw({ kind: 'station', id: wandSpot.id }); await slowSettle(D, 4000);
+  D.clickRaw({ kind: 'station', id: crocSpot.id }); await slowSettle(D, 6000);
+  const stillTraining = D.helperState().mode === 'training' && w.getComputedStyle(w.document.getElementById('exitBtn')).display !== 'none';
+  // the nested panel sits on the host's floor, inside its edges
+  D.scene.updateMatrixWorld(true);
+  const local = crocTray.worldToLocal(wandTray.getWorldPosition(new D.THREE.Vector3()));
+  const onFloor = wandTray.parent === crocTray.__ctx?.root && Math.abs(local.x) < crocTray.userData.pw / 2 && Math.abs(local.z) < crocTray.userData.pd / 2;
+  const oneRoot = wandTray.children.filter(c => c.name === 'worldRoot').length === 1;
+  // the knob in a lesson: a step
+  D.clickRaw({ kind: 'panelClose', tray: crocTray }); await slowSettle(D, 6000);
+  const folded = !crocSpot.occupant && stillTraining && D.helperState().mode === 'training';
+  D.exit(); await slowSettle(D, 4000);
+  const prog = D.activeProgram();
+  const foldStep = prog.find(st => st.type === 'fold');
+  const recorded = !!foldStep && prog.length >= 9;
+  // a fresh copy of the box: run once, the crocodile ends up with the behaviour inside its panel
+  D.worldIn({ kind: 'world', v: 4, stations: { stand: { kind: 'box', holes: [gad, croc, { kind: 'bird' }] } },
+    active: { kind: 'robot', name: 'the fitter', condition: { kind: 'box', holes: [{ kind: 'wild' }, { kind: 'wild' }, { kind: 'wild' }] },
+      trainedOn: { kind: 'box', holes: [gad, croc, { kind: 'bird' }] }, program: prog }, bench: [] });
+  await slowSettle(D, 2000); D.speed('inf');
+  D.rounds(1); D.run(); await slowSettle(D, 60000);
+  const croc2 = D.mine([1]);
+  // put away with work still inside, the panel is a hidden tray on the bench; idle, it is a record
+  const tray2 = croc2 ? D.panelOf(croc2) : null;
+  let inTray = false; tray2?.__ctx?.root?.traverse(o => { if (o.userData?.gadget) inTray = true; });
+  const inside = inTray || JSON.stringify(croc2?.userData.panelWorld || {}).includes('"text":"wandering"');
+  const noTrayOut = !spots().some(s2 => s2.occupant?.userData.panel);
+  const ok = stillTraining && onFloor && oneRoot && folded && recorded && inside && noTrayOut;
+  put((ok ? 'PASS' : 'FAIL') + ' a lesson survives a binding  (still-training=' + stillTraining + ' nested-on-floor=' + onFloor + ' one-root=' + oneRoot + ' knob-folded=' + folded + ' fold-recorded=' + recorded + ' run-behaviour-inside=' + inside + ' no-tray-left=' + noTrayOut + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4666,6 +4724,9 @@ async function runOne(D, spec) {
   let phOK = true;
   try { phOK = want('panelHole') ? await panelHoleCheck(D, frame.contentWindow) : true; }
   catch (e) { phOK = false; put('FAIL a panel and a hole  ' + e.message, 'fail'); }
+  let plOK = true;
+  try { plOK = want('panelLesson') ? await panelLessonCheck(D, frame.contentWindow) : true; }
+  catch (e) { plOK = false; put('FAIL a lesson survives a binding  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4777,7 +4838,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
