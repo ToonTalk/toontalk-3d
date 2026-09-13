@@ -6478,3 +6478,58 @@ like every ticker; the free revisits are for houses, which go quiet when
 their mail is answered. Now 24 ms a frame, two rounds a frame, and the
 crocodile wanders and turns as before. Ken's robot lives on in the suite as
 `tests/give-behavior-robot.thing.json`.
+
+## Commentary for every step, a notebook that moves, and Marty as a partner
+
+*Added 13 Sep. Ken: "I think when Marty is asked to give commentary it
+should be for every step of the robot's actions. And the robot should wait
+until Marty is finished describing the step before moving on. The user
+should be able to pick up his/her notebook and move it or resize it. They
+can even vacuum it up temporarily or move it to the yard. I wonder if a
+third Marty help mode could be to HELP plan and create programs. It tries
+to engage the user in the plan by asking questions. It should try to
+involve the user in the planning and training process but still ensure
+there is progress if the user isn't able to move forward. (By the way,
+'write programs' -- write isn't a good word here and elsewhere.) The arrow
+keys didn't work for the space invaders game when it was full size on the
+yard."*
+
+**Every step, and the robot waits.** The sequencer can now HOLD a step: an
+item whose hold() says when the world may go on, honoured at every speed,
+Instant included. With commentary on, a round asks Marty once for one line
+per step -- what it does and why it matters here -- and before each step
+the line is said and the robot waits: until his voice has finished, or a
+reading pace without it (under a second and a half for a short line, seven
+at most). Whatever he does not cover, the step says itself, so a workshop
+without a brain still narrates. Stop ends the wait. Measured on the
+Factorial team at 1x with no brain: the first line on the card at once,
+and the run four steps in after eight seconds where it used to be over.
+
+**Your notebook comes with you.** It was furniture -- fixed to the desk,
+refused by the hand, by Dusty and by resizing. Now it is picked up like
+anything else, set down where you like (out on the grass too), resized in
+the hand with + and −, and vacuumed by Dusty, who gives it back. Its place
+and size are remembered with its pages, and the search for it looks
+everywhere it can be: the table, your hand, Dusty's bag, the grass while
+you are in, the table while you are out -- a notebook that could travel
+was otherwise created afresh, a second one from the same pages, whenever
+the table alone was looked at. Loading a world empties Dusty's bag, as it
+always did; the notebook is rebuilt from its pages where it was last set
+down. Measured: moved to (−1.2, 2.19) at 1.25, and back there after a
+reload; one notebook throughout.
+
+**A partner, not an author.** The Help setting has a third choice: *plans
+and builds a program together with you*. In it Marty asks one question at
+a time about what the program should do, says the plan in plain sentences
+and checks it, hands over one next move at a time in the workshop's own
+gestures and watches the table for it to be done, and when the visitor is
+stuck -- says so, or two replies bring no progress -- does the next step
+himself, a demonstration or a Make, and hands the move after it back. The
+middle setting says "build", not "write", and so does everything else:
+nobody writes programs here.
+
+**The arrow keys in the yard.** The keyboard nest ignored every key while
+any control had the focus -- the guard added with the robot's note -- and
+the Speed menu keeps the focus after use, so the ship stood still. Only a
+text field keeps a key now. The moves themselves were already in the
+field's own units: five presses took the ship nearly half the yard.

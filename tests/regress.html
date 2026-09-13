@@ -2726,6 +2726,44 @@ async function nestedTickerCheck(D) {
   return ok;
 }
 
+// A HELD STEP, AND A NOTEBOOK THAT MOVES. The sequencer honours a step's
+// hold(): the world waits until it says go, at 1x and at Instant. And a
+// notebook -- any notebook, since the suite's app asks nobody's name and
+// keeps no desk notebook -- is picked up by its spine, set down where it is
+// dropped, and resized in the hand.
+async function heldStepCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'notebook', pages: [{ kind: 'number', value: { n: '7', d: '1' } }], page: 0 }, x: 0.4, z: 1.6 } ] });
+  await slowSettle(D, 1500);
+  let go = false;
+  let ended = 0;
+  D.enqueue({ __visual: true, dur: 0, hold: () => go, end() { ended = 1; } });
+  D.enqueue({ __visual: true, dur: 0, end() { ended = 2; } });
+  await frames(D, 30);
+  const waited = ended === 0;
+  go = true;
+  await frames(D, 5);
+  const went = ended === 2;
+  D.speed('inf');
+  go = false; ended = 0;
+  D.enqueue({ __visual: true, dur: 0, hold: () => go, end() { ended = 1; } });
+  await frames(D, 30);
+  const waitedInstant = ended === 0;
+  go = true; await frames(D, 5);
+  const wentInstant = ended === 1;
+  D.speed(1);
+  const nb = D.bench(0);
+  D.clickRaw({ kind: 'nbSpine', nb }); await frames(D, 5);
+  const inHand = D.heldPos() !== null && !D.bench(0);
+  w.document.getElementById('heldPlus').click(); await frames(D, 3);
+  const grew = +nb.scale.x.toFixed(2) === 1.25;
+  D.clickBench(-1.1, 2.1); await slowSettle(D, 1500);
+  const placed = Math.abs(nb.position.x + 1.1) < 0.15 && Math.abs(nb.position.z - 2.1) < 0.15;
+  const ok = waited && went && waitedInstant && wentInstant && inHand && grew && placed;
+  put((ok ? 'PASS' : 'FAIL') + ' a held step, and a notebook that moves  (holds=' + waited + ' goes=' + went + ' holds-at-instant=' + waitedInstant + ' goes-at-instant=' + wentInstant + ' notebook-in-hand=' + inHand + ' resized=' + grew + ' set-down=' + placed + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5111,6 +5149,9 @@ async function runOne(D, spec) {
   let ntOK = true;
   try { ntOK = want('nestedTicker') ? await nestedTickerCheck(D) : true; }
   catch (e) { ntOK = false; put('FAIL a ticker folded inside a thing keeps time  ' + e.message, 'fail'); }
+  let hsOK = true;
+  try { hsOK = want('heldStep') ? await heldStepCheck(D, frame.contentWindow) : true; }
+  catch (e) { hsOK = false; put('FAIL a held step, and a notebook that moves  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -5222,7 +5263,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
