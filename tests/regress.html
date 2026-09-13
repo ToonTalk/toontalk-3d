@@ -2628,6 +2628,69 @@ async function robotNoteCheck(D, w) {
   return ok;
 }
 
+// OUT OF A TEAM, A LITTLE ROBOT; A GAME THAT FITS THE YARD. In the grammar
+// house after a run the leader stands full size and the members at doll
+// size; a hover keeps a standby at doll size; a member taken out is a
+// little robot again, with its thought, and the leader keeps the desk. A
+// loaded robot's button says "Start the robot", a robot just taught "Run
+// what it learned". Space Invaders fitted to the yard fills its width and
+// its riders scale with it; a ground-sized pad lands centred and does not
+// stir under the pointer.
+async function teamOutCheck(D, w) {
+  const doc = w.document;
+  const world = await (await fetch('../examples/words/🔤 grammar.world.json')).json();
+  D.worldIn(world); await slowSettle(D, 2000);
+  let room = null; for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'room') { room = t; break; } }
+  D.clickRaw({ kind: 'roomLever', room }); await slowSettle(D, 2500);
+  D.clickRaw({ kind: 'roomLever', room }); await slowSettle(D, 800);
+  D.enter(room); await slowSettle(D, 3000);
+  let r = D.mine(); while (r && r.parent) r = r.parent;
+  const nodes = []; if (r) r.traverse(o => { if (o.userData?.kind === 'robot' && o.__bot?.name) nodes.push(o); });
+  const byName = (nm) => nodes.find(n => n.__bot.name === nm);
+  const sc = (n) => n ? +n.scale.x.toFixed(2) : -1;
+  const lead = byName('Scribe'), standby = byName('send it');
+  const sizes = D.worldsDeep() === 1 && sc(lead) === 1 && ['expand it', 'send it', 'take one'].every(nm => sc(byName(nm)) === 0.5);
+  const loaded = doc.getElementById('runBtn').textContent === 'Start the robot';
+  D.setWiggle(standby); await frames(D, 30); const wig = sc(standby) === 0.5; D.setWiggle(null);
+  const m1 = byName('expand it');
+  D.clickBot(m1); await frames(D, 10);
+  const inHand = !!m1.__bot.mini && sc(m1) === 0.24;
+  D.clickBench(-0.6, 2.0); await slowSettle(D, 1500);
+  const m2 = byName('take one');
+  D.clickBot(m2); await frames(D, 10); D.clickBench(0.2, 2.0); await slowSettle(D, 1500);
+  const out = sc(m1) === 0.24 && !!m1.__miniBubble && sc(m2) === 0.24 && !!m2.__miniBubble && sc(lead) === 1 && sc(standby) === 0.5;
+  D.leave(); await slowSettle(D, 1500);
+  // the button after a lesson
+  const num = (n) => ({ kind: 'number', value: { n: String(n), d: '1' }, op: '+' });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'robot', name: null, program: [], team: [] }, x: -1.0, z: 1.5 },
+    { thing: num(1), x: 0.2, z: 1.6 } ] });
+  await slowSettle(D, 2000);
+  D.hold(D.bench(1)); D.giveRobot(); await slowSettle(D, 2500);
+  D.clickRaw({ kind: 'station', id: 'nums' }); await slowSettle(D, 1500);
+  D.clickThing(D.mine()); await slowSettle(D, 1500);
+  D.exit(); await slowSettle(D, 2500);
+  const taught = D.activeProgram().length === 1 && doc.getElementById('runBtn').textContent === 'Run what it learned';
+  // the yard
+  const inv = await (await fetch('../examples/games/👾 space-invaders.world.json')).json();
+  D.worldIn(inv); await slowSettle(D, 2000);
+  const field = D.liveNode('P940');
+  const r0 = field.__subs[0].scale.x;
+  D.enterYard(); await slowSettle(D, 2500);
+  const b = D.bounds();
+  D.hold(field); await frames(D, 5);
+  doc.getElementById('heldFit').click(); await slowSettle(D, 2000);
+  const fits = Math.abs(field.userData.width - (b.x1 - b.x0)) < 0.05;
+  const riders = field.__subs[0].scale.x / r0 > 5;
+  D.hold(field); await frames(D, 5); D.clickBench(b.x0 + 0.3, b.z0 + 0.3); await slowSettle(D, 1500);
+  const centred = Math.abs(field.position.x - (b.x0 + b.x1) / 2) < 0.1 && Math.abs(field.position.z - (b.z0 + b.z1) / 2) < 0.1;
+  D.setWiggle(field); const still = D.wiggling() === null;
+  D.leaveYard(); await slowSettle(D, 1500);
+  const ok = sizes && loaded && wig && inHand && out && taught && fits && riders && centred && still;
+  put((ok ? 'PASS' : 'FAIL') + ' out of a team, a little robot; a game that fits the yard  (desk-sizes=' + sizes + ' loaded-says-start=' + loaded + ' hover-keeps-doll=' + wig + ' in-hand-mini=' + inHand + ' out-mini-with-thought=' + out + ' taught-says-run=' + taught + ' fits-yard=' + fits + ' riders-scale=' + riders + ' lands-centred=' + centred + ' no-wiggle=' + still + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5007,6 +5070,9 @@ async function runOne(D, spec) {
   let rnOK = true;
   try { rnOK = want('robotNote') ? await robotNoteCheck(D, frame.contentWindow) : true; }
   catch (e) { rnOK = false; put('FAIL a note on every robot, read from the hand  ' + e.message, 'fail'); }
+  let toOK = true;
+  try { toOK = want('teamOut') ? await teamOutCheck(D, frame.contentWindow) : true; }
+  catch (e) { toOK = false; put('FAIL out of a team, a little robot; a game that fits the yard  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -5118,7 +5184,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

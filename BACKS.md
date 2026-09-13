@@ -6407,3 +6407,46 @@ rebuild keeps them, and all seventy-nine files came out byte for byte the
 same but for the notes. The judges' members say which kind of wrong answer
 each sends back. A key typed into the note is not a key press in the
 workshop: no keyboard nest hears it.
+
+## Out of a team, a little robot; a game that fits the yard
+
+*Added 13 Sep. Ken: "'Run what it learned' is a good label after finishing
+training a robot. But in other circumstances it should just say something
+like 'start the robot'. I took a robot out from the grammar team and it
+became huge. When I move the cursor over the robots in the team they shrink
+to a smaller size before I click on them to pick one up. Picking up a
+second team member ended up a normal size on the desk. Robot tooltips
+should include the comment. After taking the space invader's game to the
+yard and clicking to make it as big as the yard the game elements didn't
+scale along with the game. And it is hard to drop it so it completely
+covers the yard. And it wiggles when I move the mouse over it."*
+
+**The button.** "Run what it learned" is right on the way out of a lesson.
+A robot that arrived trained -- from a file, a house, a team -- has nothing
+you just taught it, and its button says "Start the robot". A lesson that
+recorded steps marks the robot, and the label follows.
+
+**Sizes at the desk.** Three faults, one cause: a robot's `mini` flag, which
+takeTheFloor sets on the leader while a member has the floor and nothing
+unsets when the desk comes back. Entering the grammar house after a run,
+the leader stood at 0.24 behind members at 0.5; the pointer's wiggle read
+the flag and shrank a standby member to toy size before it was clicked; and
+a member taken out of the team kept whatever size it had -- the performer
+at 1.0 ("huge"), a standby at 0.5 ("a normal size") -- into the hand and
+onto the table. Now a team at the desk stands whoever is performing, flags
+or no flags; the wiggle keeps a standby at doll size; and the one taken out
+is a little robot again, at toy size with its own thought over it, and the
+leader takes the desk back if the leaver was performing. Measured in the
+grammar house: leader 1.0, standby 0.5 before and after a hover, the two
+taken out at 0.24 with bubbles.
+
+**The tooltip** over a robot carries its note, under its condition.
+
+**As big as the yard, riders and all.** Riders scale with a field's SIZE, not
+with its stated width, and the fit button set the width -- so Space
+Invaders fitted to the yard kept its ship and invaders table-sized. A field
+with riders is now fitted by size (9.19 for the yard) and its depth by
+shape, and the riders come with it (0.75 to 6.89). A pad the size of the
+ground lands centred however it is dropped, and does not stir under the
+pointer. The riders' speeds are still in table units, so the invaders march
+slowly across a yard-sized field -- an open item.
