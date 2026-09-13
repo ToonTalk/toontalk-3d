@@ -13,11 +13,11 @@ robot that teaches a robot.
 
 Run, the teacher does it for real: it reads the first pad out (a pad in the
 claw is read aloud by the step *read aloud what it holds*; *[speak]* given to
-a pad's bird does the same), gives the box of 1 to the little robot, has it
-add a fresh 1 to what it was given, has Ruby loosen the 1 in its thought so
-it counts on any number, and reads the last pad out. The pupil stands
-trained at its desk with its box reading 2; click it and press Start: 3, 4,
-5, … The teacher itself runs once — with the pupil gone from its box, its
-thought no longer fits.
+a pad's bird does the same), gives the box [a count | a 1] to the little
+robot, has it drop a copy of that 1 on the count, has Ruby loosen the count
+in its thought so it counts on from any number, and reads the last pad out.
+The pupil stands trained at its desk with its box reading 1; click it and
+press Start: 2, 3, 4, … The teacher itself runs once — with the pupil gone
+from its box, its thought no longer fits.
 
 Regenerate with `python make_teacher.py`.

@@ -20,6 +20,9 @@
        "holes": [
         {
          "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
         }
        ]
       },
@@ -71,7 +74,13 @@
      {
       "type": "taught",
       "step": {
-       "type": "newNumber"
+       "type": "copy",
+       "at": {
+        "c": "given",
+        "path": [
+         1
+        ]
+       }
       }
      },
      {
@@ -134,11 +143,19 @@
        "condition": null,
        "trainedOn": null,
        "team": [],
-       "note": "Untrained. The teacher gives it the box of 1 and shows it how to count."
+       "note": "Untrained. The teacher gives it a box -- a count, and a 1 -- and shows it how to count with them."
       },
       {
        "kind": "box",
        "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
         {
          "kind": "number",
          "value": {
@@ -156,7 +173,7 @@
      ]
     },
     "team": [],
-    "note": "A robot that trains a robot. It reads the first pad out, gives the box of 1 to the little robot in its second hole and teaches it to add a fresh 1 to what it was given, has Ruby loosen the 1 in the pupil\u2019s thought so it counts on any number, and reads the last pad out. It runs once: with the pupil gone from its box, its thought no longer fits."
+    "note": "A robot that trains a robot. It reads the first pad out, gives the box [0 | 1] to the little robot in its second hole and teaches it to drop a copy of the 1 it was given on the count, has Ruby loosen the count in the pupil\u2019s thought so it counts on from any number, and reads the last pad out. It runs once: with the pupil gone from its box, its thought no longer fits."
    },
    "x": -1.2,
    "z": 1.35
@@ -176,11 +193,19 @@
       "condition": null,
       "trainedOn": null,
       "team": [],
-      "note": "Untrained. The teacher gives it the box of 1 and shows it how to count."
+      "note": "Untrained. The teacher gives it a box -- a count, and a 1 -- and shows it how to count with them."
      },
      {
       "kind": "box",
       "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "0",
+         "d": "1"
+        },
+        "op": "+"
+       },
        {
         "kind": "number",
         "value": {
@@ -203,7 +228,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "THE TEACHER\n\nA robot trained to train a\nrobot. Its box holds a pad,\na little robot, a box with\na 1, and another pad.\n\nRun, it reads the pad out,\ngives the box to the little\nrobot, and TEACHES it: the\npupil steps up to a desk of\nits own and does each step\nas the teacher shows it."
+    "text": "THE TEACHER\n\nA robot trained to train a\nrobot. Its box holds a pad,\na little robot, a box with\na count and a 1, and\nanother pad.\n\nRun, it reads the pad out,\ngives the box to the little\nrobot, and TEACHES it: the\npupil steps up to a desk of\nits own and does each step\nas the teacher shows it."
    },
    "x": -1.15,
    "z": 2.25
@@ -211,7 +236,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nGive the four-hole box to\nthe teacher and press Start.\n\nWatch the pupil take a desk,\nadd a fresh 1 to its box,\nand have its thought\nloosened by Ruby.\n\nThen click the pupil -- it is\ntrained now -- and press\nStart: 3, 4, 5, ..."
+    "text": "TO RUN IT\n\nGive the four-hole box to\nthe teacher and press Start.\n\nWatch the pupil take a desk,\ndrop a copy of its 1 on its\ncount, and have its thought\nloosened by Ruby.\n\nThen click the pupil -- it is\ntrained now -- and press\nStart: 2, 3, 4, ..."
    },
    "x": -0.45,
    "z": 2.25

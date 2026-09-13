@@ -6592,3 +6592,37 @@ a little robot, a box with a 1 and another pad. It reads the first pad
 out, gives the box to the little robot, teaches it to add a fresh 1 to
 what it was given, has Ruby loosen the pupil's thought, and reads the last
 pad out.
+
+## The pupil on its feet, said once, and a stop explained truthfully
+
+*Added 13 Sep. Ken, running the teacher: "I heard 'I am teaching the robot
+to count' twice. The pupil's arm is full size and the pupil is very small;
+the student is lying down. The pupil grabs a 1 from the stack -- I thought
+the idea was to use the number provided by the teacher. When I stopped the
+pupil the narration said the pupil stopped because the teacher hadn't told
+it how to work with 3, and yet when I started it again it worked fine. I
+think the commentary should only apply at speed 1x."*
+
+**On its feet.** A robot in a box hole lies flat at toy size, and taking it
+out kept that pose: the pupil taught its whole lesson lying down, and at
+the start of its growth its arm alone read as a robot. Measured: rotation
+−1.57 about x for the whole run. It stands up as it steps out.
+
+**Said once.** The pad's own voice said its words, and the card, reading
+its messages aloud, said them again. The card shows them and keeps quiet.
+
+**The teacher's own 1.** The pupil's box is [a count | a 1] now, and the
+lesson is a copy of the 1 dropped on the count, with the count loosened to
+any number: the number it counts with is the one the teacher gave it, not
+one off the stack. Started, it counts 1, 2, 3.
+
+**A stop explained truthfully.** The closing commentary asked what the run
+achieved and why it stopped, and Marty guessed: "the teacher hadn't told it
+how to work with 3" of a robot stopped by hand. The workshop's own account
+of the stop -- Stop pressed, the Rounds limit, a thought that no longer
+fits -- goes to him with the ask, read off the card a moment after whoever
+stopped the run has said why, and he is told never to guess another.
+
+**At 1x only.** Faster than 1x the robot is ahead of any sentence and at
+Instant there is nothing to watch, so commentary -- the opening, the lines
+per step, the closing -- keeps to 1x.

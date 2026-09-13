@@ -2794,6 +2794,7 @@ async function teachCheck(D, w) {
   D.clickRaw({ kind: 'botThing', bot: pupil }); await slowSettle(D, 4000);
   const taught = D.teachingNow();
   const stepsUp = !!taught && !!pupil.stand && Math.abs(pupil.node.scale.x - 1) < 0.02
+    && Math.abs(pupil.node.rotation.x) < 0.01 && Math.abs(pupil.node.rotation.z) < 0.01   // on its feet, not the hole's flat pose
     && doc.getElementById('exitBtn').textContent === 'Stop teaching it'
     && String(D.mine()?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '1';
   D.teach({ type: 'newNumber' }); await slowSettle(D, 2500);
