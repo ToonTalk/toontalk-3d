@@ -633,7 +633,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cnear\u201d: flips the away step with a x-1, then sends both steps."
        },
        {
         "kind": "robot",
@@ -871,7 +872,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cleft\u201d: flips the across step with a x-1, then sends both steps."
        },
        {
         "kind": "robot",
@@ -1109,7 +1111,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cright\u201d -- the wall you guard, so you missed: gives a +1 to the counter\u2019s bird, flips the across step, and sends my thing back to the middle."
        },
        {
         "kind": "robot",
@@ -1359,7 +1362,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The touch reading says something is on my left: sets the across step to go right (flipping would not do: a contact lasts several rounds), then sends both steps."
        },
        {
         "kind": "robot",
@@ -1609,7 +1613,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The touch reading says something is on my right: sets the across step to go left (flipping would not do: a contact lasts several rounds), then sends both steps."
        },
        {
         "kind": "robot",
@@ -1859,7 +1864,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The touch reading says something is on my far side: sets the away step to come near (flipping would not do: a contact lasts several rounds), then sends both steps."
        },
        {
         "kind": "robot",
@@ -2109,7 +2115,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The touch reading says something is on my near side: sets the away step to go far (flipping would not do: a contact lasts several rounds), then sends both steps."
        },
        {
         "kind": "robot",
@@ -2325,9 +2332,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Nothing to turn from: just sends both steps. Last in the team, so the walls and contacts get their turn first."
        }
-      ]
+      ],
+      "note": "Leads the team. The edge reading says \u201cfar\u201d: flips the away step with a x-1, then sends both steps."
      }
     }
    },
@@ -2516,7 +2525,8 @@
         }
        ]
       },
-      "team": []
+      "team": [],
+      "note": "Copies the [set | away | _] template, takes what the pointer said, moves only the AWAY of it into the hole, vacuums the rest, and sends it: the bat follows your hand up and down the table and stays a wall across."
      }
     }
    },

@@ -34,11 +34,13 @@ nextnum = robot(
      copy('given', 0, 1), put('s0', 1),
      take('s0'), put('given', 1),
      ] + drop(1, '+', 'given', 0, 0),
-    trained_on=box(scale(num(1), num(2)), bird(*BOXES)))
+    trained_on=box(scale(num(1), num(2)), bird(*BOXES)),
+    note='Leads the team. The scale tips toward the denominator, so the numerator is still the smaller: hands out the pair [n, d] and adds one to n.')
 
 nextden = robot(
     'Next Denominator', box(tilt('='), ANYBIRD),
-    drop(1, 'set', 'given', 0, 0) + drop(1, '+', 'given', 0, 1))
+    drop(1, 'set', 'given', 0, 0) + drop(1, '+', 'given', 0, 1),
+    note='The scale balances: n has caught d up. Sets n back to 1 and takes d up one, so the next group of fractions begins.')
 
 allfractions = dict(nextnum, name='All Fractions', team=[nextden])
 
@@ -48,25 +50,35 @@ boxtonum = robot(
      take('s0', 1), setop('/'), put('s0', 0),
      take('s0', 0), put('given', 1),
      vac('s0')],
-    trained_on=box(nest(*BOXES), bird(*F_A)))
+    trained_on=box(nest(*BOXES), bird(*F_A)),
+    note='Takes an [a, b] box off the nest, drops b on a with a divide sign -- a/b as one number -- sends the fraction on, and vacuums the empty box.')
 
 
-def shifter(name, v, op, src, dst, d=1):
+def shifter(name, v, op, src, dst, d=1, note=None):
     """One term in, one term out, with a single number dropped on it. Every
     robot in this activity is this robot with a different drop."""
     return robot(name, box(ANYNUM, ANYBIRD),
                  [takeTop('given', 0), put('s0')] +
                  drop(v, op, 's0') + [take('s0'), put('given', 1)],
-                 trained_on=box(nest(*src), bird(*dst)))
+                 trained_on=box(nest(*src), bird(*dst)), note=note)
 
 
-doubler = shifter('Doubler', 2, '*', F_A, TWO)
-add10 = shifter('Add 10', 10, '+', F_B, TEN)
+doubler = shifter('Doubler', 2, '*', F_A, TWO,
+                  note='Takes the fraction off the nest, doubles it with a x2, and '
+                       'sends it on: every fraction between 0 and 1 lands between 0 '
+                       'and 2, one for one.')
+add10 = shifter('Add 10', 10, '+', F_B, TEN,
+                note='Takes the fraction off the nest, adds 10 to it, and sends it on: '
+                     'every fraction between 0 and 1 lands between 10 and 11, one '
+                     'for one.')
 halve = robot('Halve', box(ANYNUM, ANYBIRD),
               [takeTop('given', 0), put('s0'),
                newnum, setv(2, '/'), put('s0'),           # divided by two
                take('s0'), put('given', 1)],
-              trained_on=box(nest(*F_C), bird(*HALF)))
+              trained_on=box(nest(*F_C), bird(*HALF)),
+              note='Takes the fraction off the nest, divides it by 2, and sends it on: '
+                   'every fraction between 0 and 1 lands between 0 and a half, one '
+                   'for one.')
 
 ABOUT = ('ACTIVITY 7\nRationals between any two\n\n'
          'All Fractions makes every\n'

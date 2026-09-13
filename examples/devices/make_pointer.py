@@ -18,7 +18,9 @@ watcher = robot(
         takeTop('given', 0),          # this one off the nest
         put('given', 1),              # and into the hole
     ],
-    trained_on=box(device(POINT, DEV_POINT, 'pointer'), box(num(0), num(0))))
+    trained_on=box(device(POINT, DEV_POINT, 'pointer'), box(num(0), num(0))),
+    note='Sweeps the old reading out of hole 1, takes the pointer’s [across | away] '
+         'off the nest, and puts it in: a live gauge of where your hand is.')
 
 # The second hole starts with a reading of its own -- zero, zero. A hole with
 # nothing in it is not "anything", it is nothing, and the Watcher's thought

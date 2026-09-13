@@ -6361,3 +6361,49 @@ at nothing. Both levers first, the totaller's before the halver's, and the
 invariant is read off the first eight deliveries -- it holds for every
 single one, so eight are as good as a hundred thousand. The world itself
 is not capped: a dropped letter would break the very exactness it teaches.
+
+## A note on every robot, one thought at the desk, and no birds from nowhere
+
+*Added 13 Sep. Ken: "In Pong gadgets world when I move the paddle I see a
+tiny bird or two flying across the table where it isn't clear where it
+starts or ends. Birds are ok if their paths make sense but I couldn't
+figure it out. Let's add a way in the trained actions area to write a
+comment associated with that robot that is persistent. All the examples
+should have comments like this. The trained actions should display the
+steps and comment of any robot held by the user." And, testing the
+sentence generator: "2 thought bubbles and only one should be shown."*
+
+**Birds from nowhere.** A behaviour switched on without its panel ever
+being brought out works in a hidden tray, and the bat's follower stood
+invisible in the middle of the table. Every round it performed -- a bird's
+flight from the tray to the bat -- set off from there. Measured on the old
+build: the follower's tray hidden at (0.62, 1.85), a ghost bird in flight
+in 16 of 60 samples while the pointer moved, and a round to perform in all
+60. A panel out of sight performs nothing now: no round is recorded for a
+hidden tray, and a flight cut short by a fold ends at once. The new build:
+no ghost in 60 samples, and the bat following as before.
+
+**One thought at the desk.** A team's members standing by wore their own
+small bubbles, and once the standby size went from a ninth to a half those
+stood at four fifths of full size beside the performer's thought -- three
+thoughts over one desk. And when a member took the floor, the leader
+stepping back shrank to toy size -- a ninth -- and got its thought back
+over its head: measured on Factorial at the desk, the leader at 0.24 with
+a bubble while "multiply" worked. The thought on show is the performer's;
+the members' are read on the card, a member at a time; whoever steps back
+stands at the standby size, and a queue on the bench keeps its bubbles.
+
+**A note on every robot.** The Trained actions card has a line under the
+robot's thought for a note: click it and write what the robot is for, in
+your own words. The note is the robot's -- it goes into a saved world, a
+saved thing, the library and every copy -- and Marty reads it back when
+asked what a robot does. The card now reads the robot in your hand: pick
+one up off the table, out of a house or in from a file, and its steps and
+its note are on the card, a member at a time if it leads a team; put it
+down and the card returns to the desk. Every robot the examples ship
+carries a note -- 396 of 408; the twelve without are the blank robots the
+puzzles hand the player to train -- written into the generators, so a
+rebuild keeps them, and all seventy-nine files came out byte for byte the
+same but for the notes. The judges' members say which kind of wrong answer
+each sends back. A key typed into the note is not a key press in the
+workshop: no keyboard nest hears it.

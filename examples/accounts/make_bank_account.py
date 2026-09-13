@@ -60,11 +60,14 @@ weigh = {'kind': 'robot', 'name': 'take one',
              {'type': 'setValue', 'value': {'n': '0', 'd': '1'}, 'op': '+'},
              put(2, 1),                          # weighed against nothing
          ],
-         'trainedOn': None, 'team': []}
+         'trainedOn': None, 'team': [],
+         'note': 'A request is on the nest: takes the oldest one off, fetches a scale, '
+                 'puts the balance plus the amount asked for in one pan and 0 in the '
+                 'other. The tilt is the decision.'}
 
 # --- the verdicts ----------------------------------------------------------
-def verdict_ok(name, t):
-    return {'kind': 'robot', 'name': name,
+def verdict_ok(name, t, note):
+    return {'kind': 'robot', 'name': name, 'note': note,
             'condition': account_cond(scale=tilt(t), working=REQUEST),
             'program': [
                 take(3, 0), put(0),              # the amount joins the balance
@@ -80,10 +83,19 @@ sorry = {'kind': 'robot', 'name': 'sorry',
              copy(4), put(3, 1),                 # the slip flies home instead
              vac(3), vac(2),
          ],
-         'trainedOn': None, 'team': []}
+         'trainedOn': None, 'team': [],
+         'note': 'The scale tips right: the balance would go below zero. Sends a copy '
+                 'of the “not enough money” slip home instead, and clears up.'}
 
-ok = verdict_ok('Teller', 'L')
-teller = dict(ok, team=[verdict_ok('ok too', '='), sorry, weigh])
+ok = verdict_ok('Teller', 'L',
+                'Leads the team. The scale tips left: the new balance stays above '
+                'zero. Banks the amount, sends the new balance home with the '
+                'request’s own bird, and sweeps the request and the scale away.')
+teller = dict(ok, team=[verdict_ok('ok too', '=',
+                                   'The scale is level: the account would be exactly '
+                                   'empty, which is allowed. Banks the amount, sends the '
+                                   'new balance home, and clears up.'),
+                        sorry, weigh])
 account = {'kind': 'box', 'holes': [
     num(START),
     {'kind': 'nest', 'id': REQ_ID, 'guid': REQ_GUID, 'hasEgg': False, 'pile': []},

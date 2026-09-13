@@ -56,18 +56,19 @@ def account_cond(request):
     return box(request, WILD, txt(OWNER))
 
 
-def robot(name, word, second, middle):
+def robot(name, word, second, middle, note):
     """Each one lifts the message off the nest first and sweeps the husk away
     last; only the middle differs."""
     return {'kind': 'robot', 'name': name,
             'condition': account_cond(box(txt(word), second)),
             'program': [take(top('given', 0)), put('s0')] + middle + [vac('s0')],
-            'trainedOn': None, 'team': []}
+            'trainedOn': None, 'team': [], 'note': note}
 
 
 deposit = robot('deposit', 'deposit', WILD, [
     take(at('s0', 1)), put('given', 1),      # the amount joins the balance
-])
+], note='Leads the team. The message on the nest says “deposit”: lifts it off, '
+        'drops its amount on the balance, and sweeps the empty message away.')
 
 # A withdrawal is a deposit that subtracts. The robot takes the amount and
 # types a minus sign on it, exactly as the original does -- typing only an
@@ -76,11 +77,14 @@ withdraw = robot('withdraw', 'withdraw', WILD, [
     take(at('s0', 1)),                       # the amount, in hand
     {'type': 'setOp', 'op': '-'},            # "make it subtract"
     put('given', 1),                         # dropped on the balance, it takes it away
-])
+], note='The message says “withdraw”: lifts it off, types a minus sign on the '
+        'amount, drops it on the balance so it takes the amount away, and sweeps '
+        'the message away.')
 
 query = robot('query', 'query', ANYBIRD, [
     copy('given', 1), put('s0', 1),          # a copy of the balance, into the bird's wings
-])
+], note='The message says “query” and carries a bird: copies the balance into '
+        'the bird’s wings, and she flies it to the nest marked “answers”.')
 
 teller = dict(deposit, name='Teller', team=[withdraw, query])
 

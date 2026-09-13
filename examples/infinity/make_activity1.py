@@ -30,14 +30,16 @@ add1 = robot(
     'Add 1', box(ANYNUM, ANYBIRD),
     [copy('given', 0), put('given', 1)] +          # the bird takes it home
     drop(1, '+', 'given', 0),                      # and the count goes up
-    trained_on=box(num(1), bird(*NAT_D)))
+    trained_on=box(num(1), bird(*NAT_D)),
+    note='Gives the bird a copy of the number, then adds 1 to it: the natural numbers, one a round, for ever.')
 
 doubler = robot(
     'Doubler', box(ANYNUM, ANYBIRD),
     [takeTop('given', 0), put('s0')] +             # the number off the nest
     drop(2, '*', 's0') +                           # doubled where it stands
     [take('s0'), put('given', 1)],                 # and away to the bird
-    trained_on=box(nest(*NAT_D), bird(*EVEN)))
+    trained_on=box(nest(*NAT_D), bird(*EVEN)),
+    note='Takes the number off the nest, doubles it where it stands with a x2, and sends it on. Dozes when the nest is bare.')
 
 # No counter and no memory: it hands the number to whichever bird is in hole 1
 # and then swaps the two birds over, so next round the other one gets it.
@@ -47,7 +49,8 @@ split = robot(
      take('given', 1), put('s0'),                  # now swap the birds over
      take('given', 2), put('given', 1),
      take('s0'), put('given', 2)],
-    trained_on=box(nest(*NAT_S), bird(*A), bird(*B)))
+    trained_on=box(nest(*NAT_S), bird(*A), bird(*B)),
+    note='Takes the number off the nest and gives it to the bird in hole 1, then swaps the two birds over, so the next one goes the other way. No counter: the swap is the alternation.')
 
 ABOUT = ('ACTIVITY 1\nThe even numbers, two ways\n\n'
          'Add 1 makes 1, 2, 3, ... for\n'

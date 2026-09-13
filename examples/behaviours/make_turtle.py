@@ -111,7 +111,11 @@ forward_bot = robot(                                          # noqa: F405
     + leg(3, 0) + leg(4, 1)
     + [copy('given', 5), put('given', 0),                     # ONE move  # noqa: F405
        vac('s1')],                                            # noqa: F405
-    trained_on=trained(box(txt('forward'), num(30))))      # noqa: F405
+    trained_on=trained(box(txt('forward'), num(30))),      # noqa: F405
+    note='Leads the team. The order on the letterbox is [forward | n]: works out '
+         'n x sin(heading) x step size for across and n x cos(heading) x step '
+         'size for away, puts both into one [move | position | _] message, and '
+         'sends it -- one straight step.')
 
 right_bot = robot(                                            # noqa: F405
     'right', cond('right'),
@@ -122,14 +126,18 @@ right_bot = robot(                                            # noqa: F405
      vac('given', 9, 2),                                       # noqa: F405
      copy('given', 1), put('given', 9, 2),                     # noqa: F405
      copy('given', 9), put('given', 0)],                       # noqa: F405
-    trained_on=trained(box(txt('right'), num(90))))           # noqa: F405
+    trained_on=trained(box(txt('right'), num(90))),           # noqa: F405
+    note='The order is [right | a]: adds a to the heading, then sends '
+         '[set | facing | heading] so the thing turns to point where it will walk.')
 
 def pen_bot(word, hole):
     """Eat the word off the letterbox and send the pen message."""
     return robot(word, word_cond(word),                       # noqa: F405
                  [takeTop('given', 2), put('s1'), vac('s1'),  # noqa: F405
                   copy('given', hole), put('given', 0)],      # noqa: F405
-                 trained_on=trained(txt(word)))               # noqa: F405
+                 trained_on=trained(txt(word)),               # noqa: F405
+                 note='The word on the letterbox is “' + word + '”: eats it and sends '
+                      '[set | pen | ' + ('down' if word == 'pendown' else 'up') + '].')
 
 
 team = dict(forward_bot)

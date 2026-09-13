@@ -30,7 +30,11 @@ singer = robot(
         take('s1'), put('s0'),              # the recipe makes the sound sing
         take('s0'), put('given', 1),        # and it joins the tune's right edge
     ],
-    trained_on=box(nest(PITCH, 'snd-melody'), sound(), sound(), recipe))
+    trained_on=box(nest(PITCH, 'snd-melody'), sound(), sound(), recipe),
+    note='Copies the blank sound and the recipe, takes the next pitch off the nest, '
+         'drops it into the recipe’s empty frequency hole, drops the recipe on the '
+         'copy so it sings, and joins the note onto the end of the tune. It knows '
+         'no notes: its thought is “any number”.')
 
 SCALE = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5']
 

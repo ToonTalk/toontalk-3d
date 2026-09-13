@@ -135,7 +135,8 @@
         }
        ]
       },
-      "team": []
+      "team": [],
+      "note": "Every round it copies the step and gives it to my thing\u2019s bird: [move | across | 1/60]. That is the whole of \u201cmoving right\u201d."
      }
     }
    },
@@ -260,7 +261,8 @@
         }
        ]
       },
-      "team": []
+      "team": [],
+      "note": "Every round it copies the step and gives it to my thing\u2019s bird: [move | across | -1/60]. That is the whole of \u201cmoving left\u201d."
      }
     }
    },
@@ -646,7 +648,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cright\u201d: drops a x-1 on the across step to turn it round, then sends both steps."
        },
        {
         "kind": "robot",
@@ -794,7 +797,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cnear\u201d: drops a x-1 on the away step to turn it round, then sends both steps."
        },
        {
         "kind": "robot",
@@ -942,7 +946,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cfar\u201d: drops a x-1 on the away step to turn it round, then sends both steps."
        },
        {
         "kind": "robot",
@@ -1068,9 +1073,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Any other reading: just sends both steps. It comes last so a wall gets its turn first."
        }
-      ]
+      ],
+      "note": "Leads the team. The edge reading says \u201cleft\u201d: drops a x-1 on the across step to turn it round, then sends both steps."
      }
     }
    },
@@ -1447,7 +1454,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cleft\u201d: sends [set | across | 3/2] -- round to the right side."
        },
        {
         "kind": "robot",
@@ -1579,9 +1587,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Any other reading: sends the step, [move | across | 1/40]."
        }
-      ]
+      ],
+      "note": "Leads the team. The edge reading says \u201cright\u201d: sends [set | across | -3/2], which puts my thing back at the left side."
      }
     }
    },
@@ -1746,7 +1756,8 @@
         }
        ]
       },
-      "team": []
+      "team": [],
+      "note": "Copies the [set | position | _] template, takes the pointer\u2019s [across | away] off the nest, puts it in the empty hole, and gives the message to my thing\u2019s bird. It dozes between moves."
      }
     }
    },
@@ -1934,7 +1945,8 @@
         }
        ]
       },
-      "team": []
+      "team": [],
+      "note": "Copies the [set | away | _] template, takes what the pointer said, moves only the AWAY of it into the hole, vacuums the rest, and sends the message: my thing follows the pointer up and down but keeps its place across."
      }
     }
    },
@@ -2304,7 +2316,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cright\u201d: drops a x-1 on the across of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
        },
        {
         "kind": "robot",
@@ -2448,7 +2461,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cnear\u201d: drops a x-1 on the away of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
        },
        {
         "kind": "robot",
@@ -2592,7 +2606,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cfar\u201d: drops a x-1 on the away of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
        },
        {
         "kind": "robot",
@@ -2714,9 +2729,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The reading is \u201cnone\u201d -- nothing has happened yet: hands the speed over once, eats the reading, and sleeps. The clock does the moving."
        }
-      ]
+      ],
+      "note": "Leads the team. The edge reading says \u201cleft\u201d: drops a x-1 on the across of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
      }
     }
    },
@@ -3198,7 +3215,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The key on the nest is ArrowRight: eats it and sends [move | across | 1/20]."
        },
        {
         "kind": "robot",
@@ -3375,7 +3393,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The key on the nest is ArrowUp: eats it and sends [move | away | -1/20]."
        },
        {
         "kind": "robot",
@@ -3552,7 +3571,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The key on the nest is ArrowDown: eats it and sends [move | away | 1/20]."
        },
        {
         "kind": "robot",
@@ -3710,9 +3730,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Any other key: eats it, so one stray key does not stop the team."
        }
-      ]
+      ],
+      "note": "Leads the team. The key on the nest is ArrowLeft: eats it and sends [move | across | -1/20]."
      }
     }
    },
@@ -4009,9 +4031,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something has bumped my thing: eats the reading and sends [move | size | 1/4] -- it grows by a quarter, once per bump."
        }
-      ]
+      ],
+      "note": "Leads the team. The touch reading says the contact has ended (\u201cnothing\u201d): eats it and dozes again."
      }
     }
    },
@@ -4308,9 +4332,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something has bumped my thing: eats the reading and sends [move | size | -1/4] -- it shrinks by a quarter, once per bump."
        }
-      ]
+      ],
+      "note": "Leads the team. The touch reading says the contact has ended (\u201cnothing\u201d): eats it and dozes again."
      }
     }
    },
@@ -4625,9 +4651,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something has bumped my thing: eats the reading and gives \u201cplay\u201d to the bell\u2019s bird -- a ding."
        }
-      ]
+      ],
+      "note": "Leads the team. The contact has ended: eats the reading and dozes."
      }
     }
    },
@@ -5076,7 +5104,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my right side: sets the across step to go left, then sends both steps. Flipping would not do -- half the time it turns you into the thing."
        },
        {
         "kind": "robot",
@@ -5251,7 +5280,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my near side: sets the away step to go far, then sends both steps. Flipping would not do -- half the time it turns you into the thing."
        },
        {
         "kind": "robot",
@@ -5426,7 +5456,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my far side: sets the away step to come near, then sends both steps. Flipping would not do -- half the time it turns you into the thing."
        },
        {
         "kind": "robot",
@@ -5569,9 +5600,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Nothing is against me: just sends both steps."
        }
-      ]
+      ],
+      "note": "Leads the team. Something is against my left side: sets the across step to go right, then sends both steps. Flipping would not do -- half the time it turns you into the thing."
      }
     }
    },
@@ -5965,7 +5998,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The pans are full and the scale does not lean to the speed: under the limit, so it only clears the pans."
        },
        {
         "kind": "robot",
@@ -6149,9 +6183,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "A speed is on the channel: takes it, puts its across on one pan and the limit on the other, and vacuums the rest. Next round the lean decides."
        }
-      ]
+      ],
+      "note": "Leads the team. The scale leans to the speed: over the limit. Sends [set | speed | [1/2 | ]] -- the across capped, the away left alone -- and clears the pans."
      }
     },
     "speed": {
@@ -6452,9 +6488,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something has bumped my thing: eats the reading and gives a +1 to the score\u2019s bird."
        }
-      ]
+      ],
+      "note": "Leads the team. The contact has ended: eats the reading and dozes."
      }
     }
    },
@@ -6855,7 +6893,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my right side: fills in the speed\u2019s across to go left, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
        },
        {
         "kind": "robot",
@@ -7024,7 +7063,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my near side: fills in the speed\u2019s away to go far, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
        },
        {
         "kind": "robot",
@@ -7193,7 +7233,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my far side: fills in the speed\u2019s away to come near, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
        },
        {
         "kind": "robot",
@@ -7300,9 +7341,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The contact has ended: eats the announcement and sleeps again."
        }
-      ]
+      ],
+      "note": "Leads the team. Something is against my left side: fills in the speed\u2019s across to go right, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
      }
     }
    },
@@ -7596,7 +7639,8 @@
         }
        ]
       },
-      "team": []
+      "team": [],
+      "note": "Each round, on the turn\u2019s number: a copy of the die lands (1, 2 or 3), then the -2 (-1, 0 or 1), then the x30 (-30, 0 or 30 degrees). A copy of the turn goes to the bird, then a copy of the forward step: a yaw, then a step the way it faces."
      }
     }
    },

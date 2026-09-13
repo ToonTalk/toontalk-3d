@@ -63,7 +63,10 @@ pilot_bot = robot(                                           # noqa: F405
      copy('given', 2), put('given', 0)],     # then nose up a little # noqa: F405
     trained_on=box(bird(T3.ORDERS_ID, T3.ORDERS_GUID),       # noqa: F405
                    box(txt('move'), num(10)),                # noqa: F405
-                   box(txt('pitch'), num(30))))              # noqa: F405
+                   box(txt('pitch'), num(30))),              # noqa: F405
+    note='Three orders, always the same three: [move | 10], [move | 10], '
+         '[pitch | 30], each a copy given to the bird to the letterbox. Two strides '
+         'then a turn, and the path closes into a loop -- no counting anywhere.')
 pilot = dict(gadget('the pilot', PILOT, pilot_bot, pilot_work,   # noqa: F405
                     look=dict(bg='#3a2340', ink='#ffd9a0', font='sans', h=0.42)),
              boundTo=PLANE)

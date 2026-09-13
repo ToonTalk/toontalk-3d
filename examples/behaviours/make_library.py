@@ -33,7 +33,10 @@ def straight(name, lid, dx):
     step = msg('move', 'across', num(dx[0], dx[1]))          # noqa: F405
     work = box(to(lid, 'my thing'), step)                    # noqa: F405
     bot = robot('Mover', box(ANYBIRD, ANYBOX), give,         # noqa: F405
-                trained_on=box(to(lid), step))               # noqa: F405
+                trained_on=box(to(lid), step),               # noqa: F405
+                note='Every round it copies the step and gives it to my thing’s bird: '
+                     '[move | across | ' + ('1/60' if dx[0] > 0 else '-1/60') + ']. '
+                     'That is the whole of “' + name + '”.')
     return gadget(name, lid, bot, work)
 
 
@@ -56,12 +59,20 @@ b_cond = lambda w: box(ANYBIRD, ANYBOX, ANYBOX,               # noqa: E731,F405
 b_go = [copy('given', 1), put('given', 0),                    # noqa: F405
         copy('given', 2), put('given', 0)]                    # noqa: F405
 b_flip = lambda hole: drop(-1, '*', 'given', hole, 2) + b_go  # noqa: E731,F405
-b_lead = robot('at the left', b_cond('left'), b_flip(1), trained_on=b_trained)   # noqa: F405
+b_wall = lambda w, axis: ('The edge reading says “' + w + '”: drops a x-1 on the '   # noqa: E731
+                          + axis + ' step to turn it round, then sends both steps.')
+b_lead = robot('at the left', b_cond('left'), b_flip(1), trained_on=b_trained,   # noqa: F405
+               note='Leads the team. ' + b_wall('left', 'across'))
 b_lead['team'] = [
-    robot('at the right', b_cond('right'), b_flip(1), trained_on=b_trained),     # noqa: F405
-    robot('at the near wall', b_cond('near'), b_flip(2), trained_on=b_trained),  # noqa: F405
-    robot('at the far wall', b_cond('far'), b_flip(2), trained_on=b_trained),    # noqa: F405
-    robot('moving', b_cond(None), b_go, trained_on=b_trained),                   # noqa: F405
+    robot('at the right', b_cond('right'), b_flip(1), trained_on=b_trained,     # noqa: F405
+          note=b_wall('right', 'across')),
+    robot('at the near wall', b_cond('near'), b_flip(2), trained_on=b_trained,  # noqa: F405
+          note=b_wall('near', 'away')),
+    robot('at the far wall', b_cond('far'), b_flip(2), trained_on=b_trained,    # noqa: F405
+          note=b_wall('far', 'away')),
+    robot('moving', b_cond(None), b_go, trained_on=b_trained,                   # noqa: F405
+          note='Any other reading: just sends both steps. It comes last so a wall '
+               'gets its turn first.'),
 ]
 bouncing = gadget('bouncing', BOUNCE, b_lead, b_work)
 
@@ -84,13 +95,22 @@ g_send = [copy('given', 1), put('given', 0),                 # noqa: F405
           takeTop('given', 2), put('s0'), vac('s0')]         # noqa: F405
 # the across of the speed is given[1][2][0]; the away is given[1][2][1]
 g_flip = lambda hole: drop(-1, '*', 'given', 1, 2, hole) + g_send   # noqa: E731,F405
-g_lead = robot('at the left', g_cond('left'), g_flip(0), trained_on=g_trained)    # noqa: F405
+g_wall = lambda w, axis: ('The edge reading says “' + w + '”: drops a x-1 on the '   # noqa: E731
+                          + axis + ' of the speed, hands the whole speed over, then '
+                          'eats the reading so the team sleeps until the next wall.')
+g_lead = robot('at the left', g_cond('left'), g_flip(0), trained_on=g_trained,    # noqa: F405
+               note='Leads the team. ' + g_wall('left', 'across'))
 g_lead['team'] = [
-    robot('at the right', g_cond('right'), g_flip(0), trained_on=g_trained),     # noqa: F405
-    robot('at the near wall', g_cond('near'), g_flip(1), trained_on=g_trained),  # noqa: F405
-    robot('at the far wall', g_cond('far'), g_flip(1), trained_on=g_trained),    # noqa: F405
+    robot('at the right', g_cond('right'), g_flip(0), trained_on=g_trained,     # noqa: F405
+          note=g_wall('right', 'across')),
+    robot('at the near wall', g_cond('near'), g_flip(1), trained_on=g_trained,  # noqa: F405
+          note=g_wall('near', 'away')),
+    robot('at the far wall', g_cond('far'), g_flip(1), trained_on=g_trained,    # noqa: F405
+          note=g_wall('far', 'away')),
     # 'none' is what the nest holds before anything has happened: setting off
-    robot('setting off', g_cond('none'), g_send, trained_on=g_trained),          # noqa: F405
+    robot('setting off', g_cond('none'), g_send, trained_on=g_trained,          # noqa: F405
+          note='The reading is “none” -- nothing has happened yet: hands the speed '
+               'over once, eats the reading, and sleeps. The clock does the moving.'),
 ]
 gliding = gadget('bouncing at a speed', GLIDE, g_lead, g_work)
 
@@ -105,13 +125,18 @@ w_cond = lambda w: box(ANYBIRD, ANYBOX,                      # noqa: E731,F405
                        txt(w) if w else WILDTEXT, ANYBOX, ANYBOX)   # noqa: F405
 w_lead = robot('off the right', w_cond('right'),             # noqa: F405
                [copy('given', 3), put('given', 0)],          # noqa: F405
-               trained_on=box(to(WRAP), w_step, edge_nest(WRAP, 9041), w_left, w_right))  # noqa: F405
+               trained_on=box(to(WRAP), w_step, edge_nest(WRAP, 9041), w_left, w_right),  # noqa: F405
+               note='Leads the team. The edge reading says “right”: sends '
+                    '[set | across | -3/2], which puts my thing back at the left side.')
 w_lead['team'] = [
     robot('off the left', w_cond('left'),                    # noqa: F405
           [copy('given', 4), put('given', 0)],               # noqa: F405
-          trained_on=box(to(WRAP), w_step, edge_nest(WRAP, 9041), w_left, w_right)),      # noqa: F405
+          trained_on=box(to(WRAP), w_step, edge_nest(WRAP, 9041), w_left, w_right),      # noqa: F405
+          note='The edge reading says “left”: sends [set | across | 3/2] -- round '
+               'to the right side.'),
     robot('moving', w_cond(None), give,                      # noqa: F405
-          trained_on=box(to(WRAP), w_step, edge_nest(WRAP, 9041), w_left, w_right)),      # noqa: F405
+          trained_on=box(to(WRAP), w_step, edge_nest(WRAP, 9041), w_left, w_right),      # noqa: F405
+          note='Any other reading: sends the step, [move | across | 1/40].'),
 ]
 wrapping = gadget('wrapping at the edges', WRAP, w_lead, w_work)
 
@@ -124,7 +149,10 @@ f_bot = robot(                                                # noqa: F405
     [copy('given', 2), put('s0'),                             # noqa: F405
      takeTop('given', 1), put('s0', 2),                       # noqa: F405
      take('s0'), put('given', 0)],                            # noqa: F405
-    trained_on=box(to(FOLLOW), point_nest(9051), f_template))  # noqa: F405
+    trained_on=box(to(FOLLOW), point_nest(9051), f_template),  # noqa: F405
+    note='Copies the [set | position | _] template, takes the pointer’s '
+         '[across | away] off the nest, puts it in the empty hole, and gives the '
+         'message to my thing’s bird. It dozes between moves.')
 following = gadget('following the pointer', FOLLOW, f_bot, f_work)
 
 # ------------------------------------------------------- 13 pointer, one axis
@@ -144,7 +172,11 @@ fv_bot = robot(                                              # noqa: F405
      take('s1', 1), put('s0', 2),            # the AWAY of it, into the hole  # noqa: F405
      vac('s1'),                              # and the husk to Dusty          # noqa: F405
      take('s0'), put('given', 0)],           # away to my thing               # noqa: F405
-    trained_on=box(to(FOLLOWV), point_nest(9151), fv_template))   # noqa: F405
+    trained_on=box(to(FOLLOWV), point_nest(9151), fv_template),   # noqa: F405
+    note='Copies the [set | away | _] template, takes what the pointer said, moves '
+         'only the AWAY of it into the hole, vacuums the rest, and sends the '
+         'message: my thing follows the pointer up and down but keeps its place '
+         'across.')
 following_v = gadget('following up and down', FOLLOWV, fv_bot, fv_work)
 
 # ---------------------------------------------------------------- 6 arrows
@@ -161,10 +193,17 @@ a_cond = lambda w: box(ANYBIRD, txt(w) if w else WILDTEXT,   # noqa: E731,F405
 eat = [takeTop('given', 1), put('s0'), vac('s0')]            # noqa: F405
 
 
+A_STEP = {2: '[move | across | -1/20]', 3: '[move | across | 1/20]',
+          4: '[move | away | -1/20]', 5: '[move | away | 1/20]'}
+
+
 def arrow(name, word, hole):
     return robot(name, a_cond(word),                          # noqa: F405
                  eat + [copy('given', hole), put('given', 0)],  # noqa: F405
-                 trained_on=a_trained)
+                 trained_on=a_trained,
+                 note=('Leads the team. ' if hole == 2 else '')
+                 + 'The key on the nest is ' + word + ': eats it and sends '
+                 + A_STEP[hole] + '.')
 
 
 a_lead = arrow('left', 'ArrowLeft', 2)
@@ -173,7 +212,8 @@ a_lead['team'] = [
     arrow('up', 'ArrowUp', 4),
     arrow('down', 'ArrowDown', 5),
     # anything else is swallowed, so one stray key does not stop the team
-    robot('any other key', a_cond(None), eat, trained_on=a_trained),   # noqa: F405
+    robot('any other key', a_cond(None), eat, trained_on=a_trained,   # noqa: F405
+          note='Any other key: eats it, so one stray key does not stop the team.'),
 ]
 arrows = gadget('moving with the arrow keys', ARROW, a_lead, a_work)
 

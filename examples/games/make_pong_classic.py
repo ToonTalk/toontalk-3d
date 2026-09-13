@@ -129,7 +129,7 @@ ball_work = box(to(BALL, 'my thing'), go_right, go_left, go_near, go_far,  # noq
 send = lambda i: [copy('given', i), put('given', 0)]         # noqa: E731,F405
 
 
-def ball_bot(name, edge, side, program):
+def ball_bot(name, edge, side, program, note=None):
     trained = box(to(BALL), go_right, go_left, go_near, go_far,   # noqa: F405
                   edge_nest(BALL, EDGE_N, edge or 'none'),
                   touch_nest(BALL, TOUCH_N,
@@ -140,26 +140,39 @@ def ball_bot(name, edge, side, program):
                box(ANYBIRD if side else WILD,                # noqa: F405
                    txt(side) if side else WILDTEXT),         # noqa: F405
                ANYBOX, ANYBIRD, ANYNUM)                      # noqa: F405
-    return robot(name, cond, program, trained_on=trained)    # noqa: F405
+    return robot(name, cond, program, trained_on=trained, note=note)    # noqa: F405
 
 
 # In order. Running into something beats reaching a wall, because the bat
 # stands just inside the wall it is guarding.
-ball_team = ball_bot('hit on my left', None, 'left', send(1))
+MSG = {1: '[set | speed | [3/7 | ]] -- go right, and say nothing about up and down',
+       2: '[set | speed | [-3/7 | ]] -- go left, and say nothing about up and down',
+       3: '[set | speed | [ | 2/9]] -- come near, and say nothing about across',
+       4: '[set | speed | [ | -2/9]] -- go far, and say nothing about across'}
+touch = lambda s, i: ('The touch reading says something is on my ' + s + ': sends '   # noqa: E731
+                      + MSG[i] + '.')
+wall = lambda w, i: 'The edge reading says “' + w + '”: sends ' + MSG[i] + '.'   # noqa: E731
+ball_team = ball_bot('hit on my left', None, 'left', send(1),
+                     note='Leads the team. ' + touch('left', 1))
 ball_team['team'] = [
-    ball_bot('hit on my right', None, 'right', send(2)),
-    ball_bot('hit on my far side', None, 'far', send(3)),
-    ball_bot('hit on my near side', None, 'near', send(4)),
-    ball_bot('the right wall', 'right', None, send(2)),
-    ball_bot('the far wall', 'far', None, send(3)),
-    ball_bot('the near wall', 'near', None, send(4)),
+    ball_bot('hit on my right', None, 'right', send(2), note=touch('right', 2)),
+    ball_bot('hit on my far side', None, 'far', send(3), note=touch('far side', 3)),
+    ball_bot('hit on my near side', None, 'near', send(4), note=touch('near side', 4)),
+    ball_bot('the right wall', 'right', None, send(2), note=wall('right', 2)),
+    ball_bot('the far wall', 'far', None, send(3), note=wall('far', 3)),
+    ball_bot('the near wall', 'near', None, send(4), note=wall('near', 4)),
     # the left wall is the one you are guarding: getting there is a miss
     ball_bot('past the bat', 'left', None,
              [copy('given', 9), put('given', 8)]             # noqa: F405
              + [copy('given', 7), put('given', 0)]
-             + send(1)),
+             + send(1),
+             note='The edge reading says “left” -- the wall you guard, so you missed: '
+                  'a +1 to the counter’s bird, back to the middle, and off to the '
+                  'right again.'),
     # and one that does nothing, because most rounds there is nothing to do
-    ball_bot('flying', None, None, []),
+    ball_bot('flying', None, None, [],
+             note='Nothing has happened: no steps at all. The ball moves on the clock, '
+                  'so most rounds there is nothing to do.'),
 ]
 
 # --- the bat ----------------------------------------------------------------
@@ -183,7 +196,10 @@ bat_bot = robot(                                             # noqa: F405
         take('s0'), put('given', 0),
     ],
     trained_on=box(to(BAT),                                  # noqa: F405
-                   device(POINT_N, DEV_POINT, 'pointer'), bat_msg))
+                   device(POINT_N, DEV_POINT, 'pointer'), bat_msg),
+    note='Copies the [set | away | _] template, takes what the pointer said, drops '
+         'a -7/4 on its away -- the pitch’s middle is 7/4 further back than the '
+         'table’s -- puts that in the hole, vacuums the rest, and sends it.')
 
 
 def gadget(thing, bot, work):

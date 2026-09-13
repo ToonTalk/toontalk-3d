@@ -58,6 +58,8 @@ finish = {
     ],
     'trainedOn': box(num(N), bird()),
     'team': [],
+    'note': 'Leads the team. The number is 0: gives the bird a box with no holes -- '
+            'the empty list, the end -- then vacuums its own box to finish.',
 }
 
 # --- any other number: hand over one link and count down -------------------
@@ -75,6 +77,9 @@ worker = {
         put('given', 0),                 # one less to go
     ],
     'trainedOn': None, 'team': [],
+    'note': 'Any other number: builds a link [a copy of the number, a fresh nest], '
+            'gives it to the bird, keeps the nest’s own bird for the next link, '
+            'and counts the number down by one.',
 }
 
 finish['team'] = [worker]

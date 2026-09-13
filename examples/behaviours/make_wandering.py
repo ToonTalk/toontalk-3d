@@ -35,7 +35,11 @@ def wandering(lid=WANDER):
                copy('given', 1), put('given', 0)]            # noqa: F405
     bot = robot('Wanderer',                                  # noqa: F405
                 box(ANYBIRD, ANYBOX, ANYBOX, {'kind': 'wildDie'}, ANYNUM, ANYNUM),   # noqa: F405
-                program, trained_on=trained)
+                program, trained_on=trained,
+                note='Each round, on the turn’s number: a copy of the die lands (1, 2 or '
+                     '3), then the -2 (-1, 0 or 1), then the x30 (-30, 0 or 30 degrees). '
+                     'A copy of the turn goes to the bird, then a copy of the forward '
+                     'step: a yaw, then a step the way it faces.')
     return gadget('wandering', lid, bot, work)
 
 

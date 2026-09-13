@@ -84,14 +84,26 @@ def judge(name, post_id, post_guid, reply_id, reply_guid, right, on_right,
     work = box(*holes)                                              # noqa: F405
     rest = [None] * (len(holes) - 1)
     yes = robot(name, box(right, *rest),                            # noqa: F405
-                [takeTop('given', 0), put('s0')] + list(on_right))  # noqa: F405
+                [takeTop('given', 0), put('s0')] + list(on_right),  # noqa: F405
+                note='The judge. It dozes on the post nest until an answer '
+                     'arrives, and this member knows a right one: it takes '
+                     'the answer off the nest and sends the note that follows '
+                     'out by the reply bird'
+                     + (', and opens the next puzzle.'
+                        if any(st.get('type') == 'load' for st in on_right) else '.'))
     send_back = [copy('given', sorry_i), put('given', 1),           # a copy of the note  # noqa: F405
                  takeTop('given', 0), put('given', 1)]              # ...then the answer  # noqa: F405
-    team = [robot(name + ' (not a box like that)', box(ANYBOX, *rest), send_back),   # noqa: F405
-            robot(name + ' (not a number)', box(ANYNUM, *rest), send_back),          # noqa: F405
-            robot(name + ' (not a pad)', box(WILDTEXT, *rest), send_back)]           # noqa: F405
+    wrong = ('It sends back a copy of the \u201cnot quite\u201d pad by the '
+             'reply bird, and then the answer itself.')
+    team = [robot(name + ' (not a box like that)', box(ANYBOX, *rest), send_back,   # noqa: F405
+                  note='The answer is a box, but not the one the computer wants. ' + wrong),
+            robot(name + ' (not a number)', box(ANYNUM, *rest), send_back,          # noqa: F405
+                  note='The answer is a number, but not the one the computer wants. ' + wrong),
+            robot(name + ' (not a pad)', box(WILDTEXT, *rest), send_back,           # noqa: F405
+                  note='The answer is a pad, but not the one the computer wants. ' + wrong)]
     for cond, prog in others:
-        team.insert(0, robot(name + ' (other)', box(cond, *rest), prog))  # noqa: F405
+        team.insert(0, robot(name + ' (other)', box(cond, *rest), prog,  # noqa: F405
+                             note='One particular answer this judge has a reply of its own for.'))
     yes['team'] = team
     return dict(room(name, work, yes, opaque=True, dirty=True), judge=True)     # noqa: F405
 

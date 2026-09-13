@@ -43,6 +43,7 @@
      "active": {
       "kind": "robot",
       "name": "Teller",
+      "note": "Leads the team. The scale tips left: the new balance stays above zero. Banks the amount, sends the new balance home with the request\u2019s own bird, and sweeps the request and the scale away.",
       "condition": {
        "kind": "box",
        "holes": [
@@ -156,6 +157,7 @@
        {
         "kind": "robot",
         "name": "ok too",
+        "note": "The scale is level: the account would be exactly empty, which is allowed. Banks the amount, sends the new balance home, and clears up.",
         "condition": {
          "kind": "box",
          "holes": [
@@ -312,7 +314,8 @@
          }
         ],
         "trainedOn": null,
-        "team": []
+        "team": [],
+        "note": "The scale tips right: the balance would go below zero. Sends a copy of the \u201cnot enough money\u201d slip home instead, and clears up."
        },
        {
         "kind": "robot",
@@ -433,7 +436,8 @@
          }
         ],
         "trainedOn": null,
-        "team": []
+        "team": [],
+        "note": "A request is on the nest: takes the oldest one off, fetches a scale, puts the balance plus the amount asked for in one pan and 0 in the other. The tilt is the decision."
        }
       ]
      }

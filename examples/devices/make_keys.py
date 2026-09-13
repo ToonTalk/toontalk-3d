@@ -20,7 +20,10 @@ scribe = robot(
         takeTop('given', 0),          # the key that was pressed, off the nest
         put('given', 1),              # joined onto the right edge of the pad
     ],
-    trained_on=box(device(KEYS, DEV_KEYS, 'keyboard'), txt('')))
+    trained_on=box(device(KEYS, DEV_KEYS, 'keyboard'), txt('')),
+    note='Its thought is some words on the keyboard nest and anything beside them. '
+         'A bare nest puts it to sleep; a key press wakes it, and it joins the key '
+         'onto the pad.')
 
 work = box(device(KEYS, DEV_KEYS, 'keyboard'), txt(''))
 

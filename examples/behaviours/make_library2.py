@@ -43,11 +43,16 @@ def sized(title, lid, n, d):
     t_on = lambda side: box(to(lid), touch_nest(lid, 0, side), step)   # noqa: E731,F405
     quiet = robot('contact ends', box(ANYBIRD, hit_box('none'), ANYBOX),   # noqa: F405
                   [takeTop('given', 1), put('s0'), vac('s0')],             # noqa: F405
-                  trained_on=t_on('none'))
+                  trained_on=t_on('none'),
+                  note='Leads the team. The touch reading says the contact has ended '
+                       '(“nothing”): eats it and dozes again.')
     act = robot(title, box(ANYBIRD, hit_box(), ANYBOX),      # noqa: F405
                 [takeTop('given', 1), put('s0'), vac('s0'),  # noqa: F405
                  copy('given', 2), put('given', 0)],         # noqa: F405
-                trained_on=t_on('left'))
+                trained_on=t_on('left'),
+                note='Something has bumped my thing: eats the reading and sends '
+                     '[move | size | ' + str(n) + '/' + str(d) + '] -- it '
+                     + ('grows' if n > 0 else 'shrinks') + ' by a quarter, once per bump.')
     team = dict(quiet)
     team['team'] = [act]
     work = box(to(lid, 'my thing'), touch_nest(lid, 0, empty=True), step)   # noqa: F405
@@ -69,11 +74,14 @@ s_on = lambda side: box(touch_nest(SND, 0, side),             # noqa: E731,F405
                         to(BELL), s_play, bell)
 s_quiet = robot('contact ends', box(hit_box('none'), ANYBIRD, WILDTEXT, WILD),   # noqa: F405
                 [takeTop('given', 0), put('s0'), vac('s0')],               # noqa: F405
-                trained_on=s_on('none'))
+                trained_on=s_on('none'),
+                note='Leads the team. The contact has ended: eats the reading and dozes.')
 s_act = robot('ding on a hit', box(hit_box(), ANYBIRD, WILDTEXT, WILD),          # noqa: F405
               [takeTop('given', 0), put('s0'), vac('s0'),                  # noqa: F405
                copy('given', 2), put('given', 1)],                         # noqa: F405
-              trained_on=s_on('left'))
+              trained_on=s_on('left'),
+              note='Something has bumped my thing: eats the reading and gives “play” '
+                   'to the bell’s bird -- a ding.')
 s_team = dict(s_quiet)
 s_team['team'] = [s_act]
 s_work = box(touch_nest(SND, 0, empty=True), to(BELL, 'the bell'),          # noqa: F405
@@ -101,16 +109,22 @@ def r_head(hole, n, d):
 
 r_fly = [copy('given', 1), put('given', 0),                   # noqa: F405
          copy('given', 2), put('given', 0)]                   # noqa: F405
+r_side = lambda side, step, way: ('Something is against my ' + side + ' side: sets the '   # noqa: E731
+                                  + step + ' step to ' + way + ', then sends both steps. '
+                                  'Flipping would not do -- half the time it turns you '
+                                  'into the thing.')
 r_lead = robot('thing on my left', r_cond('left'), r_head(1, 1, 50) + r_fly,
-               trained_on=r_on('left'))
+               trained_on=r_on('left'),
+               note='Leads the team. ' + r_side('left', 'across', 'go right'))
 r_lead['team'] = [
     robot('thing on my right', r_cond('right'), r_head(1, -1, 50) + r_fly,
-          trained_on=r_on('right')),
+          trained_on=r_on('right'), note=r_side('right', 'across', 'go left')),
     robot('thing on my near side', r_cond('near'), r_head(2, -1, 80) + r_fly,
-          trained_on=r_on('near')),
+          trained_on=r_on('near'), note=r_side('near', 'away', 'go far')),
     robot('thing on my far side', r_cond('far'), r_head(2, 1, 80) + r_fly,
-          trained_on=r_on('far')),
-    robot('moving', r_cond(None), r_fly, trained_on=r_on('none')),
+          trained_on=r_on('far'), note=r_side('far', 'away', 'come near')),
+    robot('moving', r_cond(None), r_fly, trained_on=r_on('none'),
+          note='Nothing is against me: just sends both steps.'),
 ]
 r_work = box(to(REV, 'my thing'), r_across, r_away, touch_nest(REV, 0))   # noqa: F405
 reversing = gadget('reverse on collision', REV, r_lead, r_work)           # noqa: F405
@@ -133,18 +147,26 @@ capper = robot('over the limit',
                box(ANYBIRD, ANYNEST, tilt('L'), ANYNUM, ANYBOX),   # noqa: F405
                [copy('given', 4), put('given', 0),            # noqa: F405
                 vac('given', 2, 0), vac('given', 2, 1)],      # noqa: F405
-               trained_on=l_on)
+               trained_on=l_on,
+               note='Leads the team. The scale leans to the speed: over the limit. '
+                    'Sends [set | speed | [1/2 | ]] -- the across capped, the away '
+                    'left alone -- and clears the pans.')
 clearer = robot('weighed and fine',
                 box(ANYBIRD, ANYNEST, scale(ANYNUM, ANYNUM), ANYNUM, ANYBOX),  # noqa: F405
                 [vac('given', 2, 0), vac('given', 2, 1)],     # noqa: F405
-                trained_on=l_on)
+                trained_on=l_on,
+                note='The pans are full and the scale does not lean to the speed: '
+                     'under the limit, so it only clears the pans.')
 weigher = robot('a speed arrives',
                 box(ANYBIRD, box(ANYNUM, ANYNUM), scale(None, None), ANYNUM, ANYBOX),  # noqa: F405
                 [takeTop('given', 1), put('s0'),              # noqa: F405
                  take('s0', 0), put('given', 2, 0),           # noqa: F405
                  copy('given', 3), put('given', 2, 1),        # noqa: F405
                  vac('s0')],                                  # noqa: F405
-                trained_on=l_on)
+                trained_on=l_on,
+                note='A speed is on the channel: takes it, puts its across on one pan '
+                     'and the limit on the other, and vacuums the rest. Next round '
+                     'the lean decides.')
 l_team = dict(capper)
 l_team['team'] = [clearer, weigher]
 l_work = box(to(LIM, 'my thing'), l_nest(), scale(None, None), l_limit, l_cap)  # noqa: F405
@@ -160,11 +182,14 @@ c_on = lambda side: box(touch_nest(SCR, 0, side),             # noqa: E731,F405
                         to(TALLY), one, tally)
 c_quiet = robot('contact ends', box(hit_box('none'), ANYBIRD, ANYNUM, ANYNUM),    # noqa: F405
                 [takeTop('given', 0), put('s0'), vac('s0')],              # noqa: F405
-                trained_on=c_on('none'))
+                trained_on=c_on('none'),
+                note='Leads the team. The contact has ended: eats the reading and dozes.')
 c_act = robot('one for a hit', box(hit_box(), ANYBIRD, ANYNUM, ANYNUM),           # noqa: F405
               [takeTop('given', 0), put('s0'), vac('s0'),                 # noqa: F405
                copy('given', 2), put('given', 1)],                        # noqa: F405
-              trained_on=c_on('left'))
+              trained_on=c_on('left'),
+              note='Something has bumped my thing: eats the reading and gives a +1 to '
+                   'the score’s bird.')
 c_team = dict(c_quiet)
 c_team['team'] = [c_act]
 c_work = box(touch_nest(SCR, 0, empty=True), to(TALLY, 'the score'),       # noqa: F405
@@ -198,19 +223,28 @@ def rs_set(hole, n, d):
 # hand the speed over, then eat the announcement and go back to sleep
 rs_fly = [copy('given', 1), put('given', 0),                 # noqa: F405
           takeTop('given', 2), put('s0'), vac('s0')]         # noqa: F405
+rs_side = lambda side, axis, way: ('Something is against my ' + side + ' side: fills in '   # noqa: E731
+                                   'the speed’s ' + axis + ' to ' + way + ', leaves the '
+                                   'other hole empty, hands the speed over, and eats the '
+                                   'announcement so it sleeps until the next contact.')
 rs_lead = robot('thing on my left', rs_cond('left'),         # noqa: F405
-                rs_set(0, 9, 20) + rs_fly, trained_on=rs_on('left'))
+                rs_set(0, 9, 20) + rs_fly, trained_on=rs_on('left'),
+                note='Leads the team. ' + rs_side('left', 'across', 'go right'))
 rs_lead['team'] = [
     robot('thing on my right', rs_cond('right'),             # noqa: F405
-          rs_set(0, -9, 20) + rs_fly, trained_on=rs_on('right')),
+          rs_set(0, -9, 20) + rs_fly, trained_on=rs_on('right'),
+          note=rs_side('right', 'across', 'go left')),
     robot('thing on my near side', rs_cond('near'),          # noqa: F405
-          rs_set(1, -11, 40) + rs_fly, trained_on=rs_on('near')),
+          rs_set(1, -11, 40) + rs_fly, trained_on=rs_on('near'),
+          note=rs_side('near', 'away', 'go far')),
     robot('thing on my far side', rs_cond('far'),            # noqa: F405
-          rs_set(1, 11, 40) + rs_fly, trained_on=rs_on('far')),
+          rs_set(1, 11, 40) + rs_fly, trained_on=rs_on('far'),
+          note=rs_side('far', 'away', 'come near')),
     # contact ending is an announcement too: eat it and sleep again
     robot('contact ends', box(ANYBIRD, ANYBOX, hit_box('none')),   # noqa: F405
           [takeTop('given', 2), put('s0'), vac('s0')],             # noqa: F405
-          trained_on=rs_on('none')),
+          trained_on=rs_on('none'),
+          note='The contact has ended: eats the announcement and sleeps again.'),
 ]
 reversing_speed = gadget('reverse a speed on collision', RSP,   # noqa: F405
                          rs_lead, rs_work())

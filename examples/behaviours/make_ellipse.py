@@ -67,7 +67,11 @@ program = axis(2, 4, 6, 8) + axis(3, 5, 7, 9) + [
     copy('given', 10), put('given', 1),        # the angle takes its step  # noqa: F405
 ]
 
-bot = robot('Ellipse', cond, program, trained_on=trained)    # noqa: F405
+bot = robot('Ellipse', cond, program, trained_on=trained,    # noqa: F405
+            note='Builds the across on the scratch spot -- a copy of the angle, then the '
+                 'sin badge, the radius and the centre dropped on it -- puts it into '
+                 '[set | across | _] and sends it; the same for the away with cos; '
+                 'then the angle takes its step of 6 degrees. A lap is sixty rounds.')
 ellipse = gadget('moving in an ellipse', ELL, bot, work)     # noqa: F405
 
 ABOUT = ('MOVING IN AN ELLIPSE\n\n'

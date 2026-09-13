@@ -140,12 +140,17 @@ def march_card(lid, i):
                      [copy('given', 4), put('given', 0),        # noqa: F405
                       copy('given', 2), put('given', 0),        # noqa: F405
                       copy('given', 5), put('given', 0)],       # noqa: F405
-                     trained_on=trained('right'))
+                     trained_on=trained('right'),
+                     note='Leads the pair. The edge reading says “right”: sends drop '
+                          'down, go left, and a nudge left off the wall. The march '
+                          'itself is a speed; this card only turns it at the walls.')
     at_left = robot('at the left wall', cond('left'),           # noqa: F405
                     [copy('given', 4), put('given', 0),         # noqa: F405
                      copy('given', 3), put('given', 0),         # noqa: F405
                      copy('given', 6), put('given', 0)],        # noqa: F405
-                    trained_on=trained('left'))
+                    trained_on=trained('left'),
+                    note='The edge reading says “left”: sends drop down, go right, and '
+                         'a nudge right off the wall.')
     at_right['team'] = [at_left]
     return card('I march across, and at a wall\nI drop down and turn round.',
                 'G%d' % (nid + 1), at_right, work, bound=lid)
@@ -167,12 +172,16 @@ def explode_card(lid, i):
                 box(ANYBIRD, touch_cond(name='bullet'), ANYBIRD, WILDTEXT, WILDTEXT),   # noqa: F405
                 [copy('given', 3), put('given', 2),             # noqa: F405
                  copy('given', 4), put('given', 0)],            # noqa: F405
-                trained_on=trained('bullet'))
+                trained_on=trained('bullet'),
+                note='Leads the pair. The touch reading names a bullet: gives “play” '
+                     'to the bang, then sends my thing [vanish].')
     # anything else that touches me, or the end of a contact, is not news:
     # eaten, so the next reading can be seen
     other = robot('something else', box(ANYBIRD, touch_cond(), ANYBIRD, WILDTEXT, WILDTEXT),   # noqa: F405
                   [takeTop('given', 1), put('s0'), vac('s0')],  # noqa: F405
-                  trained_on=trained('nothing'))
+                  trained_on=trained('nothing'),
+                  note='Anything else touching me, or a contact ending, is not news: '
+                       'eats the reading so the next one can be seen.')
     hit['team'] = [other]
     return card('I explode when a bullet\nhits me: a bang, and I vanish.',
                 'G%d' % (nid + 1), hit, work, look=CARD3,
@@ -197,13 +206,17 @@ def bullet_card():
                                   touch_nest(BULLET_L, nid + 1, to(INVADERS[0]) if name != 'nothing' else None, 'far', name), gone)
     top = robot('at the top', box(ANYBIRD, txt('far'), WILD, WILDTEXT),   # noqa: F405
                 [copy('given', 3), put('given', 0)],            # noqa: F405
-                trained_on=trained('far', 'nothing'))
+                trained_on=trained('far', 'nothing'),
+                note='Leads the team. The edge reading says “far” -- the top of the '
+                     'field: sends my thing [vanish].')
     hit = robot('hit an invader', box(ANYBIRD, WILDTEXT, touch_cond(name='invader'), WILDTEXT),   # noqa: F405
                 [copy('given', 3), put('given', 0)],            # noqa: F405
-                trained_on=trained('none', 'invader'))
+                trained_on=trained('none', 'invader'),
+                note='The touch reading names an invader: sends my thing [vanish].')
     other = robot('something else', box(ANYBIRD, WILDTEXT, touch_cond(), WILDTEXT),   # noqa: F405
                   [takeTop('given', 2), put('s0'), vac('s0')],  # noqa: F405
-                  trained_on=trained('none', 'nothing'))
+                  trained_on=trained('none', 'nothing'),
+                  note='Any other touch reading: eats it so the next one can be seen.')
     top['team'] = [hit, other]
     return card('I fly up. At the top, or when\nI hit an invader, I vanish.',
                 'G9391', top, work, look=CARD2, bound=BULLET_L)
@@ -225,12 +238,18 @@ def steer_card():
     trained = lambda k: box(to(SHIP_L), dict(device(KEYS_A, DEV_KEYS, 'keyboard'), pile=[txt(k)]), left, right)   # noqa: E731,F405
     eat = [takeTop('given', 1), put('s0'), vac('s0')]           # noqa: F405
     go_left = robot('left arrow', box(ANYBIRD, txt('ArrowLeft'), ANYBOX, ANYBOX),   # noqa: F405
-                    eat + [copy('given', 2), put('given', 0)], trained_on=trained('ArrowLeft'))   # noqa: F405
+                    eat + [copy('given', 2), put('given', 0)], trained_on=trained('ArrowLeft'),   # noqa: F405
+                    note='Leads the team. The key on the nest is ArrowLeft: eats it and '
+                         'sends [move | across | -1/10].')
     go_right = robot('right arrow', box(ANYBIRD, txt('ArrowRight'), ANYBOX, ANYBOX),   # noqa: F405
-                     eat + [copy('given', 3), put('given', 0)], trained_on=trained('ArrowRight'))   # noqa: F405
+                     eat + [copy('given', 3), put('given', 0)], trained_on=trained('ArrowRight'),   # noqa: F405
+                     note='The key on the nest is ArrowRight: eats it and sends '
+                          '[move | across | 1/10].')
     # every other key is somebody else's: off the nest, so the next can be seen
     other = robot('any other key', box(ANYBIRD, WILDTEXT, ANYBOX, ANYBOX),   # noqa: F405
-                  eat, trained_on=trained('q'))
+                  eat, trained_on=trained('q'),
+                  note='Any other key is somebody else’s: eats it so the next one can '
+                       'be seen.')
     go_left['team'] = [go_right, other]
     return card('I move with the left and\nright arrow keys.', 'G9402', go_left, work, bound=SHIP_L)
 
@@ -246,9 +265,14 @@ def fire_card():
                  eat + [copy('given', 3), put('s1'),            # noqa: F405
                         copy('given', 2), put('s1', 1),         # noqa: F405
                         take('s1'), put('given', 0)],           # noqa: F405
-                 trained_on=trained('ArrowUp'))
+                 trained_on=trained('ArrowUp'),
+                 note='Leads the pair. The key is ArrowUp: eats it, puts a copy of the '
+                      'bullet into the [drop | _ | [0 | -1/3]] message, and sends it -- '
+                      'a bullet set down just above me, arriving switched on.')
     other = robot('any other key', box(ANYBIRD, WILDTEXT, WILD, ANYBOX),   # noqa: F405
-                  eat, trained_on=trained('q'))
+                  eat, trained_on=trained('q'),
+                  note='Any other key is somebody else’s: eats it so the next one can '
+                       'be seen.')
     fire['team'] = [other]
     return card('I fire a bullet with the up\narrow: a copy of the bullet,\ndropped just above me.',
                 'G9412', fire, work, look=CARD2, bound=SHIP_L)
@@ -271,11 +295,16 @@ def referee_card():
     trained = lambda a, b: box(to(FIELD), dict(touches_nest(FIELD, nid), pile=[pair(a, b)]), one, to(SCORE))   # noqa: E731,F405
     eat = [takeTop('given', 1), put('s0'), vac('s0')]           # noqa: F405
     ib = robot('an invader and a bullet', box(ANYBIRD, touches_cond('invader', 'bullet'), ANYNUM, ANYBIRD),   # noqa: F405
-               [copy('given', 2), put('given', 3)] + eat, trained_on=trained('invader', 'bullet'))   # noqa: F405
+               [copy('given', 2), put('given', 3)] + eat, trained_on=trained('invader', 'bullet'),   # noqa: F405
+               note='Leads the team. The field’s touches reading names an invader and '
+                    'a bullet: gives a +1 to the score’s bird, and eats the reading.')
     bi = robot('a bullet and an invader', box(ANYBIRD, touches_cond('bullet', 'invader'), ANYNUM, ANYBIRD),   # noqa: F405
-               [copy('given', 2), put('given', 3)] + eat, trained_on=trained('bullet', 'invader'))   # noqa: F405
+               [copy('given', 2), put('given', 3)] + eat, trained_on=trained('bullet', 'invader'),   # noqa: F405
+               note='The same pair named the other way round: a +1 to the score, and '
+                    'eats the reading.')
     other = robot('anything else meeting', box(ANYBIRD, touches_cond(), ANYNUM, ANYBIRD),   # noqa: F405
-                  eat, trained_on=trained('ship', 'bullet'))
+                  eat, trained_on=trained('ship', 'bullet'),
+                  note='Any other pair meeting on the field: eats the reading.')
     ib['team'] = [bi, other]
     return card('I keep the score: one for\nevery bullet that meets\nan invader.', 'G9421', ib, work,
                 look=CARD3, bound=FIELD)

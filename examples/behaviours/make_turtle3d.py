@@ -95,7 +95,10 @@ def turn_bot(word):
                   take('s0'), put('given', hole, 2),          # noqa: F405
                   copy('given', hole), put('given', 0),       # noqa: F405
                   vac('s1')],                                 # noqa: F405
-                 trained_on=trained(box(txt(word), num(30))))  # noqa: F405
+                 trained_on=trained(box(txt(word), num(30))),  # noqa: F405
+                 note='The order is [' + word + ' | a]: puts the degrees into '
+                      '[move | ' + word + ' | _] and sends it. Degrees are degrees -- '
+                      'nothing scales them.')
 
 
 move_bot = robot(                                             # noqa: F405
@@ -107,7 +110,10 @@ move_bot = robot(                                             # noqa: F405
      take('s0'), put('given', 2, 2),                          # noqa: F405
      copy('given', 2), put('given', 0),                       # noqa: F405
      vac('s1')],                                              # noqa: F405
-    trained_on=trained(box(txt('move'), num(30))))            # noqa: F405
+    trained_on=trained(box(txt('move'), num(30))),            # noqa: F405
+    note='Leads the team. The order is [move | n]: multiplies n by the step size, '
+         'puts it into [move | forward | _] and sends it -- a stride the way the '
+         'turtle is pointing.')
 
 
 def plain_bot(word, hole):
@@ -115,7 +121,11 @@ def plain_bot(word, hole):
     return robot(word, word_cond(word),                       # noqa: F405
                  [takeTop('given', 1), put('s1'), vac('s1'),  # noqa: F405
                   copy('given', hole), put('given', 0)],      # noqa: F405
-                 trained_on=trained(txt(word)))               # noqa: F405
+                 trained_on=trained(txt(word)),               # noqa: F405
+                 note='The word on the letterbox is “' + word + '”: eats it and sends '
+                      + {6: '[set | pen | down]', 7: '[set | pen | up]',
+                         9: '[set | home | yes] -- level, facing the far edge, back on '
+                            'the table'}[hole] + '.')
 
 
 team = dict(move_bot)

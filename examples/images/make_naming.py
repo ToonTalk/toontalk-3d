@@ -35,7 +35,10 @@ def namer(name):
             takeTop('given', 0), put('s0'), vac('s0'),     # read it, drop it
             newtext, settext(name), put('given', 1),       # and say what it was
         ],
-        trained_on=box(nest(SEEN, 'img-seen'), bird(SAID, 'img-said')))
+        trained_on=box(nest(SEEN, 'img-seen'), bird(SAID, 'img-said')),
+        note='Its thought holds the picture of a ' + name + ', and nothing else fits: '
+             'takes the picture off the nest, drops it for Dusty, and gives the bird '
+             'a pad saying “' + name + '”.')
 
 
 robots = [namer(n) for n, _ in PICTURES]

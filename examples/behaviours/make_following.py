@@ -28,7 +28,11 @@ follower = robot(
         takeTop('given', 1), put('s0', 2),   # the reading, into its empty hole
         take('s0'), put('given', 0),         # and away to my thing
     ],
-    trained_on=box(to(STAR), device(POINT, DEV_POINT, 'pointer'), template))
+    trained_on=box(to(STAR), device(POINT, DEV_POINT, 'pointer'), template),
+    note='Copies the [set | position | _] template, takes the pointer’s '
+         '[across | away] off the nest, puts it in the empty hole, and gives the '
+         'message to the bird. Nothing in it is about pointers: it dozes until '
+         'a reading arrives.')
 
 work = box(to(STAR, 'my thing'), device(POINT, DEV_POINT, 'pointer'), template)
 

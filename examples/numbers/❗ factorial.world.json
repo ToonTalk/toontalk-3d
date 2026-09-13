@@ -214,7 +214,8 @@
        }
       ],
       "trainedOn": null,
-      "team": []
+      "team": [],
+      "note": "The scale still leans right, so the count has not reached N: adds one to the count, takes a copy of it with a times sign, and drops that on \u201cso far\u201d."
      },
      {
       "kind": "robot",
@@ -262,9 +263,11 @@
        }
       ],
       "trainedOn": null,
-      "team": []
+      "team": [],
+      "note": "The scale has come level, so the count is N: gives \u201cso far\u201d to the bird, then vacuums its own box, which is how it says it has finished."
      }
-    ]
+    ],
+    "note": "Leads the team. Given [N, a bird] it builds the state the other two need: a scale with 1 in one pan and N in the other, set where N was, and a \u201cso far\u201d of 1 joined onto the front. The box is then [so far, scale, bird] and the workers take over."
    },
    "x": -1.2,
    "z": 1.3

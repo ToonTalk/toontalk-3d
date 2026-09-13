@@ -417,7 +417,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cright\u201d: drops a x-1 on the across of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
        },
        {
         "kind": "robot",
@@ -561,7 +562,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cnear\u201d: drops a x-1 on the away of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
        },
        {
         "kind": "robot",
@@ -705,7 +707,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The edge reading says \u201cfar\u201d: drops a x-1 on the away of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
        },
        {
         "kind": "robot",
@@ -827,9 +830,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The reading is \u201cnone\u201d -- nothing has happened yet: hands the speed over once, eats the reading, and sleeps. The clock does the moving."
        }
-      ]
+      ],
+      "note": "Leads the team. The edge reading says \u201cleft\u201d: drops a x-1 on the across of the speed, hands the whole speed over, then eats the reading so the team sleeps until the next wall."
      }
     },
     "boundTo": "V901",
@@ -1232,7 +1237,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my right side: fills in the speed\u2019s across to go left, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
        },
        {
         "kind": "robot",
@@ -1401,7 +1407,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my near side: fills in the speed\u2019s away to go far, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
        },
        {
         "kind": "robot",
@@ -1570,7 +1577,8 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something is against my far side: fills in the speed\u2019s away to come near, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
        },
        {
         "kind": "robot",
@@ -1677,9 +1685,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The contact has ended: eats the announcement and sleeps again."
        }
-      ]
+      ],
+      "note": "Leads the team. Something is against my left side: fills in the speed\u2019s across to go right, leaves the other hole empty, hands the speed over, and eats the announcement so it sleeps until the next contact."
      }
     },
     "boundTo": "V901",
@@ -1978,9 +1988,11 @@
           }
          ]
         },
-        "team": []
+        "team": [],
+        "note": "Something has bumped my thing: eats the reading and gives a +1 to the score\u2019s bird."
        }
-      ]
+      ],
+      "note": "Leads the team. The contact has ended: eats the reading and dozes."
      }
     },
     "boundTo": "V901",
@@ -2170,7 +2182,8 @@
         }
        ]
       },
-      "team": []
+      "team": [],
+      "note": "Copies the [set | away | _] template, takes what the pointer said, moves only the AWAY of it into the hole, vacuums the rest, and sends the message: my thing follows the pointer up and down but keeps its place across."
      }
     },
     "boundTo": "V902",

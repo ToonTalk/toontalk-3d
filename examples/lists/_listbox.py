@@ -52,6 +52,9 @@ def list_to_box_team(name='List to Box'):
             vac(at('given')),              # and its own box: finished, for good
         ],
         'trainedOn': None, 'team': [],
+        'note': 'Leads the team. The nest’s top is a box with no holes -- the end '
+                'of the list: hands the box it has been filling to the bird and '
+                'vacuums its own box to finish.',
     }
     link = {
         'kind': 'robot', 'name': 'Link',
@@ -68,6 +71,9 @@ def list_to_box_team(name='List to Box'):
             vac(at('s0')),                 # the emptied link
         ],
         'trainedOn': None, 'team': [],
+        'note': 'The nest’s top is a link [first, the rest]: puts the first into a '
+                'one-hole box joined onto the end of the box so far, and hangs the '
+                'rest in hole 0, so next round it watches the next nest along.',
     }
     end['team'] = [link]
     return end

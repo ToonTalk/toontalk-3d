@@ -24,14 +24,16 @@ ALL = (9213, 'inf2-all')         # both, interleaved
 add1 = robot(
     'Add 1', box(ANYNUM, ANYBIRD),
     [copy('given', 0), put('given', 1)] + drop(1, '+', 'given', 0),
-    trained_on=box(num(1), bird(*NAT_N)))
+    trained_on=box(num(1), bird(*NAT_N)),
+    note='Gives the bird a copy of the number, then adds 1 to it: the natural numbers, one a round, for ever.')
 
 negator = robot(
     'Negator', box(ANYNUM, ANYBIRD),
     [takeTop('given', 0), put('s0')] +
     drop(-1, '*', 's0') +
     [take('s0'), put('given', 1)],
-    trained_on=box(nest(*NAT_N), bird(*NEG)))
+    trained_on=box(nest(*NAT_N), bird(*NEG)),
+    note='Takes the number off the nest, multiplies it by -1 where it stands, and sends it on: the negatives, one for each natural.')
 
 merge = robot(
     'Merge', box(ANYNUM, WILD, ANYBIRD),
@@ -39,7 +41,8 @@ merge = robot(
      take('given', 0), put('s0'),                 # and the nests trade places
      take('given', 1), put('given', 0),
      take('s0'), put('given', 1)],
-    trained_on=box(nest(*NAT_M), nest(*NEG), bird(*ALL)))
+    trained_on=box(nest(*NAT_M), nest(*NEG), bird(*ALL)),
+    note='Gives away the number on the first nest, then swaps the two nests over, so next round it reads the other. It cannot run ahead: an empty nest puts it to sleep, so the interleaving is fair.')
 
 ABOUT = ('ACTIVITY 2\nCombining sequences, part 1\n\n'
          'Add 1 makes 1, 2, 3, ... and\n'

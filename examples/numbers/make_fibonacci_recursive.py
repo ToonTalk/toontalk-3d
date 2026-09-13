@@ -47,7 +47,9 @@ def leaf(k):
                 put('given', 1),                # into the bird's wings: she flies home
                 vac('given', 0),                # the number goes: nothing matches now
             ],
-            'trainedOn': None, 'team': []}
+            'trainedOn': None, 'team': [],
+            'note': f'n is {k}: puts a fresh 1 into the bird’s wings -- the answer '
+                    'flies home -- and vacuums n away so nothing matches again.'}
 
 # --- the recursive case ----------------------------------------------------
 def ask(minus, nest_hole, house_hole):
@@ -68,7 +70,11 @@ def ask(minus, nest_hole, house_hole):
 
 branch = {'kind': 'robot', 'name': 'ask both', 'condition': cond(WILD),
           'program': ask(1, 3, 5) + ask(2, 4, 6) + [vac('given', 0)],
-          'trainedOn': None, 'team': []}
+          'trainedOn': None, 'team': [],
+          'note': 'Any other n: for n-1 and again for n-2 it makes a nest, builds a box '
+                  '[the smaller n, the nest’s bird, a copy of the team], sends it '
+                  'into a house of its own, and keeps the house aboard. Then it '
+                  'vacuums n away and the team waits for the two nests.'}
 
 # --- the answer: both nests have a number, so add them and reply ------------
 adder = {'kind': 'robot', 'name': 'add the answers',
@@ -81,11 +87,17 @@ adder = {'kind': 'robot', 'name': 'add the answers',
              copy('s0'), put('given', 1),               # the sum goes to the bird
              vac('given', 3), vac('given', 4),          # done: nothing matches now
          ],
-         'trainedOn': None, 'team': []}
+         'trainedOn': None, 'team': [],
+         'note': 'Both nests hold a number: takes the two answers, drops one on the '
+                 'other to add them, gives the sum to the bird, and vacuums the '
+                 'nests so the round is over.'}
 
 fib = {'kind': 'robot', 'name': 'fib', 'condition': leaf(1)['condition'],
        'program': leaf(1)['program'], 'trainedOn': None,
-       'team': [leaf(2), adder, branch]}
+       'team': [leaf(2), adder, branch],
+       'note': 'Leads the team: fib(1) is 1. The members answer fib(2), add the '
+               'answers when both nests are full, and for any other n ask both '
+               'smaller cases in houses of their own.'}
 # the adder is asked before the branch: once n has gone, only it can match
 
 work_box = {'kind': 'box', 'holes': [

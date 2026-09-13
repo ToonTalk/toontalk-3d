@@ -758,7 +758,11 @@ REVERSER = robot(                                             # noqa: F405
     [take('given', 0, 0), put('given', 1, 2),                 # noqa: F405
      take('given', 0, 1), put('given', 1, 1),                 # noqa: F405
      take('given', 0, 2), put('given', 1, 0)],                # noqa: F405
-    trained_on=box(box(num(3), num(2), num(1)), empty_box(3)))   # noqa: F405
+    trained_on=box(box(num(3), num(2), num(1)), empty_box(3)),   # noqa: F405
+    note='Trained in the puzzle before this one, on 3, 2, 1 exactly: it moves '
+         'the three numbers into the empty box the other way round. Its thought '
+         'names the very numbers it first saw, so on 4, 6, 8 it does nothing '
+         'until Ruby has erased them.')
 
 puzzle(
     'p21',

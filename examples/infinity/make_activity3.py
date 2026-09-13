@@ -26,7 +26,8 @@ PAIRS = (9223, 'inf3-pairs')     # [n, term] boxes
 add1 = robot(
     'Add 1', box(ANYNUM, ANYBIRD),
     [copy('given', 0), put('given', 1)] + drop(1, '+', 'given', 0),
-    trained_on=box(num(1), bird(*NAT)))
+    trained_on=box(num(1), bird(*NAT)),
+    note='Gives the bird a copy of the number, then adds 1 to it: the natural numbers, one a round, for ever.')
 
 # n x n: take the number, copy it, and drop the copy back on with times.
 squares = robot(
@@ -34,7 +35,8 @@ squares = robot(
     [takeTop('given', 0), put('s0'),
      copy('s0'), setop('*'), put('s0'),
      take('s0'), put('given', 1)],
-    trained_on=box(nest(*NAT), bird(*SQ_M)))
+    trained_on=box(nest(*NAT), bird(*SQ_M)),
+    note='Takes the number off the nest, drops a copy of it back on with a times sign -- n times n -- and sends the square on.')
 
 matchmaker = robot(
     'Match Maker', box(ANYNUM, ANYNUM, ANYBIRD),
@@ -43,7 +45,8 @@ matchmaker = robot(
      takeTop('given', 0), put('s0', 1),            # and what it is
      take('s0'), put('given', 2),                  # the pair, off to the bird
      ] + drop(1, '+', 'given', 1),                 # count up for the next
-    trained_on=box(nest(*SQ_M), num(1), bird(*PAIRS)))
+    trained_on=box(nest(*SQ_M), num(1), bird(*PAIRS)),
+    note='Makes the box [count, the term off the nest], hands it to the bird, and counts up one. It never looks at the numbers: any sequence made a term at a time gets paired with the naturals this way.')
 
 ABOUT = ('ACTIVITY 3\nA variety of sequences\n\n'
          'Squares makes 1, 4, 9, 16, ...\n'

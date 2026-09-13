@@ -59,6 +59,9 @@ worker = {
         take(at('s0')), put('given', 2),     # the promise's own bird takes over
     ],
     'trainedOn': None, 'team': [],
+    'note': 'List1 still has a link: takes the first link, replaces its tail with a '
+            'fresh nest, and gives the link to the bird. The nest’s own bird takes '
+            'over, so the next link lands inside that promise.',
 }
 
 # --- List1 is used up: List2 is the rest ------------------------------------
@@ -72,6 +75,9 @@ finish = {
     'trainedOn': box(box(num(1), box(num(2), EMPTY)),
                      box(num(3), box(num(4), EMPTY)), bird()),
     'team': [],
+    'note': 'Leads the team. List1 is used up -- a box with no holes -- so List2 '
+            'itself is the rest of the answer: hands it to the bird, then vacuums '
+            'its own box, which is how it says it has finished.',
 }
 
 finish['team'] = [worker]

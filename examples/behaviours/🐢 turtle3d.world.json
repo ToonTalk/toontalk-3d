@@ -893,7 +893,8 @@
           "home"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The order is [yaw | a]: puts the degrees into [move | yaw | _] and sends it. Degrees are degrees -- nothing scales them."
        },
        {
         "kind": "robot",
@@ -1221,7 +1222,8 @@
           "home"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The order is [pitch | a]: puts the degrees into [move | pitch | _] and sends it. Degrees are degrees -- nothing scales them."
        },
        {
         "kind": "robot",
@@ -1549,7 +1551,8 @@
           "home"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The order is [roll | a]: puts the degrees into [move | roll | _] and sends it. Degrees are degrees -- nothing scales them."
        },
        {
         "kind": "robot",
@@ -1813,7 +1816,8 @@
           "home"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The word on the letterbox is \u201cpendown\u201d: eats it and sends [set | pen | down]."
        },
        {
         "kind": "robot",
@@ -2077,7 +2081,8 @@
           "home"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The word on the letterbox is \u201cpenup\u201d: eats it and sends [set | pen | up]."
        },
        {
         "kind": "robot",
@@ -2341,9 +2346,11 @@
           "home"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The word on the letterbox is \u201chome\u201d: eats it and sends [set | home | yes] -- level, facing the far edge, back on the table."
        }
-      ]
+      ],
+      "note": "Leads the team. The order is [move | n]: multiplies n by the step size, puts it into [move | forward | _] and sends it -- a stride the way the turtle is pointing."
      }
     }
    },

@@ -22,7 +22,10 @@ step = msg('move', 'across', num(1, 60))                     # noqa: F405
 mover = robot(
     'Mover', box(ANYBIRD, ANYBOX),
     [copy('given', 1), put('given', 0)],
-    trained_on=box(to(STAR), step))
+    trained_on=box(to(STAR), step),
+    note='Each round it copies the step and gives it to the bird: '
+         '[move | across | 1/60]. That is the whole of “start moving right”. It '
+         'does not know what it is moving, only that its bird goes somewhere.')
 
 work = box(to(STAR, 'my thing'), step)
 

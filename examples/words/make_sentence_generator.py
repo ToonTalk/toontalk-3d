@@ -36,25 +36,39 @@ def cond(phase, roll=None):
     holes = [num(phase), None if roll is None else num(roll)] + [None] * 6
     return {'kind': 'box', 'holes': holes}
 
-def bot(name, condition, program, team=()):
-    return {'kind': 'robot', 'name': name, 'program': program,
-            'condition': condition, 'trainedOn': None, 'team': list(team)}
+def bot(name, condition, program, team=(), note=None):
+    r = {'kind': 'robot', 'name': name, 'program': program,
+         'condition': condition, 'trainedOn': None, 'team': list(team)}
+    if note:
+        r['note'] = note
+    return r
 
 team = []
 for k in range(1, 7):
     team.append(bot(f'noun1-{k}', cond(1, k),
-        [copy(3, k - 1), put(2), die(), put(1), take(0), setv(2), put(0)]))
+        [copy(3, k - 1), put(2), die(), put(1), take(0), setv(2), put(0)],
+        note=f'Phase 1 and the die says {k}: copies noun {k} ({NOUNS[k - 1].strip()}) onto '
+             'the sentence, throws the die again, and moves to phase 2.'))
 for k in range(1, 7):
     team.append(bot(f'verb-{k}', cond(2, k),
-        [copy(4, k - 1), put(2), die(), put(1), take(0), setv(3), put(0)]))
+        [copy(4, k - 1), put(2), die(), put(1), take(0), setv(3), put(0)],
+        note=f'Phase 2 and the die says {k}: copies verb {k} ({VERBS[k - 1].strip()}) onto '
+             'the sentence, throws the die again, and moves to phase 3.'))
 for k in range(1, 7):
     team.append(bot(f'noun2-{k}', cond(3, k),
-        [copy(3, k - 1), put(2), take(0), setv(4), put(0)]))
+        [copy(3, k - 1), put(2), take(0), setv(4), put(0)],
+        note=f'Phase 3 and the die says {k}: copies noun {k} ({NOUNS[k - 1].strip()}) onto '
+             'the sentence and moves to phase 4.'))
 team.append(bot('post', cond(4),
-    [copy(7), put(2), take(2), put(5), take(0), setv(0), put(0)]))
+    [copy(7), put(2), take(2), put(5), take(0), setv(0), put(0)],
+    note='Phase 4: adds the full stop, hands the finished sentence to the bird, and '
+         'goes back to phase 0 for the next one.'))
 
 scribe = bot('Scribe', cond(0),
-    [copy(6), put(2), die(), put(1), take(0), setv(1), put(0)], team)
+    [copy(6), put(2), die(), put(1), take(0), setv(1), put(0)], team,
+    note='Leads the team. Phase 0: starts a sentence with “the”, throws the die '
+         'into hole 1, and moves to phase 1. From then on the member whose thought '
+         'names the phase and the roll takes each turn.')
 
 gbox = {'kind': 'box', 'holes': [
     num(0), num(1), None,

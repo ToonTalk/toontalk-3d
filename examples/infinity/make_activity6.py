@@ -33,11 +33,13 @@ nextnum = robot(
      copy('given', 0, 1), put('s0', 1),
      take('s0'), put('given', 1),
      ] + drop(1, '+', 'given', 0, 0),
-    trained_on=box(scale(num(1), num(2)), bird(*BOXES)))
+    trained_on=box(scale(num(1), num(2)), bird(*BOXES)),
+    note='Leads the team. The scale tips toward the denominator, so the numerator is still the smaller: hands out the pair [n, d] and adds one to n.')
 
 nextden = robot(
     'Next Denominator', box(tilt('='), ANYBIRD),
-    drop(1, 'set', 'given', 0, 0) + drop(1, '+', 'given', 0, 1))
+    drop(1, 'set', 'given', 0, 0) + drop(1, '+', 'given', 0, 1),
+    note='The scale balances: n has caught d up. Sets n back to 1 and takes d up one, so the next group of fractions begins.')
 
 allfractions = dict(nextnum, name='All Fractions', team=[nextden])
 
@@ -47,14 +49,16 @@ boxtonum = robot(
      take('s0', 1), setop('/'), put('s0', 0),
      take('s0', 0), put('given', 1),
      vac('s0')],
-    trained_on=box(nest(*BOXES), bird(*FRAC_D)))
+    trained_on=box(nest(*BOXES), bird(*FRAC_D)),
+    note='Takes an [a, b] box off the nest, drops b on a with a divide sign -- a/b as one number -- sends the fraction on, and vacuums the empty box.')
 
 divides1 = robot(
     'Divides 1', box(ANYNUM, ANYBIRD),
     [newnum, put('s0'),
      takeTop('given', 0), setop('/'), put('s0'),
      take('s0'), put('given', 1)],
-    trained_on=box(nest(*FRAC_D), bird(*BIG_M)))
+    trained_on=box(nest(*FRAC_D), bird(*BIG_M)),
+    note='Takes a fresh 1, drops the number off the nest on it set to divide -- 1/n -- and sends the reciprocal on. Every fraction below 1 becomes one above 1.')
 
 merge = robot(
     'Merge', box(ANYNUM, WILD, ANYBIRD),
@@ -62,7 +66,8 @@ merge = robot(
      take('given', 0), put('s0'),
      take('given', 1), put('given', 0),
      take('s0'), put('given', 1)],
-    trained_on=box(nest(*FRAC_M), nest(*BIG_M), bird(*ALL)))
+    trained_on=box(nest(*FRAC_M), nest(*BIG_M), bird(*ALL)),
+    note='Gives away the number on the first nest, then swaps the two nests over, so next round it reads the other. It cannot run ahead: an empty nest puts it to sleep, so the interleaving is fair.')
 
 ABOUT = ('ACTIVITY 6\nAll the positive rationals\n\n'
          'Nothing new is built here. The\n'

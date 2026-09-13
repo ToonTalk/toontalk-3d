@@ -26,12 +26,17 @@ evtNest = lambda nid, evt, label: nest(nid, evt, label)
 sync = robot(
     'Sync', box(ANYNUM, ANYBIRD),
     [takeTop('given', 0), setop('set'), put('given', 1)],
-    trained_on=box(num(0), liveBird(B_LID)))
+    trained_on=box(num(0), liveBird(B_LID)),
+    note='Dozes on A’s event nest. Each change to A flies to B’s bird wearing '
+         'a set badge, so B follows A.')
 
 control = robot(
     'Control', box(ANYNUM, ANYBIRD),
     [takeTop('given', 0), setop('set'), put('given', 1)],
-    trained_on=box(num(0), liveBird(A_LID)))
+    trained_on=box(num(0), liveBird(A_LID)),
+    note='Dozes on B’s event nest. Each change to B flies to A’s bird wearing '
+         'a set badge, so A follows B. The echo rule stops the ring: a set that '
+         'changes nothing is swallowed.')
 
 ABOUT = ('THE GAUGE\n\n'
          'A and B are live numbers.\n\n'

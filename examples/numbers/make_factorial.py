@@ -64,6 +64,10 @@ start = {
     ],
     'trainedOn': box(num(N), {'kind': 'bird', 'nestId': NEST_ID, 'nestGuid': NEST_GUID}),
     'team': [],
+    'note': 'Leads the team. Given [N, a bird] it builds the state the other two need: '
+            'a scale with 1 in one pan and N in the other, set where N was, and a '
+            '“so far” of 1 joined onto the front. The box is then [so far, scale, '
+            'bird] and the workers take over.',
 }
 
 # --- not there yet: count one more, and multiply it in ----------------------
@@ -76,6 +80,9 @@ worker = {
         put('given', 0),                 # dropped on so far, it multiplies
     ],
     'trainedOn': None, 'team': [],
+    'note': 'The scale still leans right, so the count has not reached N: adds one '
+            'to the count, takes a copy of it with a times sign, and drops that on '
+            '“so far”.',
 }
 
 # --- the scale has come level: the count has reached N ----------------------
@@ -86,6 +93,8 @@ finish = {
         vac('given'),                        # then its own box: finished
     ],
     'trainedOn': None, 'team': [],
+    'note': 'The scale has come level, so the count is N: gives “so far” to the '
+            'bird, then vacuums its own box, which is how it says it has finished.',
 }
 
 start['team'] = [worker, finish]

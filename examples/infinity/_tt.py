@@ -67,9 +67,16 @@ setv = lambda v, op='+', d=1: {'type': 'setValue',
                                'value': {'n': str(v), 'd': str(d)}, 'op': op}
 
 
-def robot(name, condition, program, trained_on=None, team=None):
-    return {'kind': 'robot', 'name': name, 'condition': condition,
-            'program': program, 'trainedOn': trained_on, 'team': team or []}
+def robot(name, condition, program, trained_on=None, team=None, note=None):
+    """A robot -- and its NOTE, if given: a sentence or two in plain words
+    about what it is for. The app shows it on the Trained actions card to
+    whoever picks the robot up, and saves it with the robot wherever it
+    goes. Every robot in the examples carries one."""
+    r = {'kind': 'robot', 'name': name, 'condition': condition,
+         'program': program, 'trainedOn': trained_on, 'team': team or []}
+    if note:
+        r['note'] = note
+    return r
 
 
 def room(label, stand, bot, opaque=False, dirty=True, bench=None):

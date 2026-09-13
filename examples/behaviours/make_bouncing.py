@@ -36,7 +36,10 @@ def turner(name, word):
         name, box(ANYBIRD, ANYBOX, txt(word)),               # noqa: F405
         drop(-1, '*', 'given', 1, 2)                         # noqa: F405
         + [copy('given', 1), put('given', 0)],
-        trained_on=box(to(STAR), step, edge_nest(word)))
+        trained_on=box(to(STAR), step, edge_nest(word)),
+        note=('Leads the team. ' if word == 'left' else '')
+        + 'The edge reading says “' + word + '”: drops a x-1 on the step’s number '
+        'to turn round, then sends the step.')
 
 
 left = turner('at the left', 'left')
@@ -44,7 +47,9 @@ right = turner('at the right', 'right')
 mover = robot(
     'moving', box(ANYBIRD, ANYBOX, WILDTEXT),
     [copy('given', 1), put('given', 0)],
-    trained_on=box(to(STAR), step, edge_nest()))
+    trained_on=box(to(STAR), step, edge_nest()),
+    note='Any other reading: sends the step. It comes last, so at an edge a turner '
+         'gets the turn first.')
 
 team = dict(left)
 team['team'] = [right, mover]

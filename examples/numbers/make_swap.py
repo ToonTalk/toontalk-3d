@@ -34,6 +34,10 @@ swap = {
     ],
     'trainedOn': scale(num(7), num(3)),
     'team': [],
+    'note': 'The scale leans left, so the bigger number is on the left: it sets the '
+            'left one aside, moves the right one over, and brings the first back to '
+            'the other pan. Then the scale leans the other way, the thought no '
+            'longer fits, and it stops.',
 }
 
 world = {'kind': 'world', 'v': 1, 'bench': [

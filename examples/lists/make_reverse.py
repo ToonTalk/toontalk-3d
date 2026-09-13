@@ -67,6 +67,9 @@ append_worker = {
         take(at('s0')), put('given', 2),
     ],
     'trainedOn': None, 'team': [],
+    'note': 'List1 still has a link: takes the first link, replaces its tail with a '
+            'fresh nest, and gives the link to the bird. The nest’s own bird takes '
+            'over, so the next link lands inside that promise.',
 }
 append = {
     'kind': 'robot', 'name': 'FinishAppend',
@@ -76,6 +79,9 @@ append = {
         vac('given'),          # its own box: the house folds away with it
     ],
     'trainedOn': None, 'team': [append_worker],
+    'note': 'Leads the append team. List1 is used up, so List2 itself is the rest '
+            'of the answer: hands it to the bird, then vacuums its own box -- and '
+            'the house it works in folds away with it.',
 }
 
 # --- one link: send [promise, [first], the bird] out to a house of its own --
@@ -99,6 +105,10 @@ worker = {
         take(at('s2')), {'type': 'put', 'at': at('given', 3), 'side': 'R'},
     ],
     'trainedOn': None, 'team': [],
+    'note': 'The list still has a link: builds [a nest, [first], the bird that '
+            'asked], sends it into a house of its own with a copy of the append '
+            'team, keeps the nest’s bird for itself, and carries on down the '
+            'list. The house dozes until the reversed rest reaches its nest.',
 }
 
 # --- nothing left: the empty list is its own reverse ------------------------
@@ -110,6 +120,9 @@ finish = {
         vac('given', 1),                          # and with the bird gone, it stops
     ],
     'trainedOn': None, 'team': [worker],
+    'note': 'Leads the team. The list is empty: the empty box is its own reverse, '
+            'so it goes to whoever asked, and the bird is vacuumed away, which '
+            'stops the team.',
 }
 
 the_list = box(num(1), box(num(2), box(num(3), EMPTY)))

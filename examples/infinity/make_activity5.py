@@ -30,11 +30,13 @@ nextnum = robot(
      copy('given', 0, 1), put('s0', 1),
      take('s0'), put('given', 1),
      ] + drop(1, '+', 'given', 0, 0),
-    trained_on=box(scale(num(1), num(2)), bird(*BOXES)))
+    trained_on=box(scale(num(1), num(2)), bird(*BOXES)),
+    note='Leads the team. The scale tips toward the denominator, so the numerator is still the smaller: hands out the pair [n, d] and adds one to n.')
 
 nextden = robot(
     'Next Denominator', box(tilt('='), ANYBIRD),
-    drop(1, 'set', 'given', 0, 0) + drop(1, '+', 'given', 0, 1))
+    drop(1, 'set', 'given', 0, 0) + drop(1, '+', 'given', 0, 1),
+    note='The scale balances: n has caught d up. Sets n back to 1 and takes d up one, so the next group of fractions begins.')
 
 allfractions = dict(nextnum, name='All Fractions', team=[nextden])
 
@@ -44,7 +46,8 @@ boxtonum = robot(
      take('s0', 1), setop('/'), put('s0', 0),
      take('s0', 0), put('given', 1),
      vac('s0')],
-    trained_on=box(nest(*BOXES), bird(*FRAC_D)))
+    trained_on=box(nest(*BOXES), bird(*FRAC_D)),
+    note='Takes an [a, b] box off the nest, drops b on a with a divide sign -- a/b as one number -- sends the fraction on, and vacuums the empty box.')
 
 # a fresh 1, with the incoming number dropped on it set to divide: 1/n.
 divides1 = robot(
@@ -52,7 +55,8 @@ divides1 = robot(
     [newnum, put('s0'),                            # a 1 off the stack
      takeTop('given', 0), setop('/'), put('s0'),   # n divides it
      take('s0'), put('given', 1)],
-    trained_on=box(nest(*FRAC_D), bird(*BIG)))
+    trained_on=box(nest(*FRAC_D), bird(*BIG)),
+    note='Takes a fresh 1, drops the number off the nest on it set to divide -- 1/n -- and sends the reciprocal on. Every fraction below 1 becomes one above 1.')
 
 ABOUT = ('ACTIVITY 5\nRationals greater than 1\n\n'
          'Pat says there must be more\n'

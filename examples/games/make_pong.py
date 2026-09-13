@@ -89,7 +89,7 @@ go_near = head(2, 1, 140)
 go_far = head(2, -1, 140)
 
 
-def ball_bot(name, edge, side, program):
+def ball_bot(name, edge, side, program, note=None):
     """edge: a word, or None for any. side: which side of the ball the thing
     it has run into is on -- or None for "never mind what it has run into"."""
     trained = box(to(BALL), across, away,                    # noqa: F405
@@ -102,7 +102,7 @@ def ball_bot(name, edge, side, program):
                box(ANYBIRD if side else WILD,                # noqa: F405
                    txt(side) if side else WILDTEXT),         # noqa: F405
                ANYBOX, ANYBIRD, ANYNUM)                      # noqa: F405
-    return robot(name, cond, program, trained_on=trained)    # noqa: F405
+    return robot(name, cond, program, trained_on=trained, note=note)    # noqa: F405
 
 
 # In order, and the order is the game. The WALLS come first, because a wall
@@ -115,20 +115,32 @@ def ball_bot(name, edge, side, program):
 # None of them can doze: both nests are READINGS, so neither is ever empty and
 # every member can be decided every round -- which matters, because the member
 # that does the moving is last.
-ball_team = ball_bot('at the far wall', 'far', None, flip_away + fly)
+wall = lambda w, axis: ('The edge reading says “' + w + '”: flips the ' + axis   # noqa: E731
+                        + ' step with a x-1, then sends both steps.')
+side = lambda s, axis, way: ('The touch reading says something is on my ' + s   # noqa: E731
+                             + ': sets the ' + axis + ' step to ' + way
+                             + ' (flipping would not do: a contact lasts several '
+                             'rounds), then sends both steps.')
+ball_team = ball_bot('at the far wall', 'far', None, flip_away + fly,
+                     note='Leads the team. ' + wall('far', 'away'))
 ball_team['team'] = [
-    ball_bot('at the near wall', 'near', None, flip_away + fly),
-    ball_bot('at the left wall', 'left', None, flip_across + fly),
+    ball_bot('at the near wall', 'near', None, flip_away + fly, note=wall('near', 'away')),
+    ball_bot('at the left wall', 'left', None, flip_across + fly, note=wall('left', 'across')),
     # the fourth wall is yours. Reaching it means you missed.
     ball_bot('past the bat', 'right', None,
              [copy('given', 7), put('given', 6)]             # noqa: F405
              + flip_across
-             + [copy('given', 5), put('given', 0)]),         # noqa: F405
-    ball_bot('hit on my left', None, 'left', go_right + fly),
-    ball_bot('hit on my right', None, 'right', go_left + fly),
-    ball_bot('hit on my far side', None, 'far', go_near + fly),
-    ball_bot('hit on my near side', None, 'near', go_far + fly),
-    ball_bot('flying', None, None, fly),
+             + [copy('given', 5), put('given', 0)],          # noqa: F405
+             note='The edge reading says “right” -- the wall you guard, so you missed: '
+                  'gives a +1 to the counter’s bird, flips the across step, and sends '
+                  'my thing back to the middle.'),
+    ball_bot('hit on my left', None, 'left', go_right + fly, note=side('left', 'across', 'go right')),
+    ball_bot('hit on my right', None, 'right', go_left + fly, note=side('right', 'across', 'go left')),
+    ball_bot('hit on my far side', None, 'far', go_near + fly, note=side('far side', 'away', 'come near')),
+    ball_bot('hit on my near side', None, 'near', go_far + fly, note=side('near side', 'away', 'go far')),
+    ball_bot('flying', None, None, fly,
+             note='Nothing to turn from: just sends both steps. Last in the team, so '
+                  'the walls and contacts get their turn first.'),
 ]
 
 # --- the bat ----------------------------------------------------------------
@@ -150,7 +162,10 @@ bat_bot = robot(                                             # noqa: F405
         take('s0'), put('given', 0),        # away to my thing
     ],
     trained_on=box(to(BAT),                                  # noqa: F405
-                   device(POINT_N, DEV_POINT, 'pointer'), bat_msg))
+                   device(POINT_N, DEV_POINT, 'pointer'), bat_msg),
+    note='Copies the [set | away | _] template, takes what the pointer said, moves '
+         'only the AWAY of it into the hole, vacuums the rest, and sends it: the bat '
+         'follows your hand up and down the table and stays a wall across.')
 
 
 def gadget(thing, bot, work):

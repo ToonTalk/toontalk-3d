@@ -63,7 +63,10 @@ def cond(todo, head):
 say_it = {'kind': 'robot', 'name': 'say it',
           'condition': cond(ANYBOX, WILDT),
           'program': [take(at(4)), put(at(1), 'R')],
-          'trainedOn': None, 'team': []}
+          'trainedOn': None, 'team': [],
+          'note': 'Leads the team. The symbol in hand (hole 4) is a word: it joins it '
+                  'onto the end of the sentence so far. A rule, an empty to-do box and '
+                  'a symbol still to fetch are for the other members.'}
 
 # --- a rule: look it up, throw its die, and put its symbols in front --------
 expand = {'kind': 'robot', 'name': 'expand it',
@@ -85,7 +88,11 @@ expand = {'kind': 'robot', 'name': 'expand it',
               # its symbols go in front of everything still to say
               take(spot(3)), put(at(0), 'L'),
           ],
-          'trainedOn': None, 'team': []}
+          'trainedOn': None, 'team': [],
+          'note': 'The symbol in hand is a rule number: it splits a copy of the '
+                  'dictionary at that number to find the rule, throws the rule’s own '
+                  'die to pick one alternative, and puts that alternative’s symbols in '
+                  'front of everything still to say.'}
 
 # --- nothing left to say: send it off and begin again -----------------------
 send_it = {'kind': 'robot', 'name': 'send it',
@@ -95,7 +102,10 @@ send_it = {'kind': 'robot', 'name': 'send it',
                vac(at(1)), newtext, put(at(1)), # a clean sheet
                vac(at(0)), copy(at(5)), put(at(0)),
            ],
-           'trainedOn': None, 'team': []}
+           'trainedOn': None, 'team': [],
+           'note': 'Nothing is left to say: the sentence flies to the nest, a clean '
+                   'pad takes its place, and the starting symbol is copied back into '
+                   'the to-do box for the next sentence.'}
 
 # --- otherwise: split the first symbol off the front ------------------------
 take_one = {'kind': 'robot', 'name': 'take one',
@@ -107,7 +117,10 @@ take_one = {'kind': 'robot', 'name': 'take one',
                 take(spot(0, 0)), put(at(4)),   # the first symbol, in hand
                 vac(spot(0)),
             ],
-            'trainedOn': None, 'team': []}
+            'trainedOn': None, 'team': [],
+            'note': 'Otherwise: it splits the first symbol off the front of what is '
+                    'still to say and holds it in hole 4, where the other members '
+                    'can read it.'}
 
 scribe = dict(say_it, name='Scribe', team=[expand, send_it, take_one])
 

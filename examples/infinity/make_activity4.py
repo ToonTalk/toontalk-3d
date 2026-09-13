@@ -37,12 +37,14 @@ nextnum = robot(
      copy('given', 0, 1), put('s0', 1),            # the denominator
      take('s0'), put('given', 1),                  # the pair, off to the bird
      ] + drop(1, '+', 'given', 0, 0),              # numerator up one
-    trained_on=box(scale(num(1), num(2)), bird(*FRAC_B)))
+    trained_on=box(scale(num(1), num(2)), bird(*FRAC_B)),
+    note='Leads the team. The scale tips toward the denominator, so the numerator is still the smaller: hands out the pair [n, d] and adds one to n.')
 
 nextden = robot(
     'Next Denominator', box(tilt('='), ANYBIRD),
     drop(1, 'set', 'given', 0, 0) +                # numerator back to 1
-    drop(1, '+', 'given', 0, 1))                   # denominator up one
+    drop(1, '+', 'given', 0, 1),                   # denominator up one
+    note='The scale balances: n has caught d up. Sets n back to 1 and takes d up one, so the next group of fractions begins.')
 
 allfractions = dict(nextnum, name='All Fractions', team=[nextden])
 
@@ -53,7 +55,8 @@ boxtonum = robot(
      take('s0', 1), setop('/'), put('s0', 0),      # b divides a, in place
      take('s0', 0), put('given', 1),               # the fraction, out
      vac('s0')],                                   # the emptied box away
-    trained_on=box(nest(*FRAC_B), bird(*NUMS)))
+    trained_on=box(nest(*FRAC_B), bird(*NUMS)),
+    note='Takes an [a, b] box off the nest, drops b on a with a divide sign -- a/b as one number -- sends the fraction on, and vacuums the empty box.')
 
 ABOUT = ('ACTIVITY 4\nAll fractions between 0 and 1\n\n'
          'You cannot list the fractions\n'

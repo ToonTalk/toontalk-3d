@@ -974,7 +974,8 @@
           "facing"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The order is [right | a]: adds a to the heading, then sends [set | facing | heading] so the thing turns to point where it will walk."
        },
        {
         "kind": "robot",
@@ -1216,7 +1217,8 @@
           "facing"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The word on the letterbox is \u201cpendown\u201d: eats it and sends [set | pen | down]."
        },
        {
         "kind": "robot",
@@ -1458,9 +1460,11 @@
           "facing"
          ]
         },
-        "team": []
+        "team": [],
+        "note": "The word on the letterbox is \u201cpenup\u201d: eats it and sends [set | pen | up]."
        }
-      ]
+      ],
+      "note": "Leads the team. The order on the letterbox is [forward | n]: works out n x sin(heading) x step size for across and n x cos(heading) x step size for away, puts both into one [move | position | _] message, and sends it -- one straight step."
      }
     }
    },

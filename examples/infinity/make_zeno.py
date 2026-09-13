@@ -36,7 +36,8 @@ halver_bot = robot(                                          # noqa: F405
     'the halver', box(ANYBIRD, ANYNUM),                      # noqa: F405
     [copy('given', 1), put('given', 0),      # give the bird a copy  # noqa: F405
      newnum, setv(1, '*', 2), put('given', 1)],   # ...and halve what is left  # noqa: F405
-    trained_on=box(bird(ZENO_ID, ZENO_GUID), num(1, 2)))     # noqa: F405
+    trained_on=box(bird(ZENO_ID, ZENO_GUID), num(1, 2)),     # noqa: F405
+    note='Gives the bird a copy of the fraction, then drops a x1/2 on what is left: 1/2, 1/4, 1/8, ... each delivery half the one before.')
 
 halver = room('the halver', halver_work, halver_bot, dirty=False)   # noqa: F405
 
@@ -46,7 +47,8 @@ total_work = box(post_nest(),                                # noqa: F405
 total_bot = robot(                                           # noqa: F405
     'the totaller', box(ANYNUM, ANYNUM),                     # noqa: F405
     [takeTop('given', 0), put('given', 1)],   # a number dropped on a number ADDS  # noqa: F405
-    trained_on=box(post_nest([num(1, 2)]), num(0)))          # noqa: F405
+    trained_on=box(post_nest([num(1, 2)]), num(0)),          # noqa: F405
+    note='Takes the delivery off the post nest and drops it on the running total. A number dropped on a number adds, so the total is the arithmetic. It sleeps while the nest is empty.')
 
 totaller = room('the totaller', total_work, total_bot, dirty=False)   # noqa: F405
 

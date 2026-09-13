@@ -46,7 +46,9 @@ def cond5(first):
 leaf = lambda k: {'kind': 'robot', 'name': f'leaf-{k}',
     'condition': cond5(num(k)),
     'program': [newnum(), put('given', 1), vac('given', 0)],
-    'trainedOn': None, 'team': []}
+    'trainedOn': None, 'team': [],
+    'note': f'n is {k}: mails a single 1 to the nest and vacuums the number away, so '
+            'nothing matches and this box is done.'}
 
 # Both copies are taken BEFORE either room is stowed aboard: a copy made
 # after hole 3 is filled would carry the first child along into the second.
@@ -72,16 +74,26 @@ branch = {'kind': 'robot', 'name': 'branch',
               + dec() + copy_box('s1')                   # box copy with n-2
               + build_room('s0', 3) + build_room('s1', 4)
               + [vac('given', 0)]),
-    'trainedOn': None, 'team': []}
+    'trainedOn': None, 'team': [],
+    'note': 'Any other n: takes one off it and copies the box through Mimi for n-1, '
+            'does the same again for n-2, builds a house for each with a copy of the '
+            'spare team inside, stows both houses aboard, and vacuums n away. Each '
+            'house runs the same team one level deeper.'}
 
 fib_team = {'kind': 'robot', 'name': 'Fib',
     'condition': leaf(1)['condition'], 'program': leaf(1)['program'],
-    'trainedOn': None, 'team': [leaf(2), branch]}
+    'trainedOn': None, 'team': [leaf(2), branch],
+    'note': 'Leads the team: fib(1) is 1. It mails a 1 to the nest and clears the '
+            'number; the members answer 2 and every larger n. Every leaf of the '
+            'call tree mails one 1, and the count of them is the answer.'}
 
 summer = {'kind': 'robot', 'name': 'Sum',
     'condition': {'kind': 'box', 'holes': [{'kind': 'wildNumber'}, {'kind': 'wildNumber'}]},
     'program': [dict(take('given', 1), **{'type': 'take'}), put('given', 0)],
-    'trainedOn': None, 'team': []}
+    'trainedOn': None, 'team': [],
+    'note': 'Given [total, nest]: moves the top delivery onto the total, one a '
+            'round, and dozes when the nest is bare. The total of all the ones '
+            'is fib(n).'}
 # the take must read the TOP OF THE PILE on the nest in hole 1
 summer['program'][0] = {'type': 'take', 'at': {'c': 'given', 'path': [1], 'nest': True}}
 

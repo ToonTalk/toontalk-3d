@@ -29,6 +29,13 @@ named in the generator's header and in `DIVERGENCE.md`; otherwise they are move
 for move the originals. Every generator writes its world next to itself: run
 `python make_whatever.py` in the folder to rebuild one.
 
+**Every robot carries a note.** Pick one up and the *Trained actions* card
+shows its steps and a sentence or two saying what it is for, a member at a
+time for a team. The notes are written in the generators (`note=` on
+`robot()`, or a `'note'` key on a robot written by hand), so a rebuild keeps
+them; the puzzles' judges get theirs from `_pz.judge`. The only robots
+without one are the blank robots a puzzle hands you to train.
+
 **Every list example carries a converter.** 🔢 `n-to-1`, 🔗 `append` and 🔁 `reverse`
 answer with a *lazy list* — the pair `[first, the rest]`, where the rest is a
 nest holding an answer that has not arrived. That is easy to build one link at

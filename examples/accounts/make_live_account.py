@@ -31,7 +31,10 @@ def depositor(name, amount, stop):
         name, box(tilt('R'), ANYBIRD),
         [newnum, setv(amount, '+'), put('given', 1)] +     # the deposit, whole
         drop(1, '+', 'given', 0, 0),                       # tally up one
-        trained_on=box(scale(num(1), num(stop)), bird(0, None)))
+        trained_on=box(scale(num(1), num(stop)), bird(0, None)),
+        note=f'Hands the bird a fresh +{amount} -- a whole deposit at once -- and ticks '
+             f'its own tally up one. The tally sits on a scale against {stop}: when '
+             'the beam comes level the thought no longer fits, and it stops.')
 
 
 dep10 = depositor('Tenner', 10, 6)      # runs while 1..5 < 6: five deposits
