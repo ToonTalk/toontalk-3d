@@ -2691,6 +2691,41 @@ async function teamOutCheck(D, w) {
   return ok;
 }
 
+// A TICKER FOLDED INSIDE A THING KEEPS TIME. Ken's robot takes the wandering
+// behaviour's panel and the crocodile's, puts one inside the other, folds it
+// back into the crocodile and gives the crocodile to the bird. Switched on,
+// the card inside the crocodile's panel is a nested ticker -- and the inner
+// search's free revisits gave it fifty rounds a turn: 700 ms a frame. It
+// gets one turn per parent turn now, and the crocodile still wanders.
+async function nestedTickerCheck(D) {
+  const rec = await (await fetch('give-behavior-robot.thing.json')).json();
+  const bot = rec.thing;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: bot, x: -1.2, z: 1.4 }, { thing: JSON.parse(JSON.stringify(bot.trainedOn)), x: 0, z: 1.6 },
+    { thing: { kind: 'nest', id: 1, guid: 'bc6160e9-4e69-4d94-8b74-34ccdf3205d5', hasEgg: false, pile: [] }, x: 1.2, z: 1.6 } ] });
+  await slowSettle(D, 2500);
+  D.hold(D.bench(1)); D.giveRobot(); await slowSettle(D, 1500);
+  D.run(); await slowSettle(D, 9000);
+  let nest = null; for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'nest') { nest = t; break; } }
+  const croc = nest?.userData.pile?.[0];
+  const delivered = !!croc && croc.userData.kind === 'model';
+  if (!delivered) { put('FAIL a ticker folded inside a thing keeps time  (the crocodile never reached the nest)', 'fail'); return false; }
+  D.hold(croc); await frames(D, 3); D.clickBench(-0.3, 2.2); await slowSettle(D, 1500);
+  const p0 = croc.position.clone();
+  const pressed = D.press(croc, ' ');
+  const tray = croc.__panelTray;
+  const r0 = tray?.userData?.stepRounds || 0;
+  const times = [];
+  for (let i = 0; i < 60; i++) { const t0 = performance.now(); D.frame(1, fnow()); times.push(performance.now() - t0); }
+  times.sort((a, b) => a - b);
+  const median = +times[30].toFixed(1);
+  const perFrame = +(((tray?.userData?.stepRounds || 0) - r0) / 60).toFixed(2);
+  const moved = +croc.position.distanceTo(p0).toFixed(3);
+  const ok = pressed && !!tray?.userData?.dirty && median < 80 && perFrame <= 3 && moved > 0.03;
+  put((ok ? 'PASS' : 'FAIL') + ' a ticker folded inside a thing keeps time  (switched-on=' + (pressed && !!tray?.userData?.dirty) + ' ms-per-frame=' + median + ' rounds-per-frame=' + perFrame + ' wandered=' + moved + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5073,6 +5108,9 @@ async function runOne(D, spec) {
   let toOK = true;
   try { toOK = want('teamOut') ? await teamOutCheck(D, frame.contentWindow) : true; }
   catch (e) { toOK = false; put('FAIL out of a team, a little robot; a game that fits the yard  ' + e.message, 'fail'); }
+  let ntOK = true;
+  try { ntOK = want('nestedTicker') ? await nestedTickerCheck(D) : true; }
+  catch (e) { ntOK = false; put('FAIL a ticker folded inside a thing keeps time  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -5184,7 +5222,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

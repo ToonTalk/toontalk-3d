@@ -6450,3 +6450,31 @@ shape, and the riders come with it (0.75 to 6.89). A pad the size of the
 ground lands centred however it is dropped, and does not stir under the
 pointer. The riders' speeds are still in table units, so the invaders march
 slowly across a yard-sized field -- an open item.
+
+## A narrated run waits for its narrator, and a ticker inside a thing keeps time
+
+*Added 13 Sep. Ken, testing Marty's commentary with a robot that folds the
+wandering behaviour into a crocodile and gives the crocodile to the bird:
+"I think if the user wants narration the speed of the robot should be
+ignored and it should match the narration instead. When I ran the crocodile
+it did wander but the app became very slow. Clicking to change the speed
+had the blank menu for many seconds."*
+
+**The narrator.** With commentary on, Marty's opening line took seconds to
+arrive and the robot was done before he had said a word. A run with
+commentary now starts when his line is on the card and, with his voice on,
+spoken; Stop during the wait still stops it. The closing line comes when
+the run stops, as before.
+
+**The ticker inside.** The card the robot folds into the crocodile is a
+panel inside a panel, and the inner search that lets a house work through
+its own houses -- revisiting one it has already run this turn, so a
+pipeline does not stall mid-round -- treated the card the same way. A panel
+is a ticker: it never goes quiet, so "revisit freely" was fifty rounds a
+turn, a hundred a frame. Measured with the crocodile wandering: 690 ms a
+frame, 306 turns of room work in three frames, the counts of things, trays,
+robots and birds all flat. A panel inside gets one turn per parent turn,
+like every ticker; the free revisits are for houses, which go quiet when
+their mail is answered. Now 24 ms a frame, two rounds a frame, and the
+crocodile wanders and turns as before. Ken's robot lives on in the suite as
+`tests/give-behavior-robot.thing.json`.

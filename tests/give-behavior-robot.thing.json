@@ -1,0 +1,258 @@
+{
+  "kind": "thing",
+  "v": 3,
+  "thing": {
+    "kind": "robot",
+    "name": null,
+    "program": [
+      {
+        "type": "take",
+        "at": { "c": "given", "path": [1] }
+      },
+      { "type": "panel" },
+      {
+        "type": "put",
+        "at": { "c": "given", "path": [1] },
+        "side": "R"
+      },
+      {
+        "type": "take",
+        "at": { "c": "given", "path": [0] }
+      },
+      { "type": "panel" },
+      {
+        "type": "put",
+        "at": { "c": "given", "path": [0] },
+        "side": "R"
+      },
+      {
+        "type": "take",
+        "at": { "c": "s1", "path": [] }
+      },
+      {
+        "type": "put",
+        "at": { "c": "s0", "path": [] },
+        "side": "R"
+      },
+      {
+        "type": "fold",
+        "at": { "c": "s0", "path": [] }
+      },
+      {
+        "type": "take",
+        "at": { "c": "given", "path": [1] }
+      },
+      {
+        "type": "put",
+        "at": { "c": "given", "path": [2] },
+        "side": "L"
+      }
+    ],
+    "condition": {
+      "kind": "box",
+      "holes": [
+        { "kind": "text", "text": "wandering" },
+        {
+          "kind": "model",
+          "parts": [
+            { "shape": "box", "size": [0.3, 0.05, 0.09], "at": [0, 0.03, 0], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.14, 0.03, 0.06], "at": [0.2, 0.025, 0], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.12, 0.02, 0.05], "at": [-0.2, 0.02, 0], "color": "#5f8f3c", "rot": [0, 12, 0] },
+            { "shape": "box", "size": [0.02, 0.02, 0.05], "at": [0.05, 0.065, 0], "color": "#3d6b25" },
+            { "shape": "box", "size": [0.02, 0.02, 0.05], "at": [-0.02, 0.065, 0], "color": "#3d6b25" },
+            { "shape": "box", "size": [0.02, 0.02, 0.05], "at": [-0.09, 0.065, 0], "color": "#3d6b25" },
+            { "shape": "sphere", "size": [0.012], "at": [0.12, 0.06, 0.03], "color": "#e8c24a" },
+            { "shape": "sphere", "size": [0.012], "at": [0.12, 0.06, -0.03], "color": "#e8c24a" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [0.02, 0.005, 0.06], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [0.02, 0.005, -0.06], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [-0.1, 0.005, 0.06], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [-0.1, 0.005, -0.06], "color": "#5f8f3c" }
+          ],
+          "sz": 2
+        },
+        { "kind": "anyBird" }
+      ]
+    },
+    "trainedOn": {
+      "kind": "box",
+      "holes": [
+        {
+          "kind": "text",
+          "text": "wandering",
+          "gadget": true,
+          "look": { "bg": "#2a2135", "ink": "#e8d7ff", "font": "sans", "h": 0.42 },
+          "panel": {
+            "kind": "world",
+            "v": 3,
+            "bench": [],
+            "stations": {
+              "stand": {
+                "kind": "box",
+                "holes": [
+                  { "kind": "bird", "nestId": 0, "nestGuid": null, "liveId": "L915", "label": "my thing" },
+                  {
+                    "kind": "box",
+                    "holes": [
+                      { "kind": "text", "text": "move" },
+                      { "kind": "text", "text": "forward" },
+                      {
+                        "kind": "number",
+                        "value": { "n": "1", "d": "25" },
+                        "op": "+"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "box",
+                    "holes": [
+                      { "kind": "text", "text": "move" },
+                      { "kind": "text", "text": "yaw" },
+                      {
+                        "kind": "number",
+                        "value": { "n": "0", "d": "1" },
+                        "op": "+"
+                      }
+                    ]
+                  },
+                  { "kind": "die", "faces": 3 },
+                  {
+                    "kind": "number",
+                    "value": { "n": "-2", "d": "1" },
+                    "op": "+"
+                  },
+                  {
+                    "kind": "number",
+                    "value": { "n": "30", "d": "1" },
+                    "op": "*"
+                  }
+                ]
+              }
+            },
+            "active": {
+              "kind": "robot",
+              "name": "Wanderer",
+              "condition": {
+                "kind": "box",
+                "holes": [
+                  { "kind": "anyBird" },
+                  { "kind": "anyBox" },
+                  { "kind": "anyBox" },
+                  { "kind": "wildDie" },
+                  { "kind": "wildNumber" },
+                  { "kind": "wildNumber" }
+                ]
+              },
+              "program": [
+                {
+                  "type": "copy",
+                  "at": { "c": "given", "path": [3] }
+                },
+                {
+                  "type": "put",
+                  "at": { "c": "given", "path": [2, 2] }
+                },
+                {
+                  "type": "copy",
+                  "at": { "c": "given", "path": [4] }
+                },
+                {
+                  "type": "put",
+                  "at": { "c": "given", "path": [2, 2] }
+                },
+                {
+                  "type": "copy",
+                  "at": { "c": "given", "path": [5] }
+                },
+                {
+                  "type": "put",
+                  "at": { "c": "given", "path": [2, 2] }
+                },
+                {
+                  "type": "copy",
+                  "at": { "c": "given", "path": [2] }
+                },
+                {
+                  "type": "put",
+                  "at": { "c": "given", "path": [0] }
+                },
+                {
+                  "type": "copy",
+                  "at": { "c": "given", "path": [1] }
+                },
+                {
+                  "type": "put",
+                  "at": { "c": "given", "path": [0] }
+                }
+              ],
+              "trainedOn": {
+                "kind": "box",
+                "holes": [
+                  { "kind": "bird", "nestId": 0, "nestGuid": null, "liveId": "L915" },
+                  {
+                    "kind": "box",
+                    "holes": [
+                      { "kind": "text", "text": "move" },
+                      { "kind": "text", "text": "forward" },
+                      {
+                        "kind": "number",
+                        "value": { "n": "1", "d": "25" },
+                        "op": "+"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "box",
+                    "holes": [
+                      { "kind": "text", "text": "move" },
+                      { "kind": "text", "text": "yaw" },
+                      {
+                        "kind": "number",
+                        "value": { "n": "0", "d": "1" },
+                        "op": "+"
+                      }
+                    ]
+                  },
+                  { "kind": "die", "faces": 3 },
+                  {
+                    "kind": "number",
+                    "value": { "n": "-2", "d": "1" },
+                    "op": "+"
+                  },
+                  {
+                    "kind": "number",
+                    "value": { "n": "30", "d": "1" },
+                    "op": "*"
+                  }
+                ]
+              },
+              "team": []
+            }
+          },
+          "lid": "L915",
+          "evt": "evt-L915-5dsh7g"
+        },
+        {
+          "kind": "model",
+          "parts": [
+            { "shape": "box", "size": [0.3, 0.05, 0.09], "at": [0, 0.03, 0], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.14, 0.03, 0.06], "at": [0.2, 0.025, 0], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.12, 0.02, 0.05], "at": [-0.2, 0.02, 0], "color": "#5f8f3c", "rot": [0, 12, 0] },
+            { "shape": "box", "size": [0.02, 0.02, 0.05], "at": [0.05, 0.065, 0], "color": "#3d6b25" },
+            { "shape": "box", "size": [0.02, 0.02, 0.05], "at": [-0.02, 0.065, 0], "color": "#3d6b25" },
+            { "shape": "box", "size": [0.02, 0.02, 0.05], "at": [-0.09, 0.065, 0], "color": "#3d6b25" },
+            { "shape": "sphere", "size": [0.012], "at": [0.12, 0.06, 0.03], "color": "#e8c24a" },
+            { "shape": "sphere", "size": [0.012], "at": [0.12, 0.06, -0.03], "color": "#e8c24a" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [0.02, 0.005, 0.06], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [0.02, 0.005, -0.06], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [-0.1, 0.005, 0.06], "color": "#5f8f3c" },
+            { "shape": "box", "size": [0.04, 0.02, 0.02], "at": [-0.1, 0.005, -0.06], "color": "#5f8f3c" }
+          ],
+          "sz": 2,
+          "label": "crocodile"
+        },
+        { "kind": "bird", "nestId": 1, "nestGuid": "bc6160e9-4e69-4d94-8b74-34ccdf3205d5" }
+      ]
+    },
+    "team": []
+  }
+}
