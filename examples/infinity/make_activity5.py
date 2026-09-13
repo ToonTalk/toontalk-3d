@@ -113,4 +113,4 @@ bench = [
 ]
 
 if __name__ == '__main__':
-    write('activity5-above-one', bench)
+    write('♾️ activity5-above-one', bench)

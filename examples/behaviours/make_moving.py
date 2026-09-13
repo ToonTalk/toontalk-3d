@@ -69,4 +69,4 @@ bench = [
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},             # noqa: F405
 ]
 
-write_beh('moving', bench)
+write_beh('🏃 moving', bench)

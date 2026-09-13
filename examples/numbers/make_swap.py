@@ -55,6 +55,6 @@ world = {'kind': 'world', 'v': 1, 'bench': [
      'x': -0.25, 'z': 2.15},
 ], 'stations': {}, 'active': None}
 
-out = os.path.join(os.path.dirname(__file__), 'swap.world.json')
+out = os.path.join(os.path.dirname(__file__), '🔀 swap.world.json')
 io.open(out, 'w', encoding='utf-8').write(json.dumps(world, indent=1))
 print('wrote', out)

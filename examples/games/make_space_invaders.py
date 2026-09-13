@@ -340,4 +340,4 @@ bench = [
     {'thing': txt(HOW), 'x': 1.35, 'z': 2.0},                    # noqa: F405
 ]
 
-write('space-invaders', bench, HERE)                             # noqa: F405
+write('👾 space-invaders', bench, HERE)                             # noqa: F405

@@ -226,4 +226,4 @@ bench = [
     {'thing': txt(TRY), 'x': 1.30, 'z': 1.75},              # noqa: F405
 ]
 
-write_beh('turtle3d', bench)                                  # noqa: F405
+write_beh('🐢 turtle3d', bench)                                  # noqa: F405

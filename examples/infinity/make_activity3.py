@@ -107,4 +107,4 @@ bench = [
 ]
 
 if __name__ == '__main__':
-    write('activity3-sequences-and-pairs', bench)
+    write('♾️ activity3-sequences-and-pairs', bench)

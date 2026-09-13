@@ -108,4 +108,4 @@ bench = [
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.18},
 ]
 
-write_images('naming', bench)
+write_images('🏷️ naming', bench)

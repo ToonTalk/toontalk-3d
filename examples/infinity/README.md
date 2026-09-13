@@ -115,3 +115,14 @@ python make_activity1.py
 
 Each generator writes its own `.world.json`. `_tt.py` holds the shared
 vocabulary — things, conditions, steps, and the `room()` helper.
+
+## 📮 zeno.world.json
+
+Zeno's postman: the halver copies its fraction to the bird and drops a x1/2
+badge on what is left; the totaller takes each delivery off the nest and
+drops it on the running total (a number dropped on a number ADDS). Pull both
+levers. The total is exact -- (2^k - 1)/2^k, readable off the block -- which
+is the whole argument for exact rationals in one world.
+
+`make_zeno.py` writes it (moved here from `behaviours/` on 13 Sep: Zeno's
+postman is an infinity too, and reads best beside the others).

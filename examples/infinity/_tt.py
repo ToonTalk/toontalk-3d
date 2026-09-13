@@ -7,7 +7,14 @@
 # does not fail, it dozes until a bird delivers. So a chain of these robots is
 # a pipeline, and the pipeline is the whole point of the activities: sequences
 # feeding sequences, forever, without anybody holding a whole sequence.
-import json, io, os
+import json, io, os, sys
+
+# the names have emoji in them now, and a Windows console is not UTF-8 by
+# default: say them anyway
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 # --- things -----------------------------------------------------------------
 num = lambda n, d=1, op='+': {'kind': 'number', 'value': {'n': str(n), 'd': str(d)},

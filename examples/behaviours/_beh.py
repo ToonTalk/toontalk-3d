@@ -114,5 +114,5 @@ def gadget(name, lid, bot, work, look=None, bench=None):
                       'stations': {'stand': work}, 'active': bot}}
 
 
-def write_beh(name, bench):
-    return write(name, bench, HERE)                           # noqa: F405
+def write_beh(name, bench, folder=None):
+    return write(name, bench, folder or HERE)                           # noqa: F405

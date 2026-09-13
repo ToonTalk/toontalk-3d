@@ -13,7 +13,7 @@
 # atomicity that came free: each badge is applied whole, so no interleaving
 # can tear a deposit, and 100 + 5x10 + 4x25 is 250 however the rounds land.
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'infinity'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'infinity'))
 from _tt import *                                          # noqa: F403
 
 BAL_LID, BAL_EVT = 'L910', 'evt-L910-account'
@@ -81,4 +81,4 @@ bench = [
     {'thing': txt(RUN), 'x': 1.7, 'z': 1.9},
 ]
 
-write('live-account', bench, folder=os.path.dirname(os.path.abspath(__file__)))
+write('💳 live-account', bench, folder=os.path.dirname(os.path.abspath(__file__)))

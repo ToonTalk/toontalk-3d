@@ -70,4 +70,4 @@ bench = [
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},
 ]
 
-write_sounds('tones', bench)
+write_sounds('🎹 tones', bench)

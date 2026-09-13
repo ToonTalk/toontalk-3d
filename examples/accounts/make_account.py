@@ -129,6 +129,6 @@ world = {'kind': 'world', 'v': 1, 'bench': [
      'x': -1.35, 'z': 1.18},
 ], 'stations': {}, 'active': None}
 
-out = os.path.join(os.path.dirname(__file__), 'account.world.json')
+out = os.path.join(os.path.dirname(__file__), '💰 account.world.json')
 io.open(out, 'w', encoding='utf-8').write(json.dumps(world, indent=1))
 print('wrote', out)

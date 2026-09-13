@@ -116,4 +116,4 @@ bench = [
     {'thing': txt(HOW), 'x': -0.05, 'z': 2.28},             # noqa: F405
 ]
 
-write_beh('ellipse', bench)
+write_beh('🪐 ellipse', bench)

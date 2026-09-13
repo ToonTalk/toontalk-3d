@@ -42,7 +42,7 @@ const post = (name, data) => fetch('/capture?name=' + name, {
   });
   D.mute(); D.autoLoop(false);
   const out = {};
-  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  const w = await (await fetch('../examples/infinity/📮 zeno.world.json')).json();
   D.worldIn(w); await settle(D, 6000);
   D.speed(1);
   const rooms = [];

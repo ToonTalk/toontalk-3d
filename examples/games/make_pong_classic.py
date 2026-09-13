@@ -25,6 +25,8 @@ import sys, os
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))), 'images'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'behaviours'))
 from _beh import *                                          # noqa: F403
 from _img import draw_rgba, hue                             # noqa: F401
 
@@ -299,4 +301,4 @@ bench = [
     {'thing': txt(HOW), 'x': 1.25, 'z': 1.75},              # noqa: F405
 ]
 
-write_beh('pong-classic', bench)
+write_beh('🏓 pong-classic', bench, os.path.dirname(os.path.abspath(__file__)))

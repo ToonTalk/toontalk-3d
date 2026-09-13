@@ -254,4 +254,4 @@ bench = [
     {'thing': txt(PENS), 'x': -0.80, 'z': 2.32},            # noqa: F405
 ]
 
-write_beh('turtle', bench)
+write_beh('🐢 turtle', bench)

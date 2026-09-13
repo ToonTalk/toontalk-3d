@@ -136,4 +136,4 @@ bench = [
 ]
 
 if __name__ == '__main__':
-    write('activity7-any-interval', bench)
+    write('♾️ activity7-any-interval', bench)

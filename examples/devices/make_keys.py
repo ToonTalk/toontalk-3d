@@ -74,4 +74,4 @@ bench = [
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},
 ]
 
-write_devices('keys', bench)
+write_devices('⌨️ keys', bench)

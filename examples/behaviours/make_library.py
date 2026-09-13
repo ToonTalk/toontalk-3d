@@ -297,4 +297,4 @@ bench = [
     {'thing': txt(NEW), 'x': 0.65, 'z': 2.28},              # noqa: F405
 ]
 
-write_beh('library', bench)
+write_beh('📚 library', bench)

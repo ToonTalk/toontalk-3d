@@ -20,6 +20,8 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))), 'models'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'behaviours'))
 from _beh import *                                          # noqa: F403
 import make_turtle3d as T3                                  # noqa: E402
 from make_models import airplane as PLANE_PARTS             # noqa: E402
@@ -162,4 +164,4 @@ bench = [
     {'thing': scenery(txt(HOW)), 'x': 0.65, 'z': 2.30},              # noqa: F405
 ]
 
-write_beh('airplane-flight', bench)                          # noqa: F405
+write_beh('✈️ airplane-flight', bench, os.path.dirname(os.path.abspath(__file__)))                          # noqa: F405

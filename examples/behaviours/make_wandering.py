@@ -95,4 +95,4 @@ if __name__ == '__main__':
         {'thing': txt(WHY), 'x': -0.75, 'z': 2.15},          # noqa: F405
         {'thing': txt(ABOUT), 'x': -0.05, 'z': 2.15},        # noqa: F405
     ]
-    write_beh('wandering', bench)
+    write_beh('🦋 wandering', bench)

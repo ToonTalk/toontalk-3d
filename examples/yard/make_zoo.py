@@ -3,9 +3,9 @@
 # six animals built from solid shapes, the way Marty builds them, each with
 # its name on a sign, and a welcome pad by the door. Open it, step through
 # the green back door, and there they are. Run this to regenerate
-# yard-zoo.world.json; the app carries no copy of it.
+# 🦁 zoo.world.json; the app carries no copy of it.
 import io, json, os, sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'behaviours'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'behaviours'))
 from make_wandering import wandering            # noqa: E402
 
 def part(shape, size, at, color, rot=None):
@@ -105,7 +105,7 @@ sign = {'kind': 'text', 'text': 'Welcome to the zoo!\n\nAsk Marty for more anima
 
 world = {
     'kind': 'world', 'v': 4, 'stations': {}, 'active': None,
-    'name': 'yard-zoo',
+    'name': 'zoo',
     'bench': [],
     'yard': {'bench': [
         {'thing': sign, 'x': -2.6, 'z': 6.0},
@@ -121,6 +121,6 @@ world = {
     ]},
 }
 here = os.path.dirname(os.path.abspath(__file__))
-out = os.path.join(here, 'yard-zoo.world.json')
+out = os.path.join(here, '🦁 zoo.world.json')
 io.open(out, 'w', encoding='utf-8', newline='').write(json.dumps(world, ensure_ascii=False))
 print('wrote', out)

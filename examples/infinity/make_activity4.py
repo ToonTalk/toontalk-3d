@@ -116,4 +116,4 @@ bench = [
 ]
 
 if __name__ == '__main__':
-    write('activity4-all-fractions', bench)
+    write('♾️ activity4-all-fractions', bench)

@@ -100,4 +100,4 @@ bench = [
 ]
 
 if __name__ == '__main__':
-    write('activity1-even-numbers', bench)
+    write('♾️ activity1-even-numbers', bench)

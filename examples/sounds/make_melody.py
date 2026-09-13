@@ -98,4 +98,4 @@ bench = [
     {'thing': txt(ABOUT), 'x': -0.05, 'z': 2.15},
 ]
 
-write_sounds('melody', bench)
+write_sounds('🎵 melody', bench)

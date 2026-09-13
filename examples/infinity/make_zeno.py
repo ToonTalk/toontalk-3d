@@ -16,6 +16,8 @@
 # when the post comes.
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'behaviours'))
 from _beh import *                                          # noqa: F403
 
 ZENO_ID = 9901
@@ -120,4 +122,4 @@ bench = [
     {'thing': txt(GAP), 'x': 1.00, 'z': 2.25},              # noqa: F405
 ]
 
-write_beh('zeno', bench)                                     # noqa: F405
+write_beh('📮 zeno', bench, os.path.dirname(os.path.abspath(__file__)))                                     # noqa: F405

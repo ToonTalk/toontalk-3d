@@ -90,4 +90,4 @@ bench = [
 ]
 
 if __name__ == '__main__':
-    write('activity2-all-integers', bench)
+    write('♾️ activity2-all-integers', bench)

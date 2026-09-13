@@ -6259,3 +6259,39 @@ very Set being iterated -- for ever. The ship's fire card, dozing on the
 keyboard with the switched-on bullet in its box, hung the whole workshop
 at its first turn. The loop walks a snapshot now, and a gadget sitting in
 a hole is a thing to work on, not a part to switch on.
+
+## The examples in folders, with a picture on every name
+
+*Added 13 Sep. Ken: "Let's organize the examples that are at the top-level
+of the examples folder by moving them to existing or new subfolders. And
+pong, airplane, and maybe others in behaviors should move. Add emojis when
+appropriate to all the examples' filenames."*
+
+**One folder per subject.** Nothing stands loose at the top of `examples/`
+any more: the ports of Ken's own programs are in `numbers/` (🔀 swap, ❗
+factorial, 🐇 Fibonacci twice, and 🌡️ the gauge) and `lists/` (🔢 n-to-1,
+🔗 append, 🔁 reverse, with their converter); the sentence factory and the
+grammar are `words/`; Sally's account, the bank and the live account are
+`accounts/`; the zoo is `yard/`. Out of `behaviours/` went the three Pongs
+(to `games/`, beside 👾 Space Invaders), the airplane's flight (to
+`models/`, beside the airplane itself) and Zeno's postman (to `infinity/`).
+What stays in `behaviours/` is the shelf and the single behaviours it is
+made of, and the turtles.
+
+**A picture on every name.** Every world and thing file is named with an
+emoji and a space before its name -- 🏓 pong, 🦁 zoo, 📮 zeno, ✈️
+airplane-flight, ⌨️ keys -- so a folder listing reads at a glance. The
+puzzles keep their plain `p1`..`p34`: those are the names the app loads
+them by. The server decodes the encoded paths, the activity sheets and the
+suite fetch the new names, the goldens are keyed by them, and every
+generator writes its world next to itself; all forty-six were run and every
+world came out byte for byte the same.
+
+**Found on the way.** Yesterday's fold-on-nest (a panel dropped on a panel
+goes in as its card) broke "a fold keeps nested work alive": a WORKING
+tray was hidden on the table instead of riding inside the group, so
+folding the group serialised it and the turtle's letterbox left the scene.
+A working tray goes in whole now, hidden, as before; only an idle one is
+written into its card. A panel brought out to be read comes out onto the
+table wherever its tray was riding, and a fold looks for a part's work
+wherever its tray is.

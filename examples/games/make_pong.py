@@ -20,6 +20,9 @@
 # Two panels run at once, which is what makes it a game rather than a demo:
 # the ball's team and the bat's follower are separate programs on separate
 # benches, sharing only the table they move things on.
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'behaviours'))
 from _beh import *                                          # noqa: F403
 
 BALL, BAT, SCORE = 'P901', 'P902', 'P903'
@@ -245,4 +248,4 @@ bench = [
     {'thing': txt(HOW), 'x': 0.65, 'z': 2.28},              # noqa: F405
 ]
 
-write_beh('pong', bench)
+write_beh('🏓 pong', bench, os.path.dirname(os.path.abspath(__file__)))

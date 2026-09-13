@@ -10,7 +10,7 @@
 # other follows -- and the ECHO RULE is what keeps it from ringing forever:
 # a set that changes nothing is swallowed, so the circle stops after one lap.
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'infinity'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'infinity'))
 from _tt import *                                          # noqa: F403
 
 # live identities, hand-rolled the way the app writes them
@@ -72,4 +72,4 @@ bench = [
     {'thing': txt(RUN), 'x': 1.55, 'z': 1.7},
 ]
 
-write('gauge', bench, folder=os.path.dirname(os.path.abspath(__file__)))
+write('🌡️ gauge', bench, folder=os.path.dirname(os.path.abspath(__file__)))

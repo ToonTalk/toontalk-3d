@@ -28,6 +28,8 @@
 import json
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), 'behaviours'))
 from _beh import *                                          # noqa: F403
 
 import make_library2                                        # noqa: F401  (builds the six)
@@ -173,4 +175,4 @@ bench = [
     {'thing': scenery(txt(ASK)), 'x': 1.50, 'z': 2.30},     # noqa: F405
 ]
 
-write_beh('pong-gadgets', bench)
+write_beh('🏓 pong-gadgets', bench, os.path.dirname(os.path.abspath(__file__)))

@@ -58,25 +58,25 @@
 // driver can read it without scraping the page.
 
 const WORLDS = [
-  { name: 'examples/n-to-1', drive: 'give' },
-  { name: 'examples/reverse', drive: 'give' },
-  { name: 'examples/append', drive: 'give' },
-  { name: 'examples/factorial', drive: 'give' },
-  { name: 'examples/swap', drive: 'give' },
-  { name: 'examples/infinity/activity1-even-numbers', drive: 'lever' },
-  { name: 'examples/infinity/activity2-all-integers', drive: 'lever' },
-  { name: 'examples/infinity/activity4-all-fractions', drive: 'lever' },
-  { name: 'examples/infinity/activity6-all-rationals', drive: 'lever' },
+  { name: 'examples/lists/🔢 n-to-1', drive: 'give' },
+  { name: 'examples/lists/🔁 reverse', drive: 'give' },
+  { name: 'examples/lists/🔗 append', drive: 'give' },
+  { name: 'examples/numbers/❗ factorial', drive: 'give' },
+  { name: 'examples/numbers/🔀 swap', drive: 'give' },
+  { name: 'examples/infinity/♾️ activity1-even-numbers', drive: 'lever' },
+  { name: 'examples/infinity/♾️ activity2-all-integers', drive: 'lever' },
+  { name: 'examples/infinity/♾️ activity4-all-fractions', drive: 'lever' },
+  { name: 'examples/infinity/♾️ activity6-all-rationals', drive: 'lever' },
   // stage 2: live things. The account's first lever banks Tenner's five 10s;
   // the gauge locks the live save/load shape (its ring needs a stimulus, so
   // driving a lever alone leaves it at rest -- which is itself the assertion).
-  { name: 'examples/live-account', drive: 'lever' },
-  { name: 'examples/gauge', drive: 'lever' },
+  { name: 'examples/accounts/💳 live-account', drive: 'lever' },
+  { name: 'examples/numbers/🌡️ gauge', drive: 'lever' },
   // stage 3: media. melody grows a C major scale a note a round, so its dump
   // is the tune itself; naming's six robots dispatch on the PICTURE in their
   // thought, so its dump is what they said about seven of them.
-  { name: 'examples/sounds/melody', drive: 'give' },
-  { name: 'examples/images/naming', drive: 'give' },
+  { name: 'examples/sounds/🎵 melody', drive: 'give' },
+  { name: 'examples/images/🏷️ naming', drive: 'give' },
 ];
 const ROUNDS = 8;
 
@@ -207,7 +207,7 @@ async function slowSettle(D, cap) { return settle(D, cap); }
 // and before the sweep learned about disposal the list grew 240 a second and
 // walking it was the slowing down Ken felt.
 async function leakCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   D.speed('instant');
   // BY WHAT IT IS, not by where it sits: bench indexes shift between loads,
@@ -253,7 +253,7 @@ async function leakCheck(D) {
 // play, and this is that rule: silent while it is in the machine, still
 // switched on, and moving again the moment it is back.
 async function outOfPlayCheck(D, win) {
-  const w = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const gadgets = [];
   for (let i = 0; i < 20; i++) {
@@ -296,7 +296,7 @@ async function outOfPlayCheck(D, win) {
 // Four things at once: the ball stands still, you can still pick it up, Mimi
 // still finishes the copy, and no panel sneaks a fresh turn while paused.
 async function pauseCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const gadgets = [];
   for (let i = 0; i < 20; i++) {
@@ -349,7 +349,7 @@ async function pauseCheck(D) {
 async function copyCheck(D) {
   // -- structural: the classic game through Mimi once
   put('   ..cp.a start', 'dim');
-  const w1 = await (await fetch('../examples/behaviours/pong-classic.world.json')).json();
+  const w1 = await (await fetch('../examples/games/🏓 pong-classic.world.json')).json();
   D.worldIn(w1); await slowSettle(D, 2000);
   let field = null;
   for (let i = 0; i < 20; i++) {
@@ -376,7 +376,7 @@ async function copyCheck(D) {
   }
 
   // -- runtime: the square ball, thrice over
-  const w2 = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  const w2 = await (await fetch('../examples/games/🏓 pong.world.json')).json();
   D.worldIn(w2); await slowSettle(D, 2000);
   let ball = null;
   for (let i = 0; i < 20; i++) {
@@ -444,7 +444,7 @@ async function round28Check(D, win) {
 
   // a) rider scale follows the field's size
   {
-    const w = await (await fetch('../examples/behaviours/pong-classic.world.json')).json();
+    const w = await (await fetch('../examples/games/🏓 pong-classic.world.json')).json();
     D.worldIn(w); await slowSettle(D, 2000);
     let field = null;
     for (let i = 0; i < 20; i++) {
@@ -479,7 +479,7 @@ async function round28Check(D, win) {
   }
 
   // b, c, d ride on the square-ball world
-  const w2 = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  const w2 = await (await fetch('../examples/games/🏓 pong.world.json')).json();
   D.worldIn(w2); await slowSettle(D, 2000);
   const things = [];
   for (let i = 0; i < 25; i++) { const t = D.bench(i); if (!t) break; things.push(t); }
@@ -534,7 +534,7 @@ async function round28Check(D, win) {
   // d) a world imported over a working table lands as a notebook
   const before = [];
   for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; before.push(t); }
-  const json = await (await fetch('../examples/behaviours/pong-classic.world.json')).text();
+  const json = await (await fetch('../examples/games/🏓 pong-classic.world.json')).text();
   const file = new win.File([json], 'pong-classic.world.json', { type: 'application/json' });
   const dt2 = new win.DataTransfer();
   dt2.items.add(file);
@@ -568,7 +568,7 @@ async function shelfCheck(D) {
   // pad between two touch sweeps -- contact is a thing that happens in
   // sampled time, so this check runs at a walking pace
   D.speed(2);
-  const w = await (await fetch('../examples/behaviours/library.world.json')).json();
+  const w = await (await fetch('../examples/behaviours/📚 library.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const by = {};
   for (let i = 0; i < 25; i++) {
@@ -605,7 +605,7 @@ async function shelfCheck(D) {
 // rather than falling through to the pad-join rule -- which used to merge
 // their faces and silently discard the dropped one's panel.
 async function bindingsCheck(D) {
-  const w = await (await fetch('../examples/behaviours/library.world.json')).json();
+  const w = await (await fetch('../examples/behaviours/📚 library.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const by = {};
   for (let i = 0; i < 25; i++) {
@@ -720,7 +720,7 @@ async function inexactCheck(D) {
   const stable = JSON.stringify(D.dump()) === before;
 
   // and the ellipse: an approximation good enough to draw with
-  const ew = await (await fetch('../examples/behaviours/ellipse.world.json')).json();
+  const ew = await (await fetch('../examples/behaviours/🪐 ellipse.world.json')).json();
   D.worldIn(ew); await slowSettle(D, 2000);
   const by = {};
   for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
@@ -766,7 +766,7 @@ async function inexactCheck(D) {
 // comes. That is Ken's own rule about dozing robots, and it was measured at
 // 0.08 ms a frame EACH before the scheduler learned it.
 async function turtleCheck(D) {
-  const w = await (await fetch('../examples/behaviours/turtle.world.json')).json();
+  const w = await (await fetch('../examples/behaviours/🐢 turtle.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const by = {};
   for (let i = 0; i < 25; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
@@ -922,7 +922,7 @@ async function turtleCheck(D) {
 // exactly this), the rally must climb while a perfect pointer-player keeps
 // the bat on the ball, and must freeze when the bat is parked away.
 async function pongGadgetsCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong-gadgets.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   // ITS OWN speed, stated. This check counted bounces at speed 2 for weeks
   // without saying so -- it was inheriting a leaked D.speed(2) from the shelf
@@ -997,7 +997,7 @@ async function pongGadgetsCheck(D) {
 // Also here: the bat follows UP AND DOWN only, so it stays a wall and can be
 // pointed at, which is what makes "." reachable in the first place.
 async function stoppingCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong-gadgets.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const by = {};
   for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
@@ -1040,7 +1040,7 @@ async function stoppingCheck(D) {
 // and every contact ran a scoring cycle, which is the stall Ken felt "as it
 // passes through text pads".
 async function sceneryCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong-gadgets.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const by = {}; const cards = [];
   for (let i = 0; i < 30; i++) {
@@ -1072,7 +1072,7 @@ async function sceneryCheck(D) {
 // so quieting the robots that drive it is not enough -- it kept gliding, and
 // "." looked broken. Ken: "I couldn't turn off the ball."
 async function stopsDeadCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong-gadgets.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const by = {};
   for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; if (t.userData.lid) by[t.userData.lid] = t; }
@@ -1100,7 +1100,7 @@ async function stopsDeadCheck(D) {
 // names and nothing bound to anything, and a pad's label was never written to
 // a file at all. Ken met the first as "undo returned a blank pad".
 async function keepsWhatItIsCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong-gadgets.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const survey = () => {
     const out = {};
@@ -1136,7 +1136,7 @@ async function keepsWhatItIsCheck(D) {
 // Ken's ball whole -- it had no words of its own, so it vanished without
 // changing the card by a letter, taking three bindings with it.
 async function notSpareWordsCheck(D) {
-  const w = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  const w = await (await fetch('../examples/games/🏓 pong-gadgets.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   let ball = null, card = null;
   for (let i = 0; i < 30; i++) {
@@ -2035,7 +2035,7 @@ async function walkHomeCheck(D, w) {
 // WANDERING: the zoo's behaviour dropped on the flamingo and switched on
 // moves it about the grass
 async function wanderCheck(D, w) {
-  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const zoo = await (await fetch('../examples/yard/🦁 zoo.world.json')).json();
   D.worldIn(zoo); await slowSettle(D, 2000);
   D.speed('inf');
   D.enterYard(); await slowSettle(D, 2000);
@@ -2134,7 +2134,7 @@ async function firstProjectCheck(D, w) {
 // MARTY'S FACTS: the work box hole by hole, the steps annotated with what
 // they touch, and a question about a thing on the table finds it
 async function martyFactsCheck(D, w) {
-  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const zoo = await (await fetch('../examples/yard/🦁 zoo.world.json')).json();
   D.worldIn(zoo); await slowSettle(D, 2000);
   D.enterYard(); await slowSettle(D, 2000);
   const all = []; for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
@@ -2200,7 +2200,7 @@ async function zenoByHandCheck(D, w) {
 // MELODY, TAUGHT BY HAND: the Singer's ten steps through the lesson path,
 // then eight rounds sing the scale off the nest
 async function melodyByHandCheck(D, w) {
-  const world = await (await fetch('../examples/sounds/melody.world.json')).json();
+  const world = await (await fetch('../examples/sounds/🎵 melody.world.json')).json();
   // the same table, but the Singer untrained
   for (const b of world.bench) if (b.thing.kind === 'robot') { b.thing.program = []; b.thing.condition = null; b.thing.trainedOn = null; }
   D.worldIn(world); await slowSettle(D, 2000);
@@ -2237,7 +2237,7 @@ async function melodyByHandCheck(D, w) {
 // the thing's panel, and drops one on the other; the behaviour then works
 // on the thing. And a model in a hole shows itself, not its name plate.
 async function panelStepCheck(D, w) {
-  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const zoo = await (await fetch('../examples/yard/🦁 zoo.world.json')).json();
   const gad = zoo.yard.bench.find(b => b.thing.gadget).thing;
   const croc = zoo.yard.bench.find(b => b.thing.label === 'crocodile').thing;
   const prog = [
@@ -2269,7 +2269,7 @@ async function panelStepCheck(D, w) {
 // By hand, the same drop binds too; a panel dropped in an EMPTY hole is
 // refused and set back on the table. And a model in a hole rests on the rim.
 async function panelHoleCheck(D, w) {
-  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const zoo = await (await fetch('../examples/yard/🦁 zoo.world.json')).json();
   const gad = zoo.yard.bench.find(b => b.thing.gadget).thing;
   const croc = zoo.yard.bench.find(b => b.thing.label === 'crocodile').thing;
   const name = (o) => !o ? '.' : o.userData.panel ? 'P' : (o.userData.label || o.userData.text || o.userData.kind);
@@ -2332,7 +2332,7 @@ async function panelHoleCheck(D, w) {
 // host's floor, a bound panel has one world root (not a stale second one),
 // and the trained robot repeats it all on a fresh box.
 async function panelLessonCheck(D, w) {
-  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const zoo = await (await fetch('../examples/yard/🦁 zoo.world.json')).json();
   const gad = zoo.yard.bench.find(b => b.thing.gadget).thing;
   const croc = zoo.yard.bench.find(b => b.thing.label === 'crocodile').thing;
   const name = (o) => !o ? '.' : o.userData.panel ? 'P' : (o.userData.label || o.userData.text || o.userData.kind);
@@ -2392,7 +2392,7 @@ async function panelLessonCheck(D, w) {
 // door out (Ken). And Ruby comes out to the yard, since a robot can be
 // trained there.
 async function yardPanelDoorCheck(D, w) {
-  const zoo = await (await fetch('../examples/yard-zoo.world.json')).json();
+  const zoo = await (await fetch('../examples/yard/🦁 zoo.world.json')).json();
   D.worldIn(zoo); await slowSettle(D, 3000); D.speed('inf');
   D.enterYard(); await slowSettle(D, 3000);
   const name = (o) => !o ? '.' : (o.userData.label || o.userData.text || o.userData.kind);
@@ -2458,7 +2458,7 @@ async function touchReadingCheck(D, w) {
   const pair = !!p && p.userData.holes.length === 5 && names.join('+') === 'ball+wall'
     && p.userData.holes[0].thing?.userData.kind === 'bird' && p.userData.holes[2].thing?.userData.kind === 'bird';
   // the old pong still bounces: its ball's thoughts were saved with two-hole readings
-  const pong = await (await fetch('../examples/behaviours/pong.world.json')).json();
+  const pong = await (await fetch('../examples/games/🏓 pong.world.json')).json();
   D.worldIn(pong); await slowSettle(D, 2000);
   const byLid = {}; for (let i = 0; i < 20; i++) { const x = D.bench(i); if (!x) break; if (x.userData.lid) byLid[x.userData.lid] = x; }
   const ball = byLid.P901;
@@ -2476,7 +2476,7 @@ async function touchReadingCheck(D, w) {
 // both vanish, and the field's referee card counts one on the score.
 async function spaceInvadersCheck(D, w) {
   const name = (o) => !o ? '.' : (o.userData.label || (o.userData.text || '').slice(0, 14) || o.userData.kind);
-  const world = await (await fetch('../examples/games/space-invaders.world.json')).json();
+  const world = await (await fetch('../examples/games/👾 space-invaders.world.json')).json();
   D.worldIn(world); await slowSettle(D, 2000); D.speed(1);
   const field = D.liveNode('P940'), ship = D.liveNode('P941'), score = D.liveNode('P942');
   const invaders = () => (field?.__subs || []).filter(t => t.userData.label === 'invader').length;
@@ -2505,7 +2505,7 @@ async function spaceInvadersCheck(D, w) {
 // robot at toy scale, and Enter there looks from the front; the knob folds
 // it home into the card.
 async function panelCardsCheck(D, w) {
-  const world = await (await fetch('../examples/games/space-invaders.world.json')).json();
+  const world = await (await fetch('../examples/games/👾 space-invaders.world.json')).json();
   D.worldIn(world); await slowSettle(D, 2000); D.speed('inf');
   const inv = D.liveNode('P950');
   const tray = D.panelOut(inv); await slowSettle(D, 3000);
@@ -2557,7 +2557,7 @@ async function dustyStackCheck(D) {
 }
 
 async function nestedPanelCheck(D) {
-  const lib = await (await fetch('../examples/behaviours/library.world.json')).json();
+  const lib = await (await fetch('../examples/behaviours/📚 library.world.json')).json();
   const moverRec = lib.bench.find(b => (b.thing.text || '') === 'moving right').thing;
   const star = JSON.parse(JSON.stringify(lib.bench.find(b => b.thing.lid === 'L9599').thing));
   // the part, rebound to the star exactly as dropping it on the star would
@@ -2640,7 +2640,7 @@ async function pictureCheck(D) {
 // no name with the first (copies are wholly their own -- the rule that made
 // page-by-page rekeying cut the connections in the first place).
 async function importWholeCheck(D) {
-  const rec = await (await fetch('../examples/behaviours/pong-gadgets.world.json')).json();
+  const rec = await (await fetch('../examples/games/🏓 pong-gadgets.world.json')).json();
   // mid-project: something of the visitor's own is on the table
   D.worldIn({ kind: 'world', v: 3, bench: [{ thing: { kind: 'text', text: 'my work' }, x: -1.2, z: 1.2 }],
               stations: {}, active: null });
@@ -2703,7 +2703,7 @@ async function importWholeCheck(D) {
 // the property Ken warned about, since sequential Euler updates drift and
 // quaternion multiplication does not.
 async function turtle3dCheck(D) {
-  const w = await (await fetch('../examples/behaviours/turtle3d.world.json')).json();
+  const w = await (await fetch('../examples/behaviours/🐢 turtle3d.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const by = {}; let post = null, pd = null; const orders = {};
   for (let i = 0; i < 30; i++) {
@@ -2761,9 +2761,9 @@ async function turtle3dCheck(D) {
 // the airplane and flies it, and the trail it draws sweeps up as ONE thing
 // that survives a save and a load.
 async function modelTrailCheck(D) {
-  const w = await (await fetch('../examples/behaviours/turtle3d.world.json')).json();
+  const w = await (await fetch('../examples/behaviours/🐢 turtle3d.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
-  const rec = await (await fetch('../examples/models/airplane.thing.json')).json();
+  const rec = await (await fetch('../examples/models/✈️ airplane.thing.json')).json();
   const file = () => new File([JSON.stringify(rec)], 'airplane.thing.json',
                               { type: 'application/json' });
   await D.importFile(file());
@@ -2835,7 +2835,7 @@ async function modelTrailCheck(D) {
 // the denominator a power of two and the numerator one less than it, every
 // single delivery, forever.
 async function zenoCheck(D) {
-  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  const w = await (await fetch('../examples/infinity/📮 zeno.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   D.speed('inf');
   const rooms = [];
@@ -2913,7 +2913,7 @@ async function shapeDropCheck(D) {
 // props at all. An opaque house shows none of it, and the robot's walk
 // actually reaches the stack it fetches from.
 async function houseFurnitureCheck(D) {
-  const w = await (await fetch('../examples/infinity/activity1-even-numbers.world.json')).json();
+  const w = await (await fetch('../examples/infinity/♾️ activity1-even-numbers.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   await frames(D, 120);
   const rooms = [];
@@ -2968,7 +2968,7 @@ async function houseFurnitureCheck(D) {
 // pitch with a constant stride IS a circle. The proof is the drawn path,
 // which must be as tall as it is deep, and the plane must come back DOWN.
 async function flightCheck(D) {
-  const w = await (await fetch('../examples/behaviours/airplane-flight.world.json')).json();
+  const w = await (await fetch('../examples/models/✈️ airplane-flight.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const all = [];
   for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
@@ -3018,7 +3018,7 @@ async function flightCheck(D) {
 // their rounds -- the two woken by mail stood still for weeks because their
 // round runs in checkWaiting, below where the performance was built.
 async function postAcrossCheck(D) {
-  const w = await (await fetch('../examples/infinity/activity1-even-numbers.world.json')).json();
+  const w = await (await fetch('../examples/infinity/♾️ activity1-even-numbers.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const rooms = [];
   for (let i = 0; i < 14; i++) { const t = D.bench(i); if (!t) break;
@@ -3208,7 +3208,7 @@ async function markdownCheck(D) {
 // binding intact -- not be rebuilt on the bench while the original lives on
 // inside the tray with the same live name.
 async function undoTwinCheck(D) {
-  const w = await (await fetch('../examples/behaviours/airplane-flight.world.json')).json();
+  const w = await (await fetch('../examples/models/✈️ airplane-flight.world.json')).json();
   D.worldIn(w); await settle(D, 4000);
   const find = (lid) => { for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break;
     if (t.userData.lid === lid) return t; } return null; };
@@ -3275,7 +3275,7 @@ async function notebookCheck(D) {
 // letter lands, and judged by dirty the press used to take the start branch
 // instead ("the totaller robot ignored the stop button").
 async function paceAndLeverCheck(D) {
-  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  const w = await (await fetch('../examples/infinity/📮 zeno.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   D.speed(1);
   const rooms = [];
@@ -3330,7 +3330,7 @@ async function paceAndLeverCheck(D) {
 // it: its letterbox left the scene and Ken's hand-flown orders had nowhere
 // to land. A fold over live nested work keeps the tray on the bench, closed.
 async function foldAliveCheck(D) {
-  const w = await (await fetch('../examples/behaviours/airplane-flight.world.json')).json();
+  const w = await (await fetch('../examples/models/✈️ airplane-flight.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   D.speed(1);
   const all = [];
@@ -4227,7 +4227,7 @@ async function facingCheck(D) {
   const deg = (r) => Math.round(((r % (2 * Math.PI)) * 180 / Math.PI + 540) % 360 - 180);
   const yaws = [];
   for (const waitTicks of [60, 100, 160, 220]) {
-    const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+    const w = await (await fetch('../examples/infinity/📮 zeno.world.json')).json();
     D.worldIn(w); await slowSettle(D, 4000);
     D.speed(1);
     const rooms = [];
@@ -4433,7 +4433,7 @@ async function martyDrawsCheck(D) {
 // merely filling with post ran the moment the first letter arrived. The letter
 // still lands and still waits; the lever is what makes the house work.
 async function postDoesNotStartCheck(D) {
-  const w = await (await fetch('../examples/behaviours/zeno.world.json')).json();
+  const w = await (await fetch('../examples/infinity/📮 zeno.world.json')).json();
   D.worldIn(w); await slowSettle(D, 4000);
   D.speed(1);
   const rooms = [];

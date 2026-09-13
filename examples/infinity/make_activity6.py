@@ -133,4 +133,4 @@ bench = [
 ]
 
 if __name__ == '__main__':
-    write('activity6-all-rationals', bench)
+    write('♾️ activity6-all-rationals', bench)

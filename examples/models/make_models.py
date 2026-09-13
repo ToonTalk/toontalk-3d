@@ -67,5 +67,5 @@ def write(name, label, lid, parts):
     print('wrote', out)
 
 
-write('airplane', 'a toy airplane', 'L9560', airplane)
-write('dragonfly', 'a dragonfly', 'L9561', dragonfly)
+write('✈️ airplane', 'a toy airplane', 'L9560', airplane)
+write('🪰 dragonfly', 'a dragonfly', 'L9561', dragonfly)
