@@ -6295,3 +6295,33 @@ A working tray goes in whole now, hidden, as before; only an idle one is
 written into its card. A panel brought out to be read comes out onto the
 table wherever its tray was riding, and a fold looks for a part's work
 wherever its tray is.
+
+## A team standing by, a mime by the right body, and closeups that nest
+
+*Added 13 Sep. Ken, with a picture of the explode card's back in Space
+Invaders: "the tiny robot is 'dancing' while the other looks too big. As
+a waiting team the size difference should be much less between the larger
+first robot and the rest. Maybe the bird is a bit too big. Notice that the
+door enters into the frame. If one has clicked enter for a closeup of a
+panel then when one extracts a subpanel it should be shown closeup too. I
+think while inspecting it is awkward to enter and leave closeup mode.
+Enter while holding should also switch to closeup mode."*
+
+**Who was dancing.** On a card's back the member that recognised the work
+takes the full-size body at the desk, and the leader parks in the queue.
+The queue stood at toy size, a ninth of the performer's height -- and the
+round's mime, the walk from hole to hole, moved the LEADER's node, not the
+body that had done the round. So the big robot stood idle while a tiny one
+walked its round for it. A team standing by is half-size now, and the mime
+moves whoever performed.
+
+**The tray.** The perch bird is a little smaller, and the door stands
+inside the front rail instead of through it.
+
+**Closeups nest.** In a closeup of a panel, the gear over a card takes the
+closeup on into the card's panel, however that panel comes out -- new,
+shown again, or brought out from riding inside the group. The knob, or
+Escape, comes back to the panel it stands on, and only the last Escape
+reaches the workshop. Enter works with something in the hand too: the
+thing under the pointer, or failing that the thing held, fills the screen
+where it is; Shift+Enter is the new line on a pad you are typing on.

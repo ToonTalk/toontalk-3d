@@ -2532,6 +2532,34 @@ async function panelCardsCheck(D, w) {
   return ok;
 }
 
+// A TEAM ON A CARD'S BACK, AND CLOSEUPS THAT NEST. The member performing at
+// the desk is full size and the rest stand by at half size (not a ninth);
+// the round's mime moves the performer. A closeup of a panel, then of a
+// card's panel on it, comes back to the panel when that card's panel is
+// put away -- and only the last Escape reaches the workshop.
+async function closeupNestCheck(D, w) {
+  const world = await (await fetch('../examples/games/👾 space-invaders.world.json')).json();
+  D.worldIn(world); await slowSettle(D, 2000); D.speed(1);
+  const inv = D.liveNode('P950'); const tray = D.panelOut(inv); await slowSettle(D, 2000);
+  const cards = []; tray.__ctx.root.traverse(o => { if (o.userData?.gadget) cards.push(o); });
+  const march = cards.find(c => /march/.test(c.userData.text)); const ct = D.panelOut(march); await slowSettle(D, 2000);
+  D.switchScene(D.liveNode('P940'), true);
+  await frames(D, 240);
+  const bots = []; ct.__ctx.root.traverse(o => { if (o.userData?.kind === 'robot') bots.push(o); });
+  const scales = bots.map(b => b.scale.x).sort((a, b) => b - a);
+  const team = bots.length === 2 && Math.abs(scales[0] - 1) < 0.01 && Math.abs(scales[1] - 0.5) < 0.01;
+  const body = !!ct.__body && ct.__body === bots.find(b => b.scale.x === scales[0]);
+  D.lookAt(tray, true); const look1 = D.straightOn === tray;
+  D.lookAt(ct, true); const look2 = D.straightOn === ct;
+  D.clickRaw({ kind: 'panelClose', tray: ct });
+  for (let i = 0; i < 60; i++) { D.frame(1, fnow()); D.holdLook(0.05); }
+  const back = D.straightOn === tray && w.document.body.classList.contains('playing');
+  D.camReset(); D.switchScene(D.liveNode('P940'), false);
+  const ok = team && body && look1 && look2 && back;
+  put((ok ? 'PASS' : 'FAIL') + ' a team on a card’s back, and closeups that nest  (performer-full-standby-half=' + team + ' mime-moves-performer=' + body + ' closeup-panel=' + look1 + ' closeup-card=' + look2 + ' knob-back-to-panel=' + back + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -4888,6 +4916,9 @@ async function runOne(D, spec) {
   let pcOK = true;
   try { pcOK = want('panelCards') ? await panelCardsCheck(D, frame.contentWindow) : true; }
   catch (e) { pcOK = false; put('FAIL a picture’s back is a page of cards  ' + e.message, 'fail'); }
+  let cnOK = true;
+  try { cnOK = want('closeupNest') ? await closeupNestCheck(D, frame.contentWindow) : true; }
+  catch (e) { cnOK = false; put('FAIL a team on a card’s back, and closeups that nest  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -4999,7 +5030,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
