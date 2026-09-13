@@ -6533,3 +6533,62 @@ any control had the focus -- the guard added with the robot's note -- and
 the Speed menu keeps the focus after use, so the ship stood still. Only a
 text field keeps a key now. The moves themselves were already in the
 field's own units: five presses took the ship nearly half the yard.
+
+## A robot that teaches a robot
+
+*Added 13 Sep. Ken, after a brainstorm on meta-programming: ToonTalk
+Reborn's first tour has a robot pick up a fresh robot, give it a number,
+start its training, do two gestures, stop and name it "Add 1" -- "so it
+should be possible for a robot to give an untrained robot a box and then
+train it. Maybe the API won't need an extension?" And: "the meta robot
+should be able to use text-to-speech like in ToonTalk Reborn. Of course
+this could be a general capability of text pads."*
+
+**Reborn's way.** Reborn's robot.js records, in a robot being trained, a
+"start training" step when it starts another robot's training, a "train"
+step carrying each step the other robot records while that lasts, and
+"stop training" -- two levels only, by a comment's own admission. The
+workshop does the same with its own gestures and nothing new to give a
+robot. In a lesson the claw takes a box and is dropped on a little robot
+among the robot's things: that is the step *teach*. The pupil steps up to
+a desk of its own beside the teacher (a stand aside, as a dozing robot
+takes), the box on its desk; the thought bubble, the card and the claw are
+the pupil's, and everything done next is recorded into the pupil as its own
+steps and into the teacher as *taught* steps carrying them -- Ruby's
+loosening of the pupil's thought included, as *taught: loosen*. "Stop
+teaching it" (the exit button, renamed while teaching) ends the pupil's
+lesson with *endTeach*, and the teacher's own goes on. A robot may teach a
+robot, not a robot that teaches a robot.
+
+**The dream teaches nobody.** Leaving the teacher's bubble rewinds the
+world, and the pupil rides the snapshot by reference, so it came back into
+the box still trained; now every pupil taught in a dream is un-taught on
+the way out, its desk and the box it was given taken away, and it lands in
+its hole a little robot again. Measured: after the lesson the teacher has
+nine steps (take, read aloud, put, take, teach, taught: take a new number,
+taught: drop it on hole 1, taught: loosen, and that is its lesson), the
+pupil is back in hole 2 with no steps and the box reads 1.
+
+**Run, it teaches for real.** *teach* walks the claw to the pupil and drops
+the box; the pupil steps up; each *taught* step is performed by the pupil
+in front of you and added to its lesson; the loosening is Ruby's flight to
+the pupil's thought; *endTeach* leaves the pupil trained at its desk with
+its box, and the teacher takes the middle desk back. The teacher's thought
+no longer fits its emptied box, so it runs once. Measured on the example:
+the pupil aside with two steps, its thought loosened to any number, its box
+reading 2; clicked and started, it counts to 5 in three rounds. Robots at
+desks aside are saved with what is on their desks, waiting or taught.
+
+**Pads speak.** A pad reads its own words aloud in the workshop's voice:
+the Read button on the held card does it now whenever pressed; in a lesson
+Read is the step *read aloud what it holds*, and the robot waits for its
+own words; and [speak] (or [say]) given to a pad's bird has it speak. The
+waits count on the sequencer's own clock and hold only while the engine is
+really speaking, with a cap of a dozen seconds, so a silent engine -- a
+headless browser queues what it will never say -- holds nothing.
+
+**The example.** `examples/meta/🎓 teacher`: a robot whose box holds a pad,
+a little robot, a box with a 1 and another pad. It reads the first pad
+out, gives the box to the little robot, teaches it to add a fresh 1 to
+what it was given, has Ruby loosen the pupil's thought, and reads the last
+pad out.

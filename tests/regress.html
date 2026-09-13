@@ -2764,6 +2764,73 @@ async function heldStepCheck(D, w) {
   return ok;
 }
 
+// A ROBOT THAT TEACHES A ROBOT. Taught by a person: in the teacher's lesson
+// the claw takes a box and is dropped on the little robot among its things;
+// the pupil steps up to a desk of its own, the next steps are the pupil's
+// (mirrored into the teacher as taught steps), Ruby's erasure too, and
+// "Stop teaching it" ends the pupil's lesson. Leaving the teacher's bubble
+// rewinds the pupil into the box, untrained. Run, the teacher does it for
+// real: the pupil stands trained at its desk with its box, its thought
+// loosened, and counts when started. And a pad given [speak] says its words.
+async function teachCheck(D, w) {
+  const doc = w.document;
+  const num = (n) => ({ kind: 'number', value: { n: String(n), d: '1' }, op: '+' });
+  const txt = (t) => ({ kind: 'text', text: t });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'robot', name: 'the teacher', program: [], team: [] }, x: -1.2, z: 1.4 },
+    { thing: { kind: 'box', holes: [txt('I will teach this little robot to count.'), { kind: 'robot', name: 'the pupil', program: [], team: [] }, { kind: 'box', holes: [num(1)] }, txt('Now it counts.')] }, x: 0.2, z: 1.6 },
+    { thing: { kind: 'text', text: 'hello from a pad', lid: 'L777', evt: 'evt-L777' }, x: 1.1, z: 2.1 } ] });
+  await slowSettle(D, 2000);
+  // a pad speaks: [speak] to its bird puts its words on the card (and in the air, where there is a voice)
+  D.post('L777', { kind: 'text', text: 'speak' }); await frames(D, 5);
+  const spoke = doc.getElementById('hint').textContent === 'hello from a pad';
+  D.hold(D.bench(1)); D.giveRobot(); await slowSettle(D, 2500);
+  const lesson = D.state.mode === 'training';
+  D.teach({ type: 'take', at: { c: 'given', path: [0] } }); await slowSettle(D, 2500);
+  D.teach({ type: 'speak' }); await slowSettle(D, 2500);
+  D.teach({ type: 'put', at: { c: 'given', path: [0] } }); await slowSettle(D, 2500);
+  D.teach({ type: 'take', at: { c: 'given', path: [2] } }); await slowSettle(D, 2500);
+  const pupil = D.mine([1])?.__bot;
+  D.clickRaw({ kind: 'botThing', bot: pupil }); await slowSettle(D, 4000);
+  const taught = D.teachingNow();
+  const stepsUp = !!taught && !!pupil.stand && Math.abs(pupil.node.scale.x - 1) < 0.02
+    && doc.getElementById('exitBtn').textContent === 'Stop teaching it'
+    && String(D.mine()?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '1';
+  D.teach({ type: 'newNumber' }); await slowSettle(D, 2500);
+  D.teach({ type: 'put', at: { c: 'given', path: [0] } }); await slowSettle(D, 2500);
+  const added = String(D.mine()?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '2';
+  D.rubyOn(true); D.clickCond([0]); await slowSettle(D, 2500); D.rubyOn(false);
+  const pupilLearned = pupil.program.length === 2 && pupil.condition?.holes?.[0]?.kind === 'wildNumber';
+  doc.getElementById('exitBtn').click(); await slowSettle(D, 2000);   // "Stop teaching it"
+  const teacherSteps = D.activeProgram().map(s2 => s2.type + (s2.step ? '>' + s2.step.type : ''));
+  const stopped = !D.teachingNow() && D.state.mode === 'training'
+    && teacherSteps.join(',') === 'take,speak,put,take,teach,taught>newNumber,taught>put,taught>erase,endTeach';
+  D.exit(); await slowSettle(D, 3000);
+  const given = D.mine();
+  const rewound = D.state.mode === 'world' && given?.userData?.holes?.[1]?.thing?.__bot?.program?.length === 0
+    && String(given?.userData?.holes?.[2]?.thing?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '1'
+    && !D.allBots().some(b => b.aside);
+  // run: the teacher teaches for real
+  D.run(); await slowSettle(D, 30000);
+  const bots = D.allBots();
+  const pupilNow = bots.find(b => b.name === 'the pupil' && b.aside);
+  const ranOnce = D.state.mode === 'world' && D.roundsNow().runCount === 1;
+  let pupilNode = null; { let r = given; while (r && r.parent) r = r.parent; r?.traverse(o => { if (o.__bot && o.__bot.name === 'the pupil' && o.__bot.stand) pupilNode = o; }); }
+  const boxNow = pupilNode?.__bot?.stand?.occupant;
+  const taughtForReal = !!pupilNow && pupilNow.steps === 2 && pupilNode?.__bot?.condition?.holes?.[0]?.kind === 'wildNumber'
+    && String(boxNow?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '2';
+  // ...and the pupil counts
+  let counts = false;
+  if (pupilNode) {
+    D.clickBot(pupilNode); await slowSettle(D, 2000);
+    D.rounds(3); D.run(); await slowSettle(D, 12000); D.rounds(ROUNDS);
+    counts = String(D.mine()?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '5';
+  }
+  const ok = lesson && stepsUp && added && pupilLearned && stopped && rewound && ranOnce && taughtForReal && counts && spoke;
+  put((ok ? 'PASS' : 'FAIL') + ' a robot that teaches a robot  (lesson=' + lesson + ' pupil-steps-up=' + stepsUp + ' pupil-adds=' + added + ' pupil-learned=' + pupilLearned + ' stop-teaching=' + stopped + ' rewound=' + rewound + ' teacher-ran-once=' + ranOnce + ' taught-for-real=' + taughtForReal + ' pupil-counts=' + counts + ' pad-speaks=' + spoke + (stopped ? '' : ' steps=' + teacherSteps.join(',')) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5152,6 +5219,9 @@ async function runOne(D, spec) {
   let hsOK = true;
   try { hsOK = want('heldStep') ? await heldStepCheck(D, frame.contentWindow) : true; }
   catch (e) { hsOK = false; put('FAIL a held step, and a notebook that moves  ' + e.message, 'fail'); }
+  let tchOK = true;
+  try { tchOK = want('teachCheck') ? await teachCheck(D, frame.contentWindow) : true; }
+  catch (e) { tchOK = false; put('FAIL a robot that teaches a robot  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -5263,7 +5333,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

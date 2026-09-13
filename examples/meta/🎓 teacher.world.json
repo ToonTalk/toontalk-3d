@@ -1,0 +1,230 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "the teacher",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "wildText"
+      },
+      {
+       "kind": "anyRobot"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        }
+       ]
+      },
+      {
+       "kind": "wildText"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "speak"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "teach",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "newNumber"
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "given",
+        "path": [
+         0
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "erase",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "endTeach"
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     },
+     {
+      "type": "speak"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "I am going to teach this little robot to count."
+      },
+      {
+       "kind": "robot",
+       "name": "the pupil",
+       "program": [],
+       "condition": null,
+       "trainedOn": null,
+       "team": [],
+       "note": "Untrained. The teacher gives it the box of 1 and shows it how to count."
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "Now it counts: click it, and press Start."
+      }
+     ]
+    },
+    "team": [],
+    "note": "A robot that trains a robot. It reads the first pad out, gives the box of 1 to the little robot in its second hole and teaches it to add a fresh 1 to what it was given, has Ruby loosen the 1 in the pupil\u2019s thought so it counts on any number, and reads the last pad out. It runs once: with the pupil gone from its box, its thought no longer fits."
+   },
+   "x": -1.2,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "I am going to teach this little robot to count."
+     },
+     {
+      "kind": "robot",
+      "name": "the pupil",
+      "program": [],
+      "condition": null,
+      "trainedOn": null,
+      "team": [],
+      "note": "Untrained. The teacher gives it the box of 1 and shows it how to count."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "1",
+         "d": "1"
+        },
+        "op": "+"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "Now it counts: click it, and press Start."
+     }
+    ]
+   },
+   "x": -0.1,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THE TEACHER\n\nA robot trained to train a\nrobot. Its box holds a pad,\na little robot, a box with\na 1, and another pad.\n\nRun, it reads the pad out,\ngives the box to the little\nrobot, and TEACHES it: the\npupil steps up to a desk of\nits own and does each step\nas the teacher shows it."
+   },
+   "x": -1.15,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nGive the four-hole box to\nthe teacher and press Start.\n\nWatch the pupil take a desk,\nadd a fresh 1 to its box,\nand have its thought\nloosened by Ruby.\n\nThen click the pupil -- it is\ntrained now -- and press\nStart: 3, 4, 5, ..."
+   },
+   "x": -0.45,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "HOW IT WAS TAUGHT\n\nIn the teacher\u2019s lesson, the\nclaw took the box and was\ndropped on the little robot.\nThat is \u201cteach\u201d: everything\ndone next was the PUPIL\u2019s\nlesson, and the teacher kept\neach step as a \u201ctaught\u201d step\nof its own.\n\nRead on a pad in a lesson is\na step too: the robot reads\nit out when it runs."
+   },
+   "x": 0.25,
+   "z": 2.25
+  }
+ ],
+ "stations": {},
+ "active": null
+}
