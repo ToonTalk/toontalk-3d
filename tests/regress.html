@@ -1389,6 +1389,7 @@ async function thoughtViewCheck(D) {
     if (t.userData.kind === 'box' && !t.userData.fixed) return t; } return null; })();
   D.hold(box); D.giveRobot();
   await slowSettle(D, 3000);
+  const asked = D.smartCam().show;        // the view the refusal asked for, named (mentionPose<thoughtPose: a mention keeping the thought view)
   const fl = typeof D.flagged === 'function' ? D.flagged() : D.flagged;
   const flagged = typeof fl === 'number' ? fl > 0 : (fl?.length ?? 0) > 0;
   const pRed0 = D.camera.position.clone();
@@ -1432,7 +1433,7 @@ async function thoughtViewCheck(D) {
     && runView.red && runView.ran && runView.on && runView.d > 2.9 && runView.fromBox > 2.9 && runView.done
     && lesson && Math.abs(inLesson - 2.6) < 0.35
     && afterView.moved > 0.4 && afterView.on && afterView.d > 2.9 && afterView.done;
-  put((ok ? 'PASS' : 'FAIL') + ' the camera shows the thought  (red-parts=' + flagged + ' red-view=' + JSON.stringify(redView)
+  put((ok ? 'PASS' : 'FAIL') + ' the camera shows the thought  (red-parts=' + flagged + ' asked=' + asked + ' red-view=' + JSON.stringify(redView)
       + ' after-a-run-stops=' + JSON.stringify(runView)
       + ' in-lesson=' + inLesson + ' after-lesson=' + JSON.stringify(afterView) + ')', ok ? 'pass' : 'fail');
   return ok;
@@ -2869,20 +2870,37 @@ async function zenoCheck(D) {
   const rooms = [];
   for (let i = 0; i < 10; i++) { const t = D.bench(i); if (!t) break;
     if (t.userData.kind === 'room') rooms.push(t); }
-  D.clickRaw({ kind: 'roomLever', room: rooms[0] }); await settle(D, 9000);
-  D.clickRaw({ kind: 'roomLever', room: rooms[1] }); await settle(D, 9000);
-  await frames(D, 2200);
+  // BOTH LEVERS, THE TOTALLER'S FIRST, THEN THE WAIT -- the world's own
+  // instructions ("pull the lever on each house"). Started alone, the halver
+  // posted at Instant into a house whose lever was still down: a lever pull
+  // is a whole 1.2 s slice of room work, so the pile grew by the hundred
+  // before the totaller was switched on, and the 2,200 frames that followed
+  // -- eighty halver rounds each, the total a fraction of thousands of
+  // digits -- took twenty minutes on their own. Together they keep pace,
+  // the pile stays at nothing, and the invariant is read off the first few
+  // deliveries: it holds for every single one, so eight are as good as a
+  // hundred thousand. (The world itself is not capped: a dropped delivery
+  // would break the very exactness it teaches.)
   const tot = rooms.find(r => r.userData.label === 'the totaller');
-  const v = tot.__ctx?.standOcc?.userData?.holes?.[1]?.thing?.userData?.value;
+  const halver = rooms.find(r => r.userData.label === 'the halver');
+  D.clickRaw({ kind: 'roomLever', room: tot });
+  D.clickRaw({ kind: 'roomLever', room: halver });
+  await settle(D, 9000);
+  const value = () => tot.__ctx?.standOcc?.userData?.holes?.[1]?.thing?.userData?.value;
+  let used = 0;
+  for (; used < 60; used += 5) { const v0 = value(); if (v0 && BigInt(v0.d) >= 8n) break; await frames(D, 5); }
+  const pile = tot.__ctx?.standOcc?.userData?.holes?.[0]?.thing?.userData?.pile?.length ?? -1;
+  const v = value();
   if (!v) { put('FAIL zeno  (no total found)', 'fail'); return false; }
   const num = BigInt(v.n), den = BigInt(v.d);
   const grew = den >= 8n;                       // at least three deliveries landed
   const exact = (den & (den - 1n)) === 0n && (den - num) === 1n;
   const ok = grew && exact;
   D.speed(1);      // Instant is this check's, not the suite's -- pong broke at it
-  put((ok ? 'PASS' : 'FAIL') + ' zeno\u2019s postman  (total=' + String(v.n) + '/' + String(v.d)
+  const digits = String(v.d).length;
+  put((ok ? 'PASS' : 'FAIL') + ' zeno\u2019s postman  (total=' + (digits > 40 ? '(2^k-1)/2^k with ' + digits + ' digits' : String(v.n) + '/' + String(v.d))
       + ' power-of-two=' + ((den & (den - 1n)) === 0n) + ' one-behind=' + ((den - num) === 1n)
-      + ')', ok ? 'pass' : 'fail');
+      + ' frames=' + used + ' pile=' + pile + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 

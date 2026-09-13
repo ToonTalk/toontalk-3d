@@ -6325,3 +6325,39 @@ Escape, comes back to the panel it stands on, and only the last Escape
 reaches the workshop. Enter works with something in the hand too: the
 thing under the pointer, or failing that the thing held, fills the screen
 where it is; Shift+Enter is the new line on a pad you are typing on.
+
+## The thought stays in the picture, and Zeno's postman in seconds
+
+*Added 13 Sep. From the suite: "the camera shows the thought" failed
+headless (red-view on=false, d=4.59), and the same way against the app of
+12 Sep, so not the last two days' changes -- find whether the app or the
+check drifted. And Zeno's postman took more than twenty minutes on its own.*
+
+**Whose view.** Two occasions arrive in the same instant when a robot
+refuses a box: red parts appear in the thought, which asks the camera for
+the thought; and the refusal names Ruby ("wake Ruby and click a red part"),
+which since 4 Sep asks it to pull back until she is in view. The later ask
+replaced the earlier, and the fit of the table and Ruby left the thought --
+the very red parts the words point at -- above the top of the screen. The
+check had passed only on 4 Sep, and only when another check (Ruby's view,
+the narration) ran before it and left the camera where Ruby's home was
+already on screen, so the mention never fired; on its own it has failed
+since mentions came to say(). A mention now keeps a view already asked
+for: if that view holds what was named it stands as it is; if not, the fit
+holds the thought, the robot's work area and the named thing together.
+(Pulling the thought view straight back until Ruby came in put the camera
+eight units off, the thought too small to read.) Ruby's close look on the
+thought is left alone. Headless the red view now lands 5.9 from the
+thought with the thought on screen, and Ken's case -- the run that stops
+on red parts -- the same.
+
+**Zeno's postman in seconds.** The check pulled the halver's lever, waited,
+then the totaller's, then ran 2,200 frames. At Instant a lever pull is a
+whole 1.2-second slice of room work and every frame eighty halver rounds,
+so the total became a fraction of tens of thousands of digits and the
+frames took twenty minutes, each slower than the last as the numbers grew.
+Not the pile: the totaller drains it within its first turn, and it stays
+at nothing. Both levers first, the totaller's before the halver's, and the
+invariant is read off the first eight deliveries -- it holds for every
+single one, so eight are as good as a hundred thousand. The world itself
+is not capped: a dropped letter would break the very exactness it teaches.

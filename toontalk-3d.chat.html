@@ -2344,6 +2344,7 @@ function thoughtClosePose() {
   // raw: a deliberate close look, not pulled back for the work area or for her
   return { at: centre.clone().addScaledVector(dir, d), look: centre, raw: true };
 }
+thoughtClosePose.raw = true;
 // WATCHING A RUN: when an erasure makes the thought fit and the robot sets
 // off, the camera pulls out to see it work -- the robot, what it holds and
 // its work spot -- rather than riding its claw (Ken: "if the erasures mean
@@ -2460,13 +2461,51 @@ function withWorkArea(pose) {
   }
   return { at: pose.look.clone().addScaledVector(dir, d), look: pose.look };
 }
+// does a view hold every one of these points? (a probe camera at the pose)
+function poseSees(pose, pts, margin = 0.8) {
+  const probe = camera.clone();
+  probe.position.copy(pose.at);
+  probe.lookAt(pose.look);
+  probe.updateMatrixWorld(true);
+  probe.matrixWorldInverse.copy(probe.matrixWorld).invert();
+  return pts.every(q => onScreen(q, probe, margin));
+}
 let mentionLast = '';
 function noteMentions(text) {
   if (!smartCam || !text || text === mentionLast || straightOn) return;
   mentionLast = text;
   const pts = [];
   for (const [re, at] of MENTIONS) if (re.test(text)) { const q = at(); if (q) pts.push(q); }
-  if (!pts.length || pts.every(q => onScreen(q))) return;
+  if (!pts.length) return;
+  // A VIEW ALREADY ASKED FOR IS KEPT. Red parts appear together with the
+  // message that names Ruby, and the thought view the marks asked for used
+  // to be thrown away for a fit of the table and Ruby -- which left the
+  // thought, and the very red parts the words point at, above the top of
+  // the screen (the suite's "the camera shows the thought", failing since
+  // mentions came to say()). If that view already holds what was named it
+  // stands as it is; if not, the fit holds what it looked at -- the thought,
+  // and the robot's work area with it -- as well as the named thing.
+  // (Pulling the thought view straight back until Ruby came in put the
+  // camera eight units off, the thought too small to read.) A deliberate
+  // close look (Ruby's view of the thought) is left alone.
+  if (camShowFn) {
+    if (camShowFn.raw) return;
+    const base = camShowFn;
+    const mentionPose = () => {
+      const p = base();
+      if (p.raw) return p;
+      const shown = withWorkArea(p);
+      if (poseSees(shown, pts)) return { ...shown, raw: true };
+      const keep = [p.look.clone(), ...pts];
+      if (condDisplay) { _scBox.setFromObject(condDisplay); if (!_scBox.isEmpty()) keep.push(_scBox.getCenter(new THREE.Vector3())); }
+      if (!yardIn) keep.push(...workAreaPoints());
+      return { ...fitPose(keep), raw: true };
+    };
+    mentionPose.base = base.base ?? base;      // what the glide's guard looks through to
+    showViewSoon(mentionPose);
+    return;
+  }
+  if (pts.every(q => onScreen(q))) return;
   const keep = [orbit.target.clone(), ...pts];
   const mentionPose = () => fitPose(keep);
   showViewSoon(mentionPose);
@@ -2512,7 +2551,8 @@ function holdSmartCam(dt) {
   // a thought view outlives its thought when the bubble is rebuilt away
   // between the ask and the glide (a run ending, a robot let go, a world
   // swapped): there is nothing to frame, so the occasion is over
-  if ((camShowFn === thoughtPose || camShowFn === thoughtClosePose) && !condDisplay) {
+  const shown = camShowFn?.base ?? camShowFn;
+  if ((shown === thoughtPose || shown === thoughtClosePose) && !condDisplay) {
     camShowFn = null; camFollow = null;
   }
   const moving = now - camLastMove < CAM_STILL_MS;
@@ -23845,7 +23885,7 @@ window.__nano = {
     let center = null;
     if (condDisplay) { _scBox.setFromObject(condDisplay); center = _scBox.getCenter(new THREE.Vector3()).toArray(); }
     return { on: smartCam, following: !!camFollow, t: camFollow?.t ?? 0, hover: hoverBubble, edge: edgePointer, yield: camYield,
-             still: performance.now() - camLastMove, showThought: !!camShowFn, show: camShowFn ? (camShowFn.name || 'view') : null,
+             still: performance.now() - camLastMove, showThought: !!camShowFn, show: camShowFn ? (camShowFn.name || 'view') + (camShowFn.base ? '<' + camShowFn.base.name : '') : null,
              bubble: bubble.visible, cond: !!condDisplay, center, helpers: rubyActive || dustyActive, mode };
   },
   clickBench(x = 0.3, z = ROW_Z) { handleClick({ kind: 'bench', point: new THREE.Vector3(x, BENCH_TOP, z) }); },
