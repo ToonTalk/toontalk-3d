@@ -6892,3 +6892,36 @@ rather than at the day the page was written. Nine working days before, twelve
 since; 154 commits and 87; 180 prompts and 189. The interesting one is the
 ratio: thirty tool calls to the prompt before media, fifty-four since. The
 second half is where measurement got cheaper than guessing.
+
+## What Dusty took off a page, and where a pile stands
+
+*Added 14 Sep. Ken: "When I vacuumed a page from a notebook it didn't end up
+in Dusty's bag." / "activity 8 started to work but after it created 3 numbers
+in the diagonal nothing more happened." / "The nests are not placed well since
+they quickly obscure what is happening behind their stacks."*
+
+**The page and the bag.** An open notebook draws four things -- a page
+number, the entry on that page, the next page number, its entry -- and keeps
+them in one list, in that order. Three places went looking for a page's entry
+by counting into that list with the page's own number, which finds the NUMERAL
+for a left-hand page and the neighbour's entry for a right-hand one. So Dusty
+emptied the page you pointed at and carried off a little numeral; the entry
+itself was simply gone. The entry is found by what it is now -- the node the
+page's own clicks are set on -- and a check watches both pages: vacuum the 7
+on the left and the pad on the right, click his head, and get back the 7 and
+the pad.
+
+**The diagonal stopping.** Not a fault: after the third sequence the team has
+read every row it was given and is dozing on the Sequences nest, which is
+exactly what it should do. It said nothing about it, though, which is the same
+as being broken. The pad says it now, and says why it is the point: the list
+is yours to go on adding to, and every row you add gives the diagonal one more
+term.
+
+**Where a pile stands.** A nest's pile grows upward, so a nest in the middle
+of the table becomes a wall in front of whatever is behind it -- and these
+worlds put their watch nests in the middle, where the rooms are. In Activity 8
+the two you watch now stand at the front corners, clear of every room's line of
+sight, and the pads, which lie flat and hide nothing, take the middle. The
+other activity worlds have the same arrangement to fix; they are golden worlds,
+so that is a change to make on purpose rather than in passing.

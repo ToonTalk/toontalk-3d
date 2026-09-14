@@ -138,12 +138,18 @@ RUN = ('TO RUN IT\n\n'
        'the third, and hands on what\n'
        'it lands on. The diagonal\n'
        'reads 1, 3, 4, ...\n\n'
-       'Train a robot of your own,\n'
-       'put it in a room with a nest\n'
-       'and a bird, and give the bird\n'
-       'a box with its nest: any\n'
-       'sequence you can make is a\n'
-       'row of the table.')
+       'AFTER THE THIRD it stops, and\n'
+       'that is the point: it has read\n'
+       'every row it was given and is\n'
+       'waiting for a fourth. The list\n'
+       'is yours to go on adding to,\n'
+       'and every row you add gives\n'
+       'the diagonal one more term.\n\n'
+       'Train a robot of your own, put\n'
+       'it in a room with a nest and a\n'
+       'bird, and give the bird a box\n'
+       'with its nest: any sequence you\n'
+       'can make is a row of the table.')
 
 THINK = ('THE ARGUMENT\n\n'
          'The "Add 1 to it" room turns\n'
@@ -173,35 +179,39 @@ THINK = ('THE ARGUMENT\n\n'
          'numbers, and Activity 6\n'
          'counted every fraction.')
 
+# A NEST'S PILE GROWS UPWARD, so a nest in the middle of the table hides
+# whatever stands behind it. The two you watch sit at the front corners, where
+# the only thing behind them is the edge of the table; the pads lie flat and
+# take the middle.
 bench = [
     {'thing': room('Numbers', box(num(1), bird(*S1, label='Sequence 1')),
-                   numbers, dirty=False), 'x': -1.30, 'z': 1.60},
+                   numbers, dirty=False), 'x': -1.15, 'z': 1.55},
     {'thing': room('Odd Numbers', box(num(1), bird(*S2, label='Sequence 2')),
-                   odds, dirty=False), 'x': -0.45, 'z': 1.60},
+                   odds, dirty=False), 'x': -0.35, 'z': 1.55},
     {'thing': room('Doubling', box(num(1), bird(*S3, label='Sequence 3')),
-                   doubling, dirty=False), 'x': 0.40, 'z': 1.60},
+                   doubling, dirty=False), 'x': 0.45, 'z': 1.55},
 
     {'thing': room('Diagonal',
                    box(nest(*SEQS, label='Sequences'), nest(*CUR, label='Current'),
                        scale(num(1), num(0), label='skipped | to skip'),
                        bird(*DIAG, label='Diagonal')),
-                   diagonal), 'x': 1.30, 'z': 1.60},
+                   diagonal), 'x': 1.25, 'z': 1.55},
 
     # the three sequences, ready to hand over, and the bird that takes them in
-    {'thing': box(nest(*S1G, label='Sequence 1')), 'x': -1.45, 'z': 2.25},
-    {'thing': box(nest(*S2G, label='Sequence 2')), 'x': -1.00, 'z': 2.25},
-    {'thing': box(nest(*S3G, label='Sequence 3')), 'x': -0.55, 'z': 2.25},
-    {'thing': bird(*SEQS, label='All Sequences'), 'x': -0.10, 'z': 2.25},
-
-    {'thing': nest(*DIAG_W, label='the diagonal'), 'x': 0.40, 'z': 2.25},
+    {'thing': box(nest(*S1G, label='Sequence 1')), 'x': -1.30, 'z': 2.20},
+    {'thing': box(nest(*S2G, label='Sequence 2')), 'x': -0.90, 'z': 2.20},
+    {'thing': box(nest(*S3G, label='Sequence 3')), 'x': -0.50, 'z': 2.20},
+    {'thing': bird(*SEQS, label='All Sequences'), 'x': -0.10, 'z': 2.20},
     {'thing': room('Add 1 to it',
                    box(nest(*DIAG, label='In'), bird(*CHANGED, label='Out')),
-                   add1), 'x': 1.05, 'z': 2.25},
-    {'thing': nest(*CHANGED, label='changed'), 'x': 1.60, 'z': 2.25},
+                   add1), 'x': 0.70, 'z': 2.20},
 
-    {'thing': txt(ABOUT), 'x': -1.30, 'z': 2.85},
-    {'thing': txt(RUN), 'x': -0.35, 'z': 2.85},
-    {'thing': txt(THINK), 'x': 0.60, 'z': 2.85},
+    {'thing': nest(*DIAG_W, label='the diagonal'), 'x': -1.62, 'z': 2.80},
+    {'thing': nest(*CHANGED, label='changed'), 'x': 1.62, 'z': 2.80},
+
+    {'thing': txt(ABOUT), 'x': -0.95, 'z': 2.85},
+    {'thing': txt(RUN), 'x': -0.10, 'z': 2.85},
+    {'thing': txt(THINK), 'x': 0.75, 'z': 2.85},
 ]
 
 if __name__ == '__main__':

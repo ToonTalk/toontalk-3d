@@ -3039,6 +3039,38 @@ async function cameraSavedCheck(D) {
   return ok;
 }
 
+// WHAT DUSTY TOOK OFF A PAGE IS WHAT IS IN HIS BAG. The list of things drawn
+// on an open notebook is [page number, entry, page number, entry], so counting
+// into it by the page's own number found the numeral for a left-hand page and
+// the neighbour's entry for a right-hand one: the page emptied and a little
+// numeral went into the bag (Ken: "it didn't end up in Dusty's bag").
+async function pageVacuumCheck(D) {
+  const back = [];
+  for (const slot of [0, 1]) {
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+      { thing: { kind: 'notebook', page: 0, pages: [
+        { kind: 'number', value: { n: '7', d: '1' }, op: '+' },
+        { kind: 'text', text: 'hello' }] }, x: 0.2, z: 1.6 } ] });
+    await slowSettle(D, 1500);
+    let nb = null;
+    for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break;
+      if (t.userData.kind === 'notebook' && !t.userData.main) nb = t; }
+    D.dustyOn(true);
+    D.clickRaw({ kind: 'nbItem', nb, slot });
+    await slowSettle(D, 4000);
+    const emptied = nb.userData.pages[slot] === null && D.bagN === 1;
+    D.dustyBag();                       // click his head: it comes back to the hand
+    await slowSettle(D, 2500);
+    back.push(emptied ? (D.state.hand ?? 'nothing') : 'not emptied');
+    D.dustyOn(false);
+  }
+  // the left page held a 7, the right a pad
+  const ok = back[0] === '7' && back[1] === 'text';
+  put((ok ? 'PASS' : 'FAIL') + ' what Dusty takes off a page is what he gives back  (left-page=' + back[0]
+      + ' right-page=' + back[1] + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5430,6 +5462,9 @@ async function runOne(D, spec) {
   let tchOK = true;
   try { tchOK = want('teachCheck') ? await teachCheck(D, frame.contentWindow) : true; }
   catch (e) { tchOK = false; put('FAIL a robot that teaches a robot  ' + e.message, 'fail'); }
+  let pvOK = true;
+  try { pvOK = want('pageVacuum') ? await pageVacuumCheck(D) : true; }
+  catch (e) { pvOK = false; put('FAIL what Dusty takes off a page is what he gives back  ' + e.message, 'fail'); }
   let cwOK = true;
   try { cwOK = want('cameraSaved') ? await cameraSavedCheck(D) : true; }
   catch (e) { cwOK = false; put('FAIL the view goes with the world  ' + e.message, 'fail'); }
@@ -5550,7 +5585,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

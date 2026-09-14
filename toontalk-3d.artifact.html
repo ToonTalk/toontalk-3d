@@ -14616,6 +14616,12 @@ function buildFromRec(rec) {
   nestGroupPending = savedPending;
   return t;
 }
+// What is DRAWN on a page, if anything is: the entry's own display, which is
+// the node the page's clicks are set on. Counting into __slotNodes finds the
+// page numeral instead -- that list is what was drawn, in drawing order.
+function slotNode(nb, slot) {
+  return (nb.__slotNodes || []).find(n => n.__pick?.kind === 'nbItem' && n.__pick.slot === slot) ?? null;
+}
 function renderNotebook(nb) {
   (nb.__slotNodes || []).forEach(n => n.removeFromParent());
   nb.__slotNodes = [];
@@ -23133,7 +23139,7 @@ function runRefusal(target) {
       pushUndo();
       // he flies over and takes it, as he does everywhere else: the entry used
       // to vanish with no sign that Dusty was the one who did it
-      const shown = (nb.__slotNodes || [])[slot - nb.userData.page] ?? null;
+      const shown = slotNode(nb, slot);
       if (!shown) {
         nb.userData.pages[slot] = null;
         renderNotebook(nb); saveNotebook(nb);
@@ -23211,7 +23217,7 @@ function runRefusal(target) {
     // where its picture lies, so you see it lift off the page you took it
     // from. Landing half a book away made it look like something else had
     // arrived from somewhere else.
-    const shown = (nb.__slotNodes || [])[slot - nb.userData.page] ?? null;
+    const shown = slotNode(nb, slot);
     if (shown) t.position.copy(shown.getWorldPosition(new THREE.Vector3()));
     else t.position.copy(nb.getWorldPosition(new THREE.Vector3())).y += 0.4;
     userTake(t);
@@ -29130,7 +29136,7 @@ function tipForInner(t) {
     // reason to point at it -- so it gets the same tooltip it gets on the
     // table, paging and all, rather than a name with an ellipsis in it.
     if (entry.kind === 'text' && !entry.img) {
-      const node = (t.nb.__slotNodes || [])[t.slot - t.nb.userData.page] ?? t.nb;
+      const node = slotNode(t.nb, t.slot) ?? t.nb;
       return `Page ${t.slot + 1} — ` + padTip(entry.text ?? '', node)
         + '\nClick to take a COPY out; the page keeps its own.';
     }
