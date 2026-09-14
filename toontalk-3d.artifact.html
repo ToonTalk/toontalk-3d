@@ -185,7 +185,7 @@
   <div id="library">
     <div class="row"><button id="exportHeldBtn" title="Save whatever you are holding to a file — any thing: a box, a number, a robot, a nest.">Save held thing</button>
       <button id="exportWorldBtn" title="Save the whole workshop to a file.">Save world</button></div>
-    <div class="row"><button id="importBtn" title="Open a file — a picture or a text file arrives as a pad, a sound on a speaker, a saved thing in your hand, a saved world replaces the workshop. Dropping a file on the page does the same.">Import file</button>
+    <div class="row"><button id="importBtn" title="Open a file — a picture or a text file arrives as a pad, a sound on a speaker, a 3D model (.glb) as a thing you can hold, a saved thing in your hand, a saved world replaces the workshop. Dropping a file on the page does the same.">Import file</button>
       <button id="devicesBtn" title="A notebook of the workshop's own senses: nests that receive every key press, every move of the pointer, every click. Take one off a page and give it to a robot.">Devices</button></div>
   </div>
   <ul id="steps"><li class="empty">not trained yet</li></ul>
@@ -876,6 +876,22 @@ holding the recording;
 — a pad with the writing on it, sized to suit how much there is. A poem, a
 word list or a grammar can be written elsewhere and brought in;
 
+- a 3D model (.glb) — a thing you can hold, named after
+its file and sized so its longest side is a hand's width, standing on its feet.
+From there it is a thing like any other: copy it, file it on a page, give it a
+behaviour so it wanders, carry it out to the yard, show it to a robot. glTF is
+the format because every character in this workshop is one, so the workshop
+already knows how to read it: export a .glb, which holds
+everything in one file. A .gltf works only if it is
+self-contained — one that points at a .bin and a folder of
+textures has nothing to point at here. A model may also be squeezed
+(Draco, meshopt) or carry its pictures as Basis textures, and the workshop has
+no unpacker for those. None of that is a mystery when it happens: the workshop
+says which of them it is, and the same model is nearly always offered plain as
+well — a .glb that is not squeezed. Nine megabytes is the most one
+may weigh, because a model rides inside the saved world the way a picture on a
+pad does;
+
 - a saved thing — it arrives in your hand;
 
 - a saved world — it replaces the workshop.
@@ -1552,6 +1568,11 @@ and 1/2×: faster, the robot is ahead of any sentence, and a run sped
 up mid-way stops being narrated there and then. Ask him about a robot, a behaviour or a house — the one
 in your hand, or one on the table by its name or its words — and a
 button under his answer runs it with commentary.
+Everything read aloud — his answers, a card's message, a pad's own voice —
+has the pictures taken out first: an emoji stands beside the word it
+illustrates, so reading it would say the word twice ("press the microphone
+microphone"). Arrows and arithmetic signs stay, since "the ← and → arrows turn
+it" is a sentence about arrows.
 How Marty thinks lets you pick which of your browser's voices he uses
 — the list puts the ones that speak your language first, since a voice meant
 for another language reads English with an accent. Left alone he takes a
@@ -15618,6 +15639,34 @@ function readMediaFile(file, forThing, at) {
     fr.readAsText(file);
     return;
   }
+  // A 3D MODEL. glTF is the web's model format -- every character in this
+  // workshop is one -- so the loader is already here and a .glb is a thing
+  // like any other. It rides in the saved world, so there is a limit to what
+  // one may weigh.
+  if (/\.(glb|gltf)$/.test(name) || /^model\/gltf/.test(file.type)) {
+    const MODEL_FILE_MAX = 9 * 1024 * 1024;
+    if (file.size > MODEL_FILE_MAX) {
+      return sayAttn(`\u201c${file.name}\u201d is ${(file.size / 1048576).toFixed(1)} MB. `
+        + 'A model rides inside the saved world, so nine megabytes is the most one may weigh \u2014 '
+        + 'export it smaller (fewer triangles, smaller textures) and drop it again.');
+    }
+    const fr = new FileReader();
+    fr.onload = () => {
+      const src = String(fr.result || '');
+      const trouble = modelTrouble(src, file.name);
+      if (trouble) return sayAttn(trouble);      // nothing is made, so nothing is left behind
+      const t = makeModel({ parts: [], src });
+      const named = file.name.replace(/\.(glb|gltf)$/i, '');
+      if (named) setThingLabel(t, named.slice(0, 24));
+      land(t);
+      say(`\u201c${file.name}\u201d arrives as a model, sized to the table \u2014 hold it and press `
+        + '+ or \u2212 to resize it, the arrows to turn it. It is a thing like any other: '
+        + 'copy it, file it, give it a behaviour, take it out to the yard.');
+      refreshUI();
+    };
+    fr.readAsDataURL(file);
+    return;
+  }
   importRobotFile(file);          // a saved thing or world, as ever
 }
 // A file picker of its own, scoped to one thing. Created and clicked without
@@ -16600,6 +16649,111 @@ function makeTrail(segs) {
 // degrees) and a colour. Small enough to author by hand, and once it is in
 // the world it is a thing like any other -- a model with a lid is LIVE, so a
 // behaviour binds to it and a bird delivers to it.
+// The bytes of a data: URL, as a string. (A glTF file may be binary -- .glb
+// -- or the JSON of a .gltf; the loader takes either, and which it is can be
+// read off the first character.)
+function dataBytes(src) {
+  const at = String(src).indexOf(',');
+  return atob(String(src).slice(at + 1));
+}
+// TO THE SIZE OF THE TABLE, standing on its own feet. A model may have been
+// made in metres, centimetres or millimetres and nothing in the file says
+// which, so the longest side is made a hand's width -- and its base is put on
+// the ground, since a thing here rests on the table rather than floating over
+// the middle of itself.
+const MODEL_SIDE = 0.34;
+// A glTF file comes two ways: a .glb, which is a short header and then
+// everything in one file, or the JSON of a .gltf, which may be no more than a
+// table of contents. Read the JSON out of either, so a file can be looked at
+// before it is believed.
+function gltfJson(raw) {
+  try {
+    if (raw.slice(0, 4) === 'glTF') {
+      const len = (raw.charCodeAt(12) | (raw.charCodeAt(13) << 8)
+        | (raw.charCodeAt(14) << 16) | (raw.charCodeAt(15) << 24)) >>> 0;
+      return JSON.parse(raw.substr(20, len));       // header 12, chunk header 8
+    }
+    if (raw.trimStart()[0] === '{') return JSON.parse(raw);
+  } catch (e) { /* not glTF, or not all of it */ }
+  return null;
+}
+// Squeezings a model may be wrapped in that want an unpacker of their own.
+// None of them makes a model broken: the same model is nearly always offered
+// plain as well, which is what the sentence should send you to look for.
+const MODEL_SQUEEZED = {
+  KHR_draco_mesh_compression: 'squeezed with Draco',
+  EXT_meshopt_compression: 'squeezed with meshopt',
+  KHR_texture_basisu: 'keeping its pictures as Basis textures',
+};
+// WHAT IS WRONG WITH THIS MODEL, in a sentence -- or null when nothing is.
+// Every one of these has something to do about it, so every one says it.
+function modelTrouble(src, name) {
+  const called = name ? `\u201c${name}\u201d` : 'That model';
+  let raw = '';
+  try { raw = dataBytes(src); } catch (e) { return `${called} could not be read at all.`; }
+  const json = gltfJson(raw);
+  if (!json) {
+    return raw.trimStart()[0] === '<'
+      ? `${called} is a web page, not a model \u2014 the page ABOUT the file was saved instead `
+        + 'of the file itself. Go back and use that page\u2019s download button, or its raw link.'
+      : `${called} is not a glTF model. A model comes as a .glb, or as a .gltf that holds `
+        + 'everything inside it; other kinds of model file are not read here.';
+  }
+  const squeezed = (json.extensionsRequired || []).find(x => MODEL_SQUEEZED[x]);
+  if (squeezed) {
+    return `${called} is ${MODEL_SQUEEZED[squeezed]}, and the workshop carries no unpacker for `
+      + 'that. The same model is nearly always offered plain as well \u2014 look for a .glb of '
+      + 'it that is not squeezed, which holds everything in one file.';
+  }
+  const outside = [...(json.buffers || []), ...(json.images || [])]
+    .map(b => b && b.uri).filter(u => u && !/^data:/i.test(u));
+  if (outside.length) {
+    const list = outside.slice(0, 3).map(u => decodeURIComponent(u).split('/').pop());
+    return `${called} is only a table of contents: it points at ${list.join(', ')}`
+      + `${outside.length > 3 ? ' and more' : ''}, which are separate files and did not come with `
+      + 'it. Look for the .glb of the same model \u2014 that one holds the numbers and the '
+      + 'pictures inside it.';
+  }
+  return null;
+}
+function fillModel(g, src) {
+  let parsed = null;
+  try {
+    const raw = dataBytes(src);
+    if (raw.trimStart()[0] === '{') parsed = raw;          // a self-contained .gltf
+    else {
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      parsed = bytes.buffer;
+    }
+  } catch (e) { console.error('[model] unreadable file:', e); return; }
+  const failed = (e) => {
+    console.error('[model] could not be read:', e);
+    sayAttn(modelTrouble(src, g.userData.label) || 'That model could not be read. A .glb holds '
+      + 'everything in one file; a .gltf that points at a .bin or textures beside it has '
+      + 'nothing to point at here.');
+    vanishThing(g);       // nothing arrived, so no name plate is left standing over nothing
+  };
+  try {
+    new GLTFLoader().parse(parsed, '', (gl) => {
+      const node = gl.scene ?? gl.scenes?.[0];
+      if (!node) return failed(new Error('nothing in it'));
+      node.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(node);
+      const size = box.getSize(new THREE.Vector3());
+      const big = Math.max(size.x, size.y, size.z);
+      const k = big > 1e-6 ? MODEL_SIDE / big : 1;
+      node.scale.multiplyScalar(k);
+      node.position.set(-(box.min.x + box.max.x) / 2 * k, -box.min.y * k,
+                        -(box.min.z + box.max.z) / 2 * k);
+      node.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      g.add(node);
+      g.userData.width = Math.max(0.12, size.x * k);
+      setPick(g, { kind: 'thing', thing: g });     // the meshes that just arrived answer for it too
+      refreshUI();
+    }, failed);
+  } catch (e) { failed(e); }
+}
 function makeModel(rec) {
   const g = new THREE.Group();
   let minY = 0;
@@ -16629,6 +16783,15 @@ function makeModel(rec) {
     rot: pt.rot ? pt.rot.slice() : undefined }));
   g.userData = { kind: 'model', parts: ownParts, rest: 0.004 - Math.min(0, minY),
                  width: Math.max(0.2, Number.isFinite(box.max.x - box.min.x) ? box.max.x - box.min.x : 0.2) };
+  // ...or a model out of a FILE, which arrives a moment later: the thing is
+  // real at once (it can be held, put down, named) and its meshes appear when
+  // the loader has read them, the way the workshop's own characters do.
+  if (rec.src) {
+    g.userData.src = rec.src;
+    g.userData.rest = 0.004;
+    g.userData.width = 0.34;
+    fillModel(g, rec.src);
+  }
   setPick(g, { kind: 'thing', thing: g });
   return g;
 }
@@ -19564,7 +19727,11 @@ function specOf(thing, full = false) {
   };
   if (kind === 'number') return withPanel({ kind: 'number', value: thing.userData.value, op: thing.userData.op });
   if (kind === 'trail') return withPanel({ kind: 'trail', segs: thing.userData.segs });
-  if (kind === 'model') return withPanel({ kind: 'model', parts: thing.userData.parts });
+  if (kind === 'model') {
+    return withPanel(thing.userData.src
+      ? { kind: 'model', parts: [], src: thing.userData.src }
+      : { kind: 'model', parts: thing.userData.parts });
+  }
   if (kind === 'text') return withPanel({ kind: 'text', text: thing.userData.text,
                                          sz: thing.userData.sz, img: thing.userData.img,
                                          md: thing.userData.md || undefined,
@@ -26128,7 +26295,12 @@ function thingOutRaw(t) {
     return r;
   }
   if (ud.kind === 'trail') return { kind: 'trail', segs: ud.segs };
-  if (ud.kind === 'model') return { kind: 'model', parts: ud.parts };
+  // a model read from a file carries the file: that is what makes it the
+  // model it is, the way a picture on a pad carries the picture
+  if (ud.kind === 'model') {
+    return ud.src ? { kind: 'model', parts: [], src: ud.src }
+                  : { kind: 'model', parts: ud.parts };
+  }
   if (ud.kind === 'die') return { kind: 'die', faces: ud.faces };
   if (ud.kind === 'sound') return { kind: 'sound', sound: ud.sound };
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
@@ -27510,7 +27682,9 @@ const stillSpeaking = () => !!window.speechSynthesis && speechSynthesis.getVoice
   && (speechSynthesis.speaking || speechSynthesis.pending);
 function speakText(words) {
   if (sndMuted || !window.speechSynthesis || !words) return;
-  const u = new SpeechSynthesisUtterance(String(words));
+  const said = spokenWords(words);
+  if (!said) return;
+  const u = new SpeechSynthesisUtterance(said);
   const v = hintVoice();
   if (v) u.voice = v;
   speechSynthesis.speak(u);
@@ -27738,6 +27912,18 @@ function hintVoice() {
 // message replaces whatever was waiting, never what is being said -- so the
 // current sentence ends naturally and the next thing spoken is the latest.
 let hintSpeaking = false, hintPending = null;
+// What a voice should say of a line that has pictures in it: the words. An
+// emoji stands next to the word it illustrates -- "the microphone 🎤", "the
+// speaker 🔊" -- so reading it aloud says the word twice. Variation selectors,
+// skin tones and zero-width joiners go with it, and the gaps left behind are
+// closed up so nothing is read with a stutter in it.
+const EMOJI = /(?:[⋮⛶▶⏸⏯⏹]|\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0F|\uFE0E|\u200D\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}]|[\u{E0020}-\u{E007F}])*/gu;
+const spokenWords = (s2) => String(s2 ?? '')
+  .replace(EMOJI, ' ')
+  .replace(/[ \t]{2,}/g, ' ')
+  .replace(/ +([,.;:!?])/g, '$1')
+  .replace(/^[ \t]+|[ \t]+$/gm, '')
+  .trim();
 function hintSpeak(msg) {
   if (!hintSayOn || !window.speechSynthesis || !msg || msg === hintLastSpoken) return;
   hintLastSpoken = msg;
@@ -27745,7 +27931,9 @@ function hintSpeak(msg) {
   hintSpeakNow(msg);
 }
 function hintSpeakNow(msg) {
-  const u = new SpeechSynthesisUtterance(msg);
+  const said = spokenWords(msg);
+  if (!said) return;                    // a line that was nothing but pictures
+  const u = new SpeechSynthesisUtterance(said);
   const v = hintVoice();
   if (v) u.voice = v;
   hintSpeaking = true;
@@ -28143,8 +28331,8 @@ $('importBtn').onclick = () => {
   const inp = document.createElement('input');
   inp.type = 'file';
   // The same door dropping a file on the page goes through: a picture, a
-  // recording, a text file or a saved thing, sorted by what it IS.
-  inp.accept = 'image/*,audio/*,text/plain,.json,.txt,.md,.csv';
+  // recording, a text file, a 3D model or a saved thing, sorted by what it IS.
+  inp.accept = 'image/*,audio/*,text/plain,.json,.txt,.md,.csv,.glb,.gltf';
   inp.onchange = () => { const f = inp.files?.[0]; if (f) readMediaFile(f, null); };
   inp.click();
 };
@@ -33170,7 +33358,7 @@ let martySpeaking = 0;         // sentences of his in the air
 function martySpeak(text) {
   if (!martyVoiceOn || !window.speechSynthesis) return;
   const voice = martyVoiceObj();
-  const parts = String(text).match(/[^.!?…]+[.!?…]*/g) || [text];
+  const parts = spokenWords(text).match(/[^.!?…]+[.!?…]*/g) || [spokenWords(text)];
   parts.map(p => p.trim()).filter(Boolean).forEach((p, i) => {
     const u = new SpeechSynthesisUtterance(p);
     if (voice) u.voice = voice;
@@ -33927,6 +34115,8 @@ window.__nano = {
   tilt(t) { return t?.userData.kind === 'scale' ? scaleTilt(t) : null; },
   orbitStart() { orbit.dispatchEvent({ type: 'start' }); },     // the player takes the camera
   mention(text) { noteMentions(text); },
+  spoken(text) { return spokenWords(text); },   // what a voice is given, pictures out
+  modelTrouble(src, name) { return modelTrouble(src, name); },
   // Marty, for a check: a stand-in for the brain, and the commentary switch
   // that lives in the More menu -- so a narrated run can be watched here.
   brain(fn) { brainStandIn = fn ?? null; },

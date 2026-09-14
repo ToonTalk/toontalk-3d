@@ -6925,3 +6925,66 @@ the two you watch now stand at the front corners, clear of every room's line of
 sight, and the pads, which lie flat and hide nothing, take the middle. The
 other activity worlds have the same arrangement to fix; they are golden worlds,
 so that is a change to make on purpose rather than in passing.
+
+## Pictures are for the eye, and a model out of a file
+
+*Added 14 Sep. Ken: "I like the emoji in 'press the microphone 🎤 and speak. I
+read my answers aloud — the speaker 🔊 next to my name switches my voice off
+and on' but it causes the narration to say 'microphone microphone' and 'speaker
+speaker' — maybe emojis should be removed before sending to text-to-speech?"
+and "We should be able to import 3d models? Implement it for formats that make
+sense."*
+
+**The pictures come out of the voice.** An emoji stands next to the word it
+illustrates, so a voice reading it says the word twice. Everything spoken now
+goes through one filter -- the card's reader, a pad's own voice, and Marty --
+which takes out emoji along with their variation selectors, skin tones and
+joiners, and the workshop's own icon glyphs (the ⋮ menu, the ⛶ full screen, ▶
+and ⏸), then closes up the gaps so nothing is read with a stutter in it.
+Arrows and arithmetic signs stay: "the ← and → arrows turn it" and "3 × 4 ÷ 2"
+are words about arrows and sums, not decoration. A line that was nothing but a
+picture is not spoken at all.
+
+**A model out of a file.** glTF is the web's model format and every character
+in this workshop is one, so the loader was already here: a .glb dropped on the
+page arrives as a thing you can hold. It is named after its file and sized to
+the table -- nothing in a model file says whether it was made in metres,
+centimetres or millimetres, so the longest side is made a hand's width and the
+model is stood on its feet rather than floating over the middle of itself. From
+there it is a thing like any other: copied, filed, named, given a behaviour,
+carried out to the yard.
+
+It rides inside the saved world as a picture on a pad does, which sets the
+limit: nine megabytes of file, and a plain sentence when something bigger
+arrives. A .glb holds everything in one file and is what to export; a .gltf
+works only when it is self-contained, and one that points at a .bin beside it
+says so rather than failing silently. STL and OBJ would each want another
+loader bundled into the three builds -- worth doing if they turn up, not
+before.
+
+Measured: the workshop's own Mimi (255 KB, 32 meshes) dropped in as a file
+arrives 0.30 x 0.34 x 0.12 standing on the table, saves into a 0.33 MB world,
+and comes back out of it with all 32 meshes and its name. Check: modelFile.
+
+**And a refusal that says why.** Ken's first try was the Khronos Duck, and he
+took the glTF-Draco folder: 3.8 KB of JSON that points at a Duck.bin and a
+DuckCM.png which did not come with it, and asks for a squeezing we carry no
+unpacker for. All the workshop said was that it could not be read -- and it
+left the name plate standing over nothing, because the thing is made before
+the loader has finished and nothing took it away when the loader failed.
+
+Now the file is looked at before it is believed: the JSON is read out of
+either form (a .glb's first chunk, or the .gltf itself) and four things are
+told apart, because each has something different to do about it. Squeezed
+(Draco, meshopt, Basis) -- no unpacker here, look for a plain .glb of the same
+model. A table of contents -- it names the files it points at, Duck0.bin and
+DuckCM.png, so you know what is missing rather than guessing. A web page --
+the page ABOUT the file was saved instead of the file, which is what a GitHub
+blob link gives you; go back and use its download button. And not a model at
+all. Nothing is made in any of those cases, so nothing is left behind; a model
+that fails later (out of a saved world) takes itself away.
+
+The Duck's glTF-Binary folder holds Duck.glb, one file, 120 KB -- it comes in
+and stands on the table at 0.34 x 0.32 x 0.24. The glTF-Embedded variant works
+too. Draco itself would want three quarters of a megabyte of decoder bundled
+into every build, so it is asked about rather than assumed.

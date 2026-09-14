@@ -3071,6 +3071,83 @@ async function pageVacuumCheck(D) {
   return ok;
 }
 
+// A MODEL OUT OF A FILE, and the pictures kept out of the voice. A .glb is
+// read by the loader the workshop's own characters use, sized to the table,
+// and saved inside the world -- so it comes back when the world does. And an
+// emoji is for the eye: a voice that reads it says the word twice ("press the
+// microphone microphone"), so what is spoken has the pictures taken out.
+async function modelFileCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const meshes = (m) => { let n = 0; m?.traverse(o => { if (o.isMesh) n++; }); return n; };
+  const onBench = () => { for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'model') return t; } return null; };
+  const blob = await (await fetch('../mimi_v1.glb')).blob();
+  // The meshes arrive when the loader has read them, as the workshop's own do
+  // -- on REAL time, off the workshop's clock, so this waits on the wall and
+  // not on frames (1200 frames go by in well under a second). And it waits
+  // for a COUNT, not for "not none": a thing wears its own name, and a name
+  // plate is a mesh, so the model has one before the loader has read a thing.
+  const untilRead = async (want) => {
+    for (let k = 0; k < 60 && meshes(onBench()) < want; k++) {
+      await frames(D, 10);
+      await new Promise(r => setTimeout(r, 60));
+    }
+  };
+  D.readMedia(new w.File([blob], 'mimi_v1.glb', { type: 'model/gltf-binary' }));
+  await untilRead(8);
+  const m = onBench();
+  const bb = m ? new D.THREE.Box3().setFromObject(m) : null;
+  const side = bb ? Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z) : 0;
+  const arrived = !!m && meshes(m) > 8 && m.userData.label === 'mimi_v1'
+    && Math.abs(side - 0.34) < 0.02;                  // sized to the table, whatever it was made in
+  // ...and it goes into the saved world and comes back out of it
+  const was = meshes(m);
+  const rec = JSON.parse(JSON.stringify(D.worldOut()));
+  const saved = rec.bench.find(b => b.thing.kind === 'model')?.thing ?? null;
+  D.worldIn(rec);
+  await untilRead(was);
+  const back = onBench();
+  const backNow = meshes(back);           // read ONCE, here, not at print time
+  const kept = !!saved?.src && backNow === was && back?.userData.label === 'mimi_v1';
+  // the voice, with the pictures taken out
+  const said = D.spoken('press the microphone \u{1F3A4} and speak \u2014 the speaker \u{1F50A} '
+                        + 'next to my name, in the \u22EE menu');
+  const quiet = said === 'press the microphone and speak — the speaker next to my name, in the menu';
+  const arrows = D.spoken('the \u2190 and \u2192 arrows turn it') === 'the ← and → arrows turn it';
+  // ...and a model that CANNOT come in says why, and leaves nothing behind.
+  // (Ken dropped the Khronos Duck's Draco variant: a 3.8 KB table of contents
+  // that points at a .bin and a .png which did not come with it, and asks for
+  // a squeezing we carry no unpacker for. All it said was that it could not
+  // be read -- and it left the name plate standing over nothing.)
+  const gltf = (o) => 'data:model/gltf+json;base64,' + w.btoa(JSON.stringify(o));
+  const squeezed = { asset: { version: '2.0' }, extensionsRequired: ['KHR_draco_mesh_compression'],
+                     buffers: [{ uri: 'Duck.bin' }] };
+  const dr = D.modelTrouble(gltf(squeezed), 'Duck.gltf');
+  const toc = D.modelTrouble(gltf({ asset: { version: '2.0' }, buffers: [{ uri: 'Duck0.bin' }],
+                                    images: [{ uri: 'DuckCM.png' }] }), 'Duck.gltf');
+  const page = D.modelTrouble('data:text/html;base64,'
+    + w.btoa('<!DOCTYPE html><title>Duck.gltf at main</title>'), 'Duck.gltf');
+  const whole = D.modelTrouble(gltf({ asset: { version: '2.0' },
+    buffers: [{ uri: 'data:application/octet-stream;base64,AA==' }] }), 'ok.gltf');
+  const told = /Draco/.test(dr || '') && /Duck0\.bin/.test(toc || '') && /DuckCM\.png/.test(toc || '')
+    && /web page/.test(page || '') && whole === null;
+  const count = () => { let n = 0; for (let i = 0; i < 10; i++) if (D.bench(i)) n++; return n; };
+  const n0 = count();
+  D.readMedia(new w.File([JSON.stringify(squeezed)], 'Duck.gltf', { type: 'model/gltf+json' }));
+  await frames(D, 60);
+  const nothingLeft = count() === n0;
+  const ok = arrived && kept && quiet && arrows && told && nothingLeft;
+  put((ok ? 'PASS' : 'FAIL') + ' a model out of a file, and pictures kept out of the voice  (meshes='
+      + was + ' sized=' + side.toFixed(2) + ' saved-and-back=' + kept
+      + (kept ? '' : ' [src-saved=' + !!saved?.src + ' src-bytes=' + (saved?.src || '').length
+         + ' came-back=' + backNow + ' later=' + meshes(back) + ' same-node=' + (back === m)
+         + ' named=' + JSON.stringify(back?.userData.label) + ']')
+      + ' spoken=\u201c' + said + '\u201d arrows-kept=' + arrows
+      + ' says-why=' + told + ' leaves-nothing=' + nothingLeft + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5462,6 +5539,9 @@ async function runOne(D, spec) {
   let tchOK = true;
   try { tchOK = want('teachCheck') ? await teachCheck(D, frame.contentWindow) : true; }
   catch (e) { tchOK = false; put('FAIL a robot that teaches a robot  ' + e.message, 'fail'); }
+  let mdlOK = true;
+  try { mdlOK = want('modelFile') ? await modelFileCheck(D, frame.contentWindow) : true; }
+  catch (e) { mdlOK = false; put('FAIL a model out of a file  ' + e.message, 'fail'); }
   let pvOK = true;
   try { pvOK = want('pageVacuum') ? await pageVacuumCheck(D) : true; }
   catch (e) { pvOK = false; put('FAIL what Dusty takes off a page is what he gives back  ' + e.message, 'fail'); }
@@ -5585,7 +5665,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

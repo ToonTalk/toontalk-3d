@@ -679,6 +679,21 @@ holding the recording;</li>
 <li>a <b>text file</b> (<code>.txt</code>, <code>.md</code>, <code>.csv</code>)
 — a pad with the writing on it, sized to suit how much there is. A poem, a
 word list or a grammar can be written elsewhere and brought in;</li>
+<li>a <b>3D model</b> (<code>.glb</code>) — a thing you can hold, named after
+its file and sized so its longest side is a hand's width, standing on its feet.
+From there it is a thing like any other: copy it, file it on a page, give it a
+behaviour so it wanders, carry it out to the yard, show it to a robot. glTF is
+the format because every character in this workshop is one, so the workshop
+already knows how to read it: export a <code>.glb</code>, which holds
+everything in one file. A <code>.gltf</code> works only if it is
+self-contained — one that points at a <code>.bin</code> and a folder of
+textures has nothing to point at here. A model may also be <b>squeezed</b>
+(Draco, meshopt) or carry its pictures as Basis textures, and the workshop has
+no unpacker for those. None of that is a mystery when it happens: the workshop
+says which of them it is, and the same model is nearly always offered plain as
+well — a <code>.glb</code> that is not squeezed. Nine megabytes is the most one
+may weigh, because a model rides inside the saved world the way a picture on a
+pad does;</li>
 <li>a <b>saved thing</b> — it arrives in your hand;</li>
 <li>a <b>saved world</b> — it replaces the workshop.</li>
 </ul>
@@ -1330,6 +1345,11 @@ and &frac12;&times;: faster, the robot is ahead of any sentence, and a run sped
 up mid-way stops being narrated there and then. Ask him about a robot, a behaviour or a house &mdash; the one
 in your hand, or one on the table by its name or its words &mdash; and a
 button under his answer runs it with commentary.
+Everything read aloud — his answers, a card's message, a pad's own voice —
+has the <b>pictures taken out first</b>: an emoji stands beside the word it
+illustrates, so reading it would say the word twice ("press the microphone
+microphone"). Arrows and arithmetic signs stay, since "the ← and → arrows turn
+it" is a sentence about arrows.
 <em>How Marty thinks</em> lets you pick which of your browser's voices he uses
 — the list puts the ones that speak your language first, since a voice meant
 for another language reads English with an accent. Left alone he takes a
