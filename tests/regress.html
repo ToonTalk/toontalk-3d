@@ -1349,9 +1349,26 @@ async function smartCamCheck(D) {
   // 2. the mouse rests: the camera follows
   D.camStill(); await frames(D, 80);
   const followed = D.smartCam().following && D.camera.position.distanceTo(p0) > 0.5;
+  const camWas = D.smartCam();          // what it was doing, for when this goes red in company
   // ...and the work area -- what is on the stand -- is in the picture
   const gb = D.mine();
   const workAreaOn = gb ? D.onScreen(new D.THREE.Box3().setFromObject(gb).getCenter(new D.THREE.Vector3())) : false;
+  // ...seen from well above the bench: level with it, twenty-four degrees, the
+  // near wall of a box hides what is in its holes (Ken: "when a robot is
+  // working the auto camera should move higher... so it is easier to see what
+  // is in its boxes"), and never from straight down
+  const fwd = new D.THREE.Vector3(); D.camera.getWorldDirection(fwd);
+  const pitch = +(-Math.asin(fwd.y) * 180 / Math.PI).toFixed(1);
+  const fromAbove = pitch > 34 && pitch < 60;
+  // ...and reading a card does not lean it out. Marty's card is at the left of
+  // the picture and the robot's actions at the right, so the pointer leaving
+  // for either used to stop the follow and ease the camera all the way back
+  // (Ken's picture of the factorial robots, a third of it pads and houses).
+  cv.dispatchEvent(new PointerEvent('pointerleave',
+    { clientX: r.left + 4, clientY: r.top + r.height / 2, bubbles: true, pointerType: 'mouse' }));
+  D.camStill(); await frames(D, 40);
+  const readingACard = D.smartCam().edge && D.smartCam().following;
+  move(0.5); D.camStill(); await frames(D, 20);
   // 3. the player takes the camera mid-run: the follow lets go and stays let go
   //    while the run's steps come and go
   D.orbitStart(); await frames(D, 5);
@@ -1365,9 +1382,14 @@ async function smartCamCheck(D) {
   D.hold(boxes[1]); D.giveRobot(); D.camStill(); await frames(D, 80);
   const again = D.smartCam().following;
   await slowSettle(D, 20000);
-  const ok = stillMoving && followed && workAreaOn && letGo && stayed && again;
+  const ok = stillMoving && followed && workAreaOn && fromAbove && readingACard && letGo && stayed && again;
   put((ok ? 'PASS' : 'FAIL') + ' the smart camera waits, follows and lets go  (still-while-moving=' + stillMoving
-      + ' follows-when-still=' + followed + ' work-area-on-screen=' + workAreaOn + ' lets-go-on-orbit=' + letGo + ' stays-let-go-through-the-run=' + stayed
+      + ' follows-when-still=' + followed
+      + (followed ? '' : ' [t=' + camWas.t + ' yield=' + camWas.yield + ' asked-for=' + camWas.show
+         + ' mode=' + camWas.mode + ' moved=' + (+D.camera.position.distanceTo(p0).toFixed(2)) + ']')
+      + ' work-area-on-screen=' + workAreaOn + ' looks-down-from=' + pitch + '\u00b0'
+      + ' follows-while-a-card-is-read=' + readingACard
+      + ' lets-go-on-orbit=' + letGo + ' stays-let-go-through-the-run=' + stayed
       + ' follows-the-next-occasion=' + again + ')', ok ? 'pass' : 'fail');
   return ok;
 }
@@ -2841,6 +2863,150 @@ async function teachCheck(D, w) {
   }
   const ok = lesson && stepsUp && added && pupilLearned && stopped && rewound && ranOnce && taughtForReal && atDesk && counts && spoke;
   put((ok ? 'PASS' : 'FAIL') + ' a robot that teaches a robot  (lesson=' + lesson + ' pupil-steps-up=' + stepsUp + ' pupil-adds=' + added + ' pupil-learned=' + pupilLearned + ' stop-teaching=' + stopped + ' rewound=' + rewound + ' teacher-ran-once=' + ranOnce + ' taught-for-real=' + taughtForReal + ' at-its-own-desk=' + atDesk + ' pupil-counts=' + counts + ' pad-speaks=' + spoke + (stopped ? '' : ' steps=' + teacherSteps.join(',')) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// MARTY'S COMMENTARY, AND WHO WAITS FOR WHOM. His opening line -- what the
+// robot is trying to achieve -- takes seconds to come and longer to read, and
+// the robot used to stand still for every second of it (Ken: "that causes a
+// very long pause before the first action. I think they should overlap"). Now
+// it works while he talks, and a line he cannot say at that moment is not
+// said at all. Commentary is for watching closely, too: 1x or 1/2x, and a run
+// sped up mid-way stops being narrated then and there.
+async function narrationCheck(D, w) {
+  const doc = w.document;
+  const num = (n) => ({ kind: 'number', value: { n: String(n), d: '1' }, op: '+' });
+  const fresh = () => D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'robot', name: 'the counter',
+               condition: { kind: 'box', holes: [{ kind: 'wildNumber' }] },
+               program: [{ type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [0] } }],
+               trainedOn: { kind: 'box', holes: [num(0)] }, team: [] }, x: -1.2, z: 1.4 },
+    { thing: { kind: 'box', holes: [num(0)] }, x: 0.2, z: 1.6 }] });
+  const log = () => [...doc.getElementById('martyLog').children].map(c => c.textContent);
+  const steps = () => log().filter(t => /A line for step/.test(t)).length;
+  const asks = [], systems = [];
+  let open = null;                       // the brain answers when this check says so
+  const gate = new Promise(r => (open = r));
+  let ok = false, part1 = '', part2 = '', part3 = '', part4 = '';
+  try {
+    D.brain(async (sys, q) => {
+      asks.push(q); systems.push(sys);
+      await gate;
+      if (!/JSON array/.test(q)) return 'It counts.';
+      const n = +(/its (\d+) steps/.exec(q)?.[1] ?? 2);
+      return JSON.stringify(Array.from({ length: n }, (_, i) => 'A line for step ' + (i + 1) + '.'));
+    });
+    D.commentary(true);
+    // 1. IT DOES NOT WAIT FOR HIM: the opening ask is still unanswered and the
+    //    robot is already at work, with nothing said yet
+    fresh(); await slowSettle(D, 2000);
+    D.speed(1); D.rounds(20);
+    D.hold(D.bench(1)); D.giveRobot(); await frames(D, 10);
+    if (D.state.mode !== 'replay') D.run();
+    await frames(D, 240);
+    const overlapped = asks.length >= 1 && log().length === 0 && D.state.mode === 'replay'
+      && (!!D.state.claw || D.state.busy);
+    part1 = 'asked=' + asks.length + ' said=' + log().length + ' claw=' + D.state.claw + ' busy=' + D.state.busy;
+    // 2. ...and once he is quiet again, every step gets its line
+    open(); await frames(D, 60);
+    const opened = log().some(t => /It counts/.test(t));
+    await new Promise(r => setTimeout(r, 1700));        // his opening, read at a reading pace
+    await frames(D, 400);
+    const narrated = steps() >= 1;
+    part2 = 'opening-said=' + opened + ' step-lines=' + steps();
+    // 3. THE SAME LINE IS SAID AGAIN NEXT ROUND, so it must not name the value a
+    //    hole happens to hold now (Ken: "the 0 is no longer a zero")
+    const stepsAsk = asks.find(q => /JSON array/.test(q)) ?? '';
+    const everyRound = /said again on EVERY round/.test(stepsAsk)
+      && /never by a value it happens to hold/.test(stepsAsk);
+    // ...and what a drop DOES, and who is who in a team: a number dropped on a
+    // number is arithmetic (models called adding 1 to 0 "replacing" it), and
+    // "it" among several robots is anybody (Ken)
+    const sys0 = systems[0] ?? '';
+    const plainlyTold = /number dropped on a number is ARITHMETIC/.test(sys0)
+      && /never replaces/.test(sys0) && /say WHICH robot you mean by its name/.test(sys0)
+      // ...and the robot he is to name is named to him: botFacts drops the name
+      // of a robot with no team of its own, which is every member of one
+      && /The robot “the counter”/.test(stepsAsk);
+    part3 = 'every-round-in-the-ask=' + everyRound + ' drops-teams-and-names=' + plainlyTold;
+    doc.getElementById('runBtn').click();               // stop
+    await slowSettle(D, 8000);
+    // 4. ABOVE 1x NOBODY IS WATCHING THAT CLOSELY: nothing is asked and nothing
+    //    said; and a run sped up mid-way stops being narrated there and then
+    await new Promise(r => setTimeout(r, 300)); await frames(D, 30);   // the stop comment, landed
+    const asked0 = asks.length, said0 = log().length;
+    fresh(); await slowSettle(D, 2000);
+    D.speed(2); D.rounds(3);
+    D.hold(D.bench(1)); D.giveRobot(); await frames(D, 10);
+    if (D.state.mode !== 'replay') D.run();
+    await slowSettle(D, 9000); await frames(D, 200);
+    const quietFast = asks.length === asked0 && log().length === said0;
+    fresh(); await slowSettle(D, 2000);
+    D.speed(1); D.rounds(20);
+    D.hold(D.bench(1)); D.giveRobot(); await frames(D, 10);
+    if (D.state.mode !== 'replay') D.run();
+    await new Promise(r => setTimeout(r, 1600));
+    await frames(D, 400);
+    const goingOn = steps();
+    D.speed(4);                                          // the visitor speeds it up
+    const saidAt = log().length;
+    await frames(D, 600);
+    const hushed = goingOn > 0 && log().length === saidAt;
+    part4 = 'nothing-at-2x=' + quietFast + ' lines-before-speeding-up=' + goingOn
+      + ' nothing-after=' + hushed;
+    doc.getElementById('runBtn').click();
+    await slowSettle(D, 8000);
+    ok = overlapped && opened && narrated && everyRound && plainlyTold && quietFast && hushed;
+  } finally {
+    D.brain(null); D.commentary(false); D.speed(1); D.rounds(ROUNDS);
+  }
+  put((ok ? 'PASS' : 'FAIL') + ' the robot works while Marty talks  (' + part1 + '; ' + part2
+      + '; ' + part3 + '; ' + part4 + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// EVERY FACE OF A TURNED CUBE READS. Turning a number lands the face you
+// asked for upright and used to leave the other five wherever the turn put
+// them -- the scientific notation reading bottom-to-top up the side of the
+// block, the value on the lid upside down (Ken's picture). Each pane is
+// rolled about its own normal by the quarter turn that reads best: up the
+// screen for a pane seen side-on, away from the front of the table for one
+// you look down on. The score below is that dot product: 1 is upright, 0 is
+// sideways, -1 is upside down.
+async function faceUpCheck(D, w) {
+  const THREE = D.THREE;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '123456789', d: '100000000' }, op: '+' }, x: 0.2, z: 1.6 } ] });
+  await slowSettle(D, 2000);
+  let cube = null;
+  for (let i = 0; i < 8; i++) { const t = D.bench(i); if (t?.userData?.kind === 'number') cube = t; }
+  if (!cube) { put('FAIL every face of a turned cube reads  (no cube)', 'fail'); return false; }
+  const worst = () => {
+    cube.updateMatrixWorld(true);
+    let low = 2;
+    for (const ch of cube.children) {
+      if (ch.geometry?.type !== 'PlaneGeometry') continue;
+      const q = new THREE.Quaternion(); ch.getWorldQuaternion(q);
+      const n = new THREE.Vector3(0, 0, 1).applyQuaternion(q);
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
+      const want = Math.abs(n.y) < 0.6 ? new THREE.Vector3(0, 1, 0)
+                                       : new THREE.Vector3(0, 0, n.y > 0 ? -1 : 1);
+      low = Math.min(low, +up.dot(want).toFixed(2));
+    }
+    return low;
+  };
+  const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+  const made = worst();                       // as made, every face already reads
+  D.hold(cube); await slowSettle(D, 2500);    // ...and the flight to the hand is over
+  key('ArrowUp'); await slowSettle(D, 2000);
+  const tipped = worst();
+  key('ArrowLeft'); await slowSettle(D, 2000);
+  const turned = worst();
+  D.clickBench(0.2, 1.6); await slowSettle(D, 3000);
+  const down = worst();
+  const ok = made > 0.99 && tipped > 0.99 && turned > 0.99 && down > 0.99;
+  put((ok ? 'PASS' : 'FAIL') + ' every face of a turned cube reads  (as-made=' + made
+      + ' tipped=' + tipped + ' turned=' + turned + ' set-down=' + down + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -5235,6 +5401,12 @@ async function runOne(D, spec) {
   let tchOK = true;
   try { tchOK = want('teachCheck') ? await teachCheck(D, frame.contentWindow) : true; }
   catch (e) { tchOK = false; put('FAIL a robot that teaches a robot  ' + e.message, 'fail'); }
+  let fuOK = true;
+  try { fuOK = want('faceUp') ? await faceUpCheck(D, frame.contentWindow) : true; }
+  catch (e) { fuOK = false; put('FAIL every face of a turned cube reads  ' + e.message, 'fail'); }
+  let nrOK = true;
+  try { nrOK = want('narration') ? await narrationCheck(D, frame.contentWindow) : true; }
+  catch (e) { nrOK = false; put('FAIL the robot works while Marty talks  ' + e.message, 'fail'); }
   let rvOK = true;
   try { rvOK = want('rubyView') ? await rubyViewCheck(D) : true; }
   catch (e) { rvOK = false; put('FAIL Ruby’s view and the watched run  ' + e.message, 'fail'); }
@@ -5346,7 +5518,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

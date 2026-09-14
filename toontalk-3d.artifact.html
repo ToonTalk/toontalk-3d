@@ -255,14 +255,25 @@ Not sure? Press Look around in Marty's panel, or ask him "how do I
 look around": he turns, zooms and slides the camera himself and tells you
 what your mouse or fingers do to get the same.
 The smart camera (a toggle in the ⋮ menu, on by default) comes in
-on what a robot works on during a lesson or a run — point at the side
-of the screen to lean back out — and, when Ruby or Dusty is awake, on a
+on what a robot works on during a lesson or a run — in a lesson, point
+at the side of the screen to lean back out — and, when Ruby or Dusty is
+awake, on a
 thought bubble you point at, and after a lesson or a refusal it pulls back to
-show the robot and its thought; it comes back when you point away. It keeps
-the robot's work area in the picture, and when a message names Ruby, Mimi,
+show the robot and its thought; it comes back when you point away. While a
+robot runs it watches from well above the bench, where the holes of the boxes
+on the desk are open to view instead of hidden behind their near walls, and
+close enough that the box being worked on is a good part of the picture however
+wide your screen — a wide one comes in nearer rather than showing more
+workshop. It keeps what is near the work in the picture: a robot away
+at a stack is watched where it stands rather than from far enough back to hold
+the desk as well. Pointing at the side of the picture leans it back out, but
+not while a robot runs — reading Marty's card or the robot's actions
+takes the pointer out of the picture, and watching is not reaching. When a
+message names Ruby, Mimi,
 a stack, the notebook or the judge, it pulls back until that is in view.
-Waking Ruby brings it in on the thought; an erasure that sets the robot
-running sends it out to watch. It never
+Waking Ruby brings it in on the thought, and so does a robot having her loosen
+one mid-run — the camera goes back to the work when she is done; an
+erasure that sets the robot running sends it out to watch. It never
 moves while your mouse is moving, only a moment after it rests, and your own
 orbiting or zooming always wins: the follow lets go until the next occasion.
 The same gestures work on a touch screen. ⛶ at the end of the
@@ -384,9 +395,9 @@ your own words. The note is the robot's, and goes with it into a saved
 world, a saved thing and every copy; Marty reads it back when you ask what a
 robot does. Every robot in the examples carries one, so picking up a
 stranger tells you what it does before you read its steps; the tooltip over a
-robot carries it too. With Marty's commentary on, a run starts once his
-opening line is on the card and, with his voice on, spoken, so the robot never
-gets ahead of its narrator. The button under the table says Run what it
+robot carries it too. With Marty's commentary on, the robot sets off at once
+and his opening line — what it is trying to achieve — is read while
+it works. The button under the table says Run what it
 learned for a robot you have just taught, and Start the robot for
 one that arrived trained.
 
@@ -1001,7 +1012,10 @@ from. There the <- and -> arrows turn it a
 quarter at a time and tip a number over, so
 you can read all six of its faces — the words, the mixed fraction, the
 scientific notation — without picking it up. The writing always lands the
-right way up. Escape comes back, and leaves the thing turned the way
+right way up, and so does the writing on the faces you are not reading: each
+one is rolled to whichever quarter turn reads best, up the screen for a face
+seen side-on and away from you for one you look down on. A cube left tipped on
+the table has no upside-down faces and none running up its side. Escape comes back, and leaves the thing turned the way
 you left it.
 
 Holding a pad is a different thing: that is for reading it and
@@ -1527,9 +1541,15 @@ process). Commentary while a robot works has him say, at the start of
 a run, when it stops and when a behaviour is switched on, what the robot is
 trying to achieve and the trick it uses — as a good comment would, not
 a transcript — and, during a run, one line before every step saying
-what that step is for. The robot waits for each line to be heard, so the
-narration sets the pace. Commentary keeps to Speed 1×: faster, the robot
-is ahead of any sentence. Ask him about a robot, a behaviour or a house — the one
+what that step is for. The robot waits for each line it is given to be heard,
+so the narration sets the pace; but it never stands still waiting for him. His
+opening line is read while it works, and a line he cannot say at that moment
+— his opening still going, or a pad being read aloud — is not said
+at all rather than queued behind. His lines for the steps are made once and
+said again on every round, so they name a hole by what it is rather than by the
+number it happens to hold this time round. Commentary keeps to Speed 1×
+and 1/2×: faster, the robot is ahead of any sentence, and a run sped
+up mid-way stops being narrated there and then. Ask him about a robot, a behaviour or a house — the one
 in your hand, or one on the table by its name or its words — and a
 button under his answer runs it with commentary.
 How Marty thinks lets you pick which of your browser's voices he uses
@@ -1790,7 +1810,9 @@ world's: it stays when you load somebody else's world, because it is your
 library, not part of theirs. Pick it up to move it where you like — out
 to the yard too — resize it in your hand with + and −, or have Dusty
 vacuum it up for a while; he gives it back. It remembers its place and its
-size along with its pages.
+size along with its pages. If a world you open puts one of its things where the
+notebook sits, the notebook steps aside to the nearest clear spot rather than
+lying under it, and goes back to your place in a world that leaves it room.
 
 It is kept under your name. The workshop asks who is working here
 when it opens, with the last name already filled in, and each name has a
@@ -11516,12 +11538,46 @@ function smartCamWant() {
   // a lesson or a run: what the robot works on, unless the player is
   // reaching for the sides (the stacks, the copier, the work area)
   if (mode === 'training' || mode === 'replay') {
-    if (speed === Infinity || offstage() || edgePointer) return false;
+    // ...and WHILE A ROBOT RUNS, nowhere: Marty's card is at the left of the
+    // picture and the robot's actions at the right, so reading either one
+    // took the pointer out of the picture and leaned the camera all the way
+    // back out (Ken's picture of the factorial robots, a third of it pads and
+    // houses). Watching is not reaching. Orbiting still takes the camera.
+    if (speed === Infinity || offstage() || (edgePointer && mode !== 'replay')) return false;
     return !!(clawHeld || stations.stand.occupant);
   }
   return false;
 }
 const _scBox = new THREE.Box3();
+// WATCHING FROM ABOVE. Level with the bench -- twenty-four degrees above the
+// work, measured -- the near wall of a box hides what is in its holes. While
+// a robot works the view is lifted to forty-six: high enough to see into what
+// is on the desk, nowhere near straight down, where a robot is a hat (Ken:
+// "when a robot is working the auto camera should move higher. Not directly
+// above the robot but a good deal higher so it is easier to see what is in
+// its boxes", and then "the camera angle could be greater"). A lesson is the
+// player's own work, and keeps the view they chose.
+const RUN_PITCH = Math.sin(46 * DEG);
+function liftedDir(dir) {
+  if (mode !== 'replay' || dir.y >= RUN_PITCH) return dir;
+  const flat = Math.hypot(dir.x, dir.z);
+  if (flat < 1e-4) return dir;
+  const k = Math.sqrt(1 - RUN_PITCH * RUN_PITCH) / flat;   // the same line of sight, tipped up
+  return new THREE.Vector3(dir.x * k, RUN_PITCH, dir.z * k);
+}
+// AS MUCH WORKSHOP AS THE PICTURE IS WIDE, not as much as a fixed distance
+// happens to show: at two metres and a half back a wide screen showed four
+// metres of bench across -- the box the robot works on small in the middle of
+// it (Ken, measured at 0.21 of the screen's width on his). The distance now
+// comes from the width wanted, so a wide screen comes closer rather than
+// showing more of what nobody asked to see; a narrow one never goes further
+// back than it used to.
+const WATCH_WIDE = 3.2;     // metres of workshop across the picture, while a robot runs
+function watchDist() {
+  if (mode !== 'replay') return 2.6;
+  const hTan = Math.tan(camera.fov * DEG / 2) * camera.aspect;
+  return Math.max(1.4, Math.min(2.6, WATCH_WIDE / (2 * hTan)));
+}
 function smartCamPose() {
   const dir = camera.position.clone().sub(orbit.target).normalize();
   if (camShowFn && !(mode === 'world' && (rubyActive || dustyActive) && hoverBubble)) return camShowFn();
@@ -11533,7 +11589,7 @@ function smartCamPose() {
                                   : _scBox.getCenter(new THREE.Vector3());
     // close enough to read a small number in a pan, far enough to keep the
     // robot and the desk beside it in the picture
-    return { at: look.clone().addScaledVector(dir, 2.6), look };
+    return { at: look.clone().addScaledVector(liftedDir(dir), watchDist()), look };
   }
   _scBox.setFromObject(condDisplay);
   const centre = _scBox.getCenter(new THREE.Vector3());
@@ -11662,8 +11718,14 @@ function workAreaPoints() {
   const g = stations.stand?.occupant;
   if (g) { _scBox.setFromObject(g); pts.push(_scBox.isEmpty() ? g.getWorldPosition(new THREE.Vector3()) : _scBox.getCenter(new THREE.Vector3())); }
   if (clawHeld) pts.push(clawHeld.getWorldPosition(new THREE.Vector3()));
-  const s0 = stations.s0;
-  if (s0?.point) pts.push(s0.point.clone().add(new THREE.Vector3(0, 0.15, 0)));
+  // ONLY THE SPOTS IN USE. The work spots grow leftward from the desk, and
+  // fitting an empty one in as well pulled the picture back over ground the
+  // robot was not using (Ken: "the left third of the view isn't needed").
+  for (const st of Object.values(stations)) {
+    if (st.kind === 'scratch' && st.occupant && st.point) {
+      pts.push(st.point.clone().add(new THREE.Vector3(0, 0.15, 0)));
+    }
+  }
   return pts;
 }
 function withWorkArea(pose) {
@@ -11672,9 +11734,16 @@ function withWorkArea(pose) {
   // house down on the grass was a speck (Ken: "the camera doesn't follow a
   // robot when placing things on a yard"). Out there it follows the subject.
   if (yardIn) return pose;
-  const pts = workAreaPoints();
+  let pts = workAreaPoints();
   if (rubyActive) { const q = helperPoint('ruby'); if (q) pts.push(q); }
   if (dustyActive) { const q = helperPoint('dusty'); if (q) pts.push(q); }
+  // WHAT IS NEAR THE WORK, not the whole room. A robot away at a stack is two
+  // metres from the desk it is filling, and holding both in the picture pulled
+  // the camera back five (measured on the factorial robots) -- the box it works
+  // on a speck in the middle (Ken). While it runs, only what is near whatever
+  // the picture is of counts; a lesson still keeps the whole work area, since
+  // there the player is the one reaching about.
+  if (mode === 'replay') pts = pts.filter(q => q.distanceTo(pose.look) < 1.3);
   if (!pts.length) return pose;
   const dir = pose.at.clone().sub(pose.look);
   let d = dir.length();
@@ -12958,6 +13027,7 @@ function makeNumber(value, op = '+', lite = false) {
   addFace(fSci.mat, -p, 0, 0, 0, -Math.PI / 2);       // left: scientific
   addFace(fAlt.mat, p, 0, 0, 0, Math.PI / 2);         // right: grouped / decimal
   addFace(fBot.mat, 0, -p, 0, Math.PI / 2, 0);        // bottom: taken apart
+  alignFaces(g);          // built late, on a cube that may already be turned
   };
   Object.assign(g.userData, { id: nextId++, kind: 'number', op, width: CUBE, rest: CUBE / 2 });
   g.__lod = 1;
@@ -14356,24 +14426,34 @@ const MARTY_COMMENT_SYSTEM = 'You are Marty the Martian, the green helper in Too
   // models slipped into the robot's own voice -- "I am trying to make the
   // count become 1" -- of a robot the visitor is watching, which reads as
   // Marty claiming the work (Ken).
-  + ' You are WATCHING the robot, not being it: call the robot “it” (or by its name), and keep “I” for yourself. A robot’s note is its author’s words about it, not yours: if you use one, say “its note says …”.';
+  + ' You are WATCHING the robot, not being it: call the robot “it” (or by its name), and keep “I” for yourself. A robot’s note is its author’s words about it, not yours: if you use one, say “its note says …”.'
+  // WHAT A DROP DOES. A number dropped on a number is arithmetic, not a
+  // swap -- models called adding 1 to 0 “replacing” it (Ken). And with a
+  // team, “it” could be any of them.
+  + ' In this workshop a number dropped on a number is ARITHMETIC: it adds (or subtracts, multiplies or divides, by the sign the dropped number carries), never replaces — only an empty hole is filled by what is put in it.'
+  + ' When the robot leads a team, say WHICH robot you mean by its name wherever the facts give one — “it” among several is anybody.';
 let martyCommentBusy = false;
 function martyCanThink() {
+  if (brainStandIn) return true;
   const p2 = martyProv();
   return p2 === 'nano' || p2 === 'here' || (!!p2 && !!martyKeyOf(p2));
 }
+// Says a line, and answers with the words said -- how long the run has to
+// wait before he is quiet enough for the steps to be narrated.
 async function martyCommentary(kind, subject, why = null) {
-  // at 1x only: faster, the robot is ahead of any sentence; at Instant
-  // there is nothing to watch (Ken)
-  if (!martyCommentOn() || martyCommentBusy || offstage() || speed !== 1) return;
-  if (typeof martyUI === 'undefined' || !martyUI || !martyCanThink()) return;
+  // CLOSE WATCHING ONLY: at 1x and 1/2x. Faster, the robot is ahead of any
+  // sentence and commentary is not what the visitor is there for; at Instant
+  // there is nothing to watch at all (Ken).
+  if (!martyCommentOn() || martyCommentBusy || offstage() || speed > 1) return null;
+  if (typeof martyUI === 'undefined' || !martyUI || !martyCanThink()) return null;
   let facts = null;
   if (kind === 'gadget' && subject) facts = gadgetFacts(subject);
   else if (activeBot?.program.length) {
-    facts = botFacts(activeBot, 'The robot at the bench', stations.stand.occupant ? specOf(stations.stand.occupant) : null)
+    facts = botFacts(activeBot, 'The robot at the bench' + (activeBot.name ? ' “' + activeBot.name + '”' : ''),
+                     stations.stand.occupant ? specOf(stations.stand.occupant) : null)
       + '\nOn its desk now: ' + (stations.stand.occupant ? holeWords(specOf(stations.stand.occupant)) : 'nothing');
   }
-  if (!facts) return;
+  if (!facts) return null;
   const ask = kind === 'stop'
     ? `The run has just stopped after ${roundsSaid()}.` + (why ? ` The workshop’s own account of the stop: “${why}”.` : '')
       + ' Say, as a good comment would, what it achieved and why it stopped now — two sentences at most. The reason is the workshop’s account; never guess another (a robot stopped by hand did not fail).'
@@ -14390,9 +14470,11 @@ async function martyCommentary(kind, subject, why = null) {
       if (m) words = m[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
       martyUI.style.display = 'block';
       martySay(words.slice(0, 700));
+      return words.slice(0, 700);
     }
   } catch (e) { console.error('[marty] commentary:', e); }
   finally { martyCommentBusy = false; }
+  return null;
 }
 const martyHelp = () => (typeof mineGet === 'function' && mineGet(MARTY_HELP)) || 'guide';
 const MARTY_VOICE_NAME = 'tt3d.marty-voice-name';
@@ -14601,7 +14683,8 @@ function saveNotebook(nb) {
   try {
     localStorage.setItem(nbKey(),
       JSON.stringify(stampV({ v: FILE_V, pages: nb.userData.pages, page: nb.userData.page,
-        at: nb.parent === benchRoot && !yardIn ? { x: +nb.position.x.toFixed(3), z: +nb.position.z.toFixed(3) } : (nb.__lastAt ?? null),
+        at: nb.userData.dodged        // stepped aside for this world's things: your own place stands
+            ?? (nb.parent === benchRoot && !yardIn ? { x: +nb.position.x.toFixed(3), z: +nb.position.z.toFixed(3) } : (nb.__lastAt ?? null)),
         sz: nb.userData.sz ?? 1 })));
   } catch {}
 }
@@ -16285,6 +16368,7 @@ function setAim(X, q) {
   q.normalize();                       // a hundred turns must not drift
   X.userData.aim = [q.x, q.y, q.z, q.w];
   X.quaternion.copy(q);
+  alignFaces(X);                       // its writing reads the best way it can
   if (wiggle?.node === X) wiggle.ry = X.rotation.y;
 }
 // Turn it about one of ITS OWN axes: right-multiplication is what makes the
@@ -19283,8 +19367,24 @@ function ensureMainNotebook() {
   const at = rec?.at && Number.isFinite(rec.at.x) && Number.isFinite(rec.at.z)
     && rec.at.x > BENCH.x0 && rec.at.x < BENCH.x1 && rec.at.z > BENCH.z0 && rec.at.z < BENCH.z1
     ? rec.at : { x: 0.95, z: BENCH.z0 + 0.28 };
+  nb.userData.wants = { x: at.x, z: at.z };      // where it would like to sit
   putOnBench(nb, at);
   return nb;
+}
+// A NOTEBOOK LANDS CLEAR. It is furniture, dropped into whatever world you
+// open, and a world puts its own things where yours likes to sit -- the
+// factorial example's nest stood on top of it (Ken). Once the world's things
+// are down it steps aside to the nearest free spot; the place you left it is
+// still the place you left it, and it goes back there in a world that leaves
+// it room.
+function settleNotebook() {
+  const nb = mainNotebook();
+  if (!nb || nb.parent !== benchRoot || yardIn) return;
+  const at = nb.userData.wants ?? { x: nb.position.x, z: nb.position.z };
+  const w = (nb.userData.width ?? 0.86) * (nb.userData.sz ?? 1);
+  const spot = freeSpotNear(at, w, nb);
+  nb.userData.dodged = (spot.x !== at.x || spot.z !== at.z) ? { x: +at.x.toFixed(3), z: +at.z.toFixed(3) } : null;
+  putOnBench(nb, spot);
 }
 const NOTEBOOK_STATION = {
   id: 'notebook', kind: 'notebook', label: 'the notebook',
@@ -20056,6 +20156,7 @@ function putOnBench(thing, at, byUser = false) {
     if (thing.userData.kind === 'number' || thing.userData.kind === 'model') {
       snapToAxes(thing.quaternion);
       thing.userData.aim = thing.quaternion.toArray();
+      alignFaces(thing);
     }
   }
   else if (thing.userData.facing) setFacing(thing, thing.userData.facing);
@@ -24386,7 +24487,11 @@ function userPutOnBench(at) {
   }
   // your notebook remembers where it was set down (indoors: out on the grass
   // it keeps its last indoor place for next time)
-  if (isMainNB(dropped)) { if (!yardIn) dropped.__lastAt = { x: +at.x.toFixed(3), z: +at.z.toFixed(3) }; saveNotebook(dropped); }
+  if (isMainNB(dropped)) {
+    if (!yardIn) { dropped.__lastAt = { x: +at.x.toFixed(3), z: +at.z.toFixed(3) }; dropped.userData.wants = { x: at.x, z: at.z }; }
+    dropped.userData.dodged = null;      // put down by hand: this is where it wants to be
+    saveNotebook(dropped);
+  }
   refreshUI();
 }
 function userUseCopier() {
@@ -26179,7 +26284,7 @@ function thingIn(o, nests, birds) {
     t.position.y = BENCH_TOP + (t.userData.rest ?? 0) * o.size;
   }
   if (t && o?.facing) setFacing(t, o.facing);
-  if (t && o?.aim) { t.userData.aim = o.aim.slice(); t.quaternion.fromArray(o.aim); }
+  if (t && o?.aim) { t.userData.aim = o.aim.slice(); t.quaternion.fromArray(o.aim); alignFaces(t); }
   if (t && o?.up) t.userData.up = o.up;
   if (t && o?.pen) t.userData.pen = true;
   if (t && o?.penInk != null) t.userData.penInk = o.penInk;
@@ -26448,6 +26553,7 @@ function worldIn(data) {
     putOnBench(node, { x: 0.9, z: 1.5 });
     activateBot(node.__bot);
   }
+  settleNotebook();          // ...and your notebook is not under the world's things
   refreshUI();
   // A PUZZLE INTRODUCES ITSELF, the way Marty met you at the rocket: he says
   // what is wanted, out loud if he is speaking, and the card says it too.
@@ -26747,36 +26853,35 @@ function runProgram() {
   activeBot.root.scale.setScalar(1);
   mode = 'replay'; busy = true; runCount = 0;
   if (camWatchRun) { camWatchRun = false; if (smartCam) showViewSoon(runWatchPose); }
-  // A NARRATED RUN WAITS FOR ITS NARRATOR. With commentary on, Marty's
-  // opening line took seconds to arrive and the robot was done before he
-  // had said a word (Ken: "if the user wants narration the speed of the
-  // robot should be ignored and it should match the narration"). The run
-  // starts when his line is on the card and, with his voice on, spoken.
-  narratedRun = !offstage() && martyCommentOn() && speed === 1;
-  if (!offstage() && martyCommentOn() && martyCanThink() && speed === 1) {
-    const token = (runToken = (runToken || 0) + 1);
-    busy = false;                       // nothing is moving yet
-    martyCommentary('start').then(martySpoken).then(() => {
-      if (runToken !== token || mode !== 'replay') return;
-      busy = true;
-      nextIteration();
-      refreshUI();
+  // NOTHING WAITS FOR THE NARRATOR. Marty's opening line -- what the robot
+  // is trying to achieve -- takes seconds to come and the whole of it was
+  // read out before anything moved (Ken: "that causes a very long pause
+  // before the first action. I think they should overlap"). Both asks go at
+  // once and the robot sets off; his opening is read while it works, and his
+  // line for a step is said only when he is quiet, so he never talks over
+  // himself and the steps he could not reach in time go unsaid.
+  // AND ONLY WHEN SOMEONE IS WATCHING CLOSELY: 1x, or 1/2x (Ken).
+  narratedRun = !offstage() && martyCommentOn() && speed <= 1;
+  if (narratedRun && martyCanThink()) {
+    openingBusy = true;
+    openingBy = performance.now() + 30000;      // an ask that never answers must not silence him for good
+    martyCommentary('start').then((words) => {
+      openingBusy = false;
+      // without his voice, a reading pace on the clock stands in for it
+      openingRead = words && !(martyVoiceOn && window.speechSynthesis)
+        ? performance.now() + Math.min(9000, 900 + 40 * String(words).length) : 0;
     });
-    refreshUI();
-    return;
   }
   nextIteration();
   refreshUI();
 }
-let runToken = 0;
-// resolves when Marty has finished speaking (at once if his voice is off)
-function martySpoken() {
-  return new Promise(res => {
-    if (!martyVoiceOn || !window.speechSynthesis) return res();
-    const t0 = performance.now();
-    const poll = () => (speechSynthesis.speaking && performance.now() - t0 < 40000) ? setTimeout(poll, 150) : res();
-    setTimeout(poll, 300);              // give the utterance a moment to begin
-  });
+let openingBusy = false, openingBy = 0, openingRead = 0;
+// Is Marty free to say a line about the step at hand? Not while his opening
+// comment is on its way or still being read, and not over a pad read aloud.
+function narrationLive() {
+  if (openingBusy && performance.now() < openingBy) return false;
+  if (performance.now() < openingRead) return false;
+  return !stillSpeaking();
 }
 
 // The team keeps going as long as some member recognises what is on the stand.
@@ -26881,18 +26986,15 @@ function nextIteration() {
   // before the robot does it, and the robot waits until he has finished
   // (Ken: "commentary should be for every step of the robot's actions, and
   // the robot should wait until Marty is finished describing the step").
-  // His lines for the whole program come in one ask, before the first step;
-  // whatever he does not cover, the step says itself.
+  // His lines for the whole program come in one ask, made as the run begins
+  // and waited for by nobody -- the robot works through whatever steps go by
+  // before they land, and whatever he does not cover, the step says itself.
   if (narratedRun && !offstage()) {
     let lines = member.__stepLines?.n === member.program.length ? member.__stepLines.lines : null;
-    if (!lines) {
-      let ready = false;
-      martyStepLines(member).then(l => { lines = l; ready = true; });
-      enqueue({ __visual: true, dur: 0, hold: () => ready || !narratedRun });
-    }
+    if (!lines) martyStepLines(member).then(l => { lines = l; });   // on its way, and nothing holds for it
     member.program.forEach((step, i) => {
       enqueue(doNow(() => highlight(i)));
-      enqueue(narrationHold(() => (lines && lines[i]) || describe(step)));
+      enqueue(narrationHold(() => lines && lines[i]));
       runStep(step);
     });
   } else {
@@ -26912,6 +27014,11 @@ function narrationHold(text) {
     __visual: true, dur: 0.4,
     start() {
       const line = typeof text === 'function' ? text() : text;
+      // OVERLAPPING, NOT QUEUING. A line he cannot say at this moment -- his
+      // opening still being read, his lines for the steps not yet come, a pad
+      // being read aloud -- is not said at all: the robot works on rather
+      // than standing still while he catches up.
+      if (!line || !narratedRun || !narrationLive()) { this.quiet = true; this.dur = 0; return; }
       if (martyUI) martyUI.style.display = 'block';
       martySay(line);
       // a reading pace on the sequencer's own clock without his voice; with
@@ -26919,7 +27026,7 @@ function narrationHold(text) {
       this.dur = martyVoiceOn && window.speechSynthesis ? 0.4 : Math.min(7, 0.9 + 0.04 * String(line).length);
     },
     hold() {
-      if (!narratedRun || stopRequested) return true;
+      if (this.quiet || !narratedRun || stopRequested) return true;
       this.t0 ??= performance.now();
       if (performance.now() - this.t0 > 20000) return true;
       return !(martyVoiceOn && stillSpeaking());
@@ -26934,9 +27041,11 @@ async function martyStepLines(m) {
   let lines = null;
   if (martyCanThink()) {
     try {
-      const facts = botFacts(m, 'The robot', stations.stand.occupant ? specOf(stations.stand.occupant) : null);
+      // named, so a line about one member of a team can say which (Ken)
+      const facts = botFacts(m, 'The robot' + (m.name ? ' “' + m.name + '”' : ''),
+                             stations.stand.occupant ? specOf(stations.stand.occupant) : null);
       const reply = await askBrain(MARTY_COMMENT_SYSTEM + (martyWords() === 'computing' ? '\n' + COMPUTING_WORDS : ''),
-        facts + `\n\nThe robot is about to do its ${n} steps one at a time, and waits for you after each. For EACH step, in order, give one short line in plain words saying what that step does and why it matters here -- not the step's own wording read back. Say what THE ROBOT does ("it takes...", "it drops..."), never "I". Reply with ONLY a JSON array of ${n} strings.`,
+        facts + `\n\nThe robot is about to do its ${n} steps one at a time, and waits for you after each. For EACH step, in order, give one short line in plain words saying what that step does and why it matters here -- not the step's own wording read back. Say what THE ROBOT does ("it takes...", "it drops..."), never "I". Your lines are said again on EVERY round, and the numbers above -- what is on its desk now, and what it was shown in its lesson -- are only where the counting starts: name a hole by what it is ("the count", "the number it was given"), never by a value it happens to hold ("the 0"), which is wrong by the next round. Reply with ONLY a JSON array of ${n} strings.`,
         [], 1400);
       const m2 = String(reply ?? '').match(/\[[\s\S]*\]/);
       if (m2) { const arr = JSON.parse(m2[0]); if (Array.isArray(arr)) lines = arr.map(x => plainWords(String(x))); }
@@ -27076,11 +27185,13 @@ function benchSpot() {
 // nothing is there (an authored layout is somebody's arrangement and must not
 // be tidied) and otherwise walks outward in a widening ring until it finds
 // clear table.
-function freeSpotNear(at, width = 0.3) {
+// `ignore` is the thing being placed when it is ALREADY on the table: its own
+// entry sits at the very spot being tested and blocks every ring around it.
+function freeSpotNear(at, width = 0.3, ignore = null) {
   // AT THE SIZE IT IS SHOWN. A thing's width is its own, before the scale it
   // wears on the table, so two houses shown at twice hand size were placed
   // as if they were small and stood through each other (Ken's screenshot).
-  const taken = benchThings.map(t => ({
+  const taken = benchThings.filter(t => t !== ignore).map(t => ({
     x: t.position.x, z: t.position.z,
     r: Math.max(0.12, ((t.userData?.width ?? 0.3) * (t.scale?.x ?? 1)) / 2),
   }));
@@ -27524,6 +27635,13 @@ function replayErase(path) {
   const apply = () => { condition = eraseAt(condition, path); syncBot(); rebuildCondition(); };
   const node = condNodeAt(path);
   if (!node || offstage() || speed === Infinity) return apply();
+  // THE CAMERA COMES IN FOR IT. Waking Ruby by hand is an occasion the camera
+  // answers; a robot having her loosen a pupil's thought was not, so the one
+  // moment of the run worth seeing happened off in a corner (Ken: "the camera
+  // didn't follow the use of Ruby after training the teacher robot"). It goes
+  // in close on the thought, and hands the camera back when she is done.
+  const tookCam = smartCam && !straightOn && !camYield && !!condDisplay && !offstage();
+  if (tookCam) showViewSoon(thoughtClosePose);
   const tool = ruby ?? ghostTool;
   const home = (ruby ? rubyHome : null) ?? tool.position.clone();
   const dest = node.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, -0.12, 0.34));
@@ -27533,7 +27651,8 @@ function replayErase(path) {
     { dur: 0.5, start() { sfx('erase'); flash(node.getWorldPosition(new THREE.Vector3())); },
       update(t) { tool.position.z = dest.z - 0.05 * Math.sin(Math.PI * t * 3); },
       end() { apply(); say(`The teacher has Ruby loosen the pupil’s thought — it now runs on ${condText(condition)}.`); } },
-    { dur: 0.4, update(t) { tool.position.lerpVectors(dest, home, ease(t)); } });
+    { dur: 0.4, update(t) { tool.position.lerpVectors(dest, home, ease(t)); },
+      end() { if (tookCam) { camShowFn = null; camYield = false; } } });   // the run goes on, and the camera with it
 }
 
 // ---------------------------------------------------------------- UI
@@ -28102,9 +28221,16 @@ $('exportWorldBtn').onclick = () => {
   saveFile(yardIn ? 'yard.world.json' : 'workshop.world.json', JSON.stringify(worldOut(), null, 2),
            yardIn ? 'Saved the whole workshop, yard and all, to a file.' : 'Saved the whole workshop to a file.');
 };
-$('speed').onchange = (e) => {
-  speed = e.target.value === 'inf' ? Infinity : +e.target.value;
-};
+// THE SPEED THE VISITOR PICKED, wherever the picking came from -- the select,
+// or a check driving it.
+function pickSpeed(v) {
+  speed = (v === 'inf' || v === 'instant' || v === Infinity) ? Infinity : (+v || 1);
+  // A RUN SPED UP IS NO LONGER BEING WATCHED CLOSELY. Marty's commentary
+  // stops there and then, the line in the air with it (Ken: "when I changed
+  // the speed from 1x I still hear Marty's commentary while it runs").
+  if (speed > 1 && narratedRun) { narratedRun = false; hushMarty(); }
+}
+$('speed').onchange = (e) => pickSpeed(e.target.value);
 $('pauseBtn').onclick = () => {
   simPaused = !simPaused;
   setPausedLook(simPaused);
@@ -28144,6 +28270,7 @@ function applyHeldTurn() {
   HAND.quaternion.copy(heldBaseQ).premultiply(new THREE.Quaternion().setFromEuler(
     new THREE.Euler(pitch, heldYaw * QUARTER, 0, 'YXZ')));
   uprightHeld();
+  alignFaces(HAND);
 }
 // Turning a cube by quarters lands the face you asked for in front of you --
 // and quite often lands it on its side or on its head, which is a poor reward
@@ -28197,6 +28324,48 @@ function uprightHeld(node) {
   _uv.axis.copy(_uv.view).applyQuaternion(_uv.pq.invert()).normalize();
   HAND.quaternion.premultiply(
     new THREE.Quaternion().setFromAxisAngle(_uv.axis, best * QUARTER));
+}
+// AND EVERY OTHER FACE TOO. Turning a cube leaves the face you asked for
+// upright and the other five wherever the turn happened to put them: the
+// scientific notation reading bottom-to-top up the side of the block, the
+// value on the lid upside down (Ken's picture). A face is a real pane, so
+// each one is rolled about its own normal by the quarter turn that leaves its
+// writing most nearly readable -- up the screen for a pane you see side-on,
+// and away from the front of the table for one you look down on, which is how
+// writing on a table reads and what the lid already did before anything was
+// turned. Nothing moves on a cube standing as it was made.
+const _af = { q: new THREE.Quaternion(), n: new THREE.Vector3(), up: new THREE.Vector3(),
+              want: new THREE.Vector3(), test: new THREE.Vector3(),
+              spin: new THREE.Quaternion(), roll: new THREE.Quaternion(),
+              zAxis: new THREE.Vector3(0, 0, 1) };
+function alignFaces(node) {
+  if (!node || node.userData?.kind !== 'number') return;
+  node.updateMatrixWorld(true);
+  for (const ch of node.children) {
+    if (ch.geometry?.type !== 'PlaneGeometry') continue;
+    // the pane as it was built: the roll is chosen afresh every time, never
+    // added to whatever the last one left
+    if (!ch.__faceQ) ch.__faceQ = ch.quaternion.clone();
+    ch.quaternion.copy(ch.__faceQ);
+    ch.updateMatrixWorld(true);
+    ch.getWorldQuaternion(_af.q);
+    _af.n.set(0, 0, 1).applyQuaternion(_af.q);         // the way the pane looks
+    _af.up.set(0, 1, 0).applyQuaternion(_af.q);        // the way its writing stands
+    if (Math.abs(_af.n.y) < 0.6) _af.want.set(0, 1, 0);
+    else _af.want.set(0, 0, _af.n.y > 0 ? -1 : 1);
+    let best = 0, bestDot = -2;
+    for (let k = 0; k < 4; k++) {
+      _af.spin.setFromAxisAngle(_af.n, k * QUARTER);
+      _af.test.copy(_af.up).applyQuaternion(_af.spin);
+      const d = _af.test.dot(_af.want);
+      if (d > bestDot + 1e-4) { bestDot = d; best = k; }
+    }
+    if (best) {
+      _af.roll.setFromAxisAngle(_af.zAxis, best * QUARTER);   // about the pane's own normal
+      ch.quaternion.copy(ch.__faceQ).multiply(_af.roll);
+    }
+    ch.updateMatrixWorld(true);
+  }
 }
 // Spinning left and right is good for anything. TIPPING is not: a nest with a
 // pile on it went over on its head, half of it through the table and the rest
@@ -31954,7 +32123,12 @@ function apiWhy(body) {
   const t = raw.replace(/\s+/g, ' ').trim();
   return t ? ' — ' + t.slice(0, 200) : '';
 }
+// A STAND-IN BRAIN, for the suite. No provider can be reached from a headless
+// browser, and what is under test is the TIMING of the narration -- what waits
+// for Marty and what carries on while he talks -- not a model's words.
+let brainStandIn = null;
 async function askBrain(sys, q, history = martyHistory, cap = 900, schema = null) {
+  if (brainStandIn) return await brainStandIn(sys, q);
   const prov = martyProv();
   if (prov === 'here') return await hereThink(sys, q, history, cap);
   if (prov === 'nano') return await nanoThink(sys, q, history, schema);
@@ -32940,6 +33114,7 @@ function martyVoiceObj() {
 // A Martian is not quite of this world -- but chopping the line into phrases
 // made him stutter. One utterance per SENTENCE, a touch high and quick, with a
 // little drift between sentences: strange, not annoying.
+let martySpeaking = 0;         // sentences of his in the air
 function martySpeak(text) {
   if (!martyVoiceOn || !window.speechSynthesis) return;
   const voice = martyVoiceObj();
@@ -32949,8 +33124,18 @@ function martySpeak(text) {
     if (voice) u.voice = voice;
     u.pitch = 1.32 + (i % 2 ? 0.06 : -0.06);
     u.rate = 1.04;
+    martySpeaking++;
+    u.onend = u.onerror = () => { martySpeaking = Math.max(0, martySpeaking - 1); };
     speechSynthesis.speak(u);
   });
+}
+// His voice cut short, for the moment his line stops being wanted at all.
+// There is no cancelling one utterance, so this is only done when what is in
+// the air is his -- a pad being read aloud is the robot's own doing and runs
+// to the end.
+function hushMarty() {
+  if (martySpeaking && window.speechSynthesis) speechSynthesis.cancel();
+  martySpeaking = 0;
 }
 // A BRAIN'S ANSWER, in plain words. Models drift into markdown -- **Make**,
 // bullet lists -- and a child saw the asterisks (Sisi did). His lines are
@@ -33690,6 +33875,11 @@ window.__nano = {
   tilt(t) { return t?.userData.kind === 'scale' ? scaleTilt(t) : null; },
   orbitStart() { orbit.dispatchEvent({ type: 'start' }); },     // the player takes the camera
   mention(text) { noteMentions(text); },
+  // Marty, for a check: a stand-in for the brain, and the commentary switch
+  // that lives in the More menu -- so a narrated run can be watched here.
+  brain(fn) { brainStandIn = fn ?? null; },
+  commentary(on) { mineSet(MARTY_COMMENT, on ? '1' : '0'); return martyCommentOn(); },
+  narrating() { return { on: narratedRun, live: narrationLive(), opening: openingBusy }; },
   camReset() { camResetAll(); },
   helperState() { return { ruby: !!ruby, rubyOn: !!ruby?.parent, dusty: !!dusty, dustyOn: !!dusty?.parent, rules: worldRules?.tools ?? null, rubyActive, dustyActive, busy, mode, condShow: !!condShow, hasCond: !!condDisplay }; },
   helperAt(name) { return helperPoint(name); },
@@ -33751,7 +33941,7 @@ window.__nano = {
   speed(s) {
     // '+s' of a word is NaN, and one NaN frame put NaN into every bird's
     // wings for good -- and every box around a panel that holds a bird
-    speed = (s === 'inf' || s === 'instant' || s === Infinity) ? Infinity : (+s || 1);
+    pickSpeed(s);
     document.getElementById('speed').value = speed === Infinity ? 'inf' : s;
   },
   rounds(n) { maxIter = n; },

@@ -282,40 +282,44 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Fourteen working days, 195 commits and one 21,000-line
+  <p class="standfirst">Twenty-one working days, 241 commits and one 24,000-line
     file &mdash; the day the project stopped guessing at ToonTalk and went and
-    read it, and everything media asked for afterwards.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 3 September 2026</p>
+    read it, everything media asked for afterwards, and the three weeks in which
+    the workshop grew a yard, teams, a narrator and robots that train robots.</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 14 September 2026</p>
 </header>
 
 <table class="stats">
-  <caption>Two halves of the project: everything up to the day media began, the
-    work since, and where it stands. Media started on 25&nbsp;August, with the
-    line <em>a picture is a pad</em>.</caption>
+  <caption>Two halves of the project: the first fortnight, which ended with this
+    page being written, and the three weeks since.</caption>
   <thead>
     <tr><th scope="col"></th>
-        <th scope="col">Before media<br><span class="when">16&ndash;24 Aug</span></th>
-        <th scope="col">Since<br><span class="when">25 Aug&ndash;3 Sep</span></th>
+        <th scope="col">The first fortnight<br><span class="when">16 Aug&ndash;3 Sep</span></th>
+        <th scope="col">Since<br><span class="when">4&ndash;14 Sep</span></th>
         <th scope="col">Total</th></tr>
   </thead>
   <tbody>
-    <tr><th scope="row">Working days</th><td>9</td><td>5</td><td>14</td></tr>
-    <tr><th scope="row">Commits</th><td>154</td><td>41</td><td>195</td></tr>
-    <tr><th scope="row">Prompts from Ken</th><td>217</td><td>126</td><td>343</td></tr>
-    <tr><th scope="row">Tool calls</th><td>5,491</td><td>7,702</td><td>13,193</td></tr>
-    <tr><th scope="row">Lines in the app</th><td>12,560</td><td>+8,625</td><td>21,185</td></tr>
-    <tr><th scope="row">Example worlds</th><td>20</td><td>+30</td><td>50</td></tr>
-    <tr><th scope="row">Puzzles</th><td>0</td><td>+23</td><td>23</td></tr>
-    <tr><th scope="row">Characters modelled</th><td>2</td><td>+11</td><td>13</td></tr>
-    <tr><th scope="row">Manual (lines)</th><td>544</td><td>+847</td><td>1,391</td></tr>
-    <tr><th scope="row">Regression checks</th><td>&mdash;</td><td>+50</td><td>50</td></tr>
+    <tr><th scope="row">Working days</th><td>14</td><td>7</td><td>21</td></tr>
+    <tr><th scope="row">Commits</th><td>207</td><td>34</td><td>241</td></tr>
+    <tr><th scope="row">Prompts from Ken</th><td>322</td><td>45</td><td>367</td></tr>
+    <tr><th scope="row">Tool calls</th><td>13,559</td><td>1,941</td><td>15,500</td></tr>
+    <tr><th scope="row">Lines in the app</th><td>21,477</td><td>+3,386</td><td>24,863</td></tr>
+    <tr><th scope="row">Example worlds</th><td>40</td><td>+4</td><td>44</td></tr>
+    <tr><th scope="row">Puzzles</th><td>34</td><td>&mdash;</td><td>34</td></tr>
+    <tr><th scope="row">Manual (lines)</th><td>1,401</td><td>+297</td><td>1,698</td></tr>
+    <tr><th scope="row">Regression checks</th><td>54</td><td>+44</td><td>98</td></tr>
+    <tr><th scope="row">The back of the book (lines)</th><td>5,327</td><td>+1,435</td><td>6,762</td></tr>
   </tbody>
 </table>
 <p class="statnote">A <em>prompt</em> is a message Ken typed; a <em>tool call</em>
   is one action taken in reply &mdash; a file read, an edit, a probe of the
-  running app, a Blender render, a test run. The ratio is about 38 actions to
-  the prompt overall, and it rose as the work went on: measurement got cheaper
-  than guessing, and more of each round went into proving the fix.</p>
+  running app, a Blender render, a test run. That is about 42 actions to the
+  prompt in both halves: measurement got cheaper than guessing early on, and
+  stayed that way. The prompts and tool calls are counted from the session's own
+  transcript, and counted again for this version with one rule for both halves,
+  so the first column differs a little from the figures this page carried when
+  it was written. <em>The back of the book</em> is <code>BACKS.md</code>: one
+  entry per round, saying what was asked, what was measured and what changed.</p>
 
 <p class="alsoby">Ken Kahn is writing about this project from the other side of
   the collaboration —
@@ -1401,13 +1405,15 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         team in an opaque house whose <em>thought bubble</em> does the judging:
         a box matched hole by hole, in order, a number with its badge. Nothing
         judges; something recognises.</p>
-      <p>Twenty-three of them exist now, and the last few are about robots:
+      <p>Thirty-four of them exist now, and the last few are about robots:
         one moves stuck numbers into a second box in reverse; one is that same
         robot, already trained and too fussy, so Ruby is the whole puzzle; one
         counts the letters arriving on a nest and dozes when the nest is empty;
         two grow a number or a box for ever and have to be <em>stopped in
         time</em>, because there is no rounds control &mdash; a robot runs until
-        its thought stops fitting.</p>
+        its thought stops fitting. The last two are teams: one where two robots
+        take a single run between them, and one where four sort three numbers by
+        which of them recognises the case in front of it.</p>
       <p>Two small ideas came out of it that the workshop kept. Things can be
         <strong>stuck</strong>: your fingers cannot shift them and a robot's
         claw can, which is what makes training one worth the trouble rather
@@ -1422,6 +1428,191 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         lowers it into the tray, and hands over whatever is taken off her
         platform. The animation is driven by the copier's own steps, so she
         keeps time with the machine at any speed.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">4&ndash;7 Sep<br>ec65bf8 &rarr; 4f68301</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge r">&#9678;</span>
+        <h2>A camera with occasions</h2>
+      </div>
+      <p>The smart camera arrived at the end of the first fortnight as one
+        rule: come in on what the robot is working on, and let go the moment
+        the player takes it. The days after gave it <em class="term">occasions</em>.
+        After a lesson it pulls back far enough to hold the robot and the
+        thought it has just made. When red parts appear in a thought &mdash;
+        the marks that say why a robot will not run &mdash; it shows them.
+        Waking Ruby or Dusty brings it in close on the thought, where their
+        work is about to happen. And when a message names Ruby, Mimi, a stack,
+        the notebook or the judge, it pulls back until that is in the picture
+        as well as whatever you were looking at, because a workshop that tells
+        a child to go and wake somebody ought to show her where she is.</p>
+      <p>None of it moves while your mouse is moving &mdash; only a moment
+        after it rests &mdash; and your own orbiting always wins: the follow
+        lets go until the next occasion. Thought bubbles became clouds in the
+        same round, which is a smaller thing, except that a cloud has an
+        outline a child can point at.</p>
+      <h3>A notebook that would not start</h3>
+      <p>One report was worth a day on its own: a workshop that opened to a
+        blank page where a library had been. The notebook had been written by a
+        newer build than the one opening it, and the old build, unable to read
+        the page, was ready to write an empty notebook over it. A notebook this
+        browser cannot read is now left exactly where it is &mdash; the pages
+        are still there for a newer build &mdash; and <span class="mono">?fresh</span>
+        opens a workshop with a clean library without touching the stored one.
+        A data loss that never happened is the cheapest bug there is; this one
+        was one prompt from being permanent.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">11 Sep<br>9b153a0 &rarr; 4f99f01</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge m">&#9634;</span>
+        <h2>Out the back door</h2>
+      </div>
+      <p>Behind every place &mdash; the workshop, and every house &mdash; is
+        open ground. The back door stands beside the tall door out, and through
+        it your table stays indoors and the ground takes its place: ten metres
+        by five and a half, grass underfoot, at floor level. Your hand, the
+        stacks, the robot's desk and Mimi all come along, exactly as they do
+        into a house. So whatever a robot sweeps off its work spots at the end
+        of a run lands on the grass, and so does whatever Marty makes &mdash; a
+        village from a house&#8209;maker, a zoo from a <strong>Make</strong>.</p>
+      <p><strong>Not a room.</strong> A room is a copy of the workshop, with a
+        desk and stacks: the wrong furniture for a zoo. And <em>your table came
+        with you</em> is the app's one rule about places, so the yard keeps the
+        rule by swapping the table for the ground rather than inventing a third
+        kind of place. A yard entered from inside a house belongs to that
+        house, and is saved and folded away with it.</p>
+      <p>Doors wear signs saying where they lead &mdash; <em>Back to the
+        workshop</em>, <em>Back to &ldquo;Add 1&rdquo;</em> &mdash; and pointing
+        at a door and typing changes what it says, because a place you made
+        should be able to say its own name.</p>
+      <h3>Two things a grandson found</h3>
+      <p>On a touch screen he forgot he was holding something, reached for it
+        where it sat, and turned the camera instead. A finger that lands on the
+        thing in your hand now carries it, and the thing goes where the finger
+        lifts. And he asked what had happened to the crashed rocket. It had
+        been on its side, nose bent, a fin snapped off, smoking. It stands on
+        its fins now, leaning seven degrees on the one that took the landing,
+        and Marty says he landed badly.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">12 Sep<br>69e002f &rarr; 8857624</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge k">&#9635;</span>
+        <h2>Panels all the way down</h2>
+      </div>
+      <p>A behaviour is a <em class="term">panel</em>: a little world with
+        robots in it, bound to the thing it rides on. This was the day the
+        panel stopped being a leaf. You can go into a panel from the yard and
+        come back out. A panel can be dropped into a box hole, and the
+        crocodile wearing it goes on wandering inside the hole. A panel can be
+        set down on the floor of another panel. A robot can take a panel out of
+        a thing and hand it on, because a panel is a thing like any other.</p>
+      <p><strong>A scene got a referee.</strong> Two things that run into each
+        other need somebody to say so, and nothing in the workshop was going to
+        notice on its own. A scene's own nest reports <em>who ran into
+        whom</em>, and a robot waits on that nest exactly as it waits on a
+        keyboard. Space Invaders reads from the back for the same reason: the
+        game is a scene, and the scene says what happened rather than the game
+        knowing.</p>
+      <p>Marty learned a second vocabulary the same day. <strong>Computing
+        words</strong> puts the programmer's word beside the workshop's the
+        first time each one comes up &mdash; a thought (a condition), a bird (a
+        message), a house (a process) &mdash; for the visitor who already
+        speaks one of the two languages and is trying to learn the other.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">13 Sep<br>0f5c44f &rarr; 5a33666</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">&#9783;</span>
+        <h2>A robot is a team, and every robot has a note</h2>
+      </div>
+      <p>A <strong>team</strong> is ToonTalk's case analysis, and it is also
+        its loop. One robot leads and the members stand by it; each pass, the
+        first member whose thought matches what is on the desk takes the floor,
+        and the ones in front of it step up, show why they cannot help, and go
+        to the back. Nothing chooses: the choosing <em>is</em> the matching,
+        seen. Sorting three numbers is four robots who differ only in which
+        case each recognizes. Take a member out of a team and you are holding a
+        robot again.</p>
+      <p>Every robot now carries a <strong>note</strong>: what it is for, in
+        your own words, written on the card under its name. The note goes with
+        the robot into a saved world, a saved thing and every copy; Marty reads
+        it back when you ask what a robot does; the tooltip over a robot
+        carries it. Every robot in the examples has one, so picking up a
+        stranger tells you what it does before you read a single step.</p>
+      <p>The notebook stopped being furniture bolted to the table. Pick it up,
+        resize it in your hand, carry it out to the yard, hand it to Dusty for
+        a while; it remembers where you left it and how big it was, along with
+        its pages. And Marty began talking through a run: a line before every
+        step, with the robot waiting until the line has been heard.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">13&ndash;14 Sep<br>e4b70f9 &rarr; a4b274a</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge m">&#9881;</span>
+        <h2>Robots that teach robots</h2>
+      </div>
+      <p>ToonTalk Reborn's first tour has a robot pick up a fresh robot, give
+        it a number, start its training, make two gestures, stop, and name what
+        it has made. Ken asked whether that was possible here, and whether the
+        robot's API would have to be extended for it. It did not.</p>
+      <p>In a lesson, the claw takes a box and drops it on a little robot among
+        the robot's own things. That is the step <em class="term">teach</em>:
+        the little robot steps up to a desk of its own beside the teacher with
+        the box on it, and everything done next is the <em>pupil's</em> lesson
+        &mdash; recorded into the pupil as its own steps, and into the teacher
+        as <em>taught</em> steps carrying them, Ruby's loosening of the pupil's
+        thought included. <em>Stop teaching it</em> ends the pupil's lesson;
+        the teacher's own goes on. Run it and the teacher does all of that for
+        real: the pupil ends the run trained, standing at its own desk with its
+        box, and counts when you start it. A robot may teach a robot; a robot
+        that teaches a robot may not be taught to teach one. Two levels is
+        where it stops being explainable, so two levels is where it stops.</p>
+      <p>Pads speak, which is how the teacher announces the lesson at the
+        beginning and the end: <span class="mono">[speak]</span> given to a
+        pad's bird reads its words aloud, and in a lesson <strong>Read</strong>
+        is a step like any other.</p>
+      <h3>Watching is not reaching</h3>
+      <p>The last rounds were about the watching rather than the work. Marty's
+        opening comment &mdash; what the robot is trying to achieve &mdash;
+        took seconds to arrive and longer to read out, and the robot stood
+        still through every second of it; both asks now go at once and the
+        opening is read while it works, with a line he cannot say at that
+        moment left unsaid rather than queued behind. The camera had been
+        sitting level with the bench, twenty-four degrees above the work,
+        where the near wall of a box hides what is in it; it watches a run from
+        forty-six now, and close enough that the box being worked on is a good
+        part of the picture however wide the screen. And reading Marty's card
+        at the side of the screen used to lean the camera all the way out,
+        because the pointer had left the picture and leaving the picture means
+        &ldquo;let me see the whole table&rdquo;. While a robot runs, it does
+        not: watching is not reaching.</p>
     </div>
   </div>
 </section>
@@ -1446,6 +1637,15 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         <span class="mono">5! = 120</span>, reverse turns
         <span class="mono">[1,2,3]</span> into <span class="mono">[3,2,1]</span>
         across three houses that then fold themselves away.</p>
+      <p>The suite grew with the app: fifty-four checks at the end of the first
+        fortnight, ninety-eight now. Each is a small story the workshop has to
+        go on telling — a robot that teaches a robot, a ticker folded inside a
+        thing that still keeps time, every face of a turned number cube reading
+        the right way up, a camera that follows while a card is being read.
+        They run in a headless browser against the real app and write a verdict
+        file, and a check that goes red in company and green on its own is an
+        order flake rather than a regression — which is worth knowing before
+        blaming the change in hand.</p>
       <h3>Two honest failures</h3>
       <p>Twice the verification lied, and both times in the same way — the
         measurement was wrong, not the code. Chasing why Dusty the vacuum was
@@ -1477,19 +1677,23 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
             <li>The copier is a machine on the floor, not a wand in your hand — so robots can use it exactly as you do.</li>
             <li>Rooms are <em>things</em>: nestable, mailable, fileable. The original's houses are not.</li>
             <li><span class="mono">mod</span> and <span class="mono">set</span> are spelled out. Nothing says an operation must be one character.</li>
+            <li>A behaviour is a <em>panel</em> — a little world bound to the thing it rides on — rather than a new kind of object. So is a scene, and so is a game.</li>
+            <li>The yard is the same place with the ground in the table's place, not a third kind of place. <em>Your table came with you</em> survives it.</li>
+            <li>Teaching is a gesture in a lesson, not an API: a robot trains a robot with the claw, and the steps are the ones a person would make.</li>
           </ul>
         </div>
         <div class="panel">
           <h4>Gaps still marked open</h4>
           <ul>
             <li>Operation-only pads: backspace the digits away and the bare operation remains.</li>
-            <li>Sensors — mouse, keyboard, time — the family that games are made of. Designed on the seventh day (<code>BACKS.md</code>) and deliberately not built.</li>
             <li>Insertion-point editing in numbers and pads.</li>
+            <li>A clock, and time as something a robot can ask for. The rest of that family arrived as nests — a keyboard, the pointer, the press of a button, a scene's collisions — because a robot facing a bare nest already dozes. Time did not.</li>
             <li>Video as a thing you can hold. Pictures and sounds arrived; moving pictures did not.</li>
-            <li>A clock, and time as something a robot can ask for — wanted as a bird that delivers from a system capability, not as a new kind of thing.</li>
+            <li>Un-erasing: the original's wand could put back what was erased by copying from an unerased twin.</li>
             <li>Scales that weigh rather than compare, for goals like &ldquo;a number bigger than a thousand&rdquo;.</li>
             <li>An authoring interface for puzzles. The file is written; making one is still a text editor at the last step.</li>
             <li>Matching a robot's thought against a box of half a million holes still walks every one — per action, not per frame, but it walks them.</li>
+            <li>Speeds are in table units, so a game blown up to the size of the yard plays in slow motion: the riders keep the speeds they had on the table.</li>
           </ul>
         </div>
       </div>
@@ -1505,11 +1709,11 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 195 commits between 16 August
-  and 3 September 2026, and the audit file they kept arguing with. The figures
-  at the top are counted from the git log and from the conversation's own
-  transcript. Every prompt of the conversation is in
-  <a href="the-ledger.html">the ledger</a>.</p>
+  <p>Written from the repository's own history: 241 commits between 16 August
+  and 14 September 2026, the back of the book they were written into, and the
+  audit file they kept arguing with. The figures at the top are counted from
+  the git log and from the conversation's own transcript. Every prompt of the
+  conversation is in <a href="the-ledger.html">the ledger</a>.</p>
   <p>Ken Kahn's own account of the project is
   <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">here</a>.</p>
 </footer>

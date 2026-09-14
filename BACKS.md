@@ -6663,3 +6663,128 @@ count become 1" -- which reads as Marty claiming the work. Both asks pin
 the pronouns now: Marty is watching, the robot is "it", and a robot's note
 is its author's words, to be quoted as "its note says ..." and never spoken
 as his own.
+
+## The robot works while Marty talks, and watches itself from higher up
+
+*Added 14 Sep. Ken, giving the teacher its box: Marty "correctly reads 'It is
+trying to teach the little robot to count on from any number...' but that
+causes a very long pause before the first action. I think they should
+overlap." Also: "After the pupil has run a cycle it says 'It puts that 1 into
+the first place, changing the 0 into 1 to begin the count' -- but the 0 is no
+longer a zero." Also: "I wonder when a robot is working if the auto camera
+should move higher. Not directly above the robot but a good deal higher so it
+is easier to see what is in its boxes." Also: "When I changed the speed from
+1x I still hear Marty's commentary while it runs... I guess it is fine to keep
+commentary for 1/2x."*
+
+**The pause.** A narrated run made two asks of the brain, one after the other
+-- the opening comment, then a line for each step -- and waited for the whole
+opening to be read out before the first step. Three waits, in series, and a
+robot standing still through all of them. Now both asks go at once, the robot
+sets off, and the opening is read while it works. A line he cannot say at that
+moment -- his opening still going, his lines not yet come, a pad being read
+aloud -- is not said at all rather than queued behind: the steps he could not
+reach in time go unsaid, and the narration picks up from the step at hand.
+Measured, with a brain held at the door: both asks out, nothing said, the
+robot already holding a number and working. On the build before, the same
+measurement found it idle with nothing in its hand.
+
+**The 0 that is no longer a zero.** His lines are made once and said again on
+every round, so a line that names a number goes wrong as soon as the number
+changes -- "changing the 0 into 1" the moment the count is 1. And the 0 was
+not even on the desk: a robot's steps are read to him against the box it was
+shown in its lesson, so the facts carry the lesson's numbers as well as this
+round's. The ask now rules out both: they are only where the counting starts,
+and a hole is to be named by what it is -- the count, the number it was given
+-- never by a value it happens to hold.
+
+**Higher up.** The follow sat level with the bench -- twenty-four degrees
+above the work, measured -- where the near wall of a box hides what is in its
+holes. While a robot runs the same line of sight is tipped up to forty: into
+the boxes, and nowhere near straight down, where a robot is a hat. A lesson is
+the player's own work and keeps the view they chose.
+
+**Only while someone is watching closely.** Commentary is for 1x and 1/2x.
+Above that the robot is ahead of any sentence, so a run sped up mid-way stops
+being narrated there and then -- the line in the air cut short with it, since
+what is being spoken then is his.
+
+## Watching, not reaching
+
+*Added 14 Sep. Ken, on the teacher and the factorial robots: "The camera
+didn't follow the use of Ruby after training the teacher robot." / "I
+wouldn't say 'replace' when talking about adding 1 to 0." / "when there is a
+team saying 'it' can be confusing -- maybe best to refer by name if it has
+one." / "the camera angle could be greater and more zoomed in to watch how the
+factorial robots work. The box the robot is working on should be easier to see
+(while still maintaining the bigger context. But the left third of the view
+isn't needed (pads, houses, marty, ...)" / "the nest is placed on top of the
+notebook in the factorial example."*
+
+**Ruby, in a run.** Waking Ruby by hand is an occasion the camera answers: it
+goes in close on the thought where her work will show. A robot having her
+loosen a pupil's thought was not an occasion at all, so the one moment of the
+teacher's run worth watching happened somewhere off the picture. It asks for
+the same close view now, and hands the camera back when she is done -- measured
+on the teacher: the view asked for is the close thought at the moment Ruby
+flies in, and the follow is back on the next step.
+
+**The picture was four metres wide.** Three things had widened it. The camera
+sat two and a half metres back whatever the screen, so a wide one showed four
+metres of workshop across with the box in the middle of it a fifth of the
+width; the fit that keeps the work area in view held the desk AND the claw in
+the picture even when the robot had walked two metres off to a stack, which
+pulled it back to five; and the pointer leaving the picture leans the camera
+out, which is what reading Marty's card at the left of the screen does. Now:
+the distance comes from the width wanted (about three metres of workshop
+across, so a wide screen comes nearer rather than showing more), only what is
+within arm's length of the subject is fitted in as well, and while a robot runs
+the lean-out is off -- watching is not reaching. The angle is up from forty
+degrees to forty-six. Measured on the factorial robots, same screen: the view
+went from five metres back to one metre seven, and the box from 0.21 of the
+screen's width to 0.31-0.43.
+
+**What a drop does, and who is who.** Told only that a step puts a number in a
+hole, models described adding 1 to 0 as "replacing" it. The workshop's rule is
+now in what Marty is told: a number dropped on a number is arithmetic -- adds,
+or whatever sign it carries -- and only an empty hole is filled. And with a
+team at the desk, "it" is anybody: he is asked to say which robot by name
+wherever the facts give one.
+
+**The notebook steps aside.** It is furniture, dropped into whatever world you
+open, and a world puts its own things where it likes to sit: the factorial
+example's nest stood on top of it. Once a world's things are down, it moves to
+the nearest clear spot; the place you left it is still the place you left it,
+and it goes back there in a world that leaves it room. The dodge needed a fix
+of its own first -- a thing already on the table blocked every spot around it
+with its own footprint, so nothing 0.86 wide could ever find room to move.
+Measured: the notebook now sits 0.62 from the nest, which is exactly the room
+the two of them need.
+
+## Every face of a turned cube reads
+
+*Added 14 Sep. Ken, with a picture of a cube lying with its factors toward
+him: "When a number cube has been rotated ensure that the text is rotated to
+be as easy to read as possible... E.g. the scientific notation face in the
+previous attachment."*
+
+Turning a number lands the face you asked for upright -- the cube is rolled
+about the line of sight until that face's writing stands up -- and left the
+other five wherever the turn put them. Measured on a cube tipped one quarter:
+of its six faces, two were upside down and two ran bottom-to-top up the side
+of the block, the scientific notation among them.
+
+A face is a real pane, so nothing needs deriving: each one is rolled about its
+own normal by the quarter turn whose writing points most nearly the right way
+-- up the screen for a pane seen side-on, and away from the front of the table
+for one you look down on, which is how writing on a table reads and what the
+lid already did before anything was turned. A cube standing as it was made
+scores a perfect one on every face and nothing moves; tipped, turned, or set
+back down turned, it scores one on every face again. The rolls are chosen
+afresh from the pane as built, never added to what the last turn left, so a
+hundred turns cannot drift.
+
+Found on the way, and left alone: a turn made in the first third of a second
+after picking a cube up is undone when the flight into the hand lands, because
+that flight ends by writing the orientation it started with. Press again and
+it takes.
