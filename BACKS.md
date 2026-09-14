@@ -6626,3 +6626,40 @@ stopped the run has said why, and he is told never to guess another.
 **At 1x only.** Faster than 1x the robot is ahead of any sentence and at
 Instant there is nothing to watch, so commentary -- the opening, the lines
 per step, the closing -- keeps to 1x.
+
+## The camera stays with the robot, and the pupil goes to its own desk
+
+*Added 14 Sep. Ken, running the teacher: "The camera moves to show Dusty
+when running the teacher robot. After the pupil's training is finished it
+faces the wrong way in an impossible location (colliding with a platform).
+Marty says 'I'm trying to make the count become 1'... Notice the correct
+switch from the confusing 'I'm' to 'It'. If Marty is reading a comment
+maybe it should preface it. Or was there another cause for 'I'm'?"*
+
+**The camera.** Any line naming a helper moves the camera to frame it --
+Ken asked for that, so a child told to wake Ruby can find her. A line of
+Marty's commentary mid-run names Ruby too, and so the view left the robot
+for the helpers' corner while it was working. While a run is on, the run's
+own view owns the camera: mentions are ignored until it ends. Measured on
+the teacher: the view asked for stays null for the whole run, following
+the robot, where it used to fit the helpers. The refusal at the END of a
+run still moves it, which is what the thought view depends on.
+
+**The pupil's desk.** Two faults, both about where a robot aside stands.
+The first slot aside is 0.35 from the fourth work spot, so the pupil's desk
+stood inside that platform; a slot is now taken only if it clears every
+work spot in play (and the next few the workshop would grow), every stack
+and every other desk -- measured against the whole grid it rejected all
+four slots and fell back to the bad one, so the lookahead is bounded. And
+the pupil was left wherever its last step took it, facing whichever way it
+had walked: measured at (-0.3, 0.36) turned -2.79 radians, in the middle of
+the floor. It walks to its own desk and squares up when the teaching ends,
+as a robot does at the end of a lesson. Measured now: home (1.25, -0.62),
+yaw 0, 2.15 clear of the nearest work spot.
+
+**Who is speaking.** No note was being read: told to comment on a robot,
+the model slipped into the robot's own voice -- "I am trying to make the
+count become 1" -- which reads as Marty claiming the work. Both asks pin
+the pronouns now: Marty is watching, the robot is "it", and a robot's note
+is its author's words, to be quoted as "its note says ..." and never spoken
+as his own.

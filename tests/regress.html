@@ -2820,6 +2820,18 @@ async function teachCheck(D, w) {
   const boxNow = pupilNode?.__bot?.stand?.occupant;
   const taughtForReal = !!pupilNow && pupilNow.steps === 2 && pupilNode?.__bot?.condition?.holes?.[0]?.kind === 'wildNumber'
     && String(boxNow?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '2';
+  // AT ITS OWN DESK, SQUARE, AND CLEAR OF THE WORK SPOTS: it used to be left
+  // wherever its last step took it, facing whichever way it had walked, on a
+  // desk that stood inside a work spot's platform
+  let atDesk = false;
+  {
+    const b2 = pupilNode?.__bot;
+    const spots = [];
+    for (let k = 0; k < 9; k++) { const q = D.spotPoint(k); if (q) spots.push(q); }
+    const near = b2?.stand ? Math.min(...spots.map(q => Math.hypot(b2.stand.point.x - q[0], b2.stand.point.z - q[2]))) : 0;
+    atDesk = !!b2?.home && Math.hypot(b2.root.position.x - b2.home.pos.x, b2.root.position.z - b2.home.pos.z) < 0.06
+      && Math.abs(b2.root.rotation.y) < 0.02 && near > 0.5;
+  }
   // ...and the pupil counts
   let counts = false;
   if (pupilNode) {
@@ -2827,8 +2839,8 @@ async function teachCheck(D, w) {
     D.rounds(3); D.run(); await slowSettle(D, 12000); D.rounds(ROUNDS);
     counts = String(D.mine()?.userData?.holes?.[0]?.thing?.userData?.value?.n) === '5';
   }
-  const ok = lesson && stepsUp && added && pupilLearned && stopped && rewound && ranOnce && taughtForReal && counts && spoke;
-  put((ok ? 'PASS' : 'FAIL') + ' a robot that teaches a robot  (lesson=' + lesson + ' pupil-steps-up=' + stepsUp + ' pupil-adds=' + added + ' pupil-learned=' + pupilLearned + ' stop-teaching=' + stopped + ' rewound=' + rewound + ' teacher-ran-once=' + ranOnce + ' taught-for-real=' + taughtForReal + ' pupil-counts=' + counts + ' pad-speaks=' + spoke + (stopped ? '' : ' steps=' + teacherSteps.join(',')) + ')', ok ? 'pass' : 'fail');
+  const ok = lesson && stepsUp && added && pupilLearned && stopped && rewound && ranOnce && taughtForReal && atDesk && counts && spoke;
+  put((ok ? 'PASS' : 'FAIL') + ' a robot that teaches a robot  (lesson=' + lesson + ' pupil-steps-up=' + stepsUp + ' pupil-adds=' + added + ' pupil-learned=' + pupilLearned + ' stop-teaching=' + stopped + ' rewound=' + rewound + ' teacher-ran-once=' + ranOnce + ' taught-for-real=' + taughtForReal + ' at-its-own-desk=' + atDesk + ' pupil-counts=' + counts + ' pad-speaks=' + spoke + (stopped ? '' : ' steps=' + teacherSteps.join(',')) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
