@@ -1861,7 +1861,10 @@ n-to-1 (the counting-down one), append and
 reverse.
 
 Three more folders hold sets of their own. infinity/ is
-the seven Exploring Infinity activities.
+all eight Exploring Infinity activities, ending with Cantor's
+diagonal — a team of three robots that counts its way to the nth
+term of the nth sequence, because a robot can say hole 1 of
+what it was given but never the nth one.
 sounds/ is tones (where a sound comes from),
 transforms (×2, ×1/2 and ×−1) and
 melody, a robot that knows no notes singing a queue of numbers into a
@@ -10076,9 +10079,24 @@ function settleNotebook() {
   if (!nb || nb.parent !== benchRoot || yardIn) return;
   const at = nb.userData.wants ?? { x: nb.position.x, z: nb.position.z };
   const w = (nb.userData.width ?? 0.86) * (nb.userData.sz ?? 1);
-  const spot = freeSpotNear(at, w, nb);
+  // ...and not onto the desk or a work spot: those are stations, which the
+  // things on the table know nothing about
+  const desk = [];
+  for (const st of Object.values(stations)) {
+    if ((st.kind === 'scratch' || st.id === 'stand') && st.point) desk.push(st.point);
+  }
+  const spot = freeSpotNear(at, w, nb, desk);
   nb.userData.dodged = (spot.x !== at.x || spot.z !== at.z) ? { x: +at.x.toFixed(3), z: +at.z.toFixed(3) } : null;
   putOnBench(nb, spot);
+  // ...and then exactly where the search said. putOnBench slides a thing clear
+  // of what is already down, which is right for a thing you drop and wrong
+  // here -- the spot was chosen against the things AND the work spots, and the
+  // slide undid that, forward onto the robot's own row. Behind that row it
+  // stays, even if that leaves it touching something: a notebook over the
+  // corner of a house is a nuisance, one on a work spot is in the way.
+  const back = (stations.stand?.point?.z ?? 0.58) + 0.45;
+  nb.position.x = spot.x;
+  nb.position.z = Math.max(Math.min(spot.z, BENCH.z1 - 0.2), Math.min(back, BENCH.z1 - 0.2));
 }
 const NOTEBOOK_STATION = {
   id: 'notebook', kind: 'notebook', label: 'the notebook',
@@ -17881,7 +17899,9 @@ function benchSpot() {
 // clear table.
 // `ignore` is the thing being placed when it is ALREADY on the table: its own
 // entry sits at the very spot being tested and blocks every ring around it.
-function freeSpotNear(at, width = 0.3, ignore = null) {
+// `avoid` is places rather than things -- the desk, the work spots -- for a
+// caller that must not land on the robot's own row.
+function freeSpotNear(at, width = 0.3, ignore = null, avoid = null) {
   // AT THE SIZE IT IS SHOWN. A thing's width is its own, before the scale it
   // wears on the table, so two houses shown at twice hand size were placed
   // as if they were small and stood through each other (Ken's screenshot).
@@ -17890,7 +17910,8 @@ function freeSpotNear(at, width = 0.3, ignore = null) {
     r: Math.max(0.12, ((t.userData?.width ?? 0.3) * (t.scale?.x ?? 1)) / 2),
   }));
   const clashes = (x, z) => taken.some(o =>
-    Math.hypot(o.x - x, o.z - z) < o.r + width / 2 - 0.02);
+    Math.hypot(o.x - x, o.z - z) < o.r + width / 2 - 0.02)
+    || (avoid != null && avoid.some(q => Math.hypot(q.x - x, q.z - z) < width / 2 + 0.25));
   if (!clashes(at.x, at.z)) return at;
   // rings sized to the thing, and enough of them for a yard
   const stepX = Math.max(0.18, width * 0.55), stepZ = Math.max(0.14, width * 0.45);

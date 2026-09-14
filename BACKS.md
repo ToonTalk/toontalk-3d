@@ -6788,3 +6788,45 @@ Found on the way, and left alone: a turn made in the first third of a second
 after picking a cube up is undone when the flight into the hand lands, because
 that flight ends by writing the orientation it started with. Press again and
 it takes.
+
+## The eighth activity, and a resort in the yard
+
+*Added 14 Sep. Ken: "Please add activity 8 from the Exploring Infinity page to
+the infinity folder. Do you have ideas about how we might make a variant of
+the Resort Infinity? Perhaps in the yard?"*
+
+**Activity 8 is Cantor's diagonal**, and the reason it was the one left out is
+in the README: a robot here says "hole 1 of what I was given", never "the nth
+one", so the nth term of the nth sequence cannot be addressed. It can be
+COUNTED to, and the counter is a scale. The Diagonal team's box is
+`[Sequences, Current, scale(skipped | to skip), bird]` and the scale's three
+states are its three robots: tipped towards *to skip*, **Skip a term** takes a
+term off the current sequence and vacuums it; balanced, **Hand one on** gives
+the term to the bird, takes *to skip* up one and sets *skipped* one higher
+still, which tips the scale over; tipped towards *skipped*, **Next sequence**
+drops the finished sequence, takes the next box off the Sequences nest, puts
+the nest inside it in the Current hole and sets *skipped* back to nothing.
+Nobody holds a growing box of nests; each sequence is used once and abandoned.
+
+Each robot dozes on exactly what it needs -- Skip and Hand one on look through
+Current for a number, Next sequence looks through Sequences for a box -- so
+the diagonal waits between sequences instead of failing. Measured on the three
+rows the world ships with (1 2 3 4 / 1 3 5 7 / 1 2 4 8): the diagonal reads
+1, 3, 4, and the "Add 1 to it" room turns it into 2, 4, 5, which is none of
+them. Measured also, and worth knowing: hand a box to the bird BEFORE pulling
+its room's lever. A term delivered while the bird is still carrying the box
+can be missed, and then the count is off by one -- the doubling row handed on
+8 where 4 was wanted. The pad says so.
+
+**Resort Infinity, in the yard.** The original is a ToonTalk city: you are the
+clerk, guests arrive on a nest for ever, and you train an address robot that
+says where each new guest's cottage is built -- and, from problem 2, a move
+robot that tells the guests already housed where to move to. Five problems:
+one infinite group; five more guests and no empty cottages (move up five); a
+second infinite group (double, and the newcomers take the odd addresses); three
+groups at once (times four); infinitely many groups (double, and walk the
+diagonal of the square of new guests). The city was the addressing scheme, and
+this workshop has no cities. It has the yard, which is a better fit than a city
+was: a cottage is a house standing on the grass, an address is a place along
+the row, and a move is something every guest walks. The sketch is in the
+infinity README under *What is not here*; not built.

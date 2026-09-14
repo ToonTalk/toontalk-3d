@@ -2,7 +2,8 @@
 
 Ports of the **[Exploring Infinity](https://toontalk.github.io/tt-wasm/tt-wasm/build/infinity/index.html)**
 activities — eight sessions on the cardinality of infinite sets, written for
-ToonTalk and the WebLabs project. Load one with **Import file**.
+ToonTalk and the WebLabs project. All eight are here. Load one with **Import
+file**.
 
 The mathematics is Cantor's and the activity design is Ken Kahn's; what is new
 here is the ToonTalk 3D construction, which differs from the original in one
@@ -19,11 +20,18 @@ structural way described under *Rooms* below.
 | `activity5-above-one` | 5 | Reciprocals, and a one-to-one map falls out |
 | `activity6-all-rationals` | 6 | Merging to get all of them — the capstone |
 | `activity7-any-interval` | 7 | Scale and shift the unit interval; density |
+| `activity8-counting-sequences` | 8 | Cantor's diagonal: the sequences are not countable |
 
 Each is self-contained: pull the **lever** on the first room — and pull it
 again when you have seen enough —
 and the whole pipeline runs. Everything else is already dozing in its own room
 waiting to be woken. The two text pads say what it does and what to ask.
+
+Activity 8 is the exception: there you hand the sequences in yourself, one box
+at a time, and its rooms start stopped. Give a box to the **All Sequences**
+bird first and pull that room's lever after — the team takes a sequence in as
+it arrives and counts from its first term, so a row that has already begun
+would be counted from the wrong place.
 
 ## The robots
 
@@ -43,6 +51,7 @@ Every one of them is the same shape — a box of *somewhere to read from* and
 | Box to Number | `[nest, bird]` | `[a, b]` → the single number `a/b` |
 | Divides 1 | `[nest, bird]` | `n` → `1/n` |
 | Add 10, Halve | `[nest, bird]` | one number dropped on each term |
+| Diagonal | `[nest, nest, scale, bird]` | a team of three; see below |
 
 Two of them are worth looking at twice.
 
@@ -50,6 +59,24 @@ Two of them are worth looking at twice.
 is in hole 1 and then swaps the two birds over; Merge gives away what is on the
 first nest and then swaps the two nests. The swap *is* the alternation. There
 is no state anywhere but the position of the things in the box.
+
+**The Diagonal team counts to the term it wants.** A robot here says "hole 1
+of what I was given", never "the *n*th one", so the *n*th term of the *n*th
+sequence cannot be addressed — it has to be walked to. Its box is
+`[Sequences, Current, scale(skipped | to skip), bird]`, and the scale's three
+states are the three robots:
+
+| tilt | robot | what it does |
+|---|---|---|
+| towards *to skip* | Skip a term | takes a term off Current and vacuums it; one more skipped |
+| balanced | Hand one on | this is the term: to the bird. Then *to skip* up one, and *skipped* one higher still, which tips it over |
+| towards *skipped* | Next sequence | drops the finished sequence, takes the next box off Sequences, puts its nest in Current, sets *skipped* to 0 |
+
+No counter anywhere but the scale, and each robot dozes on exactly what it
+needs — Skip and Hand one on look *through* Current for a number, Next
+sequence looks through Sequences for a box — so the diagonal waits politely
+between sequences. Measured on the three rows the world ships with (`1 2 3 4`,
+`1 3 5 7`, `1 2 4 8`) the diagonal reads 1, 3, 4.
 
 **All Fractions branches on a scale.** Its box is
 `[scale weighing numerator against denominator, bird]`, and a scale's two pans
@@ -91,18 +118,18 @@ Add 1 without either taking terms from the other.
 
 ## What is not here
 
-**Activity 8, Cantor's diagonal.** The Diagonal team needs the *n*th term of
-the *n*th sequence, and a robot's addresses here are fixed paths — it can say
-"hole 1 of what it was given" but not "the *n*th one". Building it would mean
-a robot team that walks a growing box of nests, discarding terms as it counts.
-Possible; not done.
+**Resort Infinity.** Hilbert's hotel as a city of five problems: you are the
+clerk, guests arrive on a nest for ever, and you train a robot that gives each
+new guest the address its cottage is built at — and, from problem 2, a second
+robot that tells the guests already housed where to move to. The original is a
+ToonTalk *city*, with houses used as an addressing scheme. This workshop has no
+cities, but it does have the **yard**, which is a better fit than a city was:
+a cottage is a house standing on the grass, an address is a place along the
+row, and the move robot's answer is a thing every guest walks to. Sketched in
+`BACKS.md`; not built.
 
-**Resort Infinity.** Hilbert's hotel as a city of five problems. It depends on
-ToonTalk's cities and on houses used as an addressing scheme, which this
-workshop's rooms do not reproduce.
-
-**No Copies**, which drops the duplicate fractions (`2/6` never gets past,
-because `1/3` already did). Run Activity 4 and you will see the duplicates it
+**No Copies**, which drops the duplicate fractions: `2/6` never gets past,
+because `1/3` already did. Run Activity 4 and you will see the duplicates it
 exists to remove — `2/4` after `1/2`, `3/6` after `1/2` again. Detecting them
 needs a robot that remembers everything it has seen, which is a notebook and a
 lookup, and is a good exercise rather than a finished world.
