@@ -7085,3 +7085,25 @@ already trained, for a clerk who would rather read one than write one. Problem
 2 says the same of "Move up five". The fence pad described one row of eleven
 cottages when eleven were standing at the gate in two huddles; it now says
 what the two huddles are and that the row forms as each one is housed.
+
+## A name plate through a duck's head, and a model that said nothing
+
+*Added 14 Sep. Ken imported the Khronos duck and sent a picture of its name
+plate cutting straight through its head; and: "there are no tooltips for 3d
+models".*
+
+Every thing but a box, a bird, a nest and a field takes its plaque at a fixed
+(0, 0.27, 0.06) -- which clears the workshop's own small models and sits
+squarely inside a duck read off a file. A model is whatever shape it came as,
+so the plate is now measured onto it: over its top, just in front of its face,
+centred across. And a model out of a FILE is empty when it is named -- the
+loader is still reading -- so the name goes on again when its meshes arrive.
+
+The tooltip was simply missing: `model` fell off the end of the list to
+`return null`, which mattered little while the only models were the
+workshop's own and matters now that anybody can drop a duck on the page. It
+says what it is, how it was made (out of a glTF file, or built of solid
+shapes) and how big it stands, then the usual half: pick it up, + and - and
+the arrows are its own and are saved with it, and from there it is a thing
+like any other. Both halves measure the model and not the plate standing over
+it. Check: modelFile (name-stands-clear), padTip.

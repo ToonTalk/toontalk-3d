@@ -4355,6 +4355,7 @@ function exitDoorText() {
   return prev.userData.label ? `Back to ${prev.userData.label}` : 'Back out';
 }
 function paintExitSign() { if (exitDoor?.__sign) exitDoor.__sign.__paint(exitDoorText()); }
+const _labM = new THREE.Matrix4();
 function setThingLabel(thing, text) {
   thing.userData.label = text || null;
   if (thing.userData.kind === 'room') return paintRoomLabel(thing);
@@ -4396,6 +4397,19 @@ function setThingLabel(thing, text) {
     const { d } = padFaceSize(thing);
     plate.rotation.x = -Math.PI / 2;
     plate.position.set(0, 0.028, d / 2 + 0.1);
+  }
+  else if (kind === 'model') {
+    // Measured onto the thing: over its top, just in front of its face, and
+    // centred on it across. A model read from a file may be any shape at all.
+    const bb = new THREE.Box3().setFromObject(thing);
+    if (bb.isEmpty()) plate.position.set(0, 0.27, 0.06);   // its meshes are still being read
+    else {
+      thing.updateMatrixWorld();
+      bb.applyMatrix4(_labM.copy(thing.matrixWorld).invert());
+      plate.position.set((bb.min.x + bb.max.x) / 2,
+                         bb.max.y + w / 8 + 0.02,
+                         Math.max(bb.max.z + 0.01, 0.02));
+    }
   }
   else plate.position.set(0, 0.27, 0.06);
   thing.add(plate);
@@ -7479,6 +7493,9 @@ function fillModel(g, src) {
       node.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
       g.add(node);
       g.userData.width = Math.max(0.12, size.x * k);
+      // ...and the name goes on again now that there is something to measure:
+      // it was put on an empty group while the file was still being read.
+      if (g.userData.label) setThingLabel(g, g.userData.label);
       setPick(g, { kind: 'thing', thing: g });     // the meshes that just arrived answer for it too
       refreshUI();
     }, failed);
@@ -20560,6 +20577,22 @@ function tipForInner(t) {
     }
     if (ud.kind === 'die') {
       return `A die — drop it on a number and the number re-rolls to anything from 1 to ${ud.faces}; the die is spent in the throw. Click to pick it up, then type to change its faces.`;
+    }
+    if (ud.kind === 'model' && !TIP) {
+      const named = ud.label ? `${LQ}${ud.label}${RQ}` : 'A model';
+      // the model itself, not the name plate standing over it
+      const bb = new THREE.Box3();
+      t.thing.traverse(o => { if (o.isMesh && o !== t.thing.__labelNode) bb.expandByObject(o); });
+      const big = bb.isEmpty() ? 0
+        : Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
+      const made = ud.src ? 'read out of a glTF file' : 'built out of solid shapes';
+      return `${named} \u2014 a model, ${made}`
+        + (big ? `, ${Math.round(big * 100)} cm across as it stands` : '') + '.'
+        + TIP_RULE
+        + 'Click to pick it up. + and \u2212 resize it, the arrows turn it, and both are the '
+        + 'model\u2019s own \u2014 saved with it, and with every copy. Type while holding it to '
+        + 'name it. It is a thing like any other from there: give it a behaviour and it moves, '
+        + 'drop it in a box, file it on a page, carry it out to the yard, show it to a robot.';
     }
     return null;
   }

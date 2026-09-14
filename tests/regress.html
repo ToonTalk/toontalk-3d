@@ -3097,10 +3097,28 @@ async function modelFileCheck(D, w) {
   D.readMedia(new w.File([blob], 'mimi_v1.glb', { type: 'model/gltf-binary' }));
   await untilRead(8);
   const m = onBench();
-  const bb = m ? new D.THREE.Box3().setFromObject(m) : null;
-  const side = bb ? Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z) : 0;
+  // the BODY, not the name plate standing over it: the plate is a child, and
+  // measuring the lot made a 0.34 m model 0.44 m tall
+  const bb = m ? new D.THREE.Box3() : null;
+  if (m) m.traverse(o => { if (o.isMesh && o !== m.__labelNode) bb.expandByObject(o); });
+  const side = bb && !bb.isEmpty()
+    ? Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z) : 0;
   const arrived = !!m && meshes(m) > 8 && m.userData.label === 'mimi_v1'
     && Math.abs(side - 0.34) < 0.02;                  // sized to the table, whatever it was made in
+  // ...and its NAME stands clear of it. Every thing but a box, a bird, a nest
+  // and a field takes its plaque at a fixed (0, 0.27, 0.06) -- fine for the
+  // workshop's own small models, and squarely inside an imported duck's head
+  // (Ken). A model is whatever shape it came as, so the plate is measured
+  // onto it -- and measured AGAIN when the loader has finished, since the
+  // thing is named while it is still empty.
+  const plate = m?.__labelNode ?? null;
+  let named = false;
+  if (plate && bb) {
+    const pb = new D.THREE.Box3().setFromObject(plate);
+    const body = new D.THREE.Box3();
+    m.traverse(o => { if (o.isMesh && o !== plate) body.expandByObject(o); });
+    named = !body.isEmpty() && (pb.min.y >= body.max.y - 0.005 || pb.min.z >= body.max.z - 0.005);
+  }
   // ...and it goes into the saved world and comes back out of it
   const was = meshes(m);
   const rec = JSON.parse(JSON.stringify(D.worldOut()));
@@ -3137,14 +3155,15 @@ async function modelFileCheck(D, w) {
   D.readMedia(new w.File([JSON.stringify(squeezed)], 'Duck.gltf', { type: 'model/gltf+json' }));
   await frames(D, 60);
   const nothingLeft = count() === n0;
-  const ok = arrived && kept && quiet && arrows && told && nothingLeft;
+  const ok = arrived && kept && quiet && arrows && told && nothingLeft && named;
   put((ok ? 'PASS' : 'FAIL') + ' a model out of a file, and pictures kept out of the voice  (meshes='
       + was + ' sized=' + side.toFixed(2) + ' saved-and-back=' + kept
       + (kept ? '' : ' [src-saved=' + !!saved?.src + ' src-bytes=' + (saved?.src || '').length
          + ' came-back=' + backNow + ' later=' + meshes(back) + ' same-node=' + (back === m)
          + ' named=' + JSON.stringify(back?.userData.label) + ']')
       + ' spoken=\u201c' + said + '\u201d arrows-kept=' + arrows
-      + ' says-why=' + told + ' leaves-nothing=' + nothingLeft + ')', ok ? 'pass' : 'fail');
+      + ' says-why=' + told + ' leaves-nothing=' + nothingLeft
+      + ' name-stands-clear=' + named + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
