@@ -6988,3 +6988,100 @@ The Duck's glTF-Binary folder holds Duck.glb, one file, 120 KB -- it comes in
 and stands on the table at 0.34 x 0.32 x 0.24. The glTF-Embedded variant works
 too. Draco itself would want three quarters of a megabyte of decoder bundled
 into every build, so it is asked about rather than assumed.
+
+## The yard is not a workbench, and a tooltip has two halves
+
+*Added 14 Sep, from a batch of Ken's while playing Resort Infinity.*
+
+**What you carry floated a metre over the grass.** The plane a held thing
+slides along was measured once, from the robot's reach at the TABLE, and never
+moved again -- so out in the yard, where the ground is a metre lower,
+everything you picked up rode at table height. Seen from a camera looking down
+that is not "slightly high": it is drawn a long way from the pointer, which is
+how Ken's pad "appeared behind a house when I didn't move it there", and why
+it did not seem to follow the mouse. The plane now comes from the surface
+things actually rest on. Measured: indoors bench 0.84 and hand 1.11 (0.27
+above); yard ground 0.02 and hand 1.11 (1.09 above) before, 0.29 (0.27 above)
+after. Check: yardHand.
+
+**And the words follow the ground.** "Your workbench", "put it down on the
+bench", "set it on the table" -- all of them said indoors things while
+standing on grass. Outside they say the grass, and the workbench's tooltip
+says what the yard is FOR (room: a village, a zoo, a row of cottages) rather
+than repeating the bench's own sentence. A robot may put things down out
+there, which it may not do indoors, so that is what the robot line says too.
+
+**A world may keep its whole point outside.** Resort Infinity opens on a table
+with one pad on it; the eleven cottages, the desk, the bell and the clerks are
+all on the grass. Opening a world now counts what is out there and says so --
+"24 things are out in the YARD, through the green back door, which is where
+this one is meant to be played".
+
+**A tooltip has two halves.** What THIS thing is, then how anything of its
+kind is worked, with a rule between them so the eye can skip the half it has
+read a hundred times. A pad's first half is what is written on it -- not "A
+pad", since the pad is what the pointer is on -- and the second begins "Click
+to pick the pad up". The text is still put in as TEXT (a pad's own writing
+goes in a tooltip) and the rule is a marker in the string that becomes an
+<hr> element, never markup.
+
+**A behaviour can carry a note.** A robot has had one since 13 Sep; Ken asked
+for the same on a gadget, because "the guests" told him only what any
+behaviour says when what it IS is the whole resort's machinery. The note is
+written in the same field on the card -- hold the behaviour and it says *a
+note about this behaviour* -- travels with it into a saved world, a saved
+thing and every copy, and is the first thing its tooltip says.
+
+**A bare operation says its own name.** sin and cos ignore the number they are
+written on -- the badge is the whole message -- so a lone sine pad wearing a
+"0" was a number that meant nothing. It says "sine" across its faces instead,
+and drops the corner badge that would only say the same word again. "sin" is
+what you type; "sine" is what it is. The making-of's open-gap list said
+operation-only pads were still to come: for these two they have arrived, and
+for plus and times they never will -- there is nothing for a bare plus to be
+without its number.
+
+**The camera looked away at the one moment something happened.** A copy is a
+trip to Mimi: the claw sets the original on her platform, she scans it for
+most of a second, and the claw takes it back. While she scans the claw is
+EMPTY, and the follow fell through to the robot's own stand across the desk,
+where nothing at all was going on -- away and back, for nothing (Ken). The
+camera's subject is now the claw, else the copier while she has something of
+its, else what the robot was given.
+
+**And a space that went nowhere visible.** SPACE switches on the thing in your
+hand if there is one, and otherwise whatever the pointer is over. So with the
+desk box in your hand -- which is exactly where problem 1 has you -- pointing
+at "the guests" and pressing SPACE typed a space into the BOX's name, and the
+behaviour never started. Nothing said so. It says so now: "That space went
+into the box's name -- whatever is in your hand takes the keys. Put it down
+first, and SPACE switches on 'the guests'." Measured with an empty hand: six
+letters on the post and 24 robots running.
+
+**Your hand is yours while the houses run.** Ken, with zeno going: "picking
+up and inspecting the text pads stopped working too". A house's own robots
+call the same "what is in the hand now" bookkeeping for their CLAW -- which is
+right, since that is what a lesson types on -- but they call it from inside a
+pushed world, where the hand is the inner world's and yours is not visible at
+all. So a second after the two levers went down, the card that reads a held
+pad lost its Read button and the pad in your hand stopped being a pad as far
+as the card was concerned. The card is about the hand, and it is left alone
+from inside a pushed world. Pre-existing, not new: measured the same on the
+previous build. Check: zenoCheck (your-hand-stays-yours).
+
+**And the gap list was out of date about scales.** Ken: "don't they do that
+already?" They do: a scale with a thousand in the other pan judges "a number
+bigger than a thousand", puzzle 18 is judged exactly that way, and a robot
+reads a scale's three states as its condition. What is actually missing is a
+scale that gives a NUMBER -- how much heavier -- which is what the entry now
+says.
+
+**Resort Infinity's pads.** Problem 1 never said where a box to train on comes
+from (it is the desk itself, lying on the grass), so it now says: take a
+little robot, set it on the grass, click the desk to pick it up and drop it ON
+the robot. It says what to watch for -- a letter landing on the post for each
+guest -- and it says plainly that "Next address" beside it is the same answer
+already trained, for a clerk who would rather read one than write one. Problem
+2 says the same of "Move up five". The fence pad described one row of eleven
+cottages when eleven were standing at the gate in two huddles; it now says
+what the two huddles are and that the row forms as each one is housed.

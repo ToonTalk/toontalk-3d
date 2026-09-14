@@ -114,6 +114,9 @@ def guest_gadget(k, number, lid, gid):
 
     return {'kind': 'text', 'text': 'guest %d' % number, 'gadget': True,
             'lid': gid, 'evt': 'evt-' + gid, 'boundTo': lid,
+            'note': ('Guest %d\u2019s own three robots: ask the desk where to live, stand at '
+                     'the address it is given, and ask again when the bell rings. They work on '
+                     'guest %d\u2019s cottage, and on nothing else.' % (number, number)),
             'look': {'bg': '#2b2238', 'ink': '#ecd9ff', 'font': 'sans', 'h': 0.34},
             'panel': {'kind': 'world', 'v': 3, 'bench': [], 'stations': {'stand': work},
                       'active': dict(ask, team=[stand, move])}}
@@ -127,9 +130,9 @@ def cottage(k, number, group):
                  'world': {'kind': 'world', 'v': 3, 'bench': [], 'stations': {}, 'active': None}}
 
 
-def macro(name, lid, gadgets, look):
+def macro(name, lid, gadgets, look, note=None):
     return {'kind': 'text', 'text': name, 'gadget': True, 'lid': lid, 'evt': 'evt-' + lid,
-            'look': look,
+            'look': look, 'note': note,
             'panel': {'kind': 'world', 'v': 3, 'stations': {}, 'active': None,
                       'bench': [{'thing': g, 'x': -0.6 + 0.3 * (i % 4), 'z': 1.3 + 0.3 * (i // 4)}
                                 for i, g in enumerate(gadgets)]}}
@@ -180,19 +183,31 @@ P1 = ('PROBLEM 1\nThe first infinite group\n\n'
       'On the grass is the desk: a box\n'
       'holding one nest, THE POST.\n'
       'Every guest writes to it.\n\n'
-      'Train a robot on that box to\n'
-      'take the [number, bird] letter\n'
-      'off the post and give the bird\n'
-      'the address. Give the box to\n'
-      'your robot and press Start:\n'
-      'with the nest empty it dozes,\n'
-      'which is what a clerk does.\n\n'
+      'THE BOX TO TRAIN ON IS THAT\n'
+      'DESK. Take a little robot from\n'
+      'its stack, set it on the grass,\n'
+      'then click the desk to pick it\n'
+      'up and drop it ON the robot:\n'
+      'its thought bubble opens and\n'
+      'you are teaching it.\n\n'
+      'Three moves: take the [number,\n'
+      'bird] letter off the post, copy\n'
+      'the number, give the copy to\n'
+      'the bird. Leave the bubble and\n'
+      'press Start. With the post\n'
+      'empty it dozes, which is what a\n'
+      'clerk does.\n\n'
       'Then press SPACE on the pad\n'
-      '"the guests": they ask, and\n'
-      'they house themselves.\n\n'
-      'Where should guest 1 live?\n'
-      '("Next address", on the grass,\n'
-      'is one answer.)')
+      '"the guests". Watch the post: a\n'
+      'letter lands on it for each\n'
+      'guest, and the clerk answers\n'
+      'them one at a time.\n\n'
+      'Where should guest 1 live?\n\n'
+      'Rather read an answer than\n'
+      'write one? "Next address" on\n'
+      'the grass is ALREADY trained:\n'
+      'drop the desk on it and press\n'
+      'Start.')
 
 P2 = ('PROBLEM 2\nFive more, and no room\n\n'
       'Five more guests arrive, and\n'
@@ -208,6 +223,10 @@ P2 = ('PROBLEM 2\nFive more, and no room\n\n'
       'team now, and a team runs\n'
       'whichever member fits the\n'
       'letter on top. Start it again.\n\n'
+      'That answer is on the grass\n'
+      'too, already trained: "Move up\n'
+      'five". Drop it on your clerk\n'
+      'and they are a team.\n\n'
       'Ring the bell: drop a ding on\n'
       'the bell bird, and watch the\n'
       'row shuffle up.\n\n'
@@ -221,11 +240,18 @@ P2 = ('PROBLEM 2\nFive more, and no room\n\n'
       'hundred rooms?')
 
 FENCE = ('THE ROW GOES ON\n\n'
-         'Eleven cottages is what fits\n'
-         'on this grass. The row does\n'
-         'not stop at the fence: guest\n'
-         '12 stands past it, and guest\n'
-         'a thousand a long way past.\n\n'
+         'Eleven cottages wait at the\n'
+         'gate in two huddles: the six\n'
+         'of problem 1, and five more\n'
+         'behind them for problem 2.\n'
+         'Once a cottage has asked the\n'
+         'desk and gone to its address\n'
+         'it joins ONE row, counted\n'
+         'from the left.\n\n'
+         'That row does not stop at the\n'
+         'fence: guest 12 would stand\n'
+         'past it, and guest a thousand\n'
+         'a long way past.\n\n'
          'Nothing in these robots knows\n'
          'how many guests there are.\n'
          'That is the whole of it.')
@@ -248,10 +274,18 @@ for k in range(1, 6):                                      # ...and five more
 
 bench_yard = gates + [
     {'thing': macro('the guests', 'M1', g1,
-                    {'bg': '#1f3b2c', 'ink': '#d9ffe8', 'font': 'sans', 'h': 0.42}),
+                    {'bg': '#1f3b2c', 'ink': '#d9ffe8', 'font': 'sans', 'h': 0.42},
+                    note=('The resort\u2019s own machinery, which you never need to touch: '
+                          'six behaviours, one per cottage, three robots each. SPACE here is the '
+                          'six guests arriving at once \u2014 they write to the post and house '
+                          'themselves as soon as a clerk answers. Nothing in them knows how '
+                          'many guests there are.')),
      'x': 3.3, 'z': 6.6},
     {'thing': macro('five more guests', 'M2', g2,
-                    {'bg': '#3b2c1f', 'ink': '#ffe8d9', 'font': 'sans', 'h': 0.42}),
+                    {'bg': '#3b2c1f', 'ink': '#ffe8d9', 'font': 'sans', 'h': 0.42},
+                    note=('The same machinery for problem 2\u2019s five newcomers. Switch it '
+                          'on only once the bell has moved everybody up and cottages 1 to 5 '
+                          'stand empty.')),
      'x': 3.3, 'z': 7.4},
 
     {'thing': DESK(), 'x': -4.3, 'z': 3.4},

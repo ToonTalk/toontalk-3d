@@ -159,6 +159,7 @@
          white-space: pre-line;
          color: var(--ink); background: rgba(10, 13, 19, 0.92);
          border: 1px solid var(--edge); border-radius: 8px; }
+  #tip hr { border: none; border-top: 1px solid var(--edge); margin: 6px 0 5px; opacity: 0.7; }
 </style>
 </head>
 <body>
@@ -863,6 +864,20 @@ rooms work as well, all the way down.
 
 Try it: drop the mini robot on the room, then the 4.
 Click the roof to make the walls glass. Click the door to step inside.
+
+What a tooltip says
+Point at anything and the card under the pointer has two halves with a
+line between them: what THIS one is — the words on the pad, the note
+somebody wrote on a behaviour, how many things ride on it — and then how
+anything of its kind is worked. The second half is the same every time, so
+once you know it your eye can stop at the line.
+
+A behaviour can carry a note of its own, the way a robot does: hold
+it and the field at the top of Trained actions says a note about
+this behaviour. Write what it is for in your own words; it goes with the
+behaviour into a saved world, a saved thing and every copy, and it is the
+first thing its tooltip says. A world that ships behaviours you are not meant
+to open — a resort's cottages, a game's pieces — can say so there.
 
 Bringing files in
 Import file in the ⋮ menu, and dropping a file anywhere on the
@@ -2389,6 +2404,12 @@ function setSmartCam(on) {
   try { localStorage.setItem('nano-toontalk.smartcam', smartCam ? '1' : '0'); } catch {}
 }
 let edgePointer = false;    // the pointer near a side of the screen: lean back out
+// WHAT THE ROBOT IS ATTENDING TO: what the claw carries, else the copier
+// while she has something of its, else what it was given. Mimi was the one
+// missing from that list, and she is the only station that goes on working
+// after the claw lets go.
+const camSubject = () => clawHeld ?? stations.copyIn.occupant ?? stations.copyOut.occupant
+  ?? stations.stand.occupant;
 function smartCamWant() {
   if (!smartCam || straightOn) return false;
   if (camShowFn) return true;                 // a view an occasion asked for, in any mode
@@ -2402,7 +2423,7 @@ function smartCamWant() {
     // back out (Ken's picture of the factorial robots, a third of it pads and
     // houses). Watching is not reaching. Orbiting still takes the camera.
     if (speed === Infinity || offstage() || (edgePointer && mode !== 'replay')) return false;
-    return !!(clawHeld || stations.stand.occupant);
+    return !!camSubject();
   }
   return false;
 }
@@ -2440,8 +2461,7 @@ function smartCamPose() {
   const dir = camera.position.clone().sub(orbit.target).normalize();
   if (camShowFn && !(mode === 'world' && (rubyActive || dustyActive) && hoverBubble)) return camShowFn();
   if (mode !== 'world') {
-    // the action: what the claw carries, else what is in the robot's hands
-    const subject = clawHeld ?? stations.stand.occupant;
+    const subject = camSubject();
     _scBox.setFromObject(subject);
     const look = _scBox.isEmpty() ? subject.getWorldPosition(new THREE.Vector3())
                                   : _scBox.getCenter(new THREE.Vector3());
@@ -3046,6 +3066,11 @@ const OPS = ['+', '-', '*', '/', '^', 'mod', 'set', 'sin', 'cos', 'root'];
 // number they are dropped ON: a badge saying "sin" turns 30 into sin 30. They
 // are the operations that are INEXACT BY NATURE.
 const UNARY_OPS = ['sin', 'cos'];
+// ...and since they ignore it, the number they are written on is not worth
+// reading: a lone sine pad wearing a "0" is a number that means nothing. It
+// says its own NAME instead, in full -- "sin" is what you type, "sine" is
+// what it is.
+const OP_NAME = { sin: 'sine', cos: 'cosine' };
 const OP_TELLS = {
   '+': 'Dropped on a number, this one adds to it.',
   '-': 'Dropped on a number, this one takes itself away.',
@@ -3937,6 +3962,12 @@ function makeNumber(value, op = '+', lite = false) {
       // starts at 56: the badge lay across the first line of every long number
       // ("hundred seventy-six" with a plus sign through it). At radius 20
       // centred on 36 it stops at 56, which is where the writing begins.
+      // ...unless the face itself is the operation's name, in which case the
+      // badge is the same word twice on one card.
+      if (g.userData.faceText == null && UNARY_OPS.includes(g.userData.op)) {
+        face.tex.needsUpdate = true;
+        return;
+      }
       c.beginPath(); c.arc(36, 36, 20, 0, Math.PI * 2);
       c.fillStyle = st.ink; c.fill();
       c.fillStyle = st.face;
@@ -3946,6 +3977,11 @@ function makeNumber(value, op = '+', lite = false) {
     face.tex.needsUpdate = true;
   };
 
+  // What is written across the faces INSTEAD of the digits: the "?" of an
+  // "any number" wildcard, and the NAME of an operation that ignores the
+  // number it rides on.
+  const faceWords = () => g.userData.faceText
+    ?? (UNARY_OPS.includes(g.userData.op) ? OP_NAME[g.userData.op] : null);
   function draw() {
     if (!built) return;
     const st0 = OP_STYLE[g.userData.op] || OP_STYLE['+'];
@@ -3961,7 +3997,7 @@ function makeNumber(value, op = '+', lite = false) {
     // name on a thing's plaque, and it is the same field on a nest, a bird, a
     // box and a sound. Sharing them meant that naming a counter "misses"
     // painted the word over its digits the next time it was added to.
-    const label = g.userData.faceText;
+    const label = faceWords();
     const v = g.userData.value;
     const lod = g.__lod;
     // WHAT EACH FACE SAYS, kept beside the picture of it. A face is a canvas,
@@ -4028,7 +4064,7 @@ function makeNumber(value, op = '+', lite = false) {
     c.beginPath(); c.moveTo(fx - w, 143); c.lineTo(fx + w, 143); c.stroke();
   }
   function paintSecondary() {
-    const label = g.userData.faceText;
+    const label = faceWords();
     const v = g.userData.value;
     const lod = g.__lod;
     if (label != null || !v) {
@@ -8099,9 +8135,12 @@ function sendViaBird(bird, thing) {
 // for a pad on the table and for one filed on a notebook page, because they
 // are the same pad and reading it is the same act.
 const TIP_PER = 600;
+// The thing being pointed at is a pad, which is plain to see, so the tip
+// begins with what is WRITTEN on it rather than with "A pad".
+const TIP_RULE = '\u241F';
 function padTip(words, node) {
   if (!words) return 'a blank pad';
-  if (words.length <= TIP_PER) return `A pad “${words}”`;
+  if (words.length <= TIP_PER) return `“${words}”`;
   if (tipPager.node !== node) { tipPager.node = node; tipPager.page = 0; }
   const pages = Math.ceil(words.length / TIP_PER);
   tipPager.pages = pages;
@@ -10546,6 +10585,7 @@ function specOf(thing, full = false) {
       if (ud.stuck) sp.stuck = true;
       if (ud.facing) sp.facing = ud.facing;
       if (ud.gadget) sp.gadget = true;
+      if (ud.note) sp.note = ud.note;
       if (ud.speed) sp.speed = { ...ud.speed };
       if (ud.width != null) sp.width = ud.width;
       if (ud.aspect != null) sp.aspect = ud.aspect;
@@ -10623,6 +10663,7 @@ function buildThing(spec) {
     if (spec.label) setThingLabel(t, spec.label);
     if (spec.boundTo) t.userData.boundTo = spec.boundTo;
     if (spec.gadget) t.userData.gadget = true;
+    if (spec.note) t.userData.note = spec.note;
     if (spec.ghost) t.userData.ghost = true;
     if (spec.fixed) t.userData.fixed = true;
     if (spec.stuck) t.userData.stuck = true;
@@ -10754,6 +10795,7 @@ function copyThingRaw(t) {
   else if (ud.kind === 'text') {
     c = makeText(ud.text);
     if (ud.gadget) c.userData.gadget = true;
+    if (ud.note) c.userData.note = ud.note;
     // the colours come too: a copied label used to come back as plain paper
     if (ud.look) { c.userData.look = { ...ud.look }; c.applyLook(); }
     if (ud.img) c.setImage(ud.img);
@@ -14952,6 +14994,11 @@ function parkHand() {
     .addScaledVector(_pk.up, PARK_NDC.y * h);
   handNode.updateMatrixWorld();
 }
+// OUT HERE THE BENCH IS THE GROUND. The table stayed indoors and the grass
+// took its place, so every sentence that names the bench has to follow.
+const onGrass = () => !!yardIn && worldTrail.length === yardIn.depth;
+const benchWord = () => (onGrass() ? 'grass' : 'bench');
+const tableWord = () => (onGrass() ? 'grass' : 'table');
 function moveHand(ev, hoverY = null) {
   if (!reachLocal || pointerOff) return;
   // a door in hand slides along the floor under the pointer
@@ -14971,7 +15018,11 @@ function moveHand(ev, hoverY = null) {
   // carried thing drifts from whatever you clicked, since the camera looks in
   // at an angle. But a tall pile would swallow whatever you took off it, so
   // the hand rides up to meet whatever the pointer is actually over.
-  const base = reachLocal.y + 0.15;
+  // ...from the surface things are actually resting on. Indoors that is the
+  // table (BENCH_TOP + half a cube IS reachLocal.y, the robot's grip); in the
+  // yard it is the grass, a metre lower, and the hand has to come down with
+  // it or everything carried outside floats.
+  const base = BENCH_TOP + CUBE / 2 + 0.15;
   handPlane.constant = -Math.min(base + 2.4,
     Math.max(base, hoverY == null ? base : hoverY + 0.07));
   const r = renderer.domElement.getBoundingClientRect();
@@ -15318,13 +15369,30 @@ function putBackHeld() {
   refreshUI();
 }
 function noteHeld(t = inHand()) {
-  document.getElementById('held')?.classList.toggle('pad', t?.userData?.kind === 'text');
+  // THE CARD IS ABOUT WHAT YOU ARE HOLDING. A robot's claw calls this too --
+  // it is what a lesson types on -- and while one RUNS that quietly took the
+  // Read button off your own pad the moment the claw picked up anything that
+  // was not a pad (Ken: "picking up and inspecting the text pads stopped
+  // working", with zeno running). The claw's business is the lesson; the
+  // card's is the hand.
+  // ...and never from inside a pushed world: a house's own robots call this
+  // while the outer world is stashed, where inHand() is the INNER world's
+  // hand and yours is not visible at all.
+  const shown = inHand();
+  if (!offstage()) {
+    document.getElementById('held')?.classList.toggle('pad', shown?.userData?.kind === 'text');
+  }
   heldYaw = 0; heldPitch = 0; heldTilt = 0; heldTiltSaid = false;   // whatever was turned before, this is new
   if (t) delete t.__faceBuf;           // typing on a die starts a fresh count
   valueAtPickup = t?.userData.value ?? null;
   opAtPickup = t?.userData.op ?? '+';
   holesAtPickup = t?.userData.holes?.length ?? 0;
   textAtPickup = t?.userData.text ?? null;
+  // A BEHAVIOUR IN YOUR HAND puts its note on the card, the way a robot at
+  // the bench does; the card is only rebuilt when the robot changes, so a
+  // pickup (or a putting-down) has to ask for it -- but only for the hand's
+  // own thing, never for every one of a running claw's.
+  if (t === shown && !offstage()) renderProgram();
 }
 
 // --- the user acting directly (no robot involved) --------------------------
@@ -17115,6 +17183,7 @@ function thingOutRaw(t) {
                 md: ud.md || undefined,     // a rendered page stays a page
                 mdPage: ud.mdPage || undefined,
                 gadget: ud.gadget || undefined,
+                note: ud.note || undefined,
                 boundTo: ud.boundTo || undefined,
                 look: ud.look ? { ...ud.look } : undefined };
     if (t.__subs?.length) {
@@ -17348,6 +17417,7 @@ function thingInRaw(o, nests, birds) {
     if (o.mdPage) t.userData.mdPage = o.mdPage;
     t.setText(o.text ?? '');            // of a page must already be a page
     if (o.gadget) t.userData.gadget = true;
+    if (o.note) t.userData.note = o.note;
     if (o.boundTo) t.userData.boundTo = o.boundTo;
     // applied, not just remembered: shape and canvas are decided in applyLook,
     // so a saved label came back the right colours at the wrong size without it
@@ -18912,12 +18982,22 @@ function renderProgram(list = null) {
   // is on. Typing writes it straight onto the robot; a robot with none shows
   // the invitation. The field is not rewritten under a hand that is typing
   // in it, and it takes no key from the workshop (typingInAField).
+  // ...and the same field writes a BEHAVIOUR's note when one is in your hand
+  // and no robot is on the card: a gadget is a thing somebody wrote, and what
+  // it is for is not guessable from "the guests".
+  // (NOT inHand(): this function destructures an `inHand` FLAG out of
+  // cardBot() a few lines up, which shadows it. Your own hand is what is
+  // meant here anyway -- a note is written in the world, not in a lesson.)
+  const gadgetHeld = !about && isGadget(held) ? held.userData : null;
+  const noteFor = about ?? gadgetHeld;
   const note = $('botNote');
   if (note) {
-    note.classList.toggle('on', !!about);
-    if (about) {
-      if (document.activeElement !== note || note.__for !== about) note.value = about.note ?? '';
-      note.__for = about;
+    note.classList.toggle('on', !!noteFor);
+    note.placeholder = gadgetHeld ? 'a note about this behaviour — click to write one'
+                                  : 'a note about this robot — click to write one';
+    if (noteFor) {
+      if (document.activeElement !== note || note.__for !== noteFor) note.value = noteFor.note ?? '';
+      note.__for = noteFor;
       fitNote(note);
     } else { note.__for = null; note.value = ''; }
     if (!note.__wired) {
@@ -19037,21 +19117,21 @@ function refreshUI() {
       ? (HAND.userData.op === '+'
           ? 'digits set it, − negates; * / ^ or the words “mod” and “set” say what it does; arrows turn it'
           : `digits set it, − negates; ${otherOps()} change what it does; arrows turn it`)
-      : kind === 'robot' ? 'put it on the table, or on another robot'
+      : kind === 'robot' ? `put it on the ${tableWord()}, or on another robot`
       : kind === 'box' ? (HAND.userData.holes.length <= 9
           ? 'a digit sets its holes; letters name it'
           : 'letters name it; drop it on a box to join')
       : kind === 'room' ? (HAND.userData.panel
-          ? 'set it down anywhere on the bench — the knob folds it away'
+          ? `set it down anywhere on the ${benchWord()} — the knob folds it away`
           : 'set it down; drop a robot in, then things for it to work on')
       : kind === 'notebook' ? 'set it down and drop things on its pages'
       : kind === 'text' ? 'type to write; Ctrl+↑↓ resizes it; Ctrl+C copies the words; drop on a pad’s edge to join'
       : kind === 'text' ? (reading ? 'click here to lower it; type to write on it'
           : 'click here to hold it up and read it; type to write on it')
-      : kind === 'bird' || kind === 'nest' ? 'type to name it; put it down on the bench'
+      : kind === 'bird' || kind === 'nest' ? `type to name it; put it down on the ${benchWord()}`
       : kind === 'die' ? 'type how many faces it should have; drop it on a number to re-roll that number'
       : kind === 'sound' ? 'SPACE plays it, “.” stops it; a [frequency, duration, shape] box makes it sing; ×2 speeds it'
-      : 'put it down on the bench';
+      : `put it down on the ${benchWord()}`;
   }
   if (hintTimer || attnHeld) return;
   const holdingBot = HAND?.userData.kind === 'robot';
@@ -19059,10 +19139,10 @@ function refreshUI() {
     mode === 'replay' ? 'Watching it repeat what it learned…' :
     training ? (HAND ? 'Tell it where to put that — its own things, or the copier.'
                      : 'Direct it on its own things, a stack for a new one, or the copier. Every move is remembered.') :
-    holdingBot ? 'Set the little robot on the table, or drop it on another robot to team up.' :
-    held ? (activeBot ? (program.length ? 'Click the robot to give it this to work on, or the bench to put it down.'
+    holdingBot ? `Set the little robot on the ${tableWord()}, or drop it on another robot to team up.` :
+    held ? (activeBot ? (program.length ? `Click the robot to give it this to work on, or the ${benchWord()} to put it down.`
                                         : 'Click the robot to give it this — that is how training starts.')
-                      : 'Drop it on a little robot to wake it, or put it down on the bench.') :
+                      : `Drop it on a little robot to wake it, or put it down on the ${benchWord()}.`) :
     activeBot ? (program.length ? 'Give the robot something and run it — or click it to shrink it back.'
                                 : 'Give the robot something to start training it.') :
     // in a puzzle the idle line is the puzzle's, not the workshop's -- and it
@@ -19217,7 +19297,7 @@ async function importRobotFile(file) {
       }
       worldIn(rec);
       loadedWorldName = file.name;      // so Marty knows which example this is
-      return say('Workshop loaded from the file.');
+      return say('Workshop loaded from the file.' + yardWords(rec));
     }
     if (rec.kind === 'thing') {
       if (busy || mode !== 'world') return say('Leave the thought bubble first.');
@@ -19561,7 +19641,7 @@ addEventListener('keydown', (e) => {
     if (lastMoveEv) {
       const t = resolve(lastMoveEv);
       const tip = tipFor(t);
-      if (tip) tipEl.textContent = tip;
+      if (tip) putTip(tip);
     }
     return;
   }
@@ -19689,6 +19769,18 @@ addEventListener('keydown', (e) => {
     }
     // typing on a held pad or a name still wins: space is a letter there
     const typing = held && ['text', 'robot', 'bird', 'nest', 'box', 'scale'].includes(held.userData.kind);
+    // ...but it should not do it in SILENCE while the pointer is plainly on
+    // something switchable. The key went into a name and the behaviour under
+    // the pointer stayed asleep, with nothing said either way.
+    if (typing && e.key === ' ' && lastMoveEv) {
+      const over = resolve(lastMoveEv);
+      const ot = over?.kind === 'thing' ? over.thing : null;
+      if (ot && ot !== held && (ot.userData.kind === 'room' || isGadget(ot)
+                                || (ot.__subs || []).length || ot.userData.panelWorld)) {
+        say(`That space went into ${panelName(held)}\u2019s name \u2014 whatever is in your hand `
+          + `takes the keys. Put it down first, and SPACE switches on ${panelName(ot)}.`);
+      }
+    }
     if (node && !(typing && e.key === ' ' && held === node && node.userData.kind !== 'sound')) {
       const k = node.userData.kind;
       if (k === 'sound') {
@@ -20250,13 +20342,22 @@ function tipForInner(t) {
         ? `Drop to join the pads — ${join.side === 'R' ? 'after' : 'before'} the words underneath.`
         : `Drop to join the boxes — its holes go ${join.side === 'R' ? 'after' : 'before'} these.`;
     }
-    if (TIP) return 'Your workbench — click to put that down.';
+    // OUT HERE IT IS THE GROUND, not a workbench: the table stayed indoors
+    // and the grass took its place, so the name has to follow.
+    const grass = onGrass();
+    if (TIP) return (grass ? 'The grass' : 'Your workbench') + ' — click to put that down.';
     // The bench is where YOUR things live: what you take from a stack, what
     // a bird brings you, what you are part-way through building. Saying so
     // is more use than the bare name. And the note about robots only means
     // anything once there IS a robot about -- before that it answers a
     // question nobody has asked.
     const anyBot = activeBot || benchThings.some(t2 => t2.userData.kind === 'robot');
+    if (grass) {
+      return 'The grass — the yard is where there is room: a village, a zoo, a row of '
+        + 'cottages. Whatever is out here is saved with the workshop.'
+        + (anyBot ? ' A robot CAN put things down out here — it finds a free patch of grass, '
+                  + 'which is more than it may do indoors.' : '');
+    }
     return 'Your workbench — what you take from a stack, what a bird brings you, and '
       + 'whatever you are part-way through building all live here, and are saved with the workshop.'
       + (anyBot ? ' A robot cannot reach it: it works at its own desk, and is handed things.' : '');
@@ -20457,10 +20558,15 @@ function tipForInner(t) {
           ? 'Two behaviours \u2014 drop one on a THING to bind it, not on another behaviour.'
           : `Drop it on the behaviour to give ${LQ}${words}${RQ} something to work on.`;
       }
-      return `${LQ}${words}${RQ} \u2014 a behaviour, and it ${on}. Drop it on a thing \u2014 for a `
-        + 'pad, on the pad\u2019s EDGE \u2014 and its robots work on that instead; the middle of a '
-        + 'pad takes it aboard as scenery. Wake Ruby and click it to let go again. '
-        + 'SPACE sets it going, \u201c.\u201d stops it; the panel holds the robots.';
+      // WHAT THIS ONE IS, in the writer's words, before what any behaviour is.
+      const said = (ud.note || '').trim();
+      return `${LQ}${words}${RQ} \u2014 a behaviour, and it ${on}.`
+        + (said ? '\n' + said : '')
+        + TIP_RULE
+        + 'Drop it on a thing \u2014 for a pad, on the pad\u2019s EDGE \u2014 and its robots work '
+        + 'on that instead; the middle of a pad takes it aboard as scenery. Wake Ruby and click '
+        + 'it to let go again. SPACE sets it going, \u201c.\u201d stops it; the panel holds the '
+        + 'robots.';
     }
     if (ud.kind === 'text' && !TIP) {
       const words = (ud.text ?? '').trim();
@@ -20469,19 +20575,22 @@ function tipForInner(t) {
       // could be expected to guess that, so the picture says it.
       if (ud.img) {
         return words
-          ? `A picture captioned “${words}” — the caption is the PAD’s own writing. `
-            + 'Click to pick it up, then type to change it (Backspace rubs it out).'
-          : 'A picture — click to pick it up, then TYPE to caption it: words written over '
-            + 'a picture are drawn on a band so they can be read. Ctrl with the arrows resizes it.';
+          ? `A picture captioned “${words}”.` + TIP_RULE
+            + 'The caption is the PAD’s own writing. Click to pick the picture up, then type '
+            + 'to change it (Backspace rubs it out). Ctrl with the arrows resizes it.'
+          : 'A picture.' + TIP_RULE + 'Click to pick it up, then TYPE to caption it: words written '
+            + 'over a picture are drawn on a band so they can be read. Ctrl with the arrows resizes it.';
       }
       const scene = (t.thing.__subs || []).length;
       const look = ' Press ENTER to look straight at it, filling the screen; Escape comes back.';
+      const padHow = 'Click to pick the pad up; type to write on it.' + look;
       if (scene) {
         return `A pad with ${scene} thing${scene === 1 ? '' : 's'} riding on it \u2014 a SCENE. `
-          + 'SPACE switches on everything standing on it and \u201c.\u201d stops the lot.' + look;
+          + 'SPACE switches on everything standing on it and \u201c.\u201d stops the lot.'
+          + TIP_RULE + padHow;
       }
-      if (!words) return 'A blank pad \u2014 click to pick it up, then type to write on it.' + look;
-      return padTip(words, t.thing) + '\n\u2014 click to pick it up; type to write on it.' + look;
+      if (!words) return 'A blank pad.' + TIP_RULE + padHow;
+      return padTip(words, t.thing) + TIP_RULE + padHow;
     }
     if (ud.kind === 'number') {
       if (TIP?.userData.kind === 'number') {
@@ -20648,6 +20757,17 @@ addEventListener('pointerup', (ev) => {
   parkHand();                        // still in hand (a refused drop): back to its spot
 });
 const tipEl = document.getElementById('tip');
+// What THIS thing is, then how anything of its kind is worked, with a line
+// between so the eye can skip the half it has read before. A pad's own
+// writing goes in a tooltip, so the text is put in as TEXT and the rule is a
+// marker in the string that becomes an <hr> element here -- never markup.
+function putTip(text) {
+  tipEl.textContent = '';
+  String(text).split(TIP_RULE).forEach((part, i) => {
+    if (i) tipEl.appendChild(document.createElement('hr'));
+    tipEl.appendChild(document.createTextNode(part.replace(/^\n+|\n+$/g, '')));
+  });
+}
 // Which it is decides everything above: a mouse or a stylus hovers and can
 // lead the hand, a finger cannot. Decided per event, so a tablet with a mouse
 // plugged in gets the following hand back the moment the mouse moves.
@@ -20678,7 +20798,7 @@ setInterval(() => {
   if (tipEl.style.display !== 'block') return;
   const target = resolve(lastMoveEv);
   const tip = tipFor(target);
-  if (tip) tipEl.textContent = tip;
+  if (tip) putTip(tip);
   else { tipEl.style.display = 'none'; }
 }, 300);
 // Off the canvas -- onto the holding card, the bar, anywhere -- the carried
@@ -20724,6 +20844,8 @@ renderer.domElement.addEventListener('pointerenter', () => { pointerOff = false;
 renderer.domElement.addEventListener('pointermove', (ev) => {
   lastMoveEv = { clientX: ev.clientX, clientY: ev.clientY };
   parkOnce = false;              // the pointer is back over the workshop
+  pointerOff = false;            // ...and a move over the canvas says so itself,
+                                 // whether or not an "enter" was ever delivered
   notePointerKind(ev);
   // what is under the pointer decides how high the hand rides, so resolve
   // first; resolve never looks at the hand (it skips whatever is held)
@@ -20742,7 +20864,7 @@ renderer.domElement.addEventListener('pointermove', (ev) => {
     : target ? 'pointer' : '';
   const tip = tipFor(target);
   if (tip) {
-    tipEl.textContent = tip;
+    putTip(tip);
     tipEl.style.display = 'block';
     const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
     // The tip must not sit ON the thing it describes — beside the pointer
@@ -21216,7 +21338,7 @@ loadModel('robot_v4.glb', (gltf) => {
         if (tooNew) return sayAttn(tooNew);
         worldIn(rec);
         loadedWorldName = wantWorld.split('/').pop();
-        say('Workshop loaded: ' + loadedWorldName);
+        say('Workshop loaded: ' + loadedWorldName + '.' + yardWords(rec));
       })
       .catch(() => {});
   }
@@ -22542,12 +22664,22 @@ function requestWorldLoad(name) {
     else sayAttn(`No world called \u201c${name}\u201d could be found.`);
   });
 }
+// What to add to "the world is open" when the world keeps things OUTSIDE.
+// A table with little on it is not an empty world if the yard is full.
+function yardWords(rec) {
+  const n = (rec?.yard?.bench || []).length;
+  if (!n) return '';
+  return ` ${n === 1 ? 'One thing is' : n + ' things are'} out in the YARD \u2014 `
+    + 'through the green back door, which is where this one is meant to be played.';
+}
 function openPendingWorld() {
   if (!pendingLoad || !worldReady || worldStack.length) return;
   const rec = pendingLoad; pendingLoad = null;
   hushNarration();
   worldIn(rec);
   loadedWorldName = (rec.name || loadedWorldName || '') + '';
+  const out = yardWords(rec);
+  if (out) say(out.trim());
 }
 // THE PUZZLE SET IS IN THE PAGE. embed_puzzles.py puts p1 -- which carries
 // every later puzzle in its library -- into a JSON block, so the Puzzle Game
@@ -24966,6 +25098,8 @@ window.__nano = {
     let center = null;
     if (condDisplay) { _scBox.setFromObject(condDisplay); center = _scBox.getCenter(new THREE.Vector3()).toArray(); }
     return { on: smartCam, following: !!camFollow, t: camFollow?.t ?? 0, hover: hoverBubble, edge: edgePointer, yield: camYield,
+             subjectAt: clawHeld ? 'claw' : stations.copyIn.occupant ? 'copyIn'
+               : stations.copyOut.occupant ? 'copyOut' : stations.stand.occupant ? 'stand' : null,
              still: performance.now() - camLastMove, showThought: !!camShowFn, show: camShowFn ? (camShowFn.name || 'view') + (camShowFn.base ? '<' + camShowFn.base.name : '') : null,
              bubble: bubble.visible, cond: !!condDisplay, center, helpers: rubyActive || dustyActive, mode };
   },
@@ -25000,6 +25134,12 @@ window.__nano = {
   get outside() { return !!yardIn; },
   yardDoorNode() { return yardDoor; },
   yardThings() { return (curCtx.yard?.things ?? []).slice(); },
+  yardWords(rec) { return yardWords(rec); },
+  // What the pointer would be told about a thing -- the two halves and the
+  // rule between them, as one string.
+  tip(t) { return tipFor({ kind: 'thing', thing: t }); },
+  tipRule: TIP_RULE,
+  get doc() { return document; },
   bounds() { return { ...BENCH, top: BENCH_TOP }; },
   exitDoorNode() { return exitDoor; },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },

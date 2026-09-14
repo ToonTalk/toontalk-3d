@@ -3148,6 +3148,91 @@ async function modelFileCheck(D, w) {
   return ok;
 }
 
+// OUT IN THE YARD THE GROUND IS A METRE LOWER THAN THE TABLE, and the hand
+// has to come down with it: the plane a carried thing slides on was measured
+// once, from the robot's reach at the table, so everything picked up outside
+// floated 1.09 m over the grass -- which, seen from a camera looking down, is
+// drawn a long way from the pointer (Ken's pad "appeared behind a house when
+// I didn't move it there"). And the words have to follow the ground too: it
+// is not a workbench out there.
+async function yardHandCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const el = D.renderer.domElement;
+  const lead = async () => {                       // the pointer leads the hand
+    const r = el.getBoundingClientRect();
+    for (const [fx, fy] of [[0.45, 0.6], [0.5, 0.58]]) {
+      el.dispatchEvent(new w.PointerEvent('pointermove', { clientX: r.left + r.width * fx,
+        clientY: r.top + r.height * fy, bubbles: true, pointerId: 1, pointerType: 'mouse' }));
+      await frames(D, 4);
+    }
+    return D.handPos();
+  };
+  D.click('numbers');                              // something to carry
+  await frames(D, 20);
+  const inTop = D.bounds().top, inHand = (await lead())[1];
+  D.clickBench(0.3, 1.6);                          // put it down, then go outside
+  await frames(D, 40);
+  D.clickRaw({ kind: 'yardDoor' });
+  await slowSettle(D, 3000);
+  D.click('numbers');
+  await frames(D, 20);
+  const outTop = D.bounds().top, outHand = (await lead())[1];
+  const over = (h, top) => +(h - top).toFixed(2);
+  const rides = D.outside && Math.abs(over(inHand, inTop) - over(outHand, outTop)) < 0.05
+    && over(outHand, outTop) < 0.5;
+  // a world that keeps its things outside says so when it is opened
+  const said = D.yardWords({ kind: 'world', bench: [], yard: { bench: [{}, {}, {}] } });
+  const told = /3 things are out in the YARD/.test(said) && D.yardWords({ kind: 'world' }) === '';
+  const ok = rides && told;
+  put((ok ? 'PASS' : 'FAIL') + ' what you carry rides over the ground you are on  (indoors='
+      + over(inHand, inTop) + ' yard=' + over(outHand, outTop) + ' outside=' + D.outside
+      + ' yard-is-announced=' + told + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A TOOLTIP HAS TWO HALVES, with a rule between them: what THIS thing is, and
+// how anything of its kind is worked (Ken read the second half of a pad's tip
+// for the hundredth time). A behaviour's half is the note somebody wrote on
+// it. And a sine pad says "sine": the unary operations ignore the number they
+// ride on, so a 0 on the face is a number that means nothing.
+async function padTipCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const RULE = D.tipRule;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+              bench: [{ x: 0.3, z: 1.6, thing: { kind: 'text', text: 'THE ROW GOES ON' } }] });
+  await slowSettle(D, 1500);
+  const pad = D.bench(0);
+  const padTip = D.tip(pad) ?? '';
+  const [what, how] = padTip.split(RULE);
+  const padOK = padTip.includes(RULE) && /^\u201cTHE ROW GOES ON\u201d/.test(what || '')
+    && /^Click to pick the pad up/.test((how || '').trim());
+  // a behaviour, with a note on it
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+              bench: [{ x: 0.3, z: 1.6, thing: { kind: 'text', text: 'the guests', gadget: true,
+                        note: 'The resort\u2019s own machinery.',
+                        panel: { kind: 'world', v: 3, bench: [], stations: {}, active: null } } }] });
+  await slowSettle(D, 1500);
+  const gad = D.bench(0);
+  const gTip = D.tip(gad) ?? '';
+  const gadOK = gTip.includes(RULE) && gTip.split(RULE)[0].includes('The resort\u2019s own machinery.')
+    && /Drop it on a thing/.test(gTip.split(RULE)[1] || '');
+  // ...and a bare operation wears its own name
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,
+              bench: [{ x: 0.3, z: 1.6, thing: { kind: 'number', value: { n: '0', d: '1' }, op: 'sin' } }] });
+  await slowSettle(D, 1500);
+  const sine = D.bench(0);
+  const faces = [];
+  sine.traverse(o => { if (o.material?.__text != null) faces.push(o.material.__text); });
+  const sineOK = faces.length > 0 && faces.every(t => t === 'sine');
+  const ok = padOK && gadOK && sineOK;
+  put((ok ? 'PASS' : 'FAIL') + ' a tooltip says what THIS is, then what its kind does  (pad='
+      + padOK + ' behaviour-note=' + gadOK + ' bare-operation=' + JSON.stringify(faces[0] ?? null)
+      + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -3473,6 +3558,23 @@ async function zenoCheck(D) {
   D.clickRaw({ kind: 'roomLever', room: tot });
   D.clickRaw({ kind: 'roomLever', room: halver });
   await settle(D, 9000);
+  // YOUR HAND IS YOURS WHILE THEY RUN. A house's robots call noteHeld for
+  // their own claw, from inside a pushed world where inHand() is the INNER
+  // world's hand -- so picking up a pad lost the card that reads it, and the
+  // Read button with it, within a second of these two starting.
+  let padUp = null;
+  for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break;
+    if (t.userData.kind === 'text') { padUp = t; break; } }
+  // ...at walking pace: at Instant every frame is eighty halver rounds, and a
+  // hundred frames of that is minutes of fractions thousands of digits long.
+  D.speed(1);
+  D.clickThing(padUp);
+  await frames(D, 60);
+  const card = D.doc ? D.doc.getElementById('held') : null;
+  const holdsPad = !!padUp && !!card && card.classList.contains('pad');
+  D.clickBench(0.4, 1.6);
+  await frames(D, 20);
+  D.speed('inf');
   const value = () => tot.__ctx?.standOcc?.userData?.holes?.[1]?.thing?.userData?.value;
   let used = 0;
   for (; used < 60; used += 5) { const v0 = value(); if (v0 && BigInt(v0.d) >= 8n) break; await frames(D, 5); }
@@ -3482,12 +3584,12 @@ async function zenoCheck(D) {
   const num = BigInt(v.n), den = BigInt(v.d);
   const grew = den >= 8n;                       // at least three deliveries landed
   const exact = (den & (den - 1n)) === 0n && (den - num) === 1n;
-  const ok = grew && exact;
+  const ok = grew && exact && holdsPad;
   D.speed(1);      // Instant is this check's, not the suite's -- pong broke at it
   const digits = String(v.d).length;
   put((ok ? 'PASS' : 'FAIL') + ' zeno\u2019s postman  (total=' + (digits > 40 ? '(2^k-1)/2^k with ' + digits + ' digits' : String(v.n) + '/' + String(v.d))
       + ' power-of-two=' + ((den & (den - 1n)) === 0n) + ' one-behind=' + ((den - num) === 1n)
-      + ' frames=' + used + ' pile=' + pile + ')', ok ? 'pass' : 'fail');
+      + ' frames=' + used + ' pile=' + pile + ' your-hand-stays-yours=' + holdsPad + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -5542,6 +5644,12 @@ async function runOne(D, spec) {
   let mdlOK = true;
   try { mdlOK = want('modelFile') ? await modelFileCheck(D, frame.contentWindow) : true; }
   catch (e) { mdlOK = false; put('FAIL a model out of a file  ' + e.message, 'fail'); }
+  let yhOK = true;
+  try { yhOK = want('yardHand') ? await yardHandCheck(D, frame.contentWindow) : true; }
+  catch (e) { yhOK = false; put('FAIL what you carry rides over the ground  ' + e.message, 'fail'); }
+  let ptOK2 = true;
+  try { ptOK2 = want('padTip') ? await padTipCheck(D, frame.contentWindow) : true; }
+  catch (e) { ptOK2 = false; put('FAIL a tooltip says what THIS is  ' + e.message, 'fail'); }
   let pvOK = true;
   try { pvOK = want('pageVacuum') ? await pageVacuumCheck(D) : true; }
   catch (e) { pvOK = false; put('FAIL what Dusty takes off a page is what he gives back  ' + e.message, 'fail'); }
@@ -5665,7 +5773,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

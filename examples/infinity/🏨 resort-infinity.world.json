@@ -237,6 +237,7 @@
       "font": "sans",
       "h": 0.42
      },
+     "note": "The resort’s own machinery, which you never need to touch: six behaviours, one per cottage, three robots each. SPACE here is the six guests arriving at once — they write to the post and house themselves as soon as a clerk answers. Nothing in them knows how many guests there are.",
      "panel": {
       "kind": "world",
       "v": 3,
@@ -251,6 +252,7 @@
          "lid": "G11",
          "evt": "evt-G11",
          "boundTo": "K11",
+         "note": "Guest 1’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 1’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -788,6 +790,7 @@
          "lid": "G12",
          "evt": "evt-G12",
          "boundTo": "K12",
+         "note": "Guest 2’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 2’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -1325,6 +1328,7 @@
          "lid": "G13",
          "evt": "evt-G13",
          "boundTo": "K13",
+         "note": "Guest 3’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 3’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -1862,6 +1866,7 @@
          "lid": "G14",
          "evt": "evt-G14",
          "boundTo": "K14",
+         "note": "Guest 4’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 4’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -2399,6 +2404,7 @@
          "lid": "G15",
          "evt": "evt-G15",
          "boundTo": "K15",
+         "note": "Guest 5’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 5’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -2936,6 +2942,7 @@
          "lid": "G16",
          "evt": "evt-G16",
          "boundTo": "K16",
+         "note": "Guest 6’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 6’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -3484,6 +3491,7 @@
       "font": "sans",
       "h": 0.42
      },
+     "note": "The same machinery for problem 2’s five newcomers. Switch it on only once the bell has moved everybody up and cottages 1 to 5 stand empty.",
      "panel": {
       "kind": "world",
       "v": 3,
@@ -3498,6 +3506,7 @@
          "lid": "G21",
          "evt": "evt-G21",
          "boundTo": "K21",
+         "note": "Guest 1’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 1’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -4035,6 +4044,7 @@
          "lid": "G22",
          "evt": "evt-G22",
          "boundTo": "K22",
+         "note": "Guest 2’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 2’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -4572,6 +4582,7 @@
          "lid": "G23",
          "evt": "evt-G23",
          "boundTo": "K23",
+         "note": "Guest 3’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 3’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -5109,6 +5120,7 @@
          "lid": "G24",
          "evt": "evt-G24",
          "boundTo": "K24",
+         "note": "Guest 4’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 4’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -5646,6 +5658,7 @@
          "lid": "G25",
          "evt": "evt-G25",
          "boundTo": "K25",
+         "note": "Guest 5’s own three robots: ask the desk where to live, stand at the address it is given, and ask again when the bell rings. They work on guest 5’s cottage, and on nothing else.",
          "look": {
           "bg": "#2b2238",
           "ink": "#ecd9ff",
@@ -6432,7 +6445,7 @@
    {
     "thing": {
      "kind": "text",
-     "text": "PROBLEM 1\nThe first infinite group\n\nSix guests are at the gate,\nnumbered 1 to 6, and more are\nbehind them for ever.\n\nOn the grass is the desk: a box\nholding one nest, THE POST.\nEvery guest writes to it.\n\nTrain a robot on that box to\ntake the [number, bird] letter\noff the post and give the bird\nthe address. Give the box to\nyour robot and press Start:\nwith the nest empty it dozes,\nwhich is what a clerk does.\n\nThen press SPACE on the pad\n\"the guests\": they ask, and\nthey house themselves.\n\nWhere should guest 1 live?\n(\"Next address\", on the grass,\nis one answer.)"
+     "text": "PROBLEM 1\nThe first infinite group\n\nSix guests are at the gate,\nnumbered 1 to 6, and more are\nbehind them for ever.\n\nOn the grass is the desk: a box\nholding one nest, THE POST.\nEvery guest writes to it.\n\nTHE BOX TO TRAIN ON IS THAT\nDESK. Take a little robot from\nits stack, set it on the grass,\nthen click the desk to pick it\nup and drop it ON the robot:\nits thought bubble opens and\nyou are teaching it.\n\nThree moves: take the [number,\nbird] letter off the post, copy\nthe number, give the copy to\nthe bird. Leave the bubble and\npress Start. With the post\nempty it dozes, which is what a\nclerk does.\n\nThen press SPACE on the pad\n\"the guests\". Watch the post: a\nletter lands on it for each\nguest, and the clerk answers\nthem one at a time.\n\nWhere should guest 1 live?\n\nRather read an answer than\nwrite one? \"Next address\" on\nthe grass is ALREADY trained:\ndrop the desk on it and press\nStart."
     },
     "x": 2.6,
     "z": 3.2
@@ -6440,7 +6453,7 @@
    {
     "thing": {
      "kind": "text",
-     "text": "PROBLEM 2\nFive more, and no room\n\nFive more guests arrive, and\nevery cottage is taken. You\ncannot turn them away: this is\nResort Infinity.\n\nA guest asking to MOVE writes a\nlonger letter: [ding | where I\nlive | my bird]. Train a second\nrobot for that letter — five\nfurther along — and drop it on\nyour first robot. They are a\nteam now, and a team runs\nwhichever member fits the\nletter on top. Start it again.\n\nRing the bell: drop a ding on\nthe bell bird, and watch the\nrow shuffle up.\n\nWhen cottages 1 to 5 stand\nempty, press SPACE on \"five\nmore guests\".\n\nEverybody moved; nobody was\nturned out; nobody shares an\naddress. Why does that work\nhere and not at a hotel with a\nhundred rooms?"
+     "text": "PROBLEM 2\nFive more, and no room\n\nFive more guests arrive, and\nevery cottage is taken. You\ncannot turn them away: this is\nResort Infinity.\n\nA guest asking to MOVE writes a\nlonger letter: [ding | where I\nlive | my bird]. Train a second\nrobot for that letter — five\nfurther along — and drop it on\nyour first robot. They are a\nteam now, and a team runs\nwhichever member fits the\nletter on top. Start it again.\n\nThat answer is on the grass\ntoo, already trained: \"Move up\nfive\". Drop it on your clerk\nand they are a team.\n\nRing the bell: drop a ding on\nthe bell bird, and watch the\nrow shuffle up.\n\nWhen cottages 1 to 5 stand\nempty, press SPACE on \"five\nmore guests\".\n\nEverybody moved; nobody was\nturned out; nobody shares an\naddress. Why does that work\nhere and not at a hotel with a\nhundred rooms?"
     },
     "x": 3.8,
     "z": 3.2
@@ -6448,7 +6461,7 @@
    {
     "thing": {
      "kind": "text",
-     "text": "THE ROW GOES ON\n\nEleven cottages is what fits\non this grass. The row does\nnot stop at the fence: guest\n12 stands past it, and guest\na thousand a long way past.\n\nNothing in these robots knows\nhow many guests there are.\nThat is the whole of it."
+     "text": "THE ROW GOES ON\n\nEleven cottages wait at the\ngate in two huddles: the six\nof problem 1, and five more\nbehind them for problem 2.\nOnce a cottage has asked the\ndesk and gone to its address\nit joins ONE row, counted\nfrom the left.\n\nThat row does not stop at the\nfence: guest 12 would stand\npast it, and guest a thousand\na long way past.\n\nNothing in these robots knows\nhow many guests there are.\nThat is the whole of it."
     },
     "x": -4.4,
     "z": 2.5
