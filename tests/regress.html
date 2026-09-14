@@ -3252,6 +3252,42 @@ async function padTipCheck(D, w) {
   return ok;
 }
 
+async function rebindCheck(D) {
+  const beh = (lid, evt, toLid) => ({ kind: 'text', text: 'the pilot', gadget: true,
+    lid, evt, boundTo: toLid,
+    panel: { kind: 'world', v: 3, bench: [], stations: {},
+             active: { kind: 'robot', name: 'the pilot',
+                       condition: { kind: 'box', holes: [{ kind: 'anyBird' }] },
+                       program: [], trainedOn: { kind: 'box', holes: [
+                         { kind: 'bird', nestId: 0, nestGuid: null, liveId: toLid, label: 'my thing' }] } } } });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { x: -0.9, z: 1.6, thing: { kind: 'text', text: 'plane one', lid: 'P1', evt: 'evt-P1' } },
+    { x: 0.9, z: 1.6, thing: { kind: 'text', text: 'plane two', lid: 'P2', evt: 'evt-P2' } },
+    { x: 0, z: 2.2, thing: beh('G1', 'evt-G1', 'P1') } ] });
+  await slowSettle(D, 2000);
+  const find = (t) => { for (let i = 0; i < 8; i++) { const x = D.bench(i); if (!x) break;
+    if ((x.userData.text || '') === t) return x; } return null; };
+  const g = find('the pilot'), two = find('plane two');
+  const was = g?.userData.boundTo ?? null;
+  D.clickThing(g);
+  await frames(D, 30);
+  // ON THE PAD'S EDGE: the middle of a pad takes a behaviour aboard as
+  // scenery, which is a different gesture entirely
+  const p2 = two.getWorldPosition(new D.THREE.Vector3());
+  p2.x -= 0.15;
+  D.clickThing(two, p2);
+  await frames(D, 60);
+  const now = g.userData.boundTo;
+  const rec = g.userData.panelWorld ?? (g.__panelTray?.userData?.world ?? null);
+  const names = JSON.stringify(rec ?? {}).match(/"liveId":"[^"]*"/g) || [];
+  const moved = was === 'P1' && now === 'P2' && names.length > 0
+    && names.every(n => n.includes('P2'));
+  put((moved ? 'PASS' : 'FAIL') + ' a behaviour moves from one thing to another  (was=' + was
+      + ' now=' + now + ' panel-speaks-of=' + (names.join(',') || 'nothing') + ')',
+      moved ? 'pass' : 'fail');
+  return moved;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5669,6 +5705,9 @@ async function runOne(D, spec) {
   let ptOK2 = true;
   try { ptOK2 = want('padTip') ? await padTipCheck(D, frame.contentWindow) : true; }
   catch (e) { ptOK2 = false; put('FAIL a tooltip says what THIS is  ' + e.message, 'fail'); }
+  let rbOK = true;
+  try { rbOK = want('rebind') ? await rebindCheck(D) : true; }
+  catch (e) { rbOK = false; put('FAIL a behaviour moves from one thing to another  ' + e.message, 'fail'); }
   let pvOK = true;
   try { pvOK = want('pageVacuum') ? await pageVacuumCheck(D) : true; }
   catch (e) { pvOK = false; put('FAIL what Dusty takes off a page is what he gives back  ' + e.message, 'fail'); }
@@ -5792,7 +5831,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

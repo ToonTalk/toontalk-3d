@@ -865,6 +865,26 @@ rooms work as well, all the way down.
 Try it: drop the mini robot on the room, then the 4.
 Click the roof to make the walls glass. Click the door to step inside.
 
+Giving a behaviour to something else
+A behaviour works on one thing. Drop it on another and it moves
+there: its robots stop speaking about the old thing and speak about the new
+one, and the card says how many references were re-pointed. Wake Ruby
+and click it to let it go again, and it works on itself.
+
+A copy of a live thing is its own thing with its own name — two
+things answering to one name would make the mail ambiguous — so a
+behaviour bound to the first goes on working on the first. To drive the copy,
+copy the behaviour too and drop it on the copy. What copying does NOT rename
+is an ordinary nest's name: sharing that is joining the flock, and a
+bird's delivery goes to its own nest and a copy to every other nest of that
+name. That is how one sender drives a whole squadron: copy the behaviour that
+LISTENS, bind each copy to its own thing, and one posting reaches them all.
+
+. stops the robots, not what they have already sent.
+Orders posted to a nest are still in the pile and whatever reads them will
+carry them out, so a thing may go on moving for a while after its behaviour
+rests. Press . on the thing itself to stop that too.
+
 What a tooltip says
 Point at anything and the card under the pointer has two halves with a
 line between them: what THIS one is — the words on the pad, the note
@@ -7000,7 +7020,19 @@ function bindGadget(g, target) {
   if (g === target) return say('That is what it already controls.');
   ensureLive(g);
   ensureLive(target);
-  const from = { lid: g.userData.lid, evt: g.userData.evtGuid };
+  // WHAT ITS ROBOTS SPEAK ABOUT NOW. An unbound behaviour works on itself, so
+  // its panel names its OWN lid; one already bound names the thing it is
+  // bound to. Taking the gadget's own lid either way meant a behaviour could
+  // never be moved from one thing to another -- rebindRec found nothing to
+  // re-point and it refused, which is what Ken met trying to give a copied
+  // pilot to a copied airplane. releaseGadget had it right all along.
+  if (g.userData.boundTo && g.userData.boundTo === target.userData.lid) {
+    return say(`${panelName(g)[0].toUpperCase()}${panelName(g).slice(1)} already works on `
+      + `${panelName(target)}.`);
+  }
+  const boundNow = g.userData.boundTo && liveReg.get(g.userData.boundTo);
+  const from = boundNow ? { lid: boundNow.userData.lid, evt: boundNow.userData.evtGuid }
+                        : { lid: g.userData.lid, evt: g.userData.evtGuid };
   const to = { lid: target.userData.lid, evt: target.userData.evtGuid };
   const { rec, tray } = gadgetRec(g);
   if (!rec) {
@@ -8557,7 +8589,11 @@ function switchGadget(node, on, quiet = false) {
     tray.userData.dirty = false;
     tray.userData.stopped = true;
     switchNested(tray, false);
-    return quiet || say('Stopped \u2014 its robots rest.');
+    // Its robots rest at once; what they have already SENT does not.
+    const worksOn = node.userData.boundTo && liveReg.get(node.userData.boundTo);
+    return quiet || say('Stopped \u2014 its robots rest.'
+      + (worksOn ? ' Anything they have already sent is still on its way: press \u201c.\u201d on '
+                 + `${panelName(worksOn)} itself to stop that too.` : ''));
   }
   if (!roomHasWorker(tray)) {
     // ...unless its panel holds BEHAVIOURS rather than robots. A macro

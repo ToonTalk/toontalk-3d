@@ -7107,3 +7107,48 @@ shapes) and how big it stands, then the usual half: pick it up, + and - and
 the arrows are its own and are saved with it, and from there it is a thing
 like any other. Both halves measure the model and not the plate standing over
 it. Check: modelFile (name-stands-clear), padTip.
+
+## A behaviour that could never be moved
+
+*Added 14 Sep. Ken copied the airplane, pressed SPACE on "the pilot", and only
+one of them flew: "Shouldn't the copy have maintained the bird connection so
+the gadget broadcast to both copies?" And then: "I typed '.' to the pilot and
+after a while it stopped. Why the delay?"*
+
+**The copy is its own airplane, and that is deliberate.** A copy of a live
+thing gets a fresh identity, because two things answering to one name make the
+mail ambiguous -- it is the same rule that stops a file imported twice from
+putting two things with one name on the table. So "the pilot" goes on flying
+the first plane.
+
+**But the broadcast Ken expected is real, and it is how this world already
+works.** The pilot does not address the plane directly: it posts orders to an
+ordinary nest, `turtle3d-orders`, and "a 3D turtle" -- the behaviour BOUND to
+the plane -- reads them and flies it. An ordinary nest's guid is never renamed
+on copying, because sharing a guid is joining the flock, and a bird's delivery
+goes to its own nest and a copy to every other nest answering that guid. So
+one pilot CAN fly a squadron: what has to be copied is the TURTLE, bound to
+each new plane, not the pilot.
+
+**Which is where the real bug was.** Binding a behaviour to a different thing
+always refused -- "Nothing on that panel speaks about my thing" -- because
+`bindGadget` took the GADGET's own lid as what its panel speaks about. That is
+true only while a behaviour works on itself; once bound, its panel names the
+thing it is bound to. `releaseGadget` had it right all along and `bindGadget`
+did not, so a behaviour could be let go of and could be given to a thing, but
+never MOVED from one thing to another -- which is exactly what giving a copied
+pilot to a copied airplane is. Measured: fails on the previous build, passes
+now, panel and all. Check: rebind.
+
+One thing the fix needed with it: binding a behaviour to the thing it is
+ALREADY bound to must be a no-op, not a rebuild. While the code looked for the
+wrong name it refused such a drop by accident; looking for the right one it
+found every reference, re-pointed each to itself, and threw the live tray away
+to rebuild it from the record -- which "a fold keeps nested work alive" caught
+within a minute of the real fix going in. It says "already works on that" now.
+
+**And the delay.** "." stops a behaviour's robots at once; it does not undo
+what they have already sent. Orders posted to a nest are still in the pile and
+whatever reads them goes on carrying them out -- the plane flies the rest of
+its orders. The message says so now, and points at the thing itself as the
+switch for that.
