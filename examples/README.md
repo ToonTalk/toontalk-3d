@@ -12,7 +12,7 @@ vacuum them away with Dusty once you know the drill.
 | [`behaviours/`](behaviours/) | the anima-gadgets: a shelf of behaviours to drop on your own things, and the turtles |
 | [`games/`](games/) | 🏓 Pong three ways and 👾 Space Invaders -- games built from the ordinary parts, made to be read as well as played |
 | [`puzzles/`](puzzles/) | the puzzle set the app carries (`p1` to `p34`); `MAKING-PUZZLES.md` says how to write one |
-| [`infinity/`](infinity/) | all eight *Exploring Infinity* activities, and 📮 Zeno's postman |
+| [`infinity/`](infinity/) | all eight *Exploring Infinity* activities, 🏨 Resort Infinity, and 📮 Zeno's postman |
 | [`numbers/`](numbers/) | 🔀 swap, ❗ factorial, 🐇 Fibonacci twice, and 🌡️ a gauge -- what a number, a scale and a live number can do |
 | [`lists/`](lists/) | 🔢 n-to-1, 🔗 append, 🔁 reverse -- lazy lists, a link at a time, each with a converter to a flat box |
 | [`words/`](words/) | 🔤 a grammar read as data and 📝 a sentence factory in a glass room |
@@ -73,7 +73,10 @@ mail.
 Galileo's evens to a queue holding every positive rational, and then Cantor's
 diagonal, which is the one that is not countable. Each runs from a single press
 of Run, with its pipeline dozing in glass rooms; in Activity 8 you hand the
-sequences in yourself, a box at a time.
+sequences in yourself, a box at a time. **🏨 resort-infinity** is Hilbert's
+hotel out in the yard: cottages standing in a row, a clerk's desk on the
+grass, and a bell that makes the whole row shuffle up to let five more guests
+in.
 
 ## infinity/📮 zeno.world.json
 

@@ -3010,6 +3010,35 @@ async function faceUpCheck(D, w) {
   return ok;
 }
 
+// THE VIEW GOES WITH THE WORLD, once the player has chosen one. A world saved
+// after you set the camera up opens at that view; one whose camera you never
+// touched carries none, so it opens at the workshop's own framing -- which is
+// also what keeps the golden worlds byte-identical.
+async function cameraSavedCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '3', d: '1' }, op: '+' }, x: 0.2, z: 1.6 } ] });
+  await slowSettle(D, 1500);
+  const untouched = D.worldOut().camera ?? null;          // nobody moved it: nothing saved
+  D.orbitStart();                                          // the player takes the camera...
+  D.camPut([1.5, 2.4, 3.6], [0.2, 0.9, 1.1]);              // ...and puts it here
+  await frames(D, 5);
+  const rec = D.worldOut();
+  const saved = rec.camera;
+  const wrote = !!saved && saved.at.join(',') === '1.5,2.4,3.6' && saved.look.join(',') === '0.2,0.9,1.1';
+  // somewhere else entirely, and then the world back again
+  D.camPut([-3, 5, -4], [0, 0, 0]);
+  await frames(D, 5);
+  D.worldIn(rec); await slowSettle(D, 1500);
+  const now = D.camNow();
+  const came = now.at.join(',') === '1.5,2.4,3.6' && now.look.join(',') === '0.2,0.9,1.1';
+  // ...and it is still the player's view, so saving it again keeps it
+  const again = !!D.worldOut().camera;
+  const ok = untouched === null && wrote && came && again;
+  put((ok ? 'PASS' : 'FAIL') + ' the view goes with the world  (untouched-saves-none=' + (untouched === null)
+      + ' saved=' + wrote + ' came-back=' + came + ' kept=' + again + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5401,6 +5430,9 @@ async function runOne(D, spec) {
   let tchOK = true;
   try { tchOK = want('teachCheck') ? await teachCheck(D, frame.contentWindow) : true; }
   catch (e) { tchOK = false; put('FAIL a robot that teaches a robot  ' + e.message, 'fail'); }
+  let cwOK = true;
+  try { cwOK = want('cameraSaved') ? await cameraSavedCheck(D) : true; }
+  catch (e) { cwOK = false; put('FAIL the view goes with the world  ' + e.message, 'fail'); }
   let fuOK = true;
   try { fuOK = want('faceUp') ? await faceUpCheck(D, frame.contentWindow) : true; }
   catch (e) { fuOK = false; put('FAIL every face of a turned cube reads  ' + e.message, 'fail'); }
@@ -5518,7 +5550,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

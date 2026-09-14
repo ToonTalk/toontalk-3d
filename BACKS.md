@@ -6830,3 +6830,65 @@ this workshop has no cities. It has the yard, which is a better fit than a city
 was: a cottage is a house standing on the grass, an address is a place along
 the row, and a move is something every guest walks. The sketch is in the
 infinity README under *What is not here*; not built.
+
+## Resort Infinity in the yard, and the view that goes with a world
+
+*Added 14 Sep. Ken: "Yes build the 'infinity yard' and start with the first 2
+problems. Let's add the camera state to saved worlds. The making-of should
+provide the statistics split by when we first introduced images and other
+media (around 23 August) and since."*
+
+**Hilbert's hotel, outside.** The original is a ToonTalk city: you are the
+clerk, guests arrive for ever, and you train a robot that says where each new
+guest's cottage is built -- and, from problem 2, a second that tells the
+guests already housed where to move to. The city was an addressing scheme, and
+this workshop has none; it has the yard, which suits the story better. A
+cottage is a house standing on the grass, an address is a place along the row
+(x = n * 0.6 - 4.5), and making room is the whole row shuffling up where you
+can watch it.
+
+Three things had to be measured before any of it could be designed, and all
+three came back yes: a gadget shipped in a world file, bound to a house by
+`boundTo` and a live bird's `liveId`, comes up bound; a robot in its panel can
+work out a place from a number and send `[set | position | [x|z]]` to its
+thing; and that works on the grass as well as on the table. The probe cottage
+jumped to exactly 3 * 0.6 - 4.5.
+
+**One nest each, which is the whole design.** The first two builds failed the
+same way, and the rule behind it is worth writing down: *a team stops at the
+first member whose thought is waiting on an empty nest* -- that is what dozing
+IS. So nobody may doze on two nests. A guest cannot listen for its address on
+one nest and for the bell on another; a clerk cannot listen for arrivals on
+one and for move requests on another. Each has ONE nest, and what lands says
+who runs. A guest's nest answers to two names -- its own and the bell's, by
+`aliases`, which a world file keeps -- so one ding reaches everybody and an
+answer still comes back only to the guest who asked. The desk tells the two
+kinds of letter apart by their shape: `[number | bird]` is a new guest,
+`[pad | number | bird]` is a guest asking to move, and the pad in the longer
+one is the ding itself, forwarded.
+
+What the visitor trains is three steps long, which was the point: take the
+letter off the post and give the bird the address. Problem 2's robot adds five
+and joins the first as a team. Each cottage's own robots are the resort's
+machinery, in a macro pad -- one press of SPACE starts all six.
+
+Measured end to end: six guests house themselves at 1 to 6; the bell rings and
+all six move to 6 to 11; the five newcomers then take 1 to 5. Eleven cottages,
+no two at the same address. Problems 3 to 5 are the same machinery with
+different arithmetic.
+
+**The view goes with the world.** A world saved after you have put the camera
+somewhere yourself opens at that view; one whose camera you never touched
+carries none and opens at the workshop's own framing, which fits itself to the
+window. The gate is the player's own gesture, not `userMoved` -- a demo sets
+that too, and the goldens would have gained a camera each. Saved indoors only:
+a file always opens indoors, so a view taken from the yard would look at the
+wrong place. Checked: untouched saves none, a placed view comes back, and all
+thirteen golden worlds stay byte-identical.
+
+**The figures, split where the story splits.** The making-of's table now
+divides at the day media arrived -- 25 August, the line "a picture is a pad" --
+rather than at the day the page was written. Nine working days before, twelve
+since; 154 commits and 87; 180 prompts and 189. The interesting one is the
+ratio: thirty tool calls to the prompt before media, fifty-four since. The
+second half is where measurement got cheaper than guessing.

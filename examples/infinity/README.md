@@ -118,21 +118,51 @@ Add 1 without either taking terms from the other.
 
 ## What is not here
 
-**Resort Infinity.** Hilbert's hotel as a city of five problems: you are the
-clerk, guests arrive on a nest for ever, and you train a robot that gives each
-new guest the address its cottage is built at — and, from problem 2, a second
-robot that tells the guests already housed where to move to. The original is a
-ToonTalk *city*, with houses used as an addressing scheme. This workshop has no
-cities, but it does have the **yard**, which is a better fit than a city was:
-a cottage is a house standing on the grass, an address is a place along the
-row, and the move robot's answer is a thing every guest walks to. Sketched in
-`BACKS.md`; not built.
+**Resort Infinity, problems 3 to 5.** Problems 1 and 2 are built (see
+`🏨 resort-infinity` below). The last three are the same machinery with
+different arithmetic: a second infinite group (move robot doubles, newcomers
+take the odd addresses), three groups at once (times four), and infinitely
+many groups (double, then walk the diagonal of the square of new guests —
+which is Activity 6's merge, or Activity 8's diagonal, standing on grass).
 
 **No Copies**, which drops the duplicate fractions: `2/6` never gets past,
 because `1/3` already did. Run Activity 4 and you will see the duplicates it
 exists to remove — `2/4` after `1/2`, `3/6` after `1/2` again. Detecting them
 needs a robot that remembers everything it has seen, which is a notebook and a
 lookup, and is a good exercise rather than a finished world.
+
+## 🏨 resort-infinity.world.json
+
+Hilbert's hotel, in the yard. You are the clerk; a cottage is a house standing
+on the grass and an address is a place along the row, so *making room* is the
+whole row shuffling up where you can see it.
+
+**One nest each, which is the whole design.** A robot team stops at the first
+member whose thought is waiting on an empty nest — that is what dozing *is* —
+so nobody here may doze on two nests. Everything a guest hears arrives on one
+nest of its own, under its own name *and the bell's* (a nest may answer to
+more than one name: `aliases`), and everything the clerk hears arrives on one
+nest on the desk. What lands says who runs:
+
+| the nest | what lands | who runs |
+|---|---|---|
+| a guest's | a number | *Stand at my address*: work out `x = n × 0.6 − 4.5` and tell my cottage to stand there |
+| a guest's | a pad | *Move when the bell rings*: write to the desk asking where to move to |
+| the desk's | `[number \| bird]` | *Next address*: a new guest asking |
+| the desk's | `[pad \| number \| bird]` | *Move up five*: a guest already housed |
+
+Each cottage carries its own robots — the macro pad **the guests** holds one
+behaviour per cottage, and one press of SPACE starts all six. That is the
+resort's machinery, and the visitor never touches it. What is *theirs* is the
+arithmetic: a three-step robot at the desk that gives a guest their address,
+and later a second that adds five, dropped on the first to make a **team**.
+
+Problem 1: six guests house themselves at 1–6. Problem 2: ring the bell and
+the six shuffle to 6–11; then the five newcomers take 1–5. Eleven cottages,
+no two at the same address. Set the speed to 4× or 8×: eleven round trips at
+walking pace take a while.
+
+`make_resort.py` writes it.
 
 ## Rebuilding
 

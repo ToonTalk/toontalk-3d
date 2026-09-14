@@ -1861,7 +1861,9 @@ Three more folders hold sets of their own. infinity/ is
 all eight Exploring Infinity activities, ending with Cantor's
 diagonal — a team of three robots that counts its way to the nth
 term of the nth sequence, because a robot can say hole 1 of
-what it was given but never the nth one.
+what it was given but never the nth one —
+and Resort Infinity, Hilbert's hotel out in the yard, where you are
+the clerk and making room means the whole row of cottages shuffling up.
 sounds/ is tones (where a sound comes from),
 transforms (×2, ×1/2 and ×−1) and
 melody, a robot that knows no notes singing a queue of numbers into a
@@ -11341,7 +11343,11 @@ function glideCameraTo(p1, t1) {
     },
   });
 }
-orbit.addEventListener('start', () => { userMoved = true; });
+// A VIEW THE PLAYER CHOSE, as against one the workshop or a demo set: only
+// the first is worth saving with a world (Ken: "let's add the camera state to
+// saved worlds").
+let camPlaced = false;
+orbit.addEventListener('start', () => { userMoved = true; camPlaced = true; });
 function frameScene() {
   if (userMoved) return;
   // wide enough for Dusty's mat at one end, tall enough for the thought bubble
@@ -26215,6 +26221,16 @@ function worldOut() {
       x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })) };
     if (yardBounds) rec.yard.bounds = yardBounds;
   }
+  // THE VIEW IS PART OF THE PLACE, once you have chosen one. A world saved
+  // after you set the camera up -- a scene you framed, a puzzle you want read
+  // from a particular side -- opens at that view; one whose camera you never
+  // touched opens at the workshop's own framing, which fits itself to whatever
+  // window it is opened in. Indoors only: a file always opens indoors, so a
+  // view taken from the yard would look at the wrong place.
+  if (!offstage() && !yardIn && camPlaced) {
+    rec.camera = { at: camera.position.toArray().map(v => +v.toFixed(3)),
+                   look: orbit.target.toArray().map(v => +v.toFixed(3)) };
+  }
   // the puzzle's own words and rules ride along, so saving a puzzle keeps it one
   if (worldName) rec.name = worldName;
   if (sceneryNodes.length) {
@@ -26572,6 +26588,15 @@ function worldIn(data) {
     activateBot(node.__bot);
   }
   settleNotebook();          // ...and your notebook is not under the world's things
+  // ...and the view the world was saved at, if it was saved at one
+  if (!offstage() && data.camera?.at?.length === 3 && data.camera?.look?.length === 3) {
+    camera.position.fromArray(data.camera.at);
+    orbit.target.fromArray(data.camera.look);
+    camera.lookAt(orbit.target);
+    orbit.update();
+    userMoved = true;        // the workshop's own framing must not take it back
+    camPlaced = true;        // ...and saving it again keeps it
+  }
   refreshUI();
   // A PUZZLE INTRODUCES ITSELF, the way Marty met you at the rocket: he says
   // what is wanted, out loud if he is speaking, and the card says it too.
@@ -33907,6 +33932,11 @@ window.__nano = {
   onScreen(p) { return onScreen(p); },
   roundsNow() { return { runCount, givenRounds }; },   // (rounds(n) is the Rounds limit)
   camStill() { camLastMove = -1e9; },                            // the mouse has rested
+  // where the camera is and whether the player has put it there themselves
+  camNow() { return { at: camera.position.toArray().map(v => +v.toFixed(3)),
+                      look: orbit.target.toArray().map(v => +v.toFixed(3)), placed: camPlaced }; },
+  camPut(at, look) { camera.position.fromArray(at); orbit.target.fromArray(look);
+                     camera.lookAt(orbit.target); orbit.update(); },
   smartCam(on) {
     if (on != null) setSmartCam(on);
     let center = null;
