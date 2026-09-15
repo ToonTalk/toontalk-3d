@@ -7352,3 +7352,27 @@ frame, and `D.rooms`), and a panel that has had its turn this frame is
 passed by (`__rframe`). Houses are untouched; a woken panel takes its turn
 a frame later at most. The check samples every frame now, since a flip a
 frame aliases against any even sampling period.
+
+## Activity 8 asks for its terms
+
+*Added 15 Sep. Ken: "activity 8 is confusing - screenshot 2 is what I see
+when I turn it on."*
+
+What he saw was a tower: the three sequence rooms were tickers, each
+making a term a round for ever, and their terms landed on the nests in the
+boxes still standing on the table waiting to be handed over -- two metres
+of numbered cubes over the desk, and the diagonal doing nothing because no
+box had been given to it yet. The instructions said to hand the box over
+first, which is the kind of order nobody keeps.
+
+A sequence is made on demand now. A room dozes on an "asked" nest; a
+number landing there is a request, and the robot spends it, gives its bird
+a copy of its term and moves on to the next. A sequence arrives at the
+diagonal as a box, [its nest | a bird to that room's nest], and every term
+the team takes it asks for the next by dropping a copy of its "more" number
+on that bird -- so a room is always one term ahead of the team, whatever
+order the levers and the boxes go in. The RUN pad says so, and the
+training and the argument have pads of their own (RUN 504, OWN 385,
+THINK 356, MORE 385 characters). Check: diagonal (levers first, then the
+boxes: nothing made before it is asked for, the diagonal reads 1, 3, 4,
+and no sequence pile ever exceeds two).

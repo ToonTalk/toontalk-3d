@@ -29,6 +29,14 @@
          "nestId": 9281,
          "nestGuid": "inf8-s1",
          "label": "Sequence 1"
+        },
+        {
+         "kind": "nest",
+         "id": 9295,
+         "guid": "inf8-req1",
+         "hasEgg": false,
+         "pile": [],
+         "label": "asked"
         }
        ]
       }
@@ -44,10 +52,37 @@
         },
         {
          "kind": "anyBird"
+        },
+        {
+         "kind": "wildNumber"
         }
        ]
       },
       "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
        {
         "type": "copy",
         "at": {
@@ -102,11 +137,19 @@
          "kind": "bird",
          "nestId": 9281,
          "nestGuid": "inf8-s1"
+        },
+        {
+         "kind": "nest",
+         "id": 9295,
+         "guid": "inf8-req1",
+         "hasEgg": false,
+         "pile": [],
+         "label": "asked"
         }
        ]
       },
       "team": [],
-      "note": "Gives the bird a copy of its number and adds 1: 1, 2, 3, 4, ... for ever."
+      "note": "Dozes until a number lands on \"asked\" -- a request. Then spends it, gives the bird a copy of its number and adds 1: 1, 2, 3, 4, ... one term per request."
      }
     }
    },
@@ -140,6 +183,14 @@
          "nestId": 9282,
          "nestGuid": "inf8-s2",
          "label": "Sequence 2"
+        },
+        {
+         "kind": "nest",
+         "id": 9296,
+         "guid": "inf8-req2",
+         "hasEgg": false,
+         "pile": [],
+         "label": "asked"
         }
        ]
       }
@@ -155,10 +206,37 @@
         },
         {
          "kind": "anyBird"
+        },
+        {
+         "kind": "wildNumber"
         }
        ]
       },
       "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
        {
         "type": "copy",
         "at": {
@@ -213,11 +291,19 @@
          "kind": "bird",
          "nestId": 9282,
          "nestGuid": "inf8-s2"
+        },
+        {
+         "kind": "nest",
+         "id": 9296,
+         "guid": "inf8-req2",
+         "hasEgg": false,
+         "pile": [],
+         "label": "asked"
         }
        ]
       },
       "team": [],
-      "note": "Gives the bird a copy of its number and adds 2: 1, 3, 5, 7, ... for ever."
+      "note": "Dozes until a number lands on \"asked\" -- a request. Then spends it, gives the bird a copy of its number and adds 2: 1, 3, 5, 7, ... one term per request."
      }
     }
    },
@@ -251,6 +337,14 @@
          "nestId": 9283,
          "nestGuid": "inf8-s3",
          "label": "Sequence 3"
+        },
+        {
+         "kind": "nest",
+         "id": 9297,
+         "guid": "inf8-req3",
+         "hasEgg": false,
+         "pile": [],
+         "label": "asked"
         }
        ]
       }
@@ -266,10 +360,37 @@
         },
         {
          "kind": "anyBird"
+        },
+        {
+         "kind": "wildNumber"
         }
        ]
       },
       "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
        {
         "type": "copy",
         "at": {
@@ -324,11 +445,19 @@
          "kind": "bird",
          "nestId": 9283,
          "nestGuid": "inf8-s3"
+        },
+        {
+         "kind": "nest",
+         "id": 9297,
+         "guid": "inf8-req3",
+         "hasEgg": false,
+         "pile": [],
+         "label": "asked"
         }
        ]
       },
       "team": [],
-      "note": "Gives the bird a copy of its number and doubles it: 1, 2, 4, 8, ... for ever."
+      "note": "Dozes until a number lands on \"asked\" -- a request. Then spends it, gives the bird a copy of its number and doubles it: 1, 2, 4, 8, ... one term per request."
      }
     }
    },
@@ -392,6 +521,14 @@
          "nestId": 9286,
          "nestGuid": "inf8-diag",
          "label": "Diagonal"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
         }
        ]
       }
@@ -404,7 +541,15 @@
        "holes": [
         null,
         {
-         "kind": "wildNumber"
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBird"
+          }
+         ]
         },
         {
          "kind": "scaleTilt",
@@ -412,7 +557,8 @@
         },
         {
          "kind": "anyBird"
-        }
+        },
+        null
        ]
       },
       "program": [
@@ -421,7 +567,8 @@
         "at": {
          "c": "given",
          "path": [
-          1
+          1,
+          0
          ],
          "nest": true
         }
@@ -438,6 +585,25 @@
         "at": {
          "c": "s0",
          "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          1
+         ]
         }
        },
        {
@@ -504,6 +670,14 @@
          "kind": "bird",
          "nestId": 9286,
          "nestGuid": "inf8-diag"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "1",
+          "d": "1"
+         },
+         "op": "+"
         }
        ]
       },
@@ -516,7 +690,15 @@
          "holes": [
           null,
           {
-           "kind": "wildNumber"
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "wildNumber"
+            },
+            {
+             "kind": "anyBird"
+            }
+           ]
           },
           {
            "kind": "scaleTilt",
@@ -524,7 +706,8 @@
           },
           {
            "kind": "anyBird"
-          }
+          },
+          null
          ]
         },
         "program": [
@@ -533,7 +716,8 @@
           "at": {
            "c": "given",
            "path": [
-            1
+            1,
+            0
            ],
            "nest": true
           }
@@ -558,6 +742,25 @@
            "c": "given",
            "path": [
             3
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1,
+            1
            ]
           }
          },
@@ -630,7 +833,7 @@
         ],
         "trainedOn": null,
         "team": [],
-        "note": "The scale balances: the term under the claw is the one on the diagonal. Hands it to the bird, takes \"to skip\" up one, and sets \"skipped\" higher still -- which tips the scale over and asks for the next sequence."
+        "note": "The scale balances: the term under the claw is the one on the diagonal. Hands it to the bird, asks the room for the next, takes \"to skip\" up one, and sets \"skipped\" higher still -- which tips the scale over and asks for the next sequence."
        },
        {
         "kind": "robot",
@@ -643,6 +846,9 @@
            "holes": [
             {
              "kind": "anyNest"
+            },
+            {
+             "kind": "anyBird"
             }
            ]
           },
@@ -653,7 +859,8 @@
           },
           {
            "kind": "anyBird"
-          }
+          },
+          null
          ]
         },
         "program": [
@@ -679,16 +886,18 @@
          {
           "type": "put",
           "at": {
-           "c": "s0",
-           "path": []
+           "c": "given",
+           "path": [
+            1
+           ]
           }
          },
          {
-          "type": "take",
+          "type": "copy",
           "at": {
-           "c": "s0",
+           "c": "given",
            "path": [
-            0
+            4
            ]
           }
          },
@@ -697,15 +906,9 @@
           "at": {
            "c": "given",
            "path": [
+            1,
             1
            ]
-          }
-         },
-         {
-          "type": "vacuum",
-          "at": {
-           "c": "s0",
-           "path": []
           }
          },
          {
@@ -732,10 +935,10 @@
         ],
         "trainedOn": null,
         "team": [],
-        "note": "The scale tips towards \"skipped\": this sequence is done with. Drops it, takes the next box off the Sequences nest, puts the nest inside it in the Current hole, and sets \"skipped\" back to nothing. Dozes until a sequence arrives."
+        "note": "The scale tips towards \"skipped\": this sequence is done with. Drops it, takes the next box off the Sequences nest -- a nest and a bird to its room -- puts it in the Current hole, asks for its first term, and sets \"skipped\" back to nothing. Dozes until a sequence arrives."
        }
       ],
-      "note": "Leads the team. The scale tips towards \"to skip\", so this sequence still has terms to walk past: takes one off it, throws it away, and counts one more skipped."
+      "note": "Leads the team. The scale tips towards \"to skip\", so this sequence still has terms to walk past: takes one off its nest, throws it away, asks the room for the next, and counts one more skipped."
      }
     }
    },
@@ -753,10 +956,16 @@
       "hasEgg": false,
       "pile": [],
       "label": "Sequence 1"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9295,
+      "nestGuid": "inf8-req1",
+      "label": "more"
      }
     ]
    },
-   "x": -1.1,
+   "x": -1.0,
    "z": 1.8
   },
   {
@@ -770,10 +979,16 @@
       "hasEgg": false,
       "pile": [],
       "label": "Sequence 2"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9296,
+      "nestGuid": "inf8-req2",
+      "label": "more"
      }
     ]
    },
-   "x": -0.7,
+   "x": -0.5,
    "z": 1.8
   },
   {
@@ -787,10 +1002,16 @@
       "hasEgg": false,
       "pile": [],
       "label": "Sequence 3"
+     },
+     {
+      "kind": "bird",
+      "nestId": 9297,
+      "nestGuid": "inf8-req3",
+      "label": "more"
      }
     ]
    },
-   "x": -0.3,
+   "x": 0.0,
    "z": 1.8
   },
   {
@@ -800,7 +1021,7 @@
     "nestGuid": "inf8-seqs",
     "label": "All Sequences"
    },
-   "x": 0.1,
+   "x": 0.36,
    "z": 1.8
   },
   {
@@ -961,7 +1182,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nGive the \"Sequence 1\" box to\nthe All Sequences bird FIRST,\nand then pull the lever on the\nNumbers room. The first term\nappears on the diagonal nest.\n\nHand the box over before you\nstart its room: the team takes\nthe sequence in as it arrives\nand counts from its first term.\n\nNow Sequence 2 and the Odd\nNumbers room; then Sequence 3\nand Doubling. Pull a lever\nagain when you have seen\nenough.\n\nWatch through the glass: the\nteam walks past one term of\nthe second sequence, two of\nthe third, and hands on what\nit lands on. The diagonal\nreads 1, 3, 4, ...\n\nAFTER THE THIRD it stops, and\nthat is the point: it has read\nevery row it was given and is\nwaiting for a fourth. The list\nis yours to go on adding to,\nand every row you add gives\nthe diagonal one more term.\n\nTrain a robot of your own, put\nit in a room with a nest and a\nbird, and give the bird a box\nwith its nest: any sequence you\ncan make is a row of the table."
+    "text": "TO RUN IT\n\nGive the three \"Sequence\"\nboxes to the All Sequences\nbird, and pull the lever on\neach of the three rooms. Any\norder: a room sends a term\nonly when the team asks for\none, so nothing piles up.\n\nWatch through the glass: the\nteam takes the 1st term of the\n1st sequence, walks past one\nterm of the 2nd and takes its\n2nd, walks past two of the\n3rd. The diagonal reads 1, 3,\n4.\n\nThen it waits for a fourth\nrow. The list is yours to go\non adding to: every row you\nadd gives the diagonal one\nmore term."
    },
    "x": -0.45,
    "z": 2.85
@@ -969,10 +1190,26 @@
   {
    "thing": {
     "kind": "text",
-    "text": "THE ARGUMENT\n\nThe \"Add 1 to it\" room turns\nthe diagonal into another\nsequence. Ask yourself:\n\nCould THAT sequence be one of\nthe rows? It differs from row\n1 in its 1st term, from row 2\nin its 2nd, from row n in its\nnth \u2014 so it is none of them.\n\nWhatever list of sequences you\nmake, this builds a sequence\nthe list left out. The\nsequences are NOT countable.\n\nWould Doubling instead of Add\n1 change that? (Careful: what\nif a term is 0?)\n\nNow suppose every row were\ndigits, 0 to 9, and the\nchanger sent 4 for a 5 and 5\nfor anything else. A sequence\nof digits is the decimal\n0.d1 d2 d3 ... \u2014 a number\nbetween 0 and 1. So there are\nmore numbers between 0 and 1\nthan there are counting\nnumbers, and Activity 6\ncounted every fraction."
+    "text": "THE ARGUMENT\n\nThe \"Add 1 to it\" room turns\nthe diagonal into another\nsequence. Ask yourself:\n\nCould THAT sequence be one of\nthe rows? It differs from row\n1 in its 1st term, from row 2\nin its 2nd, from row n in its\nnth -- so it is none of them.\n\nWhatever list of sequences you\nmake, this builds a sequence\nthe list left out. The\nsequences are NOT countable."
    },
    "x": 0.2,
    "z": 2.85
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "A ROW OF YOUR OWN\n\nAny sequence you can make is a\nrow of the table. Train a\nrobot that answers a number on\nits nest with the next term to\na bird, put it in a room, and\ngive the All Sequences bird a\nbox holding [a nest its bird\nwrites to | a bird to that\nroom's nest].\n\nOpen a room here and copy how\n\"Numbers\" does it: it dozes on\n\"asked\", spends the number,\nsends its term, and adds 1."
+   },
+   "x": -1.5,
+   "z": 1.8
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "GOING FURTHER\n\nWould Doubling instead of Add\n1 change that? (Careful: what\nif a term is 0?)\n\nNow suppose every row were\ndigits, 0 to 9, and the\nchanger sent 4 for a 5 and 5\nfor anything else. A sequence\nof digits is the decimal 0.d1\nd2 d3 ... -- a number between\n0 and 1. So there are more\nnumbers between 0 and 1 than\nthere are counting numbers,\nand Activity 6 counted every\nfraction."
+   },
+   "x": 1.4,
+   "z": 1.8
   }
  ],
  "stations": {},

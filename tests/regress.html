@@ -3657,6 +3657,45 @@ async function heldSwitchCheck(D, win) {
   return ok;
 }
 
+// ACTIVITY 8 ON DEMAND: a sequence room sends a term only when the diagonal
+// team asks for one, so the levers can be pulled before the boxes are handed
+// over (the order Ken tried) and no tower of terms ever forms. The diagonal
+// of 1,2,3,4 / 1,3,5,7 / 1,2,4,8 reads 1, 3, 4.
+async function diagonalCheck(D) {
+  const w = await (await fetch('../examples/infinity/♾️ activity8-counting-sequences.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  const things = () => { const o = []; for (let i = 0; i < 40; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const rooms = things().filter(t => t.userData.kind === 'room');
+  const nestsNamed = () => { const o = []; for (const t of things()) t.traverse(x => { if (x.userData?.kind === 'nest') o.push(x); }); return o; };
+  let maxSeqPile = 0;
+  const watch = () => { for (const n of nestsNamed()) if (/^Sequence/.test(n.userData.label || '')) maxSeqPile = Math.max(maxSeqPile, n.userData.pile?.length ?? 0); };
+  // levers FIRST -- the order that used to grow towers
+  for (const name of ['Numbers', 'Odd Numbers', 'Doubling']) {
+    const r = rooms.find(t => t.userData.label === name);
+    D.clickRaw({ kind: 'roomLever', room: r });
+  }
+  D.speed('instant');
+  for (let k = 0; k < 120; k++) { await frames(D, 1); watch(); }
+  const quiet = maxSeqPile;                       // nothing asked for, nothing made
+  // then the boxes, one by one, to the All Sequences bird
+  const bird = things().find(t => t.userData.kind === 'bird' && t.userData.label === 'All Sequences');
+  for (const nm of ['Sequence 1', 'Sequence 2', 'Sequence 3']) {
+    const bx = things().find(t => t.userData.kind === 'box' && t.userData.holes[0]?.thing?.userData.label === nm);
+    D.hold(bx); await frames(D, 10);
+    D.clickThing(bird); await frames(D, 30);
+  }
+  const diag = things().find(t => t.userData.kind === 'nest' && t.userData.label === 'the diagonal');
+  for (let k = 0; k < 900 && (diag.userData.pile?.length ?? 0) < 3; k++) { await frames(D, 1); watch(); }
+  for (let k = 0; k < 60; k++) { await frames(D, 1); watch(); }
+  D.speed(1);
+  const vals = (diag.userData.pile || []).map(t => t.userData.value ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN);
+  const got = vals.slice().reverse().join(',');   // the pile is newest first
+  const ok = quiet === 0 && got === '1,3,4' && maxSeqPile <= 2;
+  put((ok ? 'PASS' : 'FAIL') + ' the diagonal, with the rooms answering only when asked  (before-asking=' + quiet
+      + ' diagonal=' + got + ' tallest-sequence-pile=' + maxSeqPile + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -6086,6 +6125,9 @@ async function runOne(D, spec) {
   let apOK = true;
   try { apOK = want('airplanePilot') ? await airplanePilotCheck(D) : true; }
   catch (e) { apOK = false; put('FAIL an airplane with its pilot aboard  ' + e.message, 'fail'); }
+  let dgOK = true;
+  try { dgOK = want('diagonal') ? await diagonalCheck(D) : true; }
+  catch (e) { dgOK = false; put('FAIL the diagonal, with the rooms answering only when asked  ' + e.message, 'fail'); }
   let bhOK = true;
   try { bhOK = want('heldSwitch') ? await heldSwitchCheck(D, frame.contentWindow) : true; }
   catch (e) { bhOK = false; put('FAIL a behaviour in hand is switched, and things say what they are  ' + e.message, 'fail'); }
@@ -6215,7 +6257,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

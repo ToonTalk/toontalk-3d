@@ -76,7 +76,7 @@ of Run, with its pipeline dozing in glass rooms; in Activity 8 you hand the
 sequences in yourself, a box at a time. **🏨 resort-infinity** is Hilbert's
 hotel out in the yard: cottages standing in a row, a clerk's desk on the
 grass, and a bell that makes the whole row shuffle up to let five more guests
-in.
+in. Since 15 Sep a sequence room sends a term only when the diagonal team asks for one (a number dropped on the room's "asked" nest, by the bird that travels in the sequence's box), so levers and boxes can go in any order and nothing piles up.
 
 ## infinity/📮 zeno.world.json
 
