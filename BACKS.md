@@ -7217,3 +7217,43 @@ the same row, and five houses across the table were four and a squeeze. The
 generators are re-laid from the measured footprints; the rule is in
 examples/README.md; the check is `overlap`, which names each pair with sizes
 and centres so the next one is a two-minute fix.
+
+## The keeper's round
+
+*Added 15 Sep. Ken: "Please add a yard panel example to the yard folder.
+Maybe add a button that queries the zoo yard and adds a wiggle behavior to
+all the animals."*
+
+Three things the vocabulary lacked, each found by trying to write the
+keeper. A robot handles one thing a round and cannot walk the holes of a box
+whose length it does not know, so the yard's report as ONE box was of no use
+to it: `[query | each | bird]` delivers the same report one thing at a time,
+oldest first off a nest, which is how every list in this workshop is walked.
+The keeper must tell an animal from the welcome sign, so each entry now ends
+with the thing's KIND, and the keeper's thought matches the word "model"; a
+third member lets everything else go, or the first pad on the nest would
+block the animals behind it. And a robot could not give a thing a behaviour
+by mail: `[bind | pad]` to a thing's bird sets the behaviour down beside it,
+binds it and switches it on, exactly as dropping the pad on it does -- and
+`bindGadget` learned to keep quiet, since seven animals would have been seven
+sentences.
+
+**And two faults under the floor, found by the keeper.** A letter a robot
+sends is opened INSIDE that robot's panel, where the bench, the stations and
+the hands are the panel's: a behaviour bound from there was set down on the
+robot's own work spot -- its tray on s0, a fresh work spot minted every round,
+1,289 of them -- so a bind now waits for the thing's own world to be current,
+which is never more than a turn away. And `switchNested`, which sets a
+behaviour's parts going, decided "is this gadget in a hole?" by searching the
+world that was current -- the walk runs before the panel's world is pushed, so
+it could not see the panel's own holes at all -- and switched on the wiggle
+the keeper keeps in its box as if it were a part: a stranded tray whose world
+had captured the keeper's work spots, copied into every wiggle the keeper
+handed out, each arriving with a spent [go] on its first spot. The test is
+structural now: nothing inside a box, a nest or a scale is a part.
+
+`🦓 zoo-keeper`: the zoo, a brown pad by the door. SPACE on it, and the
+elephant, the giraffe, the lion, the zebra, the penguin, the crocodile and
+the flamingo each get a wiggle of their own, lying beside them, bound and
+running -- one a round. Check: zooKeeper (seven animals, seven wigglers, one
+each, the sign spared).

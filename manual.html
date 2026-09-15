@@ -1540,7 +1540,15 @@ box, one hole per thing standing on the grass, each holding <em>a bird to
 it</em>, <em>its name</em> and <em>its place</em> &mdash; so a robot can not
 only count what is out there but tell any of it what to do. Put a word in the
 third hole, <code>[query | things | lion | bird]</code>, and only the things
-whose name or words contain it are reported. Give it
+whose name or words contain it are reported. Each entry ends with the
+thing&rsquo;s <em>kind</em> &mdash; model, text, number &mdash; so a robot
+can tell an animal from the welcome sign. <code>[query | each | bird]</code>
+answers the same, delivered <em>one thing at a time</em>, which is how a
+robot walks a list here: it takes one entry off its nest a round. And a thing
+can be given a behaviour by mail: <code>[bind | pad]</code> to its bird sets
+the behaviour in the letter down beside it, binds it and switches it on,
+exactly as dropping the pad on it would &mdash; which is how one robot gives
+a whole zoo a wiggle (see <em>yard/zoo-keeper</em>). Give it
 <code>[listen | things | bird]</code> and the bird brings a nest that hears
 <code>[arrived | name | bird to it]</code> and <code>[left | name]</code> as
 things are set down on the grass and taken up. The yard&rsquo;s name and its

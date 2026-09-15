@@ -1788,7 +1788,15 @@ box, one hole per thing standing on the grass, each holding a bird to
 it, its name and its place — so a robot can not
 only count what is out there but tell any of it what to do. Put a word in the
 third hole, [query | things | lion | bird], and only the things
-whose name or words contain it are reported. Give it
+whose name or words contain it are reported. Each entry ends with the
+things kind — model, text, number — so a robot
+can tell an animal from the welcome sign. [query | each | bird]
+answers the same, delivered one thing at a time, which is how a
+robot walks a list here: it takes one entry off its nest a round. And a thing
+can be given a behaviour by mail: [bind | pad] to its bird sets
+the behaviour in the letter down beside it, binds it and switches it on,
+exactly as dropping the pad on it would — which is how one robot gives
+a whole zoo a wiggle (see yard/zoo-keeper). Give it
 [listen | things | bird] and the bird brings a nest that hears
 [arrived | name | bird to it] and [left | name] as
 things are set down on the grass and taken up. The yards name and its
@@ -6901,8 +6909,10 @@ function discardRoomCtx(room) {
   }
   room.__ctx = null;
 }
-function bindGadget(g, target) {
-  if (g === target) return say('That is what it already controls.');
+function bindGadget(g, target, quiet = false) {
+  const tell = (m) => (quiet ? true : say(m));
+  const warn = (m) => (quiet ? true : sayAttn(m));
+  if (g === target) return tell('That is what it already controls.');
   ensureLive(g);
   ensureLive(target);
   // WHAT ITS ROBOTS SPEAK ABOUT NOW. An unbound behaviour works on itself, so
@@ -6912,7 +6922,7 @@ function bindGadget(g, target) {
   // re-point and it refused, which is what Ken met trying to give a copied
   // pilot to a copied airplane. releaseGadget had it right all along.
   if (g.userData.boundTo && g.userData.boundTo === target.userData.lid) {
-    return say(`${panelName(g)[0].toUpperCase()}${panelName(g).slice(1)} already works on `
+    return tell(`${panelName(g)[0].toUpperCase()}${panelName(g).slice(1)} already works on `
       + `${panelName(target)}.`);
   }
   const boundNow = g.userData.boundTo && liveReg.get(g.userData.boundTo);
@@ -6921,11 +6931,11 @@ function bindGadget(g, target) {
   const to = { lid: target.userData.lid, evt: target.userData.evtGuid };
   const { rec, tray } = gadgetRec(g);
   if (!rec) {
-    return sayAttn(`${panelName(g)} has nothing on its panel to bind \u2014 a behaviour is a thing whose PANEL carries the robots.`);
+    return warn(`${panelName(g)} has nothing on its panel to bind \u2014 a behaviour is a thing whose PANEL carries the robots.`);
   }
   const moved = rebindRec(rec, from, to);
   if (!moved) {
-    return sayAttn('Nothing on that panel speaks about "my thing", so there is nothing to re-point.');
+    return warn('Nothing on that panel speaks about "my thing", so there is nothing to re-point.');
   }
   // written back where it came from, and the tray rebuilt from it so what you
   // can see is what it now says
@@ -6939,6 +6949,7 @@ function bindGadget(g, target) {
   g.userData.boundTo = to.lid;
   clearUndo();
   refreshUI();
+  if (quiet) return true;
   return sayAttn(`${panelName(g)[0].toUpperCase()}${panelName(g).slice(1)} now works on ${panelName(target)} `
     + `\u2014 ${moved} reference${moved === 1 ? '' : 's'} re-pointed, and nothing else changed. Press SPACE on it to set it going.`);
 }
@@ -7717,7 +7728,7 @@ function placeMsg(X, msg) {
   const hole = (i) => msg.userData.holes[i]?.thing ?? null;
   const word = (t2) => t2?.userData.kind === 'text' ? (t2.userData.text ?? '').trim().toLowerCase() : null;
   const verb = word(hole(0));
-  if (!['set', 'move', 'query', 'listen', 'drop'].includes(verb)) return false;
+  if (!['set', 'move', 'query', 'listen', 'drop', 'bind'].includes(verb)) return false;
   const what0 = word(hole(1));
   // BUMPED, not touched: a thing is TOUCHED by being clicked, and clicking
   // picks it up. What this channel announces is one thing running into
@@ -7725,7 +7736,7 @@ function placeMsg(X, msg) {
   // -- but the new one is what the cards and the manual teach.
   const what = ['bump', 'bumped', 'hit'].includes(what0) ? 'touch'
     : ['heading', 'turn'].includes(what0) ? 'facing' : what0;
-  if (verb !== 'drop'
+  if (verb !== 'drop' && verb !== 'bind'
       && !['across', 'away', 'position', 'speed', 'solid', 'edge', 'touch', 'touches', 'size', 'pen',
         'facing', 'up', 'yaw', 'pitch', 'roll', 'forward', 'home', 'shown'].includes(what)) return false;
   const arg = hole(2);
@@ -7773,6 +7784,33 @@ function placeMsg(X, msg) {
   // a pen: the shape lands at the thing's position and orientation, in the
   // pen's colour, and joins the pen's current trail -- so a sculpture of
   // shapes and lines sweeps up as one thing.
+  // A BEHAVIOUR BY MAIL. [bind | pad] gives my thing the behaviour in the
+  // message, exactly as dropping the pad on it would: the pad is set down
+  // beside it, bound to it, and switched on. This is how one robot can give a
+  // whole zoo something to do, one animal a round, off the yard's report.
+  if (verb === 'bind') {
+    const given = hole(1);
+    if (!isGadget(given)) {
+      sayAttn('[bind | behaviour] wants a behaviour in its second hole \u2014 a pad whose panel holds robots.');
+      return true;
+    }
+    // OUT OF THE LETTER NOW -- the letter is disposed of when this returns --
+    // and IN THE THING'S OWN WORLD. A letter a robot sends is opened inside
+    // that robot's panel, where the bench is the panel's: a behaviour set down
+    // from there landed on the robot's work spot, not beside the animal, and
+    // minted a fresh work spot every round. The bind waits for the outer
+    // world to be current again, which is never more than a turn away.
+    const h = holeContaining(given);
+    if (h) h.thing = null;
+    given.removeFromParent();
+    const bindNow = () => {
+      bindGadget(given, X, true);            // closed: re-pointed in its record
+      spawnBeside(X, given, 0.25, 0.25);     // set down beside the thing, switched on
+    };
+    if (offstage() && worldRootOf(X) !== WROOT) pendingBinds.push(bindNow);
+    else bindNow();
+    return true;
+  }
   if (verb === 'drop') {
     // A THING IN THE MESSAGE is set down beside my thing -- on its field, or
     // on the table -- and arrives working. This is how a ship fires: its
@@ -8531,7 +8569,14 @@ function switchNested(tray, on) {
     // on -- the bullet the ship's card keeps in its box to copy from. Switched
     // on there it ran a panel nobody asked for, out of play, and its open
     // tray made every reading of that box a serialisation of a world.
-    if (o !== tray && isGadget(o)) { if (!holeContaining(o)) parts.push(o); return; }
+    // The test is STRUCTURAL: the walk runs before this panel's world is
+    // pushed, so holeContaining() -- which searches the world that is
+    // current -- could not see this panel's holes at all, and a wiggle kept
+    // in the keeper's box was switched on as a part: a stranded tray, whose
+    // world had captured the keeper's own work spots, copied into every
+    // wiggle the keeper handed out.
+    if (o !== tray && isGadget(o)) { parts.push(o); return; }
+    if (o !== tray && ['box', 'nest', 'scale'].includes(o.userData?.kind)) return;
     for (const c of (o.children || [])) walk(c);
   };
   walk(ctx.root);
@@ -9300,6 +9345,9 @@ function advanceRetiring(dt) {
 // what a trained step is recorded from -- are not kept per world.
 let roomFrame = 0, roomUIDue = false, roomUIAt = 0;
 function processDirtyRooms() {
+  // behaviours given by mail while a panel was current: set down now, in the
+  // world their things are in
+  if (!offstage() && pendingBinds.length) runPendingBinds();
   if (roomWorkBusy || mode === 'training') return;
   // THE SCHEDULER BELONGS TO THE OUTER WORLD. Hydrating a house, and dropping
   // something into one, both drive that house's own world at Instant -- and
@@ -11480,6 +11528,9 @@ function dropYardNode(ctx) {
 // the ground's own list indoors, the bench while you are out there.
 function yardThingsOf(ctx = curCtx) {
   const outsideHere = yardIn && yardIn.ctx === ctx;
+  // benchThings is the place's list whatever world is current -- a push
+  // stashes the stations and the hands, not the bench -- so a letter opened
+  // inside a robot's panel still reads the grass
   return (outsideHere ? benchThings : (ctx.yard?.things ?? []))
     .filter(t => !t.userData.panel && !(t.userData.kind === 'notebook' && t.userData.main) && !t.__gone);
 }
@@ -11507,35 +11558,50 @@ function yardMsg(X, msg) {
   const verb = word(hole(0)), what = word(hole(1));
   const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
   msg.removeFromParent();
-  if (!['query', 'listen'].includes(verb) || what !== 'things') {
-    sayAttn('The yard answers two things. [query | things | bird]: what stands on the grass, one hole '
-      + 'each \u2014 a bird to it, its name, its place; put a name in the third hole to ask about '
-      + 'those only. [listen | things | bird]: the bird gets a nest that hears things arrive and leave.');
+  if (!['query', 'listen'].includes(verb) || !['things', 'each'].includes(what)) {
+    sayAttn('The yard answers three things. [query | things | bird]: what stands on the grass as one '
+      + 'box, a hole each \u2014 a bird to it, its name, its place, its kind. [query | each | bird]: '
+      + 'the same, delivered one thing at a time, for a robot that takes them off a nest. Put a word '
+      + 'in the third hole to ask about those only. [listen | things | bird]: the bird gets a nest '
+      + 'that hears things arrive and leave.');
     return true;
   }
-  if (!rb) { sayAttn(`[${verb} | things | bird] wants a bird to answer to.`); return true; }
+  if (!rb) { sayAttn(`[${verb} | ${what} | bird] wants a bird to answer to.`); return true; }
   if (verb === 'listen') { sendViaBird(rb, makeEventNest(X, 'things')); return true; }
+  if (what === 'each') {
+    // ONE DELIVERY PER THING, oldest first off the nest: a robot handles one a
+    // round, which is how a robot walks a list here
+    for (const t of yardThingsIn(X, word(hole(2)))) sendViaBird(rb, yardEntry(t));
+    return true;
+  }
   sendViaBird(rb, yardReport(X, word(hole(2))));
   return true;
 }
-function yardReport(X, filter = null) {
-  // by the name on its plaque OR the words written on it: "lion" finds the
-  // pad that says "a lion" whatever plaque it wears
+// ...by the name on its plaque OR the words written on it: "lion" finds the
+// pad that says "a lion" whatever plaque it wears
+function yardThingsIn(X, filter = null) {
   const words = (t) => (plainName(t) + ' ' + (t.userData.kind === 'text' ? (t.userData.text ?? '') : '')).toLowerCase();
-  const all = yardThingsOf(X.__yardCtx).filter(t => !filter || words(t).includes(filter));
+  return yardThingsOf(X.__yardCtx).filter(t => !filter || words(t).includes(filter));
+}
+function yardReport(X, filter = null) {
+  const all = yardThingsIn(X, filter);
   const b = makeBox(all.length);
   b.userData.holeLabels = all.map(plainName);
   paintHoleLabels(b);
   all.forEach((t, i) => putInHole(b.userData.holes[i], yardEntry(t)));
   return b;
 }
+// [a bird to it | its name | its place | its kind]. The kind is what lets a
+// robot tell an animal (a model) from the welcome sign (a pad) by matching
+// the word in its thought.
 function yardEntry(t) {
-  const e = makeBox(3);
-  e.userData.holeLabels = ['to it', 'name', 'place'];
+  const e = makeBox(4);
+  e.userData.holeLabels = ['to it', 'name', 'place', 'kind'];
   paintHoleLabels(e);
   putInHole(e.userData.holes[0], makeLiveBird(t));
   putInHole(e.userData.holes[1], makeText(plainName(t)));
   putInHole(e.userData.holes[2], placeBox(t.position.x, t.position.z));
+  putInHole(e.userData.holes[3], makeText(t.userData.kind));
   return e;
 }
 function yardEvent(how, nm, t) {
@@ -11551,6 +11617,15 @@ function yardEvent(how, nm, t) {
 // a second while you are outside, and only once the yard has been spoken to
 // at all; the first look is a baseline, not a crowd arriving.
 let yardSweepAt = 0;
+// Behaviours given by mail from inside a panel, waiting for the outer world
+// to be current so they can be set down in it.
+const pendingBinds = [];
+function runPendingBinds() {
+  while (pendingBinds.length) {
+    const f = pendingBinds.shift();
+    try { f(); } catch (e) { console.error('[bind] could not give the behaviour:', e); }
+  }
+}
 function sweepYard(now) {
   const node = yardIn?.ctx?.yard?.node;
   if (!node || now - yardSweepAt < 120) return;
@@ -25263,6 +25338,16 @@ window.__nano = {
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },
   tipRule: TIP_RULE,
   get doc() { return document; },
+  matchState, specOf,   // a probe can ask why a robot does not run
+  sched() { return { roomWorkBusy, mode, stack: worldStack.length, paused: simPaused, stands: allStands.length,
+                     busy, queue: queue.length, current: !!current, roomFrame, ready: worldReady }; },
+  roomGates(t) {        // ...and why the scheduler passes a room by
+    return { dirty: !!t.userData.dirty, running: !!t.__running,
+             postedOut: (t.__outPost || 0) > 0 && performance.now() - (t.__outPostAt || 0) < 20000,
+             sleeping: sleepingRoom(t), outOfPlay: outOfPlay(t),
+             seenThisFrame: t.__frame === roomFrame, roomFrame, waitingStep: !!(t.__nextStep && performance.now() < t.__nextStep),
+             place: (() => { const g = t.__owner; const bt = g?.userData?.boundTo && liveReg.get(g.userData.boundTo); return thingPlace(bt || g); })() };
+  },
   bounds() { return { ...BENCH, top: BENCH_TOP }; },
   exitDoorNode() { return exitDoor; },
   handPos() { return handNode.position.toArray().map(n => +n.toFixed(2)); },

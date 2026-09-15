@@ -3337,6 +3337,7 @@ const EXAMPLE_WORLDS = [
   'words/📝 sentence-generator',
   'words/🔤 grammar',
   'yard/🦁 zoo',
+  'yard/🦓 zoo-keeper',
 ];
 async function overlapCheck(D) {
   const name = (t) => (t.userData.label || (t.userData.text || '').split('\n')[0].slice(0, 14)
@@ -3409,7 +3410,8 @@ async function yardPanelCheck(D, w) {
   const entry = rep0.userData.holes[0].thing;
   const reported = rep0.userData.holes.length === 3
     && rep0.userData.holeLabels.join(',') === 'Leo,number,probe'
-    && entry.userData.holes.map(h => h.thing.userData.kind).join(',') === 'bird,text,box';
+    && entry.userData.holes.map(h => h.thing.userData.kind).join(',') === 'bird,text,box,text'
+    && entry.userData.holes[3].thing.userData.text === 'text';      // ...and its kind, so a keeper can tell a pad from an animal
   const filtered = D.yardReport('lion').userData.holeLabels.join(',') === 'Leo';
   // 2. the panel opens only outside, and its owner is the yard
   D.worldIn(JSON.parse(JSON.stringify(D.worldOut())));   // a fresh start, indoors
@@ -3472,6 +3474,64 @@ async function airplanePilotCheck(D) {
   put((ok ? 'PASS' : 'FAIL') + ' an airplane with its pilot aboard  (started=' + started + ' flew='
       + p0.distanceTo(p1).toFixed(2) + 'm stopped=' + stopped + ' lands=' + still + ' pilot-aboard=' + aboard + ')',
       ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE KEEPER'S ROUND: SPACE on a pad in the zoo asks the yard for every
+// thing on the grass, one at a time, and gives each ANIMAL a wiggle by mail
+// ([bind | behaviour]) -- and lets the welcome sign go by. Seven animals,
+// seven wigglers, each bound to its own animal and turning it.
+async function zooKeeperCheck(D) {
+  const w = await (await fetch('../examples/yard/🦓 zoo-keeper.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+  const grass = () => { const o = []; for (let i = 0; i < 60; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const animals = grass().filter(t => t.userData.kind === 'model');
+  const yaw0 = animals.map(t => t.rotation.y);
+  let btn = null; for (const t of grass()) if (t.userData.text === 'wiggle the animals') btn = t;
+  D.switchGadget(btn, true, true);
+  D.speed(8);
+  let bound = 0;
+  for (let k = 0; k < 40; k++) {
+    await frames(D, 60);
+    bound = grass().filter(t => t.userData.gadget && t.userData.text === 'wiggle'
+      && animals.some(a => a.userData.lid && a.userData.lid === t.userData.boundTo)).length;
+    if (bound >= animals.length) break;
+  }
+  // a wiggle is 25 degrees one round and 25 back the next, so it is sampled
+  // over many rounds rather than read once
+  // ...and for as long as it takes every animal to show one turn: a panel
+  // gets a turn a frame at best, and after thirteen golden worlds in the
+  // same tab the frames come slower, so a fixed window read four of seven
+  // ...in WALL time: a panel's turns are paced by a wall-clock cooldown, so
+  // a thousand frames run in a second give it one turn, and after thirteen
+  // golden worlds in the same tab the frames come at a different rate again
+  const maxd = animals.map(() => 0);
+  const t0 = performance.now();
+  while (performance.now() - t0 < 45000 && maxd.filter(d => d > 0.01).length < animals.length) {
+    await frames(D, 20);
+    await new Promise(r => setTimeout(r, 60));
+    animals.forEach((a, i) => { maxd[i] = Math.max(maxd[i], Math.abs(a.rotation.y - yaw0[i])); });
+  }
+  D.speed(1);
+  const each = animals.map(a => a.userData.lid
+    ? grass().filter(t => t.userData.gadget && t.userData.boundTo === a.userData.lid).length : 0);
+  const oneEach = each.every(n => n === 1);
+  const turned = maxd.filter(d => d > 0.01).length;
+  const signSpared = !grass().some(t => t.userData.gadget && t.userData.boundTo
+    && grass().some(o => o.userData.lid === t.userData.boundTo && o.userData.kind === 'text'));
+  const ok = animals.length === 7 && bound === 7 && oneEach && turned === 7 && signSpared;
+  const why = ok ? '' : ' still=[' + animals.map((a, i) => {
+    if (maxd[i] > 0.01) return null;
+    const wg = grass().find(t => t.userData.gadget && t.userData.boundTo === a.userData.lid);
+    const tr = wg?.__panelTray, c = tr?.__ctx;
+    const holes = c?.standOcc ? c.standOcc.userData.holes.map(h => h.thing ? (h.thing.userData.kind === 'text' ? 'tick' : h.thing.userData.kind[0]) : '-').join('') : '?';
+    return a.userData.label + ':' + holes + ' frames=' + (tr?.__frame ?? '?') + ' dirty=' + tr?.userData?.dirty
+      + ' busy=' + c?.busy + ' q=' + (c?.queue?.length ?? '?') + ' cur=' + !!c?.current + ' active=' + c?.activeBot?.name;
+  }).filter(Boolean).join('; ') + ']';
+  put((ok ? 'PASS' : 'FAIL') + ' the keeper gives every animal a wiggle  (animals=' + animals.length
+      + ' wigglers-bound=' + bound + ' one-each=' + oneEach + ' turning=' + turned
+      + ' sign-spared=' + signSpared + why + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -5904,6 +5964,9 @@ async function runOne(D, spec) {
   let apOK = true;
   try { apOK = want('airplanePilot') ? await airplanePilotCheck(D) : true; }
   catch (e) { apOK = false; put('FAIL an airplane with its pilot aboard  ' + e.message, 'fail'); }
+  let zkOK = true;
+  try { zkOK = want('zooKeeper') ? await zooKeeperCheck(D) : true; }
+  catch (e) { zkOK = false; put('FAIL the keeper gives every animal a wiggle  ' + e.message, 'fail'); }
   let pvOK = true;
   try { pvOK = want('pageVacuum') ? await pageVacuumCheck(D) : true; }
   catch (e) { pvOK = false; put('FAIL what Dusty takes off a page is what he gives back  ' + e.message, 'fail'); }
@@ -6027,7 +6090,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
