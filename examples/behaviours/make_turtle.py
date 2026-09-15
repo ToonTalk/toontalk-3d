@@ -236,7 +236,7 @@ TRY = ('TO DRAW A SQUARE\n\n'
 bench = [
     # the bird stands in FRONT with nothing behind her; the shell has the
     # middle; the orders make one spaced row on the left
-    {'thing': post, 'x': 0.85, 'z': 1.30},
+    {'thing': post, 'x': 1.05, 'z': 1.30},
     {'thing': shell, 'x': 0.25, 'z': 1.60},
     # beside the bird, not off in the far corner: the working set --
     # behaviour, bird, shell -- reads as one group
@@ -244,16 +244,16 @@ bench = [
 
     {'thing': fwd, 'x': -1.48, 'z': 1.62},
     {'thing': back, 'x': -1.08, 'z': 1.62},
-    {'thing': turn, 'x': -1.48, 'z': 1.98},
-    {'thing': turn30, 'x': -1.08, 'z': 1.98},
+    {'thing': turn, 'x': -1.48, 'z': 1.90},
+    {'thing': turn30, 'x': -1.08, 'z': 1.90},
     {'thing': pendown, 'x': -0.65, 'z': 1.62},
-    {'thing': penup, 'x': -0.65, 'z': 1.98},
+    {'thing': penup, 'x': -0.65, 'z': 1.90},
 
     # ...and what the pen is like, in a row of its own
-    {'thing': pen_red, 'x': -1.48, 'z': 1.38},
-    {'thing': pen_blue, 'x': -1.08, 'z': 1.38},
-    {'thing': pen_thick, 'x': -0.65, 'z': 1.38},
-    {'thing': pen_thin, 'x': -0.22, 'z': 1.38},
+    {'thing': pen_red, 'x': -1.52, 'z': 1.32},
+    {'thing': pen_blue, 'x': -0.86, 'z': 1.32},
+    {'thing': pen_thick, 'x': -0.22, 'z': 1.32},
+    {'thing': pen_thin, 'x': 0.42, 'z': 1.32},
 
     {'thing': txt(ABOUT), 'x': -0.10, 'z': 2.32},           # noqa: F405
     {'thing': txt(HOW), 'x': 0.60, 'z': 2.32},              # noqa: F405

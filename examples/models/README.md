@@ -16,3 +16,13 @@ radius of room behind it as well as in front.
 
 `make_flight.py` writes the flight (moved here from `behaviours/` on 13 Sep,
 to sit beside the airplane it flies).
+
+## ✈️ airplane-with-pilot.world.json
+
+The same flight with the turtle and the pilot INSIDE the airplane's own
+panel, so the airplane is a thing that flies: SPACE on it takes off and
+loops, "." lands it, and it can be picked up, copied, filed on a page or
+carried out to the yard with its pilot aboard. A copy is a second airplane
+with a second pilot -- a panel travels with its thing -- and one bird still
+reaches both letterboxes, because a copied nest keeps its name. Hold the
+airplane and press the gear to see what is inside.

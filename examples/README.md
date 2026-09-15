@@ -427,3 +427,16 @@ sweeps its bird rather than its box — its box is still holding houses that are
 hard at work.)
 
 Regenerate with `python make_reverse.py`.
+
+## Laying a world out
+
+The table runs from x −1.7 to 1.7 and z 1.05 to 2.35, and `putOnBench`
+clamps: a thing placed past an edge stands at the edge (z at 2.19, x at
+±1.7 less half its width). So a row authored at z 2.20 and a row at z 2.90 are
+the SAME row, and five houses across the table are four and a squeeze. Two
+things whose footprints overlap fight for the same pixels and flicker, so the
+suite measures every world here (`tests/regress.html?checks=overlap`) and
+names each pair that stands on another, with sizes and centres. Widths worth
+knowing: a house 0.51, a text pad 0.34 × 0.26, a three-hole box 0.48, a
+four-hole box 0.62, a nest 0.35, a number 0.24. A team's members queue about a
+metre BEHIND the leader, so leave that ground clear.

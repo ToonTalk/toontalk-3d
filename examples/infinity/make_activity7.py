@@ -127,24 +127,24 @@ bench = [
     {'thing': room('All Fractions',
                    box(scale(num(1), num(2), label='n over d'),
                        bird(*BOXES, label='Fractions')),
-                   allfractions, dirty=False), 'x': -1.20, 'z': 1.45},
+                   allfractions, dirty=False), 'x': -1.40, 'z': 1.45},
 
     {'thing': room('Box to Number',
                    box(nest(*BOXES, label='In'), bird(*F_A, label='Out')),
-                   boxtonum), 'x': -0.50, 'z': 1.45},
+                   boxtonum), 'x': -0.72, 'z': 1.45},
     {'thing': room('Doubler', box(nest(*F_A, label='In'), bird(*TWO, label='Out')),
-                   doubler), 'x': 0.20, 'z': 1.45},
+                   doubler), 'x': -0.04, 'z': 1.45},
     {'thing': room('Add 10', box(nest(*F_B, label='In'), bird(*TEN, label='Out')),
-                   add10), 'x': 0.90, 'z': 1.45},
+                   add10), 'x': 0.64, 'z': 1.45},
     {'thing': room('Halve', box(nest(*F_C, label='In'), bird(*HALF, label='Out')),
-                   halve), 'x': 1.60, 'z': 1.45},
+                   halve), 'x': 1.32, 'z': 1.45},
 
     {'thing': nest(*TWO, label='0 to 2'), 'x': 0.20, 'z': 2.15},
     {'thing': nest(*TEN, label='10 to 11'), 'x': 0.90, 'z': 2.15},
     {'thing': nest(*HALF, label='0 to a half'), 'x': 1.60, 'z': 2.15},
 
     {'thing': txt(ABOUT), 'x': -1.25, 'z': 2.35},
-    {'thing': txt(RUN), 'x': -0.10, 'z': 2.95},
+    {'thing': txt(RUN), 'x': -0.50, 'z': 2.95},
 ]
 
 if __name__ == '__main__':

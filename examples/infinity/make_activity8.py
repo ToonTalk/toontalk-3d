@@ -185,33 +185,33 @@ THINK = ('THE ARGUMENT\n\n'
 # take the middle.
 bench = [
     {'thing': room('Numbers', box(num(1), bird(*S1, label='Sequence 1')),
-                   numbers, dirty=False), 'x': -1.15, 'z': 1.55},
+                   numbers, dirty=False), 'x': -1.15, 'z': 1.42},
     {'thing': room('Odd Numbers', box(num(1), bird(*S2, label='Sequence 2')),
-                   odds, dirty=False), 'x': -0.35, 'z': 1.55},
+                   odds, dirty=False), 'x': -0.35, 'z': 1.42},
     {'thing': room('Doubling', box(num(1), bird(*S3, label='Sequence 3')),
-                   doubling, dirty=False), 'x': 0.45, 'z': 1.55},
+                   doubling, dirty=False), 'x': 0.45, 'z': 1.42},
 
     {'thing': room('Diagonal',
                    box(nest(*SEQS, label='Sequences'), nest(*CUR, label='Current'),
                        scale(num(1), num(0), label='skipped | to skip'),
                        bird(*DIAG, label='Diagonal')),
-                   diagonal), 'x': 1.25, 'z': 1.55},
+                   diagonal), 'x': 1.25, 'z': 1.42},
 
     # the three sequences, ready to hand over, and the bird that takes them in
-    {'thing': box(nest(*S1G, label='Sequence 1')), 'x': -1.30, 'z': 2.20},
-    {'thing': box(nest(*S2G, label='Sequence 2')), 'x': -0.90, 'z': 2.20},
-    {'thing': box(nest(*S3G, label='Sequence 3')), 'x': -0.50, 'z': 2.20},
-    {'thing': bird(*SEQS, label='All Sequences'), 'x': -0.10, 'z': 2.20},
+    {'thing': box(nest(*S1G, label='Sequence 1')), 'x': -1.10, 'z': 1.80},
+    {'thing': box(nest(*S2G, label='Sequence 2')), 'x': -0.70, 'z': 1.80},
+    {'thing': box(nest(*S3G, label='Sequence 3')), 'x': -0.30, 'z': 1.80},
+    {'thing': bird(*SEQS, label='All Sequences'), 'x': 0.10, 'z': 1.80},
     {'thing': room('Add 1 to it',
                    box(nest(*DIAG, label='In'), bird(*CHANGED, label='Out')),
-                   add1), 'x': 0.70, 'z': 2.20},
+                   add1), 'x': 0.75, 'z': 1.95},
 
-    {'thing': nest(*DIAG_W, label='the diagonal'), 'x': -1.62, 'z': 2.80},
-    {'thing': nest(*CHANGED, label='changed'), 'x': 1.62, 'z': 2.80},
+    {'thing': nest(*DIAG_W, label='the diagonal'), 'x': -1.52, 'z': 2.80},
+    {'thing': nest(*CHANGED, label='changed'), 'x': 1.52, 'z': 2.80},
 
-    {'thing': txt(ABOUT), 'x': -0.95, 'z': 2.85},
-    {'thing': txt(RUN), 'x': -0.10, 'z': 2.85},
-    {'thing': txt(THINK), 'x': 0.75, 'z': 2.85},
+    {'thing': txt(ABOUT), 'x': -1.10, 'z': 2.85},
+    {'thing': txt(RUN), 'x': -0.45, 'z': 2.85},
+    {'thing': txt(THINK), 'x': 0.20, 'z': 2.85},
 ]
 
 if __name__ == '__main__':

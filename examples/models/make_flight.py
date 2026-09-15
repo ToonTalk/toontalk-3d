@@ -153,12 +153,12 @@ bench = [
     {'thing': turtle, 'x': 1.42, 'z': 1.28},
     {'thing': pilot, 'x': 1.42, 'z': 1.62},
 
-    {'thing': stride, 'x': -1.45, 'z': 1.28},
-    {'thing': climb, 'x': -1.05, 'z': 1.28},
-    {'thing': level, 'x': -0.65, 'z': 1.28},
-    {'thing': roll_it, 'x': -1.45, 'z': 1.62},
-    {'thing': home, 'x': -1.05, 'z': 1.62},
-    {'thing': penup, 'x': -0.65, 'z': 1.62},
+    {'thing': stride, 'x': -1.44, 'z': 1.28},
+    {'thing': climb, 'x': -0.94, 'z': 1.28},
+    {'thing': level, 'x': -0.44, 'z': 1.28},
+    {'thing': roll_it, 'x': -1.44, 'z': 1.62},
+    {'thing': home, 'x': -0.94, 'z': 1.62},
+    {'thing': penup, 'x': -0.44, 'z': 1.62},
 
     # the experiment first (Astra's review): what to change, then how it works
     {'thing': scenery(txt(ABOUT)), 'x': -1.45, 'z': 2.30},           # noqa: F405

@@ -161,7 +161,7 @@ bench = [
     # the bat stands in the clear front-right, away from the desk notebook's
     # home; the score in the clear front-left; the ball has the middle
     {'thing': ball, 'x': 0.10, 'z': 1.50},
-    {'thing': bat, 'x': 1.42, 'z': 1.95},
+    {'thing': bat, 'x': 1.42, 'z': 1.80},
     {'thing': scenery(score), 'x': -0.90, 'z': 1.95},
 
     {'thing': scenery(b_bounce), 'x': -1.50, 'z': 1.15},

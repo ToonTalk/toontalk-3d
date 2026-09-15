@@ -106,7 +106,7 @@ bench = [
     {'thing': nest(*PAIRS, label='dancing partners'), 'x': 1.15, 'z': 2.20},
 
     {'thing': txt(ABOUT), 'x': -1.20, 'z': 2.40},
-    {'thing': txt(RUN), 'x': 0.25, 'z': 2.90},
+    {'thing': txt(RUN), 'x': 0.65, 'z': 2.90},
 ]
 
 if __name__ == '__main__':

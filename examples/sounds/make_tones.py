@@ -51,7 +51,7 @@ bench = [
     # lays out keeps to the left of it -- otherwise the bench shoves things
     # aside to make room and the arrangement you wrote is not the one you get.
     {'thing': tone_box(440, (1, 2), 'sine'), 'x': -1.50, 'z': 1.15},
-    {'thing': silent(), 'x': -0.90, 'z': 1.15},
+    {'thing': silent(), 'x': -0.80, 'z': 1.15},
 
     # the same note, sine and square, to hear the difference side by side
     {'thing': sound(seg(NOTES['A4'], 0.6, 'sine'), label='sine'),

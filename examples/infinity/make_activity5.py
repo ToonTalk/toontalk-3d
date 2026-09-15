@@ -113,7 +113,7 @@ bench = [
     {'thing': nest(*BIG, label='above 1'), 'x': 1.20, 'z': 2.20},
 
     {'thing': txt(ABOUT), 'x': -1.25, 'z': 2.40},
-    {'thing': txt(RUN), 'x': 0.30, 'z': 2.90},
+    {'thing': txt(RUN), 'x': 0.70, 'z': 2.90},
 ]
 
 if __name__ == '__main__':

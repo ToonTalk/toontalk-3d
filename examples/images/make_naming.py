@@ -106,9 +106,9 @@ bench = [
     {'thing': pic('star'), 'x': -0.85, 'z': 1.72},
     {'thing': pic('heart'), 'x': -0.40, 'z': 1.72},
 
-    {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.18},
-    {'thing': txt(RUN), 'x': -0.75, 'z': 2.18},
-    {'thing': txt(WHY), 'x': -0.05, 'z': 2.18},
+    {'thing': txt(ABOUT), 'x': -0.75, 'z': 2.18},
+    {'thing': txt(RUN), 'x': -0.05, 'z': 2.18},
+    {'thing': txt(WHY), 'x': 0.65, 'z': 2.18},
 ]
 
 write_images('🏷️ naming', bench)

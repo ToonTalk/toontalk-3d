@@ -7152,3 +7152,68 @@ what they have already sent. Orders posted to a nest are still in the pile and
 whatever reads them goes on carrying them out -- the plane flies the rest of
 its orders. The message says so now, and points at the thing itself as the
 switch for that.
+
+## The yard is a thing
+
+*Added 15 Sep. Ken: "I wonder if a panel for the yard would be a good idea.
+One particularly useful message would be to report all the objects on the
+yard and to listen for changes. Perhaps a button under the What's here panel
+since there is already the reshape yard button." Then: "Build it with birds in
+the report. But I can imagine some situations where filtering by name would be
+convenient."*
+
+A place is not a thing, so nothing could address the yard: a zoo could not
+count its animals, a village could not notice a house arriving. It has a node
+now -- no shape, never on the bench, never picked -- with a name to write to
+(`yardNode`, one per place, made the first time anything asks for it), a
+panel of its own, and two things to say.
+
+`[query | things | bird]` answers with a box, one hole per thing standing on
+the grass, each holding a bird to it, its name and its place -- a BIRD, as
+Ken chose, because that is how a thing is addressed here, so a robot can
+answer the query and then tell any of them to move. A word in the third hole
+filters by the name on its plaque or the words written on it. `[listen |
+things | bird]` sends an event nest that hears `[arrived | name | bird]` and
+`[left | name]`: a few times a second while you are outside, the things on
+the grass are compared with the last look, and the first look is a baseline,
+not a crowd arriving. The listener's own nest, carried onto the grass,
+announces itself once -- it is a thing on the grass.
+
+**Only the place you are in runs.** The table's things are detached while
+you are out and the ground's while you are in, and a panel is a thing on a
+bench, so a yard panel opened on the table would stand still the moment you
+stepped out to watch it. The button opens it on the grass, and indoors says
+so. The query still answers indoors -- the list is the ground's own -- and
+the yard's name and panel are saved with the world.
+
+A yard panel has no thing to press SPACE on, so SPACE on the open panel
+switches it, the way a house's lever does. Check: yardPanel.
+
+## An airplane with its pilot aboard
+
+*Ken: "let's make another one where the behaviors are all local to the object
+so that you can turn on airplane and turn it off."*
+
+`✈️ airplane-with-pilot`: the same flight, the turtle and the pilot grouped
+inside the airplane's own panel. SPACE on the airplane flies it and "." lands
+it -- switchBound already started and stopped whatever is grouped inside a
+thing -- and it can be picked up, copied, filed and carried with its pilot
+aboard. The copy question answers itself here: a copy is a second airplane
+with a second pilot, and one bird reaches both letterboxes, because a copied
+nest keeps its name. Check: airplanePilot.
+
+## Nothing in an example stands on anything else
+
+*Ken's picture: the airplane's "home" pad under a corner of an order box.
+"This can cause flicker and should be avoided in all the example programs."*
+
+Every example world is now opened by the suite and every pair of top-level
+things measured -- on the table, and on the grass where a world keeps things
+outside -- solid parts only, precisely (a house's roof is a cone turned
+forty-five degrees, and its loose box was a metre wide). Twelve worlds had
+real overlaps, and most came from one fact nobody had written down: the table
+clamps z to 2.19, so a row authored at z 2.20 and one at 2.40 or 2.90 were
+the same row, and five houses across the table were four and a squeeze. The
+generators are re-laid from the measured footprints; the rule is in
+examples/README.md; the check is `overlap`, which names each pair with sizes
+and centres so the next one is a two-minute fix.

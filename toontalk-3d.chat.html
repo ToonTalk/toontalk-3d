@@ -1777,6 +1777,24 @@ corner handles stretch the yard — the far edge and the sides; the near
 edge, where the helpers stand, stays — and the size is kept with the
 yard. A saved world also carries what you have put away, indoors and out.
 
+The yard is a thing. A place is not a thing, so nothing could
+address the yard: a zoo could not count its animals, a village could not
+notice a house arriving. It can now. The yards behaviours…
+in the ⋮ menu, under What is here, opens the yards
+own panel on the grass (step outside first: only the place you are in runs).
+Its bird is the yards, and the yard answers two things. Give it
+[query | things | bird] and the bird you send comes back with a
+box, one hole per thing standing on the grass, each holding a bird to
+it, its name and its place — so a robot can not
+only count what is out there but tell any of it what to do. Put a word in the
+third hole, [query | things | lion | bird], and only the things
+whose name or words contain it are reported. Give it
+[listen | things | bird] and the bird brings a nest that hears
+[arrived | name | bird to it] and [left | name] as
+things are set down on the grass and taken up. The yards name and its
+panel are saved with the world; SPACE on the panel sets its robots going and
+. rests them.
+
 ## What a programmer would call it
 
 The workshop has one set of words for everyone. For older learners and
@@ -6303,6 +6321,7 @@ function handleLiveMsg_(X, msg) {
       return;
     }
   }
+  if (X.userData.kind === 'yard' && yardMsg(X, msg)) return;
   if (placeMsg(X, msg)) return;
   if (lookMsg(X, msg)) return;
   if (X.userData.kind === 'number') {
@@ -11564,6 +11583,119 @@ function showYardDoor() {
   // else has the back door, unless it was put away from the more-menu
   const tools = (typeof worldRules !== 'undefined' && worldRules?.tools) || null;
   yardDoor.visible = !offstage() && (!tools || tools.includes('yard')) && helperShown.yard !== false;
+}
+// THE YARD AS A THING. A place is not a thing, so nothing could address the
+// yard: a zoo could not count its animals, a village could not notice a house
+// arriving. It has a node now -- no shape, never on the bench, never picked --
+// with a name to write to, a panel of its own for behaviours, and two things
+// to say: what stands on the grass, and that something has just come or gone.
+// One per place, made the first time anything asks for it.
+function yardNode(ctx = curCtx) {
+  const yard = (ctx.yard ??= { things: [] });
+  if (yard.node) return yard.node;
+  const g = new THREE.Group();
+  g.userData = { kind: 'yard', label: 'the yard', rest: 0, width: 0 };
+  g.position.set(0, GROUND_Y, (YARD.z0 + YARD.z1) / 2);
+  scene.add(g);                       // in the scene, so a live bird finds it standing
+  g.__yardCtx = ctx;
+  ensureLive(g);
+  yard.node = g;
+  return g;
+}
+function dropYardNode(ctx) {
+  const n = ctx?.yard?.node;
+  if (!n) return;
+  if (n.__panelTray) { discardRoomCtx(n.__panelTray); n.__panelTray.removeFromParent(); n.__panelTray = null; }
+  liveReg.delete(n.userData.lid);
+  n.removeFromParent();
+  ctx.yard.node = null;
+}
+// What stands on the grass of a place right now, wherever you happen to be:
+// the ground's own list indoors, the bench while you are out there.
+function yardThingsOf(ctx = curCtx) {
+  const outsideHere = yardIn && yardIn.ctx === ctx;
+  return (outsideHere ? benchThings : (ctx.yard?.things ?? []))
+    .filter(t => !t.userData.panel && !(t.userData.kind === 'notebook' && t.userData.main) && !t.__gone);
+}
+// A thing's name in plain words: the one on its plaque, else the first line
+// written on it, else what kind of thing it is.
+function plainName(t) {
+  const ud = t.userData;
+  if (ud.label) return ud.label;
+  if (ud.kind === 'text') {
+    const w = (ud.text ?? '').trim().split(String.fromCharCode(10))[0];
+    if (w) return w.length > 24 ? w.slice(0, 24) + '\u2026' : w;
+    if (ud.img) return 'a picture';
+  }
+  return ud.kind;
+}
+// WHAT THE YARD SAYS. [query | things | bird]: a box with one hole per thing
+// on the grass -- a bird to it, its name, its place -- so a robot can not only
+// count what is out there but tell any of it what to do. A name in the third
+// hole asks about those things only. [listen | things | bird]: an event nest
+// that hears [arrived | name | bird to it] and [left | name].
+function yardMsg(X, msg) {
+  if (msg.userData.kind !== 'box') return false;
+  const hole = (i) => msg.userData.holes[i]?.thing ?? null;
+  const word = (t2) => t2?.userData.kind === 'text' ? (t2.userData.text ?? '').trim().toLowerCase() : null;
+  const verb = word(hole(0)), what = word(hole(1));
+  const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
+  msg.removeFromParent();
+  if (!['query', 'listen'].includes(verb) || what !== 'things') {
+    sayAttn('The yard answers two things. [query | things | bird]: what stands on the grass, one hole '
+      + 'each \u2014 a bird to it, its name, its place; put a name in the third hole to ask about '
+      + 'those only. [listen | things | bird]: the bird gets a nest that hears things arrive and leave.');
+    return true;
+  }
+  if (!rb) { sayAttn(`[${verb} | things | bird] wants a bird to answer to.`); return true; }
+  if (verb === 'listen') { sendViaBird(rb, makeEventNest(X, 'things')); return true; }
+  sendViaBird(rb, yardReport(X, word(hole(2))));
+  return true;
+}
+function yardReport(X, filter = null) {
+  // by the name on its plaque OR the words written on it: "lion" finds the
+  // pad that says "a lion" whatever plaque it wears
+  const words = (t) => (plainName(t) + ' ' + (t.userData.kind === 'text' ? (t.userData.text ?? '') : '')).toLowerCase();
+  const all = yardThingsOf(X.__yardCtx).filter(t => !filter || words(t).includes(filter));
+  const b = makeBox(all.length);
+  b.userData.holeLabels = all.map(plainName);
+  paintHoleLabels(b);
+  all.forEach((t, i) => putInHole(b.userData.holes[i], yardEntry(t)));
+  return b;
+}
+function yardEntry(t) {
+  const e = makeBox(3);
+  e.userData.holeLabels = ['to it', 'name', 'place'];
+  paintHoleLabels(e);
+  putInHole(e.userData.holes[0], makeLiveBird(t));
+  putInHole(e.userData.holes[1], makeText(plainName(t)));
+  putInHole(e.userData.holes[2], placeBox(t.position.x, t.position.z));
+  return e;
+}
+function yardEvent(how, nm, t) {
+  const b = makeBox(t ? 3 : 2);
+  b.userData.holeLabels = t ? ['what', 'name', 'to it'] : ['what', 'name'];
+  paintHoleLabels(b);
+  putInHole(b.userData.holes[0], makeText(how));
+  putInHole(b.userData.holes[1], makeText(nm));
+  if (t) putInHole(b.userData.holes[2], makeLiveBird(t));
+  return b;
+}
+// ...and who has just come or gone, for whoever asked to be told. A few times
+// a second while you are outside, and only once the yard has been spoken to
+// at all; the first look is a baseline, not a crowd arriving.
+let yardSweepAt = 0;
+function sweepYard(now) {
+  const node = yardIn?.ctx?.yard?.node;
+  if (!node || now - yardSweepAt < 120) return;
+  yardSweepAt = now;
+  const seen = node.__seen;
+  const now2 = new Map();
+  for (const t of yardThingsOf(yardIn.ctx)) now2.set(t, plainName(t));
+  node.__seen = now2;
+  if (!seen) return;
+  for (const [t, nm] of now2) if (!seen.has(t)) emitChannel(node, 'things', () => yardEvent('arrived', nm, t), 12);
+  for (const [t, nm] of seen) if (!now2.has(t)) emitChannel(node, 'things', () => yardEvent('left', nm, null), 12);
 }
 function enterYard(byRobot = false) {
   if (yardIn) return;
@@ -17202,6 +17334,7 @@ function thingOut(t) {
     if (panel && size && (size[0] !== 0.5 || size[1] !== 0.42)) r.panelSize = size;
     if (t.userData?.lid) { r.lid = t.userData.lid; r.evt = t.userData.evtGuid; }
     if (t.userData?.liveId) r.liveId = t.userData.liveId;   // a live bird
+    if (t.userData?.note && r.kind !== 'text') r.note = t.userData.note;   // a pad wrote its own
     if (t.userData?.sz) r.sz = t.userData.sz;               // its chosen size
     // how fast it is going, which is as much a part of a thing as how wide it
     // is -- a world saved mid-rally opens with the ball still travelling
@@ -17344,10 +17477,17 @@ function worldOut() {
     if (moved) rec.doors = dp;
   }
   const yardBounds = outsideHere ? { x0: BENCH.x0, x1: BENCH.x1, z0: BENCH.z0, z1: BENCH.z1 } : (curCtx.yard?.bounds ?? null);
-  if (yardThings.length || yardBounds) {
+  // ...and the yard's own name and panel, once anything has spoken to it
+  const ynode = offstage() ? null : (curCtx.yard?.node ?? null);
+  const ypanel = !ynode ? null
+    : ynode.__panelTray ? (ynode.__panelTray.__ctx ? ctxToRec(ynode.__panelTray) : ynode.__panelTray.userData.world)
+    : (ynode.userData.panelWorld ?? null);
+  if (yardThings.length || yardBounds || ynode) {
     rec.yard = { bench: yardThings.map(t => ({ thing: thingOut(t),
       x: +t.position.x.toFixed(3), z: +t.position.z.toFixed(3) })) };
     if (yardBounds) rec.yard.bounds = yardBounds;
+    if (ynode) { rec.yard.lid = ynode.userData.lid; rec.yard.evt = ynode.userData.evtGuid; }
+    if (ypanel) rec.yard.panel = ypanel;
   }
   // THE VIEW IS PART OF THE PLACE, once you have chosen one. A world saved
   // after you set the camera up -- a scene you framed, a puzzle you want read
@@ -17423,6 +17563,7 @@ function thingIn(o, nests, birds) {
   if (t && o?.erased) { t.userData.erased = true; applyErasedLook(t); }
   if (t && o?.panel) {
     t.userData.panelWorld = o.panel;   // arrives closed
+    if (o.note && !t.userData.note) t.userData.note = o.note;
     if (o.panelSize) t.userData.panelSize = o.panelSize;
   }
   if (t && o?.lid) {
@@ -17550,6 +17691,7 @@ function thingInRaw(o, nests, birds) {
 function clearWorld() {
   if (yardIn && !offstage()) leaveYard(true);      // a new world starts indoors
   for (const t of curCtx.yard?.things ?? []) t.removeFromParent();
+  dropYardNode(curCtx);
   if (curCtx.yard) { curCtx.yard.things.length = 0; curCtx.yard.bounds = null; }
   dropQueue();
   attnHeld = false;      // an explanation of the old world explains nothing here
@@ -17682,6 +17824,16 @@ function worldIn(data) {
       t.position.set(b.x, GROUND_Y + (t.userData.rest ?? 0) * t.scale.y, b.z);
       yard.things.push(t);
     }
+  }
+  if (data.yard?.lid || data.yard?.panel) {
+    const n = yardNode(curCtx);
+    if (data.yard.lid) {
+      liveReg.delete(n.userData.lid);
+      n.userData.lid = data.yard.lid;
+      n.userData.evtGuid = data.yard.evt || n.userData.evtGuid;
+      liveReg.set(n.userData.lid, n);
+    }
+    if (data.yard.panel) n.userData.panelWorld = data.yard.panel;
   }
   for (const [id, o] of Object.entries(data.stations || {})) {
     const s2 = stations[id] ?? (/^s\d+$/.test(id) ? ensureScratchStation(+id.slice(1)) : null);
@@ -19868,6 +20020,13 @@ addEventListener('keydown', (e) => {
         }
         return say(`Nothing on ${panelName(node)} has a behaviour to switch on.`);
       }
+      // AN OPEN PANEL ON THE TABLE switches like its thing: a yard's panel has
+      // no thing to point at, and a house's is a house.
+      if (node.userData.panel && node.__owner && node.__owner.userData.kind === 'yard') {
+        e.preventDefault();
+        switchGadget(node.__owner, on);
+        return;
+      }
       // THE GAME STARTS AT THE BALL. A thing with behaviours BOUND to it is
       // switched on and off as one by SPACE and "." on the thing itself --
       // the player's eye is on the ball, not on the cards that drive it.
@@ -20758,6 +20917,7 @@ function tipForInner(t) {
       const made = ud.src ? 'read out of a glTF file' : 'built out of solid shapes';
       return `${named} \u2014 a model, ${made}`
         + (big ? `, ${Math.round(big * 100)} cm across as it stands` : '') + '.'
+        + ((ud.note || '').trim() ? '\n' + ud.note.trim() : '')
         + TIP_RULE
         + 'Click to pick it up. + and \u2212 resize it, the arrows turn it, and both are the '
         + 'model\u2019s own \u2014 saved with it, and with every copy. Type while holding it to '
@@ -21312,6 +21472,30 @@ loadModel('robot_v4.glb', (gltf) => {
     wb.onclick = () => { what.style.display = what.style.display === 'none' ? 'flex' : 'none'; };
     menu.appendChild(wb);
     menu.appendChild(what);
+    // THE YARD'S OWN PANEL, under the list of what stands out there. Its bird
+    // is the yard's: give it a [query | things | bird] and the bird you send
+    // comes back with what is on the grass; a [listen | things | bird] and
+    // it hears things arrive and leave.
+    const yb = document.createElement('button');
+    yb.id = 'yardPanelBtn';
+    yb.textContent = '\u{1F33F} The yard\u2019s behaviours\u2026';
+    yb.title = 'Open the yard\u2019s own panel. A behaviour here can ask what stands on the grass \u2014 '
+      + '[query | things | bird] answers with a bird to each thing, its name and its place \u2014 '
+      + 'and [listen | things | bird] hears things arrive and leave.';
+    yb.onclick = () => {
+      if (busy || mode !== 'world') return say('Wait for the work to finish first.');
+      // ON THE GRASS, because that is where the yard is awake: only the place
+      // you are in runs, so a panel opened on the table would stand still the
+      // moment you stepped out to watch it work.
+      if (!yardIn) return say('Step outside first — the yard’s panel lives on the grass, where the yard is awake.');
+      const tray = bringOutPanel(yardNode(curCtx), false);
+      if (!tray) return;
+      say('The yard\u2019s panel. Give its bird [query | things | bird] and the bird you send comes back '
+        + 'with what stands on the grass \u2014 a bird to each thing, its name, its place; put a name in '
+        + 'the third hole to ask about those only. [listen | things | bird] hears things arrive and '
+        + 'leave. SPACE on the panel sets its robots going, \u201c.\u201d rests them; the knob folds it away.');
+    };
+    menu.appendChild(yb);
     // The single-file build travels alone: opened from disk or published as
     // an artifact there is no manual.html or infinity.html sitting beside it,
     // so a companion page is fetched from the site instead of a 404.
@@ -21839,6 +22023,7 @@ renderer.setAnimationLoop((now) => {
   }
   if (worldReady && !simPaused) {
     sweepTouches(now);          // costs nothing until something is listening
+    sweepYard(now);             // ...and neither does this, until the yard is spoken to
   }
   placeReading();          // a pad held up to read stays facing the camera
   if (condDisplay) {
@@ -25086,7 +25271,7 @@ window.__nano = {
         else tick((1 / 60) * speed, !simPaused);
       }
       const t1 = performance.now();
-      if (worldReady && !simPaused) sweepTouches(now + i * 17);
+      if (worldReady && !simPaused) { sweepTouches(now + i * 17); sweepYard(now + i * 17); }
       const t2 = performance.now();
       if (worldReady && !simPaused && !busy && !queue.length && !current && mode === 'world') {
         processDirtyRooms();
@@ -25106,7 +25291,7 @@ window.__nano = {
         if (speed === Infinity) { fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
         else tick((1 / 60) * speed, !simPaused);
       }
-      if (worldReady && !simPaused) sweepTouches(now + i * 17);
+      if (worldReady && !simPaused) { sweepTouches(now + i * 17); sweepYard(now + i * 17); }
       if (worldReady && !simPaused && !busy && !queue.length && !current && mode === 'world') {
         processDirtyRooms();
       }
@@ -25204,6 +25389,9 @@ window.__nano = {
   yardDoorNode() { return yardDoor; },
   yardThings() { return (curCtx.yard?.things ?? []).slice(); },
   yardWords(rec) { return yardWords(rec); },
+  yardNode() { return yardNode(curCtx); },
+  yardReport(filter = null) { return yardReport(yardNode(curCtx), filter); },
+  openYardPanel() { return bringOutPanel(yardNode(curCtx), false); },
   // What the pointer would be told about a thing -- the two halves and the
   // rule between them, as one string.
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },

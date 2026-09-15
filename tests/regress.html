@@ -3288,6 +3288,193 @@ async function rebindCheck(D) {
   return moved;
 }
 
+// Every example that is not a puzzle. A new example goes on this list, or
+// it is not measured.
+const EXAMPLE_WORLDS = [
+  'accounts/🏦 bank-account',
+  'accounts/💰 account',
+  'accounts/💳 live-account',
+  'behaviours/🏀 bouncing',
+  'behaviours/🏃 moving',
+  'behaviours/🐢 turtle',
+  'behaviours/🐢 turtle3d',
+  'behaviours/🐾 following',
+  'behaviours/📚 library',
+  'behaviours/🦋 wandering',
+  'behaviours/🪐 ellipse',
+  'devices/⌨️ keys',
+  'devices/🖱️ pointer',
+  'games/🏓 pong-classic',
+  'games/🏓 pong-gadgets',
+  'games/🏓 pong',
+  'games/👾 space-invaders',
+  'images/🏷️ naming',
+  'images/📸 album',
+  'images/🖼️ pictures',
+  'infinity/♾️ activity1-even-numbers',
+  'infinity/♾️ activity2-all-integers',
+  'infinity/♾️ activity3-sequences-and-pairs',
+  'infinity/♾️ activity4-all-fractions',
+  'infinity/♾️ activity5-above-one',
+  'infinity/♾️ activity6-all-rationals',
+  'infinity/♾️ activity7-any-interval',
+  'infinity/♾️ activity8-counting-sequences',
+  'infinity/🏨 resort-infinity',
+  'infinity/📮 zeno',
+  'lists/🔁 reverse',
+  'lists/🔗 append',
+  'lists/🔢 n-to-1',
+  'meta/🎓 teacher',
+  'models/✈️ airplane-flight',
+  'numbers/❗ factorial',
+  'numbers/🌡️ gauge',
+  'numbers/🐇 fibonacci-recursive',
+  'numbers/🐇 fibonacci',
+  'numbers/🔀 swap',
+  'sounds/🎵 melody',
+  'sounds/🎹 tones',
+  'sounds/🔉 transforms',
+  'words/📝 sentence-generator',
+  'words/🔤 grammar',
+  'yard/🦁 zoo',
+];
+async function overlapCheck(D) {
+  const name = (t) => (t.userData.label || (t.userData.text || '').split('\n')[0].slice(0, 14)
+                       || t.userData.kind);
+  // the footprint on the ground, the name plate left out: a plate lies on the
+  // face of its box or flat in front of its nest by design
+  const foot = (t) => {
+    // the suite owns the clock and nothing has been drawn: a thing just set
+    // down still wears the identity matrix, and measured that way every
+    // thing in a world stood at the origin on top of every other
+    t.updateMatrixWorld(true);
+    const bb = new D.THREE.Box3();
+    // solid parts only: a house wears a faint cone of light a metre wide,
+    // and light does not flicker against a pad
+    t.traverse(o => { if (o.isMesh && o !== t.__labelNode && o.visible
+      && !(o.material?.transparent && (o.material.opacity ?? 1) < 0.5)) bb.expandByObject(o, true); });   // precise: a roof is a cone turned 45 degrees, and its loose box is a metre wide
+    return bb;
+  };
+  const clashes = (things) => {
+    const out = [];
+    const boxes = things.map(t => [t, foot(t)]).filter(([, b]) => !b.isEmpty());
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const [a, A] = boxes[i], [b, B] = boxes[j];
+      const dx = Math.min(A.max.x, B.max.x) - Math.max(A.min.x, B.min.x);
+      const dz = Math.min(A.max.z, B.max.z) - Math.max(A.min.z, B.min.z);
+      if (dx > 0.012 && dz > 0.012) {
+        const sz = (B2) => (B2.max.x - B2.min.x).toFixed(2) + 'x' + (B2.max.z - B2.min.z).toFixed(2);
+        const at = (B2) => ((B2.min.x + B2.max.x) / 2).toFixed(2) + ',' + ((B2.min.z + B2.max.z) / 2).toFixed(2);
+        out.push(name(a) + '[' + sz(A) + '@' + at(A) + '] x ' + name(b) + '[' + sz(B) + '@' + at(B) + '] ('
+          + Math.min(dx, dz).toFixed(2) + ' m)');
+      }
+    }
+    return out;
+  };
+  const bench = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break;
+    if (!t.userData.main && !t.userData.panel) o.push(t); } return o; };
+  let bad = 0;
+  for (const w of EXAMPLE_WORLDS) {
+    const rec = await (await fetch('../examples/' + w + '.world.json')).json();
+    D.worldIn(rec); await slowSettle(D, 1500);
+    let found = clashes(bench());
+    if (rec.yard?.bench?.length) {
+      D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+      found = found.concat(clashes(bench()).map(c => 'yard: ' + c));
+    }
+    if (found.length) { bad++; put('FAIL things overlap in ' + w + ':  ' + found.join('; '), 'fail'); }
+  }
+  D.speed(1);
+  const ok = bad === 0;
+  put((ok ? 'PASS' : 'FAIL') + ' nothing in an example stands on anything else  (worlds='
+      + EXAMPLE_WORLDS.length + ' with-overlaps=' + bad + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE YARD AS A THING. It has a node with a name, a panel of its own, and two
+// things to say: [query | things | bird] answers with what stands on the
+// grass -- a bird to each, its name, its place -- and [listen | things | bird]
+// hears things arrive and leave. Asked from indoors it still answers (the
+// list is the ground's own); the listening only runs outside, because only
+// the place you are in runs.
+async function yardPanelCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [],
+    yard: { bench: [
+      { x: -2, z: 5, thing: { kind: 'text', text: 'a lion', label: 'Leo' } },
+      { x: 0, z: 5, thing: { kind: 'number', value: { n: '7', d: '1' } } },
+      { x: 2, z: 6.5, thing: { kind: 'nest', id: 9901, guid: 'yard-probe', label: 'probe', hasEgg: false } } ] } });
+  await slowSettle(D, 1500);
+  // 1. from indoors: the report, and the filter by name or words
+  const rep0 = D.yardReport();
+  const entry = rep0.userData.holes[0].thing;
+  const reported = rep0.userData.holes.length === 3
+    && rep0.userData.holeLabels.join(',') === 'Leo,number,probe'
+    && entry.userData.holes.map(h => h.thing.userData.kind).join(',') === 'bird,text,box';
+  const filtered = D.yardReport('lion').userData.holeLabels.join(',') === 'Leo';
+  // 2. the panel opens only outside, and its owner is the yard
+  D.worldIn(JSON.parse(JSON.stringify(D.worldOut())));   // a fresh start, indoors
+  await slowSettle(D, 1200);
+  D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+  const tray = D.openYardPanel();
+  const opened = !!tray && tray.__owner?.userData.kind === 'yard' && !!tray.__perchBird;
+  // 3. listen: the event nest, carried onto the grass, hears a number arrive and leave
+  let probe = null; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'nest' && t.userData.label === 'probe') probe = t; }
+  const yn = D.yardNode();
+  D.post(yn.userData.lid, { kind: 'box', holes: [{ kind: 'text', text: 'listen' }, { kind: 'text', text: 'things' },
+    { kind: 'bird', nestId: 9901, nestGuid: 'yard-probe', label: 'answer' }] });
+  await frames(D, 10);
+  const ev = probe.userData.pile[probe.userData.pile.length - 1];
+  const gotNest = ev?.userData.kind === 'nest' && ev.userData.label === 'things';
+  D.clickThing(ev); await frames(D, 20);
+  D.clickBench(0.5, 6.5); await frames(D, 30);
+  // Leo leaves the grass (into your hand) and comes back: the nest hears both
+  const words = (b) => b ? b.userData.holes.map(h => h.thing?.userData.kind === 'text' ? h.thing.userData.text : h.thing?.userData.kind).join(',') : '';
+  const heard = () => ev.userData.pile.map(words).join(' | ');
+  let leo = null; for (let i = 0; i < 40; i++) { const t = D.bench(i); if (!t) break; if (t.userData.label === 'Leo') { leo = t; break; } }
+  D.clickThing(leo); await frames(D, 30);
+  const left = words(ev.userData.pile[0]) === 'left,Leo';
+  const heard1 = heard();
+  D.clickBench(-1.5, 5.5); await frames(D, 30);
+  const arrived = words(ev.userData.pile[0]) === 'arrived,Leo,bird';
+  const heard2 = heard();
+  // 4. saved with the world: the yard's name and its panel come back
+  const rec = JSON.parse(JSON.stringify(D.worldOut()));
+  const saved = !!rec.yard?.lid;                      // an empty open panel has no record to keep
+  D.worldIn(rec); await slowSettle(D, 1500);
+  const back = D.yardNode();
+  const kept = back.userData.lid === rec.yard.lid;
+  const ok = reported && filtered && opened && gotNest && arrived && left && saved && kept;
+  put((ok ? 'PASS' : 'FAIL') + ' the yard is a thing: it reports and it listens  (report=' + reported
+      + ' by-name=' + filtered + ' panel=' + opened + ' event-nest=' + gotNest + ' arrived=' + arrived
+      + ' left=' + left + ' saved=' + saved + ' kept=' + kept + ' heard=[' + heard1 + '] then [' + heard2 + '])', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// AN AIRPLANE THAT FLIES: its turtle and its pilot grouped inside its own
+// panel, so SPACE on the airplane flies it and "." lands it (Ken: "another
+// one where the behaviors are all local to the object").
+async function airplanePilotCheck(D) {
+  const w = await (await fetch('../examples/models/✈️ airplane-with-pilot.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  let plane = null; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'model') { plane = t; break; } }
+  const p0 = plane.position.clone();
+  const started = D.switchBound(plane, true);
+  await frames(D, 240);
+  const p1 = plane.position.clone();
+  const moved = p0.distanceTo(p1) > 0.05;
+  const stopped = D.switchBound(plane, false);
+  await frames(D, 60);
+  const p2 = plane.position.clone();
+  await frames(D, 120);
+  const still = p2.distanceTo(plane.position) < 0.001;
+  const aboard = D.allBots().filter(b => b.name === 'the pilot').length === 1;
+  const ok = started && moved && stopped && still && aboard;
+  put((ok ? 'PASS' : 'FAIL') + ' an airplane with its pilot aboard  (started=' + started + ' flew='
+      + p0.distanceTo(p1).toFixed(2) + 'm stopped=' + stopped + ' lands=' + still + ' pilot-aboard=' + aboard + ')',
+      ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -5708,6 +5895,15 @@ async function runOne(D, spec) {
   let rbOK = true;
   try { rbOK = want('rebind') ? await rebindCheck(D) : true; }
   catch (e) { rbOK = false; put('FAIL a behaviour moves from one thing to another  ' + e.message, 'fail'); }
+  let ovOK = true;
+  try { ovOK = want('overlap') ? await overlapCheck(D) : true; }
+  catch (e) { ovOK = false; put('FAIL nothing in an example stands on anything else  ' + e.message, 'fail'); }
+  let ypOK = true;
+  try { ypOK = want('yardPanel') ? await yardPanelCheck(D, frame.contentWindow) : true; }
+  catch (e) { ypOK = false; put('FAIL the yard is a thing  ' + e.message, 'fail'); }
+  let apOK = true;
+  try { apOK = want('airplanePilot') ? await airplanePilotCheck(D) : true; }
+  catch (e) { apOK = false; put('FAIL an airplane with its pilot aboard  ' + e.message, 'fail'); }
   let pvOK = true;
   try { pvOK = want('pageVacuum') ? await pageVacuumCheck(D) : true; }
   catch (e) { pvOK = false; put('FAIL what Dusty takes off a page is what he gives back  ' + e.message, 'fail'); }
@@ -5831,7 +6027,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

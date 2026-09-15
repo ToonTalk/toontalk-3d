@@ -121,12 +121,12 @@ world = {'kind': 'world', 'v': 1, 'bench': [
     {'thing': txt('FIBONACCI\n\nto fib n:\n  n is 1 → answer 1\n  n is 2 → answer 1\n'
                   '  else → ask fib(n-1)\n     and fib(n-2), then\n     answer their sum\n\n'
                   '"Answer" means give the\nnumber to the bird you\nwere handed.'),
-     'x': -1.05, 'z': 2.15},
+     'x': -0.35, 'z': 2.15},
     {'thing': txt('TO RUN IT\n\nGive the seven-hole box to\nthe fib robot.\n\n'
                   'Each call makes two nests,\nsends a copy of itself into\n'
                   'two houses, and dozes\nuntil both nests answer.\n\n'
                   f'fib({N}) arrives on the nest\nmarked "the answer".'),
-     'x': -0.05, 'z': 2.15},
+     'x': 0.35, 'z': 2.15},
 ], 'stations': {}, 'active': None}
 
 out = os.path.join(os.path.dirname(__file__), '🐇 fibonacci-recursive.world.json')

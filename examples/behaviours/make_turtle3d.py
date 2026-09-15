@@ -211,24 +211,24 @@ TRY = ('TRY THIS\n\n'
        'turns still closes.')
 
 bench = [
-    {'thing': post, 'x': 0.85, 'z': 1.30},
-    {'thing': shell, 'x': 0.25, 'z': 1.60},
+    {'thing': post, 'x': 1.00, 'z': 1.30},
+    {'thing': shell, 'x': 0.62, 'z': 1.60},
     # beside the bird, not off in the far corner
     {'thing': turtle3d, 'x': 1.30, 'z': 1.30},
 
-    {'thing': mv30, 'x': -1.48, 'z': 1.62},
-    {'thing': mv_back, 'x': -1.08, 'z': 1.62},
-    {'thing': yaw90, 'x': -1.48, 'z': 1.98},
-    {'thing': yaw30, 'x': -1.08, 'z': 1.98},
-    {'thing': pitch30, 'x': -0.68, 'z': 1.62},
-    {'thing': pitch_dn, 'x': -0.28, 'z': 1.62},
-    {'thing': roll45, 'x': -0.68, 'z': 1.98},
-    {'thing': home, 'x': -0.28, 'z': 1.98},
+    {'thing': mv30, 'x': -1.44, 'z': 1.62},
+    {'thing': mv_back, 'x': -0.94, 'z': 1.62},
+    {'thing': yaw90, 'x': -1.44, 'z': 1.90},
+    {'thing': yaw30, 'x': -0.94, 'z': 1.90},
+    {'thing': pitch30, 'x': -0.44, 'z': 1.62},
+    {'thing': pitch_dn, 'x': 0.06, 'z': 1.62},
+    {'thing': roll45, 'x': -0.44, 'z': 1.90},
+    {'thing': home, 'x': 0.06, 'z': 1.90},
 
-    {'thing': pendown, 'x': -1.48, 'z': 1.38},
-    {'thing': penup, 'x': -1.08, 'z': 1.38},
-    {'thing': pen_red, 'x': -0.68, 'z': 1.38},
-    {'thing': pen_thick, 'x': -0.28, 'z': 1.38},
+    {'thing': pendown, 'x': -1.50, 'z': 1.30},
+    {'thing': penup, 'x': -1.05, 'z': 1.30},
+    {'thing': pen_red, 'x': -0.50, 'z': 1.30},
+    {'thing': pen_thick, 'x': 0.16, 'z': 1.30},
 
     {'thing': txt(ABOUT), 'x': -0.10, 'z': 2.32},           # noqa: F405
     {'thing': txt(FRAME), 'x': 0.60, 'z': 2.32},            # noqa: F405
