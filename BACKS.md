@@ -7257,3 +7257,98 @@ elephant, the giraffe, the lion, the zebra, the penguin, the crocodile and
 the flamingo each get a wiggle of their own, lying beside them, bound and
 running -- one a round. Check: zooKeeper (seven animals, seven wigglers, one
 each, the sign spared).
+
+## The keeper's second round
+
+*Added 15 Sep. Ken: "some of the wiggle behaviors are blank"; "wiggle the
+animals works but typing '.' doesn't stop the behavior"; "the elephant
+doesn't wiggle"; "when I pick up any of the behaviors and type control-p the
+panel appears at the far edge of the yard in the center. There should be
+animation as it comes out (and when it returns via the knob). Same with the
+info notebook."*
+
+Four of seven wiggles came out white because the face-painting drain threw
+away any pad with no parent as if it were gone -- and a behaviour taken out
+of a `[bind | pad]` letter has no parent for the frame it waits for the
+outer world. No parent is not gone now; only a disposed pad leaves the
+queue.
+
+"." did stop a wiggle, pointed at the wiggle or at its animal; what it did
+not do was stop the zoo from the pad that started it. A behaviour handed out
+by another behaviour's robots now remembers its giver (`givenBy`, saved and
+copied with the pad), and is switched with it: "." on the keeper rests every
+wiggle it gave, SPACE sets them going again, and "." on one animal says
+where its behaviour came from.
+
+The elephant wiggles as often as the rest -- about three turns a second,
+measured at 100 ms -- which is also why a one-second sample could read it
+as still for six seconds running: three turns a second sampled once a second
+lands on the same side every time. A screenshot catches each animal at
+0 or 25 degrees by chance. Nothing was changed for it; if it stood still
+for Ken, the likeliest cause was "." over the elephant, which rested its
+wiggle and now says so.
+
+A panel on the grass went to the table's tray row -- the far edge of a
+ten-metre yard, in the middle -- and a working panel brought back out with
+Ctrl-P simply blinked on there; the knob blinked it off. `freeTraySpot` puts
+a tray on the grass beside its thing (or beside the hand holding it), and
+every way out now plays the same growth from the thing (`trayOutFrom`),
+every fold the same shrink into it (`trayHomeInto`, ending hidden rather
+than gone for a working panel). The info notebook rose from the world's
+origin because it was nowhere yet: it comes out of its plaque now and goes
+back into it.
+
+Check: zooKeeper's second line (no blank faces; seven rested and none
+turning; seven woken and all turning again; a tray that grows from the hand
+to a spot beside it, and folds home to hide still working).
+
+## Read once, spoken smoothly, and a behaviour in the hand
+
+*Added 15 Sep. Ken: "When I picked up the pad 'the row goes on' in the
+resort infinity example and clicked to read it I heard it read twice. And
+there was unusual pauses in the narration"; "the 'the guests' and the 'five
+more guests' buttons/pads don't do anything when I type space to them";
+"the tooltip should include box label"; "the switches on houses are hard to
+access sometimes"; "pointing to a transparent house should produce a
+tooltip saying its name and how it can be turned on or off".*
+
+Read showed the words as a hint and spoke them, and the hint reader spoke
+them again: `hintLastSpoken` is set first now, as a robot's own reading
+already did. The pauses were the pads' hand-wrapped lines -- a voice pauses
+at every line break, and a problem pad has one every thirty characters.
+`spokenWords` joins a single break into a space and reads a blank line as
+the end of a sentence, supplying the full stop when the line above had
+none.
+
+"The guests" did nothing because clicking a pad picks it up, and SPACE on a
+held pad is typing: the key went into its name ("the guests ") while the
+card said to drop it on a robot. Measured: the same press with an empty
+hand, pointing, sent six letters to the post. A behaviour in the hand is
+now switched, not written on: SPACE sets it down where the hand is and
+switches it on; "." sets it down and rests it. Problem 1's pad also said
+"the box to train on is that desk" of a desk it had just called a box with
+a nest in it; it says which box now, the moves to train the clerk are on a
+pad of their own, and each problem fits one tooltip (P1 548, TRAIN 404,
+P2 591 of the 600 characters a tooltip shows at once).
+
+A box's tooltip begins with its name when it has one. A house pointed at
+with an empty hand says its name, whether its walls are glass or solid,
+whether it is running and which key or switch changes that, and what the
+roof and the door do; the roof's own tip says which way the next click
+takes the walls. The lever moved from the right wall, where the house next
+door hid it as often as not, to the front beside the door.
+
+## One turn a frame
+
+*Found 15 Sep while chasing the keeper's "stuck" wiggler in the suite.*
+
+`processDirtyRooms` is reached from the frame loop, from the top of
+`tick()` and from `afterQueue`, and a ticker took a turn from each: in the
+suite a wiggle received two letters a frame -- a turn and its undoing --
+and stood still to the eye while its letters arrived as fast as the
+elephant's (2633 to 2650). A panel is "one round a turn", and a turn is now
+a rendered frame: `renderFrameNo` counts frames (tick, the harness's own
+frame, and `D.rooms`), and a panel that has had its turn this frame is
+passed by (`__rframe`). Houses are untouched; a woken panel takes its turn
+a frame later at most. The check samples every frame now, since a flip a
+frame aliases against any even sampling period.

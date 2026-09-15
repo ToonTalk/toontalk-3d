@@ -744,7 +744,15 @@ the original ToonTalk's pictures; press Enter while pointing at
 the panel and the camera looks straight down at it, framed like a page.
 Point at a card there and press ⚙ again: the card's own panel comes out
 beside, its robot at the box it works on, and Enter there looks from the
-front. The knob folds each one home. Closeups nest: in a closeup of a panel,
+front. The knob folds each one home. With a behaviour in your hand,
+SPACE sets it down where your hand is and switches it on, and .
+sets it down and rests it — a behaviour works from the ground, never
+from a hand, and the key does not go into its name. A panel always comes out of its
+thing and folds back into it — a working one, brought back out
+with ⚙, grows from the thing (or from your hand) the same way, and on the
+grass it is set down beside the thing rather than in the tables
+tray row. The ⓘ notebook comes out of its plaque and goes back into it.
+Closeups nest: in a closeup of a panel,
 ⚙ over a card takes you on into the card's panel, and the knob or
 Escape brings you back to the panel it stands on; only the last
 Escape reaches the workshop. Enter works with something in your hand too.
@@ -844,7 +852,7 @@ actually working; a room merely holding unopened deliveries sits quiet.
 
 Click the roof to switch between solid walls (the room works
 instantly, unseen) and glass (you watch it work, round by round, at your speed
-setting). The big lever on the side wall runs and stops the room: up, the robot
+setting). The big lever on the front, beside the door, runs and stops the room: up, the robot
 inside works; down, it rests. Click the door to step inside: the room
 becomes the world around you, and the world you left shrinks onto the table as
 a little room of its own — walk back out through its door. If the room was
@@ -1796,7 +1804,11 @@ robot walks a list here: it takes one entry off its nest a round. And a thing
 can be given a behaviour by mail: [bind | pad] to its bird sets
 the behaviour in the letter down beside it, binds it and switches it on,
 exactly as dropping the pad on it would — which is how one robot gives
-a whole zoo a wiggle (see yard/zoo-keeper). Give it
+a whole zoo a wiggle (see yard/zoo-keeper). A behaviour handed out
+that way stays switched with its giver: . on the
+keeper rests every wiggle it gave, SPACE sets them going again, and
+. on one animal rests only its own and says where it came
+from. Give it
 [listen | things | bird] and the bird brings a nest that hears
 [arrived | name | bird to it] and [left | name] as
 things are set down on the grass and taken up. The yards name and its
@@ -4675,8 +4687,11 @@ function drainPaintDue() {
   if (!paintDue.length) return;
   for (let i = paintDue.length - 1; i >= 0; i--) {
     const g = paintDue[i];
-    if (g.__gone || !g.parent) { g.__paintDue = false; paintDue.splice(i, 1); continue; }
-    if (!isShown(g)) continue;
+    if (g.__gone) { g.__paintDue = false; paintDue.splice(i, 1); continue; }
+    // no parent is NOT gone: a behaviour taken out of a letter waits a frame
+    // for the world its thing is in (four of the keeper's wiggles came out
+    // white, discarded here in that frame)
+    if (!g.parent || !isShown(g)) continue;
     paintDue.splice(i, 1);
     g.__paintDue = false;
     g.setText(g.userData.text ?? '');
@@ -5937,7 +5952,9 @@ function makeRoom(data = null) {
   setPick(chimney, { kind: 'roomRoof', room: g });
   g.add(chimney);
   g.__chimney = chimney;
-  // the big lever on the right wall runs and stops the room
+  // the big lever runs and stops the room. ON THE FRONT, beside the door:
+  // on the right wall it was hidden by the house next door as often as
+  // not, and Ken had to swing the camera round for a clear shot at it.
   const lever = new THREE.Group();
   const plateL = new THREE.Mesh(geo('BoxGeometry', 0.018, 0.13, 0.07),
     new THREE.MeshStandardMaterial({ color: 0x6a7280, roughness: 0.4, metalness: 0.6 }));
@@ -5954,8 +5971,7 @@ function makeRoom(data = null) {
   knobL.position.y = 0.105;
   armPivot.add(knobL);
   lever.add(armPivot);
-  lever.position.set(0.262, 0.14, 0.02);
-  lever.rotation.y = Math.PI / 2;
+  lever.position.set(0.175, 0.14, 0.222);
   lever.traverse(o => setPick(o, { kind: 'roomLever', room: g }));
   setPick(lever, { kind: 'roomLever', room: g });
   g.add(lever);
@@ -7803,6 +7819,12 @@ function placeMsg(X, msg) {
     const h = holeContaining(given);
     if (h) h.thing = null;
     given.removeFromParent();
+    // WHO HANDED IT OUT. A behaviour given by another behaviour's robots is
+    // switched with the giver from then on: "." on the keeper rests every
+    // wiggle it gave, SPACE sets them going again. Without this the keeper
+    // switched off and the zoo went on wiggling, and Ken's "." did nothing.
+    const giver = curCtx.room?.__owner;
+    if (giver && isGadget(giver) && giver.userData.lid) given.userData.givenBy = giver.userData.lid;
     const bindNow = () => {
       bindGadget(given, X, true);            // closed: re-pointed in its record
       spawnBeside(X, given, 0.25, 0.25);     // set down beside the thing, switched on
@@ -8352,6 +8374,22 @@ function buildTrayShape(g, owner, pw, pd) {
 // spot least crowded by what is already there, trays especially.
 function freeTraySpot(tray) {
   const hw = (tray.userData.pw ?? 0.5) / 2, hd = (tray.userData.pd ?? 0.42) / 2;
+  // ON THE GRASS, BESIDE ITS THING. The table's tray row is the front edge of
+  // a table small enough that everything on it is near everything else; the
+  // yard is ten metres wide, and the same row put a panel at the far edge in
+  // the middle, wherever its thing stood (Ken). Beside the thing, or beside
+  // the hand that holds it.
+  if (onGrass() && !offstage()) {
+    const X = tray.__owner;
+    const at = X && X.parent === benchRoot ? { x: X.position.x, z: X.position.z }
+      : X && X === held ? (() => { const v = handNode.getWorldPosition(new THREE.Vector3()); return { x: v.x, z: v.z }; })()
+      : null;
+    if (at) {
+      const near = freeSpotNear({ x: at.x + 0.55, z: at.z + 0.35 }, tray.userData.pw ?? 0.5, tray);
+      return { x: Math.min(BENCH.x1 - hw, Math.max(BENCH.x0 + hw, near.x)),
+               z: Math.min(BENCH.z1 - hd, Math.max(BENCH.z0 + hd, near.z)) };
+    }
+  }
   let best = null, bestScore = Infinity;
   for (const z of [2.15, 2.55, 1.85]) {
     for (const x of [0, -0.62, 0.62, -1.15, 1.15]) {
@@ -8460,10 +8498,7 @@ function openHeldPanel() {
   if (X.__panelTray) {
     const tray = X.__panelTray;
     if (tray.__closed) {
-      tray.visible = true;
-      tray.__closed = false;
-      sfx('grow');
-      wobble(tray);
+      trayOutFrom(tray, X);       // out of the hand that holds it
       say('The panel comes back out — still working away.');
       return refreshUI();
     }
@@ -8500,10 +8535,22 @@ function switchScene(node, on) {
 // SPACE and "." for a behaviour, as one callable thing: on brings its panel
 // out folded and sets the robots working; off lets them rest. The keyboard
 // handler calls this, and so can a test that has no pointer to aim with.
+// Everything this behaviour's robots HANDED OUT by mail ([bind | pad]),
+// switched with it. Answers how many, for the sentence.
+function switchHandedOut(node, on) {
+  const lid = node.userData.lid;
+  if (!lid) return 0;
+  const given = benchThings.filter(t => t !== node && isGadget(t) && t.userData.givenBy === lid);
+  for (const g of given) switchGadget(g, on, true);
+  return given.length;
+}
+const handedOutNote = (n, on) => !n ? ''
+  : ` The ${n === 1 ? 'behaviour' : n + ' behaviours'} its robots handed out ${on ? (n === 1 ? 'goes' : 'go') + ' again too' : (n === 1 ? 'rests' : 'rest') + ' too'}.`;
 function switchGadget(node, on, quiet = false) {
   const tray = bringOutPanel(node, true);   // working, not on display
   if (!tray) return quiet || say('That behaviour has no panel yet.');
   if (on && !quiet) martyCommentary('gadget', node);
+  const handed = switchHandedOut(node, on);
   // STOPPED is not the same as idle: a panel with nothing to do this instant
   // must still be woken by post, and one a person switched off must not be.
   // Without the difference, a behaviour listening to the pointer could never
@@ -8514,7 +8561,7 @@ function switchGadget(node, on, quiet = false) {
     switchNested(tray, false);
     // Its robots rest at once; what they have already SENT does not.
     const worksOn = node.userData.boundTo && liveReg.get(node.userData.boundTo);
-    return quiet || say('Stopped \u2014 its robots rest.'
+    return quiet || say('Stopped \u2014 its robots rest.' + handedOutNote(handed, false)
       + (worksOn ? ' Anything they have already sent is still on its way: press \u201c.\u201d on '
                  + `${panelName(worksOn)} itself to stop that too.` : ''));
   }
@@ -8530,9 +8577,9 @@ function switchGadget(node, on, quiet = false) {
       tray.userData.dirty = on;
       if (on) { delete tray.userData.stopped; tray.__switched = true; }
       else { tray.userData.stopped = true; delete tray.__switched; }
-      return quiet || say(on
+      return quiet || say((on
         ? `Off they go — the ${parts} behaviour${parts === 1 ? '' : 's'} grouped inside it.`
-        : 'Stopped — everything grouped inside it rests.');
+        : 'Stopped — everything grouped inside it rests.') + handedOutNote(handed, on));
     }
     return quiet
       || sayAttn('Nothing to run yet: its panel needs a robot and something for it to work on.');
@@ -8546,7 +8593,7 @@ function switchGadget(node, on, quiet = false) {
   const boundTo = node.userData.boundTo && liveReg.get(node.userData.boundTo);
   return say((boundTo ? `Off it goes, on ${panelName(boundTo)}.`
                       : 'Off it goes \u2014 on itself, since nobody has given it anything else to work on.')
-    + ' Its robots work out of sight; open its panel to watch them.');
+    + ' Its robots work out of sight; open its panel to watch them.' + handedOutNote(handed, true));
 }
 // Everything BOUND to a thing, switched as one: SPACE on the ball starts the
 // game, because the player's eye is on the ball, not the cards that drive it.
@@ -8637,9 +8684,12 @@ function switchBound(node, on) {
   }
   for (const g of bound) switchGadget(g, on, true);
   parkSpeed(node, on);
-  say(on
+  const giver = liveReg.get(bound.find(g => g.userData.givenBy)?.userData.givenBy);
+  say((on
     ? `${bound.length === 1 ? 'Its behaviour' : 'Its ' + bound.length + ' behaviours'} \u2014 ${bound.map(g => panelName(g)).join(', ')} \u2014 set to work on ${panelName(node)}.`
-    : 'Stopped \u2014 everything bound to it rests.');
+    : 'Stopped \u2014 everything bound to it rests.')
+    + (giver && giver.parent ? ` ${panelName(giver)[0].toUpperCase()}${panelName(giver).slice(1)} handed it out: `
+       + `\u201c${on ? 'SPACE' : '.'}\u201d there ${on ? 'starts' : 'rests'} everything it gave.` : ''));
   return true;
 }
 const allTrays = [];
@@ -8657,7 +8707,7 @@ function bringOutPanel(X, folded = false) {
       putOnBench(tray0, freeTraySpot(tray0), true);
       tray0.scale.setScalar(1);
     }
-    if (tray0.__closed && !folded) { tray0.visible = true; tray0.__closed = false; }
+    if (tray0.__closed && !folded) trayOutFrom(tray0, X);
     // A tray stranded off the bench -- its thing was vacuumed and taken back
     // out, say -- returns WITH the thing: dirty meant nothing while no list
     // held it, so SPACE lit a panel that never got a turn.
@@ -8689,13 +8739,36 @@ function bringOutPanel(X, folded = false) {
     tray.__closed = true;
     return tray;
   }
+  trayOutFrom(tray, X);
+  return tray;
+}
+// IT COMES OUT OF THE THING. Ken: "when a user requests a panel for an object
+// the panel should grow and animate from the object." It used to swell into
+// being at its spot on the table, which says nothing about where it came
+// from -- and a panel is not a new thing, it is the inside of one you were
+// already holding. So it starts small AT the thing and travels out, which is
+// the same journey the knob plays in reverse when it folds back home.
+// A tray coming back out of hiding -- a behaviour switched on works with its
+// panel folded -- makes the same journey: it used to blink on where it lay
+// (Ken: "there should be animation as it comes out"). On the grass it is
+// re-placed beside its thing first, since it was parked where the table's
+// row would have put it.
+function trayOutFrom(tray, X) {
+  tray.visible = true;
+  tray.__closed = false;
+  // a fold still playing is cut short: the tray is wanted out
+  for (let i = retiring.length - 1; i >= 0; i--) {
+    const r = retiring[i];
+    if (r.node !== tray) continue;
+    if (r.home) { tray.position.copy(r.home); tray.rotation.y = r.rot0 ?? 0; }
+    tray.scale.setScalar(r.s0);
+    retiring.splice(i, 1);
+  }
+  if (onGrass() && !offstage() && tray.parent === benchRoot) {
+    const sp = freeTraySpot(tray);
+    tray.position.x = sp.x; tray.position.z = sp.z;
+  }
   sfx('grow');
-  // IT COMES OUT OF THE THING. Ken: "when a user requests a panel for an object
-  // the panel should grow and animate from the object." It used to swell into
-  // being at its spot on the table, which says nothing about where it came
-  // from -- and a panel is not a new thing, it is the inside of one you were
-  // already holding. So it starts small AT the thing and travels out, which is
-  // the same journey the knob plays in reverse when it folds back home.
   const s0 = tray.scale.x;
   const home = tray.position.clone();
   const from = (X && X.parent) ? (() => {
@@ -8715,7 +8788,20 @@ function bringOutPanel(X, folded = false) {
     },
     end() { tray.scale.setScalar(s0); tray.position.copy(home); },
   });
-  return tray;
+}
+// ...and folds back INTO it while its robots keep working: the same trip the
+// other way, ending hidden rather than gone. (An idle panel is serialized into
+// its thing and its tray retires for good; this is the working one.)
+function trayHomeInto(tray, X) {
+  tray.__closed = true;
+  const at = tray.position.clone();
+  const to = X && X.parent ? (() => {
+    const w = X.getWorldPosition(new THREE.Vector3());
+    const p2 = tray.parent ? tray.parent.worldToLocal(w) : w;
+    return new THREE.Vector3(p2.x, at.y, p2.z);
+  })() : null;
+  retiring.push({ node: tray, t: 0, s0: tray.scale.x, from: at.clone(), to,
+                  hide: true, home: at.clone(), rot0: tray.rotation.y });
 }
 // Which way the plaque will go next time: out, or back.
 function paintInfoPlaque(tray) {
@@ -8763,8 +8849,7 @@ function closePanelTray(tray, byRobot = false) {
   // scene, its tray ticked on as a zombie, and Ken's hand-flown orders had
   // no nest to land on until the panel was opened again.
   if (tray.__ctx && (tray.userData.dirty || roomHasWorker(tray) || nestedWork(tray))) {
-    tray.visible = false;
-    tray.__closed = true;
+    trayHomeInto(tray, X);
     sfx('shrink');
     say('The panel folds back inside — its robot keeps working there, out of sight.');
     return refreshUI();
@@ -8957,6 +9042,7 @@ function runRoomWork(room, depth = 0, miOverride = null, chunkMax = null) {
   // marked HERE, not in the caller: a nested find must not be able to give a
   // sibling a second turn in the same frame
   room.__frame = roomFrame;
+  if (room.userData.panel) { room.__rframe = renderFrameNo; (room.__td ??= [0, 0])[depth ? 1 : 0]++; }
   room.__mail = false;          // this turn is the answer to whatever arrived
   room.__seen = roomFrame;      // ...and when a sleeper was last looked at
   room.__running = true;
@@ -8995,8 +9081,10 @@ function runRoomWork(room, depth = 0, miOverride = null, chunkMax = null) {
         drainQueue(Infinity);
         ran = runCount;            // what it really did, not what it was allowed
       }
+      const roundsA = roundsEver;
       checkWaiting();                     // a delivery may have woken a dozing robot
       drainQueue(Infinity);
+      if (room.userData.panel) room.__roundsSeen = [roundsEver - rounds0, roundsEver - roundsA];
       // WHO DID IT: the member that recognised the work is the body at the
       // desk, and the mime below must move THAT one. It moved the leader's
       // node, which stands doll-sized in the queue while a member performs
@@ -9251,7 +9339,12 @@ function findDirtyRoom(ignoreCooldown = false, skip = null, within = null) {
   // steps, releases included) can wedge nothing for good
   const postedOut = (t) => (t.__outPost || 0) > 0
     && performance.now() - (t.__outPostAt || 0) < 20000;
+  // A PANEL HAD ITS TURN THIS FRAME: when every panel on the bench is gated
+  // the scheduler falls through to this walk, which found the first dirty
+  // panel in bench order and gave it a second round in the same frame -- the
+  // elephant's wiggle turned and un-turned every frame and stood still.
   const ready = (t) => t.userData.kind === 'room' && t.userData.dirty && !t.__running
+    && !(t.userData.panel && t.__rframe === renderFrameNo)
     && !postedOut(t)
     && !(skip && (skip.get?.(t) ?? 0) >= 3)
     && (!within || isDescendantOf(t, within))
@@ -9318,8 +9411,17 @@ function advanceRetiring(dt) {
     const r = retiring[i];
     r.t += dt / 0.55;
     if (r.t >= 1) {
-      r.node.removeFromParent();
-      if (r.dispose) disposeThing(r.node);
+      if (r.hide) {
+        // a working panel: hidden where it lay, its size and place kept for
+        // the trip back out
+        r.node.visible = false;
+        r.node.scale.setScalar(r.s0);
+        r.node.position.copy(r.home);
+        r.node.rotation.y = r.rot0 ?? 0;
+      } else {
+        r.node.removeFromParent();
+        if (r.dispose) disposeThing(r.node);
+      }
       retiring.splice(i, 1);
       continue;
     }
@@ -9386,6 +9488,7 @@ function processDirtyRooms() {
     // times a second, failing every time and saying so every time, which is
     // what "I put the ball on Mimi and it got stuck" was.
     if (outOfPlay(t)) continue;
+    if (t.__rframe === renderFrameNo) continue;      // had its turn this frame
     // A turn cannot outlive the frame it began in. If a panel still claims to
     // be running from an earlier frame, the turn was interrupted -- a thrown
     // error deep inside, or the tab frozen mid-frame -- and the flag is stale.
@@ -9413,7 +9516,7 @@ function processDirtyRooms() {
     if (!t.userData.dirty || t.__running || panels.includes(t)) continue;
     if (benchThings.includes(t)) continue;        // already found the usual way
     if (outOfPlay(t) || sleepingRoom(t)) continue;
-    if (t.__frame === roomFrame) continue;
+    if (t.__frame === roomFrame || t.__rframe === renderFrameNo) continue;
     panels.push(t);
   }
   if (panels.length) {
@@ -10782,6 +10885,7 @@ function copyThingRaw(t) {
     c = makeText(ud.text);
     if (ud.gadget) c.userData.gadget = true;
     if (ud.note) c.userData.note = ud.note;
+    if (ud.givenBy) c.userData.givenBy = ud.givenBy;
     // the colours come too: a copied label used to come back as plain paper
     if (ud.look) { c.userData.look = { ...ud.look }; c.applyLook(); }
     if (ud.img) c.setImage(ud.img);
@@ -12329,7 +12433,15 @@ function enqueueNext(...steps) {
   }
   if (keep.length) queue.unshift(...keep);
 }
+// The rendered frame the scheduler is in. processDirtyRooms is reached
+// from the frame loop, from the top of tick() and from afterQueue, and a
+// ticker took a turn from EACH of them: a wiggle that turns 25 degrees one
+// round and back the next turned and un-turned inside a single frame and
+// stood still to the eye (measured: 590 letters in 294 frames, yaw never
+// seen to change). A panel is "one round a turn", and a turn is a frame.
+let renderFrameNo = 0;
 function tick(dt, worldRuns = true) {
+  renderFrameNo++;
   // The queue is the workshop's hands and the world's motion both. Paused,
   // the hands keep moving, and so do the birds.
   advanceWorldClocks(dt, worldRuns);
@@ -14164,11 +14276,15 @@ function runRefusal(target) {
     // plaque takes it away again -- from your hand or from wherever you set
     // it down. Without this the only way to be rid of one was Dusty.
     const out = tray.__infoNb;
+    const plaqueAt = tray.__infoPlaque ? tray.__infoPlaque.getWorldPosition(new THREE.Vector3()) : null;
     if (out && (out === held || inScene(out))) {
       if (out === held) held = null;
       detach(out);
-      out.removeFromParent();
-      disposeThing(out);
+      // it goes back INTO the plaque it came from, the way a panel folds home
+      const at = out.getWorldPosition(new THREE.Vector3());
+      scene.attach(out);
+      out.position.copy(at);
+      retiring.push({ node: out, t: 0, s0: out.scale.x, from: at.clone(), to: plaqueAt, dispose: true });
       tray.__infoNb = null;
       paintInfoPlaque(tray);
       sfx('shrink');
@@ -14178,7 +14294,7 @@ function runRefusal(target) {
     if (held) return say('Empty your hand first — the notebook arrives in it.');
     const nb = infoNotebookFor(owner);
     tray.__infoNb = nb;
-    takeIntoHand(nb);
+    takeIntoHand(nb, plaqueAt);     // it comes out of the plaque
     paintInfoPlaque(tray);
     return say(`${panelName(owner)[0].toUpperCase() + panelName(owner).slice(1)}’s info notebook — a fresh copy. The examples are real: take one off a page, edit it, give it to the bird. The ℹ takes it back.`);
   }
@@ -15177,10 +15293,12 @@ function moveHand(ev, hoverY = null) {
     if (wide) dragCorner(hit);
   }
 }
-function takeIntoHand(obj) {
+function takeIntoHand(obj, from = null) {
   // start from where the thing actually is, so it rises into the hand instead
-  // of jumping there
-  const fromWorld = obj.getWorldPosition(new THREE.Vector3());
+  // of jumping there -- or from where it is SAID to come from, for a thing
+  // that was nowhere yet (a panel's info notebook rose from the world's origin,
+  // the far edge of the yard, instead of from the plaque that hands it out)
+  const fromWorld = from ? from.clone() : obj.getWorldPosition(new THREE.Vector3());
   held = obj;
   // Stack items are tagged as the stack so the whole column is clickable; once
   // one is taken it has to become a thing in its own right, or clicking it
@@ -15443,6 +15561,9 @@ function showSoftKeys(on) {
     if (!words) return say('Nothing is written on it yet.');
     // IN A LESSON, READ IS A STEP: the robot reads out the pad it holds
     if (mode === 'training' && H === clawHeld) return go({ type: 'speak' });
+    // ONCE: the card shows the words, and the pad's own voice says them. The
+    // hint reader used to say them as well, so a pad read aloud was heard twice.
+    hintLastSpoken = words;
     sayAttn(words);
     speakText(words);
   });
@@ -17276,6 +17397,7 @@ function thingOut(t) {
     if (t.userData?.lid) { r.lid = t.userData.lid; r.evt = t.userData.evtGuid; }
     if (t.userData?.liveId) r.liveId = t.userData.liveId;   // a live bird
     if (t.userData?.note && r.kind !== 'text') r.note = t.userData.note;   // a pad wrote its own
+    if (t.userData?.givenBy && r.kind !== 'text') r.givenBy = t.userData.givenBy;
     if (t.userData?.sz) r.sz = t.userData.sz;               // its chosen size
     // how fast it is going, which is as much a part of a thing as how wide it
     // is -- a world saved mid-rally opens with the ball still travelling
@@ -17312,6 +17434,7 @@ function thingOutRaw(t) {
                 gadget: ud.gadget || undefined,
                 note: ud.note || undefined,
                 boundTo: ud.boundTo || undefined,
+                givenBy: ud.givenBy || undefined,   // the behaviour whose robots handed it out
                 look: ud.look ? { ...ud.look } : undefined };
     if (t.__subs?.length) {
       r.subs = t.__subs.map(c => ({ at: c.userData.at, thing: thingOut(c) }));
@@ -17505,6 +17628,7 @@ function thingIn(o, nests, birds) {
   if (t && o?.panel) {
     t.userData.panelWorld = o.panel;   // arrives closed
     if (o.note && !t.userData.note) t.userData.note = o.note;
+    if (o.givenBy && !t.userData.givenBy) t.userData.givenBy = o.givenBy;
     if (o.panelSize) t.userData.panelSize = o.panelSize;
   }
   if (t && o?.lid) {
@@ -17554,6 +17678,7 @@ function thingInRaw(o, nests, birds) {
     if (o.gadget) t.userData.gadget = true;
     if (o.note) t.userData.note = o.note;
     if (o.boundTo) t.userData.boundTo = o.boundTo;
+    if (o.givenBy) t.userData.givenBy = o.givenBy;
     // applied, not just remembered: shape and canvas are decided in applyLook,
     // so a saved label came back the right colours at the wrong size without it
     if (o.look) { t.userData.look = { ...o.look }; t.applyLook(); }
@@ -18663,6 +18788,7 @@ function checkWaiting(nest = null) {
   }
 }
 function wakeWaiter(bot) {
+  if (curCtx.room) curCtx.room.__wakes = (curCtx.room.__wakes || 0) + 1;   // a probe's count
   bot.waiting = false;
   waiters.delete(bot);
   if (bot !== activeBot) {        // it takes the floor, wherever it is standing
@@ -18962,8 +19088,15 @@ let hintSpeaking = false, hintPending = null;
 // skin tones and zero-width joiners go with it, and the gaps left behind are
 // closed up so nothing is read with a stutter in it.
 const EMOJI = /(?:[⋮⛶▶⏸⏯⏹]|\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0F|\uFE0E|\u200D\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}]|[\u{E0020}-\u{E007F}])*/gu;
+// A pad's words are wrapped by hand -- a line break every thirty characters
+// or so -- and a voice pauses at every one of them, so a paragraph was read
+// in a halting stammer. A single break is a space; a blank line is the end of
+// a sentence, with a full stop supplied when the line above had none.
 const spokenWords = (s2) => String(s2 ?? '')
   .replace(EMOJI, ' ')
+  .replace(/([^\n.!?:;,])[ \t]*\n[ \t]*\n+/g, '$1.\n')
+  .replace(/[ \t]*\n[ \t]*\n+/g, '\n')
+  .replace(/([^\n])[ \t]*\n[ \t]*(?=[^\n])/g, '$1 ')
   .replace(/[ \t]{2,}/g, ' ')
   .replace(/ +([,.;:!?])/g, '$1')
   .replace(/^[ \t]+|[ \t]+$/gm, '')
@@ -18997,7 +19130,9 @@ function addToHint(extra) {
   attnHeld = false;
   return sayAttn(now ? now + ' ' + extra : extra);
 }
+let lastSayText = null;     // what say() was last asked to show, offstage included (a probe)
 function say(msg, hold = 2800, attn = false) {
+  lastSayText = msg;
   if (offstage()) return;
   if (attnHeld && !attn) return;
   attnHeld = attn;
@@ -19913,6 +20048,21 @@ addEventListener('keydown', (e) => {
       if (!on && !e.repeat) { e.preventDefault(); $('runBtn').onclick(); }
       return;
     }
+    // A BEHAVIOUR IN HAND is switched, not written on. Ken clicked "the
+    // guests" (which picks it up) and pressed SPACE, and the key went into
+    // its name -- "the guests " -- while the card said to drop it on a
+    // robot. A behaviour works from the ground, so SPACE sets it down where
+    // the hand is and switches it on; "." sets it down and rests it.
+    if (held && isGadget(held) && mode === 'world' && !busy && !e.repeat) {
+      e.preventDefault();
+      const g = held;
+      const w = handNode.getWorldPosition(new THREE.Vector3());
+      userPutOnBench({ x: w.x, z: w.z });
+      if (held === g) return;             // the drop was refused, and said why
+      if (switchScene(g, on) == null) switchGadget(g, on);
+      addToHint(`(Set down where your hand was: a behaviour works from the ${benchWord()}, not from a hand.)`);
+      return;
+    }
     // typing on a held pad or a name still wins: space is a letter there
     const typing = held && ['text', 'robot', 'bird', 'nest', 'box', 'scale'].includes(held.userData.kind);
     // ...but it should not do it in SILENCE while the pointer is plainly on
@@ -20575,7 +20725,9 @@ function tipForInner(t) {
          : 'The switch — nothing to run yet: the room needs a robot and something on its desk.');
   }
   if (t.kind === 'roomRoof') {
-    return 'The roof — click to switch between solid walls (works instantly, unseen) and glass (you can watch).';
+    return t.room?.userData.opaque
+      ? 'The roof — click for glass walls, to watch the robot inside work.'
+      : 'The roof — click for solid walls: the robot works unseen, in an instant.';
   }
   if (t.kind === 'ruby') {
     return rubyActive
@@ -20652,6 +20804,23 @@ function tipForInner(t) {
     // -- a child who opens the door and reads the robots inside learns how
     // puzzles are made, which is the point of the whole workshop -- with the
     // one caution that reading the answer off the judge is not solving it.
+    // A HOUSE, pointed at with an empty hand: its name, whether it is
+    // running and how to switch it, and how to see in or shut it (Ken:
+    // "pointing to a transparent house should produce a tooltip saying its
+    // name and how it can be turned on or off").
+    if (ud.kind === 'room' && !ud.judge && !ud.panel && !TIP) {
+      const r = t.thing;
+      const on = !ud.stopped && (ud.dirty || r.__running || !!r.__switched);
+      const name = ud.label ? `\u201c${ud.label}\u201d` : 'A house';
+      const walls = ud.opaque
+        ? 'solid walls: the robot inside works unseen, in an instant'
+        : 'glass walls: you can watch the robot inside work';
+      const state = on ? 'It is running \u2014 \u201c.\u201d or its switch stops it.'
+        : roomHasWorker(r) ? 'It is stopped \u2014 SPACE or its switch starts it.'
+        : 'Nothing to run yet: it needs a robot and something on its desk.';
+      return `${name} \u2014 a house with ${walls}. ${state} Click the roof for `
+        + `${ud.opaque ? 'glass' : 'solid'} walls; the door takes you inside.`;
+    }
     if (ud.kind === 'room' && ud.judge && !TIP) {
       return `${ud.label ? ud.label[0].toUpperCase() + ud.label.slice(1) : 'The judge'} \u2014 the house that runs this puzzle. `
         + 'Give the bird your answer and the robots in here decide. Do step inside and see how they work \u2014 '
@@ -20802,7 +20971,18 @@ function tipForInner(t) {
         const side = t.point ? sideOf(t.thing, t.point) : 'R';
         return `Drop to join the boxes — on this side your box’s holes go on the ${side === 'L' ? 'LEFT' : 'RIGHT'}, making one box of ${ud.holes.length + TIP.userData.holes.length}.`;
       }
-      return `A box with ${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''} — a hole holds anything: numbers, pads, boxes, even a robot.`
+      // by its NAME first, when it has one: "Sequence 1" is what the
+      // instructions call it, and the tip said only "a box with 1 hole"
+      // ...and WHAT IT HOLDS, by name: the plate under activity 8's box reads
+      // "Sequence 1", and that is the nest's name, not the box's
+      const inside = ud.holes.map(h => h.thing).filter(Boolean).slice(0, 4).map(x => {
+        const nm = x.userData.label || (x.userData.kind === 'text' ? plainName(x) : null);
+        const kind = x.userData.kind === 'text' ? 'pad' : x.userData.kind === 'number' ? ratShort(x.userData.value) : x.userData.kind;
+        return nm && nm !== kind ? `a ${kind} \u201c${nm}\u201d` : (x.userData.kind === 'number' ? kind : `a ${kind}`);
+      });
+      const holding = inside.length ? `, holding ${inside.join(', ')}` : '';
+      return (ud.label ? `\u201c${ud.label}\u201d \u2014 a box with ` : 'A box with ')
+        + `${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''}${holding} \u2014 a hole holds anything: numbers, pads, boxes, even a robot.`
         + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
     }
     if (ud.kind === 'scale') {
@@ -25196,7 +25376,7 @@ window.__nano = {
   dropQueueNow() { dropQueue(); },   // simulate an animation thrown away mid-flight
   // Houses and panels run from the FRAME loop, not from tick, so a headless
   // driver has to ask for their turn the way the frame does.
-  rooms(n = 1) { for (let i = 0; i < n; i++) processDirtyRooms(); },
+  rooms(n = 1) { for (let i = 0; i < n; i++) { renderFrameNo++; processDirtyRooms(); } },
   // One whole frame, by hand: what the animation loop does, for a test that
   // cannot rely on the browser drawing anything. The GATES are the loop's own
   // gates, copied exactly -- a bug in them must fail here too.
@@ -25229,7 +25409,7 @@ window.__nano = {
   frame(n = 1, now = performance.now()) {
     for (let i = 0; i < n; i++) {
       if (worldReady && (!simPaused || mode !== 'replay')) {
-        if (speed === Infinity) { fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
+        if (speed === Infinity) { renderFrameNo++; fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
         else tick((1 / 60) * speed, !simPaused);
       }
       if (worldReady && !simPaused) { sweepTouches(now + i * 17); sweepYard(now + i * 17); }
@@ -25475,6 +25655,28 @@ window.__nano = {
   // holds -- a check cannot tell "dozing here" from "dozing in there"
   vigil() { return [...waiters].map(b => ({ name: b.name, waiting: b.waiting,
     stand: b.stand?.occupant?.userData?.kind ?? null })); },
+  // why a panel's turn is a no-op: the guard runRoomWork applies, read from
+  // inside the panel's own world
+  turnGuard(t) {
+    if (!t.__ctx) return null;
+    pushWorld(t);
+    try {
+      const st = stations.stand, occ = st?.occupant ?? null;
+      return { turns: t.__td ?? null, wakes: t.__wakes ?? 0, rounds: t.__roundsSeen ?? null,
+               bot: activeBot?.name ?? null, progLen: program.length, botProg: activeBot?.program?.length ?? null,
+               standOcc: occ?.userData?.kind ?? null, standIsBots: activeBot ? st === activeBot.stand : null,
+               waiting: activeBot?.waiting ?? null,
+               states: activeBot && occ ? [activeBot, ...activeBot.team].map(m => matchState(m.condition, specOf(occ))) : null,
+               busy, mode, queue: queue.length, current: !!current, stopRequested, lastSaid: lastSayText,
+               botParent: activeBot ? (activeBot.node.parent === WROOT ? 'root' : activeBot.node.parent ? 'other' : 'none') : null,
+               // the bird in hole 0 and who it reaches: a round that runs and turns nothing is a delivery going nowhere
+               bird: (() => { const b = occ?.userData?.holes?.[0]?.thing; if (!b) return null;
+                 const o = liveOwnerOf(b); return { liveId: b.userData.liveId ?? null, live: !!b.__liveTarget,
+                   owner: o ? (o.userData.label ?? o.userData.lid ?? o.userData.kind) : null, ownerMsgs: o?.__msgN ?? null,
+                   ownerParent: o?.parent?.type ?? null }; })(),
+               holes: occ?.userData?.holes?.map(h => h.thing ? h.thing.userData.kind + (h.thing.userData.text ? ':' + h.thing.userData.text : '') : '-') ?? null };
+    } finally { popWorld(); }
+  },
   ctxInfo(t) { const c = t.__ctx; return c ? {
     waiters: (c.waiters || []).map(b => b.name),
     active: c.activeBot?.name ?? null,

@@ -3481,7 +3481,7 @@ async function airplanePilotCheck(D) {
 // thing on the grass, one at a time, and gives each ANIMAL a wiggle by mail
 // ([bind | behaviour]) -- and lets the welcome sign go by. Seven animals,
 // seven wigglers, each bound to its own animal and turning it.
-async function zooKeeperCheck(D) {
+async function zooKeeperCheck(D, win) {
   const w = await (await fetch('../examples/yard/🦓 zoo-keeper.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
@@ -3506,12 +3506,24 @@ async function zooKeeperCheck(D) {
   // ...in WALL time: a panel's turns are paced by a wall-clock cooldown, so
   // a thousand frames run in a second give it one turn, and after thirteen
   // golden worlds in the same tab the frames come at a different rate again
+  // ...SAMPLED EVERY FRAME. A wiggle flips once a frame here (a panel's
+  // round is instant in the suite), and a sample every twenty frames -- an
+  // even period -- saw the same side every time: the crocodile read as
+  // still for 45 s while its letters arrived as fast as the elephant's
+  // (2633 to 2650). Aliasing, not a stuck panel.
   const maxd = animals.map(() => 0);
+  // how many letters each animal gets PER FRAME: 0, 1, or 2 and more (two in
+  // one frame is a turn and its undoing, invisible)
+  const hist = animals.map(() => [0, 0, 0]), lastMsg = animals.map(a => a.__msgN || 0);
   const t0 = performance.now();
   while (performance.now() - t0 < 45000 && maxd.filter(d => d > 0.01).length < animals.length) {
-    await frames(D, 20);
+    for (let k = 0; k < 20; k++) {
+      D.frame(1, fnow());
+      animals.forEach((a, i) => { maxd[i] = Math.max(maxd[i], Math.abs(a.rotation.y - yaw0[i]));
+        const d = (a.__msgN || 0) - lastMsg[i]; lastMsg[i] = a.__msgN || 0; hist[i][Math.min(2, d)]++; });
+    }
+    await breathe();
     await new Promise(r => setTimeout(r, 60));
-    animals.forEach((a, i) => { maxd[i] = Math.max(maxd[i], Math.abs(a.rotation.y - yaw0[i])); });
   }
   D.speed(1);
   const each = animals.map(a => a.userData.lid
@@ -3526,12 +3538,122 @@ async function zooKeeperCheck(D) {
     const wg = grass().find(t => t.userData.gadget && t.userData.boundTo === a.userData.lid);
     const tr = wg?.__panelTray, c = tr?.__ctx;
     const holes = c?.standOcc ? c.standOcc.userData.holes.map(h => h.thing ? (h.thing.userData.kind === 'text' ? 'tick' : h.thing.userData.kind[0]) : '-').join('') : '?';
-    return a.userData.label + ':' + holes + ' frames=' + (tr?.__frame ?? '?') + ' dirty=' + tr?.userData?.dirty
-      + ' busy=' + c?.busy + ' q=' + (c?.queue?.length ?? '?') + ' cur=' + !!c?.current + ' active=' + c?.activeBot?.name;
+    const ab = c?.activeBot;
+    const states = ab && c.standOcc ? [ab, ...ab.team].map(m => D.matchState(m.condition, D.specOf(c.standOcc))).join('/') : '?';
+    return a.userData.label + ':' + holes + ' per-frame[0,1,2+]=' + hist[i].join('/') + ' yaw=' + a.rotation.y.toFixed(3) + ' frames=' + (tr?.__frame ?? '?') + ' dirty=' + tr?.userData?.dirty
+      + ' busy=' + c?.busy + ' q=' + (c?.queue?.length ?? '?') + ' cur=' + !!c?.current + ' active=' + ab?.name
+      + ' waiting=' + ab?.waiting + ' states=' + states + ' gates=' + JSON.stringify(tr ? D.roomGates(tr) : null)
+      + ' sched=' + JSON.stringify(D.sched()) + ' vigil=' + JSON.stringify(D.vigil ? D.vigil() : null)
+      + ' guard=' + JSON.stringify(tr ? D.turnGuard(tr) : null)
+;
   }).filter(Boolean).join('; ') + ']';
   put((ok ? 'PASS' : 'FAIL') + ' the keeper gives every animal a wiggle  (animals=' + animals.length
       + ' wigglers-bound=' + bound + ' one-each=' + oneEach + ' turning=' + turned
       + ' sign-spared=' + signSpared + why + ')', ok ? 'pass' : 'fail');
+  // THE SECOND ROUND (Ken): every wiggle has a face; "." on the keeper rests
+  // every wiggle it handed out and SPACE sets them going again; a panel
+  // brought out on the grass comes out of its thing, beside it, and folds
+  // back into it. Measured in wall time at speed 1, the app's own clock.
+  // the suite holds the clock (autoLoop off): waiting is DRIVING frames, 17 ms each
+  const sleep = (ms) => frames(D, Math.ceil(ms / 17));
+  const wigs = () => grass().filter(t => t.userData.gadget && t.userData.text === 'wiggle');
+  const blankFace = (p) => { const m = p.children[0]?.material; const mm = Array.isArray(m) ? m[2] : m;
+    const im = mm?.map?.image; return !im || im.width <= 1; };
+  await sleep(600);
+  const blank = wigs().filter(blankFace).length;
+  // every frame, for the same reason as above: a flip a frame aliases
+  // against any even sampling period
+  const changes = async (ms) => {
+    const y = animals.map(a => a.rotation.y), n = animals.map(() => 0);
+    for (let t = 0; t < ms; t += 17) { await frames(D, 1);
+      animals.forEach((a, i) => { if (Math.abs(a.rotation.y - y[i]) > 0.001) { n[i]++; y[i] = a.rotation.y; } }); }
+    return n;
+  };
+  D.press(btn, '.'); await sleep(400);
+  const stopped = wigs().filter(p => p.__panelTray?.userData.stopped).length;
+  await sleep(2500);                                   // a round in flight finishes
+  const stillTurning = (await changes(2000)).filter(n => n > 0).length;
+  D.press(btn, ' '); await sleep(400);
+  const going = wigs().filter(p => p.__panelTray?.userData.dirty && !p.__panelTray?.userData.stopped).length;
+  // woken and turning again, not a cadence: one turn within five seconds each
+  const msg0 = animals.map(a => a.__msgN || 0);
+  const again = await changes(5000);
+  const turningAgain = again.filter(n => n >= 1).length;
+  const stillWhy = turningAgain === 7 ? '' : ' not-again=[' + animals.map((a, i) => {
+    if (again[i]) return null;
+    const wg = grass().find(t => t.userData.gadget && t.userData.boundTo === a.userData.lid);
+    return a.userData.label + ' msgs+' + ((a.__msgN || 0) - msg0[i]) + ' gates=' + JSON.stringify(wg?.__panelTray ? D.roomGates(wg.__panelTray) : null)
+      + ' guard=' + JSON.stringify(wg?.__panelTray ? D.turnGuard(wg.__panelTray) : null);
+  }).filter(Boolean).join('; ') + ']';
+  // out of the hand, beside it, growing; the knob takes it home and hides it
+  const gw = wigs().find(p => p.userData.boundTo === animals[1].userData.lid);
+  D.hold(gw); await sleep(300);
+  const hand = D.handPos();
+  win.dispatchEvent(new KeyboardEvent('keydown', { key: 'p', ctrlKey: true, bubbles: true, cancelable: true }));
+  await sleep(60);
+  const tr = gw.__panelTray;
+  const growing = !!tr && tr.visible && tr.scale.x < 0.5;
+  await sleep(1200);
+  const near = !!tr && Math.hypot(tr.position.x - hand[0], tr.position.z - hand[2]) < 1.4 && Math.abs(tr.scale.x - 1) < 0.01;
+  D.place(gw, animals[1].position.x + 0.4, animals[1].position.z + 0.5); await sleep(400);
+  D.clickRaw({ kind: 'panelClose', tray: tr }); await sleep(150);
+  const goingHome = !!tr && tr.__closed && tr.visible && tr.scale.x < 0.95;
+  await sleep(1000);
+  const home = !!tr && !tr.visible && Math.abs(tr.scale.x - 1) < 0.01 && tr.userData.dirty;
+  const ok2 = blank === 0 && stopped === 7 && stillTurning === 0 && going === 7 && turningAgain === 7
+    && growing && near && goingHome && home;
+  put((ok2 ? 'PASS' : 'FAIL') + ' the keeper rests and wakes what it handed out, and a panel on the grass comes out of its thing  (blank-faces=' + blank
+      + ' rested=' + stopped + ' still-turning=' + stillTurning + ' woken=' + going + ' turning-again=' + turningAgain
+      + ' grows-from-hand=' + growing + ' beside-hand=' + near + ' folds-home=' + goingHome + ' hidden-working=' + home + stillWhy + ')', ok2 ? 'pass' : 'fail');
+  return ok && ok2;
+}
+
+// A BEHAVIOUR IN HAND IS SWITCHED, NOT WRITTEN ON (Ken clicked "the guests"
+// -- which picks it up -- and pressed SPACE; the key went into its name).
+// Also from that round: a box's tip starts with its name, a house's tip says
+// its name, its walls and how to switch it, the lever stands on the front
+// beside the door, the Read button speaks once, and a pad's hand-wrapped
+// lines are read as one sentence.
+async function heldSwitchCheck(D, win) {
+  const w = await (await fetch('../examples/infinity/🏨 resort-infinity.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+  const grass = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const guests = grass().find(t => t.userData.text === 'the guests');
+  const desk = grass().find(t => t.userData.kind === 'box');
+  const nest = desk && desk.userData.holes.map(h => h.thing).find(t => t?.userData.kind === 'nest');
+  D.hold(guests); await frames(D, 20);
+  win.document.activeElement && win.document.activeElement.blur();
+  win.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+  await frames(D, 20);
+  const nameKept = guests.userData.text === 'the guests';
+  const setDown = D.state.hand == null && !!guests.parent;
+  const switched = !!guests.__panelTray?.userData.dirty;
+  let pile = 0;
+  for (let k = 0; k < 60 && pile < 6; k++) { await frames(D, 30); pile = nest?.userData.pile?.length ?? 0; }
+  const pads = grass().filter(t => t.userData.kind === 'text' && !t.userData.gadget).map(t => t.userData.text || '');
+  const fits = pads.every(t => t.length <= 600) && pads.some(t => t.startsWith('PROBLEM 1')) && pads.some(t => t.startsWith('HOW TO TRAIN'));
+  // read aloud once, in one breath: the hint reader is told the words were said
+  const spoken = D.spoken('THE ROW GOES ON\n\nEleven cottages wait at the\ngate.\n\nThat row goes on.');
+  const oneBreath = spoken === 'THE ROW GOES ON. Eleven cottages wait at the gate. That row goes on.';
+  // a box says its name, a house says what it is, the lever is on the front
+  const w2 = await (await fetch('../examples/infinity/♾️ activity8-counting-sequences.world.json')).json();
+  D.worldIn(w2); await slowSettle(D, 2000);
+  const seq1 = grass().find(t => t.userData.kind === 'box' && t.userData.holes[0]?.thing?.userData.label === 'Sequence 1');
+  const boxNamed = !!seq1 && D.tip(seq1).startsWith('A box with 1 hole, holding a nest \u201cSequence 1\u201d');
+  const numbers = grass().find(t => t.userData.kind === 'room' && t.userData.label === 'Numbers');
+  const tip0 = numbers ? D.tip(numbers) : '';
+  D.clickRaw({ kind: 'roomLever', room: numbers }); await frames(D, 5);
+  const tip1 = numbers ? D.tip(numbers) : '';
+  const houseTip = tip0.startsWith('\u201cNumbers\u201d') && tip0.includes('glass walls') && tip0.includes('It is stopped')
+    && tip1.includes('It is running') && tip0.includes('Click the roof for solid walls');
+  const lever = numbers?.__lever?.parent;
+  const leverFront = !!lever && lever.position.z > 0.2 && Math.abs(lever.position.x) < 0.25;
+  const ok = nameKept && setDown && switched && pile >= 6 && fits && oneBreath && boxNamed && houseTip && leverFront;
+  put((ok ? 'PASS' : 'FAIL') + ' a behaviour in hand is switched, and things say what they are  (name-kept=' + nameKept
+      + ' set-down=' + setDown + ' switched=' + switched + ' letters=' + pile + ' pads-fit=' + fits + ' one-breath=' + oneBreath
+      + ' box-named=' + boxNamed + ' house-tip=' + houseTip + ' lever-front=' + leverFront
+      + (boxNamed ? '' : ' box-tip=' + JSON.stringify(seq1 ? D.tip(seq1) : null) + ' boxes=' + JSON.stringify(grass().filter(t => t.userData.kind === 'box').map(t => [t.userData.label ?? null, t.userData.name ?? null]))) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -5964,8 +6086,11 @@ async function runOne(D, spec) {
   let apOK = true;
   try { apOK = want('airplanePilot') ? await airplanePilotCheck(D) : true; }
   catch (e) { apOK = false; put('FAIL an airplane with its pilot aboard  ' + e.message, 'fail'); }
+  let bhOK = true;
+  try { bhOK = want('heldSwitch') ? await heldSwitchCheck(D, frame.contentWindow) : true; }
+  catch (e) { bhOK = false; put('FAIL a behaviour in hand is switched, and things say what they are  ' + e.message, 'fail'); }
   let zkOK = true;
-  try { zkOK = want('zooKeeper') ? await zooKeeperCheck(D) : true; }
+  try { zkOK = want('zooKeeper') ? await zooKeeperCheck(D, frame.contentWindow) : true; }
   catch (e) { zkOK = false; put('FAIL the keeper gives every animal a wiggle  ' + e.message, 'fail'); }
   let pvOK = true;
   try { pvOK = want('pageVacuum') ? await pageVacuumCheck(D) : true; }
@@ -6090,7 +6215,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
