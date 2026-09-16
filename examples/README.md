@@ -73,10 +73,12 @@ mail.
 Galileo's evens to a queue holding every positive rational, and then Cantor's
 diagonal, which is the one that is not countable. Each runs from a single press
 of Run, with its pipeline dozing in glass rooms; in Activity 8 you hand the
-sequences in yourself, a box at a time. **🏨 resort-infinity** is Hilbert's
-hotel out in the yard: cottages standing in a row, a clerk's desk on the
-grass, and a bell that makes the whole row shuffle up to let five more guests
-in. Since 15 Sep a sequence room sends a term only when the diagonal team asks for one (a number dropped on the room's "asked" nest, by the bird that travels in the sequence's box), so levers and boxes can go in any order and nothing piles up.
+sequences in yourself, a box at a time, and a sequence room makes a term only
+when the diagonal team asks for one, so levers and boxes can go in any order
+and nothing piles up. **🏨 resort-infinity** is Hilbert's hotel out in the
+yard: eleven cottages in a fixed row, guests waiting at the gate who walk to
+the cottage the clerk gives them, a clerk's desk on the grass, and a bell that
+moves every guest five cottages along to let five more in.
 
 ## infinity/📮 zeno.world.json
 

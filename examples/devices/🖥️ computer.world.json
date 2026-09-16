@@ -1,0 +1,131 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "notebook",
+    "page": 0,
+    "pages": [
+     {
+      "kind": "text",
+      "text": "BIRD TO THE COMPUTER\n\nThe next page holds a bird\nto the workshop\u2019s own\nmachine. Take her off the\npage and give her one of\nthe letters that follow;\nthe answer comes back to\nher nest as a number or a\nbox.\n\nEvery letter needs a bird\nin its last hole to answer\nto: put one of yours there."
+     },
+     {
+      "kind": "bird",
+      "nestId": 0,
+      "nestGuid": null,
+      "liveId": "COMPUTER",
+      "label": "to the computer"
+     },
+     {
+      "kind": "text",
+      "text": "THE TIME\n\n[query | time | bird]\n\nanswers with the clock: the\nmilliseconds since the\nworkshop opened, as one\nnumber. A thousand a second.\n\nAsk twice and take the\ndifference: that is how long\nsomething took."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "text",
+        "text": "query"
+       },
+       {
+        "kind": "text",
+        "text": "time"
+       },
+       null
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "THE DATE\n\n[query | date | bird]\n\nanswers with a box of three\nnumbers: [year | month | day].\n\nTake the year out of the\nfirst hole and it is a\nnumber like any other."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "text",
+        "text": "query"
+       },
+       {
+        "kind": "text",
+        "text": "date"
+       },
+       null
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "THE CLOCK\n\n[query | clock | bird]\n\nanswers with a box of three\nnumbers:\n[hours | minutes | seconds]."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "text",
+        "text": "query"
+       },
+       {
+        "kind": "text",
+        "text": "clock"
+       },
+       null
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "A TIMER, FROM ROBOTS\n\nA number can be TOLD its\nvalue: give its bird\n[set | value | n].\n\nSo a timer is a robot that\nasks the computer the time,\ntells its number the answer,\nand asks again. The world\ntimer.world.json in this\nfolder is that robot, bound\nto a number on the table."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "text",
+        "text": "set"
+       },
+       {
+        "kind": "text",
+        "text": "value"
+       },
+       null
+      ]
+     }
+    ]
+   },
+   "x": 0.0,
+   "z": 1.75
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THE COMPUTER\n\nThis notebook holds a bird\nto the workshop\u2019s own\nmachine, and the letters it\nanswers. Point at the\nnotebook and press the left\nand right arrows to turn\nits pages; click a page to\ntake a copy of what is on\nit."
+   },
+   "x": -0.9,
+   "z": 1.75
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9811,
+    "guid": "computer-answers",
+    "hasEgg": false,
+    "pile": [],
+    "label": "answers"
+   },
+   "x": 0.9,
+   "z": 1.75
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 9811,
+    "nestGuid": "computer-answers",
+    "label": "to answers"
+   },
+   "x": 1.3,
+   "z": 1.75
+  }
+ ],
+ "stations": {},
+ "active": null
+}

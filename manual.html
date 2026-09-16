@@ -756,7 +756,9 @@ across is the middle of the table; <em>away</em> grows towards you</td></tr>
 <tr><td><code>[set | away | 2]</code></td><td></td></tr>
 <tr><td><code>[set | position | [across | away]]</code></td>
 <td>both at once, as a box — the same box the <a href="#devices">pointer
-device</a> delivers</td></tr>
+device</a> delivers. On the table or the grass the thing <em>glides</em>
+there over half a second; on a field it is placed at once, since a game
+places its ball by the frame</td></tr>
 <tr><td><code>[move | across | 1/60]</code></td><td>from where it is
 now, rather than to a place</td></tr>
 <tr><td><code>[query | position | bird]</code></td><td>tell that bird
@@ -1497,6 +1499,18 @@ run finds a free patch of grass each time. Carry out a box of animals, give
 it to a robot, show it taking one out and setting it on the ground: each
 round unpacks another. A robot taught outside and run indoors says so and
 stops.</p>
+<p><b>The computer.</b> The workshop&rsquo;s own machine is a thing with a
+name, and a bird to it is on the last page of the Devices notebook (and in
+<em>devices/computer</em>, with the letters ready to copy). Give her
+<code>[query | time | bird]</code> and the clock comes back as a number of
+milliseconds since the workshop opened; <code>[query | date | bird]</code>
+answers with a box <code>[year | month | day]</code> and
+<code>[query | clock | bird]</code> with <code>[hours | minutes | seconds]</code>.
+Nothing listens: a timer is <em>built</em>. A number can be told what it is
+&mdash; <code>[set | value | n]</code> to its bird replaces what it holds,
+where a badge would add to it &mdash; so a robot that asks the computer the
+time and tells its number the answer, round after round, is a timer
+(<em>devices/timer</em>).</p>
 <p><b>Filling a yard by hand.</b> Whatever you carry comes through the door
 with you: a box of things to unpack, and the empty box goes back in with
 you. A nest set on the grass takes the bird's deliveries, and the pile is

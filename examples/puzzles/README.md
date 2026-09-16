@@ -66,7 +66,7 @@ of three and a pair in order, with a scale by hand; a robot that swaps a
 scale's stuck pans; letters poured into a word and a word into letters; the
 third letter of a word picked out by a number; a halver weighed against
 1; two boxes tipping opposite ways, a robot for each and a team that takes
-either; and a team of four that sorts three). Marty's ship lies on the floor behind every table as `scenery`; a small
+either; and a team of four that sorts three; and p35, played after the door code: THIS YEAR from the powers of two up to 1,024 -- the judge asks the computer what year it is and subtracts, so the puzzle is right in any year). Marty's ship lies on the floor behind every table as `scenery`; a small
 goal carries `size` on its thing and stands larger.
 
 There is no Rounds control: a robot runs until its thought stops fitting, so
@@ -86,3 +86,16 @@ her, the goal and the judge at the back.
 as a JSON block, so the **Puzzle game** button on the door card works in a
 published artifact where nothing can be fetched. Progress (the puzzle a
 player is on, and the ones solved) is kept per person in the browser.
+
+## Where the set stands against the original
+
+The original tutorial is 62 puzzles (74 files, twelve of them "Skip this
+puzzle"). This set follows its opening arc -- the box with 1 and 2, a 4,
+8-16-32, zeros and robots, letters, the seconds in a year, scales -- and then
+diverges towards what this workshop can judge by identity or on a scale:
+fractions, words poured into letters, sorting. The original's clock arc (time
+sensors, countdowns, timers on the back of a number, about a third of the
+tutorial) is not here yet; the computer bird is the first piece of it.
+A **second arc** of puzzles that introduce the 3D things -- turning a model,
+setting a place, giving a model a behaviour, pictures with captions -- is
+planned to follow p35 rather than interleave with the first.

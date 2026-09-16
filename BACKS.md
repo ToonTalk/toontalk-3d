@@ -7376,3 +7376,71 @@ training and the argument have pads of their own (RUN 504, OWN 385,
 THINK 356, MORE 385 characters). Check: diagonal (levers first, then the
 boxes: nothing made before it is asked for, the diagonal reads 1, 3, 4,
 and no sequence pile ever exceeds two).
+
+## Resort Infinity: the guests walk
+
+*Added 15 Sep. Ken: "Why are there 11 cottages and they disappear and
+reappear when the robot runs? Problem 1 moves cottages 2 to 6 and then
+cottage 1. Why? We need to convey the idea that guests at first move to a
+cottage 5 down so the new guests can have rooms. Moving houses is just
+confusing."*
+
+The cottages were the guests: each was a house with a behaviour bound to
+it, told where to stand by the clerk, and `[set | position]` put it there
+in one frame -- a house vanishing at the gate and appearing along the row.
+Now eleven cottages stand in a fixed row, numbered from the left, and a
+guest is a pad at the gate that walks to the cottage it is given
+(`make_resort.py`: `cottage(n)`, `guest(name, lid, bg)`; the guest
+behaviours are bound to the pads and put them at z 5.2, in front of the
+row at 4.5). A thing on the table or the grass told where to stand GLIDES
+there now (`startGlide`/`advanceGlides`, half a second; a thing on a field
+still jumps, since a game places its ball by the frame).
+
+Guest 1 was housed last because of the post, not the clerk: the six letters
+left together, the courier's own letter was tucked with an animation and
+joined the pile when that ended, while the five that rode along were set
+down at once -- so the first letter sent landed last. Her own letter is set
+down with its companions now, in posting order (`advanceFlights`), and
+the panels nested in a behaviour take their first turns in the order they
+were made rather than from the end of the register.
+
+What is NOT a fault: the clerk's round takes about nine seconds at 4x
+because its copy walks to Mimi and its vacuum walks to Dusty, two metres
+each way, which is the workshop's ordinary pace; the pads say to set the
+Speed up.
+
+Check: resort (eleven cottages, the letters land 1 to 6, guest 1 walks
+first, the mover joins as a team, the bell moves everybody five along, the
+five newcomers take 1 to 5, eleven distinct cottages, and a newcomer is seen
+part-way across the grass).
+
+## A bird to the computer
+
+*Added 16 Sep. Ken: "We need a bird to the 'computer'... Various JavaScript
+functionality can be accessed this way. Maybe the first example is to query a
+timer or the time. Then using the number API we can construct something like
+the timer sensor." And: "a 'computer' notebook in the devices folder. Page 1
+should be a text pad saying 'Bird to computer' or the like, page 2 the bird,
+and the rest alternating doc and sample messages."*
+
+The computer is a live thing with a FIXED name (`COMPUTER`), made once at
+start and kept through every world (`computerNode`, re-registered in
+`clearWorld`), so a bird to it can be saved in any file and kept on a
+notebook page. It has no body. `computerMsg` answers `[query | time |
+bird]` with milliseconds since the workshop opened, `[query | date | bird]`
+with `[year | month | day]` and `[query | clock | bird]` with
+`[hours | minutes | seconds]`; anything else gets the list. No `listen`: the
+timer is built, as Ken wanted. A number now takes `[set | value | n]`
+(replace, where a badge adds; the echo rule applies). `devices/computer` is
+the notebook Ken described, `devices/timer` the one-robot timer bound to a
+number, measured at about two readings a second, resting on ".". The
+in-app Devices notebook gained a page of words and the bird.
+
+The year puzzle, p35, is played after the door code (p11 loads p35, p35
+loads p12). Its judge cannot know the year, so it asks the computer, takes
+the year out of the date box, gives it a minus badge and drops it on a copy
+of the answer: exactly zero is right. The worked example in the last hint
+is computed when the set is generated, so `make_puzzles.py` should be run
+each new year. Numbering: p35 sits after p11 in play but not in name;
+renumbering p12 to p34 would touch every file, the suite and players'
+saved progress, and was left for a deliberate day.

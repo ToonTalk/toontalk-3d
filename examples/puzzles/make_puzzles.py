@@ -493,9 +493,8 @@ puzzle(
           nest(10012, 'p11-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10011, 'p11-post', 10012, 'p11-reply',
                 right=num(77),                               # noqa: F405
-                on_right=next_note('') + [load('p12')],
-                notes=['77 — the door opens. Next: a number smaller than '
-                       'one.'],
+                on_right=next_note('') + [load('p35')],
+                notes=['77 — the door opens. Next: a bigger number, this year.'],
                 sorry='Not quite — the code is exactly 77. Each number in '
                       'the box may be used once.')),
     scenery=SCENERY)
@@ -1282,3 +1281,89 @@ puzzle(
                       'smallest first, both pans empty, and hole 5 empty.'),
           extra=[{'thing': TO_SORT, 'x': 0.75, 'z': MID}]),
     scenery=SCENERY)
+
+
+# --- p35: this year, from powers of two ---------------------------------------
+# Played after the door code. The judge does not KNOW the year: it asks the
+# computer (a bird to it is in its box), takes the year out of the date box,
+# and drops it on a copy of your answer with a minus badge -- exactly zero
+# means right. Any year, any number of years from now.
+live_bird = lambda lid, label: {'kind': 'bird', 'nestId': 0, 'nestGuid': None,   # noqa: E731
+                                'liveId': lid, 'label': label}
+def year_judge():
+    #  0 post  1 reply bird  2 note  3 sorry  4 bird to computer  5 date nest
+    #  6 [query | date | _]  7 bird to date nest  8 held answer  9 answer minus year
+    work = box(nest(10351, 'p35-post', 'the post'),                       # noqa: F405
+               bird(10352, 'p35-reply', 'to the player'),                 # noqa: F405
+               pad('This year — the log is dated. Next: a number smaller than one.'),
+               pad('Not quite — the year the computer keeps, from these powers of two, each used once.'),
+               live_bird('COMPUTER', 'to the computer'),
+               nest(10353, 'p35-date', 'the date'),                       # noqa: F405
+               box(txt('query'), txt('date'), None),                      # noqa: F405
+               bird(10353, 'p35-date', 'to the date nest'),               # noqa: F405
+               None, None)
+    N = [None] * 10
+    def cond(**at):
+        c = list(N)
+        for k, v in at.items():
+            c[int(k[1:])] = v
+        return box(*c)                                                    # noqa: F405
+    right = robot('the judge', cond(h9=num(0)),                           # noqa: F405
+                  next_note('') + [vac('given', 8), vac('given', 9), load('p12')],   # noqa: F405
+                  note='Your answer minus the year came to exactly zero: right. Sends the note and opens the next puzzle.')
+    wrong = robot('the judge (not this year)', cond(h9=ANYNUM),           # noqa: F405
+                  [copy('given', 3), put('given', 1),                     # noqa: F405
+                   take('given', 8), put('given', 1),                     # noqa: F405
+                   vac('given', 9)],                                      # noqa: F405
+                  note='Your answer minus the year was not zero. Sends back a copy of the "not quite" pad, then the answer itself.')
+    subtract = robot('the judge (does the sum)', cond(h5=ANYBOX, h8=ANYNUM),   # noqa: F405
+                     [copy('given', 8), put('given', 9),                  # a working copy of the answer  # noqa: F405
+                      takeTop('given', 5), put('s0'),                     # the date box  # noqa: F405
+                      take('s0', 0), setop('-'), put('given', 9),         # the year, subtracted from the copy  # noqa: F405
+                      vac('s0')],                                         # noqa: F405
+                     note='The date has come back from the computer. Takes the year out of it, gives it a minus badge and drops it on a copy of your answer.')
+    ask = robot('the judge (asks the computer)', cond(h0=ANYNUM),         # noqa: F405
+                [takeTop('given', 0), put('given', 8),                    # your answer, kept  # noqa: F405
+                 copy('given', 6), put('s0'),                             # [query | date | _]  # noqa: F405
+                 copy('given', 7), put('s0', 2),                          # ...answered to the date nest  # noqa: F405
+                 take('s0'), put('given', 4)],                            # asked of the computer  # noqa: F405
+                note='A number has arrived. Keeps it, and asks the computer what year it is.')
+    send_back = [copy('given', 3), put('given', 1), takeTop('given', 0), put('given', 1)]   # noqa: F405
+    others = [robot('the judge (not a box like that)', cond(h0=ANYBOX), send_back,   # noqa: F405
+                    note='The answer is a box, but the computer wants a number.'),
+              robot('the judge (not a pad)', cond(h0=WILDTEXT), send_back,          # noqa: F405
+                    note='The answer is a pad, but the computer wants a number.')]
+    right['team'] = [wrong, subtract, ask] + others
+    return dict(room('the judge', work, right, opaque=True, dirty=True), judge=True)   # noqa: F405
+
+# the worked example in the last hint is for the year the set was generated in
+import datetime as _dt
+year = _dt.date.today().year
+_r, powers = year, []
+for _pw in [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]:
+    if _pw <= _r:
+        powers.append(_pw); _r -= _pw
+worked = ' + '.join(str(x) for x in powers)
+
+puzzle(
+    'p35',
+    'The ship’s log wants dating, and the computer keeps the year. Make THIS '
+    'YEAR from the powers of two in this box, each used at most once, and give '
+    'it to the bird. The judge asks the computer what year it is, so this '
+    'puzzle is right in any year.',
+    'this year, as a number',
+    ['Which year is it? The devices notebook has a bird to the computer, and '
+     '[query | date | bird] answers with [year | month | day].',
+     'Every number is a sum of powers of two, each used at most once. Take the '
+     'biggest that fits under the year, then the biggest that fits under what '
+     'is left, and so on.',
+     'For %d that is %s: take the 1024 out and drop the others on it in turn, '
+     'then give it to the bird.' % (year, worked)],
+    rules(),
+    table([box(num(1), num(2), num(4), num(8), num(16), num(32), num(64), num(128),   # noqa: F405
+               num(256), num(512), num(1024))],                       # noqa: F405
+          fixed(pad('this year'), 'we need this'),                    # noqa: F405
+          bird(10351, 'p35-post', 'give me your answer'),             # noqa: F405
+          nest(10352, 'p35-reply', 'from the judge'),                 # noqa: F405
+          year_judge()),
+)

@@ -214,27 +214,27 @@ MORE = ('GOING FURTHER\n'
 # take the middle.
 bench = [
     {'thing': room('Numbers', box(num(1), bird(*S1, label='Sequence 1'), nest(*REQ1, label='asked')),
-                   numbers, dirty=False), 'x': -1.15, 'z': 1.42},
+                   numbers, dirty=False), 'x': -1.40, 'z': 1.27},
     {'thing': room('Odd Numbers', box(num(1), bird(*S2, label='Sequence 2'), nest(*REQ2, label='asked')),
-                   odds, dirty=False), 'x': -0.35, 'z': 1.42},
+                   odds, dirty=False), 'x': -0.70, 'z': 1.27},
     {'thing': room('Doubling', box(num(1), bird(*S3, label='Sequence 3'), nest(*REQ3, label='asked')),
-                   doubling, dirty=False), 'x': 0.45, 'z': 1.42},
+                   doubling, dirty=False), 'x': 0.00, 'z': 1.27},
 
     {'thing': room('Diagonal',
                    box(nest(*SEQS, label='Sequences'), nest(*CUR, label='Current'),
                        scale(num(1), num(0), label='skipped | to skip'),
                        bird(*DIAG, label='Diagonal'), num(1, 1)),
-                   diagonal), 'x': 1.25, 'z': 1.42},
+                   diagonal), 'x': 0.70, 'z': 1.27},
 
     # the three sequences, ready to hand over, and the bird that takes them in
     # each: its nest, and a bird that asks its room for the next term
-    {'thing': box(nest(*S1G, label='Sequence 1'), bird(*REQ1, label='more')), 'x': -1.00, 'z': 1.80},
-    {'thing': box(nest(*S2G, label='Sequence 2'), bird(*REQ2, label='more')), 'x': -0.50, 'z': 1.80},
-    {'thing': box(nest(*S3G, label='Sequence 3'), bird(*REQ3, label='more')), 'x': 0.00, 'z': 1.80},
-    {'thing': bird(*SEQS, label='All Sequences'), 'x': 0.36, 'z': 1.80},
+    {'thing': box(nest(*S1G, label='Sequence 1'), bird(*REQ1, label='more')), 'x': -1.30, 'z': 1.72},
+    {'thing': box(nest(*S2G, label='Sequence 2'), bird(*REQ2, label='more')), 'x': -0.78, 'z': 1.72},
+    {'thing': box(nest(*S3G, label='Sequence 3'), bird(*REQ3, label='more')), 'x': -0.26, 'z': 1.72},
+    {'thing': bird(*SEQS, label='All Sequences'), 'x': 0.14, 'z': 1.72},
     {'thing': room('Add 1 to it',
                    box(nest(*DIAG, label='In'), bird(*CHANGED, label='Out')),
-                   add1), 'x': 0.75, 'z': 1.95},
+                   add1), 'x': 1.40, 'z': 1.27},          # in the row with the others
 
     {'thing': nest(*DIAG_W, label='the diagonal'), 'x': -1.52, 'z': 2.80},
     {'thing': nest(*CHANGED, label='changed'), 'x': 1.52, 'z': 2.80},
@@ -242,8 +242,8 @@ bench = [
     {'thing': txt(ABOUT), 'x': -1.10, 'z': 2.85},
     {'thing': txt(RUN), 'x': -0.45, 'z': 2.85},
     {'thing': txt(THINK), 'x': 0.20, 'z': 2.85},
-    {'thing': txt(OWN), 'x': -1.50, 'z': 1.80},     # the front-left corner, beside Sequence 1
-    {'thing': txt(MORE), 'x': 1.40, 'z': 1.80},     # beside the Add 1 room
+    {'thing': txt(OWN), 'x': 0.62, 'z': 1.72},
+    {'thing': txt(MORE), 'x': 1.10, 'z': 1.72},
 ]
 
 if __name__ == '__main__':

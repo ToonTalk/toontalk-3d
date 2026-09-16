@@ -1,0 +1,328 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "0",
+     "d": "1"
+    },
+    "lid": "TIMER1",
+    "evt": "evt-TIMER1",
+    "label": "milliseconds"
+   },
+   "x": 0.0,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "timer",
+    "gadget": true,
+    "lid": "T901",
+    "evt": "evt-T901",
+    "look": {
+     "bg": "#1f2f3f",
+     "ink": "#dff3ff",
+     "font": "sans",
+     "h": 0.34
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "TIMER1",
+         "label": "my number"
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "COMPUTER",
+         "label": "the computer"
+        },
+        {
+         "kind": "nest",
+         "id": 9821,
+         "guid": "timer-readings",
+         "hasEgg": false,
+         "pile": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ],
+         "label": "readings"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9821,
+         "nestGuid": "timer-readings",
+         "label": "to my readings"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "query"
+          },
+          {
+           "kind": "text",
+           "text": "time"
+          },
+          null
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "value"
+          },
+          null
+         ]
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Tell the time",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          5
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s1",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "TIMER1",
+         "label": "my number"
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "COMPUTER",
+         "label": "the computer"
+        },
+        {
+         "kind": "nest",
+         "id": 9821,
+         "guid": "timer-readings",
+         "hasEgg": false,
+         "pile": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ],
+         "label": "readings"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9821,
+         "nestGuid": "timer-readings",
+         "label": "to my readings"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "query"
+          },
+          {
+           "kind": "text",
+           "text": "time"
+          },
+          null
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "value"
+          },
+          null
+         ]
+        }
+       ]
+      },
+      "team": [],
+      "note": "A reading is on my nest. Puts it in a [set | value | _] letter for my number, then asks the computer the time again, to my own nest -- so there is always a next reading to wait for."
+     }
+    },
+    "boundTo": "TIMER1",
+    "note": "A timer built from one robot: it asks the computer the time and tells the number it is bound to. SPACE starts it, \".\" stops it where it is."
+   },
+   "x": 0.55,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "A TIMER\n\nThe number counts the\nmilliseconds since the\nworkshop opened, and it is\nrobots doing it: press\nSPACE on the \"timer\" pad.\n\nOpen the pad\u2019s panel: one\nrobot asks the computer\nthe time and tells the\nnumber the answer, round\nafter round. \".\" rests it."
+   },
+   "x": -0.9,
+   "z": 1.75
+  }
+ ],
+ "stations": {},
+ "active": null
+}
