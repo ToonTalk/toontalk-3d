@@ -11,24 +11,8 @@
     },
     "lid": "TIMER1",
     "evt": "evt-TIMER1",
-    "label": "milliseconds"
-   },
-   "x": 0.0,
-   "z": 1.55
-  },
-  {
-   "thing": {
-    "kind": "text",
-    "text": "timer",
-    "gadget": true,
-    "lid": "T901",
-    "evt": "evt-T901",
-    "look": {
-     "bg": "#1f2f3f",
-     "ink": "#dff3ff",
-     "font": "sans",
-     "h": 0.34
-    },
+    "label": "milliseconds",
+    "note": "A timer: two robots on my own panel. One asks the computer the time, the other tells me the answer, and a pad crossing between two holes lets them take turns. SPACE on me starts them; \".\" rests them.",
     "panel": {
      "kind": "world",
      "v": 3,
@@ -42,7 +26,7 @@
          "nestId": 0,
          "nestGuid": null,
          "liveId": "TIMER1",
-         "label": "my number"
+         "label": "my thing"
         },
         {
          "kind": "bird",
@@ -56,16 +40,7 @@
          "id": 9821,
          "guid": "timer-readings",
          "hasEgg": false,
-         "pile": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          }
-         ],
+         "pile": [],
          "label": "readings"
         },
         {
@@ -101,13 +76,18 @@
           },
           null
          ]
-        }
+        },
+        {
+         "kind": "text",
+         "text": "go"
+        },
+        null
        ]
       }
      },
      "active": {
       "kind": "robot",
-      "name": "Tell the time",
+      "name": "Ask the time",
       "condition": {
        "kind": "box",
        "holes": [
@@ -117,9 +97,7 @@
         {
          "kind": "anyBird"
         },
-        {
-         "kind": "wildNumber"
-        },
+        null,
         {
          "kind": "anyBird"
         },
@@ -128,61 +106,14 @@
         },
         {
          "kind": "anyBox"
-        }
+        },
+        {
+         "kind": "wildText"
+        },
+        null
        ]
       },
       "program": [
-       {
-        "type": "copy",
-        "at": {
-         "c": "given",
-         "path": [
-          5
-         ]
-        }
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "s0",
-         "path": []
-        }
-       },
-       {
-        "type": "take",
-        "at": {
-         "c": "given",
-         "path": [
-          2
-         ],
-         "nest": true
-        }
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "s0",
-         "path": [
-          2
-         ]
-        }
-       },
-       {
-        "type": "take",
-        "at": {
-         "c": "s0",
-         "path": []
-        }
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "given",
-         "path": [
-          0
-         ]
-        }
-       },
        {
         "type": "copy",
         "at": {
@@ -195,7 +126,7 @@
        {
         "type": "put",
         "at": {
-         "c": "s1",
+         "c": "s0",
          "path": []
         }
        },
@@ -211,7 +142,7 @@
        {
         "type": "put",
         "at": {
-         "c": "s1",
+         "c": "s0",
          "path": [
           2
          ]
@@ -220,7 +151,7 @@
        {
         "type": "take",
         "at": {
-         "c": "s1",
+         "c": "s0",
          "path": []
         }
        },
@@ -230,6 +161,24 @@
          "c": "given",
          "path": [
           1
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          6
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          7
          ]
         }
        }
@@ -242,7 +191,7 @@
          "nestId": 0,
          "nestGuid": null,
          "liveId": "TIMER1",
-         "label": "my number"
+         "label": "my thing"
         },
         {
          "kind": "bird",
@@ -256,16 +205,7 @@
          "id": 9821,
          "guid": "timer-readings",
          "hasEgg": false,
-         "pile": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          }
-         ],
+         "pile": [],
          "label": "readings"
         },
         {
@@ -301,25 +241,142 @@
           },
           null
          ]
-        }
+        },
+        {
+         "kind": "text",
+         "text": "go"
+        },
+        null
        ]
       },
-      "team": [],
-      "note": "A reading is on my nest. Puts it in a [set | value | _] letter for my number, then asks the computer the time again, to my own nest -- so there is always a next reading to wait for."
+      "team": [
+       {
+        "kind": "robot",
+        "name": "Tell my number",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          null,
+          {
+           "kind": "wildText"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            5
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            6
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "A reading is on my nest and the go pad is in hole 8: tells my thing the reading with [set | value | n], and moves the pad back to hole 7, so the asking robot goes again."
+       }
+      ],
+      "note": "The go pad is in hole 7: asks the computer the time, answered to my readings nest, and moves the pad to hole 8 so it does not ask again until the answer is dealt with."
      }
-    },
-    "boundTo": "TIMER1",
-    "note": "A timer built from one robot: it asks the computer the time and tells the number it is bound to. SPACE starts it, \".\" stops it where it is."
+    }
    },
-   "x": 0.55,
+   "x": 0.0,
    "z": 1.55
   },
   {
    "thing": {
     "kind": "text",
-    "text": "A TIMER\n\nThe number counts the\nmilliseconds since the\nworkshop opened, and it is\nrobots doing it: press\nSPACE on the \"timer\" pad.\n\nOpen the pad\u2019s panel: one\nrobot asks the computer\nthe time and tells the\nnumber the answer, round\nafter round. \".\" rests it."
+    "text": "A TIMER\n\nPress SPACE on the number:\nit counts the milliseconds\nsince the workshop opened.\n\".\" rests it.\n\nRobots are doing it, on the\nnumber\u2019s own panel: open it\nwith the gear and see two\nrobots and a box. One asks\nthe computer the time, the\nother tells the number the\nanswer. A pad crossing\nbetween two holes lets them\ntake turns."
    },
    "x": -0.9,
+   "z": 1.75
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "BUILT BY HAND\n\nOpen the number\u2019s panel,\ndrop a box on it, take a\nbird from the panel\u2019s perch\ninto the box, and a bird to\nthe computer from the\ndevices notebook.\n\nDrop a robot on the panel\nand train it: give the\ncomputer the question.\nStart it: the answer lands\non the nest. Train a second\nrobot on that, and drop it\non the first: a team."
+   },
+   "x": 0.9,
    "z": 1.75
   }
  ],

@@ -1747,11 +1747,15 @@ devices/computer, with the letters ready to copy). Give her
 milliseconds since the workshop opened; [query | date | bird]
 answers with a box [year | month | day] and
 [query | clock | bird] with [hours | minutes | seconds].
-Nothing listens: a timer is built. A number can be told what it is
-— [set | value | n] to its bird replaces what it holds,
-where a badge would add to it — so a robot that asks the computer the
-time and tells its number the answer, round after round, is a timer
-(devices/timer).
+[query | seconds | bird] gives the same clock in seconds,
+thousandths and all. Nothing listens: a timer is built. A number
+can be told what it is — [set | value | n] to its bird
+replaces what it holds, where a badge would add to it — so two robots
+on a numbers own panel are a timer: one asks the computer the time,
+the other tells the number the answer, and a pad crossing between two holes
+lets them take turns (devices/timer). SPACE on the number starts
+the robots on its own panel; . rests them; and the Stop button,
+pressed inside a panel or a house, stops it for good until Start.
 
 Filling a yard by hand. Whatever you carry comes through the door
 with you: a box of things to unpack, and the empty box goes back in with
@@ -5823,6 +5827,17 @@ function fitRoomContents(room) {
   if (room.userData.panel) {
     r.position.x = -mid.x * r.scale.x;
     r.position.z = -0.02 - mid.z * r.scale.z;
+    // ...AND ON THE FLOOR. A thing set down inside a world stands at table
+    // height, and a panel has no table: a card nested in a panel floated
+    // three-quarters of a metre over the tray (Ken's timer, hanging over
+    // the number's panel). The lowest thing that can be seen rests on the
+    // floor; a robot's feet are already there, so a panel with a robot on
+    // it keeps its desk where it was.
+    r.scale.setScalar(1);
+    r.updateWorldMatrix(true, false);
+    const low = r.worldToLocal(new THREE.Vector3(box.getCenter(new THREE.Vector3()).x, box.min.y, box.getCenter(new THREE.Vector3()).z)).y;
+    r.scale.setScalar(worldScaleOf(room) * factor);
+    r.position.y = 0.034 - Math.max(0, low) * r.scale.y;
   }
 }
 // The bounds of what can be SEEN under a node, in world space. A folded
@@ -8733,17 +8748,27 @@ function switchBound(node, on) {
   // behaviour on a picture's panel puts it IN the panel now, so the picture
   // is the only place left to press: SPACE on the thing starts what is
   // grouped inside it, exactly as it starts what is bound to it from outside.
-  let parts = 0;
+  let parts = 0, ownRobot = false;
   if (node.userData.panelWorld || node.__panelTray) {
     const tray = bringOutPanel(node, true);
     if (tray) {
       parts = switchNested(tray, on);
-      if (parts) {
+      // ...and a ROBOT of its own on the panel, trained there by hand (Ken
+      // moved the timer's robot onto the number's panel and "." did nothing)
+      ownRobot = roomHasWorker(tray);
+      if (parts || ownRobot) {
         tray.userData.stepRounds = 0;
         tray.userData.dirty = on;
-        if (on) delete tray.userData.stopped; else tray.userData.stopped = true;
+        if (on) { delete tray.userData.stopped; tray.__switched = true; }
+        else { tray.userData.stopped = true; delete tray.__switched; }
       }
     }
+  }
+  if (ownRobot && !parts) {
+    parkSpeed(node, on);
+    say(on ? `Off they go — the robots on ${panelName(node)}’s own panel get to work.`
+           : `Stopped — the robots on ${panelName(node)}’s own panel rest.`);
+    return true;
   }
   if (!node.userData.lid) {
     if (!parts) return false;
@@ -9421,7 +9446,7 @@ function findDirtyRoom(ignoreCooldown = false, skip = null, within = null) {
   // the scheduler falls through to this walk, which found the first dirty
   // panel in bench order and gave it a second round in the same frame -- the
   // elephant's wiggle turned and un-turned every frame and stood still.
-  const ready = (t) => t.userData.kind === 'room' && t.userData.dirty && !t.__running
+  const ready = (t) => t.userData.kind === 'room' && t.userData.dirty && !t.__running && !t.__entering
     && !(t.userData.panel && t.__rframe === renderFrameNo)
     && !postedOut(t)
     && !(skip && (skip.get?.(t) ?? 0) >= 3)
@@ -9565,7 +9590,7 @@ function processDirtyRooms() {
     // Without this, a ball set on the copier went on trying to move sixty
     // times a second, failing every time and saying so every time, which is
     // what "I put the ball on Mimi and it got stuck" was.
-    if (outOfPlay(t)) continue;
+    if (outOfPlay(t) || t.__entering) continue;
     if (t.__rframe === renderFrameNo) continue;      // had its turn this frame
     // A turn cannot outlive the frame it began in. If a panel still claims to
     // be running from an earlier frame, the turn was interrupted -- a thrown
@@ -9595,7 +9620,12 @@ function processDirtyRooms() {
   for (const t of allTrays) {
     if (!t.userData.dirty || t.__running || panels.includes(t)) continue;
     if (benchThings.includes(t)) continue;        // already found the usual way
-    if (outOfPlay(t) || sleepingRoom(t)) continue;
+    if (outOfPlay(t) || sleepingRoom(t) || t.__entering) continue;
+    // NOT THE WORLD YOU ARE STANDING IN. A panel walked into is taken off the
+    // scene but stays on this register, and a turn given to it pushed the
+    // world that was already current -- the timer's two robots then fed each
+    // other by post inside one turn until the watchdog paused the room.
+    if (t.__ctx && (t.__ctx === curCtx || worldTrail.some(w => (w.ctx ?? w) === t.__ctx || w.room === t))) continue;
     if (t.__frame === roomFrame || t.__rframe === renderFrameNo) continue;
     panels.push(t);
   }
@@ -9627,6 +9657,12 @@ function enterRoom(room) {
   hydrateRoom(room);
   clearUndo();
   busy = true;
+  // NOT A TURN WHILE YOU WALK IN. The scheduler kept giving a room its
+  // turns during the door animation, and a panel whose robots feed each
+  // other by post (the timer: a question, an instant answer, a question)
+  // ran that turn until the watchdog paused the whole room -- "The room's
+  // work was taking too long" the moment Ken stepped inside.
+  room.__entering = true;
   sfx('whoosh');
   const at = { x: room.position.x, z: room.position.z };
   detach(room);
@@ -9644,6 +9680,7 @@ function enterRoom(room) {
   enqueue(doNow(() => {
     busy = false;
     current = null;                       // this very step must not be re-run
+    delete room.__entering;
     const innerCtx = room.__ctx;
     innerCtx.root.removeFromParent();
     room.removeFromParent();
@@ -11725,15 +11762,16 @@ function computerMsg(X, msg) {
     vals.forEach((v, i) => putInHole(b.userData.holes[i], n(v)));
     return b;
   };
-  if (verb !== 'query' || !['time', 'date', 'clock'].includes(what)) {
-    sayAttn('The computer answers three letters. [query | time | bird]: the clock in milliseconds since '
-      + 'the workshop opened. [query | date | bird]: a box [year | month | day]. [query | clock | bird]: '
-      + 'a box [hours | minutes | seconds].');
+  if (verb !== 'query' || !['time', 'seconds', 'date', 'clock'].includes(what)) {
+    sayAttn('The computer answers four letters. [query | time | bird]: the clock in milliseconds since '
+      + 'the workshop opened; [query | seconds | bird]: the same in seconds, thousandths and all. '
+      + '[query | date | bird]: a box [year | month | day]. [query | clock | bird]: a box [hours | minutes | seconds].');
     return true;
   }
   if (!rb) { sayAttn(`[query | ${what} | bird] wants a bird to answer to.`); return true; }
   const now = new Date();
   if (what === 'time') sendViaBird(rb, n(performance.now() - computerT0));
+  else if (what === 'seconds') sendViaBird(rb, makeNumber(rat(BigInt(Math.round(performance.now() - computerT0)), 1000n)));
   else if (what === 'date') sendViaBird(rb, boxOf(['year', 'month', 'day'], [now.getFullYear(), now.getMonth() + 1, now.getDate()]));
   else sendViaBird(rb, boxOf(['hours', 'minutes', 'seconds'], [now.getHours(), now.getMinutes(), now.getSeconds()]));
   return true;
@@ -12595,6 +12633,7 @@ let autoRunArmed = false;   // set when an erasure may have fixed the mismatch
 // a claw full, a box split in two -- and Run picks up from there.
 let stopRequested = false, lastStopAt = 0;
 function maybeAutoRun() {
+  if (autoRunHeld) return;                      // stopped by hand: Start lifts the hold
   if (mode !== 'world' || busy || held || !activeBot?.program.length) return;
   const given = stations.stand.occupant;
   if (!given) return;
@@ -16005,6 +16044,7 @@ function giveToRobot() {
 // A mini robot grows to full size, walks behind the bench, and takes what the
 // user is dropping on it.
 function activateBot(bot, after) {
+  autoRunHeld = false;
   clearUndo();
   busy = true;
   bot.mini = false;                  // decided now, not when the tween ends
@@ -19574,12 +19614,27 @@ $('exitBtn').onclick = () => {
   if (teaching && mode === 'training') endTeaching(false);   // the pupil's lesson ends; the teacher's goes on
   else leaveTraining();
 };
+// STOP MEANS STOP. Inside a panel a delivery landing on the desk box arms an
+// auto-run, so the robot Ken had just stopped started its next cycle as soon
+// as the computer answered ("the narration mentions stopping but it just
+// started the next cycle"). A stop by hand holds the auto-run until Start is
+// pressed again, and puts the room you are standing in to rest as well, so
+// leaving it does not set it going again.
+let autoRunHeld = false;
 $('runBtn').onclick = () => {
   if (mode === 'replay') {
     stopRequested = true; lastStopAt = performance.now();
+    autoRunHeld = true;
+    const here = curCtx.room;
+    if (here) { here.userData.stopped = true; here.userData.dirty = false; delete here.__switched; }
     fastForward(100000, 4000);
     refreshUI();
-  } else if (performance.now() - lastStopAt > 500) runProgram();
+  } else if (performance.now() - lastStopAt > 500) {
+    autoRunHeld = false;
+    const here = curCtx.room;
+    if (here) { delete here.userData.stopped; here.__switched = true; }
+    runProgram();
+  }
 };
 $('dustyBtn').onclick = () => handleClick({ kind: 'dusty' });
 $('progMin').onclick = () => {

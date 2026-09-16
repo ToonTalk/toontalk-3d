@@ -7474,3 +7474,32 @@ with an aim writes the aim, or the next set-down put the old turn back. A
 model's "forward" is +z whatever way its head points, and the zoo's heads
 point +x -- so the walk goes AWAY, towards the near edge, and the lion is
 set facing you; a model built to look along +z is a job for another day.
+
+## The timer, the way a player would build it
+
+*Added 16 Sep. Ken: "When I dropped the timer panel on the number panel
+instead of nesting the time pad began to float over the panel"; "the stop
+button didn't work... it just started the next cycle"; "I typed '.' to it but
+it didn't stop"; and the proposal that a behaviour is authored by training
+robots INSIDE a thing's panel, with the panel's bird at hand and the
+answers to what they send arriving while they are trained.*
+
+Four faults, each measured. A card nested in a panel stood at table
+height, and a panel has no table: three-quarters of a metre over the tray,
+in either gesture. `fitRoomContents` now rests the lowest visible thing on
+the floor (a robot's feet are already there, so a panel with a robot keeps
+its desk). Inside a panel, Stop finished the round and a delivery landing
+on the desk box armed the auto-run, so the robot set off again: a stop by
+hand holds the auto-run until Start and puts the room you are standing in
+to rest, so leaving does not set it going either. "." on a thing whose OWN
+panel holds a working robot did nothing, because `switchBound` counted
+only behaviours grouped inside; a robot of the panel's own counts now, and
+SPACE starts it. And the computer answers `[query | seconds | bird]`.
+
+The timer is rebuilt as Ken described: no separate pad, a box and a team of
+two on the number's own panel. One robot asks and moves a "go" pad across
+to the next hole; the other runs when a reading lands and the pad is there,
+tells the number, and moves the pad back. That pad is the whole of the
+composition: a team stops at the first member dozing on an empty nest, and
+no thought can say "an empty nest", so two robots take turns by a token
+crossing between two holes -- the wiggle's idiom, and now the timer's.

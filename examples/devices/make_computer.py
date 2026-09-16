@@ -41,6 +41,13 @@ pages = [
         'difference: that is how long\n'
         'something took.'),
     letter('time'),
+    txt('SECONDS\n\n'                                      # noqa: F405
+        '[query | seconds | bird]\n\n'
+        'answers with the same clock\n'
+        'in seconds, thousandths and\n'
+        'all: 12345 milliseconds is\n'
+        '12.345 here.'),
+    letter('seconds'),
     txt('THE DATE\n\n'                                      # noqa: F405
         '[query | date | bird]\n\n'
         'answers with a box of three\n'

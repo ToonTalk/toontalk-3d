@@ -3800,16 +3800,16 @@ async function computerCheck(D) {
   w = await (await fetch('../examples/devices/⏱️ timer.world.json')).json();
   D.worldIn(w); await slowSettle(D, 2000);
   const num = things().find(t => t.userData.kind === 'number');
-  const pad = things().find(t => t.userData.gadget);
   D.post('TIMER1', { kind: 'box', holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'value' }, { kind: 'number', value: { n: '42', d: '1' } }] });
   await frames(D, 10);
   const told = numOf(num) === 42;
-  D.switchGadget(pad, true, true);
+  // the timer is the number's OWN panel now: SPACE on the number starts it
+  D.switchBound(num, true);
   const v0 = numOf(num);
   await frames(D, 240);
   const v1 = numOf(num);
   const climbs = v1 > v0 && v1 > 42;
-  D.press(pad, '.'); await frames(D, 60);
+  D.switchBound(num, false); await frames(D, 60);
   const v2 = numOf(num); await frames(D, 120);
   const rests = numOf(num) === v2;
   // the year puzzle
