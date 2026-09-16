@@ -1,0 +1,690 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "the teacher",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "wildText"
+      },
+      {
+       "kind": "anyRobot"
+      },
+      {
+       "kind": "anyBox"
+      },
+      {
+       "kind": "anyRobot"
+      },
+      {
+       "kind": "anyBox"
+      },
+      {
+       "kind": "wildText"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "speak"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "teach",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "copy",
+       "at": {
+        "c": "given",
+        "path": [
+         3
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "s0",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "copy",
+       "at": {
+        "c": "given",
+        "path": [
+         2
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "s0",
+        "path": [
+         2
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "take",
+       "at": {
+        "c": "s0",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "given",
+        "path": [
+         0
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "take",
+       "at": {
+        "c": "given",
+        "path": [
+         5
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "given",
+        "path": [
+         6
+        ]
+       }
+      }
+     },
+     {
+      "type": "endTeach"
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "teach",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "copy",
+       "at": {
+        "c": "given",
+        "path": [
+         4
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "s0",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "take",
+       "at": {
+        "c": "given",
+        "path": [
+         1
+        ],
+        "nest": true
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "s0",
+        "path": [
+         2
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "take",
+       "at": {
+        "c": "s0",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "perch",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "take",
+       "at": {
+        "c": "given",
+        "path": [
+         6
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "given",
+        "path": [
+         5
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "erase",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "endTeach"
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "speak"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "I am going to teach two little robots to be a timer."
+      },
+      {
+       "kind": "robot",
+       "name": "Ask",
+       "program": [],
+       "condition": null,
+       "trainedOn": null,
+       "team": [],
+       "note": "Untrained. The teacher shows it how to ask the computer the time and move the go pad across."
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "COMPUTER",
+         "label": "the computer"
+        },
+        {
+         "kind": "nest",
+         "id": 9842,
+         "guid": "timer-teacher-readings",
+         "hasEgg": false,
+         "pile": [],
+         "label": "readings"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9842,
+         "nestGuid": "timer-teacher-readings",
+         "label": "to my readings"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "query"
+          },
+          {
+           "kind": "text",
+           "text": "time"
+          },
+          null
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "value"
+          },
+          null
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "go"
+        },
+        null
+       ]
+      },
+      {
+       "kind": "robot",
+       "name": "Tell",
+       "program": [],
+       "condition": null,
+       "trainedOn": null,
+       "team": [],
+       "note": "Untrained. The teacher shows it how to give a reading to the bird on the perch and move the go pad back."
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "COMPUTER",
+         "label": "the computer"
+        },
+        {
+         "kind": "nest",
+         "id": 9843,
+         "guid": "timer-teacher-readings-2",
+         "hasEgg": false,
+         "pile": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ],
+         "label": "readings"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9843,
+         "nestGuid": "timer-teacher-readings-2",
+         "label": "to my readings"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "query"
+          },
+          {
+           "kind": "text",
+           "text": "time"
+          },
+          null
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "value"
+          },
+          null
+         ]
+        },
+        null,
+        {
+         "kind": "text",
+         "text": "go"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "Drop Tell on Ask: a team. Give it a box, or put it on a number\u2019s panel."
+      }
+     ]
+    },
+    "team": [],
+    "note": "A robot that trains the timer\u2019s two robots. It teaches Ask on a box with the go pad in hole 6: ask the computer the time, answered to my readings, and move the pad to hole 7. Then it teaches Tell on a box with a reading and the pad in hole 7: put the reading in a [set | value | _] letter, give it to the bird on the perch, move the pad back, and have Ruby loosen the reading. Drop Tell on Ask and they take turns."
+   },
+   "x": -1.45,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "I am going to teach two little robots to be a timer."
+     },
+     {
+      "kind": "robot",
+      "name": "Ask",
+      "program": [],
+      "condition": null,
+      "trainedOn": null,
+      "team": [],
+      "note": "Untrained. The teacher shows it how to ask the computer the time and move the go pad across."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "bird",
+        "nestId": 0,
+        "nestGuid": null,
+        "liveId": "COMPUTER",
+        "label": "the computer"
+       },
+       {
+        "kind": "nest",
+        "id": 9842,
+        "guid": "timer-teacher-readings",
+        "hasEgg": false,
+        "pile": [],
+        "label": "readings"
+       },
+       {
+        "kind": "bird",
+        "nestId": 9842,
+        "nestGuid": "timer-teacher-readings",
+        "label": "to my readings"
+       },
+       {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "text",
+          "text": "query"
+         },
+         {
+          "kind": "text",
+          "text": "time"
+         },
+         null
+        ]
+       },
+       {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "text",
+          "text": "set"
+         },
+         {
+          "kind": "text",
+          "text": "value"
+         },
+         null
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "go"
+       },
+       null
+      ]
+     },
+     {
+      "kind": "robot",
+      "name": "Tell",
+      "program": [],
+      "condition": null,
+      "trainedOn": null,
+      "team": [],
+      "note": "Untrained. The teacher shows it how to give a reading to the bird on the perch and move the go pad back."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "bird",
+        "nestId": 0,
+        "nestGuid": null,
+        "liveId": "COMPUTER",
+        "label": "the computer"
+       },
+       {
+        "kind": "nest",
+        "id": 9843,
+        "guid": "timer-teacher-readings-2",
+        "hasEgg": false,
+        "pile": [
+         {
+          "kind": "number",
+          "value": {
+           "n": "5",
+           "d": "1"
+          },
+          "op": "+"
+         }
+        ],
+        "label": "readings"
+       },
+       {
+        "kind": "bird",
+        "nestId": 9843,
+        "nestGuid": "timer-teacher-readings-2",
+        "label": "to my readings"
+       },
+       {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "text",
+          "text": "query"
+         },
+         {
+          "kind": "text",
+          "text": "time"
+         },
+         null
+        ]
+       },
+       {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "text",
+          "text": "set"
+         },
+         {
+          "kind": "text",
+          "text": "value"
+         },
+         null
+        ]
+       },
+       null,
+       {
+        "kind": "text",
+        "text": "go"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "Drop Tell on Ask: a team. Give it a box, or put it on a number\u2019s panel."
+     }
+    ]
+   },
+   "x": -0.1,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9841,
+    "guid": "timer-teacher-what-it-told",
+    "hasEgg": false,
+    "pile": [],
+    "label": "what it told"
+   },
+   "x": 1.35,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THE TIMER TEACHER\n\nA robot that trains the two\nrobots of the timer, one\nafter the other, each on a\nbox in the state it works\nin.\n\nAsk: the go pad is in hole 6.\nAsk the computer the time,\nmove the pad to hole 7.\n\nTell: a reading, pad in 7.\nGive it to the bird on the\nperch, move the pad back."
+   },
+   "x": -1.15,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nGive the six-hole box to\nthe teacher and press Start.\n\nAsk really asks: the\ncomputer\u2019s answer lands on\nthe nest in its box. Tell\nreally tells: its letter\ngoes to the bird on the\nperch, and out here she\ntakes it to \u201cwhat it told\u201d."
+   },
+   "x": -0.45,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THEN\n\nDrop Tell on Ask: a team.\nGive the team Ask\u2019s box and\npress Start: readings pile\nup on \u201cwhat it told\u201d.\n\nOr take a number from the\nstack, open its panel with\nthe gear, drop the box and\nthe team on the panel, and\npress SPACE on the number:\nit counts the milliseconds."
+   },
+   "x": 0.25,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WHY TWO ROBOTS\n\nA robot cannot wait in the\nmiddle of a round for an\nanswer. So one asks and\none tells, and a pad\ncrossing between two holes\nlets them take turns.\n\nNeither knows what it tells:\nthe perch means whatever\nthing\u2019s panel they are on."
+   },
+   "x": 0.95,
+   "z": 2.25
+  }
+ ],
+ "stations": {
+  "perch": {
+   "kind": "bird",
+   "nestId": 9841,
+   "nestGuid": "timer-teacher-what-it-told",
+   "label": "to what it told"
+  }
+ },
+ "active": null
+}

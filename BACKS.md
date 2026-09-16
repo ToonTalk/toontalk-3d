@@ -7543,3 +7543,14 @@ The timer is rebuilt on it: the box on the number's own panel holds no bird
 to the number now, and "Tell my number" gives its letter to the bird on the
 perch. SPACE on a thing's panel starts the robots on it, as SPACE on the
 thing does.
+
+Ken: "once this is working we should add a few examples to meta where a
+robot demonstrates how to create a behavior like this." Two: *telling*, a
+teacher that trains one pupil to put a reading in a `[set | value | _]`
+letter and give it to the bird on the perch, and *timer-teacher*, which
+trains Ask and Tell one after the other, each on a box in the state that
+robot works in. Both lessons run for real on the bench with a bird of your
+own on the perch -- Ask really asks the computer, Tell's letter really lands
+on "what it told" -- and the pads say how to move the pupils onto a number's
+panel. Nothing was added to what a robot can do; `put('perch')` is a taught
+step like any other.

@@ -21,3 +21,29 @@ press Start: 2, 3, 4, … The teacher itself runs once — with the pupil gone
 from its box, its thought no longer fits.
 
 Regenerate with `python make_teacher.py`.
+
+🎓 **telling** — a robot teaches a robot to *tell its thing*. The pedestal
+beside the robot's desk is the perch: on a thing's panel it holds a bird to
+that thing, and out here a bird of your own, to the nest "what it told". The
+teacher gives Tell a box — a nest with a reading on it and a
+`[set | value | _]` letter — and shows it how to copy the letter, put the
+reading in it and give it to the bird on the perch; Ruby loosens the reading
+so any will do. Run, the lesson lands `[set | value | 5]` on "what it told".
+Then take a number from the stack, open its panel with the gear, drop a copy
+of the box and the trained pupil on the panel, and press SPACE on the number:
+the same robot, on the number's own panel, tells the number. It never learned
+what it tells — the perch means the thing whose panel it is on, and that is
+what makes a behaviour. Regenerate with `python make_telling.py`.
+
+🎓 **timer-teacher** — a robot builds the timer's two robots, the way you
+would. Ask is taught on a box with the "go" pad in hole 6: ask the computer
+the time, answered to my readings, and move the pad to hole 7. Tell is taught
+on a box with a reading on the nest and the pad in hole 7: put the reading in
+a `[set | value | _]` letter, give it to the bird on the perch, move the pad
+back. Both lessons are done for real in the run — the computer's answer lands
+on the nest in Ask's box, and Tell's letter reaches "what it told". Then drop
+Tell on Ask (a team), give the team a box and press Start, or put the box and
+the team on a number's panel and press SPACE on the number: it counts the
+milliseconds. A robot cannot wait mid-round for an answer, which is why there
+are two; a pad crossing between two holes lets them take turns. Regenerate
+with `python make_timer_teacher.py`.

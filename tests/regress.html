@@ -3303,6 +3303,8 @@ const EXAMPLE_WORLDS = [
   'behaviours/🦋 wandering',
   'behaviours/🪐 ellipse',
   'devices/⌨️ keys',
+  'meta/🎓 telling',
+  'meta/🎓 timer-teacher',
   'devices/🖱️ pointer',
   'games/🏓 pong-classic',
   'games/🏓 pong-gadgets',
@@ -3899,6 +3901,56 @@ async function perchCheck(D) {
   put((ok ? 'PASS' : 'FAIL') + ' the perch: a bird to my thing on a panel, any bird on the bench  (fixture=' + fixture
       + ' tips=' + tipOK + ' another-when-taken=' + refilled + ' back=' + back + ' empty-outside=' + emptyOut
       + ' empty-perch-refused=' + refused + ' my-bird-set=' + set + ' told-5=' + told + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A ROBOT TEACHES ROBOTS TO WRITE TO THE PERCH. meta/telling: the teacher
+// trains Tell to put a reading in a [set | value | _] letter and give it to
+// the bird on the perch -- for real, so the letter lands on "what it told".
+// meta/timer-teacher: it trains Ask (which really asks the computer) and
+// Tell, one after the other, each on a box in the state that robot works in.
+async function metaTeachCheck(D) {
+  const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
+  const load = async (name) => {
+    const w = await (await fetch('../examples/meta/' + name + '.world.json')).json();
+    D.worldIn(w); await slowSettle(D, 2000);
+    D.speed('instant');
+    const bx = things().find(t => t.userData.kind === 'box');
+    D.hold(bx); await frames(D, 5); D.giveRobot(); await slowSettle(D, 40000);
+  };
+  const botsNow = () => {
+    const o = {};
+    let r = D.mine(); while (r && r.parent) r = r.parent;
+    r?.traverse(n => { if (n.__bot?.stand && n.__bot.name) o[n.__bot.name] = n.__bot; });
+    return o;
+  };
+  const steps = (b) => (b?.program || []).map(s2 => s2.type + (s2.at ? ':' + s2.at.c + (s2.at.path?.length ? '.' + s2.at.path.join('.') : '') : '')).join(',');
+  const toldOK = () => {
+    const told = things().find(t => t.userData.kind === 'nest');
+    const top = told?.userData.pile[0];
+    return told?.userData.pile.length === 1 && top?.userData.kind === 'box' && numOf(top.userData.holes[2]?.thing) === 5;
+  };
+  await load('🎓 telling');
+  const ran1 = D.state.mode === 'world' && D.roundsNow().runCount === 1;
+  let bots = botsNow();
+  const tellTaught = steps(bots.Tell) === 'copy:given.1,put:s0,take:given.0,put:s0.2,take:s0,put:perch';
+  const told1 = toldOK();
+  D.speed(1);
+  await load('🎓 timer-teacher');
+  const ran2 = D.state.mode === 'world' && D.roundsNow().runCount === 1;
+  bots = botsNow();
+  const askTaught = steps(bots.Ask) === 'copy:given.3,put:s0,copy:given.2,put:s0.2,take:s0,put:given.0,take:given.5,put:given.6';
+  const tellTaught2 = steps(bots.Tell) === 'copy:given.4,put:s0,take:given.1,put:s0.2,take:s0,put:perch,take:given.6,put:given.5';
+  const askBox = bots.Ask?.stand?.occupant;
+  const asked = Number.isFinite(numOf(askBox?.userData.holes[1]?.thing?.userData.pile?.[0]))
+    && askBox?.userData.holes[6]?.thing?.userData.text === 'go' && !askBox?.userData.holes[5]?.thing;
+  const told2 = toldOK();
+  D.speed(1);
+  const ok = ran1 && tellTaught && told1 && ran2 && askTaught && tellTaught2 && asked && told2;
+  put((ok ? 'PASS' : 'FAIL') + ' a robot teaches robots to write to the perch  (telling: ran-once=' + ran1 + ' tell-taught=' + tellTaught
+      + ' told-5=' + told1 + '; timer-teacher: ran-once=' + ran2 + ' ask-taught=' + askTaught + ' tell-taught=' + tellTaught2
+      + ' ask-really-asked=' + asked + ' told-5=' + told2 + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -6347,6 +6399,9 @@ async function runOne(D, spec) {
   let prchOK = true;
   try { prchOK = want('perch') ? await perchCheck(D) : true; }
   catch (e) { prchOK = false; put('FAIL the perch: a bird to my thing on a panel, any bird on the bench  ' + e.message, 'fail'); }
+  let mtchOK = true;
+  try { mtchOK = want('metaTeach') ? await metaTeachCheck(D) : true; }
+  catch (e) { mtchOK = false; put('FAIL a robot teaches robots to write to the perch  ' + e.message, 'fail'); }
   let rsrtOK = true;
   try { rsrtOK = want('resort') ? await resortCheck(D, frame.contentWindow) : true; }
   catch (e) { rsrtOK = false; put('FAIL Resort Infinity: the guests walk, guest 1 first, and eleven find eleven cottages  ' + e.message, 'fail'); }
@@ -6482,7 +6537,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

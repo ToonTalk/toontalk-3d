@@ -1,0 +1,355 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "robot",
+    "name": "the teacher",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "wildText"
+      },
+      {
+       "kind": "anyRobot"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBox"
+        }
+       ]
+      },
+      {
+       "kind": "wildText"
+      }
+     ]
+    },
+    "program": [
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "speak"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "teach",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "copy",
+       "at": {
+        "c": "given",
+        "path": [
+         1
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "s0",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "take",
+       "at": {
+        "c": "given",
+        "path": [
+         0
+        ],
+        "nest": true
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "s0",
+        "path": [
+         2
+        ]
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "take",
+       "at": {
+        "c": "s0",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "put",
+       "at": {
+        "c": "perch",
+        "path": []
+       }
+      }
+     },
+     {
+      "type": "taught",
+      "step": {
+       "type": "erase",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "endTeach"
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     },
+     {
+      "type": "speak"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "I am going to teach this little robot to tell its thing what it read."
+      },
+      {
+       "kind": "robot",
+       "name": "Tell",
+       "program": [],
+       "condition": null,
+       "trainedOn": null,
+       "team": [],
+       "note": "Untrained. The teacher gives it a box -- a nest with a reading on it, and a [set | value | _] letter -- and shows it how to tell the bird on the perch."
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9832,
+         "guid": "telling-readings",
+         "hasEgg": false,
+         "pile": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ],
+         "label": "readings"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "value"
+          },
+          null
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "Now it tells. Put it on any thing\u2019s panel, with its box, and it tells that thing."
+      }
+     ]
+    },
+    "team": [],
+    "note": "A robot that trains a robot to tell its thing. It reads the first pad out, gives the box to the little robot in its second hole and teaches it: copy the [set | value | _] letter, put the reading in it, give it to the bird on the perch; then has Ruby loosen the reading in the pupil\u2019s thought so any reading will do, and reads the last pad out."
+   },
+   "x": -1.2,
+   "z": 1.35
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "I am going to teach this little robot to tell its thing what it read."
+     },
+     {
+      "kind": "robot",
+      "name": "Tell",
+      "program": [],
+      "condition": null,
+      "trainedOn": null,
+      "team": [],
+      "note": "Untrained. The teacher gives it a box -- a nest with a reading on it, and a [set | value | _] letter -- and shows it how to tell the bird on the perch."
+     },
+     {
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "nest",
+        "id": 9832,
+        "guid": "telling-readings",
+        "hasEgg": false,
+        "pile": [
+         {
+          "kind": "number",
+          "value": {
+           "n": "5",
+           "d": "1"
+          },
+          "op": "+"
+         }
+        ],
+        "label": "readings"
+       },
+       {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "text",
+          "text": "set"
+         },
+         {
+          "kind": "text",
+          "text": "value"
+         },
+         null
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "Now it tells. Put it on any thing\u2019s panel, with its box, and it tells that thing."
+     }
+    ]
+   },
+   "x": -0.1,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 9831,
+    "guid": "telling-what-it-told",
+    "hasEgg": false,
+    "pile": [],
+    "label": "what it told"
+   },
+   "x": 1.1,
+   "z": 1.3
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TELLING\n\nA robot trained to train a\nrobot to TELL ITS THING.\n\nThe pedestal beside the desk\nis the perch. On a thing\u2019s\npanel it holds a bird to\nthat thing; out here it\nholds a bird of your own,\nto the nest \u201cwhat it told\u201d.\n\nA letter put on the perch\ngoes to whichever bird\nstands there."
+   },
+   "x": -1.15,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TO RUN IT\n\nGive the four-hole box to\nthe teacher and press Start.\n\nWatch the pupil take a desk,\ncopy the [set | value | _]\nletter, put the reading in\nit and give it to the bird\non the perch: it lands on\n\u201cwhat it told\u201d as\n[set | value | 5]."
+   },
+   "x": -0.45,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "THEN, ON A PANEL\n\nTake a number from the\nstack. Open its panel with\nthe gear, and drop on the\npanel a copy of the box and\nthe trained pupil.\n\nPress SPACE on the number:\nthe pupil runs on the\nnumber\u2019s own panel, and the\nbird on the perch there is\na bird to the number. It\nreads 5 now."
+   },
+   "x": 0.25,
+   "z": 2.25
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "WHY THE PERCH\n\nThe pupil never learned\nwhat it tells. It learned\n\u201cgive the letter to the bird\non the perch\u201d, and the perch\nmeans the thing whose panel\nit is on.\n\nThat is what makes a\nbehaviour: the same robot,\nthe same box, on any thing."
+   },
+   "x": 0.95,
+   "z": 2.25
+  }
+ ],
+ "stations": {
+  "perch": {
+   "kind": "bird",
+   "nestId": 9831,
+   "nestGuid": "telling-what-it-told",
+   "label": "to what it told"
+  }
+ },
+ "active": null
+}
