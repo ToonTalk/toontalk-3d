@@ -7444,3 +7444,33 @@ is computed when the set is generated, so `make_puzzles.py` should be run
 each new year. Numbering: p35 sits after p11 in play but not in name;
 renumbering p12 to p34 would touch every file, the suite and players'
 saved progress, and was left for a deliberate day.
+
+## The second arc of puzzles
+
+*Added 16 Sep. Ken: "Let's start on the second arc of 3D puzzles."*
+
+Four puzzles, p36 to p39, chained from p34: the lion told where to stand,
+turned until its facing reads 0, given the walk, and carried out to the
+grass. What they needed was a judge that ASKS. A thing's place, facing or
+whereabouts is not something the player can hand over, so the judge holds a
+bird to the lion (or to the yard) and, when the player gives its own bird a
+pad saying done, sends the question and reads the answer off its post.
+
+Two things the first draft got wrong, both measured. The judge had a nest of
+its own for the answer, and a team stops at the first member dozing on an
+empty nest -- the leader dozed there and the member that asks never ran; so
+everything now lands on the one post, and what lands says who runs: the
+right answer, the done pad, or anything else (which goes back with the "not
+quite" pad and the done pad, for next time). And the reply bird went into
+the letter's third hole, which is right for `[query | position | _]` and
+wrong for the yard's `[query | things | lion | _]`, where that hole holds
+the word: the yard got a letter with no bird and said so to nobody.
+
+Under the floor: a model's facing reading came from a field only
+`[set | facing]` wrote, so a lion turned a quarter by `[move | yaw | 90]` or
+by the arrows still answered 0; `facingOf` reads the thing's own turn now
+(minding the hover wiggle, which borrows it), and `[set | facing]` on a thing
+with an aim writes the aim, or the next set-down put the old turn back. A
+model's "forward" is +z whatever way its head points, and the zoo's heads
+point +x -- so the walk goes AWAY, towards the near edge, and the lion is
+set facing you; a model built to look along +z is a job for another day.

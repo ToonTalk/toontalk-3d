@@ -1274,7 +1274,7 @@ puzzle(
           nest(10342, 'p34-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10341, 'p34-post', 10342, 'p34-reply',
                 right=SORTED,
-                on_right=next_note(''),
+                on_right=next_note('') + [load('p36')],
                 notes=['11/15, 7/9, 4/5 — sorted by a team of four. Thank '
                        'you! (More puzzles are on the way.)'],
                 sorry='Not quite — the three fractions in holes 2, 3 and 4, '
@@ -1366,4 +1366,193 @@ puzzle(
           bird(10351, 'p35-post', 'give me your answer'),             # noqa: F405
           nest(10352, 'p35-reply', 'from the judge'),                 # noqa: F405
           year_judge()),
+)
+
+
+# ============================================================================
+# THE SECOND ARC: the things the original could not have. A lion made of
+# parts, told where to stand, turned, given a behaviour, taken outside. Each
+# judge holds a bird to the lion (or to the yard) and ASKS once you give its
+# own bird a pad saying done: the answer lands on the judge's nest and the
+# team reads it there. The lion is the zoo's, read from the zoo's file.
+import json as _json
+_zoo = _json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'yard', '\U0001f981 zoo.world.json'), encoding='utf-8'))
+_lion0 = [e['thing'] for e in _zoo['yard']['bench'] if e['thing'].get('kind') == 'model' and e['thing'].get('label') == 'lion'][0]
+
+def lion(lid, facing=None):
+    t = dict(_lion0)
+    t['lid'] = lid; t['evt'] = 'evt-' + lid
+    t.pop('sz', None)
+    if facing is not None:
+        t['facing'] = facing
+    return t
+
+def done_pad():
+    return txt('done')                                                # noqa: F405
+
+def ask_judge(name, post, reply, thing_bird, question, right_cond, right_note, sorry, on_right_more=(),
+              bird_hole=2):
+    """A judge that ASKS. ONE NEST: a team stops at the first member dozing on
+    an empty nest, so the question's answer comes back to the POST, where the
+    done pad arrives too. Given: [post | reply bird | note | sorry | bird to
+    the thing | the question | bird to the post | the done pad, kept]. What
+    lands on the post says who runs: the right answer; a pad saying done
+    (kept, and the question is asked); anything else (a wrong answer, or a
+    stray thing) goes back with a copy of the "not quite" pad, and the done
+    pad with it."""
+    holes = [nest(*post, 'the post'), bird(*reply, 'to the player'),          # noqa: F405
+             pad(right_note), pad(sorry), thing_bird, question, bird(*post, 'to the post'), None]   # noqa: F405
+    n = len(holes)
+    def cond(**at):
+        c = [None] * n
+        for k, v in at.items():
+            c[int(k[1:])] = v
+        return box(*c)                                                        # noqa: F405
+    spend = [takeTop('given', 0), put('s0'), vac('s0')]                       # the answer, off the post  # noqa: F405
+    right = robot('the judge', cond(h0=right_cond),
+                  spend + [vac('given', 7)] + next_note('') + list(on_right_more),  # noqa: F405
+                  note='The answer is the one wanted: sends the note out by the reply bird' + (' and opens the next puzzle.' if any(st.get('type') == 'load' for st in on_right_more) else '.'))
+    ask = robot('the judge (asks)', cond(h0=txt('done')),                     # noqa: F405
+                [takeTop('given', 0), put('given', 7),                        # the done pad, kept  # noqa: F405
+                 copy('given', 5), put('s1'),                                 # the question  # noqa: F405
+                 copy('given', 6), put('s1', bird_hole),                      # ...answered to the post  # noqa: F405
+                 take('s1'), put('given', 4)],                                # asked of the thing  # noqa: F405
+                note='A pad saying done has landed: keeps it and asks the question, answered to this same post.')
+    back = [copy('given', 3), put('given', 1), takeTop('given', 0), put('given', 1)]   # noqa: F405
+    wrongs = []
+    for shape in [ANYBOX, ANYNUM, WILDTEXT]:                                  # noqa: F405
+        wrongs.append(robot('the judge (not yet)', cond(h0=shape, h7=WILDTEXT),   # noqa: F405
+                            back + [take('given', 7), put('given', 1)],       # ...and the done pad back  # noqa: F405
+                            note='Not the answer wanted: a copy of the "not quite" pad goes back, then the thing itself, then your done pad for next time.'))
+        wrongs.append(robot('the judge (not that)', cond(h0=shape), back,     # noqa: F405
+                            note='Something arrived that is not an answer: a copy of the "not quite" pad goes back, then the thing itself.'))
+    right['team'] = [ask] + wrongs
+    return dict(room('the judge', box(*holes), right, opaque=True, dirty=True), judge=True)   # noqa: F405
+
+query = lambda what: box(txt('query'), txt(what), None)                     # noqa: E731,F405
+
+# --- p36: stand the lion at [1/2 | 3/2] --------------------------------------
+puzzle(
+    'p36',
+    'The ship needs a lookout. This lion must stand exactly half a step across '
+    'and one and a half away — a thing can be TOLD where to stand. When it is '
+    'there, give the judge’s bird the pad that says done.',
+    'the lion at [1/2 | 3/2]',
+    ['A thing has a bird of its own: what you give her, the thing hears. '
+     'Ask the lion where it stands with [query | position | bird] and see the '
+     'shape of the answer.',
+     'The letter that moves a thing is [set | position | [across | away]]: fill '
+     'the empty box with the two numbers and drop the whole letter on the '
+     'lion’s bird.',
+     'Put the 1/2 in the first hole of the small box and the 3/2 in the second, '
+     'set that box in the third hole of [set | position | _], give the letter '
+     'to the lion’s bird, then the done pad to the judge’s bird.'],
+    rules(),
+    table([lion('LION36'), live_bird('LION36', 'to the lion'),
+           box(txt('set'), txt('position'), None), box(None, None), num(1, 2), num(3, 2), done_pad()],   # noqa: F405
+          fixed(pad('half across,\none and a half away'), 'we need this'),   # noqa: F405
+          bird(10361, 'p36-post', 'give me your answer'),                    # noqa: F405
+          nest(10362, 'p36-reply', 'from the judge'),                        # noqa: F405
+          ask_judge('p36', (10361, 'p36-post'), (10362, 'p36-reply'), live_bird('LION36', 'to the lion'),
+                    query('position'), box(num(1, 2), num(3, 2)),           # noqa: F405
+                    'The lookout is posted. Next: which way it looks.',
+                    'Not quite — ask the lion where it stands: it must answer [1/2 | 3/2] exactly.',
+                    on_right_more=[load('p37')])),
+)
+
+# --- p37: turn the lion until its facing reads 0 -----------------------------
+puzzle(
+    'p37',
+    'The lookout faces the wrong way. Turn the lion until its FACING reads 0, '
+    'then give the judge’s bird the done pad.',
+    'the lion facing 0',
+    ['Ask the lion which way it looks: [query | facing | bird]. The answer is '
+     'a number of degrees.',
+     'Pick the lion up and the arrow keys turn it; set it down and ask again. '
+     'Or write to it: [move | yaw | 90] turns it a quarter, [set | facing | 0] '
+     'turns it to face 0 outright.',
+     'Give the lion’s bird [set | facing | 0] — the letter is on the table with '
+     'an empty third hole for the 0 — then the done pad to the judge’s bird.'],
+    rules(),
+    table([lion('LION37', facing=270), live_bird('LION37', 'to the lion'),
+           box(txt('query'), txt('facing'), None), box(txt('set'), txt('facing'), None), num(0), done_pad()],   # noqa: F405
+          fixed(pad('facing 0'), 'we need this'),                             # noqa: F405
+          bird(10371, 'p37-post', 'give me your answer'),                    # noqa: F405
+          nest(10372, 'p37-reply', 'from the judge'),                        # noqa: F405
+          ask_judge('p37', (10371, 'p37-post'), (10372, 'p37-reply'), live_bird('LION37', 'to the lion'),
+                    query('facing'), num(0),                                 # noqa: F405
+                    'It looks the right way. Next: a walk.',
+                    'Not quite — ask the lion its facing: it must answer 0.',
+                    on_right_more=[load('p38')])),
+)
+
+# --- p38: the walk, stopped at the near edge -----------------------------------
+def walk_gadget(lid, target):
+    work = box(live_bird(target, 'my thing'), box(txt('move'), txt('away'), num(1, 10)))   # noqa: F405
+    step = robot('Step', box(ANYBIRD, ANYBOX),                              # noqa: F405
+                 [copy('given', 1), put('given', 0)],                         # noqa: F405
+                 trained_on=work,
+                 note='Every round: a copy of [move | away | 1/10] to my thing -- a tenth of a step towards the near edge, where it stops because the table ends.')
+    g = {'kind': 'text', 'text': 'walk', 'gadget': True, 'lid': lid, 'evt': 'evt-' + lid,
+         'boundTo': target,
+         'note': 'A behaviour: drop it on the lion and press SPACE, and the lion walks the way it looks. "." stops it where it is.',
+         'look': {'bg': '#2f3a55', 'ink': '#dfe8ff', 'font': 'sans', 'h': 0.34},
+         'panel': {'kind': 'world', 'v': 3, 'bench': [], 'stations': {'stand': work}, 'active': step}}
+    return g
+
+puzzle(
+    'p38',
+    'A lookout walks the deck. Give the lion the WALK — the pad on the table '
+    'is a behaviour: drop it on the lion and press SPACE. It walks towards you '
+    'until the table ends. When it stands against the near edge, give the '
+    'judge’s bird the done pad.',
+    'the lion against the near edge',
+    ['A behaviour dropped on a thing becomes that thing’s. SPACE on the lion '
+     'starts what is bound to it; “.” rests it.',
+     'Ask the lion where it stands with [query | position | bird]: against the '
+     'near edge its second number reads 2.23, as far as the table goes.',
+     'Drop the walk on the lion, press SPACE, and wait until it stops at the '
+     'edge nearest you; then give the done pad to the judge’s bird.'],
+    rules(),
+    table([live_bird('LION38', 'to the lion'), walk_gadget('W38', 'LION38'),
+           box(txt('query'), txt('position'), None), done_pad()],              # noqa: F405
+          fixed(pad('against the\nnear edge'), 'we need this'),               # noqa: F405
+          bird(10381, 'p38-post', 'give me your answer'),                    # noqa: F405
+          nest(10382, 'p38-reply', 'from the judge'),                        # noqa: F405
+          ask_judge('p38', (10381, 'p38-post'), (10382, 'p38-reply'), live_bird('LION38', 'to the lion'),
+                    query('position'), box(num(1, 5), num(223, 100)),        # where the walk ends: the table's edge  # noqa: F405
+                    'It stands at the rail. Next: outside.',
+                    'Not quite — it must stand against the near edge, where the walk leaves it.',
+                    on_right_more=[load('p39')]),
+          # the lion starts at the back, looking at you: the walk brings it to the near edge
+          extra=[{'thing': lion('LION38', facing=270), 'x': 0.2, 'z': 1.3}]),
+)
+
+# --- p39: out on the grass ------------------------------------------------------
+puzzle(
+    'p39',
+    'A lookout belongs outside. Carry the lion through the back door and set '
+    'it down on the grass, come back in, and give the judge’s bird the done '
+    'pad. The judge asks the yard what stands out there.',
+    'the lion on the grass',
+    ['The back door is on the left. Whatever you carry comes through it with '
+     'you; set the lion down anywhere on the grass and click the door to come '
+     'back in.',
+     'The yard is a thing too: it answers [query | things | lion | bird] with a '
+     'box, one hole per thing named lion that stands on the grass. That is '
+     'what the judge asks.',
+     'Pick the lion up, click the door, click the grass to set it down, click '
+     'the door again, and give the done pad to the judge’s bird.'],
+    rules(),
+    table([lion('LION39'), done_pad()],
+          fixed(pad('the lion\non the grass'), 'we need this'),               # noqa: F405
+          bird(10391, 'p39-post', 'give me your answer'),                    # noqa: F405
+          nest(10392, 'p39-reply', 'from the judge'),                        # noqa: F405
+          ask_judge('p39', (10391, 'p39-post'), (10392, 'p39-reply'), live_bird('PY39', 'to the yard'),
+                    box(txt('query'), txt('things'), txt('lion'), None),     # noqa: F405
+                    box(box(ANYBIRD, txt('lion'), ANYBOX, txt('model'))),    # one thing named lion out there  # noqa: F405
+                    'The lookout is on the grass, and this arc is done. Whatever you make from here, it is yours.',
+                    'Not quite — the yard says no lion stands on the grass. Set it down out there and come back in.',
+                    bird_hole=3)),                                           # [query | things | lion | bird]
+    yard={'lid': 'PY39', 'evt': 'evt-PY39', 'bench': []},
 )

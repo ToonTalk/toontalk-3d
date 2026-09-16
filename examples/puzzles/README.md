@@ -96,6 +96,26 @@ diverges towards what this workshop can judge by identity or on a scale:
 fractions, words poured into letters, sorting. The original's clock arc (time
 sensors, countdowns, timers on the back of a number, about a third of the
 tutorial) is not here yet; the computer bird is the first piece of it.
-A **second arc** of puzzles that introduce the 3D things -- turning a model,
-setting a place, giving a model a behaviour, pictures with captions -- is
-planned to follow p35 rather than interleave with the first.
+## The second arc: the 3D things
+
+Played after p34. Each of these judges does not wait to be handed a thing:
+it holds a bird to the lion (or to the yard) and ASKS once you give its own
+bird the pad that says done, and reads the answer off its post. Give the
+wrong thing, or say done too soon, and the "not quite" pad comes back with
+the done pad, for next time.
+
+- **p36** the lion must stand at `[1/2 | 3/2]`: a thing can be told where to
+  stand with `[set | position | [across | away]]` to its bird, and asked
+  with `[query | position | bird]`.
+- **p37** turn the lion until its facing reads 0: the arrows turn a thing in
+  your hand, `[move | yaw | 90]` and `[set | facing | 0]` turn it by letter,
+  `[query | facing | bird]` says which way it looks.
+- **p38** the walk: a behaviour dropped on the lion becomes the lion's; SPACE
+  starts it and it walks towards you a tenth of a step a round until the
+  table ends.
+- **p39** out on the grass: carry the lion through the back door, set it
+  down, come back in. The judge asks the yard `[query | things | lion |
+  bird]`, and the yard answers with a box, one hole per lion out there.
+
+More to come: pictures with captions, a model given two behaviours, a scene
+where one thing must move to touch another.

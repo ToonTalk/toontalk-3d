@@ -4903,7 +4903,7 @@ async function puzzleCheckBody(D, w, at) {
 async function puzzleSetCheck(D) {
   const line = [];
   let ok = true;
-  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28', 'p29', 'p30', 'p31', 'p32', 'p33', 'p34', 'p35']) {
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28', 'p29', 'p30', 'p31', 'p32', 'p33', 'p34', 'p35', 'p36', 'p37', 'p38', 'p39']) {
     const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
     D.worldIn(rec);
     await slowSettle(D, 3000);
@@ -4920,6 +4920,16 @@ async function puzzleSetCheck(D) {
       p26: { kind: 'number', value: { n: '8', d: '11' }, op: '+' },
       p27: { kind: 'box', holes: [{ kind: 'number', value: { n: '5', d: '9' }, op: '+' },
                                   { kind: 'number', value: { n: '7', d: '12' }, op: '+' }] },
+      // the second arc: the judge ASKS the lion (or the yard) and reads its answer
+      p36: { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '2' }, op: '+' },
+                                  { kind: 'number', value: { n: '3', d: '2' }, op: '+' }] },
+      p37: { kind: 'number', value: { n: '0', d: '1' }, op: '+' },
+      p38: { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '5' }, op: '+' },
+                                  { kind: 'number', value: { n: '223', d: '100' }, op: '+' }] },
+      p39: { kind: 'box', holes: [{ kind: 'box', holes: [{ kind: 'bird', nestId: 0, nestGuid: null, liveId: 'LION39' },
+                                                         { kind: 'text', text: 'lion' },
+                                                         { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '2' }, op: '+' }, { kind: 'number', value: { n: '5', d: '1' }, op: '+' }] },
+                                                         { kind: 'text', text: 'model' }] }] },
     };
     if (goal?.userData.kind === 'text' && SIGN_ANSWERS[name]) {
       D.worldIn({ kind: 'world', v: 4, stations: {}, active: null,

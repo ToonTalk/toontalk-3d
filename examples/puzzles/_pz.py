@@ -108,10 +108,12 @@ def judge(name, post_id, post_guid, reply_id, reply_guid, right, on_right,
     return dict(room(name, work, yes, opaque=True, dirty=True), judge=True)     # noqa: F405
 
 
-def puzzle(name, intro, goal, hints, rules_, bench, library=None, scenery=None):
+def puzzle(name, intro, goal, hints, rules_, bench, library=None, scenery=None, yard=None):
     world = {'kind': 'world', 'v': 3, 'name': name, 'intro': intro,
              'goal': goal, 'hints': list(hints), 'rules': rules_,
              'bench': bench, 'stations': {}, 'active': None}
+    if yard:
+        world['yard'] = yard              # a puzzle with grass behind the workshop
     if library:
         world['library'] = library
     if scenery:

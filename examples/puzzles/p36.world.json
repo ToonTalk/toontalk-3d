@@ -1,0 +1,1138 @@
+{
+ "kind": "world",
+ "v": 3,
+ "name": "p36",
+ "intro": "The ship needs a lookout. This lion must stand exactly half a step across and one and a half away \u2014 a thing can be TOLD where to stand. When it is there, give the judge\u2019s bird the pad that says done.",
+ "goal": "the lion at [1/2 | 3/2]",
+ "hints": [
+  "A thing has a bird of its own: what you give her, the thing hears. Ask the lion where it stands with [query | position | bird] and see the shape of the answer.",
+  "The letter that moves a thing is [set | position | [across | away]]: fill the empty box with the two numbers and drop the whole letter on the lion\u2019s bird.",
+  "Put the 1/2 in the first hole of the small box and the 3/2 in the second, set that box in the third hole of [set | position | _], give the letter to the lion\u2019s bird, then the done pad to the judge\u2019s bird."
+ ],
+ "rules": {
+  "stacks": [],
+  "tools": [],
+  "typing": {
+   "numbers": false,
+   "pads": false
+  },
+  "undo": true
+ },
+ "bench": [
+  {
+   "thing": {
+    "kind": "model",
+    "parts": [
+     {
+      "shape": "cylinder",
+      "size": [
+       0.016,
+       0.016,
+       0.07
+      ],
+      "at": [
+       -0.06,
+       0.035,
+       -0.04
+      ],
+      "color": "#c9a063"
+     },
+     {
+      "shape": "cylinder",
+      "size": [
+       0.016,
+       0.016,
+       0.07
+      ],
+      "at": [
+       -0.06,
+       0.035,
+       0.04
+      ],
+      "color": "#c9a063"
+     },
+     {
+      "shape": "cylinder",
+      "size": [
+       0.016,
+       0.016,
+       0.07
+      ],
+      "at": [
+       0.06,
+       0.035,
+       -0.04
+      ],
+      "color": "#c9a063"
+     },
+     {
+      "shape": "cylinder",
+      "size": [
+       0.016,
+       0.016,
+       0.07
+      ],
+      "at": [
+       0.06,
+       0.035,
+       0.04
+      ],
+      "color": "#c9a063"
+     },
+     {
+      "shape": "box",
+      "size": [
+       0.18,
+       0.1,
+       0.1
+      ],
+      "at": [
+       0,
+       0.12,
+       0
+      ],
+      "color": "#c9a063"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.065
+      ],
+      "at": [
+       0.12,
+       0.17,
+       0
+      ],
+      "color": "#b07a2a"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.045
+      ],
+      "at": [
+       0.15,
+       0.17,
+       0
+      ],
+      "color": "#c9a063"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.01
+      ],
+      "at": [
+       0.185,
+       0.18,
+       0.02
+      ],
+      "color": "#242424"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.01
+      ],
+      "at": [
+       0.185,
+       0.18,
+       -0.02
+      ],
+      "color": "#242424"
+     },
+     {
+      "shape": "cylinder",
+      "size": [
+       0.006,
+       0.006,
+       0.12
+      ],
+      "at": [
+       -0.13,
+       0.13,
+       0
+      ],
+      "color": "#c9a063",
+      "rot": [
+       0,
+       0,
+       70
+      ]
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.014
+      ],
+      "at": [
+       -0.19,
+       0.16,
+       0
+      ],
+      "color": "#b07a2a"
+     }
+    ],
+    "label": "lion",
+    "lid": "LION36",
+    "evt": "evt-LION36"
+   },
+   "x": -1.51,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 0,
+    "nestGuid": null,
+    "liveId": "LION36",
+    "label": "to the lion"
+   },
+   "x": -1.11,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "set"
+     },
+     {
+      "kind": "text",
+      "text": "position"
+     },
+     null
+    ]
+   },
+   "x": -0.53,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     null,
+     null
+    ]
+   },
+   "x": 0.16,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "1",
+     "d": "2"
+    },
+    "op": "+"
+   },
+   "x": 0.66,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "2"
+    },
+    "op": "+"
+   },
+   "x": 1.04,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "done"
+   },
+   "x": 1.47,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "bird",
+    "nestId": 10361,
+    "nestGuid": "p36-post",
+    "label": "give me your answer"
+   },
+   "x": -0.55,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "nest",
+    "id": 10362,
+    "guid": "p36-reply",
+    "hasEgg": false,
+    "pile": [],
+    "label": "from the judge"
+   },
+   "x": -0.05,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "half across,\none and a half away",
+    "fixed": true,
+    "label": "we need this",
+    "size": 1.5
+   },
+   "z": 1.2,
+   "x": 1.19
+  },
+  {
+   "thing": {
+    "kind": "room",
+    "label": "the judge",
+    "opaque": true,
+    "dirty": true,
+    "world": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 10361,
+         "guid": "p36-post",
+         "hasEgg": false,
+         "pile": [],
+         "label": "the post"
+        },
+        {
+         "kind": "bird",
+         "nestId": 10362,
+         "nestGuid": "p36-reply",
+         "label": "to the player"
+        },
+        {
+         "kind": "text",
+         "text": "The lookout is posted. Next: which way it looks."
+        },
+        {
+         "kind": "text",
+         "text": "Not quite \u2014 ask the lion where it stands: it must answer [1/2 | 3/2] exactly."
+        },
+        {
+         "kind": "bird",
+         "nestId": 0,
+         "nestGuid": null,
+         "liveId": "LION36",
+         "label": "to the lion"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "query"
+          },
+          {
+           "kind": "text",
+           "text": "position"
+          },
+          null
+         ]
+        },
+        {
+         "kind": "bird",
+         "nestId": 10361,
+         "nestGuid": "p36-post",
+         "label": "to the post"
+        },
+        null
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "the judge",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "2"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "2"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ]
+      },
+      "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          7
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "load",
+        "name": "p37"
+       }
+      ],
+      "trainedOn": null,
+      "team": [
+       {
+        "kind": "robot",
+        "name": "the judge (asks)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "done"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            5
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            6
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            4
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "A pad saying done has landed: keeps it and asks the question, answered to this same post."
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not yet)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBox"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+           "kind": "wildText"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "Not the answer wanted: a copy of the \"not quite\" pad goes back, then the thing itself, then your done pad for next time."
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not that)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBox"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "Something arrived that is not an answer: a copy of the \"not quite\" pad goes back, then the thing itself."
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not yet)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+           "kind": "wildText"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "Not the answer wanted: a copy of the \"not quite\" pad goes back, then the thing itself, then your done pad for next time."
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not that)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "Something arrived that is not an answer: a copy of the \"not quite\" pad goes back, then the thing itself."
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not yet)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildText"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+           "kind": "wildText"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "Not the answer wanted: a copy of the \"not quite\" pad goes back, then the thing itself, then your done pad for next time."
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not that)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildText"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "Something arrived that is not an answer: a copy of the \"not quite\" pad goes back, then the thing itself."
+       }
+      ],
+      "note": "The answer is the one wanted: sends the note out by the reply bird and opens the next puzzle."
+     }
+    },
+    "judge": true
+   },
+   "x": -1.35,
+   "z": 1.2
+  }
+ ],
+ "stations": {},
+ "active": null,
+ "scenery": [
+  {
+   "thing": {
+    "kind": "model",
+    "parts": [
+     {
+      "shape": "cylinder",
+      "size": [
+       0.05,
+       0.055,
+       0.3
+      ],
+      "at": [
+       0,
+       0.21,
+       0
+      ],
+      "color": "#e9e4d8"
+     },
+     {
+      "shape": "cylinder",
+      "size": [
+       0.056,
+       0.058,
+       0.05
+      ],
+      "at": [
+       0,
+       0.085,
+       0
+      ],
+      "color": "#5a4a3a"
+     },
+     {
+      "shape": "cone",
+      "size": [
+       0.05,
+       0.12
+      ],
+      "at": [
+       0,
+       0.42,
+       0
+      ],
+      "color": "#c0392b"
+     },
+     {
+      "shape": "cylinder",
+      "size": [
+       0.052,
+       0.052,
+       0.03
+      ],
+      "at": [
+       0,
+       0.27,
+       0
+      ],
+      "color": "#c0392b"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.022
+      ],
+      "at": [
+       0,
+       0.31,
+       0.045
+      ],
+      "color": "#fff1a8"
+     },
+     {
+      "shape": "box",
+      "size": [
+       0.02,
+       0.12,
+       0.09
+      ],
+      "at": [
+       0,
+       0.06,
+       0.075
+      ],
+      "color": "#c0392b"
+     },
+     {
+      "shape": "box",
+      "size": [
+       0.09,
+       0.12,
+       0.02
+      ],
+      "at": [
+       -0.075,
+       0.06,
+       0
+      ],
+      "color": "#c0392b"
+     },
+     {
+      "shape": "box",
+      "size": [
+       0.09,
+       0.12,
+       0.02
+      ],
+      "at": [
+       0.07,
+       0.05,
+       -0.01
+      ],
+      "rot": [
+       0,
+       0,
+       18
+      ],
+      "color": "#c0392b"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.02
+      ],
+      "at": [
+       0.045,
+       0.14,
+       0.02
+      ],
+      "color": "#6b6b6b"
+     },
+     {
+      "shape": "sphere",
+      "size": [
+       0.012
+      ],
+      "at": [
+       0,
+       0.485,
+       0
+      ],
+      "color": "#ffd23f"
+     }
+    ],
+    "fixed": true,
+    "ghost": true,
+    "label": "Marty\u2019s ship"
+   },
+   "x": 3.1,
+   "y": 0.02,
+   "z": -3.4,
+   "ry": 35,
+   "rz": 0,
+   "sz": 7
+  }
+ ]
+}
