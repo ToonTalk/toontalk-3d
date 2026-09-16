@@ -1,17 +1,18 @@
 # moving -- the smallest behaviour there is, laid out in the open.
 #
 # A gadget's robots live on its panel, out of the way. This world puts the
-# same robots on the open table instead, so you can see what a behaviour IS
+# same robot on the open table instead, so you can see what a behaviour IS
 # before meeting one folded up.
 #
-# The Mover is handed [a bird to my thing, a step]. Each round it copies the
-# step and gives it to the bird:
+# The Mover is handed [a step]. Each round it copies the step and gives it to
+# THE BIRD ON THE PERCH -- the pedestal beside its desk:
 #
 #     [move | across | 1/60]
 #
-# That is the whole of "start moving right". The thing it moves does not know
-# it is being moved, and the robot does not know what it is moving -- only
-# that its bird goes somewhere.
+# That is the whole of "start moving right". On a thing's panel the perch
+# holds a bird to that thing; out here it holds a bird to the star. The
+# thing it moves does not know it is being moved, and the robot does not
+# know what it is moving -- only that the bird on the perch goes somewhere.
 from _beh import *                                          # noqa: F403
 
 STAR = 'L9501'
@@ -20,20 +21,21 @@ star = live(pad('*', bg='#1b2233', ink='#ffd23f', font='sans'), STAR)
 step = msg('move', 'across', num(1, 60))                     # noqa: F405
 
 mover = robot(
-    'Mover', box(ANYBIRD, ANYBOX),
-    [copy('given', 1), put('given', 0)],
-    trained_on=box(to(STAR), step),
-    note='Each round it copies the step and gives it to the bird: '
+    'Mover', box(ANYBOX),
+    [copy('given', 0), put('perch')],
+    trained_on=box(step),
+    note='Each round it copies the step and gives it to the bird on the perch: '
          '[move | across | 1/60]. That is the whole of “start moving right”. It '
-         'does not know what it is moving, only that its bird goes somewhere.')
+         'does not know what it is moving, only that the bird on the perch goes somewhere.')
 
-work = box(to(STAR, 'my thing'), step)
+work = box(step)
 
 ABOUT = ('MOVING\n\n'
-         'The Mover is handed\n'
-         '[a bird to my thing, a step].\n\n'
+         'The Mover is handed [a step].\n\n'
          'Each round it copies the step\n'
-         'and gives it to the bird:\n\n'
+         'and gives it to the bird on\n'
+         'the PERCH, the pedestal\n'
+         'beside its desk:\n\n'
          '  [move | across | 1/60]\n\n'
          'That is the whole of "start\n'
          'moving right".')
@@ -50,16 +52,16 @@ RUN = ('TO RUN IT\n\n'
 
 WHY = ('WHAT IS NOT HERE\n\n'
        'The robot does not know what\n'
-       'it is moving. It knows a bird\n'
-       'goes somewhere.\n\n'
-       'The star does not know it is\n'
-       'being moved. It answers a\n'
-       'message, as it would answer\n'
-       'one from you.\n\n'
-       'So the same two steps move\n'
-       'anything: point the bird at\n'
-       'something else and the same\n'
-       'robot moves that instead.\n'
+       'it is moving. It knows the\n'
+       'bird on the perch goes\n'
+       'somewhere.\n\n'
+       'Out here she is a bird to the\n'
+       'star. On a thing\'s panel the\n'
+       'perch holds a bird to THAT\n'
+       'thing -- so the same two\n'
+       'steps move anything: put the\n'
+       'robot on a panel and it moves\n'
+       'whatever the panel belongs to.\n'
        'THAT is what a behaviour is.')
 
 bench = [
@@ -72,4 +74,4 @@ bench = [
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},             # noqa: F405
 ]
 
-write_beh('🏃 moving', bench)
+write_beh('🏃 moving', bench, perch=to(STAR, 'to the star'))

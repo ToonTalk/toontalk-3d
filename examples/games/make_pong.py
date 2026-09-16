@@ -52,25 +52,26 @@ def touch_nest(lid, nid, thing=None, side='none'):
 
 
 # --- the ball ---------------------------------------------------------------
-#  0 my thing        1 across step   2 away step   3 edge   4 touching
-#  5 back to the middle              6 the counter's bird   7 one more
+#  0 across step   1 away step   2 edge   3 touching
+#  4 back to the middle              5 the counter's bird   6 one more
+# (my thing is the bird on the perch: the panel's own)
 across = msg('move', 'across', num(1, 55))                   # noqa: F405
 away = msg('move', 'away', num(1, 140))                      # noqa: F405
 middle = msg('set', 'position', box(num(0), num(17, 10)))    # noqa: F405
 one = num(1)                                                 # noqa: F405
 
-ball_work = box(to(BALL, 'my thing'), across, away,          # noqa: F405
+ball_work = box(across, away,                                # noqa: F405
                 edge_nest(BALL, EDGE_N), touch_nest(BALL, TOUCH_N),
                 middle, to(SCORE, 'the counter'), one)
 
-fly = [copy('given', 1), put('given', 0),                    # noqa: F405
-       copy('given', 2), put('given', 0)]                    # both steps, sent
+fly = [copy('given', 0), put('perch'),                       # noqa: F405
+       copy('given', 1), put('perch')]                       # both steps, sent
 
 # At a WALL, turning round is a x-1 dropped on the step, exactly as you would
 # drop one by hand -- and it is safe there because the wall has clamped the
 # ball exactly on the line, so one flip takes it off.
-flip_across = drop(-1, '*', 'given', 1, 2)                   # noqa: F405
-flip_away = drop(-1, '*', 'given', 2, 2)                     # noqa: F405
+flip_across = drop(-1, '*', 'given', 0, 2)                   # noqa: F405
+flip_away = drop(-1, '*', 'given', 1, 2)                     # noqa: F405
 
 
 def head(hole, n, d):
@@ -83,21 +84,21 @@ def head(hole, n, d):
             setv(n, '+', d), put('given', hole, 2)]          # noqa: F405
 
 
-go_right = head(1, 1, 55)
-go_left = head(1, -1, 55)
-go_near = head(2, 1, 140)
-go_far = head(2, -1, 140)
+go_right = head(0, 1, 55)
+go_left = head(0, -1, 55)
+go_near = head(1, 1, 140)
+go_far = head(1, -1, 140)
 
 
 def ball_bot(name, edge, side, program, note=None):
     """edge: a word, or None for any. side: which side of the ball the thing
     it has run into is on -- or None for "never mind what it has run into"."""
-    trained = box(to(BALL), across, away,                    # noqa: F405
+    trained = box(across, away,                              # noqa: F405
                   edge_nest(BALL, EDGE_N, edge or 'none'),
                   touch_nest(BALL, TOUCH_N,
                              to(BALL) if side else None, side or 'none'),
                   middle, to(SCORE), one)
-    cond = box(ANYBIRD, ANYBOX, ANYBOX,                      # noqa: F405
+    cond = box(ANYBOX, ANYBOX,                               # noqa: F405
                txt(edge) if edge else WILDTEXT,              # noqa: F405
                box(ANYBIRD if side else WILD,                # noqa: F405
                    txt(side) if side else WILDTEXT),         # noqa: F405
@@ -128,9 +129,9 @@ ball_team['team'] = [
     ball_bot('at the left wall', 'left', None, flip_across + fly, note=wall('left', 'across')),
     # the fourth wall is yours. Reaching it means you missed.
     ball_bot('past the bat', 'right', None,
-             [copy('given', 7), put('given', 6)]             # noqa: F405
+             [copy('given', 6), put('given', 5)]             # noqa: F405
              + flip_across
-             + [copy('given', 5), put('given', 0)],          # noqa: F405
+             + [copy('given', 4), put('perch')],             # noqa: F405
              note='The edge reading says “right” -- the wall you guard, so you missed: '
                   'gives a +1 to the counter’s bird, flips the across step, and sends '
                   'my thing back to the middle.'),
@@ -144,25 +145,23 @@ ball_team['team'] = [
 ]
 
 # --- the bat ----------------------------------------------------------------
-#  0 my thing        1 the pointer   2 [set | away | _]
+#  0 the pointer   1 [set | away | _]     (my thing: the bird on the perch)
 # The pointer hands over [across | away] and the bat wants only the away of
 # it -- so it takes that one hole out, drops it in the message, and has Dusty
 # clean up what is left. Its across never changes, which is why it stays a
 # wall and does not wander off after your hand.
 bat_msg = box(txt('set'), txt('away'), None)                 # noqa: F405
-bat_work = box(to(BAT, 'my thing'),                          # noqa: F405
-               device(POINT_N, DEV_POINT, 'pointer'), bat_msg)
+bat_work = box(device(POINT_N, DEV_POINT, 'pointer'), bat_msg)   # noqa: F405
 bat_bot = robot(                                             # noqa: F405
-    'Bat', box(ANYBIRD, ANYBOX, ANYBOX),                     # noqa: F405
+    'Bat', box(ANYBOX, ANYBOX),                              # noqa: F405
     [
-        copy('given', 2), put('s0'),        # a [set | away | _] to fill in
-        takeTop('given', 1), put('s1'),     # what the pointer just said
+        copy('given', 1), put('s0'),        # a [set | away | _] to fill in
+        takeTop('given', 0), put('s1'),     # what the pointer just said
         take('s1', 1), put('s0', 2),        # the AWAY of it, into the hole
         vac('s1'),                          # and the husk to Dusty
-        take('s0'), put('given', 0),        # away to my thing
+        take('s0'), put('perch'),           # away to my thing, by the bird on the perch
     ],
-    trained_on=box(to(BAT),                                  # noqa: F405
-                   device(POINT_N, DEV_POINT, 'pointer'), bat_msg),
+    trained_on=box(device(POINT_N, DEV_POINT, 'pointer'), bat_msg),   # noqa: F405
     note='Copies the [set | away | _] template, takes what the pointer said, moves '
          'only the AWAY of it into the hole, vacuums the rest, and sends it: the bat '
          'follows your hand up and down the table and stays a wall across.')

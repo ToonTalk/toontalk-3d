@@ -57,7 +57,7 @@ empty — which matters here more than anywhere, since the member that does the
 moving is the last one tried.
 
 The bat's panel holds one robot: take what the pointer just said, keep the
-*away* of it, and send my thing `[set | away | that]`. Its across never
+*away* of it, and give the bird on the perch `[set | away | that]`. Its across never
 changes, which is why it stays a wall and does not wander off after your hand.
 
 Every piece of it was built for something else — `[move | across | n]`, the

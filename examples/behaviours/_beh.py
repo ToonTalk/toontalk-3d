@@ -1,10 +1,13 @@
 # Shared vocabulary for the behaviour worlds (anima-gadgets).
 #
 # A BEHAVIOUR is an ordinary pad whose PANEL carries robots. The robots speak
-# about "my thing" through a live bird, and binding a behaviour to something
-# is nothing more than re-pointing that bird. Unattached, the bird points at
-# the behaviour itself -- which is why a gadget set down on the table
-# demonstrates itself, at no cost and with no demo mode.
+# about "my thing" through THE BIRD ON THE PERCH -- the pedestal beside every
+# robot's desk, which on a panel holds a bird to whatever the panel is the
+# back of -- and binding a behaviour to something is nothing more than
+# deciding what that is. Unattached, the panel is the back of the pad itself
+# -- which is why a gadget set down on the table demonstrates itself, at no
+# cost and with no demo mode. The robots' boxes hold no bird to my thing at
+# all (since 16 Sep 2026); a robot's letter put on the perch goes to her.
 #
 # Everything a behaviour does, it does by sending its thing a message:
 #
@@ -114,5 +117,10 @@ def gadget(name, lid, bot, work, look=None, bench=None):
                       'stations': {'stand': work}, 'active': bot}}
 
 
-def write_beh(name, bench, folder=None):
-    return write(name, bench, folder or HERE)                           # noqa: F405
+def write_beh(name, bench, folder=None, perch=None):
+    """A behaviour world -- and, when its robots stand in the open rather
+    than on a panel, the bird on the PERCH: the pedestal beside the desk that
+    a robot's letters to "my thing" go to. On a panel it holds the panel's
+    own bird; out here, a bird to the star."""
+    return write(name, bench, folder or HERE,                           # noqa: F405
+                 stations={'perch': perch} if perch else None)

@@ -25,9 +25,6 @@
      "kind": "box",
      "holes": [
       {
-       "kind": "anyBird"
-      },
-      {
        "kind": "anyBox"
       },
       {
@@ -50,6 +47,25 @@
       "at": {
        "c": "given",
        "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
         3
        ]
       }
@@ -59,7 +75,7 @@
       "at": {
        "c": "given",
        "path": [
-        2,
+        1,
         2
        ]
       }
@@ -78,45 +94,8 @@
       "at": {
        "c": "given",
        "path": [
-        2,
+        1,
         2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        5
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        2,
-        2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        2
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        0
        ]
       }
      },
@@ -132,22 +111,30 @@
      {
       "type": "put",
       "at": {
+       "c": "perch",
+       "path": []
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
        "c": "given",
        "path": [
         0
        ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "perch",
+       "path": []
       }
      }
     ],
     "trainedOn": {
      "kind": "box",
      "holes": [
-      {
-       "kind": "bird",
-       "nestId": 0,
-       "nestGuid": null,
-       "liveId": "L9513"
-      },
       {
        "kind": "box",
        "holes": [
@@ -213,7 +200,7 @@
      ]
     },
     "team": [],
-    "note": "Each round, on the turn\u2019s number: a copy of the die lands (1, 2 or 3), then the -2 (-1, 0 or 1), then the x30 (-30, 0 or 30 degrees). A copy of the turn goes to the bird, then a copy of the forward step: a yaw, then a step the way it faces."
+    "note": "Each round, on the turn\u2019s number: a copy of the die lands (1, 2 or 3), then the -2 (-1, 0 or 1), then the x30 (-30, 0 or 30 degrees). A copy of the turn goes to the bird on the perch, then a copy of the forward step: a yaw, then a step the way it faces."
    },
    "x": -1.45,
    "z": 1.62
@@ -222,13 +209,6 @@
    "thing": {
     "kind": "box",
     "holes": [
-     {
-      "kind": "bird",
-      "nestId": 0,
-      "nestGuid": null,
-      "liveId": "L9513",
-      "label": "my thing"
-     },
      {
       "kind": "box",
       "holes": [
@@ -315,12 +295,20 @@
   {
    "thing": {
     "kind": "text",
-    "text": "WANDERING\n\n[my thing, forward, turn,\n a die of 3, a -2, a x30]\n\nEach round, on the turn:\n  the die lands on it: 1..3\n  the -2 lands on it: -1..1\n  the x30 lands on it\n  a copy goes to the bird\nthen a copy of forward goes\nto the bird.\n\nyaw and forward are the\nturtle's own words."
+    "text": "WANDERING\n\n[forward, turn,\n a die of 3, a -2, a x30]\n\nEach round, on the turn:\n  the die lands on it: 1..3\n  the -2 lands on it: -1..1\n  the x30 lands on it\n  a copy goes to the bird\nthen a copy of forward goes\nto the bird.\n\nyaw and forward are the\nturtle's own words."
    },
    "x": -0.05,
    "z": 2.15
   }
  ],
- "stations": {},
+ "stations": {
+  "perch": {
+   "kind": "bird",
+   "nestId": 0,
+   "nestGuid": null,
+   "liveId": "L9513",
+   "label": "to the star"
+  }
+ },
  "active": null
 }

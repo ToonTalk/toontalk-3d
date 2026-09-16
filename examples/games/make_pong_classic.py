@@ -119,23 +119,24 @@ go_near = go(dz=(AWAY[0], AWAY[1]))
 go_far = go(dz=(-AWAY[0], AWAY[1]))
 serve = msg('set', 'position', box(num(0), num(0)))          # noqa: F405
 
-#  0 my thing   1 go right   2 go left   3 come near   4 go far
-#  5 the edge   6 what I have run into   7 back to the middle
-#  8 the counter's bird       9 one more
-ball_work = box(to(BALL, 'my thing'), go_right, go_left, go_near, go_far,  # noqa: F405
+#  0 go right   1 go left   2 come near   3 go far
+#  4 the edge   5 what I have run into   6 back to the middle
+#  7 the counter's bird       8 one more
+# (my thing is the bird on the perch: the panel's own)
+ball_work = box(go_right, go_left, go_near, go_far,          # noqa: F405
                 edge_nest(BALL, EDGE_N), touch_nest(BALL, TOUCH_N),
                 serve, to(SCORE, 'the counter'), num(1))     # noqa: F405
 
-send = lambda i: [copy('given', i), put('given', 0)]         # noqa: E731,F405
+send = lambda i: [copy('given', i), put('perch')]            # noqa: E731,F405
 
 
 def ball_bot(name, edge, side, program, note=None):
-    trained = box(to(BALL), go_right, go_left, go_near, go_far,   # noqa: F405
+    trained = box(go_right, go_left, go_near, go_far,        # noqa: F405
                   edge_nest(BALL, EDGE_N, edge or 'none'),
                   touch_nest(BALL, TOUCH_N,
                              to(BALL) if side else None, side or 'none'),
                   serve, to(SCORE), num(1))                  # noqa: F405
-    cond = box(ANYBIRD, ANYBOX, ANYBOX, ANYBOX, ANYBOX,      # noqa: F405
+    cond = box(ANYBOX, ANYBOX, ANYBOX, ANYBOX,               # noqa: F405
                txt(edge) if edge else WILDTEXT,              # noqa: F405
                box(ANYBIRD if side else WILD,                # noqa: F405
                    txt(side) if side else WILDTEXT),         # noqa: F405
@@ -145,27 +146,27 @@ def ball_bot(name, edge, side, program, note=None):
 
 # In order. Running into something beats reaching a wall, because the bat
 # stands just inside the wall it is guarding.
-MSG = {1: '[set | speed | [3/7 | ]] -- go right, and say nothing about up and down',
-       2: '[set | speed | [-3/7 | ]] -- go left, and say nothing about up and down',
-       3: '[set | speed | [ | 2/9]] -- come near, and say nothing about across',
-       4: '[set | speed | [ | -2/9]] -- go far, and say nothing about across'}
+MSG = {0: '[set | speed | [3/7 | ]] -- go right, and say nothing about up and down',
+       1: '[set | speed | [-3/7 | ]] -- go left, and say nothing about up and down',
+       2: '[set | speed | [ | 2/9]] -- come near, and say nothing about across',
+       3: '[set | speed | [ | -2/9]] -- go far, and say nothing about across'}
 touch = lambda s, i: ('The touch reading says something is on my ' + s + ': sends '   # noqa: E731
                       + MSG[i] + '.')
 wall = lambda w, i: 'The edge reading says “' + w + '”: sends ' + MSG[i] + '.'   # noqa: E731
-ball_team = ball_bot('hit on my left', None, 'left', send(1),
-                     note='Leads the team. ' + touch('left', 1))
+ball_team = ball_bot('hit on my left', None, 'left', send(0),
+                     note='Leads the team. ' + touch('left', 0))
 ball_team['team'] = [
-    ball_bot('hit on my right', None, 'right', send(2), note=touch('right', 2)),
-    ball_bot('hit on my far side', None, 'far', send(3), note=touch('far side', 3)),
-    ball_bot('hit on my near side', None, 'near', send(4), note=touch('near side', 4)),
-    ball_bot('the right wall', 'right', None, send(2), note=wall('right', 2)),
-    ball_bot('the far wall', 'far', None, send(3), note=wall('far', 3)),
-    ball_bot('the near wall', 'near', None, send(4), note=wall('near', 4)),
+    ball_bot('hit on my right', None, 'right', send(1), note=touch('right', 1)),
+    ball_bot('hit on my far side', None, 'far', send(2), note=touch('far side', 2)),
+    ball_bot('hit on my near side', None, 'near', send(3), note=touch('near side', 3)),
+    ball_bot('the right wall', 'right', None, send(1), note=wall('right', 1)),
+    ball_bot('the far wall', 'far', None, send(2), note=wall('far', 2)),
+    ball_bot('the near wall', 'near', None, send(3), note=wall('near', 3)),
     # the left wall is the one you are guarding: getting there is a miss
     ball_bot('past the bat', 'left', None,
-             [copy('given', 9), put('given', 8)]             # noqa: F405
-             + [copy('given', 7), put('given', 0)]
-             + send(1),
+             [copy('given', 8), put('given', 7)]             # noqa: F405
+             + [copy('given', 6), put('perch')]
+             + send(0),
              note='The edge reading says “left” -- the wall you guard, so you missed: '
                   'a +1 to the counter’s bird, back to the middle, and off to the '
                   'right again.'),
@@ -176,27 +177,25 @@ ball_team['team'] = [
 ]
 
 # --- the bat ----------------------------------------------------------------
-#  0 my thing   1 the pointer   2 [set | away | _]
+#  0 the pointer   1 [set | away | _]     (my thing: the bird on the perch)
 # The pointer says where your hand is on the TABLE; the bat lives on the pitch,
 # whose middle is 7/4 further back. So the robot takes the away out of the
 # reading, drops a -7/4 on it, and posts the difference. That is not a
 # workaround: a place is always measured from the middle of whatever you are
 # standing on, and this robot is doing the only sum that follows from it.
 bat_msg = box(txt('set'), txt('away'), None)                 # noqa: F405
-bat_work = box(to(BAT, 'my thing'),                          # noqa: F405
-               device(POINT_N, DEV_POINT, 'pointer'), bat_msg)
+bat_work = box(device(POINT_N, DEV_POINT, 'pointer'), bat_msg)   # noqa: F405
 bat_bot = robot(                                             # noqa: F405
-    'Bat', box(ANYBIRD, ANYBOX, ANYBOX),                     # noqa: F405
+    'Bat', box(ANYBOX, ANYBOX),                              # noqa: F405
     [
-        copy('given', 2), put('s0'),        # a [set | away | _] to fill in
-        takeTop('given', 1), put('s1'),     # where the pointer is on the table
+        copy('given', 1), put('s0'),        # a [set | away | _] to fill in
+        takeTop('given', 0), put('s1'),     # where the pointer is on the table
         newnum, setv(-7, '+', 4), put('s1', 1),   # ...measured from the pitch
         take('s1', 1), put('s0', 2),
         vac('s1'),                          # and the husk to Dusty
-        take('s0'), put('given', 0),
+        take('s0'), put('perch'),
     ],
-    trained_on=box(to(BAT),                                  # noqa: F405
-                   device(POINT_N, DEV_POINT, 'pointer'), bat_msg),
+    trained_on=box(device(POINT_N, DEV_POINT, 'pointer'), bat_msg),   # noqa: F405
     note='Copies the [set | away | _] template, takes what the pointer said, drops '
          'a -7/4 on its away -- the pitch’s middle is 7/4 further back than the '
          'table’s -- puts that in the hole, vacuums the rest, and sends it.')

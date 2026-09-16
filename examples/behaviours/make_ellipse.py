@@ -34,12 +34,12 @@ across_msg = msg('set', 'across', num(0))                    # noqa: F405
 away_msg = msg('set', 'away', num(0))                        # noqa: F405
 step = dict(num(6), op='+')                                  # noqa: F405
 
-work = box(to(ELL, 'my thing'), angle, sin_b, cos_b,         # noqa: F405
+work = box(angle, sin_b, cos_b,                              # noqa: F405
            rx, rz, cx, cz, across_msg, away_msg, step)
-trained = box(to(ELL), angle, sin_b, cos_b,                  # noqa: F405
+trained = box(angle, sin_b, cos_b,                           # noqa: F405
               rx, rz, cx, cz, across_msg, away_msg, step)
 
-cond = box(ANYBIRD, ANYNUM, ANYNUM, ANYNUM, ANYNUM,          # noqa: F405
+cond = box(ANYNUM, ANYNUM, ANYNUM, ANYNUM,                   # noqa: F405
            ANYNUM, ANYNUM, ANYNUM, ANYBOX, ANYBOX, ANYNUM)
 
 
@@ -52,19 +52,19 @@ def axis(trig_hole, radius_hole, centre_hole, msg_hole):
     numbers landing on a number.
     """
     return [
-        copy('given', 1), put('s0'),                         # noqa: F405
+        copy('given', 0), put('s0'),                         # noqa: F405
         copy('given', trig_hole), put('s0'),                 # noqa: F405
         copy('given', radius_hole), put('s0'),               # noqa: F405
         copy('given', centre_hole), put('s0'),               # noqa: F405
         # swap the answer into the message and send it
         vac('given', msg_hole, 2),                           # noqa: F405
         take('s0'), put('given', msg_hole, 2),               # noqa: F405
-        copy('given', msg_hole), put('given', 0),            # noqa: F405
+        copy('given', msg_hole), put('perch'),               # noqa: F405
     ]
 
 
-program = axis(2, 4, 6, 8) + axis(3, 5, 7, 9) + [
-    copy('given', 10), put('given', 1),        # the angle takes its step  # noqa: F405
+program = axis(1, 3, 5, 7) + axis(2, 4, 6, 8) + [
+    copy('given', 9), put('given', 0),         # the angle takes its step  # noqa: F405
 ]
 
 bot = robot('Ellipse', cond, program, trained_on=trained,    # noqa: F405

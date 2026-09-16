@@ -26,19 +26,19 @@ def wandering(lid=WANDER):
     die = {'kind': 'die', 'faces': 3}
     minus2 = num(-2)                                         # noqa: F405
     times30 = num(30, 1, '*')                                # noqa: F405
-    work = box(to(lid, 'my thing'), step, turn, die, minus2, times30)      # noqa: F405
-    trained = box(to(lid), step, turn, die, minus2, times30)               # noqa: F405
-    program = [copy('given', 3), put('given', 2, 2),         # noqa: F405
-               copy('given', 4), put('given', 2, 2),         # noqa: F405
-               copy('given', 5), put('given', 2, 2),         # noqa: F405
-               copy('given', 2), put('given', 0),            # noqa: F405
-               copy('given', 1), put('given', 0)]            # noqa: F405
+    work = box(step, turn, die, minus2, times30)             # noqa: F405
+    trained = box(step, turn, die, minus2, times30)          # noqa: F405
+    program = [copy('given', 2), put('given', 1, 2),         # noqa: F405
+               copy('given', 3), put('given', 1, 2),         # noqa: F405
+               copy('given', 4), put('given', 1, 2),         # noqa: F405
+               copy('given', 1), put('perch'),               # noqa: F405
+               copy('given', 0), put('perch')]               # noqa: F405
     bot = robot('Wanderer',                                  # noqa: F405
-                box(ANYBIRD, ANYBOX, ANYBOX, {'kind': 'wildDie'}, ANYNUM, ANYNUM),   # noqa: F405
+                box(ANYBOX, ANYBOX, {'kind': 'wildDie'}, ANYNUM, ANYNUM),   # noqa: F405
                 program, trained_on=trained,
                 note='Each round, on the turn’s number: a copy of the die lands (1, 2 or '
                      '3), then the -2 (-1, 0 or 1), then the x30 (-30, 0 or 30 degrees). '
-                     'A copy of the turn goes to the bird, then a copy of the forward '
+                     'A copy of the turn goes to the bird on the perch, then a copy of the forward '
                      'step: a yaw, then a step the way it faces.')
     return gadget('wandering', lid, bot, work)
 
@@ -48,14 +48,12 @@ if __name__ == '__main__':
     star = live(pad('*', bg='#1b2233', ink='#ffd23f', font='sans'), STAR)
     g = wandering()
     # laid out in the open, like the other behaviour worlds: the robot and
-    # its work box on the table, the bird pointed at the star
+    # its work box on the table, and a bird to the star on the perch
     bot = g['panel']['active']
     work = g['panel']['stations']['stand']
-    work['holes'][0] = to(STAR, 'my thing')
-    bot['trainedOn']['holes'][0] = to(STAR)
 
     ABOUT = ('WANDERING\n\n'
-             '[my thing, forward, turn,\n'
+             '[forward, turn,\n'
              ' a die of 3, a -2, a x30]\n\n'
              'Each round, on the turn:\n'
              '  the die lands on it: 1..3\n'
@@ -99,4 +97,4 @@ if __name__ == '__main__':
         {'thing': txt(WHY), 'x': -0.75, 'z': 2.15},          # noqa: F405
         {'thing': txt(ABOUT), 'x': -0.05, 'z': 2.15},        # noqa: F405
     ]
-    write_beh('🦋 wandering', bench)
+    write_beh('🦋 wandering', bench, perch=to(STAR, 'to the star'))

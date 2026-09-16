@@ -7585,3 +7585,28 @@ robot joins as a team). The timer teacher ends that way: the number's panel
 out onto a work spot, Ask's box back in its hole (a desk left aside holds
 the panels still), Tell's box on the panel, Ask, Tell, fold -- and the
 number, taken out of the box, climbs on SPACE. The dream rewinds it all.
+
+## The behaviours on the perch
+
+*Added 16 Sep. Ken: "Go ahead and update the examples to use the bird on
+the perch but it should not come from 'the hole-0 bird' but from the panel's
+bird."*
+
+Every gadget's box loses its hole-0 bird to my thing; the holes shift down
+one; the put that sent a message "to my thing" is a put on the perch, and
+the bird standing there is the panel's own -- a bird to whatever the panel
+is the back of, resolved when the letter is given. Birds to OTHER things
+stay in the boxes: the bell, the score, the counter, the desk, the yard.
+Twenty-odd builders: the shelf (both halves), moving, bouncing, following,
+wandering, the ellipse, both turtles, Pong twice, Space Invaders' seven
+cards, the zoo keeper's wiggle, the resort's guests, the puzzles' walk;
+the airplane's pilot and the gauge were never about my thing and stand as
+they were. The open-bench worlds set a bird to the star on the perch by the
+world file.
+
+Two things in the app had assumed the old way. Binding refused a gadget
+whose panel held nothing that named it ("nothing to re-point"): the perch
+speaks for my thing now, so binding sets what the panel is the back of and
+re-points only the channel nests. And the yard's panel is the outer world
+itself, so a thing on the grass is not "inside" it -- the resort's six
+guests had been writing their positions to the yard.

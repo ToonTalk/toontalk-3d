@@ -25,9 +25,6 @@
      "kind": "box",
      "holes": [
       {
-       "kind": "anyBird"
-      },
-      {
        "kind": "anyBox"
       }
      ]
@@ -38,29 +35,21 @@
       "at": {
        "c": "given",
        "path": [
-        1
+        0
        ]
       }
      },
      {
       "type": "put",
       "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
+       "c": "perch",
+       "path": []
       }
      }
     ],
     "trainedOn": {
      "kind": "box",
      "holes": [
-      {
-       "kind": "bird",
-       "nestId": 0,
-       "nestGuid": null,
-       "liveId": "L9501"
-      },
       {
        "kind": "box",
        "holes": [
@@ -85,7 +74,7 @@
      ]
     },
     "team": [],
-    "note": "Each round it copies the step and gives it to the bird: [move | across | 1/60]. That is the whole of \u201cstart moving right\u201d. It does not know what it is moving, only that its bird goes somewhere."
+    "note": "Each round it copies the step and gives it to the bird on the perch: [move | across | 1/60]. That is the whole of \u201cstart moving right\u201d. It does not know what it is moving, only that the bird on the perch goes somewhere."
    },
    "x": -1.45,
    "z": 1.62
@@ -94,13 +83,6 @@
    "thing": {
     "kind": "box",
     "holes": [
-     {
-      "kind": "bird",
-      "nestId": 0,
-      "nestGuid": null,
-      "liveId": "L9501",
-      "label": "my thing"
-     },
      {
       "kind": "box",
       "holes": [
@@ -130,7 +112,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "MOVING\n\nThe Mover is handed\n[a bird to my thing, a step].\n\nEach round it copies the step\nand gives it to the bird:\n\n  [move | across | 1/60]\n\nThat is the whole of \"start\nmoving right\"."
+    "text": "MOVING\n\nThe Mover is handed [a step].\n\nEach round it copies the step\nand gives it to the bird on\nthe PERCH, the pedestal\nbeside its desk:\n\n  [move | across | 1/60]\n\nThat is the whole of \"start\nmoving right\"."
    },
    "x": -1.45,
    "z": 2.15
@@ -146,12 +128,20 @@
   {
    "thing": {
     "kind": "text",
-    "text": "WHAT IS NOT HERE\n\nThe robot does not know what\nit is moving. It knows a bird\ngoes somewhere.\n\nThe star does not know it is\nbeing moved. It answers a\nmessage, as it would answer\none from you.\n\nSo the same two steps move\nanything: point the bird at\nsomething else and the same\nrobot moves that instead.\nTHAT is what a behaviour is."
+    "text": "WHAT IS NOT HERE\n\nThe robot does not know what\nit is moving. It knows the\nbird on the perch goes\nsomewhere.\n\nOut here she is a bird to the\nstar. On a thing's panel the\nperch holds a bird to THAT\nthing -- so the same two\nsteps move anything: put the\nrobot on a panel and it moves\nwhatever the panel belongs to.\nTHAT is what a behaviour is."
    },
    "x": -0.05,
    "z": 2.15
   }
  ],
- "stations": {},
+ "stations": {
+  "perch": {
+   "kind": "bird",
+   "nestId": 0,
+   "nestGuid": null,
+   "liveId": "L9501",
+   "label": "to the star"
+  }
+ },
  "active": null
 }

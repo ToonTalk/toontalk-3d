@@ -31,22 +31,22 @@ REPORT = (9950, 'zoo-report')
 # ONE turn a round, the other way the next: both turns in one round land a
 # split second apart and the animal sits still to the eye. A token pad moves
 # between two holes, and whichever hole holds it says which robot's turn it is.
-#  0 my thing   1 [move | yaw | 25]   2 [move | yaw | -25]   3 tick   4 (tock)
-wiggle_work = box(to(WIGGLE, 'my thing'),                   # noqa: F405
-                  msg('move', 'yaw', num(25)),              # noqa: F405
+#  0 [move | yaw | 25]   1 [move | yaw | -25]   2 tick   3 (tock)
+# (my thing is the bird on the perch: whatever the panel is the back of)
+wiggle_work = box(msg('move', 'yaw', num(25)),              # noqa: F405
                   msg('move', 'yaw', num(-25)),             # noqa: F405
                   txt('tick'), None)                        # noqa: F405
 one_way = robot(                                            # noqa: F405
-    'one way', box(ANYBIRD, ANYBOX, ANYBOX, WILDTEXT, None),   # noqa: F405
-    [copy('given', 1), put('given', 0),                     # noqa: F405
-     take('given', 3), put('given', 4)],                    # the token crosses over  # noqa: F405
-    trained_on=box(to(WIGGLE), msg('move', 'yaw', num(25)), msg('move', 'yaw', num(-25)), txt('tick'), None),   # noqa: F405
-    note='The token is in hole 4: turn 25 degrees this way, and move the token to hole 5.')
+    'one way', box(ANYBOX, ANYBOX, WILDTEXT, None),         # noqa: F405
+    [copy('given', 0), put('perch'),                        # noqa: F405
+     take('given', 2), put('given', 3)],                    # the token crosses over  # noqa: F405
+    trained_on=box(msg('move', 'yaw', num(25)), msg('move', 'yaw', num(-25)), txt('tick'), None),   # noqa: F405
+    note='The token is in hole 3: turn 25 degrees this way (a copy of the turn to the bird on the perch), and move the token to hole 4.')
 other_way = robot(                                          # noqa: F405
-    'the other way', box(ANYBIRD, ANYBOX, ANYBOX, None, WILDTEXT),   # noqa: F405
-    [copy('given', 2), put('given', 0),                     # noqa: F405
-     take('given', 4), put('given', 3)],                    # noqa: F405
-    note='The token is in hole 5: turn 25 degrees back, and move the token to hole 4.')
+    'the other way', box(ANYBOX, ANYBOX, None, WILDTEXT),   # noqa: F405
+    [copy('given', 1), put('perch'),                        # noqa: F405
+     take('given', 3), put('given', 2)],                    # noqa: F405
+    note='The token is in hole 4: turn 25 degrees back, and move the token to hole 3.')
 wiggle = gadget('wiggle', WIGGLE, dict(one_way, team=[other_way]), wiggle_work,   # noqa: F405
                 look=dict(bg='#2f3a55', ink='#dfe8ff', font='sans', h=0.34))
 

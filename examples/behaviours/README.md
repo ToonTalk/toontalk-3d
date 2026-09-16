@@ -5,16 +5,24 @@ reuse behaviour without reading code* — a picture whose front carries
 behaviours you can lift off and put on your own butterfly.
 
 **A behaviour is one pad.** Its face says what it does, its panel carries the
-robots that do it, and those robots speak about *my thing* through a live bird.
-To use one:
+robots that do it, and those robots speak about *my thing* through **the bird
+on the perch** — the pedestal beside every robot's desk, which on a panel holds
+a bird to whatever the panel is the back of. Their box holds no bird to the
+thing at all (since 16 Sep 2026). To use one:
 
-1. drop it on your thing — its bird is re-pointed and **nothing else changes**
+1. drop it on your thing — its panel is that thing's back now, and **nothing
+   inside changes** (a channel nest such as `edge` or `touching` is re-pointed
+   by name)
 2. press **space** on it (**`.`** stops it)
 3. wake **Ruby** and click it to let go again
 
-Unattached, a behaviour's bird points at the behaviour itself. That is not a
+Unattached, a behaviour's panel is the back of the pad itself. That is not a
 demonstration mode: it is what *my thing* means when nobody has said otherwise,
 which is why a gadget set down on the table does its own thing.
+
+The open-bench worlds (*moving*, *bouncing*, *following*, *wandering*) put the
+same robots on the table with a bird to the star standing on the perch: a
+robot trained to write to the perch can be tried out on anything that way.
 
 **Nothing here is built in.** There is no move, no bounce, no follow. There are
 messages a thing already answers —
@@ -45,7 +53,7 @@ The shelf: six gadgets and a star to try them on.
 
 | gadget | how it works |
 |---|---|
-| moving right | two steps: copy the step, give it to my thing |
+| moving right | two steps: copy the step, give it to the bird on the perch |
 | moving left | the same gadget with a negative step — the step is data |
 | bouncing | three robots on the `edge` reading: *left* → flip and move, *right* → flip and move, anything → move |
 | wrapping at the edges | the same shape, but sends `[set \| across \| ∓3/2]` instead of flipping |

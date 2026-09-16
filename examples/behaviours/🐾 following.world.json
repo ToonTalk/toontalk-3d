@@ -25,9 +25,6 @@
      "kind": "box",
      "holes": [
       {
-       "kind": "anyBird"
-      },
-      {
        "kind": "anyBox"
       },
       {
@@ -41,7 +38,7 @@
       "at": {
        "c": "given",
        "path": [
-        2
+        1
        ]
       }
      },
@@ -57,7 +54,7 @@
       "at": {
        "c": "given",
        "path": [
-        1
+        0
        ],
        "nest": true
       }
@@ -81,22 +78,14 @@
      {
       "type": "put",
       "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
+       "c": "perch",
+       "path": []
       }
      }
     ],
     "trainedOn": {
      "kind": "box",
      "holes": [
-      {
-       "kind": "bird",
-       "nestId": 0,
-       "nestGuid": null,
-       "liveId": "L9521"
-      },
       {
        "kind": "nest",
        "id": 9522,
@@ -123,7 +112,7 @@
      ]
     },
     "team": [],
-    "note": "Copies the [set | position | _] template, takes the pointer\u2019s [across | away] off the nest, puts it in the empty hole, and gives the message to the bird. Nothing in it is about pointers: it dozes until a reading arrives."
+    "note": "Copies the [set | position | _] template, takes the pointer\u2019s [across | away] off the nest, puts it in the empty hole, and gives the message to the bird on the perch. Nothing in it is about pointers: it dozes until a reading arrives."
    },
    "x": -1.45,
    "z": 1.62
@@ -132,13 +121,6 @@
    "thing": {
     "kind": "box",
     "holes": [
-     {
-      "kind": "bird",
-      "nestId": 0,
-      "nestGuid": null,
-      "liveId": "L9521",
-      "label": "my thing"
-     },
      {
       "kind": "nest",
       "id": 9522,
@@ -186,12 +168,20 @@
   {
    "thing": {
     "kind": "text",
-    "text": "THE TEST OF A DESIGN\n\nNothing in these four steps\nis about pointers, and\nnothing is about position.\nThe robot copies a box, moves\na thing into a hole, and\ngives it to a bird -- three\ngestures it could already do.\n\nThe device and the message\nwere designed a week apart\nand fit because both are\nDATA and neither is a\nfeature."
+    "text": "THE TEST OF A DESIGN\n\nNothing in these four steps\nis about pointers, and\nnothing is about position.\nThe robot copies a box, moves\na thing into a hole, and\ngives it to the bird on the\nperch -- three gestures it\ncould already do.\n\nThe device and the message\nwere designed a week apart\nand fit because both are\nDATA and neither is a\nfeature."
    },
    "x": -0.05,
    "z": 2.15
   }
  ],
- "stations": {},
+ "stations": {
+  "perch": {
+   "kind": "bird",
+   "nestId": 0,
+   "nestGuid": null,
+   "liveId": "L9521",
+   "label": "to the star"
+  }
+ },
  "active": null
 }

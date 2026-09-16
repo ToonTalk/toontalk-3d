@@ -63,20 +63,20 @@ DESK = lambda: box(nest(DESK_ID, DESK_G, label='the post'))   # noqa: F405,E731
 
 
 # --- one guest's behaviour ---------------------------------------------------
-# 0 my thing | 1 the desk | 2 my nest | 3 my own bird | 4 my number
-# 5 my place | 6 [set | position | _]
+# 0 the desk | 1 my nest | 2 my own bird | 3 my number
+# 4 my place | 5 [set | position | _]
+# (my thing -- the guest -- is the bird on the perch: the panel's own)
 def guest_gadget(k, number, lid, gid):
     mail = (9700 + k, 'resort-guest-%d' % k)
     mine = nest(*mail, label='my post')                    # noqa: F405
     mine['aliases'] = [BELL]                               # ...and the bell reaches it too
-    work = box(live_bird(lid, 'my thing'),                 # noqa: F405
-               bird(DESK_ID, DESK_G, label='the desk'),    # noqa: F405
+    work = box(bird(DESK_ID, DESK_G, label='the desk'),    # noqa: F405
                mine,
                bird(*mail, label='my own bird'),           # noqa: F405
                num(number),                                # noqa: F405
                None,                                       # my place: empty until I am housed
                msg('set', 'position'))
-    any_ = [ANYBIRD, ANYBIRD, None, ANYBIRD, None, None, ANYBOX]   # noqa: F405
+    any_ = [ANYBIRD, None, ANYBIRD, None, None, ANYBOX]   # noqa: F405
 
     def cond(**at):
         c = list(any_)
@@ -85,33 +85,33 @@ def guest_gadget(k, number, lid, gid):
         return box(*c)                                     # noqa: F405
 
     ask = robot(                                           # noqa: F405
-        'Ask for a place', cond(h4=ANYNUM),                # noqa: F405
+        'Ask for a place', cond(h3=ANYNUM),                # noqa: F405
         [newbox, holes(2), put('s0'),                      # noqa: F405
-         take('given', 4), put('s0', 0),                   # my number -- taken, so I ask once  # noqa: F405
-         copy('given', 3), put('s0', 1),                   # ...and a bird of my own to answer  # noqa: F405
-         take('s0'), put('given', 1)],                     # off to the desk  # noqa: F405
+         take('given', 3), put('s0', 0),                   # my number -- taken, so I ask once  # noqa: F405
+         copy('given', 2), put('s0', 1),                   # ...and a bird of my own to answer  # noqa: F405
+         take('s0'), put('given', 0)],                     # off to the desk  # noqa: F405
         trained_on=work,
         note='Leads. My number is still in the box, so I have nowhere to live: sends [my number, my own bird] to the desk and takes my number out as it goes, so I never ask twice.')
 
     stand = robot(                                         # noqa: F405
-        'Stand at my address', cond(h2=ANYNUM),            # noqa: F405
-        [copy('given', 6), put('s0'),                      # the [set | position | _] message  # noqa: F405
+        'Stand at my address', cond(h1=ANYNUM),            # noqa: F405
+        [copy('given', 5), put('s0'),                      # the [set | position | _] message  # noqa: F405
          newbox, holes(2), put('s0', 2),                   # an empty [across | away]  # noqa: F405
-         takeTop('given', 2), put('s0', 2, 0),             # the address they gave me  # noqa: F405
-         copy('s0', 2, 0), put('given', 5),                # ...which is my place from now on  # noqa: F405
+         takeTop('given', 1), put('s0', 2, 0),             # the address they gave me  # noqa: F405
+         copy('s0', 2, 0), put('given', 4),                # ...which is my place from now on  # noqa: F405
          ] + dropf(STEP_N, STEP_D, '*', 's0', 2, 0)        # x = n * 0.6 ...
         + dropf(OFF_N, OFF_D, '-', 's0', 2, 0)             # ... - 4.5
         + [newnum, setv(ROW_N, '+', ROW_D), put('s0', 2, 1),   # the row  # noqa: F405
-           take('s0'), put('given', 0)],                   # and I walk there  # noqa: F405
+           take('s0'), put('perch')],                      # and I walk there: to the bird on the perch  # noqa: F405
         note='A number has landed on my nest: that is my address. Works out where that cottage stands along the row, remembers it as my place, and walks there.')
 
     move = robot(                                          # noqa: F405
-        'Move when the bell rings', cond(h2=WILDTEXT, h5=ANYNUM),   # noqa: F405
+        'Move when the bell rings', cond(h1=WILDTEXT, h4=ANYNUM),   # noqa: F405
         [newbox, holes(3), put('s0'),                      # noqa: F405
-         takeTop('given', 2), put('s0', 0),                # the ding itself says "a move, please"  # noqa: F405
-         take('given', 5), put('s0', 1),                   # where I live now -- taken  # noqa: F405
-         copy('given', 3), put('s0', 2),                   # ...and my own bird  # noqa: F405
-         take('s0'), put('given', 1)],                     # off to the desk  # noqa: F405
+         takeTop('given', 1), put('s0', 0),                # the ding itself says "a move, please"  # noqa: F405
+         take('given', 4), put('s0', 1),                   # where I live now -- taken  # noqa: F405
+         copy('given', 2), put('s0', 2),                   # ...and my own bird  # noqa: F405
+         take('s0'), put('given', 0)],                     # off to the desk  # noqa: F405
         note='A pad has landed on my nest -- the bell. Sends [the ding, where I live, my own bird] to the desk and takes my place out of the box, so that the answer puts a new one in.')
 
     return {'kind': 'text', 'text': 'guest %d' % number, 'gadget': True,

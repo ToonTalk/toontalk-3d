@@ -58,6 +58,8 @@
   }
   footer { text-align: center; color: var(--soft); padding: 30px 0 50px; font-size: 14px; }
   a { color: var(--red); }
+dl.words dt { font-weight: bold; margin-top: .6em; }
+dl.words dd { margin: 0 0 0 1.2em; }
 </style>
 </head>
 <body>
@@ -87,6 +89,7 @@
   <a href="#rooms">Rooms</a>
   <a href="making-of.html">Making of</a>
   <a href="#marty">Marty</a>
+  <a href="#words">Words</a>
   <a href="#puzzles">Puzzles</a>
   <a href="#notebook">Notebook &amp; files</a>
   <a href="#examples">Examples</a>
@@ -687,9 +690,10 @@ rooms work as well, all the way down.</p>
 
 <h3>Giving a behaviour to something else</h3>
 <p>A behaviour works on <b>one thing</b>. Drop it on another and it moves
-there: its robots stop speaking about the old thing and speak about the new
-one, and the card says how many references were re-pointed. Wake <b>Ruby</b>
-and click it to let it go again, and it works on itself.</p>
+there: its panel is that thing's back now, so the bird on its perch goes to
+the new thing, and any channel nest inside (edge, touch, speed) is re-pointed
+&mdash; the card says how many. Wake <b>Ruby</b> and click it to let it go
+again, and it works on itself.</p>
 <p>A <b>copy</b> of a live thing is its own thing with its own name &mdash; two
 things answering to one name would make the mail ambiguous &mdash; so a
 behaviour bound to the first goes on working on the first. To drive the copy,
@@ -842,12 +846,15 @@ and sends it</td></tr>
 
 <h2 id="behaviours">Behaviours</h2>
 <p>A <b>behaviour</b> is a pad whose panel carries robots, and those robots
-speak about <em>my thing</em> through a live bird. Load
-<em>behaviours/📚 library</em> from the examples for a shelf of them.</p>
+speak about <em>my thing</em> through the bird on the <a href="#perch">perch</a>
+&mdash; the pedestal beside their desk, which on a panel holds a bird to
+whatever the panel is the back of. The box they work on holds no bird to the
+thing at all. Load <em>behaviours/📚 library</em> from the examples for a
+shelf of them.</p>
 <p>To use one: <b>drop it on your thing</b>, then press <kbd>Space</kbd> on it.
 <kbd>.</kbd> stops it, and waking <b>Ruby</b> and clicking it lets go again.
-Binding is not editing — nothing inside the behaviour changes except which
-thing its bird is addressed to.</p>
+Binding is not editing — nothing inside the behaviour changes, only which
+thing its panel is the back of.</p>
 <p><b>SPACE and “.” act on whatever the pointer is over</b>, so the keyboard
 always belongs to the workshop: a button you have just clicked hands it back at
 once, and only a field you are genuinely typing in keeps it.</p>
@@ -901,7 +908,7 @@ aboard as part of the scene, the way a ball is added to a pitch. To give a
 <em>pad</em> its behaviour, drop it on the pad’s <b>edge</b>; anything that is
 not a pad binds wherever you drop it.</p>
 <p>Set one down on its own and switch it on and it does its thing <em>to
-itself</em>. That is not a demonstration mode: <em>my thing</em> means itself
+itself</em>. That is not a demonstration mode: a pad's panel is its own back
 until somebody has said otherwise, so the shelf is legible by watching.</p>
 <p>Nothing in a behaviour is built in. Open its panel and you will find
 ordinary robots sending the messages above. <em>Bouncing</em> is three robots
@@ -1622,6 +1629,110 @@ from. Give it
 things are set down on the grass and taken up. The yard&rsquo;s name and its
 panel are saved with the world; SPACE on the panel sets its robots going and
 &ldquo;.&rdquo; rests them.</p>
+
+<h2 id="words">The words, in one place</h2>
+<p>Every word the workshop uses for a place or a thing, with where it is
+explained. Ken asked for this after finding <em>perch</em> used once without
+an explanation and <em>station</em> nowhere at all.</p>
+<dl class="words">
+<dt>the table</dt><dd>The big surface in front of you, where things stand
+when they are yours. Also called the <em>bench</em>. Outside, the ground takes
+its place. <a href="#basics">Basics</a></dd>
+<dt>the desk, its stand</dt><dd>The small desk in front of the robot: what
+the robot was <em>given</em> sits on it, and every step it learns speaks of
+that thing by its holes. A robot working aside &mdash; a pupil, or a second
+robot &mdash; has a desk of its own. <a href="#robots">Robots</a></dd>
+<dt>a work spot</dt><dd>One of the little desks beside the robot's own: its
+scratch space, numbered <em>spot 1, spot 2&hellip;</em>, cleared onto the
+table when it finishes. More grow as they are needed. <a href="#robots">Robots</a></dd>
+<dt>a station</dt><dd>The name in this manual for any fixed place a robot
+can be shown to use: its desk, a work spot, the copier's platform and tray,
+the perch, the notebook, the stacks. A step never names a station by
+position, only by what it is for ("put it on spot 2", "set it on the
+perch").</dd>
+<dt>the perch</dt><dd>The pedestal to the right of the robot's desk. On a
+thing's panel it holds a bird to <em>my thing</em> &mdash; whatever the panel
+is the back of; on the table it is empty, and any bird of your own set there
+takes a robot's letters. <a href="#perch">The perch</a></dd>
+<dt>my thing</dt><dd>What a behaviour works on: the thing whose panel its
+robots stand on, followed up through nesting and binding to the outermost.
+The bird on the perch goes to it. <a href="#perch">The perch</a></dd>
+<dt>a stack</dt><dd>The piles behind the table: numbers, boxes, pads, nests,
+scales, dice, sounds, houses and little robots, each giving a fresh one when
+clicked. <a href="#basics">Basics</a></dd>
+<dt>the copier, Mimi</dt><dd>The machine to the right of the table, and the
+helper who works it: a thing set on its platform comes out copied in the tray.
+<a href="#copier">Mimi</a></dd>
+<dt>Dusty, Ruby, Marty</dt><dd>The vacuum that takes things away (and gives
+them back), the loosener of a robot's thought, and the Martian who explains
+and builds. <a href="#tools">Dusty &amp; Ruby</a>, <a href="#marty">Marty</a></dd>
+<dt>a thing</dt><dd>Anything you can pick up: a number, a pad, a box, a nest,
+a bird, a scale, a die, a sound, a picture, a model, a house, a robot.</dd>
+<dt>a box, a hole</dt><dd>A box has holes, numbered from 1; a robot's steps
+name them ("hole 3 of what it was given"). <a href="#boxes">Boxes</a></dd>
+<dt>a pad</dt><dd>A card with words on it. A pad can carry a picture, ride
+on another pad, and have a panel. <a href="#pads">Pads</a></dd>
+<dt>a badge</dt><dd>The operation a number wears (+, &minus;, &times;, &divide;,
+set, sin&hellip;): dropped on another number, it does that to it.
+<a href="#numbers">Numbers</a></dd>
+<dt>a nest, a bird, a letter</dt><dd>A bird flies whatever she is given to
+her nest, where it lands on a pile, oldest on top. A <em>letter</em> or
+<em>message</em> is a box given to a bird. <a href="#birds">Birds &amp; nests</a></dd>
+<dt>a bird to a thing, a live thing</dt><dd>Some birds go to a thing rather
+than a nest &mdash; a number, a picture, the computer &mdash; and the thing
+answers the letter. A thing with a name of its own that birds can find is
+<em>live</em>. <a href="#where">Places</a></dd>
+<dt>a reading, a channel</dt><dd>A nest a thing keeps for what it senses
+(its edge, what it touches, its speed): a <em>reading</em> holds one thing at
+all times, an <em>event</em> nest is empty until something happens.
+<a href="#behaviours">Behaviours</a></dd>
+<dt>a robot, a little robot</dt><dd>A robot at its desk is full size; on the
+table, in a hole or in a claw it is little. <a href="#robots">Robots</a></dd>
+<dt>a lesson, the thought bubble, a daydream</dt><dd>Training: give an
+untrained robot a thing and everything you do is learned as steps; the world
+it works on is a daydream that rewinds when you leave the bubble.
+<a href="#robots">Robots</a></dd>
+<dt>a thought, the condition</dt><dd>What a robot must be given before it
+runs: exact at first, loosened by Ruby. <a href="#robots">Robots</a></dd>
+<dt>a step</dt><dd>One thing a robot learned to do: take, put, copy, a fresh
+number, a badge, a vacuuming, a teaching&hellip; The Trained actions card
+lists them.</dd>
+<dt>a round, a run</dt><dd>A run is the robot doing its steps over and over;
+each pass is a round, and the Rounds limit caps them.</dd>
+<dt>a team</dt><dd>Robots dropped on a robot: given a thing, the first whose
+thought fits takes the round. <a href="#robots">Robots</a></dd>
+<dt>a pupil, a teacher</dt><dd>A robot taught by a robot, at a desk of its
+own; the teacher keeps the pupil's lesson as <em>taught</em> steps, and can
+pick the pupil up again afterwards. <a href="#robots">Robots</a></dd>
+<dt>a token pad</dt><dd>A pad that two robots move between two holes to take
+turns, since no thought can say "an empty nest". <a href="#devices">Devices</a></dd>
+<dt>a panel, the back of a thing</dt><dd>Every thing has a back: press the
+gear (&#9881;) over it and its panel comes out as a tray, a little world of its
+own. Drop robots and things on it, enter it by its door, fold it away by its
+knob. <a href="#where">Places</a></dd>
+<dt>a tray, a card</dt><dd>A panel on the table is a <em>tray</em>; a pad
+standing on another thing's panel is a <em>card</em> of that thing.
+<a href="#where">Places</a></dd>
+<dt>a behaviour, a gadget</dt><dd>A pad whose panel carries robots. Drop it
+on a thing and that thing is what the robots work on; SPACE starts them.
+<a href="#behaviours">Behaviours</a></dd>
+<dt>binding</dt><dd>Making a behaviour's panel the back of another thing, by
+dropping it there. Nothing inside changes. <a href="#behaviours">Behaviours</a></dd>
+<dt>a house, a room</dt><dd>A whole workshop in a small house: a robot inside
+works on its own, and birds deliver through the roof. <a href="#rooms">Rooms</a></dd>
+<dt>the yard, the ground</dt><dd>The open ground out the back door, where
+things stand on the grass and the yard itself is a thing with a panel.
+<a href="#yard">The yard</a></dd>
+<dt>the computer</dt><dd>The workshop's own machine, a thing with a fixed
+name: its bird answers the time and the date. <a href="#devices">Devices</a></dd>
+<dt>a device</dt><dd>The keyboard and the pointer, each a nest that the
+workshop keeps fed. <a href="#devices">Devices</a></dd>
+<dt>the notebook</dt><dd>Your own book: file a thing on a page, look one up
+by name, and it goes with you. <a href="#notebook">Notebook &amp; files</a></dd>
+<dt>Start, Stop, Speed, Rounds</dt><dd>The buttons: run what the robot
+learned, stop it after the round it is in, how fast, and how many rounds.
+Inside a panel or a house they apply to that place.</dd>
+</dl>
 
 <h2 id="glossary">What a programmer would call it</h2>
 <p>The workshop has one set of words for everyone. For older learners and

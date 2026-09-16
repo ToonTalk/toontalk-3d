@@ -1488,11 +1488,11 @@ puzzle(
 
 # --- p38: the walk, stopped at the near edge -----------------------------------
 def walk_gadget(lid, target):
-    work = box(live_bird(target, 'my thing'), box(txt('move'), txt('away'), num(1, 10)))   # noqa: F405
-    step = robot('Step', box(ANYBIRD, ANYBOX),                              # noqa: F405
-                 [copy('given', 1), put('given', 0)],                         # noqa: F405
+    work = box(box(txt('move'), txt('away'), num(1, 10)))                  # noqa: F405
+    step = robot('Step', box(ANYBOX),                                       # noqa: F405
+                 [copy('given', 0), put('perch')],                            # noqa: F405
                  trained_on=work,
-                 note='Every round: a copy of [move | away | 1/10] to my thing -- a tenth of a step towards the near edge, where it stops because the table ends.')
+                 note='Every round: a copy of [move | away | 1/10] to the bird on the perch -- my thing, whatever the panel is the back of: a tenth of a step towards the near edge, where it stops because the table ends.')
     g = {'kind': 'text', 'text': 'walk', 'gadget': True, 'lid': lid, 'evt': 'evt-' + lid,
          'boundTo': target,
          'note': 'A behaviour: drop it on the lion and press SPACE, and the lion walks the way it looks. "." stops it where it is.',

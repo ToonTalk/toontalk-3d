@@ -25,9 +25,6 @@
      "kind": "box",
      "holes": [
       {
-       "kind": "anyBird"
-      },
-      {
        "kind": "anyBox"
       },
       {
@@ -53,7 +50,7 @@
       "at": {
        "c": "given",
        "path": [
-        1,
+        0,
         2
        ]
       }
@@ -63,29 +60,21 @@
       "at": {
        "c": "given",
        "path": [
-        1
+        0
        ]
       }
      },
      {
       "type": "put",
       "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
+       "c": "perch",
+       "path": []
       }
      }
     ],
     "trainedOn": {
      "kind": "box",
      "holes": [
-      {
-       "kind": "bird",
-       "nestId": 0,
-       "nestGuid": null,
-       "liveId": "L9511"
-      },
       {
        "kind": "box",
        "holes": [
@@ -130,9 +119,6 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "anyBird"
-        },
-        {
          "kind": "anyBox"
         },
         {
@@ -158,7 +144,7 @@
         "at": {
          "c": "given",
          "path": [
-          1,
+          0,
           2
          ]
         }
@@ -168,29 +154,21 @@
         "at": {
          "c": "given",
          "path": [
-          1
+          0
          ]
         }
        },
        {
         "type": "put",
         "at": {
-         "c": "given",
-         "path": [
-          0
-         ]
+         "c": "perch",
+         "path": []
         }
        }
       ],
       "trainedOn": {
        "kind": "box",
        "holes": [
-        {
-         "kind": "bird",
-         "nestId": 0,
-         "nestGuid": null,
-         "liveId": "L9511"
-        },
         {
          "kind": "box",
          "holes": [
@@ -237,9 +215,6 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "anyBird"
-        },
-        {
          "kind": "anyBox"
         },
         {
@@ -253,29 +228,21 @@
         "at": {
          "c": "given",
          "path": [
-          1
+          0
          ]
         }
        },
        {
         "type": "put",
         "at": {
-         "c": "given",
-         "path": [
-          0
-         ]
+         "c": "perch",
+         "path": []
         }
        }
       ],
       "trainedOn": {
        "kind": "box",
        "holes": [
-        {
-         "kind": "bird",
-         "nestId": 0,
-         "nestGuid": null,
-         "liveId": "L9511"
-        },
         {
          "kind": "box",
          "holes": [
@@ -326,13 +293,6 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "bird",
-      "nestId": 0,
-      "nestGuid": null,
-      "liveId": "L9511",
-      "label": "my thing"
-     },
-     {
       "kind": "box",
       "holes": [
        {
@@ -374,7 +334,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "BOUNCING\n\n[my thing, a step, the edge]\n\nThe edge is a READING: one\npad saying which edge the\nstar is against, or \"none\".\n\nThree robots, in order,\ndiffering only in the word\nthey expect:\n\n  left    flip, then move\n  right   flip, then move\n  any     move"
+    "text": "BOUNCING\n\n[a step, the edge]\n\nThe edge is a READING: one\npad saying which edge the\nstar is against, or \"none\".\n\nThree robots, in order,\ndiffering only in the word\nthey expect:\n\n  left    flip, then move\n  right   flip, then move\n  any     move"
    },
    "x": -1.45,
    "z": 2.15
@@ -390,12 +350,20 @@
   {
    "thing": {
     "kind": "text",
-    "text": "WHY A READING\n\nAn event would leave the nest\nempty most of the time -- and\na team member facing a bare\nnest dozes, which stops the\nwhole team, including the one\ndoing the moving.\n\nA reading is never empty, so\nevery member can be decided\nevery round.\n\nFlipping the step is a x-1\ndropped on a number. Nothing\nhere is about bouncing."
+    "text": "WHY A READING\n\nAn event would leave the nest\nempty most of the time -- and\na team member facing a bare\nnest dozes, which stops the\nwhole team, including the one\ndoing the moving.\n\nA reading is never empty, so\nevery member can be decided\nevery round.\n\nFlipping the step is a x-1\ndropped on a number. Nothing\nhere is about bouncing.\n\nThe step goes to the bird on\nthe perch: out here, a bird\nto the star."
    },
    "x": -0.05,
    "z": 2.15
   }
  ],
- "stations": {},
+ "stations": {
+  "perch": {
+   "kind": "bird",
+   "nestId": 0,
+   "nestGuid": null,
+   "liveId": "L9511",
+   "label": "to the star"
+  }
+ },
  "active": null
 }

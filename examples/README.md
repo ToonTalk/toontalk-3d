@@ -58,8 +58,9 @@ numbers, and a team of robots that recognise pictures by looking at them.
 
 **[`behaviours/`](behaviours/)** is the anima-gadgets: behaviours you can lift
 off a shelf and drop on your own thing. Each is one pad whose panel carries the
-robots; binding one re-points a single bird and changes nothing else, and an
-unbound one demonstrates itself because "my thing" means itself until somebody
+robots, which write to the bird on the perch (the panel's own); binding one
+makes the panel your thing's back and changes nothing inside, and an unbound
+one demonstrates itself because a pad's panel is its own back until somebody
 says otherwise. Pong, which grew out of it, lives in `games/` now.
 
 **[`devices/`](devices/)** is the workshop's own senses: nests that receive

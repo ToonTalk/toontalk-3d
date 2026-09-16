@@ -37,12 +37,12 @@ def orders_nest(top=None):
 
 
 # the work box, hole by hole:
-#  0 my thing   1 heading   2 the letterbox   3 sin badge   4 cos badge
-#  5 [move|position|[across|away]] -- ONE message, so a step is one straight
+#  0 heading   1 the letterbox   2 sin badge   3 cos badge
+#  4 [move|position|[across|away]] -- ONE message, so a step is one straight
 #                                     line and not an across-then-away
 #                                     staircase
-#  6 [set|pen|down]         7 [set|pen|up]        8 step size
-#  9 [set|facing|_]  -- the turn made visible: heading 0 points at the far
+#  5 [set|pen|down]         6 [set|pen|up]        7 step size
+#  8 [set|facing|_]  -- the turn made visible: heading 0 points at the far
 #                      edge of the table (or of the pad it is riding on)
 # Every hole is LABELLED on the box, so opening the panel tells you what each
 # one is for without having to work it out from the robots.
@@ -58,24 +58,24 @@ pen_up = msg('set', 'pen', 'up')                             # noqa: F405
 # sight, so the scale is a thing you can pick up and change.
 step_size = num(1, 100)                                      # noqa: F405
 facing_msg = msg('set', 'facing', num(0))                    # noqa: F405
-HOLE_NAMES = ['my thing', 'heading', 'letterbox', 'sine', 'cosine',
+HOLE_NAMES = ['heading', 'letterbox', 'sine', 'cosine',
               'the step', 'pen down', 'pen up', 'step size', 'facing']
 
-work = dict(box(to(TURTLE, 'my thing'), heading, orders_nest(),   # noqa: F405
+work = dict(box(heading, orders_nest(),                      # noqa: F405
                 sin_b, cos_b, step_msg,
                 pen_down, pen_up, step_size, facing_msg),
             holeLabels=HOLE_NAMES)
 
 
 def trained(top):
-    return dict(box(to(TURTLE), heading, orders_nest(top),   # noqa: F405
+    return dict(box(heading, orders_nest(top),               # noqa: F405
                     sin_b, cos_b, step_msg,
                     pen_down, pen_up, step_size, facing_msg),
                 holeLabels=HOLE_NAMES)
 
 
 def cond(word):
-    return box(ANYBIRD, ANYNUM,                              # noqa: F405
+    return box(ANYNUM,                                       # noqa: F405
                box(txt(word), ANYNUM),                       # noqa: F405
                ANYNUM, ANYNUM, ANYBOX,                       # noqa: F405
                ANYBOX, ANYBOX, ANYNUM, ANYBOX)               # noqa: F405
@@ -83,7 +83,7 @@ def cond(word):
 
 def word_cond(word):
     """An order that is just a WORD on the letterbox: pendown, penup."""
-    return box(ANYBIRD, ANYNUM, txt(word),                   # noqa: F405
+    return box(ANYNUM, txt(word),                            # noqa: F405
                ANYNUM, ANYNUM, ANYBOX,                       # noqa: F405
                ANYBOX, ANYBOX, ANYNUM, ANYBOX)               # noqa: F405
 
@@ -96,20 +96,20 @@ def leg(trig_hole, axis):
     are filled in first, so the thing takes one diagonal step instead of an
     across one and then an away one, which is a staircase and not a line."""
     return [
-        copy('given', 1), put('s0'),                         # noqa: F405
+        copy('given', 0), put('s0'),                         # noqa: F405
         copy('given', trig_hole), put('s0'),                 # noqa: F405
         copy('s1', 1), setop('*'), put('s0'),                # noqa: F405
-        copy('given', 8), setop('*'), put('s0'),             # ...times the step size  # noqa: F405
-        vac('given', 5, 2, axis),                            # noqa: F405
-        take('s0'), put('given', 5, 2, axis),                # noqa: F405
+        copy('given', 7), setop('*'), put('s0'),             # ...times the step size  # noqa: F405
+        vac('given', 4, 2, axis),                            # noqa: F405
+        take('s0'), put('given', 4, 2, axis),                # noqa: F405
     ]
 
 
 forward_bot = robot(                                          # noqa: F405
     'forward', cond('forward'),
-    [takeTop('given', 2), put('s1')]                          # noqa: F405
-    + leg(3, 0) + leg(4, 1)
-    + [copy('given', 5), put('given', 0),                     # ONE move  # noqa: F405
+    [takeTop('given', 1), put('s1')]                          # noqa: F405
+    + leg(2, 0) + leg(3, 1)
+    + [copy('given', 4), put('perch'),                        # ONE move  # noqa: F405
        vac('s1')],                                            # noqa: F405
     trained_on=trained(box(txt('forward'), num(30))),      # noqa: F405
     note='Leads the team. The order on the letterbox is [forward | n]: works out '
@@ -119,13 +119,13 @@ forward_bot = robot(                                          # noqa: F405
 
 right_bot = robot(                                            # noqa: F405
     'right', cond('right'),
-    [takeTop('given', 2), put('s1'),                           # the order   # noqa: F405
-     copy('s1', 1), setop('+'), put('given', 1),               # heading += n  # noqa: F405
+    [takeTop('given', 1), put('s1'),                           # the order   # noqa: F405
+     copy('s1', 1), setop('+'), put('given', 0),               # heading += n  # noqa: F405
      vac('s1'),                                                # noqa: F405
      # ...and TURN THE THING, so it points where it will walk
-     vac('given', 9, 2),                                       # noqa: F405
-     copy('given', 1), put('given', 9, 2),                     # noqa: F405
-     copy('given', 9), put('given', 0)],                       # noqa: F405
+     vac('given', 8, 2),                                       # noqa: F405
+     copy('given', 0), put('given', 8, 2),                     # noqa: F405
+     copy('given', 8), put('perch')],                          # noqa: F405
     trained_on=trained(box(txt('right'), num(90))),           # noqa: F405
     note='The order is [right | a]: adds a to the heading, then sends '
          '[set | facing | heading] so the thing turns to point where it will walk.')
@@ -133,15 +133,15 @@ right_bot = robot(                                            # noqa: F405
 def pen_bot(word, hole):
     """Eat the word off the letterbox and send the pen message."""
     return robot(word, word_cond(word),                       # noqa: F405
-                 [takeTop('given', 2), put('s1'), vac('s1'),  # noqa: F405
-                  copy('given', hole), put('given', 0)],      # noqa: F405
+                 [takeTop('given', 1), put('s1'), vac('s1'),  # noqa: F405
+                  copy('given', hole), put('perch')],         # noqa: F405
                  trained_on=trained(txt(word)),               # noqa: F405
                  note='The word on the letterbox is “' + word + '”: eats it and sends '
                       '[set | pen | ' + ('down' if word == 'pendown' else 'up') + '].')
 
 
 team = dict(forward_bot)
-team['team'] = [right_bot, pen_bot('pendown', 6), pen_bot('penup', 7)]
+team['team'] = [right_bot, pen_bot('pendown', 5), pen_bot('penup', 6)]
 
 turtle = gadget('a turtle', TURTLE, team, work,               # noqa: F405
                 look=dict(bg='#14352a', ink='#8ff0b5', font='sans', h=0.42))

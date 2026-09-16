@@ -48,13 +48,6 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "bird",
-         "nestId": 0,
-         "nestGuid": null,
-         "liveId": "G914",
-         "label": "my thing"
-        },
-        {
          "kind": "number",
          "value": {
           "n": "0",
@@ -185,7 +178,6 @@
         }
        ],
        "holeLabels": [
-        "my thing",
         "heading",
         "letterbox",
         "sine",
@@ -204,9 +196,6 @@
       "condition": {
        "kind": "box",
        "holes": [
-        {
-         "kind": "anyBird"
-        },
         {
          "kind": "wildNumber"
         },
@@ -251,7 +240,7 @@
         "at": {
          "c": "given",
          "path": [
-          2
+          1
          ],
          "nest": true
         }
@@ -268,7 +257,108 @@
         "at": {
          "c": "given",
          "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "s1",
+         "path": [
           1
+         ]
+        }
+       },
+       {
+        "type": "setOp",
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          7
+         ]
+        }
+       },
+       {
+        "type": "setOp",
+        "op": "*"
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          4,
+          2,
+          0
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          4,
+          2,
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          0
          ]
         }
        },
@@ -320,7 +410,7 @@
         "at": {
          "c": "given",
          "path": [
-          8
+          7
          ]
         }
        },
@@ -340,9 +430,9 @@
         "at": {
          "c": "given",
          "path": [
-          5,
+          4,
           2,
-          0
+          1
          ]
         }
        },
@@ -358,26 +448,10 @@
         "at": {
          "c": "given",
          "path": [
-          5,
+          4,
           2,
-          0
-         ]
-        }
-       },
-       {
-        "type": "copy",
-        "at": {
-         "c": "given",
-         "path": [
           1
          ]
-        }
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "s0",
-         "path": []
         }
        },
        {
@@ -392,95 +466,8 @@
        {
         "type": "put",
         "at": {
-         "c": "s0",
+         "c": "perch",
          "path": []
-        }
-       },
-       {
-        "type": "copy",
-        "at": {
-         "c": "s1",
-         "path": [
-          1
-         ]
-        }
-       },
-       {
-        "type": "setOp",
-        "op": "*"
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "s0",
-         "path": []
-        }
-       },
-       {
-        "type": "copy",
-        "at": {
-         "c": "given",
-         "path": [
-          8
-         ]
-        }
-       },
-       {
-        "type": "setOp",
-        "op": "*"
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "s0",
-         "path": []
-        }
-       },
-       {
-        "type": "vacuum",
-        "at": {
-         "c": "given",
-         "path": [
-          5,
-          2,
-          1
-         ]
-        }
-       },
-       {
-        "type": "take",
-        "at": {
-         "c": "s0",
-         "path": []
-        }
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "given",
-         "path": [
-          5,
-          2,
-          1
-         ]
-        }
-       },
-       {
-        "type": "copy",
-        "at": {
-         "c": "given",
-         "path": [
-          5
-         ]
-        }
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "given",
-         "path": [
-          0
-         ]
         }
        },
        {
@@ -494,12 +481,6 @@
       "trainedOn": {
        "kind": "box",
        "holes": [
-        {
-         "kind": "bird",
-         "nestId": 0,
-         "nestGuid": null,
-         "liveId": "G914"
-        },
         {
          "kind": "number",
          "value": {
@@ -649,7 +630,6 @@
         }
        ],
        "holeLabels": [
-        "my thing",
         "heading",
         "letterbox",
         "sine",
@@ -668,9 +648,6 @@
         "condition": {
          "kind": "box",
          "holes": [
-          {
-           "kind": "anyBird"
-          },
           {
            "kind": "wildNumber"
           },
@@ -715,7 +692,7 @@
           "at": {
            "c": "given",
            "path": [
-            2
+            1
            ],
            "nest": true
           }
@@ -745,7 +722,7 @@
           "at": {
            "c": "given",
            "path": [
-            1
+            0
            ]
           }
          },
@@ -761,58 +738,50 @@
           "at": {
            "c": "given",
            "path": [
-            9,
+            8,
             2
            ]
           }
          },
          {
           "type": "copy",
-          "at": {
-           "c": "given",
-           "path": [
-            1
-           ]
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "given",
-           "path": [
-            9,
-            2
-           ]
-          }
-         },
-         {
-          "type": "copy",
-          "at": {
-           "c": "given",
-           "path": [
-            9
-           ]
-          }
-         },
-         {
-          "type": "put",
           "at": {
            "c": "given",
            "path": [
             0
            ]
           }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            8,
+            2
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            8
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "perch",
+           "path": []
+          }
          }
         ],
         "trainedOn": {
          "kind": "box",
          "holes": [
-          {
-           "kind": "bird",
-           "nestId": 0,
-           "nestGuid": null,
-           "liveId": "G914"
-          },
           {
            "kind": "number",
            "value": {
@@ -962,7 +931,6 @@
           }
          ],
          "holeLabels": [
-          "my thing",
           "heading",
           "letterbox",
           "sine",
@@ -983,9 +951,6 @@
         "condition": {
          "kind": "box",
          "holes": [
-          {
-           "kind": "anyBird"
-          },
           {
            "kind": "wildNumber"
           },
@@ -1022,7 +987,7 @@
           "at": {
            "c": "given",
            "path": [
-            2
+            1
            ],
            "nest": true
           }
@@ -1046,29 +1011,21 @@
           "at": {
            "c": "given",
            "path": [
-            6
+            5
            ]
           }
          },
          {
           "type": "put",
           "at": {
-           "c": "given",
-           "path": [
-            0
-           ]
+           "c": "perch",
+           "path": []
           }
          }
         ],
         "trainedOn": {
          "kind": "box",
          "holes": [
-          {
-           "kind": "bird",
-           "nestId": 0,
-           "nestGuid": null,
-           "liveId": "G914"
-          },
           {
            "kind": "number",
            "value": {
@@ -1205,7 +1162,6 @@
           }
          ],
          "holeLabels": [
-          "my thing",
           "heading",
           "letterbox",
           "sine",
@@ -1226,9 +1182,6 @@
         "condition": {
          "kind": "box",
          "holes": [
-          {
-           "kind": "anyBird"
-          },
           {
            "kind": "wildNumber"
           },
@@ -1265,7 +1218,7 @@
           "at": {
            "c": "given",
            "path": [
-            2
+            1
            ],
            "nest": true
           }
@@ -1289,29 +1242,21 @@
           "at": {
            "c": "given",
            "path": [
-            7
+            6
            ]
           }
          },
          {
           "type": "put",
           "at": {
-           "c": "given",
-           "path": [
-            0
-           ]
+           "c": "perch",
+           "path": []
           }
          }
         ],
         "trainedOn": {
          "kind": "box",
          "holes": [
-          {
-           "kind": "bird",
-           "nestId": 0,
-           "nestGuid": null,
-           "liveId": "G914"
-          },
           {
            "kind": "number",
            "value": {
@@ -1448,7 +1393,6 @@
           }
          ],
          "holeLabels": [
-          "my thing",
           "heading",
           "letterbox",
           "sine",

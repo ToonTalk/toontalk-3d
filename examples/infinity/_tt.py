@@ -99,8 +99,8 @@ def drop(v, op, *where):
     return [newnum, setv(v, op), put(*where)]
 
 
-def write(name, bench, folder=None):
-    world = {'kind': 'world', 'v': 3, 'bench': bench, 'stations': {},
+def write(name, bench, folder=None, stations=None):
+    world = {'kind': 'world', 'v': 3, 'bench': bench, 'stations': stations or {},
              'active': None}
     out = os.path.join(folder or os.path.dirname(os.path.abspath(__file__)),
                        name + '.world.json')

@@ -53,14 +53,14 @@ pen_up = msg('set', 'pen', 'up')                             # noqa: F405
 home_msg = msg('set', 'home', 'yes')                         # noqa: F405
 step_size = num(1, 100)                                      # noqa: F405
 
-HOLE_NAMES = ['my thing', 'letterbox', 'the step', 'yaw', 'pitch', 'roll',
+HOLE_NAMES = ['letterbox', 'the step', 'yaw', 'pitch', 'roll',
               'pen down', 'pen up', 'step size', 'home']
 
-MSG_HOLE = {'forward': 2, 'yaw': 3, 'pitch': 4, 'roll': 5}
+MSG_HOLE = {'forward': 1, 'yaw': 2, 'pitch': 3, 'roll': 4}
 
 
 def work_box(top=None, mine=True):
-    return dict(box(to(T3, 'my thing') if mine else to(T3),   # noqa: F405
+    return dict(box(                                          # noqa: F405
                     orders_nest(top), fwd_msg, yaw_msg, pitch_msg, roll_msg,
                     pen_down, pen_up, step_size, home_msg),
                 holeLabels=HOLE_NAMES)
@@ -72,14 +72,14 @@ trained = lambda top: work_box(top, mine=False)               # noqa: E731
 
 def cond(word):
     """An order that is a WORD and a NUMBER, lying on the letterbox."""
-    return box(ANYBIRD, box(txt(word), ANYNUM),               # noqa: F405
+    return box(box(txt(word), ANYNUM),                        # noqa: F405
                ANYBOX, ANYBOX, ANYBOX, ANYBOX,                # noqa: F405
                ANYBOX, ANYBOX, ANYNUM, ANYBOX)                # noqa: F405
 
 
 def word_cond(word):
     """An order that is just a word: pendown, penup, home."""
-    return box(ANYBIRD, txt(word),                            # noqa: F405
+    return box(txt(word),                                     # noqa: F405
                ANYBOX, ANYBOX, ANYBOX, ANYBOX,                # noqa: F405
                ANYBOX, ANYBOX, ANYNUM, ANYBOX)                # noqa: F405
 
@@ -89,11 +89,11 @@ def turn_bot(word):
     are degrees: nothing scales them, unlike a distance."""
     hole = MSG_HOLE[word]
     return robot(word, cond(word),                            # noqa: F405
-                 [takeTop('given', 1), put('s1'),             # noqa: F405
+                 [takeTop('given', 0), put('s1'),             # noqa: F405
                   copy('s1', 1), put('s0'),                   # noqa: F405
                   vac('given', hole, 2),                      # noqa: F405
                   take('s0'), put('given', hole, 2),          # noqa: F405
-                  copy('given', hole), put('given', 0),       # noqa: F405
+                  copy('given', hole), put('perch'),          # noqa: F405
                   vac('s1')],                                 # noqa: F405
                  trained_on=trained(box(txt(word), num(30))),  # noqa: F405
                  note='The order is [' + word + ' | a]: puts the degrees into '
@@ -103,12 +103,12 @@ def turn_bot(word):
 
 move_bot = robot(                                             # noqa: F405
     'move', cond('move'),
-    [takeTop('given', 1), put('s1'),                          # the order  # noqa: F405
+    [takeTop('given', 0), put('s1'),                          # the order  # noqa: F405
      copy('s1', 1), put('s0'),                                # how far    # noqa: F405
-     copy('given', 8), setop('*'), put('s0'),                 # x step size  # noqa: F405
-     vac('given', 2, 2),                                      # noqa: F405
-     take('s0'), put('given', 2, 2),                          # noqa: F405
-     copy('given', 2), put('given', 0),                       # noqa: F405
+     copy('given', 7), setop('*'), put('s0'),                 # x step size  # noqa: F405
+     vac('given', 1, 2),                                      # noqa: F405
+     take('s0'), put('given', 1, 2),                          # noqa: F405
+     copy('given', 1), put('perch'),                          # noqa: F405
      vac('s1')],                                              # noqa: F405
     trained_on=trained(box(txt('move'), num(30))),            # noqa: F405
     note='Leads the team. The order is [move | n]: multiplies n by the step size, '
@@ -119,19 +119,19 @@ move_bot = robot(                                             # noqa: F405
 def plain_bot(word, hole):
     """A word with nothing else to it: eat it and send the message."""
     return robot(word, word_cond(word),                       # noqa: F405
-                 [takeTop('given', 1), put('s1'), vac('s1'),  # noqa: F405
-                  copy('given', hole), put('given', 0)],      # noqa: F405
+                 [takeTop('given', 0), put('s1'), vac('s1'),  # noqa: F405
+                  copy('given', hole), put('perch')],         # noqa: F405
                  trained_on=trained(txt(word)),               # noqa: F405
                  note='The word on the letterbox is “' + word + '”: eats it and sends '
-                      + {6: '[set | pen | down]', 7: '[set | pen | up]',
-                         9: '[set | home | yes] -- level, facing the far edge, back on '
+                      + {5: '[set | pen | down]', 6: '[set | pen | up]',
+                         8: '[set | home | yes] -- level, facing the far edge, back on '
                             'the table'}[hole] + '.')
 
 
 team = dict(move_bot)
 team['team'] = [turn_bot('yaw'), turn_bot('pitch'), turn_bot('roll'),
-                plain_bot('pendown', 6), plain_bot('penup', 7),
-                plain_bot('home', 9)]
+                plain_bot('pendown', 5), plain_bot('penup', 6),
+                plain_bot('home', 8)]
 
 turtle3d = gadget('a 3D turtle', T3, team, work,              # noqa: F405
                   look=dict(bg='#1b2f42', ink='#9fd8ff', font='sans', h=0.42))

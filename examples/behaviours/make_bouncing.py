@@ -1,13 +1,14 @@
 # bouncing -- a team that differs only in which word it expects.
 #
-# The star is handed [a bird to my thing, a step, the edge]. The edge is one
+# The team is handed [a step, the edge], and writes to the bird on the perch
+# -- out here a bird to the star; on a thing's panel, to that thing. The edge is one
 # of the workshop's readings: a nest holding exactly one pad, saying which
 # edge the thing is against, or "none". A reading rather than an event, so it
 # is never empty -- which matters, because a team member facing an empty nest
 # DOZES, and a dozing member stops the whole team.
 #
 # So three robots, in order, and the only difference between them is the word
-# they expect in the third hole:
+# they expect in the second hole:
 #
 #     at the left   flip the step, then move
 #     at the right  flip the step, then move
@@ -33,10 +34,10 @@ def edge_nest(reading='none'):
 def turner(name, word):
     """Flip the step, then move: the step's number takes a x-1."""
     return robot(
-        name, box(ANYBIRD, ANYBOX, txt(word)),               # noqa: F405
-        drop(-1, '*', 'given', 1, 2)                         # noqa: F405
-        + [copy('given', 1), put('given', 0)],
-        trained_on=box(to(STAR), step, edge_nest(word)),
+        name, box(ANYBOX, txt(word)),                        # noqa: F405
+        drop(-1, '*', 'given', 0, 2)                         # noqa: F405
+        + [copy('given', 0), put('perch')],
+        trained_on=box(step, edge_nest(word)),
         note=('Leads the team. ' if word == 'left' else '')
         + 'The edge reading says “' + word + '”: drops a x-1 on the step’s number '
         'to turn round, then sends the step.')
@@ -45,19 +46,19 @@ def turner(name, word):
 left = turner('at the left', 'left')
 right = turner('at the right', 'right')
 mover = robot(
-    'moving', box(ANYBIRD, ANYBOX, WILDTEXT),
-    [copy('given', 1), put('given', 0)],
-    trained_on=box(to(STAR), step, edge_nest()),
+    'moving', box(ANYBOX, WILDTEXT),
+    [copy('given', 0), put('perch')],
+    trained_on=box(step, edge_nest()),
     note='Any other reading: sends the step. It comes last, so at an edge a turner '
          'gets the turn first.')
 
 team = dict(left)
 team['team'] = [right, mover]
 
-work = box(to(STAR, 'my thing'), step, edge_nest())
+work = box(step, edge_nest())
 
 ABOUT = ('BOUNCING\n\n'
-         '[my thing, a step, the edge]\n\n'
+         '[a step, the edge]\n\n'
          'The edge is a READING: one\n'
          'pad saying which edge the\n'
          'star is against, or "none".\n\n'
@@ -93,7 +94,10 @@ WHY = ('WHY A READING\n\n'
        'every round.\n\n'
        'Flipping the step is a x-1\n'
        'dropped on a number. Nothing\n'
-       'here is about bouncing.')
+       'here is about bouncing.\n\n'
+       'The step goes to the bird on\n'
+       'the perch: out here, a bird\n'
+       'to the star.')
 
 bench = [
     {'thing': star, 'x': -1.30, 'z': 1.20},
@@ -105,4 +109,4 @@ bench = [
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},             # noqa: F405
 ]
 
-write_beh('🏀 bouncing', bench)
+write_beh('🏀 bouncing', bench, perch=to(STAR, 'to the star'))
