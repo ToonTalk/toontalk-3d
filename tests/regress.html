@@ -3839,6 +3839,69 @@ async function computerCheck(D) {
   return ok;
 }
 
+// THE PERCH. Ken: "a user should be able to test such a robot without
+// entering a panel by placing any bird on that pedestal." Inside the timer's
+// panel the perch holds a bird to "my thing" -- the number -- and another is
+// there the moment she is taken; on the bench the timer's second robot is
+// refused when the perch is empty, and with a bird of your own there its
+// [set | value | 5] lands on her nest.
+async function perchCheck(D) {
+  const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
+  const J = (o) => JSON.stringify(o);
+  const hint = () => D.doc.getElementById('hint').textContent;
+  const w = await (await fetch('../examples/devices/⏱️ timer.world.json')).json();
+  D.worldIn(JSON.parse(J(w))); await slowSettle(D, 2000);
+  const num = things().find(t => t.userData.kind === 'number');
+  D.switchBound(num, true); await frames(D, 20);     // its panel comes out to work
+  D.switchBound(num, false); await frames(D, 20);
+  const tray = num.__panelTray;
+  D.clickRaw({ kind: 'roomDoor', room: tray }); await slowSettle(D, 4000);
+  const p1 = D.perch();
+  const fixture = p1.occ === 'bird' && p1.liveId === 'MYTHING' && p1.myThing === 'milliseconds';
+  const tipOK = /perch/.test(D.tipStation('perch') || '') && /my thing/.test(D.tip(D.at('perch')) || '');
+  D.clickStation('perch'); await frames(D, 20);       // take her: another is there
+  const p2 = D.perch();
+  const refilled = p2.occ === 'bird' && p2.liveId === 'MYTHING';
+  D.clickStation('perch'); await frames(D, 20);       // give her back
+  const back = /Back on the perch/.test(hint());
+  D.clickRaw({ kind: 'exitDoor' }); await slowSettle(D, 4000);
+  const p3 = D.perch();
+  const emptyOut = p3.occ === null && p3.myThing === null;
+  // the timer's second robot on the bench, given a reading and the go pad in hole 7
+  const pw = w.bench[0].thing.panel;
+  const tell = JSON.parse(J(pw.active.team[0])); tell.team = [];
+  const work = JSON.parse(J(pw.stations.stand));
+  work.holes[1].pile = [{ kind: 'number', value: { n: '5', d: '1' } }];
+  work.holes[5] = null; work.holes[6] = { kind: 'text', text: 'go' };
+  const bw = { kind: 'world', v: pw.v ?? 3,
+    bench: [{ thing: { kind: 'nest', id: 7001, guid: 'perch-test', hasEgg: false, pile: [], label: 'mine' }, x: 1.2, z: 2.0 },
+            { thing: { kind: 'bird', nestId: 7001, nestGuid: 'perch-test', label: 'my bird' }, x: 1.6, z: 2.0 }],
+    stations: { stand: work }, active: tell };
+  D.worldIn(JSON.parse(J(bw))); await slowSettle(D, 2500);
+  D.speed('instant');
+  D.doc.getElementById('runBtn').click(); await slowSettle(D, 4000);
+  let nest = things().find(t => t.userData.kind === 'nest');
+  const refused = (nest?.userData.pile.length ?? -1) === 0 && /no bird on the perch/.test(hint());
+  D.speed(1);
+  D.worldIn(JSON.parse(J(bw))); await slowSettle(D, 2500);
+  D.speed('instant');
+  const bird = things().find(t => t.userData.kind === 'bird');
+  D.hold(bird); await frames(D, 10);
+  D.clickStation('perch'); await frames(D, 30);
+  const set = D.perch().label === 'my bird';
+  D.doc.getElementById('runBtn').click(); await slowSettle(D, 5000);
+  nest = things().find(t => t.userData.kind === 'nest');
+  const top = nest?.userData.pile[nest.userData.pile.length - 1];
+  const told = nest?.userData.pile.length === 1 && top?.userData.kind === 'box' && numOf(top.userData.holes[2]?.thing) === 5;
+  D.speed(1);
+  const ok = fixture && tipOK && refilled && back && emptyOut && refused && set && told;
+  put((ok ? 'PASS' : 'FAIL') + ' the perch: a bird to my thing on a panel, any bird on the bench  (fixture=' + fixture
+      + ' tips=' + tipOK + ' another-when-taken=' + refilled + ' back=' + back + ' empty-outside=' + emptyOut
+      + ' empty-perch-refused=' + refused + ' my-bird-set=' + set + ' told-5=' + told + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function dustyStackCheck(D) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, bench: [], active: null });
   await slowSettle(D, 2000);
@@ -6281,6 +6344,9 @@ async function runOne(D, spec) {
   let cmpOK = true;
   try { cmpOK = want('computer') ? await computerCheck(D) : true; }
   catch (e) { cmpOK = false; put('FAIL a bird to the computer, a timer from robots, and the year puzzle  ' + e.message, 'fail'); }
+  let prchOK = true;
+  try { prchOK = want('perch') ? await perchCheck(D) : true; }
+  catch (e) { prchOK = false; put('FAIL the perch: a bird to my thing on a panel, any bird on the bench  ' + e.message, 'fail'); }
   let rsrtOK = true;
   try { rsrtOK = want('resort') ? await resortCheck(D, frame.contentWindow) : true; }
   catch (e) { rsrtOK = false; put('FAIL Resort Infinity: the guests walk, guest 1 first, and eleven find eleven cottages  ' + e.message, 'fail'); }
@@ -6416,7 +6482,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

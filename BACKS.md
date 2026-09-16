@@ -7503,3 +7503,43 @@ tells the number, and moves the pad back. That pad is the whole of the
 composition: a team stops at the first member dozing on an empty nest, and
 no thought can say "an empty nest", so two robots take turns by a token
 crossing between two holes -- the wiggle's idiom, and now the timer's.
+
+## The perch
+
+*Added 16 Sep. Ken: "the idea of having access to 'my thing' bird while
+training should work even when nested since as you say this bird goes to the
+object of the outermost panel. Let's try it... just the my thing bird as
+available during training and then will access that bird when run. I guess
+a user should be able to test such a robot without entering a panel by
+placing any bird on that pedestal."*
+
+A pedestal beside the robot's desk, in every world: the perch. On a panel
+it holds a bird to "my thing", the thing whose back the panel is. She
+carries no name, and is resolved when a letter is given, from the world
+that is current then: a robot's round runs in its panel's world, and so
+does a hand inside an entered panel. A card standing on another thing's
+panel, or a behaviour bound to a picture, resolves on up to the outermost
+thing -- the original's rule that a sensor belongs to the owner of the
+uppermost back -- so a robot trained on one panel does the same work
+wherever it is moved. Take her off the perch and another is there at once;
+the one in your hand goes in a box and travels with the robot. She is never
+saved into a panel's world (a panel whose only content is its own fixture
+is still an empty panel), and a training daydream's rewind leaves her be.
+Nor is she in a panel's world while that world is stashed: in a tray's
+miniature she stood where no perch is drawn and counted in the fit of the
+panel's contents (a picture's page of cards came out smaller), and an
+invisible node still counts to a bounding box -- so she is added to her
+world only while it is the one on display.
+
+On the bench the perch is empty and she has nothing to go to: a letter put
+there says so and the round stops. Set a bird of your own on the perch and
+a robot's letters go to her nest -- the way to try such a robot out without
+entering a panel. A robot's put on the perch is a put on the bird standing
+there, which a robot's put on any station already knew how to do; a put on
+an empty perch, of anything but a bird, is refused in training and aborts
+in a run.
+
+The timer is rebuilt on it: the box on the number's own panel holds no bird
+to the number now, and "Tell my number" gives its letter to the bird on the
+perch. SPACE on a thing's panel starts the robots on it, as SPACE on the
+thing does.

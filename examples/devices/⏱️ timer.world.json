@@ -12,7 +12,7 @@
     "lid": "TIMER1",
     "evt": "evt-TIMER1",
     "label": "milliseconds",
-    "note": "A timer: two robots on my own panel. One asks the computer the time, the other tells me the answer, and a pad crossing between two holes lets them take turns. SPACE on me starts them; \".\" rests them.",
+    "note": "A timer: two robots on my own panel. One asks the computer the time, the other gives the answer to the bird on the perch, which is a bird to me, and a pad crossing between two holes lets them take turns. SPACE on me starts them; \".\" rests them.",
     "panel": {
      "kind": "world",
      "v": 3,
@@ -21,13 +21,6 @@
       "stand": {
        "kind": "box",
        "holes": [
-        {
-         "kind": "bird",
-         "nestId": 0,
-         "nestGuid": null,
-         "liveId": "TIMER1",
-         "label": "my thing"
-        },
         {
          "kind": "bird",
          "nestId": 0,
@@ -94,9 +87,6 @@
         {
          "kind": "anyBird"
         },
-        {
-         "kind": "anyBird"
-        },
         null,
         {
          "kind": "anyBird"
@@ -119,7 +109,7 @@
         "at": {
          "c": "given",
          "path": [
-          4
+          3
          ]
         }
        },
@@ -135,7 +125,7 @@
         "at": {
          "c": "given",
          "path": [
-          3
+          2
          ]
         }
        },
@@ -160,7 +150,7 @@
         "at": {
          "c": "given",
          "path": [
-          1
+          0
          ]
         }
        },
@@ -169,7 +159,7 @@
         "at": {
          "c": "given",
          "path": [
-          6
+          5
          ]
         }
        },
@@ -178,7 +168,7 @@
         "at": {
          "c": "given",
          "path": [
-          7
+          6
          ]
         }
        }
@@ -186,13 +176,6 @@
       "trainedOn": {
        "kind": "box",
        "holes": [
-        {
-         "kind": "bird",
-         "nestId": 0,
-         "nestGuid": null,
-         "liveId": "TIMER1",
-         "label": "my thing"
-        },
         {
          "kind": "bird",
          "nestId": 0,
@@ -260,9 +243,6 @@
            "kind": "anyBird"
           },
           {
-           "kind": "anyBird"
-          },
-          {
            "kind": "wildNumber"
           },
           {
@@ -286,7 +266,7 @@
           "at": {
            "c": "given",
            "path": [
-            5
+            4
            ]
           }
          },
@@ -302,7 +282,7 @@
           "at": {
            "c": "given",
            "path": [
-            2
+            1
            ],
            "nest": true
           }
@@ -326,10 +306,8 @@
          {
           "type": "put",
           "at": {
-           "c": "given",
-           "path": [
-            0
-           ]
+           "c": "perch",
+           "path": []
           }
          },
          {
@@ -337,7 +315,7 @@
           "at": {
            "c": "given",
            "path": [
-            7
+            6
            ]
           }
          },
@@ -346,17 +324,17 @@
           "at": {
            "c": "given",
            "path": [
-            6
+            5
            ]
           }
          }
         ],
         "trainedOn": null,
         "team": [],
-        "note": "A reading is on my nest and the go pad is in hole 8: tells my thing the reading with [set | value | n], and moves the pad back to hole 7, so the asking robot goes again."
+        "note": "A reading is on my nest and the go pad is in hole 7: puts the reading in a [set | value | _] letter, gives it to the bird on the perch -- the panel\u2019s own thing -- and moves the pad back to hole 6, so the asking robot goes again."
        }
       ],
-      "note": "The go pad is in hole 7: asks the computer the time, answered to my readings nest, and moves the pad to hole 8 so it does not ask again until the answer is dealt with."
+      "note": "The go pad is in hole 6: asks the computer the time, answered to my readings nest, and moves the pad to hole 7 so it does not ask again until the answer is dealt with."
      }
     }
    },
@@ -366,7 +344,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "A TIMER\n\nPress SPACE on the number:\nit counts the milliseconds\nsince the workshop opened.\n\".\" rests it.\n\nRobots are doing it, on the\nnumber\u2019s own panel: open it\nwith the gear and see two\nrobots and a box. One asks\nthe computer the time, the\nother tells the number the\nanswer. A pad crossing\nbetween two holes lets them\ntake turns."
+    "text": "A TIMER\n\nPress SPACE on the number:\nit counts the milliseconds\nsince the workshop opened.\n\".\" rests it.\n\nRobots are doing it, on the\nnumber\u2019s own panel: open it\nwith the gear and see two\nrobots and a box. One asks\nthe computer the time; the\nother gives the answer to\nthe bird on the PERCH, the\npedestal beside the desk.\nOn a panel that bird goes\nto the panel\u2019s own thing."
    },
    "x": -0.9,
    "z": 1.75
@@ -374,10 +352,18 @@
   {
    "thing": {
     "kind": "text",
-    "text": "BUILT BY HAND\n\nOpen the number\u2019s panel,\ndrop a box on it, take a\nbird from the panel\u2019s perch\ninto the box, and a bird to\nthe computer from the\ndevices notebook.\n\nDrop a robot on the panel\nand train it: give the\ncomputer the question.\nStart it: the answer lands\non the nest. Train a second\nrobot on that, and drop it\non the first: a team."
+    "text": "BUILT BY HAND\n\nOpen the number\u2019s panel and\ndrop a box on it, with a\nbird to the computer from\nthe devices notebook.\n\nDrop a robot on the panel\nand train it: give the\ncomputer the question.\nStart it: the answer lands\non the nest. Train a second\nrobot on that: put the\nreading in [set | value | _]\nand give it to the bird on\nthe perch. Drop it on the\nfirst robot: a team."
    },
    "x": 0.9,
    "z": 1.75
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "TRY IT ANYWHERE\n\nA robot that writes to the\nperch works on whatever the\npanel it is on belongs to.\n\nTo try one on the bench, set\nany bird on the perch first:\nits letters go to her."
+   },
+   "x": 1.4,
+   "z": 1.4
   }
  ],
  "stations": {},
