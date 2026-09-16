@@ -25,6 +25,9 @@
        "kind": "anyBox"
       },
       {
+       "kind": "wildNumber"
+      },
+      {
        "kind": "wildText"
       }
      ]
@@ -295,7 +298,7 @@
       }
      },
      {
-      "type": "speak"
+      "type": "panel"
      },
      {
       "type": "put",
@@ -303,6 +306,94 @@
        "c": "given",
        "path": [
         5
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "t1",
+       "path": []
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "t2",
+       "path": []
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "t1",
+       "path": [],
+       "bot": true
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "t2",
+       "path": [],
+       "bot": true
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "fold",
+      "at": {
+       "c": "s0",
+       "path": []
+      }
+     },
+     {
+      "type": "take",
+      "at": {
+       "c": "given",
+       "path": [
+        6
+       ]
+      }
+     },
+     {
+      "type": "speak"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6
        ]
       }
      }
@@ -460,13 +551,21 @@
        ]
       },
       {
+       "kind": "number",
+       "value": {
+        "n": "0",
+        "d": "1"
+       },
+       "label": "stopwatch"
+      },
+      {
        "kind": "text",
-       "text": "Drop Tell on Ask: a team. Give it a box, or put it on a number\u2019s panel."
+       "text": "The number is a stopwatch now. Take it out of the box and press SPACE on it."
       }
      ]
     },
     "team": [],
-    "note": "A robot that trains the timer\u2019s two robots. It teaches Ask on a box with the go pad in hole 6: ask the computer the time, answered to my readings, and move the pad to hole 7. Then it teaches Tell on a box with a reading and the pad in hole 7: put the reading in a [set | value | _] letter, give it to the bird on the perch, move the pad back, and have Ruby loosen the reading. Drop Tell on Ask and they take turns."
+    "note": "A robot that trains the timer\u2019s two robots. It teaches Ask on a box with the go pad in hole 6: ask the computer the time, answered to my readings, and move the pad to hole 7. Then it teaches Tell on a box with a reading and the pad in hole 7: put the reading in a [set | value | _] letter, give it to the bird on the perch, move the pad back, and have Ruby loosen the reading. Then it takes the number\u2019s panel out, sets Tell\u2019s box, Ask and Tell on it, and folds the panel away: the number is a stopwatch."
    },
    "x": -1.45,
    "z": 1.35
@@ -625,8 +724,16 @@
       ]
      },
      {
+      "kind": "number",
+      "value": {
+       "n": "0",
+       "d": "1"
+      },
+      "label": "stopwatch"
+     },
+     {
       "kind": "text",
-      "text": "Drop Tell on Ask: a team. Give it a box, or put it on a number\u2019s panel."
+      "text": "The number is a stopwatch now. Take it out of the box and press SPACE on it."
      }
     ]
    },
@@ -648,7 +755,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "THE TIMER TEACHER\n\nA robot that trains the two\nrobots of the timer, one\nafter the other, each on a\nbox in the state it works\nin.\n\nAsk: the go pad is in hole 6.\nAsk the computer the time,\nmove the pad to hole 7.\n\nTell: a reading, pad in 7.\nGive it to the bird on the\nperch, move the pad back."
+    "text": "THE TIMER TEACHER\n\nA robot that trains the two\nrobots of the timer, one\nafter the other, each on a\nbox in the state it works\nin -- then puts them on a\nnumber\u2019s panel.\n\nAsk: the go pad is in hole 6.\nAsk the computer the time,\nmove the pad to hole 7.\n\nTell: a reading, pad in 7.\nGive it to the bird on the\nperch, move the pad back."
    },
    "x": -1.15,
    "z": 2.25
@@ -656,7 +763,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nGive the six-hole box to\nthe teacher and press Start.\n\nAsk really asks: the\ncomputer\u2019s answer lands on\nthe nest in its box. Tell\nreally tells: its letter\ngoes to the bird on the\nperch, and out here she\ntakes it to \u201cwhat it told\u201d."
+    "text": "TO RUN IT\n\nGive the seven-hole box to\nthe teacher and press Start.\n\nAsk really asks: the\ncomputer\u2019s answer lands on\nthe nest in its box. Tell\nreally tells: its letter\ngoes to the bird on the\nperch, and out here she\ntakes it to \u201cwhat it told\u201d.\n\nThen the number\u2019s panel\ncomes out, the box and the\ntwo robots go on it, and\nit folds away."
    },
    "x": -0.45,
    "z": 2.25
@@ -664,7 +771,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "THEN\n\nDrop Tell on Ask: a team.\nGive the team Ask\u2019s box and\npress Start: readings pile\nup on \u201cwhat it told\u201d.\n\nOr take a number from the\nstack, open its panel with\nthe gear, drop the box and\nthe team on the panel, and\npress SPACE on the number:\nit counts the milliseconds."
+    "text": "THE STOPWATCH\n\nTake the number out of the\nteacher\u2019s box and press\nSPACE on it: it counts the\nmilliseconds. \u201c.\u201d rests it.\n\nOpen its panel with the\ngear: the box and the team\nare there, and the bird on\nthe perch is a bird to the\nnumber."
    },
    "x": 0.25,
    "z": 2.25
@@ -672,7 +779,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "WHY TWO ROBOTS\n\nA robot cannot wait in the\nmiddle of a round for an\nanswer. So one asks and\none tells, and a pad\ncrossing between two holes\nlets them take turns.\n\nNeither knows what it tells:\nthe perch means whatever\nthing\u2019s panel they are on."
+    "text": "HOW IT REACHES THEM\n\nA little robot the teacher\ntaught stays among its\nthings: \u201cthe first little\nrobot it taught\u201d, at its own\ndesk, with its box. Click\nthe pupil with an empty\nclaw to pick it up; click\nthe box on its desk to take\nthat.\n\nOne asks and one tells\nbecause a robot cannot wait\nmid-round for an answer."
    },
    "x": 0.95,
    "z": 2.25

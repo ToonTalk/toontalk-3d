@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # The timer teacher -- a robot builds the timer's two robots, the way you
-# would, and you put them on a number's panel.
+# would, and puts them on a number's panel: a stopwatch.
 #
 # The timer (devices/timer) is two robots on a number's own panel, taking
 # turns by a "go" pad crossing between two holes: "Ask the time" sends the
@@ -13,14 +13,17 @@
 #   0 a pad it reads out first
 #   1 a little robot (Ask)   2 the box as Ask finds it: nest empty, "go" in hole 6
 #   3 a little robot (Tell)  4 the box as Tell finds it: a reading on the nest, "go" in hole 7
-#   5 a pad it reads out at the end
+#   5 a number               6 a pad it reads out at the end
 #
 # Run, it does it all for real: Ask's lesson really asks the computer (the
 # answer lands on the nest in Ask's box), and Tell's lesson really gives its
 # letter to the bird on the perch -- out here, a bird of your own to the
-# nest "what it told". Then drop Tell on Ask (a team), give the team one of
-# the boxes, and they are the timer on the bench; or put them on a number's
-# panel and SPACE on the number.
+# nest "what it told". Then it takes the number's panel out onto a work
+# spot, puts Ask's box back in its hole, sets Tell's box on the panel, then
+# Ask, then Tell (a team), folds the panel away, and reads the last pad. The little robots it taught stay among its
+# things -- the first, the second little robot it taught -- so it can pick
+# them up again. Take the number out of the box and press SPACE: it counts
+# the milliseconds. "." rests it.
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'infinity'))
 from _tt import *                                          # noqa: F403
@@ -51,7 +54,7 @@ ask_box = work(ASK_MAIL, None, False)       # nothing asked yet: go in hole 6
 tell_box = work(TELL_MAIL, 5, True)         # a reading waiting, go in hole 7
 
 first = txt('I am going to teach two little robots to be a timer.')    # noqa: F405
-last = txt('Drop Tell on Ask: a team. Give it a box, or put it on a number’s panel.')   # noqa: F405
+last = txt('The number is a stopwatch now. Take it out of the box and press SPACE on it.')   # noqa: F405
 ask = {'kind': 'robot', 'name': 'Ask', 'program': [], 'condition': None,
        'trainedOn': None, 'team': [],
        'note': 'Untrained. The teacher shows it how to ask the computer the time and move the go pad across.'}
@@ -64,11 +67,14 @@ teach = lambda *p: {'type': 'teach', 'at': at('given', *p)}            # noqa: E
 taught = lambda step: {'type': 'taught', 'step': step}                 # noqa: E731
 erase = lambda *path: {'type': 'erase', 'path': list(path)}           # noqa: E731
 
-given = box(first, ask, ask_box, tell, tell_box, last)                 # noqa: F405
+number = {'kind': 'number', 'value': {'n': '0', 'd': '1'}, 'label': 'stopwatch'}
+given = box(first, ask, ask_box, tell, tell_box, number, last)         # noqa: F405
+fold = lambda c: {'type': 'fold', 'at': at(c)}                         # noqa: E731,F405
+pupil = lambda k: {'type': 'take', 'at': {'c': 't%d' % k, 'path': [], 'bot': True}}   # noqa: E731
 
 teacher = robot(                                                       # noqa: F405
     'the teacher',
-    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, WILDTEXT),       # noqa: F405
+    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYNUM, WILDTEXT),   # noqa: F405
     [take('given', 0), speak, put('given', 0),                         # noqa: F405
      # ASK: the pad is in hole 6 -- ask the computer, answered to my readings, and cross the pad over
      take('given', 2), teach(1),                                       # noqa: F405
@@ -85,20 +91,29 @@ teacher = robot(                                                       # noqa: F
      taught(take('given', 6)), taught(put('given', 5)),                # the go pad comes back  # noqa: F405
      taught(erase(1)),                                                 # any reading, not just 5
      {'type': 'endTeach'},
-     take('given', 5), speak, put('given', 5)],                        # noqa: F405
+     # THE STOPWATCH: the number's panel out onto a work spot, Tell's box on it, Ask, then Tell -- a team
+     take('given', 5), {'type': 'panel'}, put('given', 5),             # noqa: F405
+     take('t1'), put('given', 2),                                      # Ask's box back in its hole: its desk goes  # noqa: F405
+     take('t2'), put('s0'),                                            # the box on the second pupil's desk  # noqa: F405
+     pupil(1), put('s0'),                                              # Ask, behind the panel's desk  # noqa: F405
+     pupil(2), put('s0'),                                              # Tell joins: a team  # noqa: F405
+     fold('s0'),                                                       # the panel goes home into the number
+     take('given', 6), speak, put('given', 6)],                        # noqa: F405
     trained_on=given,
     note='A robot that trains the timer’s two robots. It teaches Ask on a box with the go '
          'pad in hole 6: ask the computer the time, answered to my readings, and move the pad '
          'to hole 7. Then it teaches Tell on a box with a reading and the pad in hole 7: put the '
          'reading in a [set | value | _] letter, give it to the bird on the perch, move the pad '
-         'back, and have Ruby loosen the reading. Drop Tell on Ask and they take turns.')
+         'back, and have Ruby loosen the reading. Then it takes the number’s panel out, sets '
+         'Tell’s box, Ask and Tell on it, and folds the panel away: the number is a stopwatch.')
 
 ABOUT = ('THE TIMER TEACHER\n\n'
          'A robot that trains the two\n'
          'robots of the timer, one\n'
          'after the other, each on a\n'
          'box in the state it works\n'
-         'in.\n\n'
+         'in -- then puts them on a\n'
+         'number’s panel.\n\n'
          'Ask: the go pad is in hole 6.\n'
          'Ask the computer the time,\n'
          'move the pad to hole 7.\n\n'
@@ -107,7 +122,7 @@ ABOUT = ('THE TIMER TEACHER\n\n'
          'perch, move the pad back.')
 
 RUN = ('TO RUN IT\n\n'
-       'Give the six-hole box to\n'
+       'Give the seven-hole box to\n'
        'the teacher and press Start.\n\n'
        'Ask really asks: the\n'
        'computer’s answer lands on\n'
@@ -115,30 +130,36 @@ RUN = ('TO RUN IT\n\n'
        'really tells: its letter\n'
        'goes to the bird on the\n'
        'perch, and out here she\n'
-       'takes it to “what it told”.')
+       'takes it to “what it told”.\n\n'
+       'Then the number’s panel\n'
+       'comes out, the box and the\n'
+       'two robots go on it, and\n'
+       'it folds away.')
 
-THEN = ('THEN\n\n'
-        'Drop Tell on Ask: a team.\n'
-        'Give the team Ask’s box and\n'
-        'press Start: readings pile\n'
-        'up on “what it told”.\n\n'
-        'Or take a number from the\n'
-        'stack, open its panel with\n'
-        'the gear, drop the box and\n'
-        'the team on the panel, and\n'
-        'press SPACE on the number:\n'
-        'it counts the milliseconds.')
+THEN = ('THE STOPWATCH\n\n'
+        'Take the number out of the\n'
+        'teacher’s box and press\n'
+        'SPACE on it: it counts the\n'
+        'milliseconds. “.” rests it.\n\n'
+        'Open its panel with the\n'
+        'gear: the box and the team\n'
+        'are there, and the bird on\n'
+        'the perch is a bird to the\n'
+        'number.')
 
-HOW = ('WHY TWO ROBOTS\n\n'
-       'A robot cannot wait in the\n'
-       'middle of a round for an\n'
-       'answer. So one asks and\n'
-       'one tells, and a pad\n'
-       'crossing between two holes\n'
-       'lets them take turns.\n\n'
-       'Neither knows what it tells:\n'
-       'the perch means whatever\n'
-       'thing’s panel they are on.')
+HOW = ('HOW IT REACHES THEM\n\n'
+       'A little robot the teacher\n'
+       'taught stays among its\n'
+       'things: “the first little\n'
+       'robot it taught”, at its own\n'
+       'desk, with its box. Click\n'
+       'the pupil with an empty\n'
+       'claw to pick it up; click\n'
+       'the box on its desk to take\n'
+       'that.\n\n'
+       'One asks and one tells\n'
+       'because a robot cannot wait\n'
+       'mid-round for an answer.')
 
 bench = [
     {'thing': teacher, 'x': -1.45, 'z': 1.35},

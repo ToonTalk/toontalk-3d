@@ -36,14 +36,18 @@ what it tells — the perch means the thing whose panel it is on, and that is
 what makes a behaviour. Regenerate with `python make_telling.py`.
 
 🎓 **timer-teacher** — a robot builds the timer's two robots, the way you
-would. Ask is taught on a box with the "go" pad in hole 6: ask the computer
-the time, answered to my readings, and move the pad to hole 7. Tell is taught
-on a box with a reading on the nest and the pad in hole 7: put the reading in
-a `[set | value | _]` letter, give it to the bird on the perch, move the pad
-back. Both lessons are done for real in the run — the computer's answer lands
-on the nest in Ask's box, and Tell's letter reaches "what it told". Then drop
-Tell on Ask (a team), give the team a box and press Start, or put the box and
-the team on a number's panel and press SPACE on the number: it counts the
-milliseconds. A robot cannot wait mid-round for an answer, which is why there
-are two; a pad crossing between two holes lets them take turns. Regenerate
-with `python make_timer_teacher.py`.
+would, and puts them on a number's panel: a stopwatch. Ask is taught on a box
+with the "go" pad in hole 6: ask the computer the time, answered to my
+readings, and move the pad to hole 7. Tell is taught on a box with a reading
+on the nest and the pad in hole 7: put the reading in a `[set | value | _]`
+letter, give it to the bird on the perch, move the pad back. Both lessons are
+done for real in the run — the computer's answer lands on the nest in Ask's
+box, and Tell's letter reaches "what it told". Then the teacher takes the
+number's panel out onto a work spot, puts Ask's box back in its hole, sets
+Tell's box on the panel, then Ask, then Tell (a team), folds the panel away
+and reads the last pad. Take the number out of the box and press SPACE: it
+counts the milliseconds; "." rests it. The little robots a teacher taught stay
+among its things ("the first little robot it taught", at its own desk, with
+its box), which is how it reaches them again. A robot cannot wait mid-round
+for an answer, which is why there are two; a pad crossing between two holes
+lets them take turns. Regenerate with `python make_timer_teacher.py`.

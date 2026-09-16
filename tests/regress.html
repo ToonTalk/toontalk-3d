@@ -3941,16 +3941,134 @@ async function metaTeachCheck(D) {
   const ran2 = D.state.mode === 'world' && D.roundsNow().runCount === 1;
   bots = botsNow();
   const askTaught = steps(bots.Ask) === 'copy:given.3,put:s0,copy:given.2,put:s0.2,take:s0,put:given.0,take:given.5,put:given.6';
-  const tellTaught2 = steps(bots.Tell) === 'copy:given.4,put:s0,take:given.1,put:s0.2,take:s0,put:perch,take:given.6,put:given.5';
-  const askBox = bots.Ask?.stand?.occupant;
+  // Ask's box went back into hole 3 after Ask really asked: an answer on its nest, go in hole 7
+  const askBox = D.mine([2]);
   const asked = Number.isFinite(numOf(askBox?.userData.holes[1]?.thing?.userData.pile?.[0]))
     && askBox?.userData.holes[6]?.thing?.userData.text === 'go' && !askBox?.userData.holes[5]?.thing;
   const told2 = toldOK();
+  // THE STOPWATCH: the number in hole 6 carries a panel with Tell's box and the team; taken
+  // out onto the table, SPACE sets it climbing and "." rests it
+  const num = D.mine([5]);
+  const tray = num?.__panelTray;
+  const c = tray?.__ctx;
+  const tellTaught2 = steps(c?.activeBot?.team?.[0]) === 'copy:given.4,put:s0,take:given.1,put:s0.2,take:s0,put:perch,take:given.6,put:given.5';
+  const built = !!c && c.activeBot?.name === 'Ask' && c.activeBot.team?.[0]?.name === 'Tell'
+    && c.standOcc?.userData.kind === 'box' && D.sched().stands === 1;       // no desk left aside
+  const builtWhy = JSON.stringify({ ctx: !!c, active: c?.activeBot?.name ?? null, team: c?.activeBot?.team?.map(m => m.name) ?? null, stand: c?.standOcc?.userData.kind ?? null,
+    waiters: c?.waiters?.length ?? null, stands: D.sched().stands });
+  D.hold(num); await frames(D, 5); D.clickBench(0.9, 1.0); await slowSettle(D, 2000);
+  D.switchBound(num, true);
+  const v0 = numOf(num);
+  await frames(D, 240);
+  const v1 = numOf(num);
+  const climbs = v1 > v0;
+  D.switchBound(num, false); await frames(D, 60);
+  const v2 = numOf(num); await frames(D, 120);
+  const rests = numOf(num) === v2;
   D.speed(1);
-  const ok = ran1 && tellTaught && told1 && ran2 && askTaught && tellTaught2 && asked && told2;
+  const ok = ran1 && tellTaught && told1 && ran2 && askTaught && tellTaught2 && asked && told2 && built && climbs && rests;
   put((ok ? 'PASS' : 'FAIL') + ' a robot teaches robots to write to the perch  (telling: ran-once=' + ran1 + ' tell-taught=' + tellTaught
       + ' told-5=' + told1 + '; timer-teacher: ran-once=' + ran2 + ' ask-taught=' + askTaught + ' tell-taught=' + tellTaught2
-      + ' ask-really-asked=' + asked + ' told-5=' + told2 + ')', ok ? 'pass' : 'fail');
+      + ' ask-really-asked=' + asked + ' told-5=' + told2 + ' stopwatch-built=' + built + (built ? '' : ' ' + builtWhy) + ' climbs=' + climbs + ' rests=' + rests + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A LESSON WAITING. Ken dropped a box on a number's panel, then a fresh
+// robot, went in and copied a letter, gave it to the bird on the perch, and
+// dropped a 1 on the number -- and only the last was learned. Entering a
+// panel whose robot is untrained, with a thing on its desk, begins the
+// lesson; the copier, the perch and the number stack are all learned.
+async function lessonWaitingCheck(D) {
+  const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const steps = () => D.activeProgram().map(s2 => s2.type + (s2.at ? ':' + s2.at.c + (s2.at.path?.length ? '.' + s2.at.path.join('.') : '') : '')).join(',');
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '0', d: '1' }, label: 'count' }, x: -0.4, z: 1.6 },
+    { thing: { kind: 'box', holes: [{ kind: 'box', holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'value' }, { kind: 'number', value: { n: '7', d: '1' } }] }, { kind: 'number', value: { n: '3', d: '1' } }] }, x: 0.5, z: 1.7 },
+    { thing: { kind: 'robot', name: 'fresh', program: [], team: [] }, x: 1.2, z: 1.5 } ] });
+  await slowSettle(D, 2000);
+  const num = things().find(t => t.userData.kind === 'number');
+  const box = things().find(t => t.userData.kind === 'box');
+  const bot = things().find(t => t.userData.kind === 'robot');
+  const tray = D.panelOut(num); await slowSettle(D, 2000);
+  D.hold(box); D.clickThing(tray); await slowSettle(D, 3000);
+  D.hold(bot); D.clickThing(tray); await slowSettle(D, 3000);
+  const waiting = /go in to train it/.test(D.doc.getElementById('hint').textContent);
+  D.clickRaw({ kind: 'roomDoor', room: tray }); await slowSettle(D, 4000);
+  const lesson = D.state.mode === 'training' && D.doc.getElementById('exitBtn').style.display !== 'none';
+  D.clickThing(D.mine([0])); await slowSettle(D, 4000);
+  D.clickRaw({ kind: 'station', id: 'copyIn' }); await slowSettle(D, 6000);
+  D.clickRaw({ kind: 'station', id: 'copyOut' }); await slowSettle(D, 4000);
+  D.clickStation('perch'); await slowSettle(D, 4000);
+  const toldInDream = String(num.userData.value.n) === '7';
+  D.click('numbers'); await slowSettle(D, 4000);
+  D.clickThing(D.mine([1])); await slowSettle(D, 4000);
+  const learned = steps() === 'take:given.0,put:in,take:out,put:perch,newNumber,put:given.1';
+  D.exit(); await slowSettle(D, 3000);
+  const rewound = D.state.mode === 'world' && String(num.userData.value.n) === '0' && String(D.mine([1])?.userData.value.n) === '3';
+  D.speed('inf');
+  D.rounds(1); D.run(); await slowSettle(D, 30000);
+  const ran = String(num.userData.value.n) === '7' && String(D.mine([1])?.userData.value.n) === '4';
+  D.rounds(0); D.speed(1);
+  D.clickRaw({ kind: 'exitDoor' }); await slowSettle(D, 4000);
+  const out = D.worldsDeep() === 0;
+  const ok = waiting && lesson && toldInDream && learned && rewound && ran && out;
+  put((ok ? 'PASS' : 'FAIL') + ' a lesson waiting on a panel begins on entering  (drop-says-train=' + waiting + ' lesson-on-entering=' + lesson
+      + ' perch-tells-in-dream=' + toldInDream + ' learned=' + learned + ' rewound=' + rewound + ' ran=' + ran + ' back-out=' + out + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE LITTLE ROBOT IT TAUGHT STAYS AMONG ITS THINGS. By hand: a teacher is
+// given [a little robot | a box with a 1 | a number]; it teaches the pupil to
+// drop a fresh 1 on the count, stops teaching, takes the number's panel out,
+// takes the pupil's box and the pupil off the pupil's desk and sets them on
+// the panel, folds it, and leaves the thought. The dream rewinds the pupil to
+// its hole; the run does it all for real, and the number counts.
+async function taughtBackCheck(D) {
+  const num = (n) => ({ kind: 'number', value: { n: String(n), d: '1' }, op: '+' });
+  const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const steps = () => D.activeProgram().map(s2 => s2.type + (s2.at ? ':' + s2.at.c + (s2.at.path?.length ? '.' + s2.at.path.join('.') : '') + (s2.at.bot ? '!' : '') : '') + (s2.step ? '>' + s2.step.type : '')).join(',');
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'robot', name: 'the teacher', program: [], team: [] }, x: -1.2, z: 1.4 },
+    { thing: { kind: 'box', holes: [{ kind: 'robot', name: 'the pupil', program: [], team: [] }, { kind: 'box', holes: [num(1)] }, Object.assign(num(0), { label: 'count' })] }, x: 0.2, z: 1.6 } ] });
+  await slowSettle(D, 2000);
+  D.hold(D.bench(1)); D.giveRobot(); await slowSettle(D, 2500);
+  D.teach({ type: 'take', at: { c: 'given', path: [1] } }); await slowSettle(D, 2500);
+  const pupil = D.mine([0])?.__bot;
+  D.clickRaw({ kind: 'botThing', bot: pupil }); await slowSettle(D, 4000);
+  D.teach({ type: 'newNumber' }); await slowSettle(D, 2500);
+  D.teach({ type: 'put', at: { c: 'given', path: [0] } }); await slowSettle(D, 2500);
+  D.doc.getElementById('exitBtn').click(); await slowSettle(D, 2000);   // "Stop teaching it"
+  D.teach({ type: 'take', at: { c: 'given', path: [2] } }); await slowSettle(D, 2500);
+  D.teach({ type: 'panel' }); await slowSettle(D, 2500);
+  D.teach({ type: 'put', at: { c: 'given', path: [2] } }); await slowSettle(D, 2500);
+  // the pupil's box, then the pupil, by clicking them where they stand
+  D.clickThing(pupil.stand?.occupant); await slowSettle(D, 3000);
+  D.clickRaw({ kind: 'station', id: 's0' }); await slowSettle(D, 3000);
+  const boxTaken = pupil.stand?.occupant == null && !!D.at('s0')?.userData.panel;
+  D.clickRaw({ kind: 'botThing', bot: pupil }); await slowSettle(D, 3000);
+  const pupilTaken = D.queueInfo().clawHeld === 'robot' && !D.allBots().find(b => b.name === 'the pupil')?.aside;
+  D.clickRaw({ kind: 'station', id: 's0' }); await slowSettle(D, 3000);
+  D.teach({ type: 'fold', at: { c: 's0', path: [] } }); await slowSettle(D, 3000);
+  const taught = steps() === 'take:given.1,teach:given.0,taught>newNumber,taught>put,endTeach,take:given.2,panel,put:given.2,take:t1,put:s0,take:t1!,put:s0,fold:s0';
+  D.exit(); await slowSettle(D, 3000);
+  const given = D.mine();
+  const p0 = given?.userData.holes[0]?.thing?.__bot;
+  const rewound = D.state.mode === 'world' && p0?.name === 'the pupil' && p0.program.length === 0
+    && given?.userData.holes[1]?.thing?.userData.kind === 'box' && D.sched().stands === 1;
+  const rewoundWhy = JSON.stringify({ mode: D.state.mode, h0: given?.userData.holes[0]?.thing?.userData.kind ?? null, p0: p0 ? { name: p0.name, steps: p0.program.length } : null,
+    h1: given?.userData.holes[1]?.thing?.userData.kind ?? null, h2: given?.userData.holes[2]?.thing?.userData.kind ?? null, stands: D.sched().stands, s0: D.at('s0')?.userData.kind ?? null });
+  D.speed('inf');
+  D.rounds(1); D.run(); await slowSettle(D, 30000);
+  const count = D.mine([2]);
+  const tray = count?.__panelTray, c = tray?.__ctx;
+  const built = !!c && c.activeBot?.name === 'the pupil' && c.activeBot.program.length === 2 && c.standOcc?.userData.kind === 'box'
+    && !given.userData.holes[0]?.thing && !given.userData.holes[1]?.thing && D.sched().stands === 1;
+  const builtWhy = JSON.stringify({ ctx: !!c, active: c?.activeBot?.name ?? null, steps: c?.activeBot?.program?.length ?? null, stand: c?.standOcc?.userData.kind ?? null,
+    h0: given.userData.holes[0]?.thing?.userData.kind ?? null, h1: given.userData.holes[1]?.thing?.userData.kind ?? null, stands: D.sched().stands, said: D.doc.getElementById('hint').textContent.slice(0, 100) });
+  D.rounds(0); D.speed(1);
+  const ok = boxTaken && pupilTaken && taught && rewound && built;
+  put((ok ? 'PASS' : 'FAIL') + ' a robot takes back the little robot it taught  (box-taken=' + boxTaken + ' pupil-taken=' + pupilTaken
+      + ' taught=' + taught + ' rewound=' + rewound + (rewound ? '' : ' ' + rewoundWhy) + ' built-on-the-panel=' + built + (built ? '' : ' ' + builtWhy) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -6402,6 +6520,12 @@ async function runOne(D, spec) {
   let mtchOK = true;
   try { mtchOK = want('metaTeach') ? await metaTeachCheck(D) : true; }
   catch (e) { mtchOK = false; put('FAIL a robot teaches robots to write to the perch  ' + e.message, 'fail'); }
+  let lwOK = true;
+  try { lwOK = want('lessonWaiting') ? await lessonWaitingCheck(D) : true; }
+  catch (e) { lwOK = false; put('FAIL a lesson waiting on a panel begins on entering  ' + e.message, 'fail'); }
+  let tbOK = true;
+  try { tbOK = want('taughtBack') ? await taughtBackCheck(D) : true; }
+  catch (e) { tbOK = false; put('FAIL a robot takes back the little robot it taught  ' + e.message, 'fail'); }
   let rsrtOK = true;
   try { rsrtOK = want('resort') ? await resortCheck(D, frame.contentWindow) : true; }
   catch (e) { rsrtOK = false; put('FAIL Resort Infinity: the guests walk, guest 1 first, and eleven find eleven cottages  ' + e.message, 'fail'); }
@@ -6537,7 +6661,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

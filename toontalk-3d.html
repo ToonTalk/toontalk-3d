@@ -385,6 +385,17 @@ Click it and press Start. A robot may teach a robot, not a robot that
 teaches a robot. examples/meta/🎓 teacher is a robot that teaches a
 little robot to count with the 1 it gives it.
 
+The little robots it taught stay among its things. After Stop
+teaching it, the pupil at its own desk is still within the teacher's
+reach: click the pupil with an empty claw and the teacher picks it up (the
+step is pick up the first little robot it taught); click the box on
+the pupil's desk and it takes that. A robot can thus train two robots and set
+them, with a box, on a thing's panel: examples/meta/🎓 timer-teacher
+teaches Ask and Tell one after the other, takes a number's panel out onto a
+work spot, puts Tell's box, Ask and Tell on it, and folds it away — the
+number is a stopwatch. A desk left aside with a box on it holds the workshop's
+panels still, so a tidy teacher puts a leftover box back in its hole.
+
 Pads speak. Read on the held card reads a pad in full and
 aloud, in the workshop's own voice. In a lesson, Read is a step: the robot
 reads out the pad in its claw when it runs, and waits for its own words. And
@@ -1756,6 +1767,14 @@ the other tells the number the answer, and a pad crossing between two holes
 lets them take turns (devices/timer). SPACE on the number starts
 the robots on its own panel; . rests them; and the Stop button,
 pressed inside a panel or a house, stops it for good until Start.
+
+A lesson waiting on a panel. Drop a box on a thing's panel, then a
+fresh robot, and the robot stands behind the panel's desk with the box on it.
+Go in and the lesson begins as you enter: everything you do is learned, the
+copier, the number stack and the bird on the perch included, and a letter
+given to that bird during the lesson really reaches the thing (the daydream
+takes it back when you leave the thought). Leave the thought and press Start,
+or come out and press SPACE on the thing.
 
 The perch
 Beside the robots desk stands a pedestal, the perch. Enter a
@@ -9182,7 +9201,9 @@ function roomDrop(room, dropped, refuse) {
     ? (room.userData.panel && activeTeamSize(room) > 1
         ? `A team of ${activeTeamSize(room)} on the panel — each waits for something it recognises.`
         : roomHasWorker(room) ? 'The robot steps inside, ready behind the desk.'
-                              : 'Another robot joins the room, waiting on the table.')
+        : room.__ctx?.activeBot === dropped.__bot && !dropped.__bot.program.length && room.__ctx.standOcc
+          ? `The robot steps inside, behind the desk with ${panelName(room.__ctx.standOcc)} on it — go in to train it.`
+          : 'Another robot joins the room, waiting on the table.')
     : 'Set down inside the room.');
   refreshUI();
 }
@@ -9823,7 +9844,16 @@ function enterRoom(room) {
     if (wasRunning && activeBot && program.length && stations.stand.occupant) {
       enqueue(doNow(() => runProgram()));
     }
-    say(wasRunning
+    // A LESSON WAITING. Ken dropped a box on a number's panel, then a fresh
+    // robot, and went in to train it -- and copied a letter, gave it to the
+    // bird on the perch, all in world mode, none of it learned: the robot
+    // had been given its box offstage, where no lesson can begin. An untrained
+    // robot with a thing on its desk is a lesson, so it begins as you enter.
+    const lesson = activeBot && !program.length && stations.stand.occupant && mode === 'world';
+    if (lesson) enqueue(doNow(() => { if (mode === 'world') enterTraining(); }));
+    say(lesson
+      ? 'You step inside — the robot is imagining: everything you do now, it learns. The tall door on the left leads back out.'
+      : wasRunning
       ? 'You step inside — the robot gets straight back to work. Your table came with you; the tall door on the left leads back out.'
       : 'You step inside — your table came with you, and the tall door on the left leads back out.');
     // ...and the view settles where training puts it: over the robot's
@@ -10667,6 +10697,7 @@ const roots = () => Object.values(stations)
 const CONTAINER_STATION = { given: 'stand', in: 'copyIn', out: 'copyOut',
   notebook: 'notebook', perch: 'perch' };
 const containerText = (c) => /^s\d+$/.test(c) ? `spot ${+c.slice(1) + 1}`
+  : TAUGHT_RE.test(c) ? `the box on the desk of the ${nth(+c.slice(1))} little robot it taught`
   : ({ given: 'what it was given', in: 'the copier platform',
        out: 'the copy tray', notebook: 'the notebook', ground: 'the ground',
        perch: 'the bird on the perch' })[c];
@@ -10764,12 +10795,15 @@ function roundNotebook() {
   return roundNB;
 }
 const stationOf = (c) => /^s\d+$/.test(c) ? ensureScratchStation(+c.slice(1))
+  : TAUGHT_RE.test(c) ? taughtStation(+c.slice(1))
   : c === 'notebook' ? NOTEBOOK_STATION
   : stations[CONTAINER_STATION[c]];
 const containerOfStation = (id) => /^s\d+$/.test(id) ? id
   : Object.keys(CONTAINER_STATION).find(c => CONTAINER_STATION[c] === id) ?? null;
 const myThing = () => stations.stand?.occupant ?? null;
 function thingAt(at) {
+  // the pupil itself, at its own desk
+  if (at.bot) { const b = taughtNow[+at.c.slice(1) - 1]; return taughtAtDesk(b) ? b.node : null; }
   let node = stationOf(at.c)?.occupant ?? null;
   let path = at.path;
   // the notebook is paged, not holed: hole 1 of "the notebook" is the left page
@@ -10809,7 +10843,8 @@ function holeAt(at) {
 // Where a thing sits among the robot's containers, or null if it is elsewhere.
 function addrOf(thing) {
   const cs = ['given', 'in', 'out', 'perch',
-    ...Object.keys(stations).filter(id => /^s\d+$/.test(id))];
+    ...Object.keys(stations).filter(id => /^s\d+$/.test(id)),
+    ...taughtNow.map((b, i) => 't' + (i + 1)).filter(c => stationOf(c))];
   for (const c of cs) {
     const walk = (node, path) => {
       if (!node) return null;
@@ -13200,7 +13235,7 @@ function actionNew(kind) {
 const walkTargetFor = (c) =>
   c === 'given' ? (() => homeFor(activeBot))
   : (c === 'in' || c === 'out') ? () => standForPoint(stations.copyOut.point)
-  : () => standForPoint(stationOf(c).point);
+  : () => { const st = stationOf(c); return st ? standForPoint(st.point) : homeFor(activeBot); };
 
 // Where to stand so the claw lands on the addressed hole itself, not the
 // centre of whatever contains it.
@@ -13312,6 +13347,17 @@ function actionTake(at, onNest) {
     }
     if (!obj) return abort(`The robot expected something in ${holeName(at)} and found nothing.`);
     detach(obj);
+    if (TAUGHT_RE.test(at.c)) {
+      const b = taughtNow[+at.c.slice(1) - 1];
+      const st = b?.__taughtStand;
+      if (at.bot) {
+        b.stand = null; b.home = HOME; b.mini = true; b.waiting = false;
+        obj.scale.setScalar(MINI);
+        b.root.position.set(0, 0, 0); b.root.rotation.set(0, 0, 0);
+        addMiniBubble(obj, null);
+      }
+      if (st && !st.occupant && !taughtAtDesk(b)) dropStand(st);
+    }
     clawHeld = obj;
     setPick(clawHeld, { kind: 'thing', thing: clawHeld });
     noteHeld(obj);           // the CLAW's, whatever your own hand is doing
@@ -14354,7 +14400,8 @@ function resolve(ev) {
     // handing things over only means anything in the workshop -- inside the
     // bubble the robot is working, and its body must not block clicks past it
     if (o.__pick.kind === 'botThing' && mode !== 'world'
-        && !(mode === 'training' && clawHeld && clawHeld.userData.kind !== 'robot' && teachable(o.__pick.bot))) continue;
+        && !(mode === 'training' && clawHeld && clawHeld.userData.kind !== 'robot' && teachable(o.__pick.bot))
+        && !(mode === 'training' && !clawHeld && taughtIndex(o.__pick.bot) && taughtAtDesk(o.__pick.bot))) continue;
     return { ...o.__pick, point: h.point.clone() };
   }
   return null;
@@ -15170,7 +15217,11 @@ function userClick(target) {
         sfx('drop'); refreshUI();
         return say('Back on the perch.');
       }
-      if (b?.userData.kind === 'bird') return userDropOn(b);
+      if (b?.userData.kind === 'bird') {
+        if (b.__liveTarget || b.userData.liveId) return giveToLiveBird(b, liveOwnerOf(b));
+        const gift = held; held = null;
+        return birdDeliver(b, gift);
+      }
       if (b) return say(`The perch is taken \u2014 ${panelName(b)} is on it.`);
       if (held.userData.kind !== 'bird') {
         return say('The perch is for a bird: set one there, and a robot\u2019s letters put on the perch go to her.');
@@ -15355,6 +15406,9 @@ function directRobot(target) {
   // the pupil's box, and the lesson that follows is the pupil's
   if (target.kind === 'botThing') {
     const bot = target.bot;
+    if (!clawHeld && taughtIndex(bot) && taughtAtDesk(bot)) {
+      return go({ type: 'take', at: { c: 't' + taughtIndex(bot), path: [], bot: true } });
+    }
     if (!clawHeld) return say('Have the robot pick up what the little robot should learn on, then click the little robot.');
     if (clawHeld.userData.kind === 'robot') return say('Robots don’t work on robots — a robot can teach one, with a box in its claw.');
     if (clawHeld.userData.panel) return say('A panel is not a lesson. Give it a box, a number or a pad to learn on.');
@@ -18341,6 +18395,7 @@ function enterTraining() {
   if (activeBot) activeBot.trainedOn = thingOut(given);
   clearUndo();
   clearScratch();
+  taughtNow = [];
   // the robot at the desk is full size by definition; if some interrupted
   // animation left it otherwise, put it right and leave a trace for the
   // "random tiny robot" reports
@@ -18529,6 +18584,7 @@ function runProgram() {
   // No world reset, but the robot's own area always starts empty so a replay
   // cannot depend on leftovers from a previous run.
   clearScratch();
+  taughtNow = [];
   if ((Math.abs(activeBot.node.scale.x - 1) > 0.01 || Math.abs(activeBot.root.scale.x - 1) > 0.01)
       && !activeBot.__warned) {
     // once per robot: a panel's robot enters a run every frame, and this was
@@ -19232,6 +19288,8 @@ function beginTeach(bot, gift, at) {
     steps.push(settleInto(gift, gw, 0.5));
   }
   teaching = { outer, inner: bot, at, gift };
+  bot.__taughtStand = st;
+  taughtNow.push(bot);
   if (mode === 'training') dreamPupils.push({ bot, program: bot.program, condition: bot.condition, trainedOn: bot.trainedOn });
   steps.push(armTo(POSE.rest, JAW_CLOSED, 0.5));       // the teacher's arm, before the claw is the pupil's
   steps.push({
@@ -19311,6 +19369,25 @@ function endTeaching(byRobot = false) {
 // A lesson left mid-teaching still ends the pupil's, so the teacher's
 // steps are whole.
 let dreamPupils = [];
+// THE LITTLE ROBOTS IT TAUGHT, in this lesson or this run, in order. Each
+// stands at a desk of its own beside the teacher, and stays among the
+// teacher's things: the first, the second... little robot it taught is a
+// place the teacher can take from -- the pupil itself, or the box on its
+// desk -- so a robot can train two robots and set them, with a box, on a
+// number's panel.
+let taughtNow = [];
+const TAUGHT_RE = /^t\d+$/;
+const nth = (k) => ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'][k - 1] ?? `${k}th`;
+function taughtStation(k) {
+  const bot = taughtNow[k - 1];
+  const st = bot?.__taughtStand;
+  if (!bot || !st) return null;
+  return { id: 't' + k, kind: 'taught', bot, point: st.point, topY: st.topY, cubes: [],
+           get occupant() { return st.occupant ?? null; }, set occupant(v) { st.occupant = v; } };
+}
+const taughtIndex = (bot) => taughtNow.indexOf(bot) + 1;
+// still standing at the desk the lesson gave it
+const taughtAtDesk = (bot) => !!bot && !!bot.__taughtStand && bot.stand === bot.__taughtStand && bot.node.parent === WROOT;
 function undoDreamTeaching() {
   if (teaching) { teaching.outer.program.push({ type: 'endTeach' }); const o = teaching.outer; teaching = null; bindBot(o); }
   for (const d of dreamPupils) {
@@ -19461,6 +19538,7 @@ const holeName = (at) => {
     const page = `the ${at.path[0] ? 'right' : 'left'} page of the notebook`;
     return rest.length ? `hole ${rest.map(i => i + 1).join('.')} of ${page}` : page;
   }
+  if (at.bot) return `the ${nth(+at.c.slice(1))} little robot it taught`;
   const base = at.path.length
     ? `hole ${at.path.map(i => i + 1).join('.')} of ${containerText(at.c)}`
     : containerText(at.c);
@@ -19488,7 +19566,8 @@ function describe(s) {
        : s.type === 'goOut' ? 'go out through the back door to the yard'
        : s.type === 'goIn' ? 'come back inside through the back door'
        : s.type === 'load' ? `open the world \u201c${s.name}\u201d`
-       : s.type === 'take' ? (s.at.nbHalf != null ? `take a copy from ${holeName(s.at)}`
+       : s.type === 'take' ? (s.at.bot ? `pick up ${holeName(s.at)}`
+           : s.at.nbHalf != null ? `take a copy from ${holeName(s.at)}`
            : s.at.nest ? `take the top of ${holeName(s.at)}`
            : s.at.path.length ? `take what is in ${holeName(s.at)}`
            : s.at.c === 'out' ? 'take the copy'
@@ -25877,7 +25956,8 @@ window.__nano = {
              myThing: X ? (X.userData.label ?? X.userData.lid ?? X.userData.kind) : null,
              point: st ? st.point.toArray().map(n => +n.toFixed(2)) : null };
   },
-  clickStation(id) { userClick({ kind: 'station', id }); },
+  clickStation(id) { handleClick({ kind: 'station', id }); },   // a hand's click, or the robot's in a lesson
+  roomHasWorker,
   tipStation(id) { return tipFor({ kind: 'station', id }); },
   get marty() { return martyNode; },
   canPaint,

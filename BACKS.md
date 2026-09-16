@@ -7554,3 +7554,34 @@ own on the perch -- Ask really asks the computer, Tell's letter really lands
 on "what it told" -- and the pads say how to move the pupils onto a number's
 panel. Nothing was added to what a robot can do; `put('perch')` is a taught
 step like any other.
+
+## A lesson waiting, and the little robots it taught
+
+*Added 16 Sep. Ken: "When I tried to train to have a panel robot to copy a
+message, give it the thing bird, and then drop a 1 on the number in the box
+the training started with the drop of the 1 -- and the copying, putting one
+back, and giving the bird a copy were not recorded." And: "the meta timer
+example doesn't involve panels - it should end up with a number that when
+turned on is a stop watch."*
+
+The first was measured as Ken described: a box dropped on a number's panel,
+then a fresh robot, and the robot stood behind the panel's desk with the box
+on it -- given offstage, where no lesson can begin -- so the hand's gestures
+inside were a hand's, not a lesson's. An untrained robot with a thing on its
+desk IS a lesson, so it begins as you enter the panel; the drop says "go in
+to train it". Measured after: take, put on the copier, take the copy, put on
+the perch (the number really reads 7 in the dream and 0 again after it),
+a fresh 1, put in hole 2 -- six steps, and the run does them for real.
+
+The second needed one thing a robot could not do: reach the little robot it
+had taught. After "Stop teaching it" the pupil stood at a desk of its own,
+addressable by nobody. Now the pupils a robot taught in this lesson (or this
+run) are among its things -- "the first little robot it taught", "the box on
+the desk of the second little robot it taught" -- and a click on the pupil
+with an empty claw, or on the box on its desk, is a take. The pupil comes up
+small in the claw, its desk goes when nothing and nobody is left at it, and
+a put on a panel tray sets it behind the panel's desk (a second trained
+robot joins as a team). The timer teacher ends that way: the number's panel
+out onto a work spot, Ask's box back in its hole (a desk left aside holds
+the panels still), Tell's box on the panel, Ask, Tell, fold -- and the
+number, taken out of the box, climbs on SPACE. The dream rewinds it all.
