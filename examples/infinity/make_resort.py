@@ -72,7 +72,19 @@ OFFICE = lambda: box(nest(OFFICE_ID, OFFICE_G, label='the office post'))   # noq
 
 # --- one guest's behaviour ---------------------------------------------------
 # 0 the desk | 1 my nest | 2 my own bird | 3 my number
-# 4 my place | 5 [set | position | _] | 6 the moving office
+# 4 my place | 5 [set | position | _] | 6 the moving office | 7 a bell kept for later
+#
+# THE BELL BEFORE THE ADDRESS. Everything a guest hears lands on the one nest,
+# and only the top of the pile can be seen. Rung before a guest was housed
+# (the resort teacher rings it the moment the clerk is at work, and at
+# Instant the clerk's answer is still in the air), the bell's pad lay on TOP
+# of the address, and nobody's thought fitted: Stand wants a number on top,
+# Move wants a place already set. So a fourth robot keeps the pad in hole 7
+# for later, which uncovers the address, and a fifth moves on a KEPT pad once
+# there is a place. The order matters, since a thought looking at the empty
+# nest waits and stops the round there: the kept-pad robot looks only at holes
+# and comes first; Move looks at the nest and waits when it is bare, which is
+# how the guest dozes.
 # (my thing -- the guest -- is the bird on the perch: the panel's own)
 def guest_gadget(k, number, lid, gid):
     mail = (9700 + k, 'resort-guest-%d' % k)
@@ -84,8 +96,9 @@ def guest_gadget(k, number, lid, gid):
                num(number),                                # noqa: F405
                None,                                       # my place: empty until I am housed
                msg('set', 'position'),
-               bird(OFFICE_ID, OFFICE_G, label='the moving office'))   # noqa: F405
-    any_ = [ANYBIRD, None, ANYBIRD, None, None, ANYBOX, ANYBIRD]   # noqa: F405
+               bird(OFFICE_ID, OFFICE_G, label='the moving office'),   # noqa: F405
+               None)                                       # a bell heard before I had a place, kept
+    any_ = [ANYBIRD, None, ANYBIRD, None, None, ANYBOX, ANYBIRD, None]   # noqa: F405
 
     def cond(**at):
         c = list(any_)
@@ -123,6 +136,20 @@ def guest_gadget(k, number, lid, gid):
          take('s0'), put('given', 6)],                     # off to the moving office  # noqa: F405
         note='A pad has landed on my nest: the bell, rung for every guest. Sends [where I live, my own bird] to the moving office and takes my place out of the box, so that the answer puts a new one in.')
 
+    move_kept = robot(                                     # noqa: F405
+        'Move on the bell I kept', cond(h7=WILDTEXT, h4=ANYNUM),   # noqa: F405
+        [take('given', 7), put('s1'), vac('s1'),           # the kept pad, thrown away  # noqa: F405
+         newbox, holes(2), put('s0'),                      # noqa: F405
+         take('given', 4), put('s0', 0),                   # noqa: F405
+         copy('given', 2), put('s0', 1),                   # noqa: F405
+         take('s0'), put('given', 6)],                     # noqa: F405
+        note='The bell rang before I had a place, and the pad was kept in hole 7. Now that I have one: the same as Move when told to, on the kept pad.')
+
+    hold = robot(                                          # noqa: F405
+        'Keep the bell for later', cond(h1=WILDTEXT),      # noqa: F405
+        [takeTop('given', 1), put('given', 7)],            # noqa: F405
+        note='The bell rang before I had a place (Move when told to did not fit): takes the pad off my nest into hole 7, which uncovers the address under it.')
+
     return {'kind': 'text', 'text': 'guest %d' % number, 'gadget': True,
             'lid': gid, 'evt': 'evt-' + gid, 'boundTo': lid,
             'note': ('Guest %d\u2019s own three robots: ask the desk where to live, walk to '
@@ -130,7 +157,7 @@ def guest_gadget(k, number, lid, gid):
                      'guest %d, and on nothing else.' % (number, number)),
             'look': {'bg': '#2b2238', 'ink': '#ecd9ff', 'font': 'sans', 'h': 0.34},
             'panel': {'kind': 'world', 'v': 3, 'bench': [], 'stations': {'stand': work},
-                      'active': dict(ask, team=[stand, move])}}
+                      'active': dict(ask, team=[move_kept, move, hold, stand])}}
 
 
 def cottage(n):

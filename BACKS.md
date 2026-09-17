@@ -7775,3 +7775,53 @@ same tab stopped before its first round -- the clerk answered nobody, the
 guests stayed at the gate, and a check waiting six thousand frames for them
 looked like a hang. They restore the suite's limit now.
 
+## The resort teacher
+
+Ken: "I still find infinity resort very confusing - can you make a meta
+example that solves it." `examples/meta/make_resort_teacher.py`: the resort
+in the yard, and at the yard's table a teacher given a thirteen-hole box
+that does the whole of it -- the two lessons are the very robots of the
+resort's answers, taught step by step. Four things it needed:
+
+THREE ROBOTS, not one: a lesson takes a letter off a post, and letters take
+a moment to fly. A robot cannot wait mid-round, but a thought about a post
+waits for a letter -- so the teacher is a team: Seat the guests (hole 0
+holds the pad; it reads it and has Dusty take it, so never again), Teach
+the clerk (a little robot in hole 1 and a letter on the desk's post), Teach
+the mover (a little robot in hole 3 and a letter on the office post). Each
+takes a turn its predecessor makes possible, and makes it impossible for
+itself. A hole a robot need not look in is `null` in its thought, which
+matches anything or nothing; a `wild` thought needs something there, and the
+team stopped on the vacuumed hole 0 until that was put right. And a member
+teaches ITS first pupil: the taught robots are counted per robot, so the
+mover's teacher says t1, not t2.
+
+A PAD'S PANEL is where a pupil works, since the bench holds one working
+robot and the teacher is standing there: the sign's panel out onto a work
+spot, the pupil's box and the pupil on it, the panel folded away. But a pad
+in a hole is out of play -- its panel gets no turn -- so the teacher sets
+the sign on the grass (a put on `ground` with a spot) before throwing its
+switch by mail.
+
+A FOLDED TRAY TOOK A WORK SPOT: putOnBench gives a robot's put-downs a
+scratch spot during a run, and a behaviour switched on by mail while the
+teacher worked had its hidden tray land on spot 1, where the next lesson's
+letter was "set down inside the room". A folded tray is placed as a person
+would place it.
+
+THE BELL BEFORE THE ADDRESS: the teacher rings the bell the moment the
+clerk is at work, and at Instant the clerk's answers were still in the air,
+so the bell's pad lay on TOP of the address on four guests' nests, and
+nobody's thought fitted (Stand wants a number on top, Move a place already
+set). Two more robots in every guest's machinery: Keep the bell for later
+takes the pad off into hole 7, uncovering the address; Move on the bell I
+kept moves once there is a place. Their order matters -- a thought looking
+at the empty nest waits and stops the round there -- so the kept-pad robot
+looks only at holes and comes first, and Move, which looks at the nest,
+waits when it is bare, which is how a guest dozes.
+
+And a glide bug the run exposed: thingPlace read the picture, and a
+[set | position] that landed mid-glide was treated as a step added to the
+old target, so the guests went past their cottages by the trip they had not
+yet finished (and stood at z 3.8, the unfinished 1.4 of the walk from the
+gate added twice). The place is the glide's target now, and a set is a set.

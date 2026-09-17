@@ -150,6 +150,7 @@ and its robots move it. What lands says who runs:
 |---|---|---|
 | a guest's | a number | *Stand at my address*: work out `x = n × 0.6 − 4.5` and tell my cottage to stand there |
 | a guest's | a pad | *Move when told to*: the bell; write `[where I live \| bird]` to the moving office |
+| a guest's | a pad, before it has an address | *Keep the bell for later*: the pad off the nest into hole 7, which uncovers the address; *Move on the bell I kept* moves once there is a place |
 | the desk's | `[number \| bird]` | the clerk: a new guest asking where to live |
 | the office's | `[number \| bird]` | the mover: a guest already housed, asking where to move |
 
@@ -170,7 +171,8 @@ own perch bird, so it rings once a press. Both answers, *Next address* and
 Problem 1: six guests house themselves at 1–6. Problem 2: ring the bell, and
 the six ask the office where to go and shuffle to 6–11; then the five
 newcomers take 1–5. Eleven cottages, no two at the same address. Set the
-speed to 4× or 8×: eleven round trips at walking pace take a while.
+speed to 4× or 8×: eleven round trips at walking pace take a while. To
+watch the whole of it done by a robot, see `meta/🎓 resort-teacher`.
 
 `make_resort.py` writes it.
 

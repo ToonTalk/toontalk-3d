@@ -3306,6 +3306,7 @@ const EXAMPLE_WORLDS = [
   'devices/⌨️ keys',
   'meta/🎓 telling',
   'meta/🎓 timer-teacher',
+  'meta/🎓 resort-teacher',
   'devices/🖱️ pointer',
   'games/🏓 pong-classic',
   'games/🏓 pong-gadgets',
@@ -4265,6 +4266,52 @@ async function resortLateCheck(D, win) {
       + ' go-in-to-train=' + goIn + ' lesson-on-the-post=' + lesson + ' added-5=' + added + ' loosened=' + loosened + ' back-out=' + out
       + ' moved-up-five=' + movedUp + ' newcomers-1-to-5=' + newcomers + ' old-at-6-to-11=' + oldStayed
       + ' guests-at=' + at(guests.slice(0, 6)) + ' newcomers-at=' + at(guests.slice(6)) + ' secs=' + secs + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE RESORT TEACHER. Ken: "I still find infinity resort very confusing -
+// can you make a meta example that solves it." A team of three at the yard's
+// table, given a thirteen-hole box, does the whole of it: seats the guests,
+// teaches a little robot the clerk's job on the desk and puts it to work on
+// a pad's panel, rings the bell, teaches another the mover's job (+5) on the
+// office desk and puts that to work, and welcomes five more. Measured: six
+// at 6 to 11, five at 1 to 5, the two pupils taught the very programs of the
+// resort's answers, the two signs on the grass with a worker each.
+async function resortTeacherCheck(D, win) {
+  const w = await (await fetch('../examples/meta/🎓 resort-teacher.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+  const grass = () => { const o = []; for (let i = 0; i < 90; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const guests = grass().filter(t => t.userData.kind === 'model' && /^(new )?guest \d/.test(t.userData.label || ''));
+  const box = grass().find(t => t.userData.kind === 'box' && t.userData.holes.length === 13);
+  const teacher = D.benchBots().find(b => b.__bot?.name === 'the teacher');
+  const cottageX = (n) => n * 0.6 - 4.5;
+  const atCottage = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.05 && Math.abs(g.position.z - 5.2) < 0.05;
+  const slow = CHECKS_FILTER.some(w2 => 'teacherslow'.includes(w2) && w2.length > 7);   // named teacherSlow: at 4x
+  D.speed(slow ? 4 : 'instant');
+  D.hold(box); await frames(D, 30); D.clickBot(teacher);
+  let wentToWork = false;                                 // the drop set it to work
+  for (let k = 0; k < 200 && !wentToWork; k++) { await frames(D, 1); wentToWork = D.helperState().mode === 'replay'; }
+  const done = () => guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)) && guests.slice(6).every((g, i) => atCottage(g, i + 1));
+  for (let k = 0; k < (slow ? 30000 : 8000) && !done(); k++) await frames(D, 1);
+  const solved = done();
+  for (let k = 0; k < 4000 && D.helperState().mode !== 'world'; k++) await frames(D, 1);   // the team looks once more, and stops
+  const hint = win.document.getElementById('hint').textContent;
+  const ended = D.helperState().mode === 'world' && /none of them recognises/.test(hint);
+  const fd = grass().find(t => t.userData.text === 'the front desk'), mo = grass().find(t => t.userData.text === 'the moving office');
+  const worker = (p) => p?.__panelTray?.__ctx?.activeBot?.name ?? null;
+  const signs = worker(fd) === 'Next address' && worker(mo) === 'Move up five';
+  // the pupils learned the very robots of the resort's answers
+  const R = await (await fetch('../examples/infinity/🏨 resort-infinity.world.json')).json();
+  const answers = Object.fromEntries(R.yard.bench.filter(e => e.thing.kind === 'robot').map(e => [e.thing.name, e.thing.program]));
+  const prog = (p) => JSON.stringify(p.__panelTray.__ctx.activeBot.program.map(st => ({ ...st, value: undefined })));
+  const learned = fd && mo && prog(fd) === JSON.stringify(answers['Next address'].map(st => ({ ...st, value: undefined })))
+    && prog(mo) === JSON.stringify(answers['Move up five'].map(st => ({ ...st, value: undefined })));
+  D.speed(1);
+  const ok = wentToWork && solved && ended && signs && learned;
+  const at = (gs) => gs.map(g => Math.round((g.position.x + 4.5) / 0.6 * 10) / 10).join(',');
+  put((ok ? 'PASS' : 'FAIL') + ' the resort teacher solves the resort  (went-to-work=' + wentToWork + ' solved=' + solved + ' ended=' + ended
+      + ' signs-have-workers=' + signs + ' pupils-learned-the-answers=' + learned + ' guests-at=' + at(guests.slice(0, 6)) + ' newcomers-at=' + at(guests.slice(6)) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -6774,6 +6821,9 @@ async function runOne(D, spec) {
   let rlOK = true;
   try { rlOK = want('resortLate') || want('resortSlow') ? await resortLateCheck(D, frame.contentWindow) : true; }
   catch (e) { rlOK = false; put('FAIL Resort Infinity by hand  ' + e.message, 'fail'); }
+  let rtcOK = true;
+  try { rtcOK = want('resortTeacher') || want('teacherSlow') ? await resortTeacherCheck(D, frame.contentWindow) : true; }
+  catch (e) { rtcOK = false; put('FAIL the resort teacher solves the resort  ' + e.message, 'fail'); }
   let shOK = true;
   try { shOK = want('selfHouse') ? await selfHouseCheck(D) : true; }
   catch (e) { shOK = false; put('FAIL a house dropped on its own door is refused  ' + e.message, 'fail'); }
@@ -6930,7 +6980,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

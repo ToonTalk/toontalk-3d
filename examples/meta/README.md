@@ -55,3 +55,25 @@ there. A pupil whose lesson is over stands half size at its desk. The little
 robots a teacher taught stay among its things ("the first little robot it
 taught", at its own desk, with its box), which is how it reaches them again.
 Regenerate with `python make_timer_teacher.py`.
+
+🎓 **resort-teacher** — a robot solves Resort Infinity in front of you (Ken:
+"I still find infinity resort very confusing - can you make a meta example
+that solves it"). Out in the yard, at the table, a team of three is given a
+thirteen-hole box: a pad, the two little robots to be taught, the desk and
+the office desk (each a box with a post), birds to "the guests", "ring the
+bell" and "five more guests", the switch letter `[set | switch | on]`, and
+two signs with birds to them. *Seat the guests* gives "the guests" the
+switch letter, reads the pad and has Dusty take it. *Teach the clerk*, once
+a letter lies on the post, teaches the first little robot the clerk's job on
+the desk (the very steps of `infinity/make_resort.py`'s *Next address*,
+then Ruby on the number), takes the sign "the front desk"'s panel out, puts
+the desk and the pupil on it, folds it, sets the sign on the grass and
+switches it on by its bird — six guests walk to their cottages — then rings
+the bell. *Teach the mover*, once a housed guest's letter lies on the office
+post, does the same with *Move up five* and "the moving office", and gives
+"five more guests" the switch letter. Three robots because a robot cannot
+wait mid-round and a lesson takes a letter off a post: a thought about a
+post is what waits for the letter to land. A pad's panel is where a robot
+works when the bench is taken; a pad in a hole is out of play, so the sign
+goes on the grass first. The little robots it taught stay among its things.
+Regenerate with `python make_resort_teacher.py`.

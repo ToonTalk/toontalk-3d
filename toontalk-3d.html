@@ -1823,7 +1823,12 @@ bird of your own there and the robots letters go to her nest —
 the way to try such a robot out without entering a panel. Two worlds in
 examples/meta show a robot teaching robots to do it:
 telling (one pupil, one letter to the perch) and
-timer-teacher (the timers two robots, built by a teacher).
+timer-teacher (the timers two robots, built by a teacher);
+a third, resort-teacher, is a team of three that solves Resort
+Infinity in front of you — seats the guests, teaches a clerk and puts it
+to work on a pads panel, rings the bell, teaches a mover, welcomes five
+more — three robots because a lesson takes a letter off a post, and a
+thought about a post is what waits for the letter to land.
 
 Filling a yard by hand. Whatever you carry comes through the door
 with you: a box of things to unpack, and the empty box goes back in with
@@ -7542,7 +7547,14 @@ function thingPlace(X) {
   // its own panel, where benchThings is that panel's, and the thing it moves
   // is out here on the shared table. Asking the scene graph is the question
   // that means the same in every world.
-  return X.parent === benchRoot ? { x: X.position.x, z: X.position.z } : null;
+  // THE PLACE, NOT THE PICTURE: mid-glide the thing is seen short of where
+  // it was told to stand, and a robot that read the picture then sent a
+  // guest to its next cottage from a place it had never reached.
+  if (X.parent === benchRoot) {
+    const g = X.__glide;
+    return g ? { x: g.tx, z: g.tz } : { x: X.position.x, z: X.position.z };
+  }
+  return null;
 }
 // Everything with a speed, so the clock does not have to go looking. A thing
 // standing still is not in here at all, which is the point: a world where
@@ -8473,11 +8485,14 @@ function startGlide(X, from) {
   // hand's width -- not for the sixty steps a second a behaviour sends: each
   // of those restarted the glide from where the thing was SEEN, and a star
   // sent across the table by bouncing crept 0.0001 a frame (bindingsCheck,
-  // outOfPlayCheck). A step shorter than a finger applies at once; a step
-  // that lands while a glide is on adds to where the glide was going.
+  // outOfPlayCheck). The place a step is measured from is the glide's own
+  // target (thingPlace), so the new place is simply where the thing now
+  // stands; the picture starts from where it is seen. A move shorter than a
+  // finger applies at once. (Adding the step to the old target instead sent
+  // the resort's guests past their cottages by the trip they had not yet
+  // finished: [set | position] mid-glide is not a step.)
   const g = X.__glide;
-  const step = { x: X.position.x - from.x, z: X.position.z - from.z };
-  const tx = g ? g.tx + step.x : X.position.x, tz = g ? g.tz + step.z : X.position.z;
+  const tx = X.position.x, tz = X.position.z;
   const x0 = g ? g.vx : from.x, z0 = g ? g.vz : from.z;
   if (Math.hypot(tx - x0, tz - z0) < 0.12) {
     X.position.x = tx; X.position.z = tz;
@@ -9165,7 +9180,7 @@ function bringOutPanel(X, folded = false) {
     // A tray stranded off the bench -- its thing was vacuumed and taken back
     // out, say -- returns WITH the thing: dirty meant nothing while no list
     // held it, so SPACE lit a panel that never got a turn.
-    if (!tray0.parent) putOnBench(tray0, freeTraySpot(tray0));
+    if (!tray0.parent) putOnBench(tray0, freeTraySpot(tray0), folded);
     return tray0;
   }
   const size = X.userData.panelSize;
@@ -9182,7 +9197,12 @@ function bringOutPanel(X, folded = false) {
   // tray as it is made lets the scheduler reach a nested one directly,
   // whatever it is nested in.
   allTrays.push(tray);
-  putOnBench(tray, freeTraySpot(tray));
+  // A FOLDED TRAY TAKES NO WORK SPOT. putOnBench gives a robot's put-downs
+  // a scratch spot during a run, and a behaviour switched on BY MAIL while
+  // a robot works -- the resort teacher's switch letter to "the guests" --
+  // had its hidden tray land on spot 1, where the next lesson's letter was
+  // "set down inside the room". Placed as a person would place it.
+  putOnBench(tray, freeTraySpot(tray), folded);
   if (tray.userData.world) hydrateRoom(tray);
   // A behaviour switched on wants its robots WORKING, not on display: the
   // tray is made and left folded, the state a panel already has for "its
