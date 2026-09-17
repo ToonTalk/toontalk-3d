@@ -147,7 +147,7 @@ nest on the desk. What lands says who runs:
 | the nest | what lands | who runs |
 |---|---|---|
 | a guest's | a number | *Stand at my address*: work out `x = n × 0.6 − 4.5` and tell my cottage to stand there |
-| a guest's | a pad | *Move when the bell rings*: write to the desk asking where to move to |
+| a guest's | a pad | *Move when told to*: the desk's announcement, to every guest at once; write to the desk asking where to move to |
 | the desk's | `[number \| bird]` | *Next address*: a new guest asking |
 | the desk's | `[pad \| number \| bird]` | *Move up five*: a guest already housed |
 
@@ -155,9 +155,12 @@ Each cottage carries its own robots — the macro pad **the guests** holds one
 behaviour per cottage, and one press of SPACE starts all six. That is the
 resort's machinery, and the visitor never touches it. What is *theirs* is the
 arithmetic: a three-step robot at the desk that gives a guest their address,
-and later a second that adds five, dropped on the first to make a **team**.
+and a second that adds five, on its team from the start (a clerk you train
+yourself needs *Move up five* dropped on it).
 
-Problem 1: six guests house themselves at 1–6. Problem 2: ring the bell and
+Problem 1: six guests house themselves at 1–6. Problem 2: announce "everybody
+move up five" to every guest (a pad given to the bird *to every guest*, whose
+nest every guest's nest answers to as an alias) and
 the six shuffle to 6–11; then the five newcomers take 1–5. Eleven cottages,
 no two at the same address. Set the speed to 4× or 8×: eleven round trips at
 walking pace take a while.

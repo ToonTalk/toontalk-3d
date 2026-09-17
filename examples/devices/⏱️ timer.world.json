@@ -11,8 +11,8 @@
     },
     "lid": "TIMER1",
     "evt": "evt-TIMER1",
-    "label": "milliseconds",
-    "note": "A timer: two robots on my own panel. One asks the computer the time, the other gives the answer to the bird on the perch, which is a bird to me, and a pad crossing between two holes lets them take turns. SPACE on me starts them; \".\" rests them.",
+    "label": "stopwatch",
+    "note": "A stopwatch: four robots on my own panel. One asks the computer the time, one tells me the time since the start, and two -- when my switch says \"on\" -- set the start so I go on from whatever I show. SPACE on me starts; \".\" rests; set me to 0 and start again.",
     "panel": {
      "kind": "world",
      "v": 3,
@@ -74,13 +74,63 @@
          "kind": "text",
          "text": "go"
         },
-        null
+        null,
+        null,
+        null,
+        {
+         "kind": "nest",
+         "id": 9823,
+         "guid": "evt-TIMER1#switch",
+         "hasEgg": false,
+         "label": "my switch",
+         "pile": [
+          {
+           "kind": "text",
+           "text": "idle"
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9822,
+         "guid": "timer-my-value",
+         "hasEgg": false,
+         "pile": [],
+         "label": "my value"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9822,
+         "nestGuid": "timer-my-value",
+         "label": "to my value"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9823,
+         "nestGuid": "evt-TIMER1#switch",
+         "label": "to my switch"
+        }
+       ],
+       "holeLabels": [
+        "the computer",
+        "readings",
+        "to my readings",
+        "ask the time",
+        "tell a value",
+        "go",
+        "asked",
+        "start",
+        "fresh",
+        "my switch",
+        "my value",
+        "to my value",
+        "to my switch"
        ]
       }
      },
      "active": {
       "kind": "robot",
-      "name": "Ask the time",
+      "name": "Started",
       "condition": {
        "kind": "box",
        "holes": [
@@ -97,13 +147,141 @@
         {
          "kind": "anyBox"
         },
+        null,
+        null,
+        null,
+        null,
         {
-         "kind": "wildText"
+         "kind": "text",
+         "text": "on"
         },
-        null
+        null,
+        {
+         "kind": "anyBird"
+        },
+        {
+         "kind": "anyBird"
+        }
        ]
       },
       "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          9
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          8
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          8
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3,
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          12
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          5
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          6
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3,
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          5
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          7
+         ]
+        }
+       },
        {
         "type": "copy",
         "at": {
@@ -125,7 +303,7 @@
         "at": {
          "c": "given",
          "path": [
-          2
+          11
          ]
         }
        },
@@ -148,28 +326,8 @@
        {
         "type": "put",
         "at": {
-         "c": "given",
-         "path": [
-          0
-         ]
-        }
-       },
-       {
-        "type": "take",
-        "at": {
-         "c": "given",
-         "path": [
-          5
-         ]
-        }
-       },
-       {
-        "type": "put",
-        "at": {
-         "c": "given",
-         "path": [
-          6
-         ]
+         "c": "perch",
+         "path": []
         }
        }
       ],
@@ -229,10 +387,614 @@
          "kind": "text",
          "text": "go"
         },
-        null
+        null,
+        null,
+        null,
+        {
+         "kind": "nest",
+         "id": 9823,
+         "guid": "evt-TIMER1#switch",
+         "hasEgg": false,
+         "label": "my switch",
+         "pile": [
+          {
+           "kind": "text",
+           "text": "on"
+          }
+         ]
+        },
+        {
+         "kind": "nest",
+         "id": 9822,
+         "guid": "timer-my-value",
+         "hasEgg": false,
+         "pile": [],
+         "label": "my value"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9822,
+         "nestGuid": "timer-my-value",
+         "label": "to my value"
+        },
+        {
+         "kind": "bird",
+         "nestId": 9823,
+         "nestGuid": "evt-TIMER1#switch",
+         "label": "to my switch"
+        }
+       ],
+       "holeLabels": [
+        "the computer",
+        "readings",
+        "to my readings",
+        "ask the time",
+        "tell a value",
+        "go",
+        "asked",
+        "start",
+        "fresh",
+        "my switch",
+        "my value",
+        "to my value",
+        "to my switch"
        ]
       },
       "team": [
+       {
+        "kind": "robot",
+        "name": "Ask the time",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          null,
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "wildText"
+          },
+          null,
+          null,
+          null,
+          null,
+          null,
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBird"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            5
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            6
+           ]
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "COMPUTER",
+           "label": "the computer"
+          },
+          {
+           "kind": "nest",
+           "id": 9821,
+           "guid": "timer-readings",
+           "hasEgg": false,
+           "pile": [],
+           "label": "readings"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9821,
+           "nestGuid": "timer-readings",
+           "label": "to my readings"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "query"
+            },
+            {
+             "kind": "text",
+             "text": "time"
+            },
+            null
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "value"
+            },
+            null
+           ]
+          },
+          {
+           "kind": "text",
+           "text": "go"
+          },
+          null,
+          null,
+          null,
+          {
+           "kind": "nest",
+           "id": 9823,
+           "guid": "evt-TIMER1#switch",
+           "hasEgg": false,
+           "label": "my switch",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "idle"
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9822,
+           "guid": "timer-my-value",
+           "hasEgg": false,
+           "pile": [],
+           "label": "my value"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9822,
+           "nestGuid": "timer-my-value",
+           "label": "to my value"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9823,
+           "nestGuid": "evt-TIMER1#switch",
+           "label": "to my switch"
+          }
+         ],
+         "holeLabels": [
+          "the computer",
+          "readings",
+          "to my readings",
+          "ask the time",
+          "tell a value",
+          "go",
+          "asked",
+          "start",
+          "fresh",
+          "my switch",
+          "my value",
+          "to my value",
+          "to my switch"
+         ]
+        },
+        "team": [],
+        "note": "The go token is in hole 6: asks the computer the time, answered to my readings, and moves the token to hole 7 so it does not ask again until the answer is dealt with."
+       },
+       {
+        "kind": "robot",
+        "name": "Zero",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBox"
+          },
+          {
+           "kind": "anyBox"
+          },
+          null,
+          {
+           "kind": "wildText"
+          },
+          null,
+          {
+           "kind": "wildText"
+          },
+          null,
+          {
+           "kind": "wildNumber"
+          },
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBird"
+          }
+         ]
+        },
+        "program": [
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            10
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "setOp",
+          "op": "-"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "setOp",
+          "op": "-"
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            4
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s0",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s1",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "s1",
+           "path": []
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "perch",
+           "path": []
+          }
+         },
+         {
+          "type": "vacuum",
+          "at": {
+           "c": "given",
+           "path": [
+            8
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            6
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            5
+           ]
+          }
+         }
+        ],
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "COMPUTER",
+           "label": "the computer"
+          },
+          {
+           "kind": "nest",
+           "id": 9821,
+           "guid": "timer-readings",
+           "hasEgg": false,
+           "pile": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "5000",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ],
+           "label": "readings"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9821,
+           "nestGuid": "timer-readings",
+           "label": "to my readings"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "query"
+            },
+            {
+             "kind": "text",
+             "text": "time"
+            },
+            null
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "value"
+            },
+            null
+           ]
+          },
+          null,
+          {
+           "kind": "text",
+           "text": "go"
+          },
+          null,
+          {
+           "kind": "text",
+           "text": "on"
+          },
+          {
+           "kind": "nest",
+           "id": 9823,
+           "guid": "evt-TIMER1#switch",
+           "hasEgg": false,
+           "label": "my switch",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "idle"
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9822,
+           "guid": "timer-my-value",
+           "hasEgg": false,
+           "pile": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "3",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ],
+           "label": "my value"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9822,
+           "nestGuid": "timer-my-value",
+           "label": "to my value"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9823,
+           "nestGuid": "evt-TIMER1#switch",
+           "label": "to my switch"
+          }
+         ],
+         "holeLabels": [
+          "the computer",
+          "readings",
+          "to my readings",
+          "ask the time",
+          "tell a value",
+          "go",
+          "asked",
+          "start",
+          "fresh",
+          "my switch",
+          "my value",
+          "to my value",
+          "to my switch"
+         ]
+        },
+        "team": [],
+        "note": "A reading, the fresh mark and my value have all arrived: the start is the reading minus the value, so that from now on reading minus start is what the number showed; tells it that, spends the fresh mark, and moves the go token back."
+       },
        {
         "kind": "robot",
         "name": "Tell my number",
@@ -257,6 +1019,18 @@
           null,
           {
            "kind": "wildText"
+          },
+          {
+           "kind": "wildNumber"
+          },
+          null,
+          null,
+          null,
+          {
+           "kind": "anyBird"
+          },
+          {
+           "kind": "anyBird"
           }
          ]
         },
@@ -286,6 +1060,28 @@
            ],
            "nest": true
           }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "s0",
+           "path": [
+            2
+           ]
+          }
+         },
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            7
+           ]
+          }
+         },
+         {
+          "type": "setOp",
+          "op": "-"
          },
          {
           "type": "put",
@@ -329,12 +1125,136 @@
           }
          }
         ],
-        "trainedOn": null,
+        "trainedOn": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": 0,
+           "nestGuid": null,
+           "liveId": "COMPUTER",
+           "label": "the computer"
+          },
+          {
+           "kind": "nest",
+           "id": 9821,
+           "guid": "timer-readings",
+           "hasEgg": false,
+           "pile": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "5000",
+              "d": "1"
+             },
+             "op": "+"
+            }
+           ],
+           "label": "readings"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9821,
+           "nestGuid": "timer-readings",
+           "label": "to my readings"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "query"
+            },
+            {
+             "kind": "text",
+             "text": "time"
+            },
+            null
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "set"
+            },
+            {
+             "kind": "text",
+             "text": "value"
+            },
+            null
+           ]
+          },
+          null,
+          {
+           "kind": "text",
+           "text": "go"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "4000",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          null,
+          {
+           "kind": "nest",
+           "id": 9823,
+           "guid": "evt-TIMER1#switch",
+           "hasEgg": false,
+           "label": "my switch",
+           "pile": [
+            {
+             "kind": "text",
+             "text": "idle"
+            }
+           ]
+          },
+          {
+           "kind": "nest",
+           "id": 9822,
+           "guid": "timer-my-value",
+           "hasEgg": false,
+           "pile": [],
+           "label": "my value"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9822,
+           "nestGuid": "timer-my-value",
+           "label": "to my value"
+          },
+          {
+           "kind": "bird",
+           "nestId": 9823,
+           "nestGuid": "evt-TIMER1#switch",
+           "label": "to my switch"
+          }
+         ],
+         "holeLabels": [
+          "the computer",
+          "readings",
+          "to my readings",
+          "ask the time",
+          "tell a value",
+          "go",
+          "asked",
+          "start",
+          "fresh",
+          "my switch",
+          "my value",
+          "to my value",
+          "to my switch"
+         ]
+        },
         "team": [],
-        "note": "A reading is on my nest and the go pad is in hole 7: puts the reading in a [set | value | _] letter, gives it to the bird on the perch -- the panel\u2019s own thing -- and moves the pad back to hole 6, so the asking robot goes again."
+        "note": "A reading is on my nest, the start is known and the go token is in hole 7: puts the reading minus the start in a [set | value | _] letter, gives it to the bird on the perch -- the panel\u2019s own thing -- and moves the token back to hole 6, so the asking robot goes again."
        }
       ],
-      "note": "The go pad is in hole 6: asks the computer the time, answered to my readings nest, and moves the pad to hole 7 so it does not ask again until the answer is dealt with."
+      "note": "Leads the team. My switch says \"on\": takes the word off and puts it in hole 9 as the fresh mark, sends a \"time\" pad to the switch nest so it is never bare (a thought about an empty nest waits, and a waiting leader stops the team), has Dusty take a stale reading if one landed after the stop, puts a fresh go token in hole 6, forgets the old start, and asks the number -- by the bird on the perch -- what it shows now."
      }
     }
    },
@@ -344,7 +1264,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "A TIMER\n\nPress SPACE on the number:\nit counts the milliseconds\nsince the workshop opened.\n\".\" rests it.\n\nRobots are doing it, on the\nnumber\u2019s own panel: open it\nwith the gear and see two\nrobots and a box. One asks\nthe computer the time; the\nother gives the answer to\nthe bird on the PERCH, the\npedestal beside the desk.\nOn a panel that bird goes\nto the panel\u2019s own thing."
+    "text": "A STOPWATCH\n\nPress SPACE on the number:\nit counts milliseconds. \".\"\nrests it; SPACE again goes\non from where it stopped.\nSet it to 0 (drop a 0 with\na set badge) and start it,\nand it starts from 0.\n\nRobots are doing it, on the\nnumber\u2019s own panel: open it\nwith the gear and see four\nrobots and a box."
    },
    "x": -0.9,
    "z": 1.75
@@ -352,7 +1272,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "BUILT BY HAND\n\nOpen the number\u2019s panel and\ndrop a box on it, with a\nbird to the computer from\nthe devices notebook.\n\nDrop a robot on the panel\nand train it: give the\ncomputer the question.\nStart it: the answer lands\non the nest. Train a second\nrobot on that: put the\nreading in [set | value | _]\nand give it to the bird on\nthe perch. Drop it on the\nfirst robot: a team."
+    "text": "HOW IT WORKS\n\nThe computer\u2019s clock is the\nmilliseconds since the\nworkshop opened. Tell shows\nreading minus a START.\n\nThe number announces its\nswitch: [listen | switch |\nbird] gives a nest that gets\n\"on\" or \"off\". Started hears\n\"on\", forgets the start and\nasks the number what it\nshows; Zero sets the start\nso the count goes on from\nthere. Ask and Tell take\nturns by the go pad."
    },
    "x": 0.9,
    "z": 1.75
@@ -360,10 +1280,10 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TRY IT ANYWHERE\n\nA robot that writes to the\nperch works on whatever the\npanel it is on belongs to.\n\nTo try one on the bench, set\nany bird on the perch first:\nits letters go to her."
+    "text": "BUILT BY HAND\n\nOpen the number\u2019s panel,\ndrop the box on it, then a\nrobot, and go in: the\nlesson begins. Train it;\nleave the thought; drop the\nnext robot on the panel for\nthe next lesson. Each joins\nthe team.\n\nThe bird on the perch is a\nbird to the number, and a\nletter given to her in a\nlesson really arrives."
    },
-   "x": 1.4,
-   "z": 1.4
+   "x": 1.5,
+   "z": 1.35
   }
  ],
  "stations": {},

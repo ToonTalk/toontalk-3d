@@ -1,146 +1,163 @@
 # -*- coding: utf-8 -*-
-# The timer teacher -- a robot builds the timer's two robots, the way you
+# The timer teacher -- a robot builds the stopwatch's four robots, the way you
 # would, and puts them on a number's panel: a stopwatch.
 #
-# The timer (devices/timer) is two robots on a number's own panel, taking
-# turns by a "go" pad crossing between two holes: "Ask the time" sends the
-# computer [query | time | _] while the pad is in hole 6 and moves it to
-# hole 7; "Tell my number" runs when a reading is on the nest and the pad is
-# in hole 7, gives the reading to the bird on the perch in a
-# [set | value | _] letter, and moves the pad back. This teacher trains both,
-# one after the other, each on a box in the state that robot works in:
+# The stopwatch (devices/timer) is four robots on a number's own panel. Two
+# take turns by a "go" token crossing between two holes: "Ask the time" sends
+# the computer [query | time | _] while the token is in hole 6 and moves it
+# to hole 7; "Tell my number" runs when a reading is on the nest and the token
+# is in hole 7, gives the reading minus the START to the bird on the perch in
+# a [set | value | _] letter, and moves the token back. Two more make it a
+# stopwatch rather than a clock: "Started" hears "on" on the number's own
+# switch nest and asks the number what it shows; "Zero" sets the start from
+# the next reading and that value, so the count goes on from whatever the
+# number showed. This teacher trains all four, one after the other, each on
+# the box in the state that robot works in -- the very robots of
+# devices/make_timer.py, taught step by step:
 #
 #   0 a pad it reads out first
-#   1 a little robot (Ask)   2 the box as Ask finds it: nest empty, "go" in hole 6
-#   3 a little robot (Tell)  4 the box as Tell finds it: a reading on the nest, "go" in hole 7
-#   5 a number               6 a pad it reads out at the end
+#   1 Started   2 its box: "on" on the switch
+#   3 Ask       4 its box: nothing asked yet, the token in hole 6
+#   5 Zero      6 its box: a reading, the fresh mark and my value have arrived
+#   7 Tell      8 its box: a reading, a start, the token in hole 7
+#   9 a number  10 a pad it reads out at the end
 #
 # Run, it does it all for real: Ask's lesson really asks the computer (the
-# answer lands on the nest in Ask's box), and Tell's lesson really gives its
-# letter to the bird on the perch -- out here, a bird of your own to the
-# nest "what it told". Then it takes the number's panel out onto a work
-# spot, puts Ask's box back in its hole, sets Tell's box on the panel, then
-# Ask, then Tell (a team), folds the panel away, and reads the last pad. The little robots it taught stay among its
-# things -- the first, the second little robot it taught -- so it can pick
-# them up again. Take the number out of the box and press SPACE: it counts
-# the milliseconds. "." rests it.
+# answer lands on the nest in Ask's box); Started's, Zero's and Tell's
+# letters really go to the bird on the perch -- out here, a bird of your own
+# to the nest "what it told". Then it takes the number's panel out onto a
+# work spot, puts three boxes back in their holes, sets Started's box on the
+# panel, then Started, Ask, Zero and Tell (a team, in that order), folds the
+# panel away, and reads the last pad. The little robots it taught stay among
+# its things -- the first, the second... little robot it taught -- so it can
+# pick them up again. Take the number out of the box and press SPACE.
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'infinity'))
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'infinity'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'devices'))
 from _tt import *                                          # noqa: F403
+import make_timer as T
 
 WILDTEXT = {'kind': 'wildText'}
 ANYROBOT = {'kind': 'anyRobot'}
 TOLD = (9841, 'timer-teacher-what-it-told')
-ASK_MAIL = (9842, 'timer-teacher-readings')
-TELL_MAIL = (9843, 'timer-teacher-readings-2')
-
-live_bird = lambda lid, label: {'kind': 'bird', 'nestId': 0, 'nestGuid': None,   # noqa: E731
-                                'liveId': lid, 'label': label}
-query = box(txt('query'), txt('time'), None)               # noqa: F405
-setter = box(txt('set'), txt('value'), None)               # noqa: F405
+NUM = 'SW1'
 
 
-def work(mail, reading, asked):
-    """The timer's box, in the state one of its robots works in."""
-    return box(live_bird('COMPUTER', 'the computer'),        # noqa: F405
-               nest(*mail, label='readings', pile=[num(reading)] if reading is not None else []),   # noqa: F405
-               bird(*mail, label='to my readings'),          # noqa: F405
-               query, setter,
-               None if asked else txt('go'),                 # noqa: F405
-               txt('go') if asked else None)                 # noqa: F405
+def fresh(bot, note):
+    """An untrained little robot with the name of the one it will become."""
+    return {'kind': 'robot', 'name': bot['name'], 'program': [], 'condition': None,
+            'trainedOn': None, 'team': [], 'note': 'Untrained. ' + note}
 
 
-ask_box = work(ASK_MAIL, None, False)       # nothing asked yet: go in hole 6
-tell_box = work(TELL_MAIL, 5, True)         # a reading waiting, go in hole 7
+pupils = [
+    (fresh(T.started, 'The teacher shows it what to do when the switch says "on".'),
+     T.started, T.work(lid=NUM, switch='on')),
+    (fresh(T.ask, 'The teacher shows it how to ask the computer the time and move the go token across.'),
+     T.ask, T.work(lid=NUM)),
+    (fresh(T.zero, 'The teacher shows it how to set the start from a fresh reading and what the number showed.'),
+     T.zero, T.work(lid=NUM, reading=5000, asked=True, my_value=3, fresh=True)),
+    (fresh(T.tell, 'The teacher shows it how to tell the number the reading minus the start, and move the token back.'),
+     T.tell, T.work(lid=NUM, reading=5000, asked=True, start=4000)),
+]
 
-first = txt('I am going to teach two little robots to be a timer.')    # noqa: F405
+first = txt('I am going to teach four little robots to be a stopwatch.')   # noqa: F405
 last = txt('The number is a stopwatch now. Take it out of the box and press SPACE on it.')   # noqa: F405
-ask = {'kind': 'robot', 'name': 'Ask', 'program': [], 'condition': None,
-       'trainedOn': None, 'team': [],
-       'note': 'Untrained. The teacher shows it how to ask the computer the time and move the go pad across.'}
-tell = {'kind': 'robot', 'name': 'Tell', 'program': [], 'condition': None,
-        'trainedOn': None, 'team': [],
-        'note': 'Untrained. The teacher shows it how to give a reading to the bird on the perch and move the go pad back.'}
+number = {'kind': 'number', 'value': {'n': '0', 'd': '1'}, 'label': 'stopwatch',
+          'lid': NUM, 'evt': 'evt-' + NUM}
 
 speak = {'type': 'speak'}
 teach = lambda *p: {'type': 'teach', 'at': at('given', *p)}            # noqa: E731,F405
 taught = lambda step: {'type': 'taught', 'step': step}                 # noqa: E731
 erase = lambda *path: {'type': 'erase', 'path': list(path)}           # noqa: E731
-
-number = {'kind': 'number', 'value': {'n': '0', 'd': '1'}, 'label': 'stopwatch'}
-given = box(first, ask, ask_box, tell, tell_box, number, last)         # noqa: F405
 fold = lambda c: {'type': 'fold', 'at': at(c)}                         # noqa: E731,F405
 pupil = lambda k: {'type': 'take', 'at': {'c': 't%d' % k, 'path': [], 'bot': True}}   # noqa: E731
 
+holes = [first]
+for p, _, bx in pupils:
+    holes += [p, bx]
+holes += [number, last]
+given = box(*holes)                                                    # noqa: F405
+
+# the lessons, one per pupil: the robot's own steps, taught -- then Ruby on
+# the holes that must fit any reading, value, start or token (not just
+# these), and Dusty on the holes a robot must not look in at all (the token
+# may be in either of two holes, or a mark may be there or not)
+forget = lambda *path: {'type': 'forget', 'path': list(path)}          # noqa: E731
+# (a hole empty at the lesson already takes anything or nothing; a nest empty
+# at the lesson already takes any nest -- only what was THERE needs loosening)
+LOOSEN = {'Started': ([], [5]),                  # the token: whichever hole, or none
+          'Ask the time': ([5], [9]),            # any token; the switch nest, whatever it holds
+          'Zero': ([1, 6, 8, 10], [9]),          # any reading, token, mark and value
+          'Tell my number': ([1, 6, 7], [9])}    # any reading, token and start
+program = [take('given', 0), speak, put('given', 0)]                   # noqa: F405
+for i, (p, bot, bx) in enumerate(pupils):
+    program += [take('given', 2 + 2 * i), teach(1 + 2 * i)]            # noqa: F405
+    program += [taught(st) for st in bot['program']]
+    ruby, dusty = LOOSEN[bot['name']]
+    program += [taught(erase(h)) for h in ruby]
+    program += [taught(forget(h)) for h in dusty]
+    program += [{'type': 'endTeach'}]
+program += [
+    # THE STOPWATCH: the number's panel out onto a work spot, three boxes back in their
+    # holes (a desk left aside holds the panels still), Started's box on the panel, then
+    # the four pupils in order -- a team -- and the panel folded away
+    take('given', 9), {'type': 'panel'}, put('given', 9),              # noqa: F405
+    take('t2'), put('given', 4),                                       # noqa: F405
+    take('t3'), put('given', 6),                                       # noqa: F405
+    take('t4'), put('given', 8),                                       # noqa: F405
+    take('t1'), put('s0'),                                             # Started's box, on the panel  # noqa: F405
+    pupil(1), put('s0'), pupil(2), put('s0'), pupil(3), put('s0'), pupil(4), put('s0'),   # noqa: F405
+    fold('s0'),
+    take('given', 10), speak, put('given', 10)]                        # noqa: F405
+
 teacher = robot(                                                       # noqa: F405
     'the teacher',
-    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYNUM, WILDTEXT),   # noqa: F405
-    [take('given', 0), speak, put('given', 0),                         # noqa: F405
-     # ASK: the pad is in hole 6 -- ask the computer, answered to my readings, and cross the pad over
-     take('given', 2), teach(1),                                       # noqa: F405
-     taught(copy('given', 3)), taught(put('s0')),                      # [query | time | _]  # noqa: F405
-     taught(copy('given', 2)), taught(put('s0', 2)),                   # ...answered to my readings  # noqa: F405
-     taught(take('s0')), taught(put('given', 0)),                      # asked of the computer  # noqa: F405
-     taught(take('given', 5)), taught(put('given', 6)),                # the go pad crosses over  # noqa: F405
-     {'type': 'endTeach'},
-     # TELL: a reading is on the nest and the pad is in hole 7 -- tell the perch, and bring the pad back
-     take('given', 4), teach(3),                                       # noqa: F405
-     taught(copy('given', 4)), taught(put('s0')),                      # [set | value | _]  # noqa: F405
-     taught(takeTop('given', 1)), taught(put('s0', 2)),                # ...with the reading in it  # noqa: F405
-     taught(take('s0')), taught(put('perch')),                         # given to the bird on the perch  # noqa: F405
-     taught(take('given', 6)), taught(put('given', 5)),                # the go pad comes back  # noqa: F405
-     taught(erase(1)),                                                 # any reading, not just 5
-     {'type': 'endTeach'},
-     # THE STOPWATCH: the number's panel out onto a work spot, Tell's box on it, Ask, then Tell -- a team
-     take('given', 5), {'type': 'panel'}, put('given', 5),             # noqa: F405
-     take('t1'), put('given', 2),                                      # Ask's box back in its hole: its desk goes  # noqa: F405
-     take('t2'), put('s0'),                                            # the box on the second pupil's desk  # noqa: F405
-     pupil(1), put('s0'),                                              # Ask, behind the panel's desk  # noqa: F405
-     pupil(2), put('s0'),                                              # Tell joins: a team  # noqa: F405
-     fold('s0'),                                                       # the panel goes home into the number
-     take('given', 6), speak, put('given', 6)],                        # noqa: F405
-    trained_on=given,
-    note='A robot that trains the timer’s two robots. It teaches Ask on a box with the go '
-         'pad in hole 6: ask the computer the time, answered to my readings, and move the pad '
-         'to hole 7. Then it teaches Tell on a box with a reading and the pad in hole 7: put the '
-         'reading in a [set | value | _] letter, give it to the bird on the perch, move the pad '
-         'back, and have Ruby loosen the reading. Then it takes the number’s panel out, sets '
-         'Tell’s box, Ask and Tell on it, and folds the panel away: the number is a stopwatch.')
+    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYNUM, WILDTEXT),   # noqa: F405
+    program, trained_on=given,
+    note='A robot that trains the stopwatch’s four robots -- Started, Ask, Zero and Tell, '
+         'each on the box in the state that robot works in -- then takes the number’s panel out, '
+         'sets Started’s box and the four pupils on it, and folds the panel away: the number is a '
+         'stopwatch. Nothing here is new: put on the perch, Dusty, Ruby and a teaching are steps like '
+         'any other.')
 
+RQ, LQ, DQ = '’', '“', '”'
 ABOUT = ('THE TIMER TEACHER\n\n'
-         'A robot that trains the two\n'
-         'robots of the timer, one\n'
-         'after the other, each on a\n'
+         'A robot that trains the four\n'
+         'robots of the stopwatch, one\n'
+         'after the other, each on the\n'
          'box in the state it works\n'
          'in -- then puts them on a\n'
-         'number’s panel.\n\n'
-         'Ask: the go pad is in hole 6.\n'
-         'Ask the computer the time,\n'
-         'move the pad to hole 7.\n\n'
-         'Tell: a reading, pad in 7.\n'
-         'Give it to the bird on the\n'
-         'perch, move the pad back.')
+         'number' + RQ + 's panel.\n\n'
+         'Started: "on" on my switch.\n'
+         'Ask: the token in hole 6.\n'
+         'Zero: a fresh reading, and\n'
+         'what the number showed.\n'
+         'Tell: a reading and a start.')
 
 RUN = ('TO RUN IT\n\n'
-       'Give the seven-hole box to\n'
+       'Give the eleven-hole box to\n'
        'the teacher and press Start.\n\n'
        'Ask really asks: the\n'
-       'computer’s answer lands on\n'
-       'the nest in its box. Tell\n'
-       'really tells: its letter\n'
-       'goes to the bird on the\n'
-       'perch, and out here she\n'
-       'takes it to “what it told”.\n\n'
-       'Then the number’s panel\n'
-       'comes out, the box and the\n'
-       'two robots go on it, and\n'
+       'computer' + RQ + 's answer lands on\n'
+       'the nest in its box. The\n'
+       'others really tell: their\n'
+       'letters go to the bird on\n'
+       'the perch, and out here she\n'
+       'takes them to ' + LQ + 'what it told' + DQ + '.\n\n'
+       'Then the number' + RQ + 's panel\n'
+       'comes out, a box and the\n'
+       'four robots go on it, and\n'
        'it folds away.')
 
 THEN = ('THE STOPWATCH\n\n'
         'Take the number out of the\n'
-        'teacher’s box and press\n'
+        'teacher' + RQ + 's box and press\n'
         'SPACE on it: it counts the\n'
-        'milliseconds. “.” rests it.\n\n'
+        'milliseconds from 0. ' + LQ + '.' + DQ + '\n'
+        'rests it; SPACE goes on from\n'
+        'there. Set it to 0 and start\n'
+        'it, and it starts from 0.\n\n'
         'Open its panel with the\n'
         'gear: the box and the team\n'
         'are there, and the bird on\n'
@@ -150,16 +167,17 @@ THEN = ('THE STOPWATCH\n\n'
 HOW = ('HOW IT REACHES THEM\n\n'
        'A little robot the teacher\n'
        'taught stays among its\n'
-       'things: “the first little\n'
-       'robot it taught”, at its own\n'
+       'things: ' + LQ + 'the first little\n'
+       'robot it taught' + DQ + ', at its own\n'
        'desk, with its box. Click\n'
        'the pupil with an empty\n'
        'claw to pick it up; click\n'
        'the box on its desk to take\n'
        'that.\n\n'
-       'One asks and one tells\n'
-       'because a robot cannot wait\n'
-       'mid-round for an answer.')
+       'Four robots, because a robot\n'
+       'cannot wait mid-round for\n'
+       'an answer, and a stopwatch\n'
+       'must know when it started.')
 
 bench = [
     {'thing': teacher, 'x': -1.45, 'z': 1.35},
@@ -175,6 +193,6 @@ bench = [
 world = {'kind': 'world', 'v': 3, 'bench': bench,
          'stations': {'perch': bird(*TOLD, label='to what it told')},   # noqa: F405
          'active': None}
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), '\U0001f393 timer-teacher.world.json')
+out = os.path.join(HERE, '\U0001f393 timer-teacher.world.json')
 io.open(out, 'w', encoding='utf-8').write(json.dumps(world, indent=1))   # noqa: F405
 print('wrote', os.path.basename(out))

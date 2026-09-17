@@ -3,11 +3,11 @@
 # Each gadget is ONE pad. Its face says what it does, its panel carries the
 # robots that do it, and those robots speak about "my thing" through THE BIRD
 # ON THE PERCH -- the pedestal beside the desk, which on a panel holds a bird
-# to whatever the panel is the back of. So a gadget set down on the table does
+# to whatever thing the panel is the inside of. So a gadget set down on the table does
 # its own thing -- not as a demonstration mode, but because its panel is the
-# back of the pad itself until somebody says otherwise.
+# inside of the pad itself until somebody says otherwise.
 #
-# To use one: drop it on your thing (the panel is that thing's back now, and
+# To use one: drop it on your thing (the panel is that thing's inside now, and
 # NOTHING inside changes), then press SPACE. "." stops it. Ruby lets it go again.
 #
 # Nothing here is built in. There is no move, no bounce, no follow: there are
@@ -240,7 +240,7 @@ USE = ('TO USE ONE\n\n'
        '2. press SPACE on it\n\n'
        'Nothing inside it is edited.\n'
        'Only which thing its panel\n'
-       'is the back of: the robots\n'
+       'is the inside of: the robots\n'
        'write to the bird on the\n'
        'PERCH, and that is a bird to\n'
        'whatever the panel belongs to.\n\n'
@@ -313,7 +313,7 @@ NEW = ('THE SECOND SIX\n\n'
 star = live(pad('*', bg='#1b2233', ink='#ffd23f', font='sans'), 'L9599')   # noqa: F405
 
 bench = [
-    {'thing': star, 'x': 0.35, 'z': 1.15},
+    {'thing': star, 'x': 0.35, 'z': 0.80},      # a row of its own in front: at (0.35, 1.15) it rode on "bouncing at a speed"
 
     {'thing': moving_right, 'x': -1.50, 'z': 1.15},
     {'thing': moving_left, 'x': -1.50, 'z': 1.48},
@@ -331,7 +331,7 @@ bench = [
     {'thing': SIX['limiting'], 'x': 0.15, 'z': 1.81},
     {'thing': SIX['scoring'], 'x': 0.70, 'z': 1.48},
     {'thing': SIX['reversing_speed'], 'x': 0.15, 'z': 1.48},
-    {'thing': wandering_g, 'x': 1.25, 'z': 1.48},      # clear of the star at 0.35
+    {'thing': wandering_g, 'x': 1.25, 'z': 1.48},
 
     {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.28},           # noqa: F405
     {'thing': txt(USE), 'x': -0.75, 'z': 2.28},             # noqa: F405

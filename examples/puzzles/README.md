@@ -94,7 +94,7 @@ puzzle"). This set follows its opening arc -- the box with 1 and 2, a 4,
 8-16-32, zeros and robots, letters, the seconds in a year, scales -- and then
 diverges towards what this workshop can judge by identity or on a scale:
 fractions, words poured into letters, sorting. The original's clock arc (time
-sensors, countdowns, timers on the back of a number, about a third of the
+sensors, countdowns, timers inside a number, about a third of the
 tutorial) is not here yet; the computer bird is the first piece of it.
 ## The second arc: the 3D things
 

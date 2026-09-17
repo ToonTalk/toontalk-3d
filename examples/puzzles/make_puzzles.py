@@ -1492,7 +1492,7 @@ def walk_gadget(lid, target):
     step = robot('Step', box(ANYBOX),                                       # noqa: F405
                  [copy('given', 0), put('perch')],                            # noqa: F405
                  trained_on=work,
-                 note='Every round: a copy of [move | away | 1/10] to the bird on the perch -- my thing, whatever the panel is the back of: a tenth of a step towards the near edge, where it stops because the table ends.')
+                 note='Every round: a copy of [move | away | 1/10] to the bird on the perch -- my thing, whatever thing the panel is the inside of: a tenth of a step towards the near edge, where it stops because the table ends.')
     g = {'kind': 'text', 'text': 'walk', 'gadget': True, 'lid': lid, 'evt': 'evt-' + lid,
          'boundTo': target,
          'note': 'A behaviour: drop it on the lion and press SPACE, and the lion walks the way it looks. "." stops it where it is.',

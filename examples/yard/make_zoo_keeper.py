@@ -32,7 +32,7 @@ REPORT = (9950, 'zoo-report')
 # split second apart and the animal sits still to the eye. A token pad moves
 # between two holes, and whichever hole holds it says which robot's turn it is.
 #  0 [move | yaw | 25]   1 [move | yaw | -25]   2 tick   3 (tock)
-# (my thing is the bird on the perch: whatever the panel is the back of)
+# (my thing is the bird on the perch: whatever thing the panel is the inside of)
 wiggle_work = box(msg('move', 'yaw', num(25)),              # noqa: F405
                   msg('move', 'yaw', num(-25)),             # noqa: F405
                   txt('tick'), None)                        # noqa: F405

@@ -7610,3 +7610,55 @@ speaks for my thing now, so binding sets what the panel is the back of and
 re-points only the channel nests. And the yard's panel is the outer world
 itself, so a thing on the grass is not "inside" it -- the resort's six
 guests had been writing their positions to the yard.
+
+## The switch, the stopwatch, and a copy of its own
+
+*Added 17 Sep. Ken: "I made a copy of the stopwatch and it did nothing
+(visible) when I started it... a stack of unprocessed responses"; "You can
+turn off the stop watch and edit its value (e.g. to zero) but then starting
+it again resumes its old value. I wonder if an event an object can listen
+for is when it is started"; "the pupil should be ½ size"; "one of the work
+spots has a white circle that comes and goes"; "the 'move up five' robot
+fails to match the messages sent by the 5 more guests gadget"; and "the back
+of a thing" should be its inside.*
+
+Measured on the copy: its "readings" nest kept the original's name, so the
+birds of both panels delivered to whichever nest was found first, and
+readings piled up unprocessed on both. A nest on a panel with a bird to it
+on the same panel is a private post, and a copy's private posts take fresh
+names with their birds; a letterbox posted to from outside keeps its name,
+since sharing a name is how one posting drives a squadron. And the original
+had been running since the teacher built it: a robot dropped on a thing's
+own panel set it going, as a robot dropped into a house does. A thing's
+panel waits for SPACE now; a house is still set going by the drop.
+
+A thing announces its switch: `[listen | switch | bird]` brings a nest that
+gets "on" or "off" whenever SPACE, "." or a `[set | switch | on]` letter
+throws it, and `[query | switch | bird]` asks. The stopwatch's Started robot
+hears "on", forgets the start, marks the next reading fresh and asks the
+number (by the perch) what it shows; Zero sets the start from that reading
+and value, so the count goes on from wherever it stopped, and from 0 after a
+0 is set. Two things the team rule taught: a thought about an empty nest
+WAITS, and a waiting leader stops the whole team -- so Started sends a pad
+to the switch nest by its own bird and the nest is never bare; and a box of
+more than thirteen holes is drawn with its middle elided, and a nest in an
+elided hole is not in the scene, so nothing reaches it -- the box is
+thirteen holes exactly.
+
+The timer teacher trains those four robots, the very ones of the devices
+world, and needed one more taught step: Dusty on a pupil's thought (the hole
+takes anything, or nothing), for the holes a robot must not look in -- the
+token in either of two holes. Ruby's loosening had been a taught step; now
+both are. A taught pupil stands half size at its desk once its lesson is
+over, full size while it learns and works.
+
+The white circle was the perch: its pale stone top, seen from above beside
+the desk, read as a disc on a work spot. It has a post like the desks' legs,
+a round wooden top, a rim and a plate saying "the perch". The resort's clerk
+is a team from the start, and the bell is an announcement: "everybody move
+up five", given to the bird "to every guest". And the two lone failures of
+the suite were one fault: a step sent sixty times a second restarted the
+glide from where the thing was seen, and a star sent across the table by
+bouncing crept a ten-thousandth a frame. A step shorter than a finger applies
+at once; a step that lands mid-glide extends the glide. The library's star
+had also been riding on "bouncing at a speed"; it has a row of its own.

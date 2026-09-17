@@ -66,12 +66,13 @@ pages = [
         'A number can be TOLD its\n'
         'value: give its bird\n'
         '[set | value | n].\n\n'
-        'So a timer is two robots on\n'
+        'So a stopwatch is robots on\n'
         'a number’s own panel: one\n'
         'asks the computer the time,\n'
-        'the other gives the answer\n'
-        'to the bird on the perch,\n'
-        'the panel’s own thing. The\n'
+        'one tells the number the\n'
+        'reading minus a start, and\n'
+        'two set the start when the\n'
+        'number is switched on. The\n'
         'world timer.world.json in\n'
         'this folder is that number.'),
     box(txt('set'), txt('value'), None),                    # noqa: F405

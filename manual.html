@@ -218,6 +218,13 @@ taught step in front of you, and stands trained at its desk with its box.
 Click it and press Start. A robot may teach a robot, not a robot that
 teaches a robot. <em>examples/meta/🎓 teacher</em> is a robot that teaches a
 little robot to count with the 1 it gives it.</p>
+<p><b>Dusty on the pupil's thought is taught too.</b> Ruby's loosening of a
+part of the pupil's thought is a taught step, and so is Dusty taking a part
+out &mdash; <em>anything, or nothing, fits there</em> &mdash; which is what
+a robot needs when a token may be in either of two holes. A pupil whose
+lesson is over stands <b>half size</b> at its desk, so the teacher and the
+taught are told apart at a glance; it is full size while it learns and
+while it works.</p>
 <p><b>The little robots it taught stay among its things.</b> After <b>Stop
 teaching it</b>, the pupil at its own desk is still within the teacher's
 reach: click the pupil with an empty claw and the teacher picks it up (the
@@ -690,7 +697,7 @@ rooms work as well, all the way down.</p>
 
 <h3>Giving a behaviour to something else</h3>
 <p>A behaviour works on <b>one thing</b>. Drop it on another and it moves
-there: its panel is that thing's back now, so the bird on its perch goes to
+there: its panel is that thing's inside now, so the bird on its perch goes to
 the new thing, and any channel nest inside (edge, touch, speed) is re-pointed
 &mdash; the card says how many. Wake <b>Ruby</b> and click it to let it go
 again, and it works on itself.</p>
@@ -701,7 +708,11 @@ copy the behaviour too and drop it on the copy. What copying does NOT rename
 is an ordinary <b>nest's</b> name: sharing that is joining the flock, and a
 bird's delivery goes to its own nest and a copy to every other nest of that
 name. That is how one sender drives a whole squadron: copy the behaviour that
-LISTENS, bind each copy to its own thing, and one posting reaches them all.</p>
+LISTENS, bind each copy to its own thing, and one posting reaches them all.
+The one exception is a <em>private</em> channel: a nest on a panel with a
+bird to it on the same panel (a stopwatch's readings) is the copy's own,
+renamed with its bird &mdash; or the birds of both panels would deliver to
+whichever nest was found first.</p>
 <p><b>&ldquo;.&rdquo; stops the robots, not what they have already sent.</b>
 Orders posted to a nest are still in the pile and whatever reads them will
 carry them out, so a thing may go on moving for a while after its behaviour
@@ -818,6 +829,11 @@ picture, and Ruby loosens it to anything. The <em>normal</em> is an
 <code>[across | away]</code> box, length one, pointing from your middle to
 the other thing's: two round things meet along exactly that line, so a
 bounce that is not square-on has the number it needs. Also a reading</td></tr>
+<tr><td><code>[listen | switch | bird]</code></td><td>a pad saying
+<em>on</em> or <em>off</em>, whenever the thing is switched &mdash; by SPACE
+and &ldquo;.&rdquo;, or by mail: <code>[set | switch | on]</code> throws it,
+<code>[query | switch | bird]</code> asks. Only the newest is kept. What a
+stopwatch listens for to start from whatever it shows</td></tr>
 <tr><td><code>[listen | touches | bird]</code></td><td>sent to a <b>scene</b>
 &mdash; a pad with things riding on it &mdash; every pair of its riders that
 <em>starts</em> touching is announced once, as <code>[bird | name | bird |
@@ -848,13 +864,13 @@ and sends it</td></tr>
 <p>A <b>behaviour</b> is a pad whose panel carries robots, and those robots
 speak about <em>my thing</em> through the bird on the <a href="#perch">perch</a>
 &mdash; the pedestal beside their desk, which on a panel holds a bird to
-whatever the panel is the back of. The box they work on holds no bird to the
+whatever thing the panel is the inside of. The box they work on holds no bird to the
 thing at all. Load <em>behaviours/📚 library</em> from the examples for a
 shelf of them.</p>
 <p>To use one: <b>drop it on your thing</b>, then press <kbd>Space</kbd> on it.
 <kbd>.</kbd> stops it, and waking <b>Ruby</b> and clicking it lets go again.
-Binding is not editing — nothing inside the behaviour changes, only which
-thing its panel is the back of.</p>
+Binding is not editing — nothing on the behaviour's panel changes, only which
+thing its panel is the inside of.</p>
 <p><b>SPACE and “.” act on whatever the pointer is over</b>, so the keyboard
 always belongs to the workshop: a button you have just clicked hands it back at
 once, and only a field you are genuinely typing in keeps it.</p>
@@ -908,8 +924,8 @@ aboard as part of the scene, the way a ball is added to a pitch. To give a
 <em>pad</em> its behaviour, drop it on the pad’s <b>edge</b>; anything that is
 not a pad binds wherever you drop it.</p>
 <p>Set one down on its own and switch it on and it does its thing <em>to
-itself</em>. That is not a demonstration mode: a pad's panel is its own back
-until somebody has said otherwise, so the shelf is legible by watching.</p>
+itself</em>. That is not a demonstration mode: a pad's panel is its own
+inside until somebody has said otherwise, so the shelf is legible by watching.</p>
 <p>Nothing in a behaviour is built in. Open its panel and you will find
 ordinary robots sending the messages above. <em>Bouncing</em> is three robots
 that differ only in the word they expect from the <em>edge</em> reading, and
@@ -1524,14 +1540,19 @@ milliseconds since the workshop opened; <code>[query | date | bird]</code>
 answers with a box <code>[year | month | day]</code> and
 <code>[query | clock | bird]</code> with <code>[hours | minutes | seconds]</code>.
 <code>[query | seconds | bird]</code> gives the same clock in seconds,
-thousandths and all. Nothing listens: a timer is <em>built</em>. A number
-can be told what it is &mdash; <code>[set | value | n]</code> to its bird
-replaces what it holds, where a badge would add to it &mdash; so two robots
-on a number&rsquo;s own panel are a timer: one asks the computer the time,
-the other tells the number the answer, and a pad crossing between two holes
-lets them take turns (<em>devices/timer</em>). SPACE on the number starts
-the robots on its own panel; &ldquo;.&rdquo; rests them; and the Stop button,
-pressed inside a panel or a house, stops it for good until Start.</p>
+thousandths and all. Nothing listens: a stopwatch is <em>built</em>. A
+number can be told what it is &mdash; <code>[set | value | n]</code> to its
+bird replaces what it holds, where a badge would add to it &mdash; so four
+robots on a number&rsquo;s own panel are a stopwatch (<em>devices/timer</em>):
+one asks the computer the time and one tells the number the reading minus a
+<em>start</em>, taking turns by a pad crossing between two holes; and when the
+number&rsquo;s own switch says <em>on</em>, one forgets the start and asks the
+number what it shows, and one sets the start from the next reading and that
+value &mdash; so the count goes on from wherever it stopped, and from 0 if you
+set it to 0 first. SPACE on the number starts the robots on its own panel;
+&ldquo;.&rdquo; rests them; and the Stop button, pressed inside a panel or a
+house, stops it for good until Start. A robot or a box dropped on a thing's
+panel does not start it: SPACE does.</p>
 
 <p><b>A lesson waiting on a panel.</b> Drop a box on a thing's panel, then a
 fresh robot, and the robot stands behind the panel's desk with the box on it.
@@ -1543,7 +1564,7 @@ or come out and press SPACE on the thing.</p>
 <h3 id="perch">The perch</h3>
 <p>Beside the robot&rsquo;s desk stands a pedestal, <b>the perch</b>. Enter a
 thing&rsquo;s panel and a bird is standing on it: the bird to <b>&ldquo;my
-thing&rdquo;</b>, whatever this panel is the back of. Give her a letter by
+thing&rdquo;</b>, whatever thing this panel is the inside of. Give her a letter by
 hand and it goes to the thing; train a robot to put a letter on the perch and
 the robot&rsquo;s letters go there too. That is how the timer&rsquo;s second
 robot tells its number the time &mdash; the box it works on holds no bird to
@@ -1552,7 +1573,7 @@ on the perch at once.</p>
 <p>&ldquo;My thing&rdquo; is decided when the letter is given, not when the
 robot was trained: a card standing on another thing&rsquo;s panel, or a
 behaviour bound to a picture, writes to the <em>outermost</em> thing, the way
-a sensor in the original belonged to the owner of the uppermost back. So a
+a sensor in the original belonged to the owner of the uppermost back side. So a
 robot trained on one panel does the same work on any panel it is moved to.
 On the bench the perch stands empty, and she has nothing to go to; set any
 bird of your own there and the robot&rsquo;s letters go to her nest &mdash;
@@ -1651,8 +1672,8 @@ the perch, the notebook, the stacks. A step never names a station by
 position, only by what it is for ("put it on spot 2", "set it on the
 perch").</dd>
 <dt>the perch</dt><dd>The pedestal to the right of the robot's desk. On a
-thing's panel it holds a bird to <em>my thing</em> &mdash; whatever the panel
-is the back of; on the table it is empty, and any bird of your own set there
+thing's panel it holds a bird to <em>my thing</em> &mdash; whatever thing the
+panel is the inside of; on the table it is empty, and any bird of your own set there
 takes a robot's letters. <a href="#perch">The perch</a></dd>
 <dt>my thing</dt><dd>What a behaviour works on: the thing whose panel its
 robots stand on, followed up through nesting and binding to the outermost.
@@ -1706,18 +1727,18 @@ own; the teacher keeps the pupil's lesson as <em>taught</em> steps, and can
 pick the pupil up again afterwards. <a href="#robots">Robots</a></dd>
 <dt>a token pad</dt><dd>A pad that two robots move between two holes to take
 turns, since no thought can say "an empty nest". <a href="#devices">Devices</a></dd>
-<dt>a panel, the back of a thing</dt><dd>Every thing has a back: press the
-gear (&#9881;) over it and its panel comes out as a tray, a little world of its
-own. Drop robots and things on it, enter it by its door, fold it away by its
-knob. <a href="#where">Places</a></dd>
+<dt>a panel, the inside of a thing</dt><dd>Every thing has an inside: press
+the gear (&#9881;) over it and its panel comes out as a tray, a little world
+of its own. Drop robots and things on it, enter it by its door, fold it away
+by its knob. <a href="#where">Places</a></dd>
 <dt>a tray, a card</dt><dd>A panel on the table is a <em>tray</em>; a pad
 standing on another thing's panel is a <em>card</em> of that thing.
 <a href="#where">Places</a></dd>
 <dt>a behaviour, a gadget</dt><dd>A pad whose panel carries robots. Drop it
 on a thing and that thing is what the robots work on; SPACE starts them.
 <a href="#behaviours">Behaviours</a></dd>
-<dt>binding</dt><dd>Making a behaviour's panel the back of another thing, by
-dropping it there. Nothing inside changes. <a href="#behaviours">Behaviours</a></dd>
+<dt>binding</dt><dd>Making a behaviour's panel the inside of another thing,
+by dropping it there. Nothing on the panel changes. <a href="#behaviours">Behaviours</a></dd>
 <dt>a house, a room</dt><dd>A whole workshop in a small house: a robot inside
 works on its own, and birds deliver through the roof. <a href="#rooms">Rooms</a></dd>
 <dt>the yard, the ground</dt><dd>The open ground out the back door, where

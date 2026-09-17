@@ -653,6 +653,7 @@ async function bindingsCheck(D) {
     px = by2.L9599.position.x;
   }
   const wanders = (Math.max(...xs) - Math.min(...xs)) > 1 && flips >= 2;
+  const wanderWhy = ' range=' + (Math.max(...xs) - Math.min(...xs)).toFixed(2) + ' xs=' + JSON.stringify(xs.filter((_, i) => i % 70 === 0).map(x => +x.toFixed(2)));
   D.switchGadget(by2.G903, false);
   D.switchGadget(by2.G910, false);
   // ...and Ruby RELEASES a binding rather than erasing the gadget: the
@@ -663,7 +664,7 @@ async function bindingsCheck(D) {
                 && by2.G903.userData.text === 'bouncing';
   const ok = g2g && rebound && wanders && released;
   put((ok ? 'PASS' : 'FAIL') + ' bindings travel  (gadget-binds-gadget=' + g2g
-      + ' survive-save-load=' + rebound + ' star-wanders-and-bounces=' + wanders
+      + ' survive-save-load=' + rebound + ' star-wanders-and-bounces=' + wanders + (wanders ? '' : wanderWhy)
       + ' flips=' + flips + ' ruby-releases=' + released + ')', ok ? 'pass' : 'fail');
   return ok;
 }
@@ -3743,11 +3744,11 @@ async function resortCheck(D, win) {
   // -- checked below on the newcomers, sampled every frame
   // problem 2
   for (let k = 0; k < 600 && !/Start|Run/.test(runBtn.textContent); k++) await frames(D, 1);
-  D.hold(mover); await frames(D, 30); D.clickBot(addr); await frames(D, 90);
-  const team = D.active && D.active.team === 1;
+  // the clerk is a team from the start: "Move up five" is on it already
+  const team = !mover && D.active && D.active.team === 1;
   runBtn.onclick(); await frames(D, 60);
-  const ding = grass().find(t => t.userData.kind === 'text' && t.userData.text === 'ding');
-  const bell = grass().find(t => t.userData.kind === 'bird' && t.userData.label === 'the bell');
+  const ding = grass().find(t => t.userData.kind === 'text' && t.userData.text === 'everybody move up five');
+  const bell = grass().find(t => t.userData.kind === 'bird' && t.userData.label === 'to every guest');
   D.hold(ding); await frames(D, 30); D.clickThing(bell); await frames(D, 30);
   for (let k = 0; k < 6000 && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)); k++) await frames(D, 1);
   const movedUp = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6));
@@ -3860,7 +3861,7 @@ async function perchCheck(D) {
   const tray = num.__panelTray;
   D.clickRaw({ kind: 'roomDoor', room: tray }); await slowSettle(D, 4000);
   const p1 = D.perch();
-  const fixture = p1.occ === 'bird' && p1.liveId === 'MYTHING' && p1.myThing === 'milliseconds';
+  const fixture = p1.occ === 'bird' && p1.liveId === 'MYTHING' && p1.myThing === 'stopwatch';
   const tipOK = /perch/.test(D.tipStation('perch') || '') && /my thing/.test(D.tip(D.at('perch')) || '');
   D.clickStation('perch'); await frames(D, 20);       // take her: another is there
   const p2 = D.perch();
@@ -3872,10 +3873,12 @@ async function perchCheck(D) {
   const emptyOut = p3.occ === null && p3.myThing === null;
   // the timer's second robot on the bench, given a reading and the go pad in hole 7
   const pw = w.bench[0].thing.panel;
-  const tell = JSON.parse(J(pw.active.team[0])); tell.team = [];
+  // the stopwatch's team is Started, Ask, Zero, Tell: the teller is last
+  const tell = JSON.parse(J(pw.active.team[2])); tell.team = [];
   const work = JSON.parse(J(pw.stations.stand));
   work.holes[1].pile = [{ kind: 'number', value: { n: '5', d: '1' } }];
   work.holes[5] = null; work.holes[6] = { kind: 'text', text: 'go' };
+  work.holes[7] = { kind: 'number', value: { n: '0', d: '1' }, op: '+' };    // a start of 0: it tells the reading itself
   const bw = { kind: 'world', v: pw.v ?? 3,
     bench: [{ thing: { kind: 'nest', id: 7001, guid: 'perch-test', hasEgg: false, pile: [], label: 'mine' }, x: 1.2, z: 2.0 },
             { thing: { kind: 'bird', nestId: 7001, nestGuid: 'perch-test', label: 'my bird' }, x: 1.6, z: 2.0 }],
@@ -3939,37 +3942,44 @@ async function metaTeachCheck(D) {
   D.speed(1);
   await load('🎓 timer-teacher');
   const ran2 = D.state.mode === 'world' && D.roundsNow().runCount === 1;
-  bots = botsNow();
-  const askTaught = steps(bots.Ask) === 'copy:given.3,put:s0,copy:given.2,put:s0.2,take:s0,put:given.0,take:given.5,put:given.6';
-  // Ask's box went back into hole 3 after Ask really asked: an answer on its nest, go in hole 7
-  const askBox = D.mine([2]);
-  const asked = Number.isFinite(numOf(askBox?.userData.holes[1]?.thing?.userData.pile?.[0]))
-    && askBox?.userData.holes[6]?.thing?.userData.text === 'go' && !askBox?.userData.holes[5]?.thing;
-  const told2 = toldOK();
-  // THE STOPWATCH: the number in hole 6 carries a panel with Tell's box and the team; taken
-  // out onto the table, SPACE sets it climbing and "." rests it
-  const num = D.mine([5]);
+  // THE STOPWATCH: the teacher taught the four robots of devices/timer, step for step
+  const tw = await (await fetch('../examples/devices/⏱️ timer.world.json')).json();
+  const want = [tw.bench[0].thing.panel.active, ...tw.bench[0].thing.panel.active.team];   // Started, Ask, Zero, Tell
+  const stepsOf = (b) => (b?.program || []).map(s2 => s2.type + (s2.at ? ':' + s2.at.c + (s2.at.path?.length ? '.' + s2.at.path.join('.') : '') + (s2.at.nest ? '^' : '') : '')).join(',');
+  const num = D.mine([9]);
   const tray = num?.__panelTray;
   const c = tray?.__ctx;
-  const tellTaught2 = steps(c?.activeBot?.team?.[0]) === 'copy:given.4,put:s0,take:given.1,put:s0.2,take:s0,put:perch,take:given.6,put:given.5';
-  const built = !!c && c.activeBot?.name === 'Ask' && c.activeBot.team?.[0]?.name === 'Tell'
-    && c.standOcc?.userData.kind === 'box' && D.sched().stands === 1;       // no desk left aside
-  const builtWhy = JSON.stringify({ ctx: !!c, active: c?.activeBot?.name ?? null, team: c?.activeBot?.team?.map(m => m.name) ?? null, stand: c?.standOcc?.userData.kind ?? null,
-    waiters: c?.waiters?.length ?? null, stands: D.sched().stands });
+  const got = c ? [c.activeBot, ...(c.activeBot?.team ?? [])] : [];
+  const taughtAll = got.length === 4 && got.every((b, i2) => b.name === want[i2].name && stepsOf(b) === stepsOf(want[i2]));
+  const askTaught = taughtAll, tellTaught2 = taughtAll;
+  // Ask's box went back into hole 5 after Ask really asked: an answer on its nest, the token in hole 7
+  const askBox = D.mine([4]);
+  const asked = Number.isFinite(numOf(askBox?.userData.holes[1]?.thing?.userData.pile?.[0]))
+    && !!askBox?.userData.holes[6]?.thing?.userData.text && !askBox?.userData.holes[5]?.thing;
+  // Zero told 3 and Tell told 1000 during their lessons, by the bird on the perch
+  const toldPile = (things().find(t => t.userData.kind === 'nest')?.userData.pile ?? []);
+  const toldVals = toldPile.filter(t => t.userData.kind === 'box' && t.userData.holes[0]?.thing?.userData.text === 'set').map(t => numOf(t.userData.holes[2]?.thing));
+  const told2 = toldVals.includes(3) && toldVals.includes(1000);
+  const built = !!c && c.standOcc?.userData.kind === 'box' && D.sched().stands === 1;       // no desk left aside
+  const builtWhy = JSON.stringify({ ctx: !!c, got: got.map(b => b.name + ':' + (b.program?.length ?? '?')), conds: got.map(b => (b.condition?.holes || []).map(h => h ? h.kind + (h.text ? ':' + h.text : '') : '_').join(' ')), extra: got.map((b, i2) => stepsOf(b).replace(stepsOf(want[i2]), '*')), stand: c?.standOcc?.userData.kind ?? null,
+    waiters: c?.waiters?.length ?? null, stands: D.sched().stands, told: toldVals });
   D.hold(num); await frames(D, 5); D.clickBench(0.9, 1.0); await slowSettle(D, 2000);
   D.switchBound(num, true);
+  await frames(D, 30);
   const v0 = numOf(num);
   await frames(D, 240);
   const v1 = numOf(num);
-  const climbs = v1 > v0;
+  const climbs = v1 > v0 && v0 < 5000;          // from about zero, not from the workshop's clock
+  const holesNow = JSON.stringify(c?.standOcc?.userData.holes.map(h => h.thing ? (h.thing.userData.kind === 'nest' ? 'nest[' + h.thing.userData.pile.map(t => t.userData.text ?? String(t.userData.value?.n)).join('/') + ']' : h.thing.userData.kind === 'number' ? String(h.thing.userData.value.n) : h.thing.userData.text ?? h.thing.userData.kind) : '-'));
+  const statesNow = got.map(b => b.name + '=' + D.matchState(b.condition, D.specOf(c.standOcc))).join(' ');
   D.switchBound(num, false); await frames(D, 60);
   const v2 = numOf(num); await frames(D, 120);
   const rests = numOf(num) === v2;
   D.speed(1);
-  const ok = ran1 && tellTaught && told1 && ran2 && askTaught && tellTaught2 && asked && told2 && built && climbs && rests;
+  const ok = ran1 && tellTaught && told1 && ran2 && taughtAll && asked && told2 && built && climbs && rests;
   put((ok ? 'PASS' : 'FAIL') + ' a robot teaches robots to write to the perch  (telling: ran-once=' + ran1 + ' tell-taught=' + tellTaught
-      + ' told-5=' + told1 + '; timer-teacher: ran-once=' + ran2 + ' ask-taught=' + askTaught + ' tell-taught=' + tellTaught2
-      + ' ask-really-asked=' + asked + ' told-5=' + told2 + ' stopwatch-built=' + built + (built ? '' : ' ' + builtWhy) + ' climbs=' + climbs + ' rests=' + rests + ')', ok ? 'pass' : 'fail');
+      + ' told-5=' + told1 + '; timer-teacher: ran-once=' + ran2 + ' four-taught=' + taughtAll
+      + ' ask-really-asked=' + asked + ' told-3-and-1000=' + told2 + ' stopwatch-built=' + built + (built && taughtAll ? '' : ' ' + builtWhy) + ' climbs-from-zero=' + climbs + ' v0=' + v0 + ' v1=' + v1 + (climbs ? '' : ' holes=' + holesNow + ' states=' + statesNow + ' dirty=' + tray?.userData.dirty + ' gates=' + JSON.stringify(D.roomGates(tray))) + ' rests=' + rests + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -4046,7 +4056,7 @@ async function taughtBackCheck(D) {
   D.clickRaw({ kind: 'station', id: 's0' }); await slowSettle(D, 3000);
   const boxTaken = pupil.stand?.occupant == null && !!D.at('s0')?.userData.panel;
   D.clickRaw({ kind: 'botThing', bot: pupil }); await slowSettle(D, 3000);
-  const pupilTaken = D.queueInfo().clawHeld === 'robot' && !D.allBots().find(b => b.name === 'the pupil')?.aside;
+  const pupilTaken = D.queueInfo().clawHeld === 'robot' && D.sched().stands === 1;   // its desk went with it
   D.clickRaw({ kind: 'station', id: 's0' }); await slowSettle(D, 3000);
   D.teach({ type: 'fold', at: { c: 's0', path: [] } }); await slowSettle(D, 3000);
   const taught = steps() === 'take:given.1,teach:given.0,taught>newNumber,taught>put,endTeach,take:given.2,panel,put:given.2,take:t1,put:s0,take:t1!,put:s0,fold:s0';
@@ -4069,6 +4079,67 @@ async function taughtBackCheck(D) {
   const ok = boxTaken && pupilTaken && taught && rewound && built;
   put((ok ? 'PASS' : 'FAIL') + ' a robot takes back the little robot it taught  (box-taken=' + boxTaken + ' pupil-taken=' + pupilTaken
       + ' taught=' + taught + ' rewound=' + rewound + (rewound ? '' : ' ' + rewoundWhy) + ' built-on-the-panel=' + built + (built ? '' : ' ' + builtWhy) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE STOPWATCH, and a copy of it. Ken: "You can turn off the stop watch and
+// edit its value (e.g. to zero) but then starting it again resumes its old
+// value"; "I made a copy of the stopwatch and it did nothing (visible) when I
+// started it... a stack of unprocessed responses". A thing announces its
+// switch on a channel; the stopwatch's Started robot hears "on" and starts
+// from whatever the number shows. A copy's panel gets nests of its own.
+async function stopwatchCheck(D) {
+  const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
+  const w = await (await fetch('../examples/devices/⏱️ timer.world.json')).json();
+  w.bench.push({ thing: { kind: 'nest', id: 7002, guid: 'switch-answers', hasEgg: false, pile: [], label: 'answers' }, x: -1.4, z: 1.1 });
+  D.worldIn(w); await slowSettle(D, 2000);
+  const num = things().find(t => t.userData.kind === 'number');
+  const answers = things().find(t => t.userData.kind === 'nest');
+  D.switchBound(num, true); await frames(D, 60);
+  const a0 = numOf(num); await frames(D, 180); const a1 = numOf(num);
+  const fromZero = a0 >= 0 && a0 < 1500 && a1 > a0;
+  D.switchBound(num, false); await frames(D, 30);
+  const b0 = numOf(num); await frames(D, 90);
+  const rests = numOf(num) === b0;
+  D.switchBound(num, true); await frames(D, 60);
+  const c0 = numOf(num); await frames(D, 120); const c1 = numOf(num);
+  const goesOn = c0 >= b0 && c0 < b0 + 2500 && c1 > c0;
+  D.switchBound(num, false); await frames(D, 30);
+  D.post('TIMER1', { kind: 'box', holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'value' }, { kind: 'number', value: { n: '0', d: '1' } }] });
+  await frames(D, 10);
+  D.switchBound(num, true); await frames(D, 60);
+  const d0 = numOf(num); await frames(D, 120); const d1 = numOf(num);
+  const zeroed = d0 >= 0 && d0 < 1500 && d1 > d0;
+  // the switch by mail: query answers on, set switches off
+  D.post('TIMER1', { kind: 'box', holes: [{ kind: 'text', text: 'query' }, { kind: 'text', text: 'switch' }, { kind: 'bird', nestId: 7002, nestGuid: 'switch-answers' }] });
+  await frames(D, 30);
+  const saysOn = answers.userData.pile.some(t => t.userData.text === 'on');
+  D.post('TIMER1', { kind: 'box', holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'switch' }, { kind: 'text', text: 'off' }] });
+  await frames(D, 30);
+  const offByMail = num.__panelTray.userData.dirty === false;
+  // A COPY: Mimi's copy has a nest of its own, and runs while the original rests
+  D.hold(num); await frames(D, 5); D.clickRaw({ kind: 'station', id: 'copyIn' }); await slowSettle(D, 6000);
+  D.clickRaw({ kind: 'station', id: 'copyOut' }); await slowSettle(D, 3000);
+  D.clickBench(-0.9, 1.0); await slowSettle(D, 2000);
+  D.clickRaw({ kind: 'station', id: 'copyIn' }); await slowSettle(D, 3000);     // the original back
+  D.clickBench(0.9, 1.0); await slowSettle(D, 2000);
+  const nums = things().filter(t => t.userData.kind === 'number' && t.userData.label === 'stopwatch');
+  const copy = nums.find(n => n !== num);
+  D.switchBound(copy, true); await frames(D, 90);
+  const e0 = numOf(copy); await frames(D, 420); const e1 = numOf(copy);
+  const copyRuns = e1 > e0;
+  const copyWhy = copyRuns ? '' : ' copy=' + JSON.stringify({ e0, e1, on: copy.userData.switchedOn, dirty: copy.__panelTray?.userData.dirty,
+    holes: copy.__panelTray?.__ctx?.standOcc?.userData.holes.map(h => h.thing ? (h.thing.userData.kind === 'nest' ? 'nest[' + h.thing.userData.pile.map(t => t.userData.text ?? String(t.userData.value?.n)).join('/') + ']' : h.thing.userData.kind === 'number' ? String(h.thing.userData.value.n) : h.thing.userData.text ?? h.thing.userData.kind) : '-'),
+    last: copy.__lastMsgs, gates: D.roomGates(copy.__panelTray) });
+  const ownNest = (() => { const b = copy.__panelTray?.__ctx?.standOcc; const g = b?.userData.holes[1].thing.userData.guid; return !!g && g !== 'timer-readings'; })();
+  const readings = copy.__panelTray?.__ctx?.standOcc?.userData.holes[1].thing.userData.pile.length ?? -1;
+  const originalRests = numOf(num) === numOf(num) && !num.__panelTray.userData.dirty;
+  D.switchBound(copy, false); await frames(D, 30);
+  const ok = fromZero && rests && goesOn && zeroed && saysOn && offByMail && copyRuns && ownNest && readings <= 2 && originalRests;
+  put((ok ? 'PASS' : 'FAIL') + ' the stopwatch starts from what it shows, and a copy is its own  (from-zero=' + fromZero + ' rests=' + rests
+      + ' goes-on=' + goesOn + ' zeroed-then-from-zero=' + zeroed + ' says-on=' + saysOn + ' off-by-mail=' + offByMail
+      + ' copy-runs=' + copyRuns + copyWhy + ' copy-own-nest=' + ownNest + ' copy-readings-waiting=' + readings + ' original-rests=' + originalRests + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -6520,6 +6591,9 @@ async function runOne(D, spec) {
   let mtchOK = true;
   try { mtchOK = want('metaTeach') ? await metaTeachCheck(D) : true; }
   catch (e) { mtchOK = false; put('FAIL a robot teaches robots to write to the perch  ' + e.message, 'fail'); }
+  let swOK = true;
+  try { swOK = want('stopwatch') ? await stopwatchCheck(D) : true; }
+  catch (e) { swOK = false; put('FAIL the stopwatch starts from what it shows, and a copy is its own  ' + e.message, 'fail'); }
   let lwOK = true;
   try { lwOK = want('lessonWaiting') ? await lessonWaitingCheck(D) : true; }
   catch (e) { lwOK = false; put('FAIL a lesson waiting on a panel begins on entering  ' + e.message, 'fail'); }
@@ -6661,7 +6735,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

@@ -106,13 +106,13 @@ def guest_gadget(k, number, lid, gid):
         note='A number has landed on my nest: that is my address. Works out where that cottage stands along the row, remembers it as my place, and walks there.')
 
     move = robot(                                          # noqa: F405
-        'Move when the bell rings', cond(h1=WILDTEXT, h4=ANYNUM),   # noqa: F405
+        'Move when told to', cond(h1=WILDTEXT, h4=ANYNUM),   # noqa: F405
         [newbox, holes(3), put('s0'),                      # noqa: F405
          takeTop('given', 1), put('s0', 0),                # the ding itself says "a move, please"  # noqa: F405
          take('given', 4), put('s0', 1),                   # where I live now -- taken  # noqa: F405
          copy('given', 2), put('s0', 2),                   # ...and my own bird  # noqa: F405
          take('s0'), put('given', 0)],                     # off to the desk  # noqa: F405
-        note='A pad has landed on my nest -- the bell. Sends [the ding, where I live, my own bird] to the desk and takes my place out of the box, so that the answer puts a new one in.')
+        note='A pad has landed on my nest -- an announcement from the desk, to every guest. Sends [the announcement, where I live, my own bird] to the desk and takes my place out of the box, so that the answer puts a new one in.')
 
     return {'kind': 'text', 'text': 'guest %d' % number, 'gadget': True,
             'lid': gid, 'evt': 'evt-' + gid, 'boundTo': lid,
@@ -159,7 +159,13 @@ move_robot = robot(                                        # noqa: F405
     + [take('s0', 1), put('s0', 2),                        # the new address, to their bird  # noqa: F405
        vac('s0')],                                         # noqa: F405
     trained_on=DESK(),
-    note='Problem 2, answered: everybody moves up five, which empties cottages 1 to 5 for the newcomers. Takes the [ding, where I live, bird] letter off the post, adds 5, and gives the answer to the bird.')
+    note='Problem 2, answered: everybody moves up five, which empties cottages 1 to 5 for the newcomers. Takes the [the announcement, where I live, bird] letter off the post, adds 5, and gives the answer to the bird.')
+
+# THE CLERK IS A TEAM FROM THE START: whichever letter lies on the post, the
+# member that fits it runs -- a newcomer's [number | bird] or a housed guest's
+# [announcement | where I live | bird]. Ken switched on the five newcomers
+# with only "Move up five" at the desk, and nothing recognised their letters.
+clerk = dict(address_robot, team=[move_robot])
 
 ABOUT = ('RESORT INFINITY\n'
       '\n'
@@ -198,22 +204,19 @@ P1 = ('PROBLEM 1\n'
       'The box on the grass with a\n'
       'nest in it is the DESK. Every\n'
       'guest writes to that nest, the\n'
-      'post.\n'
-      '\n'
-      'A clerk answers each letter\n'
-      'with a cottage number. Train\n'
-      'one (see HOW TO TRAIN THE\n'
-      'CLERK), or use "Next address",\n'
-      'already trained: drop the desk\n'
-      'on it and press Start.\n'
+      'post. A clerk answers each\n'
+      'letter with a cottage number:\n'
+      'train one (see HOW TO TRAIN\n'
+      'THE CLERK), or drop the desk\n'
+      'on the clerk already trained\n'
+      'and press Start.\n'
       '\n'
       'Then point at the pad "the\n'
       'guests", with nothing in your\n'
       'hand, and press SPACE. Letters\n'
-      'land on the post; the clerk\n'
-      'answers them one at a time,\n'
-      'and each guest walks to its\n'
-      'cottage.\n'
+      'land on the post, the clerk\n'
+      'answers them, and each guest\n'
+      'walks to its cottage.\n'
       '\n'
       'Which cottage should guest 1\n'
       'have?')
@@ -230,20 +233,19 @@ P2 = ('PROBLEM 2\n'
       'along, and the newcomers take\n'
       '1 to 5.\n'
       '\n'
-      'A guest asking to move writes\n'
-      '[ding | where I live | my\n'
-      'bird]. The answer is on the\n'
-      'grass, already trained: "Move\n'
-      'up five". Drop it on your\n'
-      'clerk: they are a team, and\n'
-      'the member that fits the\n'
-      'letter on top runs.\n'
+      'The clerk ANNOUNCES it: give\n'
+      'the pad "everybody move up\n'
+      'five" to the bird "to every\n'
+      'guest". It lands on every\n'
+      'guest\u2019s nest, and each asks\n'
+      'the desk where to go. "Move\n'
+      'up five", on the clerk team\n'
+      'already, answers: +5.\n'
       '\n'
-      'Drop a ding on the bell bird\n'
-      'and watch the guests walk\n'
-      'along. When cottages 1 to 5\n'
-      'stand empty, SPACE on "five\n'
-      'more guests".\n'
+      'Watch the guests walk along.\n'
+      'When cottages 1 to 5 stand\n'
+      'empty, SPACE on "five more\n'
+      'guests".\n'
       '\n'
       'Why does this work here, and\n'
       'not at a hotel with a hundred\n'
@@ -323,13 +325,11 @@ bench_yard = row + gates + [
      'x': 3.3, 'z': 7.4},
 
     {'thing': DESK(), 'x': -4.3, 'z': 3.4},
-    {'thing': address_robot, 'x': -3.4, 'z': 2.8},
-    {'thing': move_robot, 'x': -2.4, 'z': 2.8},
+    {'thing': clerk, 'x': -3.4, 'z': 2.8},
 
-    {'thing': bird(9792, BELL, label='the bell'), 'x': -1.2, 'z': 3.0},          # noqa: F405
-    {'thing': txt('ding'), 'x': -0.6, 'z': 3.0},                                 # noqa: F405
-    {'thing': txt('ding'), 'x': -0.2, 'z': 3.0},                                 # noqa: F405
-    {'thing': txt('ding'), 'x': 0.2, 'z': 3.0},                                  # noqa: F405
+    {'thing': bird(9792, BELL, label='to every guest'), 'x': -1.2, 'z': 3.0},    # noqa: F405
+    {'thing': txt('everybody move up five'), 'x': -0.55, 'z': 3.0},              # noqa: F405
+    {'thing': txt('everybody move up five'), 'x': 0.05, 'z': 3.0},               # noqa: F405
 
     {'thing': txt(ABOUT), 'x': 1.4, 'z': 3.2},                                   # noqa: F405
     {'thing': txt(P1), 'x': 2.6, 'z': 3.2},                                      # noqa: F405

@@ -35,19 +35,23 @@ the same robot, on the number's own panel, tells the number. It never learned
 what it tells — the perch means the thing whose panel it is on, and that is
 what makes a behaviour. Regenerate with `python make_telling.py`.
 
-🎓 **timer-teacher** — a robot builds the timer's two robots, the way you
-would, and puts them on a number's panel: a stopwatch. Ask is taught on a box
-with the "go" pad in hole 6: ask the computer the time, answered to my
-readings, and move the pad to hole 7. Tell is taught on a box with a reading
-on the nest and the pad in hole 7: put the reading in a `[set | value | _]`
-letter, give it to the bird on the perch, move the pad back. Both lessons are
-done for real in the run — the computer's answer lands on the nest in Ask's
-box, and Tell's letter reaches "what it told". Then the teacher takes the
-number's panel out onto a work spot, puts Ask's box back in its hole, sets
-Tell's box on the panel, then Ask, then Tell (a team), folds the panel away
-and reads the last pad. Take the number out of the box and press SPACE: it
-counts the milliseconds; "." rests it. The little robots a teacher taught stay
-among its things ("the first little robot it taught", at its own desk, with
-its box), which is how it reaches them again. A robot cannot wait mid-round
-for an answer, which is why there are two; a pad crossing between two holes
-lets them take turns. Regenerate with `python make_timer_teacher.py`.
+🎓 **timer-teacher** — a robot builds the stopwatch's four robots, the way
+you would, and puts them on a number's panel. They are the very robots of
+`devices/make_timer.py`, taught step by step, each on the box in the state
+that robot works in: Started (an "on" on the number's switch nest), Ask (the
+go token in hole 6), Zero (a fresh reading, and what the number showed), Tell
+(a reading and a start). Every lesson is done for real in the run — Ask's
+computer answer lands on the nest in its box, and the letters the others give
+to the bird on the perch land on "what it told". After each pupil's steps the
+teacher has Ruby loosen the holes that must fit any reading, value, start or
+token, and Dusty take out the holes a robot must not look in at all (the
+token may be in either of two holes) — Dusty on a pupil's thought is a taught
+step now, like Ruby. Then the teacher takes the number's panel out onto a
+work spot, puts three boxes back in their holes, sets Started's box on the
+panel, then Started, Ask, Zero and Tell (a team, in that order), folds the
+panel away and reads the last pad. Take the number out of the box and press
+SPACE: it counts the milliseconds from 0; "." rests it; SPACE goes on from
+there. A pupil whose lesson is over stands half size at its desk. The little
+robots a teacher taught stay among its things ("the first little robot it
+taught", at its own desk, with its box), which is how it reaches them again.
+Regenerate with `python make_timer_teacher.py`.

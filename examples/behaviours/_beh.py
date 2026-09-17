@@ -4,7 +4,7 @@
 # about "my thing" through THE BIRD ON THE PERCH -- the pedestal beside every
 # robot's desk, which on a panel holds a bird to whatever the panel is the
 # back of -- and binding a behaviour to something is nothing more than
-# deciding what that is. Unattached, the panel is the back of the pad itself
+# deciding what that is. Unattached, the panel is the inside of the pad itself
 # -- which is why a gadget set down on the table demonstrates itself, at no
 # cost and with no demo mode. The robots' boxes hold no bird to my thing at
 # all (since 16 Sep 2026); a robot's letter put on the perch goes to her.
