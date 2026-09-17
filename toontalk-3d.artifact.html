@@ -1659,7 +1659,8 @@ and whether the messages under the title are read aloud, belong to
 whoever is signed in — like the notebook, they are kept under your
 name, so picking a voice does not change it for everybody else who uses this
 browser. The 🎤 button lets you ask by voice, where the browser
-offers a microphone — where it does not, the button simply is not shown.
+offers a microphone — where it does not, the button simply is not shown. The sound slider in the menu sets how loud every voice is as well as the
+effects, and the mute button beside it silences them all.
 
 Asking Marty for a toy
 Next to Ask in Martys panel is Make. Type what you want
@@ -12407,6 +12408,15 @@ function setVolume(v, muted) {
   sndVol = v; sndMuted = muted;
   try { localStorage.setItem('nano-toontalk.sound', JSON.stringify({ v, muted })); } catch {}
   if (sndGain) sndGain.gain.value = muted ? 0 : v;
+}
+// THE SLIDER REACHES THE VOICES TOO. Speech goes out through the browser's
+// own engine, not the gain node, so every utterance is made here at the
+// slider's setting (muted: a robot's speak action says nothing at all, see
+// speakText; the hints and Marty keep their own switches and go quiet).
+function utterance(said) {
+  const u = new SpeechSynthesisUtterance(said);
+  u.volume = sndMuted ? 0 : sndVol;
+  return u;
 }
 function tone(freq, dur, { type = 'sine', at = 0, slide = 0, gain = 0.25 } = {}) {
   const ac = audio(); if (!ac) return;
@@ -24948,7 +24958,9 @@ function userClick(target) {
     return userDropOn(target.thing, target.point);
   }
   if (target.kind === 'hole') {
-    if (!held) return say('That hole is empty.');
+    // AN EMPTY HAND ON AN EMPTY HOLE takes the box: the hole is part of the
+    // box, and "That hole is empty" answered a question nobody had asked.
+    if (!held) return handleClick({ kind: 'thing', thing: target.box, point: target.point });
     return userPutInHole(target.box.userData.holes[target.index]);
   }
 }
@@ -25082,6 +25094,11 @@ function directRobot(target) {
       const side = target.kind === 'thing' && target.point
         ? sideOf(target.thing, target.point) : 'R';
       return go({ type: 'put', at, side });
+    }
+    // an empty claw on an EMPTY hole takes the box, as the hand does -- a take
+    // of the hole itself would abort the lesson over nothing being there
+    if (target.kind === 'hole' && !target.box.userData.holes[target.index]?.thing) {
+      return go({ type: 'take', at: { c: at.c, path: at.path.slice(0, -1) } });
     }
     return go({ type: 'take', at });
   }
@@ -28775,7 +28792,7 @@ function speakText(words) {
   if (sndMuted || !window.speechSynthesis || !words) return;
   const said = spokenWords(words);
   if (!said) return;
-  const u = new SpeechSynthesisUtterance(said);
+  const u = utterance(said);
   const v = hintVoice();
   if (v) u.voice = v;
   speechSynthesis.speak(u);
@@ -29062,7 +29079,7 @@ function hintSpeak(msg) {
 function hintSpeakNow(msg) {
   const said = spokenWords(msg);
   if (!said) return;                    // a line that was nothing but pictures
-  const u = new SpeechSynthesisUtterance(said);
+  const u = utterance(said);
   const v = hintVoice();
   if (v) u.voice = v;
   hintSpeaking = true;
@@ -30493,6 +30510,22 @@ function dropMeaning(t) {
   if (xk === 'model' && hk === 'text' && t.point) return `rides on ${name(X)}`;
   return null;
 }
+// WHO IS STANDING THERE. Robots have names, and a team is several of them:
+// a line about dropping something on a robot names whoever will wake, and
+// says "they" for a team; a robot without a name is "the robot", never "it".
+// Ken: "the tooltip could be better given that the robots have names".
+function botWho(bot) {
+  const all = [bot, ...(bot.team || [])];
+  const q = b => `“${b.name}”`;
+  const steps = all.reduce((n, b) => n + b.program.length, 0);
+  if (all.length === 1) {
+    return { who: bot.name ? q(bot) : 'the robot', they: 'it', their: 'its', them: 'it', plural: false, steps };
+  }
+  const who = all.every(b => b.name) ? `${all.slice(0, -1).map(q).join(', ')} and ${q(all[all.length - 1])}`
+            : bot.name ? `${q(bot)} and its team of ${all.length}` : 'the robots';
+  return { who, they: 'they', their: 'their', them: 'them', plural: true, steps };
+}
+const capWho = (w) => w[0].toUpperCase() + w.slice(1);
 function tipFor(t) {
   const base = tipForInner(t);
   if (!dropHints || !inHand()) return base;
@@ -30662,7 +30695,12 @@ function tipForInner(t) {
       : 'Dusty the vacuum — click to wake him, then click a thing to vacuum it away, its name to take just the name off, or a part of a robot’s thought to remove that part.';
   }
   if (t.kind === 'miniCond') {
-    return 'Its little thought — click to take a copy of the very thing it was first shown.';
+    // Not "its" (whose?) and not a click line for a full hand: that click
+    // only says "Empty your hand first".
+    const whose = t.bot?.name ? `The little thought of “${t.bot.name}”` : 'The robot’s little thought';
+    return TIP
+      ? `${whose} — empty your hand first, then click to take a copy of the very thing it was first shown.`
+      : `${whose} — click to take a copy of the very thing it was first shown.`;
   }
   if (TIP && (t.kind === 'roomDoor' || t.kind === 'roomRoof'
       || (t.kind === 'thing' && t.thing?.userData.kind === 'room'
@@ -30728,11 +30766,11 @@ function tipForInner(t) {
   if (t.kind === 'botThing') {
     const bot = t.bot, trained = bot.program.length;
     const teamNote = bot.team.length ? ` It leads a team of ${bot.team.length + 1}.` : '';
-    const who = bot.name ? `“${bot.name}”` : 'The robot';
+    const w = botWho(bot), who = capWho(w.who);
     const note = bot.note ? `\n${bot.note}` : '';
     if (bot === activeBot) {
       return TIP
-        ? (trained ? 'Click to give it that to work on.' : 'Click to give it that — that starts its training.')
+        ? (trained ? `Click to give ${w.who} that to work on.` : `Click to give ${w.who} that — that starts ${w.their} training.`)
         : `${who} at the bench${trained ? ` (${trained} steps trained).` : ' — untrained.'} Click to shrink it into your hand.${teamNote}${note}`;
     }
     if (TIP?.userData.kind === 'robot') {
@@ -30740,8 +30778,8 @@ function tipForInner(t) {
     }
     if (TIP && mode === 'training') {
       return teachable(bot)
-        ? 'Drop that on it to TEACH it: the little robot steps up to a desk of its own, and everything you do next is its lesson.'
-        : 'That robot cannot be taught here.';
+        ? `Drop that on ${w.who} to TEACH ${w.them}: the little robot steps up to a desk of its own, and everything you do next is ${w.their} lesson.`
+        : `${who} cannot be taught here.`;
     }
     if (TIP) {
       // WHICH ROBOT THIS IS decides what dropping on it means, and the one
@@ -30750,15 +30788,17 @@ function tipForInner(t) {
       // set going on the thing in your hand.
       if (activeBot) return 'Another robot is already at the bench.';
       return trained
-        ? `Drop that on it: it wakes, grows, and gets to work on it — it already knows ${trained} step${trained === 1 ? '' : 's'}.`
-        : 'Drop that on it: it wakes, grows, and watches you — whatever you do next is its lesson.';
+        ? (w.plural
+            ? `Drop that on ${w.who}: they wake, grow, and get to work on it — they know ${w.steps} step${w.steps === 1 ? '' : 's'} between them.`
+            : `Drop that on ${w.who}: it wakes, grows, and gets to work on it — it already knows ${trained} step${trained === 1 ? '' : 's'}.`)
+        : `Drop that on ${w.who}: it wakes, grows, and watches you — whatever you do next is its lesson.`;
     }
     if (trained) {
       const lines = bot.program.slice(0, 8).map((st2, i) => `${i + 1}. ${describe(st2)}`);
       if (bot.program.length > 8) lines.push(`… and ${bot.program.length - 8} more`);
       return `${bot.name ? `“${bot.name}” — runs` : 'Runs'} on ${condText(bot.condition)}${note}:\n${lines.join('\n')}${teamNote ? '\n' + teamNote.trim() : ''}\nClick to pick it up.`;
     }
-    return 'A little robot, untrained — click to pick it up.';
+    return `${bot.name ? who : 'A little robot'}, untrained — click to pick it up.`;
   }
   if (t.kind === 'liveBirdPerch') {
     const who = t.tray.__owner ? panelName(t.tray.__owner) : 'its thing';
@@ -31044,7 +31084,7 @@ function tipForInner(t) {
       : occ.userData.kind === 'number' ? `holds ${ratText(occ.userData.value)}`
       : `holds a ${occ.userData.label || occ.userData.kind}`;
     return `${pan ? 'Pan' : 'Hole'} ${t.index + 1} — ${what}.`
-      + (TIP && !occ ? ' Click to put that in.' : '');
+      + (TIP && !occ ? ' Click to put that in.' : !TIP && !occ ? ` Click to pick up the ${pan ? 'scale' : 'box'}.` : '');
   }
   return null;
 }
@@ -31556,11 +31596,11 @@ loadModel('robot_v4.glb', (gltf) => {
     menu.appendChild(gb);
     const sb = document.createElement('button');
     sb.id = 'sndBtn';
-    sb.title = 'Mute or unmute the sound effects.';
+    sb.title = 'Mute or unmute the sound, voices included.';
     const sv = document.createElement('input');
     sv.id = 'sndVol'; sv.type = 'range';
     sv.min = '0'; sv.max = '1'; sv.step = '0.05';
-    sv.title = 'Sound volume.';
+    sv.title = 'Sound volume, for the effects and the voices.';
     sv.style.minWidth = '64px'; sv.style.verticalAlign = 'middle';
     const refreshSnd = () => {
       sb.textContent = sndMuted ? '\u{1F507}' : '\u{1F50A}';
@@ -34736,7 +34776,7 @@ function martySpeak(text) {
   const voice = martyVoiceObj();
   const parts = spokenWords(text).match(/[^.!?…]+[.!?…]*/g) || [spokenWords(text)];
   parts.map(p => p.trim()).filter(Boolean).forEach((p, i) => {
-    const u = new SpeechSynthesisUtterance(p);
+    const u = utterance(p);
     if (voice) u.voice = voice;
     u.pitch = 1.32 + (i % 2 ? 0.06 : -0.06);
     u.rate = 1.04;
@@ -35575,6 +35615,9 @@ window.__nano = {
   // What the pointer would be told about a thing -- the two halves and the
   // rule between them, as one string.
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },
+  utter(said) { return utterance(said); },             // made, not spoken: its volume is the slider's
+  tipBot(b) { return tipFor({ kind: 'botThing', bot: b.__bot ?? b }); },
+  tipThought(b) { return tipFor({ kind: 'miniCond', bot: b.__bot ?? b }); },
   tipRule: TIP_RULE,
   get doc() { return document; },
   matchState, specOf,   // a probe can ask why a robot does not run

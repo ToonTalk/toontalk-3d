@@ -3723,7 +3723,8 @@ async function resortCheck(D, win) {
   const cottageX = (n) => n * 0.6 - 4.5;
   const atCottage = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.05 && Math.abs(g.position.z - 5.2) < 0.05;
   D.hold(desk); await frames(D, 30); D.clickBot(addr); await frames(D, 90);
-  runBtn.onclick(); await frames(D, 60);
+  if (!/Stop/.test(runBtn.textContent)) runBtn.onclick();   // the drop sets a trained clerk to work
+  await frames(D, 60);
   D.speed('instant');
   const macro1 = grass().find(t => t.userData.text === 'the guests');
   D.switchGadget(macro1, true, true);
@@ -4088,6 +4089,128 @@ async function taughtBackCheck(D) {
 // started it... a stack of unprocessed responses". A thing announces its
 // switch on a channel; the stopwatch's Started robot hears "on" and starts
 // from whatever the number shows. A copy's panel gets nests of its own.
+// TOOLTIPS THAT KNOW WHO. Ken: "the tooltip could be better given that the
+// robots have names. And if there are no names either 'the robot' or 'the
+// robots' is better than 'it'"; and the little thought's line for a full hand
+// "is appropriate for an empty hand but not one holding something".
+async function robotTipCheck(D) {
+  const mk = (name, n, team = []) => ({ name, team, program: Array.from({ length: n }, () => ({ type: 'noop' })), note: '', condition: null });
+  const named = mk('Next address', 5), five = mk('Move up five', 3), anon = mk(null, 4), anon2 = mk(null, 2);
+  const team = mk('Next address', 5, [five]), mixed = mk('Ann', 1, [anon2]), twoAnon = mk(null, 2, [anon2]);
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'text', text: 'a pad' }, x: 0.2, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  const pad = D.bench(0); D.hold(pad); await frames(D, 5);
+  const t = {
+    named: D.tipBot(named), team: D.tipBot(team), mixed: D.tipBot(mixed), anon: D.tipBot(anon), twoAnon: D.tipBot(twoAnon),
+    fresh: D.tipBot(mk('Bob', 0)), thoughtNamed: D.tipThought(named), thoughtAnon: D.tipThought(anon),
+  };
+  const ok = t.named.startsWith('Drop that on \u201cNext address\u201d: it wakes')
+    && t.team.startsWith('Drop that on \u201cNext address\u201d and \u201cMove up five\u201d: they wake') && /8 steps between them/.test(t.team)
+    && t.mixed.startsWith('Drop that on \u201cAnn\u201d and its team of 2: they wake')
+    && t.anon.startsWith('Drop that on the robot: it wakes') && !/on it:/.test(t.anon)
+    && t.twoAnon.startsWith('Drop that on the robots: they wake')
+    && /Drop that on \u201cBob\u201d: it wakes, grows, and watches you/.test(t.fresh)
+    && t.thoughtNamed.startsWith('The little thought of \u201cNext address\u201d \u2014 empty your hand first')
+    && t.thoughtAnon.startsWith('The robot\u2019s little thought \u2014 empty your hand first');
+  D.place(pad, 0.2, 1.7); await frames(D, 5);
+  put((ok ? 'PASS' : 'FAIL') + ' the tooltip names the robot, or says the robot(s), and the thought asks for an empty hand  ' + (ok ? '' : JSON.stringify(t)), ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE SLIDER REACHES THE VOICES. Ken: "The volume control slider doesn't
+// affect text-to-speech". Speech does not pass through the gain node, so each
+// utterance is made at the slider's setting.
+async function voiceVolumeCheck(D, W) {
+  const sv = W.document.getElementById('sndVol');
+  if (!sv || !W.speechSynthesis) { put('FAIL the volume slider sets the voices too  (no slider or speech engine here)', 'fail'); return false; }
+  const at = async (v) => { sv.value = String(v); sv.dispatchEvent(new W.Event('input')); await frames(D, 2); return D.utter('a line').volume; };
+  const a = await at(0.3), b = await at(1), c = await at(0), d = await at(0.5);
+  D.mute(true);
+  // and every speaking site makes its utterance that way: the app's source
+  // has the constructor once, inside utterance()
+  const src = await (await fetch(frame.src)).text();
+  const sites = (src.match(/new SpeechSynthesisUtterance\(/g) || []).length;
+  const ok = Math.abs(a - 0.3) < 0.01 && b === 1 && c === 0 && Math.abs(d - 0.5) < 0.01 && sites === 1;
+  put((ok ? 'PASS' : 'FAIL') + ' the volume slider sets the voices too  (0.3→' + a + ' 1→' + b + ' 0→' + c + ' 0.5→' + d + ' utterance-sites=' + sites + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// AN EMPTY HAND ON AN EMPTY HOLE. Ken: "an empty hand pointing to an empty
+// box hole should pick it up when clicked" -- it said "That hole is empty".
+// The robot's empty claw does the same in a lesson, where a take of the hole
+// itself would have aborted the lesson.
+async function emptyHoleCheck(D) {
+  const world = () => ({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'box', holes: [{ kind: 'number', value: { n: '3', d: '1' } }, null] }, x: 0.2, z: 1.7 },
+    { thing: { kind: 'robot' }, x: 0.9, z: 1.5 }] });
+  const find = (k) => { for (let i = 0; i < 8; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === k) return t; } return null; };
+  D.worldIn(world()); await slowSettle(D, 1500);
+  let box = find('box');
+  D.clickHole(box, 1); await frames(D, 30);
+  const handHolds = !!D.heldPos() && !find('box');
+  D.place(box, 0.2, 1.7); await frames(D, 10);
+  // the robot: given the box, told to take from its empty hole
+  box = find('box'); D.hold(box); await frames(D, 5); D.giveRobot(); await slowSettle(D, 2500);
+  const given = D.at('given');
+  const givenIsBox = given?.userData.kind === 'box';
+  if (givenIsBox) { D.clickHole(given, 1); await slowSettle(D, 4000); }
+  const clawHolds = D.clawThing()?.kind === 'box' && !D.at('given');
+  const lessonOn = D.helperState().mode === 'training';
+  const ok = handHolds && givenIsBox && clawHolds && lessonOn;
+  put((ok ? 'PASS' : 'FAIL') + ' an empty hand or claw on an empty hole takes the box  (hand-holds=' + handHolds + ' given-is-box=' + givenIsBox + ' claw-holds=' + clawHolds + ' lesson-on=' + lessonOn + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE RESORT IN KEN'S ORDER. "testing infinity resort led to the robot not
+// doing anything when given the nest after starting 'the guests'... I tried
+// it 2 more times and it worked fine except that the old guests didn't move
+// 5 cottages over". The guests write first, the desk goes to the clerk with
+// the letters already piled, then Start; and the bell is rung while the run
+// is still going, as a player rings it.
+async function resortLateCheck(D, win) {
+  const w = await (await fetch('../examples/infinity/🏨 resort-infinity.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+  const grass = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const guests = grass().filter(t => t.userData.kind === 'text' && /^(new )?guest \d/.test(t.userData.text || ''));
+  const desk = grass().find(t => t.userData.kind === 'box');
+  const nest = desk.userData.holes.map(h => h.thing).find(t => t?.userData.kind === 'nest');
+  const addr = D.benchBots().find(b => /address/i.test(b.__bot?.name || ''));
+  const runBtn = win.document.getElementById('runBtn');
+  const cottageX = (n) => n * 0.6 - 4.5;
+  const atCottage = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.05 && Math.abs(g.position.z - 5.2) < 0.05;
+  const t0 = performance.now();
+  const slow = CHECKS_FILTER.some(w => 'resortslow'.includes(w) && w.length > 6);   // named: at 1x, as Ken plays it (~7 min)
+  D.speed(slow ? 1 : 'instant');
+  const prog = async (at, k) => { if (k % 300) return; try { await fetch('/capture?name=suiteprog', { method: 'POST',
+    body: JSON.stringify({ at, k, pile: (nest.userData.pile || []).length, guests: guests.slice(0, 6).map(g => [Math.round(g.position.x * 100) / 100, Math.round(g.position.z * 100) / 100]),
+      run: runBtn.textContent, hint: win.document.getElementById('hint')?.textContent?.slice(0, 120), t: Math.round(performance.now() / 1000) }) }); } catch (e2) {} };
+  const macro1 = grass().find(t => t.userData.text === 'the guests');
+  D.switchGadget(macro1, true, true);
+  for (let k = 0; k < 300 && (nest.userData.pile || []).length < 6; k++) await frames(D, 1);
+  const piled = (nest.userData.pile || []).length;
+  D.hold(desk); await frames(D, 30); D.clickBot(addr); await frames(D, 90);
+  // the drop set it to work (the letters were there), so nobody presses
+  // Start -- pressed then, it is Stop, which is what Ken met
+  const wentToWork = D.helperState().mode === 'replay' || !(nest.userData.pile || []).length;
+  await frames(D, 60);
+  for (let k = 0; k < (slow ? 20000 : 4000) && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 1)); k++) { await frames(D, 1); await prog('resort-house', k); }
+  const housed1 = guests.slice(0, 6).every((g, i) => atCottage(g, i + 1));
+  const stillRunning = !/Start|Run/.test(runBtn.textContent);
+  // the bell, rung while the clerk still works
+  const ding = grass().find(t => t.userData.kind === 'text' && t.userData.text === 'everybody move up five');
+  const bell = grass().find(t => t.userData.kind === 'bird' && t.userData.label === 'to every guest');
+  D.hold(ding); await frames(D, 30); D.clickThing(bell); await frames(D, 30);
+  for (let k = 0; k < (slow ? 20000 : 6000) && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)); k++) { await frames(D, 1); await prog('resort-move', k); }
+  const movedUp = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6));
+  const secs = Math.round((performance.now() - t0) / 1000);
+  D.speed(1);
+  const ok = piled === 6 && wentToWork && housed1 && movedUp;
+  put((ok ? 'PASS' : 'FAIL') + ' Resort Infinity, the guests first and the bell mid-run  (piled=' + piled + ' went-to-work-on-the-drop=' + wentToWork + ' housed-1-to-6=' + housed1
+      + ' still-running-after=' + stillRunning + ' moved-up-five=' + movedUp + ' guests-at=' + guests.slice(0, 6).map(g => Math.round((g.position.x + 4.5) / 0.6 * 10) / 10).join(',') + ' secs=' + secs + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function stopwatchCheck(D) {
   const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
@@ -6591,6 +6714,18 @@ async function runOne(D, spec) {
   let mtchOK = true;
   try { mtchOK = want('metaTeach') ? await metaTeachCheck(D) : true; }
   catch (e) { mtchOK = false; put('FAIL a robot teaches robots to write to the perch  ' + e.message, 'fail'); }
+  let rlOK = true;
+  try { rlOK = want('resortLate') || want('resortSlow') ? await resortLateCheck(D, frame.contentWindow) : true; }
+  catch (e) { rlOK = false; put('FAIL Resort Infinity, the guests first and the bell mid-run  ' + e.message, 'fail'); }
+  let ehOK = true;
+  try { ehOK = want('emptyHole') ? await emptyHoleCheck(D) : true; }
+  catch (e) { ehOK = false; put('FAIL an empty hand or claw on an empty hole takes the box  ' + e.message, 'fail'); }
+  let rtOK = true;
+  try { rtOK = want('robotTip') ? await robotTipCheck(D) : true; }
+  catch (e) { rtOK = false; put('FAIL the tooltip names the robot  ' + e.message, 'fail'); }
+  let vvOK = true;
+  try { vvOK = want('voiceVolume') ? await voiceVolumeCheck(D, frame.contentWindow) : true; }
+  catch (e) { vvOK = false; put('FAIL the volume slider sets the voices too  ' + e.message, 'fail'); }
   let swOK = true;
   try { swOK = want('stopwatch') ? await stopwatchCheck(D) : true; }
   catch (e) { swOK = false; put('FAIL the stopwatch starts from what it shows, and a copy is its own  ' + e.message, 'fail'); }
@@ -6735,7 +6870,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

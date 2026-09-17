@@ -7662,3 +7662,40 @@ glide from where the thing was seen, and a star sent across the table by
 bouncing crept a ten-thousandth a frame. A step shorter than a finger applies
 at once; a step that lands mid-glide extends the glide. The library's star
 had also been riding on "bouncing at a speed"; it has a row of its own.
+
+## The slider reaches the voices, who is at the desk, and an empty hole
+
+Ken: "The volume control slider doesn't affect text-to-speech." The effects
+are synthesised through one gain node and the slider drove that; speech goes
+out through the browser's own engine, and none of the three speaking sites
+(a robot's speak action, the hints, Marty) set the utterance's volume. One
+`utterance(said)` makes every utterance now, at the slider's setting, and
+the suite counts the constructor in the source: once.
+
+"The tooltip could be better given that the robots have names. And if there
+are no names either 'the robot' or 'the robots' is better than 'it'." The
+drop-on-a-robot lines name whoever will wake -- "Drop that on 'Next address'
+and 'Move up five': they wake, grow, and get to work on it -- they know 8
+steps between them" -- and say "the robot" or "the robots" for the nameless,
+through `botWho(bot)`. The little thought's line with something in your hand
+had been the empty-hand line; it says to empty your hand first, since that
+is all the click would have said.
+
+"An empty hand pointing to an empty box hole should pick it up when
+clicked." It said "That hole is empty". The hole is part of the box, so the
+click takes the box; and the robot's empty claw on an empty hole in a lesson
+takes the box too, where a take of the hole itself would have aborted the
+lesson over nothing being there.
+
+"Testing infinity resort led to the robot not doing anything when given the
+nest after starting 'the guests' -- but I tried it 2 more times and it worked
+fine except that the old guests didn't move 5 cottages over." Measured in
+Ken's order (the guests first, then the desk to the clerk) at 1x: the drop of
+the desk on the trained clerk sets it to work at once, letters and all, and
+the run button reads Stop from that moment -- so "press Start", as the
+problem 1 pad said, was a Stop. Pressed at once it left the clerk doing
+nothing; pressed after a round it held the auto-run, and the bell's letters
+then woke nobody, which is the guests staying put. The pad says the drop
+sets it to work and not to press Start; the checks no longer press it
+either. A page that went unresponsive once in Ken's play is not reproduced:
+the resort at 1x in that order runs seven minutes clean under the suite.
