@@ -1824,11 +1824,11 @@ the way to try such a robot out without entering a panel. Two worlds in
 examples/meta show a robot teaching robots to do it:
 telling (one pupil, one letter to the perch) and
 timer-teacher (the timers two robots, built by a teacher);
-a third, resort-teacher, is a team of three that solves Resort
-Infinity in front of you — seats the guests, teaches a clerk and puts it
-to work on a pads panel, rings the bell, teaches a mover, welcomes five
-more — three robots because a lesson takes a letter off a post, and a
-thought about a post is what waits for the letter to land.
+a third, resort-teacher, solves Resort Infinity in front of you
+— seats the guests, teaches a clerk on a practice letter and gives it to
+the bird to the front desk, teaches a mover and gives it to the bird to the
+moving office, welcomes five more. A robot is a letter too: given to a bird,
+it flies to her nest.
 
 Filling a yard by hand. Whatever you carry comes through the door
 with you: a box of things to unpack, and the empty box goes back in with
@@ -6015,6 +6015,11 @@ function stashCtx(ctx) {
   ctx.pendingAfter = pendingAfter; pendingAfter = null;
   ctx.mode = mode; mode = 'world';
   ctx.runCount = runCount; runCount = 0;
+  // THE LITTLE ROBOTS IT TAUGHT are this world's: a house taking its turn
+  // starts a run of its own, and that run's reset of the list emptied the
+  // teacher's -- "the second little robot it taught" was gone the moment a
+  // desk woke to the first (the resort teacher, at 4x).
+  ctx.taughtNow = taughtNow; taughtNow = [];
 }
 function loadCtx(ctx) {
   waiters.clear();
@@ -6049,6 +6054,7 @@ function loadCtx(ctx) {
   pendingAfter = ctx.pendingAfter ?? null;
   mode = ctx.mode ?? 'world';
   runCount = ctx.runCount ?? 0;
+  taughtNow = ctx.taughtNow ?? [];
 }
 function pushWorld(room) {
   stashCtx(curCtx);
@@ -9336,17 +9342,15 @@ function bringOutPanel(X, folded = false) {
   // a robot works -- the resort teacher's switch letter to "the guests" --
   // had its hidden tray land on spot 1, where the next lesson's letter was
   // "set down inside the room". Placed as a person would place it.
-  putOnBench(tray, freeTraySpot(tray), folded);
-  if (tray.userData.world) hydrateRoom(tray);
   // A behaviour switched on wants its robots WORKING, not on display: the
   // tray is made and left folded, the state a panel already has for "its
   // robot keeps working there, out of sight". Six gadgets going at once
-  // would otherwise fill the table with trays.
-  if (folded) {
-    tray.visible = false;
-    tray.__closed = true;
-    return tray;
-  }
+  // would otherwise fill the table with trays. Marked before it is placed,
+  // so that placing it neither pushes its neighbours nor grows the yard.
+  if (folded) { tray.visible = false; tray.__closed = true; }
+  putOnBench(tray, freeTraySpot(tray), folded);
+  if (tray.userData.world) hydrateRoom(tray);
+  if (folded) return tray;
   trayOutFrom(tray, X);
   return tray;
 }
@@ -11954,9 +11958,14 @@ function putOnBench(thing, at, byUser = false) {
        : thing.userData.kind === 'text' ? 1 : (thing.userData.sz ?? 1)));
   thing.quaternion.identity();
   const half = (thing.userData.width || 0.3) / 2 + 0.05;
-  const spot = clearBenchSpot(thing,
-    Math.min(BENCH.x1 - half, Math.max(BENCH.x0 + half, at.x)),
-    Math.min(BENCH.z1 - 0.16, Math.max(BENCH.z0 + 0.16, at.z)));
+  // A FOLDED TRAY TAKES NO ROOM: invisible, it neither shoves what stands
+  // where it lands nor grows the yard (thirty hidden trays of the resort's
+  // guests did both).
+  const spot = thing.__closed
+    ? { x: Math.min(BENCH.x1 - half, Math.max(BENCH.x0 + half, at.x)), z: Math.min(BENCH.z1 - 0.16, Math.max(BENCH.z0 + 0.16, at.z)) }
+    : clearBenchSpot(thing,
+        Math.min(BENCH.x1 - half, Math.max(BENCH.x0 + half, at.x)),
+        Math.min(BENCH.z1 - 0.16, Math.max(BENCH.z0 + 0.16, at.z)));
   thing.position.set(spot.x, BENCH_TOP + thing.userData.rest * thing.scale.y, spot.z);
   thing.__baseY = thing.position.y;
   // Which way it was pointed, and how high it floated, are part of what it
@@ -11982,7 +11991,7 @@ function putOnBench(thing, at, byUser = false) {
     addMiniBubble(thing, thing.__bot?.program.length ? thing.__bot.condition : null);
   }
   if (thing.__labelNode) thing.__labelNode.visible = true;   // out of a hole, the name is back
-  growYardIfNeeded(thing);
+  if (!thing.__closed) growYardIfNeeded(thing);
 }
 
 // A work spot is a small desk. Something too wide for it -- a box of eight
@@ -13830,7 +13839,11 @@ function actionPut(at, side, backTo) {
     // NOW, not when the round was queued: the step before may have been the
     // back door
     if (at.c === 'ground') {
-      if (!yardIn) {
+      // THE FLOOR OF ITS OWN HOUSE counts as ground: a house is the robot's
+      // domain, and a machinery robot that launches a house per letter (the
+      // resort's front desk, the trucks of the original) has to set the
+      // launched house down somewhere. The table stays yours.
+      if (!yardIn && !curCtx?.room) {
         abort('This robot sets things down on the ground, and there is no ground in here — take it outside.');
         return homeFor(activeBot);
       }
@@ -14549,6 +14562,21 @@ function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
       replaceThing(target, nb);
       say(`One hole per letter — ${chars.length} of them.`);
     });
+  }
+  // A ROBOT ON A ROBOT IS A TEAM, by a robot's claw as by your hand: the
+  // resort's desks drop a copy of Tidy on a copy of your robot before putting
+  // the pair in a little house, so the house folds itself up when the work
+  // is done. (A robot dropped on a robot used to be refused here and left on
+  // the bench.)
+  if (target.userData.kind === 'robot' && incoming.userData.kind === 'robot'
+      && target.__bot && incoming.__bot && target.__bot !== incoming.__bot) {
+    if (!incoming.__bot.program.length || !target.__bot.program.length) {
+      return refuse(!incoming.__bot.program.length ? 'Train that robot before adding it to a team.'
+                                                   : 'The robot underneath has no training to lead with.');
+    }
+    const lead = teamLeaderOf(target.__bot) ?? target.__bot;
+    formTeam(lead, incoming.__bot);
+    return refreshUI();
   }
   // and the other way: a box of letters poured onto a BLANK pad becomes the
   // word. (A robot is not poured out this way -- dropping a robot into a hole
@@ -15739,6 +15767,15 @@ function userClick(target) {
     if (target.thing === held) return;
     if (fixedRoot(target.thing)) return say(FIXED_WORDS);
     if (holdingBot) {
+      // A ROBOT IS A LETTER TOO. Given to a bird, it flies to her nest -- the
+      // resort's "give your robot to the bird to the front desk", the
+      // original's Solution bird.
+      if (kind === 'bird') {
+        if (target.thing.__liveTarget || target.thing.userData.liveId) {
+          return giveToLiveBird(target.thing, liveOwnerOf(target.thing));
+        }
+        const gift = held; held = null; return birdDeliver(target.thing, gift);
+      }
       // the shell of a box occludes its holes: aim at the hole meant
       const hs = holesOf(target.thing);
       if (hs && hs.length) {
@@ -17457,10 +17494,17 @@ function dustyErase(path) {
       // enough left a thought with nothing red in it and a card claiming it
       // would run. The parts that still do not match are marked again, and
       // the card says whether this was enough (Ken, twice, on both halves).
-      const givenNow = stations.stand.occupant;
+      // IN A LESSON, JUDGED AGAINST WHAT IT WAS SHOWN, not the desk as it is
+      // now: mid-lesson the number has been given away, and a thought that
+      // fits any number was told "still not what is on its desk" (the resort's
+      // clerk, loosened after giving the bird its number).
+      const shown = mode === 'training' && activeBot?.trainedOn
+        ? thingIn(activeBot.trainedOn, new Map(), []) : null;
+      const givenNow = shown ?? stations.stand.occupant;
       const red = givenNow ? mismatchPaths(condition, specOf(givenNow)) : [];
       if (red.length) flagMismatch(red);
       const fits = givenNow && matchState(condition, specOf(givenNow)) !== 'no';
+      if (shown) disposeThing(shown);
       // an erase must never pass invisibly: say what the thought asks now.
       // sayAttn while it still does not fit -- a plain say cannot displace the
       // refusal already holding the card, which is how Ken came to read a
@@ -26471,6 +26515,7 @@ window.__nano = {
   // rule between them, as one string.
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },
   utter(said) { return utterance(said); },             // made, not spoken: its volume is the slider's
+  taught() { return taughtNow.map(b => ({ name: b.name, stand: !!b.__taughtStand, atDesk: taughtAtDesk(b), occ: b.__taughtStand?.occupant?.userData?.kind ?? null })); },
   tipBot(b) { return tipFor({ kind: 'botThing', bot: b.__bot ?? b }); },
   tipThought(b) { return tipFor({ kind: 'miniCond', bot: b.__bot ?? b }); },
   tipRule: TIP_RULE,

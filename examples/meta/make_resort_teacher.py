@@ -3,33 +3,28 @@
 # way you would, and says what it is doing as it goes.
 #
 # Ken: "I still find infinity resort very confusing - can you make a meta
-# example that solves it." So here is the whole of it done by one robot at
-# the table out in the yard, given a thirteen-hole box:
+# example that solves it." And, on the first version: "I have the feeling
+# you've made it more complex than it needs to be" -- it was; the resort has
+# the original's shape now, and so has this. One robot at the table out in
+# the yard, given a ten-hole box:
 #
 #   0 a pad it reads out first
-#   1 a little robot: the clerk to be     2 the desk (a box with the post in it)
-#   3 a little robot: the mover to be     4 the office desk (a box with the office post)
-#   5 a bird to "the guests"              6 a bird to "ring the bell"
-#   7 a bird to "five more guests"        8 [set | switch | on], the letter that throws a switch
-#   9 a pad, "the front desk"            10 a bird to it
-#  11 a pad, "the moving office"         12 a bird to it
+#   1 a little robot: the clerk to be     2 a practice letter, [7 | bird to the practice nest]
+#   3 a little robot: the mover to be     4 another practice letter
+#   5 a bird to "the guests"              6 the bird "to the front desk"
+#   7 the bird "to the moving office"     8 a bird to "five more guests"
+#   9 [set | switch | on], the letter that throws a switch
 #
-# It gives "the guests" the switch letter (six letters land on the post),
-# teaches the first little robot on the desk -- take the letter off the post,
-# copy the number, give the copy to the bird, Dusty takes the empty letter,
-# Ruby erases the number in its thought -- and puts the desk and the clerk on
-# the front desk pad's panel and switches that on: six guests walk to their
-# cottages. Then it rings the bell (every housed guest writes [where I live |
-# bird] to the office post), teaches the second little robot on the office
-# desk -- the same, with a +5 dropped on the number first -- puts them on the
-# moving office pad's panel, switches it on (everybody moves up five), and
-# gives "five more guests" the switch letter: the newcomers take 1 to 5.
-#
-# Nothing here is new. The two lessons are the very robots of
-# infinity/make_resort.py, taught step by step; a pad's panel is where a
-# robot works when the bench is taken (the teacher is standing there); and a
-# switch is thrown by mail. The little robots it taught stay among its
-# things, so you can pick them up and look at what they learned.
+# It gives "the guests" the switch letter (six letters land on the front
+# desk's post), teaches the first little robot on a practice letter -- take
+# the number, give it to the bird, Ruby erases the number in its thought --
+# and gives that robot to the bird "to the front desk": the desk runs it on
+# every letter, and six guests walk to their cottages. Then it teaches the
+# second on the other letter -- a +5 dropped on the number first -- gives it
+# to the bird "to the moving office" (the office rings the bell, every housed
+# guest writes where it lives, and the office runs the robot on each: everyone
+# moves up five), and gives "five more guests" the switch letter: the
+# newcomers take 1 to 5. Nothing waits on anything: the desks do the waiting.
 import sys, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'infinity'))
@@ -38,7 +33,6 @@ import make_resort as R
 
 WILDTEXT = {'kind': 'wildText'}
 ANYROBOT = {'kind': 'anyRobot'}
-FD, MO = 'FD1', 'MO1'
 
 live_bird = lambda lid, label: {'kind': 'bird', 'nestId': 0, 'nestGuid': None,   # noqa: E731
                                 'liveId': lid, 'label': label}
@@ -51,129 +45,72 @@ def fresh(bot, note):
             'trainedOn': None, 'team': [], 'note': 'Untrained. ' + note}
 
 
-def sign(text, lid):
-    return {'kind': 'text', 'text': text, 'lid': lid, 'evt': 'evt-' + lid,
-            'look': {'bg': '#2b3a4a', 'ink': '#e8f0ff', 'font': 'sans', 'h': 0.42},
-            'note': 'A pad with a panel: the robot the teacher puts on its panel works there, on the box it puts with it.'}
-
-
 RQ, LQ, DQ = '’', '“', '”'
-FIRST = txt('Watch. I seat the guests, teach a clerk, ring the bell, teach a mover, and welcome five more.')   # noqa: F405
+FIRST = txt('Watch. I seat the guests, teach a clerk and give it to the front desk, teach a mover and give it to the moving office, and welcome five more.')   # noqa: F405
 
 given = box(                                               # noqa: F405
     FIRST,
-    fresh(R.address_robot, 'The teacher shows it the clerk' + RQ + 's job on the desk: the letter off the post, a copy of its number to its bird.'),
-    R.DESK(),
-    fresh(R.move_robot, 'The teacher shows it the mover' + RQ + 's job on the office desk: the letter off the post, five more on its number, the number to its bird.'),
-    R.OFFICE(),
+    fresh(R.address_robot, 'The teacher shows it the clerk' + RQ + 's job on a practice letter: the number to the bird.'),
+    R.LETTER(7, 'a practice letter'),
+    fresh(R.move_robot, 'The teacher shows it the mover' + RQ + 's job on a practice letter: five more on the number, then the number to the bird.'),
+    R.LETTER(3, 'a practice letter'),
     live_bird('M1', 'to the guests'),
-    live_bird('BELL1', 'to the bell'),
+    bird(*R.ROBOT_NESTS[R.DESK_G], label='to the front desk'),          # noqa: F405
+    bird(*R.ROBOT_NESTS[R.OFFICE_G], label='to the moving office'),     # noqa: F405
     live_bird('M2', 'to five more guests'),
-    msg('set', 'switch', 'on'),
-    sign('the front desk', FD),
-    live_bird(FD, 'to the front desk'),
-    sign('the moving office', MO),
-    live_bird(MO, 'to the moving office'))
+    msg('set', 'switch', 'on'))
 
 speak = {'type': 'speak'}
 teach = lambda *p: {'type': 'teach', 'at': at('given', *p)}            # noqa: E731,F405
 taught = lambda step: {'type': 'taught', 'step': step}                 # noqa: E731
 erase = lambda *path: {'type': 'erase', 'path': list(path)}           # noqa: E731
-fold = lambda c: {'type': 'fold', 'at': at(c)}                         # noqa: E731,F405
 pupil = lambda k: {'type': 'take', 'at': {'c': 't%d' % k, 'path': [], 'bot': True}}   # noqa: E731
-switch_on = lambda hole: [copy('given', 8), put('given', hole)]        # noqa: E731,F405
-ground = lambda x, z: {'type': 'put', 'at': {'c': 'ground', 'path': [], 'spot': {'x': x, 'z': z}}}   # noqa: E731
+switch_on = lambda hole: [copy('given', 9), put('given', hole)]        # noqa: E731,F405
 
 
-def lesson(k, box_hole, bot):
-    """Teach the little robot in the hole before box_hole, on the box in
-    box_hole, the robot's own steps, then Ruby on the number in its thought
-    (the letter on top of the post had ONE number; any will do). k counts
-    the pupils THIS robot taught: each of the team teaches its first."""
-    return ([take('given', box_hole), teach(box_hole - 1)]             # noqa: F405
+def lesson(k, letter_hole, bot):
+    """Teach the little robot in the hole before letter_hole, on that letter,
+    the robot's own steps, then Ruby on the number in its thought (the letter
+    had ONE number; any will do)."""
+    return ([take('given', letter_hole), teach(letter_hole - 1)]       # noqa: F405
             + [taught(st) for st in bot['program']]
-            + [taught(erase(0, 0)), {'type': 'endTeach'}])
+            + [taught(erase(0)), {'type': 'endTeach'}])
 
 
-def to_work(k, sign_hole, bird_hole, x, z):
-    """The sign's panel out onto a work spot, the pupil's box and the pupil on
-    it, the panel folded away, the sign set down on the grass (a pad in a
-    hole is out of play: its panel gets no turn) and switched on by its
-    bird."""
-    return ([take('given', sign_hole), {'type': 'panel'}, put('given', sign_hole),   # noqa: F405
-             take('t%d' % k), put('s0'), pupil(k), put('s0'), fold('s0'),            # noqa: F405
-             take('given', sign_hole), ground(x, z)]                                 # noqa: F405
-            + switch_on(bird_hole))
+program = (switch_on(5)                                    # the guests write to the front desk
+           + [take('given', 0), speak, put('given', 0)]    # ...while I say what I am doing  # noqa: F405
+           + lesson(1, 2, R.address_robot)                 # the clerk, taught on a practice letter
+           + [take('t1'), put('given', 2),                 # the letter back in its hole (a desk left aside with a box on it holds the houses still)  # noqa: F405
+              pupil(1), put('given', 6)]                   # ...and the clerk given to the front desk: six guests housed  # noqa: F405
+           + lesson(2, 4, R.move_robot)                    # the mover, taught on the other letter
+           + [take('t2'), put('given', 4),                 # noqa: F405
+              pupil(2), put('given', 7)]                   # ...and given to the moving office: everybody moves up five  # noqa: F405
+           + switch_on(8))                                 # five more guests: 1 to 5
 
-
-# THREE ROBOTS, BECAUSE A ROBOT CANNOT WAIT MID-ROUND. A lesson takes a letter
-# off a post, and the letters take a moment to fly: the guests must have
-# written before the clerk's lesson, and the bell must have been answered
-# before the mover's. A thought about a post is what waits for that -- a robot
-# whose thought wants a letter on the post dozes until one lands, and its team
-# with it. So the teacher is a team of three, each taking a turn its
-# predecessor makes possible and then makes impossible for itself:
-#
-#   Seat the guests   hole 0 holds the pad: switch "the guests" on, read the
-#                     pad, and Dusty takes it (never again)
-#   Teach the clerk   hole 1 holds a little robot and a letter lies on the
-#                     desk's post: the lesson, the front desk, the bell (the
-#                     pupil leaves hole 1: never again)
-#   Teach the mover   hole 3 holds a little robot and a letter lies on the
-#                     office post: the lesson, the moving office, five more
-LETTER_ON = box(box(ANYNUM, ANYBIRD))                      # a post with a [number | bird] letter on top  # noqa: F405
-
-
-def cond(**at):
-    c = [None] * 13                                        # a hole never looked in: anything, or nothing
-    for k, v in at.items():
-        c[int(k[1:])] = v
-    return box(*c)                                         # noqa: F405
-
-
-seat = robot(                                              # noqa: F405
-    'Seat the guests', cond(h0=WILDTEXT),
-    switch_on(5)                                           # the guests write to the post
-    + [take('given', 0), speak, put('given', 0), vac('given', 0)],   # ...while I say what I am doing  # noqa: F405
-    trained_on=given,
-    note='First of the teacher' + RQ + 's team: gives "the guests" the switch letter, so six letters land on the post in the desk, reads the pad out and has Dusty take it, so this turn is never taken again.')
-
-clerking = robot(                                          # noqa: F405
-    'Teach the clerk', cond(h1=ANYROBOT, h2=LETTER_ON, h9=WILDTEXT),
-    lesson(1, 2, R.address_robot)                          # the clerk, taught on the desk
-    + to_work(1, 9, 10, -4.3, 3.4)                         # ...and put to work by the desk: six guests housed
-    + switch_on(6),                                        # the bell: everybody asks where to move
-    trained_on=given,
-    note='Second of the team, once a letter lies on the post: teaches the little robot in hole 1 the clerk' + RQ + 's job on the desk, puts the desk and the clerk on the front desk pad' + RQ + 's panel, switches it on, and rings the bell.')
-
-moving = robot(                                            # noqa: F405
-    'Teach the mover', cond(h3=ANYROBOT, h4=LETTER_ON, h11=WILDTEXT),
-    lesson(1, 4, R.move_robot)                             # the mover, taught on the office desk (ITS first pupil)
-    + to_work(1, 11, 12, -2.9, 3.3)                        # ...and put to work: everybody moves up five
-    + switch_on(7),                                        # five more guests: 1 to 5
-    trained_on=given,
-    note='Third of the team, once a housed guest' + RQ + 's letter lies on the office post: teaches the little robot in hole 3 the mover' + RQ + 's job (+5) on the office desk, puts them on the moving office pad' + RQ + 's panel, switches it on, and welcomes five more guests.')
-
-teacher = dict(seat, name='the teacher', team=[clerking, moving],
-               note='A team of three that solves Resort Infinity: seats the guests; teaches a little robot the '
-                    'clerk' + RQ + 's job on the desk and puts it to work on a pad' + RQ + 's panel; rings the bell, '
-                    'teaches another the mover' + RQ + 's job (+5) on the office desk and puts that to work too, '
-                    'then welcomes five more. Three robots because a lesson takes a letter off a post, and a '
-                    'thought about a post is what waits for the letter to land. Nothing here is new: a teaching, '
-                    'Dusty, Ruby, a panel and a switch thrown by mail are steps like any other.')
+teacher = robot(                                           # noqa: F405
+    'the teacher',
+    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYBIRD, ANYBIRD, ANYBIRD, ANYBIRD, ANYBOX),   # noqa: F405
+    program, trained_on=given,
+    note='A robot that solves Resort Infinity: seats the guests, teaches a little robot the '
+         'clerk' + RQ + 's job on a practice letter and gives it to the bird to the front desk, teaches '
+         'another the mover' + RQ + 's job (+5) and gives it to the bird to the moving office, then '
+         'welcomes five more. Nothing here is new: a teaching, Ruby, a robot given to a bird and a '
+         'switch thrown by mail are steps like any other.')
 
 ABOUT = ('THE RESORT TEACHER\n\n'
          'A robot that solves Resort\n'
          'Infinity in front of you.\n\n'
-         'Give it the thirteen-hole\n'
-         'box and press Start. Then\n'
-         'watch the grass: the guests\n'
-         'write, a clerk is taught,\n'
-         'six walk to their cottages;\n'
-         'the bell rings, a mover is\n'
-         'taught, everybody moves up\n'
-         'five, and five more take\n'
-         '1 to 5.\n\n'
+         'Give it the ten-hole box:\n'
+         'the drop sets it to work.\n'
+         'Then watch the grass: the\n'
+         'guests write, a clerk is\n'
+         'taught and given to the\n'
+         'front desk, six walk to\n'
+         'their cottages; a mover is\n'
+         'taught and given to the\n'
+         'moving office, everybody\n'
+         'moves up five, and five\n'
+         'more take 1 to 5.\n\n'
          'Set the Speed to 4x: a\n'
          'resort takes a while at\n'
          'walking pace.')
@@ -181,47 +118,45 @@ ABOUT = ('THE RESORT TEACHER\n\n'
 WHAT = ('WHAT IT DOES\n\n'
         '1. A switch letter to "the\n'
         'guests": six letters land\n'
-        'on the post in the desk.\n'
+        'on the front desk' + RQ + 's post.\n'
         '2. Teaches the first little\n'
-        'robot on the desk: take the\n'
-        'letter, copy the number,\n'
-        'give the copy to the bird,\n'
-        'Dusty, Ruby.\n'
-        '3. Desk and clerk onto the\n'
-        'front desk pad' + RQ + 's panel, and\n'
-        'a switch letter to the pad.\n'
-        '4. A switch letter to the\n'
-        'bell: everybody asks the\n'
-        'office where to move.\n'
-        '5. Teaches the second on the\n'
-        'office desk: the same, with\n'
-        '+5 dropped on the number.\n'
-        '6. Onto the moving office\n'
-        'pad' + RQ + 's panel; switched on.\n'
-        '7. A switch letter to "five\n'
+        'robot on a practice letter:\n'
+        'take the number, give it to\n'
+        'the bird. Ruby erases the\n'
+        'number in its thought.\n'
+        '3. Picks the robot up and\n'
+        'gives it to the bird "to the\n'
+        'front desk". The desk runs it\n'
+        'on every letter.\n'
+        '4. Teaches the second on the\n'
+        'other letter: a +5 dropped\n'
+        'on the number first.\n'
+        '5. Gives it to the bird "to\n'
+        'the moving office". The\n'
+        'office rings the bell, and\n'
+        'runs it on every reply.\n'
+        '6. A switch letter to "five\n'
         'more guests".')
 
-WHY = ('WHY A PANEL, AND WHY THREE\n\n'
-       'One robot works at the\n'
-       'bench, and the teacher is\n'
-       'standing there. A pad' + RQ + 's\n'
-       'panel is a bench of its own:\n'
-       'a box and a robot put on it\n'
-       'work there once the pad is\n'
-       'switched on, and a switch is\n'
-       'thrown by mail, [set |\n'
-       'switch | on] given to a bird\n'
-       'to the pad.\n\n'
-       'Three robots, because a\n'
-       'lesson takes a letter off a\n'
-       'post and letters take a\n'
-       'moment to fly: a thought\n'
-       'about a post waits for one.\n\n'
-       'The little robots it taught\n'
-       'stay among its things: click\n'
-       'one with an empty claw to\n'
-       'pick it up and read what it\n'
-       'learned.')
+HOW = ('HOW THE DESKS WORK\n\n'
+       'The front desk and the moving\n'
+       'office are houses, closed.\n'
+       'Inside, a robot waits for a\n'
+       'letter on the post and a\n'
+       'robot of yours in its box;\n'
+       'for each letter it takes a\n'
+       'fresh little house, puts the\n'
+       'letter and a copy of your\n'
+       'robot in it, and sets it\n'
+       'down: the house works on its\n'
+       'own, like the trucks of the\n'
+       'original. Your robot is never\n'
+       'used up.\n\n'
+       'The little robots the teacher\n'
+       'taught stay among its things:\n'
+       'click one with an empty claw\n'
+       'to pick it up and read what\n'
+       'it learned.')
 
 INSIDE = txt('THE RESORT TEACHER\n\n'                      # noqa: F405
              'Everything is out the back\n'
@@ -230,11 +165,13 @@ INSIDE = txt('THE RESORT TEACHER\n\n'                      # noqa: F405
              'table.\n\n'
              'Go outside.')
 
-# the grass: the resort's own things, without the desk, the office and the
-# answers -- the teacher brings the desks in its box, and IS the answer
-KEEP_OUT = (R.office, R.clerk, R.move_robot)
+# the grass: the resort's own things, without the practice letters, the
+# answers and the pads -- the teacher brings its letters in its box, and IS
+# the answer
+KEEP_OUT = (R.clerk, R.move_robot)
 yard = [e for e in R.bench_yard
-        if e['thing'] not in KEEP_OUT and e['thing'].get('kind') != 'box'
+        if e['thing'] not in KEEP_OUT
+        and not (e['thing'].get('kind') == 'box' and e['thing'].get('label') == 'a practice letter')
         and not (e['thing'].get('kind') == 'text' and not e['thing'].get('gadget')
                  and e['thing']['text'] != R.FENCE)]
 yard += [
@@ -242,7 +179,7 @@ yard += [
     {'thing': given, 'x': -0.10, 'z': 1.55},
     {'thing': txt(ABOUT), 'x': -1.15, 'z': 2.25},          # noqa: F405
     {'thing': txt(WHAT), 'x': -0.45, 'z': 2.25},           # noqa: F405
-    {'thing': txt(WHY), 'x': 0.25, 'z': 2.25},             # noqa: F405
+    {'thing': txt(HOW), 'x': 0.25, 'z': 2.25},             # noqa: F405
 ]
 
 world = {'kind': 'world', 'v': 3, 'bench': [{'thing': INSIDE, 'x': -0.2, 'z': 1.6}],

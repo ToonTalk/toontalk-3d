@@ -7825,3 +7825,71 @@ And a glide bug the run exposed: thingPlace read the picture, and a
 old target, so the guests went past their cottages by the trip they had not
 yet finished (and stood at z 3.8, the unfinished 1.4 of the walk from the
 gate added twice). The place is the glide's target now, and a set is a set.
+
+## The resort the original's way
+
+Ken: "I have the feeling you've made it more complex than it needs to be.
+Maybe you can load the original city and the solutions." Loaded and read
+(the .cty and .tt files are zips of XML; `examples/infinity/dump_city.py`
+prints every robot's thought and actions). In the city the player's Address
+Robot receives [guest # | group # | bird] and is two actions -- pick up hole
+1, give it to the bird; the Move Robot receives [address | bird], types a 5
+onto the address and gives it to the bird; both go in a [Move | Build] box
+to the Solution bird. The robots on the back of a pad do the rest: Broadcast
+Announcement wand-copies the Announce nest (a copied nest is a broadcast)
+and gives the Move robot to the "To old guests" bird; each guest's Find new
+address wand-copies it, builds [copy | address, bird] and drops that on a
+"local computation" pad, which runs it; Build new cottage does the same per
+new guest and loads a truck. The player never touches a nest.
+
+Mine had the player doing the machinery's job -- the desk with its post, the
+letter off the post, a spot, Dusty, a house to enter. So: the player trains
+a robot on a PRACTICE LETTER [number | bird to the practice nest] and gives
+it to a bird, "to the front desk" or "to the moving office". Ken: "go ahead
+- a robot could give a trained robot a box but better might be to put them
+into a house and turn the house on (which is like trucks). but either should
+work I think." The truck it is, and it needed no new step: a robot can take
+a new house (newRoom), put a box on it (onto its stand) and put a robot on
+it (a robot dropped on a house with a box on its stand sets the house
+going). The machinery in each desk house: Run your robot on the letter takes
+a fresh house onto a work spot, the letter into it, Mimi's copy of your robot
+with a copy of Tidy dropped on it into it, and sets the house down; Take the
+robot in moves your robot from its nest into a hole (and the office rings
+the bell then). Tidy's thought fits the letter once your robot has taken its
+number; it sweeps the letter away, and a house whose robot has swept its box
+away folds itself up (retireRoom), so the grass is clear again.
+
+What it took, each measured:
+- YOUR ROBOT'S OWN NEST. A nest is a queue with the oldest on top, so a
+  robot given after six letters was never seen; the bird "to the front
+  desk" delivers to a nest of the robot's own.
+- RUN FIRST. A team stops at the first member whose thought waits on an
+  empty nest, and once your robot is in its hole, its nest is bare for good:
+  with Take in first nothing behind it ever ran.
+- A ROBOT IS A LETTER TOO: a held robot dropped on a bird was "Robots only
+  team up with other robots"; it flies to her nest now.
+- A ROBOT ON A ROBOT BY A CLAW IS A TEAM, as by your hand (combine refused
+  it and left the second robot on the bench): that is how Tidy rides behind
+  your robot's copy.
+- A HOUSE HAS NO FLOOR OF ITS OWN: a robot inside it that sets a thing down
+  on "the ground" sets it on the grass (or the table); the refusal "there is
+  no ground in here" now applies only outside houses. The runner houses
+  appear on the grass for a moment and fold away, like the trucks.
+- A FOLDED TRAY TAKES NO ROOM: placed invisible, it neither shoves what
+  stands there nor grows the yard (thirty hidden trays of the guests did
+  both, and "The yard grows to make room" said so).
+- THE LITTLE ROBOTS IT TAUGHT ARE THE WORLD'S: taughtNow is stashed with the
+  world context. A desk house taking its turn started a run of its own and
+  emptied the teacher's list -- "the second little robot it taught" was
+  gone the moment a desk woke to the first (at 4x; at Instant the timing hid
+  it).
+- IN A LESSON, RUBY'S JUDGMENT IS AGAINST WHAT THE ROBOT WAS SHOWN, not the
+  desk as it is mid-lesson (the number had been given away, so "still not
+  what is on its desk" after loosening the very number).
+
+The resort teacher is one robot again: it teaches on the two practice
+letters in its box, puts each letter back (a desk left aside with a box on
+it holds the houses still), and gives each pupil to its bird. The moving
+office, the bell pad, the by-hand office lesson and the three-robot teacher
+are gone. Kept: the guests' kept-bell robots (a bell before an address still
+happens, since the office rings the moment your robot arrives).

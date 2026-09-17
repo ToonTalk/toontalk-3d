@@ -137,42 +137,57 @@ Hilbert's hotel, in the yard. You are the clerk; a cottage is a house standing
 on the grass and an address is a place along the row, so *making room* is the
 whole row shuffling up where you can see it.
 
-**One nest each, which is the whole design.** A robot team stops at the first
-member whose thought is waiting on an empty nest — that is what dozing *is* —
-so nobody here may doze on two nests. Everything a guest hears arrives on one
-nest of its own, under its own name *and the bell's* (a nest may answer to
-more than one name: `aliases`), and everything the clerk hears arrives on one
-nest on the desk. A guest is a little person of solid shapes with a name
-plate, red-shirted for the first six and blue for the five who come later,
-and its robots move it. What lands says who runs:
+**The original's shape.** In the ToonTalk city the player's Address Robot
+received `[guest # | group # | bird]` and its whole program was two actions —
+pick up hole 1, give it to the bird; the Move Robot received `[address |
+bird]`, typed a 5 onto the address and gave it to the bird; both went in a box
+to the Solution bird, and the robots on the back of a pad did the rest. So
+here: you train a robot on a **practice letter**, `[number | bird to the
+practice nest]` (two clicks for problem 1; a +5 dropped on the number first
+for problem 2; Ruby on the number), pick it up and **give it to a bird** — *to
+the front desk* for problem 1, *to the moving office* for problem 2. Nobody
+but the machinery touches a nest.
+
+**The machinery** is two closed houses, the front desk and the moving office,
+each with a box on its stand: the post, a nest your robot flies to, a hole for
+it, and Tidy. A robot on its nest is taken into the hole (and the office rings
+the bell then: the pad "a move, please" to the bird *to every guest*, whose
+nests answer to the bell's name). Every letter after that is run through a
+copy of your robot in a fresh little house — the truck of the original: a
+house from the stack onto a work spot, the letter onto its stand, a copy of
+your robot with a copy of Tidy dropped on it (a team) into it, the house set
+down on the grass, where it works on its own. Your robot answers the letter;
+Tidy, whose thought fits the emptied letter, sweeps it away, and a house whose
+robot has swept its box away folds itself up. Your robot is never used up. (A
+house has no floor of its own — what a robot inside sets down goes on the
+grass, which is where the original's trucks built.) The machinery team runs
+*Run your robot on the letter* first and *Take the robot in* second, because a
+team stops at the first member whose thought waits on an empty nest, and once
+your robot is in its hole its nest is bare for good.
+
+**One nest each.** Everything a guest hears arrives on one nest of its own,
+under its own name *and the bell's* (`aliases`). A guest is a little person of
+solid shapes with a name plate, red-shirted for the first six and blue for the
+five who come later, and its robots move it:
 
 | the nest | what lands | who runs |
 |---|---|---|
 | a guest's | a number | *Stand at my address*: work out `x = n × 0.6 − 4.5` and tell my cottage to stand there |
 | a guest's | a pad | *Move when told to*: the bell; write `[where I live \| bird]` to the moving office |
 | a guest's | a pad, before it has an address | *Keep the bell for later*: the pad off the nest into hole 7, which uncovers the address; *Move on the bell I kept* moves once there is a place |
-| the desk's | `[number \| bird]` | the clerk: a new guest asking where to live |
-| the office's | `[number \| bird]` | the mover: a guest already housed, asking where to move |
+| the desk's | `[number \| bird]` | the machinery, with your clerk: a new guest asking where to live |
+| the office's | `[number \| bird]` | the machinery, with your mover: a guest already housed, asking where to move |
 
 Each cottage carries its own robots — the macro pad **the guests** holds one
-behaviour per cottage, and one press of SPACE starts all six. That is the
-resort's machinery, and the visitor never touches it. What is *theirs* is the
-arithmetic, and the point of the activity is that they come up with it: a
-three-step robot at the desk that gives a guest their address (problem 1),
-and a robot that adds five (problem 2). The second works in the **moving
-office**, a glass house by the desk with a post of its own, because the bench
-holds one working robot and the clerk is standing there: drop a fresh robot
-on the office, go in, and the lesson begins on the office post. **Ring the
-bell** is a behaviour: SPACE on it gives every housed guest the pad "a move,
-please" through the bird *to every guest*, then switches itself off by its
-own perch bird, so it rings once a press. Both answers, *Next address* and
-*Move up five*, lie by the fence for whoever would rather read one.
+behaviour per cottage, and one press of SPACE starts all six. Both answers,
+*Next address* and *Move up five*, lie by the fence for whoever would rather
+read one.
 
-Problem 1: six guests house themselves at 1–6. Problem 2: ring the bell, and
-the six ask the office where to go and shuffle to 6–11; then the five
-newcomers take 1–5. Eleven cottages, no two at the same address. Set the
-speed to 4× or 8×: eleven round trips at walking pace take a while. To
-watch the whole of it done by a robot, see `meta/🎓 resort-teacher`.
+Problem 1: six guests house themselves at 1–6. Problem 2: your mover goes to
+the office, the office rings the bell, the six ask where to go and shuffle to
+6–11; then the five newcomers take 1–5. Eleven cottages, no two at the same
+address. Set the speed to 4× or 8×: eleven round trips at walking pace take a
+while. To watch the whole of it done by a robot, see `meta/🎓 resort-teacher`.
 
 `make_resort.py` writes it.
 
