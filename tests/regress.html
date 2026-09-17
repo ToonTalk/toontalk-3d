@@ -3713,7 +3713,7 @@ async function resortCheck(D, win) {
   D.worldIn(w); await slowSettle(D, 2000);
   D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
   const grass = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
-  const guests = grass().filter(t => t.userData.kind === 'text' && /^(new )?guest \d/.test(t.userData.text || ''));
+  const guests = grass().filter(t => t.userData.kind === 'model' && /^(new )?guest \d/.test(t.userData.label || ''));
   const cottages = grass().filter(t => t.userData.kind === 'room');
   const desk = grass().find(t => t.userData.kind === 'box');
   const nest = desk.userData.holes.map(h => h.thing).find(t => t?.userData.kind === 'nest');
@@ -4172,7 +4172,7 @@ async function resortLateCheck(D, win) {
   D.worldIn(w); await slowSettle(D, 2000);
   D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
   const grass = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
-  const guests = grass().filter(t => t.userData.kind === 'text' && /^(new )?guest \d/.test(t.userData.text || ''));
+  const guests = grass().filter(t => t.userData.kind === 'model' && /^(new )?guest \d/.test(t.userData.label || ''));
   const desk = grass().find(t => t.userData.kind === 'box');
   const nest = desk.userData.holes.map(h => h.thing).find(t => t?.userData.kind === 'nest');
   const addr = D.benchBots().find(b => /address/i.test(b.__bot?.name || ''));
@@ -4180,8 +4180,8 @@ async function resortLateCheck(D, win) {
   const cottageX = (n) => n * 0.6 - 4.5;
   const atCottage = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.05 && Math.abs(g.position.z - 5.2) < 0.05;
   const t0 = performance.now();
-  const slow = CHECKS_FILTER.some(w => 'resortslow'.includes(w) && w.length > 6);   // named: at 1x, as Ken plays it (~7 min)
-  D.speed(slow ? 1 : 'instant');
+  const slow = CHECKS_FILTER.some(w => 'resortslow'.includes(w) && w.length > 6);   // named: at 4x, as the ABOUT pad advises (~3 min)
+  D.speed(slow ? 4 : 'instant');
   const prog = async (at, k) => { if (k % 300) return; try { await fetch('/capture?name=suiteprog', { method: 'POST',
     body: JSON.stringify({ at, k, pile: (nest.userData.pile || []).length, guests: guests.slice(0, 6).map(g => [Math.round(g.position.x * 100) / 100, Math.round(g.position.z * 100) / 100]),
       run: runBtn.textContent, hint: win.document.getElementById('hint')?.textContent?.slice(0, 120), t: Math.round(performance.now() / 1000) }) }); } catch (e2) {} };
@@ -4203,11 +4203,19 @@ async function resortLateCheck(D, win) {
   D.hold(ding); await frames(D, 30); D.clickThing(bell); await frames(D, 30);
   for (let k = 0; k < (slow ? 20000 : 6000) && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)); k++) { await frames(D, 1); await prog('resort-move', k); }
   const movedUp = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6));
+  // and the five more, switched on straight after
+  const macro2 = grass().find(t => t.userData.text === 'five more guests');
+  D.switchGadget(macro2, true, true);
+  for (let k = 0; k < (slow ? 20000 : 6000) && !guests.slice(6).every((g, i) => atCottage(g, i + 1)); k++) { await frames(D, 1); await prog('resort-newcomers', k); }
+  const newcomers = guests.slice(6).every((g, i) => atCottage(g, i + 1));
+  const oldStayed = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6));
   const secs = Math.round((performance.now() - t0) / 1000);
   D.speed(1);
-  const ok = piled === 6 && wentToWork && housed1 && movedUp;
+  const ok = piled === 6 && wentToWork && housed1 && movedUp && newcomers && oldStayed;
+  const at = (gs) => gs.map(g => Math.round((g.position.x + 4.5) / 0.6 * 10) / 10).join(',');
   put((ok ? 'PASS' : 'FAIL') + ' Resort Infinity, the guests first and the bell mid-run  (piled=' + piled + ' went-to-work-on-the-drop=' + wentToWork + ' housed-1-to-6=' + housed1
-      + ' still-running-after=' + stillRunning + ' moved-up-five=' + movedUp + ' guests-at=' + guests.slice(0, 6).map(g => Math.round((g.position.x + 4.5) / 0.6 * 10) / 10).join(',') + ' secs=' + secs + ')', ok ? 'pass' : 'fail');
+      + ' still-running-after=' + stillRunning + ' moved-up-five=' + movedUp + ' newcomers-1-to-5=' + newcomers + ' old-at-6-to-11=' + oldStayed
+      + ' guests-at=' + at(guests.slice(0, 6)) + ' newcomers-at=' + at(guests.slice(6)) + ' secs=' + secs + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 

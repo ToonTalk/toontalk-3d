@@ -129,10 +129,30 @@ def cottage(n):
             'world': {'kind': 'world', 'v': 3, 'bench': [], 'stations': {}, 'active': None}}
 
 
-# a guest is a pad with a name: the thing that walks
-def guest(name, lid, bg):
-    return {'kind': 'text', 'text': name, 'lid': lid, 'evt': 'evt-' + lid,
-            'look': {'bg': bg, 'ink': '#fff5e6', 'font': 'sans', 'h': 0.34}}
+# A GUEST IS A LITTLE PERSON: a model of solid shapes, the way Marty builds
+# them, with a name plate. The first six wear red, the five who come later
+# blue -- Ken: "make the guests a simple model of a person - the two colors
+# (maybe clothing) are a good idea". Under 0.3 wide, since the cottages stand
+# 0.6 apart.
+SKIN, HAIR, TROUSERS, SHOES = '#e8b48c', '#4a2f1e', '#2f3140', '#1a1a1a'
+def person(shirt):
+    P = lambda shape, size, at, color: {'shape': shape, 'size': size, 'at': at, 'color': color}
+    return [P('sphere', [0.062], [0, 0.44, 0], SKIN),                 # head
+            P('sphere', [0.058], [0, 0.465, -0.012], HAIR),           # hair, a cap of it
+            P('box', [0.16, 0.18, 0.09], [0, 0.29, 0], shirt),        # shirt
+            P('box', [0.045, 0.16, 0.05], [-0.1, 0.29, 0], shirt),    # sleeves
+            P('box', [0.045, 0.16, 0.05], [0.1, 0.29, 0], shirt),
+            P('sphere', [0.024], [-0.1, 0.2, 0], SKIN),               # hands
+            P('sphere', [0.024], [0.1, 0.2, 0], SKIN),
+            P('box', [0.06, 0.17, 0.07], [-0.04, 0.115, 0], TROUSERS),   # legs
+            P('box', [0.06, 0.17, 0.07], [0.04, 0.115, 0], TROUSERS),
+            P('box', [0.065, 0.03, 0.09], [-0.04, 0.015, 0.01], SHOES),  # shoes
+            P('box', [0.065, 0.03, 0.09], [0.04, 0.015, 0.01], SHOES)]
+
+
+def guest(name, lid, shirt):
+    return {'kind': 'model', 'parts': person(shirt), 'label': name,
+            'lid': lid, 'evt': 'evt-' + lid}
 
 
 def macro(name, lid, gadgets, look, note=None):
@@ -230,9 +250,8 @@ P2 = ('PROBLEM 2\n'
       'Five more guests arrive and\n'
       'every cottage is taken. Nobody\n'
       'is turned away: everybody\n'
-      'housed moves FIVE cottages\n'
-      'along, and the newcomers take\n'
-      '1 to 5.\n'
+      'housed moves FIVE along, and\n'
+      'the newcomers take 1 to 5.\n'
       '\n'
       'The clerk ANNOUNCES it: give\n'
       'the pad "everybody move up\n'
@@ -243,14 +262,14 @@ P2 = ('PROBLEM 2\n'
       'up five", on the clerk team\n'
       'already, answers: +5.\n'
       '\n'
-      'Watch the guests walk along.\n'
-      'When cottages 1 to 5 stand\n'
-      'empty, SPACE on "five more\n'
-      'guests".\n'
+      'Watch the guests walk along\n'
+      '(the clerk must be at work:\n'
+      'the button reads Stop). Once\n'
+      'cottages 1 to 5 stand empty,\n'
+      'SPACE on "five more guests".\n'
       '\n'
       'Why does this work here, and\n'
-      'not at a hotel with a hundred\n'
-      'rooms?')
+      'not in a hundred-room hotel?')
 
 
 TRAIN = ('HOW TO TRAIN THE CLERK\n'
@@ -303,11 +322,11 @@ g1, g2, gates = [], [], []
 for k in range(1, 7):                                      # the first six, at the gate
     lid = 'GST1%d' % k
     g1.append(guest_gadget(k, k, lid, 'G1%d' % k))
-    gates.append({'thing': guest('guest %d' % k, lid, '#7a3b2e'), 'x': -4.2 + 0.5 * (k - 1), 'z': 6.6})
+    gates.append({'thing': guest('guest %d' % k, lid, '#b8362b'), 'x': -4.2 + 0.5 * (k - 1), 'z': 6.6})
 for k in range(1, 6):                                      # ...and five more behind them
     lid = 'GST2%d' % k
     g2.append(guest_gadget(10 + k, k, lid, 'G2%d' % k))
-    gates.append({'thing': guest('new guest %d' % k, lid, '#2e5a7a'), 'x': -4.2 + 0.5 * (k - 1), 'z': 7.4})
+    gates.append({'thing': guest('new guest %d' % k, lid, '#2b6fb8'), 'x': -4.2 + 0.5 * (k - 1), 'z': 7.4})
 
 bench_yard = row + gates + [
     {'thing': macro('the guests', 'M1', g1,

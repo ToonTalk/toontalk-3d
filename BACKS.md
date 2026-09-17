@@ -7699,3 +7699,24 @@ then woke nobody, which is the guests staying put. The pad says the drop
 sets it to work and not to press Start; the checks no longer press it
 either. A page that went unresponsive once in Ken's play is not reproduced:
 the resort at 1x in that order runs seven minutes clean under the suite.
+
+## The guests are people
+
+Ken: "let's make the guests be a simple model of a person - the two colors
+(maybe clothing) are a good idea." A guest was a pad with a name; it is a
+model now, built from solid shapes the way Marty builds them (`person(shirt)`
+in `make_resort.py`: head, a cap of hair, shirt and sleeves, hands, legs,
+shoes), under 0.3 wide since the cottages stand 0.6 apart, with the name on
+a plate. The first six wear red, the five who come later blue. Everything
+else is as it was: the model carries the guest's `lid` and `evt` like the pad
+did, the behaviour is bound to it, and `[set | position | ...]` walks it. The
+suite finds guests by label and kind now.
+
+Ken also saw the first guests "replaced by the next 5 - they don't move
+first" again. Measured at instant and at 4x, the guests first and the desk
+after, the bell rung mid-run and the five more switched on straight after:
+the six stand at 6 to 11 and the newcomers at 1 to 5, every time. In Ken's
+picture guest 6 still stood at cottage 6, so the clerk had answered nobody's
+move: the bell was not rung, or the clerk's auto-run was held by a Stop
+(the old "press Start"). The problem 2 pad now says the clerk must be at
+work, the button reading Stop, and the checks cover that order.

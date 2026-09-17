@@ -142,7 +142,9 @@ member whose thought is waiting on an empty nest â€” that is what dozing *is* â€
 so nobody here may doze on two nests. Everything a guest hears arrives on one
 nest of its own, under its own name *and the bell's* (a nest may answer to
 more than one name: `aliases`), and everything the clerk hears arrives on one
-nest on the desk. What lands says who runs:
+nest on the desk. A guest is a little person of solid shapes with a name
+plate, red-shirted for the first six and blue for the five who come later,
+and its robots move it. What lands says who runs:
 
 | the nest | what lands | who runs |
 |---|---|---|
