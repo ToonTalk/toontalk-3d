@@ -153,6 +153,7 @@
              background: #12151b; z-index: 10; color: var(--dim); font-size: 13px;
              transition: opacity .4s ease; }
   #loading.gone { opacity: 0; pointer-events: none; }
+  #loading.done { display: none; }   /* off the page, and out of the accessibility tree */
 
   #tip { position: fixed; z-index: 20; pointer-events: none; display: none;
          max-width: 260px; padding: 6px 9px; font-size: 12px; line-height: 1.4;
@@ -363,8 +364,10 @@ holds is now a 2, so the thought no longer fits.
 - Wake Ruby the eraser (click her, beside the copier) and click the
 1 in the thought bubble. It becomes any number.
 
-- Press Run again. It counts: 3, 4, 5… as long as what it holds is
-a number, which is always. Pause holds it still.
+- Press Run again (a loosening never sets it going by itself, so
+you can erase several things before it runs). It counts: 3, 4, 5… as long
+as what it holds is a number, which is always. Pause holds it
+still.
 
 That is the whole language in one robot: a lesson is a thing shown once,
 a thought is the shape it waits for, and Ruby turns one example into a rule.
@@ -427,7 +430,9 @@ one that arrived trained.
 ## Numbers
 
 Numbers come off their stack as 1s. While holding one, type digits to
-set its value, - to make it negative, and * /
+set its value (the first digit typed on a fresh one is its value;
+digits after that add on, and Backspace takes one off),
+- to make it negative, and * /
 ^ to choose what it does when dropped on another number
 (adding is the default — and adding a negative is subtraction).
 Dropping a number on a number combines them: the arriving one applies its
@@ -452,8 +457,10 @@ cleanly: as soon as the last few you typed spell a name, the number takes it.
 
 ## Pads
 
-Pads are paper for words. Type on a held pad to write (Enter
-for a new line, Shift+Enter; Ctrl+V pastes). Drop one pad on
+Pads are paper for words. Type on a held pad to write
+(Shift+Enter for a new line; Enter on its own
+looks at the pad close up and Escape comes back; Ctrl+V
+pastes). Drop one pad on
 the left edge of another and it reads first; on the right edge
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
 Dropped in the middle of another it rides on it, part of its scene
@@ -4238,7 +4245,7 @@ function makeNumber(value, op = '+', lite = false) {
   }
   g.__paintSecondary = () => { if (!built) return; paintSecondary(); g.__facesStale = false; };
 
-  g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; draw(); };
+  g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; delete g.userData.fresh; draw(); };
   g.setOp = (o) => { g.userData.op = o; draw(); };
   // the face override, for a wildcard in a thought bubble
   g.setFaceText = (t) => { g.userData.faceText = t; draw(); };
@@ -16335,6 +16342,11 @@ function userTakeFromStack(st) {
   pushUndo();
   const obj = st.cubes.pop();
   refillStack(st, true);
+  // A FRESH NUMBER TAKES THE FIRST DIGIT AS ITS VALUE. The stack's 1 is a
+  // stand-in for "a number", and typing 2 on it gave 12 (Codex's report;
+  // the manual's "take a 1 and type 2"). The first digit replaces it; digits
+  // after that add on, as they always did.
+  if (obj?.userData.kind === 'number') obj.userData.fresh = true;
   if (obj) takeIntoHand(obj);
 }
 // THE GOAL IS SHOWN, NOT TAKEN. A puzzle puts what it wants on the table in
@@ -17325,10 +17337,15 @@ function removeCondAt(path) {
         teaching.outer.program.push({ type: 'taught', step: { type: 'forget', path: path.slice() } });
         renderProgram();
       }
-      say('Gone — that hole now takes anything, or nothing.');
-      autoRunArmed = !fitBefore;
-      if (!fitBefore && stations.stand.occupant
-          && matchState(condition, specOf(stations.stand.occupant)) !== 'no') camWatchRun = true;
+      // NOT SET GOING BY A LOOSENING. Ken: "the robot should not start
+      // running as soon as Ruby has erased enough that it matches. The user
+      // may intend to erase multiple things and if so it is much easier if
+      // the robot waits for the start button." Dusty here, Ruby below: the
+      // card says Start will run it, and Start does.
+      const fitsNow = !fitBefore && stations.stand.occupant
+        && matchState(condition, specOf(stations.stand.occupant)) !== 'no';
+      (fitsNow ? sayAttn : say)('Gone — that hole now takes anything, or nothing.' + (fitsNow ? ' It fits what is on its desk now: Start runs it.' : ''));
+      if (fitsNow) camWatchRun = true;   // the run Start begins is watched from a distance, Ruby in view
       refreshUI();
     },
   });
@@ -17387,10 +17404,14 @@ function dustyErase(path) {
       // stale "the number 3" line after loosening that very 3.
       const words = `Ruby loosens the thought — it now runs on ${condText(condition)}.`
         + (!givenNow ? ''
-           : fits ? '' : ' Still not what is on its desk — the red parts are what to loosen next.');
-      if (givenNow && !fits) sayAttn(words); else say(words);
-      autoRunArmed = !fitBefore;    // the loosened thought may fit the given NOW
-      if (!fitBefore && fits) camWatchRun = true;   // and the run that follows is watched from a distance
+           : fits ? (!fitBefore && mode !== 'training' ? ' It fits what is on its desk now: Start runs it.' : '')
+                  : ' Still not what is on its desk — the red parts are what to loosen next.');
+      // ...and with attention when it fits NOW as well: the refusal that held
+      // the card would otherwise stay in front of "Start runs it"
+      if (givenNow && (!fits || (!fitBefore && mode !== 'training'))) sayAttn(words); else say(words);
+      // not set going by the loosening (see the erasure above): Start does
+      // that, and the run it begins is watched from a distance, Ruby in view
+      if (!fitBefore && fits) camWatchRun = true;
     },
   });
   enqueue({
@@ -21140,12 +21161,14 @@ addEventListener('keydown', (e) => {
     // fraction outright
     pushUndo();
     const sign = v.n < 0n ? -1n : 1n;
-    const mag = v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;
+    const mag = H.userData.fresh ? 0n : v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;   // fresh off the stack: the digit IS the number
+    delete H.userData.fresh;
     H.setValue(rat(sign * (mag * 10n + BigInt(key))));
     sfx('type');
     refreshUI();
   } else if (key === 'Backspace') {
     pushUndo();
+    delete H.userData.fresh;
     H.setValue(v.d === 1n ? rat(v.n / 10n) : rat(0));
     refreshUI(); e.preventDefault();
   } else if (key === '-') {
@@ -22589,6 +22612,8 @@ loadModel('robot_v4.glb', (gltf) => {
   rememberEmbeddedPuzzles();
   renderProgram(); refreshUI();
   $('loading').classList.add('gone');
+  $('loading').setAttribute('aria-hidden', 'true');
+  setTimeout(() => $('loading').classList.add('done'), 600);   // after its fade
 
   loadModel('dusty_v11.glb', (dg) => {
     if (new URLSearchParams(location.search).get('demo')) { refreshUI(); return; }
@@ -22942,6 +22967,20 @@ function setupDemo(name) {
   orbit.target.set(0, 0.8, 1.4);
   orbit.update();
   userMoved = true;    // demos keep their close framing
+  // AN OPENING LINE ABOUT THE EXPERIMENT IN FRONT OF THE READER, not the
+  // workshop's "take a little robot" (Codex's report: both the numbers and
+  // pads demos opened with it)
+  const opening = ({
+    numbers: 'Try the arithmetic: pick up the 3 and drop it on the 6, or type an operation on a held number first.',
+    pads: 'Try the pads: drop “Talk” on the right edge of “Toon” and read the result; type on a held pad to write.',
+    box: 'Try the box: drop a number in a hole, and drop one box on another to join them.',
+    bird: 'Try the bird: give her a number and watch it land on the nest.',
+    robot: 'Try the robot: drop the 5 on it and show it a step, then leave the bubble and run it.',
+    room: 'Try the house: drop the number on it, then the robot, and it works inside.',
+    copier: 'Try the copier: set a thing on the platform and take the copy from the tray.',
+    dice: 'Try the die: drop it on a number and the number re-rolls.',
+  })[name];
+  if (opening) setTimeout(() => sayAttn(opening), 50);
 }
 
 // Numbers near the camera redraw with more digits and a finer canvas -- and
@@ -26403,6 +26442,8 @@ window.__nano = {
   // rule between them, as one string.
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },
   utter(said) { return utterance(said); },             // made, not spoken: its volume is the slider's
+  heldNode() { return held; },
+  fromStack(id) { userTakeFromStack(stations[id]); },          // even where the demo hides the stacks
   taught() { return taughtNow.map(b => ({ name: b.name, stand: !!b.__taughtStand, atDesk: taughtAtDesk(b), occ: b.__taughtStand?.occupant?.userData?.kind ?? null })); },
   tipBot(b) { return tipFor({ kind: 'botThing', bot: b.__bot ?? b }); },
   tipThought(b) { return tipFor({ kind: 'miniCond', bot: b.__bot ?? b }); },

@@ -1423,7 +1423,8 @@ async function thoughtViewCheck(D) {
   //     the camera close on the box, and it must pull back to the thought
   D.rubyOn(true); D.clickCond([0, 0]); await slowSettle(D, 3000); D.clickCond([0, 1]); await slowSettle(D, 3000);
   D.clickCond([0, 2]); await slowSettle(D, 3000); D.rubyOn(false);
-  D.camStill(); await slowSettle(D, 20000);          // it runs by itself, and stops
+  D.run();                                           // a loosening no longer sets it going: Start does (Ken)
+  D.camStill(); await slowSettle(D, 20000);          // it runs, and stops
   D.camStill(); await frames(D, 120);
   const fl2 = typeof D.flagged === 'function' ? D.flagged() : D.flagged;
   const gBox = D.mine();
@@ -1537,9 +1538,10 @@ async function rubyViewCheck(D) {
   D.rubyOn(true);                                              // Ruby wakes: in on the thought
   D.camStill(); await frames(D, 120);
   const close = { d: dT(), on: D.onScreen(thought()), closer: dT() < d0 - 0.5 };
-  D.clickCond([0]);                                            // the 1 becomes any number: it fits, and runs
+  D.clickCond([0]);                                            // the 1 becomes any number: it fits
   await slowSettle(D, 4000);                                   // Ruby's flight and the erasure
   const words = D.condWords();
+  D.run();                                                     // ...and Start runs it (a loosening no longer does)
   for (let i = 0; i < 60 && D.state.mode !== 'replay'; i++) await frames(D, 10);
   const hint = D.doc.getElementById('hint').textContent.slice(0, 70);
   D.camStill(); await frames(D, 150);
@@ -4301,6 +4303,62 @@ async function resortTeacherCheck(D, win) {
   return ok;
 }
 
+// CODEX'S REPORT (17 September 2026). A fresh 1 off the stack typed 2 gave
+// 12; the first digit is the number now, the next digits add on. A robot no
+// longer sets itself going when Ruby's loosening makes its thought fit (Ken:
+// "the user may intend to erase multiple things"); Start runs it. The
+// loading overlay is out of the accessibility tree once the scene is up.
+async function codexCheck(D, win) {
+  const doc = win.document;
+  const key = (k) => { doc.activeElement?.blur?.(); win.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); };
+  const heldValue = () => { const h = D.heldNode?.(); return h?.userData?.value ? String(h.userData.value.n) + (h.userData.value.d === 1n ? '' : '/' + h.userData.value.d) : null; };
+  const loading = doc.getElementById('loading');
+  await new Promise(r => setTimeout(r, 800));            // the overlay's fade, then it is gone for good
+  const loadingGone = !!loading && loading.getAttribute('aria-hidden') === 'true' && win.getComputedStyle(loading).display === 'none';
+  const loadingWhy = loading ? (loading.getAttribute('aria-hidden') + '/' + loading.className + '/' + win.getComputedStyle(loading).display) : 'none';
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '1', d: '1' }, op: '+' }, x: -0.4, z: 1.6 },
+    { thing: { kind: 'robot', name: 'fresh', program: [], team: [] }, x: 0.8, z: 1.5 } ] });
+  await slowSettle(D, 1500);
+  // 1. a fresh number: the first digit IS the number, then digits add on
+  D.fromStack('numbers'); await frames(D, 5);
+  const isFresh = !!D.heldPos() && heldValue() === '1';
+  key('2'); await frames(D, 3);
+  const after2 = heldValue();
+  key('5'); await frames(D, 3);
+  const after25 = heldValue();
+  key('Backspace'); await frames(D, 3);
+  const afterBack = heldValue();
+  D.clickBench(0.2, 2.0); await frames(D, 10);
+  // ...and a number that is not fresh appends, as it always did
+  const one = D.bench(0); D.hold(one); await frames(D, 5); key('2'); await frames(D, 3);
+  const notFresh = heldValue();
+  D.clickBench(-0.4, 1.6); await frames(D, 10);
+  // 2. a loosening does not set the robot going: teach it to add a fresh 1 to the given,
+  // run once (it stops: the 2 no longer fits its thought of a 1), loosen, and see it wait
+  const given = D.bench(1) ?? one;
+  D.hold(one); await frames(D, 5); D.giveRobot(); await slowSettle(D, 2500);
+  D.teach({ type: 'newNumber' }); await slowSettle(D, 2000);
+  D.teach({ type: 'put', at: { c: 'given', path: [] } }); await slowSettle(D, 2000);
+  D.exit(); await slowSettle(D, 2000);
+  D.speed('instant'); D.run(); await slowSettle(D, 4000);
+  const stopped1 = D.helperState().mode === 'world';
+  D.rubyOn(true); D.clickCond([]); await slowSettle(D, 3000); D.rubyOn(false);
+  const hintAfter = doc.getElementById('hint').textContent;
+  for (let k = 0; k < 120; k++) await frames(D, 1);
+  const waits = D.helperState().mode === 'world' && /Start runs it/.test(hintAfter);
+  const v0 = Number(D.mine()?.userData.value?.n);
+  D.rounds(3); D.run(); await slowSettle(D, 6000);
+  const finalV = String(D.mine()?.userData.value?.n), finalHint = doc.getElementById('hint').textContent.slice(0, 80);
+  const ranOnStart = Number(finalV) === v0 + 3;             // three rounds of adding a fresh 1
+  D.rounds(ROUNDS); D.speed(1);
+  const ok = loadingGone && isFresh && after2 === '2' && after25 === '25' && afterBack === '2' && notFresh === '12' && stopped1 && waits && ranOnStart;
+  put((ok ? 'PASS' : 'FAIL') + ' a fresh number takes its first digit, a loosening waits for Start, the loading overlay is gone  (loading-gone=' + loadingGone + ' [' + loadingWhy + ']'
+      + ' fresh=' + isFresh + ' typed-2=' + after2 + ' then-5=' + after25 + ' backspace=' + afterBack + ' not-fresh-2=' + notFresh
+      + ' stopped-after-one=' + stopped1 + ' waits-after-loosening=' + waits + ' ran-on-start=' + ranOnStart + ' [' + finalV + ' ' + JSON.stringify(finalHint) + '])', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function stopwatchCheck(D) {
   const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
@@ -6807,6 +6865,9 @@ async function runOne(D, spec) {
   let rlOK = true;
   try { rlOK = want('resortLate') || want('resortSlow') ? await resortLateCheck(D, frame.contentWindow) : true; }
   catch (e) { rlOK = false; put('FAIL Resort Infinity by hand  ' + e.message, 'fail'); }
+  let cdxOK = true;
+  try { cdxOK = want('codex') ? await codexCheck(D, frame.contentWindow) : true; }
+  catch (e) { cdxOK = false; put('FAIL a fresh number takes its first digit, a loosening waits for Start, the loading overlay is gone  ' + e.message, 'fail'); }
   let rtcOK = true;
   try { rtcOK = want('resortTeacher') || want('teacherSlow') ? await resortTeacherCheck(D, frame.contentWindow) : true; }
   catch (e) { rtcOK = false; put('FAIL the resort teacher solves the resort  ' + e.message, 'fail'); }
@@ -6966,7 +7027,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

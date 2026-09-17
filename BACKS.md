@@ -7919,3 +7919,28 @@ left parts under half opacity out of a thing's footprint. The mist is a
 ghost, so the guests walk through it, and stuck, so a hand cannot carry the
 weather away. The fence pad says what the mist shows.
 
+## Codex's report, the first four
+
+Ken had ChatGPT Codex test the workshop (17 September). Done from it:
+
+- A ROBOT IS NOT SET GOING BY A LOOSENING (#4). Ken: "the robot should not
+  start running as soon as Ruby has erased enough that it matches. The user
+  may intend to erase multiple things and if so it is much easier if the
+  robot waits for the start button." Ruby's and Dusty's erasures no longer
+  arm an auto-run; the card says "It fits what is on its desk now: Start
+  runs it", with attention, since the refusal that held the card would
+  otherwise stay in front of it; and the run Start then begins is still
+  watched from a distance with Ruby in view. The first project's step says
+  so. (Deliveries still wake a dozing robot: that is post, not a loosening.)
+- A FRESH NUMBER TAKES ITS FIRST DIGIT (#3). The stack's 1 typed 2 gave 12.
+  A number just off the stack is `fresh`; the first digit replaces it, the
+  next digits add on, Backspace takes one off, and any other change to its
+  value ends the freshness. The manual says so.
+- ENTER (#5): the manual said Enter for a new line; it is Shift+Enter, and
+  Enter looks at the pad close up.
+- THE LOADING OVERLAY (#6) is aria-hidden and display none once the scene
+  is up, not merely faded.
+- The manual's little workshops open with a line about the experiment in
+  front of the reader, not "take a little robot".
+Covered in codexCheck; rubyView and thoughtView press Start after Ruby now.
+
