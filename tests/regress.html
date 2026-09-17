@@ -4429,6 +4429,48 @@ async function kenRoundCheck(D, win) {
   return ok;
 }
 
+// THE FIRST PROJECT IN THE WORKSHOP, THE HOME VIEW, THE FIT BUTTON'S NAME.
+// The guide watches what you do: each step is said when the one before is
+// seen to be done, with a ring on the thing to reach for, and it ends when
+// the robot counts. The home view puts the camera back where it starts, out
+// of a close-up first. "As big as the ground" is "As big as the table" indoors.
+async function guideCheck(D, win) {
+  const doc = win.document, hint = () => doc.getElementById('hint').textContent;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1500);
+  const at = []; const step = (i, re) => { at.push([D.guide()?.i, hint().slice(0, 40)]); return D.guide()?.i === i && re.test(hint()); };
+  D.guideStart(); await frames(D, 3);
+  const s0 = step(0, /Take a little robot/) && D.guide().ring;
+  D.fromStack('minis'); await frames(D, 5); D.clickBench(0.6, 1.7); await frames(D, 20);
+  const s1 = step(1, /number stack/);
+  D.fromStack('numbers'); await frames(D, 5); D.giveRobot(); await slowSettle(D, 3000);
+  const s2 = step(2, /show it one step/);
+  D.teach({ type: 'newNumber' }); await slowSettle(D, 2000); D.teach({ type: 'put', at: { c: 'given', path: [] } }); await slowSettle(D, 2000);
+  const s3 = step(3, /Leave the bubble/);
+  D.exit(); await slowSettle(D, 2000);
+  const s4 = step(4, /Press Run what it learned/);
+  D.speed('instant'); D.run(); await slowSettle(D, 4000);
+  const s5 = step(5, /Wake Ruby/) && D.guide().ring;
+  D.rubyOn(true); D.clickCond([]); await slowSettle(D, 3000); D.rubyOn(false); await frames(D, 5);
+  const s6 = step(6, /Press Run again/);
+  D.rounds(5); D.run(); await slowSettle(D, 4000); D.rounds(ROUNDS); D.speed(1);
+  const over = D.guide() === null;
+  // the home view: out of a close-up and back where it starts
+  const pad = D.bench(0);
+  const p0 = D.camera.position.clone();
+  D.hold(pad ?? D.mine()); await frames(D, 5);
+  const num = D.heldNode();
+  if (num) { D.lookAt(num, true); }
+  const inClose = !!D.straightOn;
+  D.homeView(); for (let k = 0; k < 60; k++) { D.holdLook(0.1); await frames(D, 1); }
+  const home = !D.straightOn && D.camera.position.distanceTo(new D.THREE.Vector3(0.40, 3.05, 5.45)) < 0.05;
+  const fitName = doc.getElementById('heldFit').textContent === 'As big as the table';
+  D.clickBench(-0.5, 1.9); await frames(D, 5);
+  const ok = s0 && s1 && s2 && s3 && s4 && s5 && s6 && over && inClose && home && fitName;
+  put((ok ? 'PASS' : 'FAIL') + ' the first project guides step by step, the home view comes home, the fit button names the table  (steps=' + [s0, s1, s2, s3, s4, s5, s6].map(Number).join('') + ' over=' + over
+      + ' close-up=' + inClose + ' home=' + home + ' fit-name=' + fitName + (ok ? '' : ' seen=' + JSON.stringify(at)) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function stopwatchCheck(D) {
   const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
@@ -6935,6 +6977,9 @@ async function runOne(D, spec) {
   let rlOK = true;
   try { rlOK = want('resortLate') || want('resortSlow') ? await resortLateCheck(D, frame.contentWindow) : true; }
   catch (e) { rlOK = false; put('FAIL Resort Infinity by hand  ' + e.message, 'fail'); }
+  let fpjOK = true;
+  try { fpjOK = want('guide') ? await guideCheck(D, frame.contentWindow) : true; }
+  catch (e) { fpjOK = false; put('FAIL the first project guides step by step  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7100,7 +7145,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

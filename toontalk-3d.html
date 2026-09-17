@@ -145,6 +145,30 @@
   #moreMenu button { text-align: left; }
   #moreMenu .sndrow { display: flex; align-items: center; gap: 8px; }
   #moreMenu .sndrow input { flex: 1; min-width: 0; }
+  /* SMALL SCREENS (Codex's report: at 390 wide the actions card lay over the
+     title card, and in a short landscape Marty's panel ran off the top, close
+     button and all). Every card keeps inside the window and scrolls inside
+     itself; Marty's panel stands above the bar, not on it; and below 600px
+     the two top cards share the width in one column, the actions card under
+     the title, so neither covers the other. */
+  #prog { max-height: min(60vh, calc(100vh - var(--barh, 0px) - 28px)); }
+  #martyPanel { bottom: calc(var(--barh, 0px) + 10px) !important;
+             max-height: calc(100vh - var(--barh, 0px) - 24px); box-sizing: border-box;
+             overflow: auto; }
+  #martyLog { max-height: min(240px, 38vh) !important; }
+  @media (max-width: 600px) {
+    #title { max-width: calc(100vw - 28px); right: 14px; }
+    #prog { top: auto; bottom: calc(var(--barh, 0px) + 10px); right: 14px; left: 14px; width: auto;
+            max-height: min(40vh, calc(100vh - var(--barh, 0px) - 120px)); }
+    #held { max-width: calc(100vw - 28px); }
+    #martyPanel { left: 14px !important; right: 14px !important; width: auto !important; max-width: none !important; }
+  }
+  @media (max-height: 460px) and (min-width: 601px) {
+    /* a short landscape: the title left, the actions right, Marty between */
+    #title { max-width: 250px; max-height: calc(100vh - var(--barh, 0px) - 28px); overflow: auto; }
+    #martyPanel { left: 50% !important; transform: translateX(-50%); width: 290px !important; }
+    #martyLog { max-height: 30vh !important; }
+  }
   #softKeys { position: fixed; left: 50%; bottom: 108px; width: 1px; height: 1px;
               opacity: 0; border: 0; padding: 0; margin: 0; resize: none;
               pointer-events: none; }
@@ -234,6 +258,8 @@
   <span class="sep"></span>
   <button id="undoBtn"
     title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
+  <button id="homeBtn"
+    title="Home view — the camera back where it starts: the whole table, or the whole yard. Leaves a close-up too. The Home key does the same.">⌂</button>
   <button id="fullBtn"
     title="Full screen — fill the screen with the workshop. On a tablet this is what gets the browser's own bars out of the way.">⛶</button>
   <button id="moreBtn" title="More — the table, the manual, sound, and reporting a bug.">⋮</button>
@@ -258,7 +284,10 @@ of their faces up close); drag with the right button to slide sideways.
 On a touchpad: one-finger drag orbits, pinch zooms, two-finger drag slides.
 Not sure? Press Look around in Marty's panel, or ask him "how do I
 look around": he turns, zooms and slides the camera himself and tells you
-what your mouse or fingers do to get the same.
+what your mouse or fingers do to get the same. Lost? The ⌂ home
+view button on the bar (or the Home key) puts the camera back
+where it starts — the whole table, or the whole yard — out of any
+close-up first.
 The smart camera (a toggle in the ⋮ menu, on by default) comes in
 on what a robot works on during a lesson or a run — in a lesson, point
 at the side of the screen to lean back out — and, when Ruby or Dusty is
@@ -338,7 +367,10 @@ workshop — click things, carry them, try it.
 
 Your first project: a robot that counts
 Ten minutes, and it meets everything that matters. You will teach a robot
-one step, watch it stop, and loosen its thought so it never stops.
+one step, watch it stop, and loosen its thought so it never stops. The
+workshop can walk you through it: ⋮ -> The first project says
+each step as the one before is done, with a ring of light on the thing to
+reach for.
 
 - Click the number stack (the pedestal of 1s behind the table) and
 set the 1 down on the table.
@@ -2317,6 +2349,17 @@ let userMoved = false;
 // its work -- "seeing his back isn't helpful".
 function glideCameraHome() {
   glideCameraTo(new THREE.Vector3(0.40, 3.05, 5.45), new THREE.Vector3(0, 0.68, 0.95));
+}
+// THE HOME VIEW, ASKED FOR (Codex's report; Ken): the camera back where it
+// starts for wherever you are -- the whole table, or the whole yard -- out
+// of any close-up first, and the smart camera's slate wiped, so it takes up
+// from there rather than fighting the request.
+function homeView() {
+  if (straightOn && !straightOn.leaving) comeBackFrom();
+  camResetAll();
+  userMoved = false;
+  if (yardIn) glideCameraTo(new THREE.Vector3(0.4, 5.8, 12.8), new THREE.Vector3(0, 0.2, 4.6));
+  else glideCameraHome();
 }
 function glideCameraTo(p1, t1) {
   const p0 = camera.position.clone();
@@ -12876,6 +12919,7 @@ function placeChanged() {
 }
 let rubyT = 0, rubyBase = null;
 let runCount = 0;
+let runsBegun = 0;          // runs ever started: the first-project guide tells a new run from an old count
 // runCount restarts: at Run, and again whenever a dozing robot is woken by
 // mail. So it cannot answer "did a round happen just now", which is what a
 // glass house needs to know before it performs one. This one only ever goes
@@ -13282,6 +13326,7 @@ function advanceWorldClocks(dt, worldRuns = true) {
   advanceGlides(dt);
   advanceMarty(dt);
   advanceMimi(dt);
+  guideTick(dt);
   // a working room's chimney smokes
   for (const t of benchThings) {
     if (t.userData?.kind !== 'room') continue;
@@ -14726,6 +14771,82 @@ function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
 
 let scaleBobT = 0;                 // the undecided scales' shared clock
 const flashes = [];
+// THE FIRST PROJECT, IN THE WORKSHOP. Codex's report: "the initial
+// instruction to take a robot does not explain the complete first
+// interaction. Offer a small guided sequence with highlighted stack, table,
+// robot, and input targets." The manual's first project, step by step, each
+// step said when the one before is seen to be done -- the workshop watches
+// what you do rather than what you click -- with a ring of light on the
+// thing to reach for. Nothing is done for you: it is your robot.
+let guide = null;                       // { i } while the first project is on
+let guideRing = null;
+const GUIDE_STEPS = [
+  { say: 'The first project: a robot that counts. Take a little robot from its stack and set it on the table.',
+    at: () => stackPoint('minis'),
+    done: () => benchThings.some(t => t.userData.kind === 'robot') || !!activeBot },
+  { say: 'Now give it something to work on: take a number from the number stack (it is a 1) and drop it on the robot. Its thought bubble opens \u2014 you are teaching it.',
+    at: () => stackPoint('numbers'),
+    done: () => mode === 'training' },
+  { say: 'In the bubble, show it one step: take another number from the number stack and drop it on the number it was given. That adds 1.',
+    at: () => stackPoint('numbers'),
+    done: () => mode === 'training' && program.some(st => st.type === 'put') },
+  { say: 'That is the whole lesson. Leave the bubble with the button under the title: the table is as you left it, and the robot keeps what it learned.',
+    at: () => null,
+    done: () => mode !== 'training' && !!activeBot?.program.length },
+  { say: 'Press Run what it learned. It does the step once and stops: its thought wants exactly a 1, and what it holds is a 2 now.',
+    at: () => null,
+    done: () => activeBot?.program.length && runsBegun > guide.runs && runCount >= 1 && mode === 'world' },
+  { say: 'Wake Ruby the eraser \u2014 click her, beside the copier \u2014 and click the 1 in the thought bubble. It becomes any number.',
+    at: () => helperPoint('ruby'),
+    done: () => !!activeBot && condition && condition.kind !== 'number' },
+  { say: 'Press Run again. It counts \u2014 3, 4, 5\u2026 \u2014 as long as what it holds is a number, which is always. Pause holds it still, Stop ends the run. That was the whole language: a lesson shown once, a thought that says what it waits for, and Ruby turning one example into a rule.',
+    at: () => null,
+    done: () => runsBegun > guide.runs && runCount >= 2 },   // a new run of two rounds or more: it counts (at Instant the whole run is over before a frame)
+];
+function guideStart() {
+  guide = { i: -1 };
+  guideAdvance();
+}
+function guideStop(said = true) {
+  guide = null;
+  if (guideRing) { guideRing.removeFromParent(); guideRing = null; }
+  if (said) say('The first project is over \u2014 the manual has more.');
+}
+function guideAdvance() {
+  if (!guide) return;
+  guide.i += 1;
+  guide.runs = runsBegun;                 // a step that waits for a run waits for a NEW one
+  if (guide.i >= GUIDE_STEPS.length) return guideStop(false);
+  const st = GUIDE_STEPS[guide.i];
+  sayAttn(st.say);
+  guideMark(st.at());
+}
+function guideMark(p) {
+  if (guideRing) { guideRing.removeFromParent(); guideRing = null; }
+  if (!p) return;
+  const ring = new THREE.Mesh(geo('TorusGeometry', 0.22, 0.025, 10, 40),
+    new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.85, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(p.x, p.y + 0.02, p.z);
+  ring.__t = 0;
+  scene.add(ring);
+  guideRing = ring;
+}
+// each frame: the ring breathes, and the step is judged done
+function guideTick(dt) {
+  if (guideRing) {
+    guideRing.__t += dt;
+    const k = 1 + 0.12 * Math.sin(guideRing.__t * 4);
+    guideRing.scale.setScalar(k);
+    guideRing.material.opacity = 0.6 + 0.3 * Math.sin(guideRing.__t * 4);
+  }
+  if (!guide || offstage()) return;
+  const st = GUIDE_STEPS[guide.i];
+  if (st && st.done()) {
+    if (guide.i === GUIDE_STEPS.length - 1) return guideStop(false);
+    guideAdvance();
+  }
+}
 function flash(pos) {
   if (speed === Infinity || offstage()) return;   // nothing to see
   const m = new THREE.Mesh(geo('SphereGeometry', 0.15, 20, 12),
@@ -16142,6 +16263,7 @@ addEventListener('pointerdown', (e) => {
 // A tablet gives most of its height to the browser's own bars, which leaves
 // the workshop a letterbox. iOS Safari on the phone has no Fullscreen API at
 // all, so where it is missing the button says nothing rather than lying.
+document.getElementById('homeBtn').onclick = () => homeView();
 {
   const btn = document.getElementById('fullBtn');
   const can = !!(document.documentElement.requestFullscreen
@@ -19016,7 +19138,7 @@ function runProgram() {
   activeBot.mini = false;
   activeBot.node.scale.setScalar(1);
   activeBot.root.scale.setScalar(1);
-  mode = 'replay'; busy = true; runCount = 0;
+  mode = 'replay'; busy = true; runCount = 0; runsBegun++;
   if (camWatchRun) { camWatchRun = false; if (smartCam) showViewSoon(runWatchPose); }
   // NOTHING WAITS FOR THE NARRATOR. Marty's opening line -- what the robot
   // is trying to achieve -- takes seconds to come and the whole of it was
@@ -20192,6 +20314,10 @@ function refreshUI() {
       : kind === 'sound' ? (soundEmpty(HAND.userData.sound) ? 'a silent sound'
           : `a sound of ${soundSeconds(HAND.userData.sound).toFixed(1)}s`)
       : `${HAND.userData.label ? `“${HAND.userData.label}” — ` : ''}a box with ${HAND.userData.holes.length} hole${HAND.userData.holes.length > 1 ? 's' : ''}`;
+    // the fit button names what it fits: the ground outside, the table in
+    // here (Ken: "as big as the ground" isn't a good name when not out in the yard)
+    const fitBtn = $('heldFit');
+    if (fitBtn) fitBtn.textContent = yardIn ? 'As big as the ground' : 'As big as the table';
     const backBtn = $('heldBack');
     if (backBtn) {
       const ok = backSpotFree(HAND.__from);
@@ -20852,6 +20978,7 @@ addEventListener('keydown', (e) => {
   }
 
   if (e.key === 'Escape' && straightOn) { e.preventDefault(); comeBackFrom(); return; }
+  if (e.key === 'Home' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); homeView(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     e.preventDefault();
     if (!busy && mode !== 'replay' && worldRules?.undo !== false) undo();
@@ -22478,6 +22605,12 @@ loadModel('robot_v4.glb', (gltf) => {
     sndRow.append(sb, sv);
     menu.appendChild(sndRow);
     refreshSnd();
+    const fp = document.createElement('button');
+    fp.id = 'firstBtn';
+    fp.title = 'The first project, step by step, here in the workshop: a robot that counts.';
+    fp.textContent = '\u{1F393} The first project';
+    fp.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); guideStart(); };
+    menu.appendChild(fp);
     const cb = document.createElement('button');
     cb.id = 'camBtn';
     cb.title = 'Smart camera — in a lesson or a run the camera comes in on what the robot works on (point at the side of the screen to lean back out); with Ruby or Dusty awake, pointing at the thought bubble brings it in on the thought.';
@@ -26426,6 +26559,9 @@ window.__nano = {
   commentary(on) { mineSet(MARTY_COMMENT, on ? '1' : '0'); return martyCommentOn(); },
   narrating() { return { on: narratedRun, live: narrationLive(), opening: openingBusy }; },
   camReset() { camResetAll(); },
+  guide() { return guide ? { i: guide.i, say: GUIDE_STEPS[guide.i]?.say ?? null, ring: !!guideRing } : null; },
+  guideStart() { guideStart(); },
+  homeView() { homeView(); },
   helperState() { return { ruby: !!ruby, rubyOn: !!ruby?.parent, dusty: !!dusty, dustyOn: !!dusty?.parent, rules: worldRules?.tools ?? null, rubyActive, dustyActive, busy, mode, condShow: !!condShow, hasCond: !!condDisplay }; },
   helperAt(name) { return helperPoint(name); },
   onScreen(p) { return onScreen(p); },

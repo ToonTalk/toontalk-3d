@@ -7982,3 +7982,28 @@ Covered in codexCheck; rubyView and thoughtView press Start after Ruby now.
   below the top.
 Covered in kenRoundCheck.
 
+## Small screens, the first project in the workshop, the home view
+
+From Codex's report, with Ken's go-ahead. SMALL SCREENS: every card keeps
+inside the window and scrolls inside itself; Marty's panel stands above the
+bar, not on it; below 600px wide the two top cards share the width in one
+column (the actions card under the title, above the bar); in a short
+landscape (under 460px tall) the title keeps to 250px, Marty's panel goes
+between the cards, and the log shrinks. Measured at 390x844 and 844x390 by
+DOM geometry: nothing overlaps, every close button is inside the window.
+Not a phone app -- reading and simple play.
+
+THE FIRST PROJECT, in the &#8942; menu: the manual's first project, step by
+step. The workshop watches what you do rather than what you click -- a robot
+on the table, a lesson begun, a put recorded, the bubble left, a run of one
+round, a thought loosened, a run that counts -- and says each step as the
+one before is seen to be done, with a ring of light on the stack or helper
+to reach for. Nothing is done for you.
+
+THE HOME VIEW: a button on the bar and the Home key put the camera back
+where it starts for wherever you are -- the whole table, or the whole yard
+-- out of any close-up first, and the smart camera's slate wiped so it
+takes up from there. (Ken asked whether a reset-camera button was a good
+idea: yes, and this is how it works.) And "As big as the ground" reads "As
+big as the table" indoors (Ken).
+
