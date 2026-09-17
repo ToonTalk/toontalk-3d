@@ -393,19 +393,58 @@ TRAIN = ('HOW TO TRAIN ONE\n'
 
 FENCE = ('THE ROW GOES ON\n'
       '\n'
-      'Eleven cottages stand in a\n'
-      'row, counted from the left,\n'
-      'and a guest given a number\n'
-      'walks to that cottage.\n'
+      'Eleven cottages stand in\n'
+      'the clear, counted from the\n'
+      'left, and a guest given a\n'
+      'number walks to that cottage.\n'
       '\n'
-      'The row does not stop at the\n'
-      'fence: guest 12 would walk\n'
-      'past it, and guest a thousand\n'
-      'a long way past.\n'
+      'The row does not stop at 11:\n'
+      'it goes on into the mist.\n'
+      'Cottages 12, 13 and 14 are\n'
+      'in there, and all the rest\n'
+      'behind them, as far as you\n'
+      'like. A guest sent to 15\n'
+      'walks in and is lost to view.\n'
       '\n'
       'Nothing in these robots knows\n'
       'how many guests there are.\n'
       'That is the whole of it.')
+
+
+# THE MIST. Ken: a cloud obscuring cottages 12 and up, so the row is seen to
+# go on rather than told to. A model of see-through puffs from just past
+# cottage 11 to the fence, thin at the near edge and thicker with every step
+# in, over the row and the guests' line in front of it. Cottages 12, 13 and
+# 14 stand inside, real houses half-seen; a guest sent further walks in and
+# is lost to view. Ghost, so guests walk through it; stuck, so a hand cannot
+# carry the weather away.
+MIST_X, MIST_Z = 3.75, 5.05
+
+
+def mist():
+    parts = []
+    seed = [7]
+
+    def rnd():                                             # the same puffs every build
+        seed[0] = (seed[0] * 16807) % 2147483647
+        return seed[0] / 2147483647
+    x0, x1 = 2.5, 4.95
+    for c in range(10):
+        depth = c / 9
+        for (z, spread) in ((4.3, 0.2), (4.8, 0.25), (5.3, 0.25), (5.75, 0.2)):
+            for k in range(2):
+                x = x0 + (x1 - x0) * depth + (rnd() - 0.5) * 0.3
+                zz = z + (rnd() - 0.5) * spread
+                y = 0.22 + 0.3 * k + rnd() * 0.25
+                r = 0.22 + rnd() * 0.16 + 0.06 * depth
+                op = 0.14 + 0.28 * depth + rnd() * 0.05      # thin at the near edge, thicker in
+                parts.append({'shape': 'sphere', 'size': [round(r, 3)],
+                              'at': [round(x - MIST_X, 3), round(y, 3), round(zz - MIST_Z, 3)],   # about the model's own middle
+                              'color': '#ffffff', 'opacity': round(min(op, 0.48), 3)})
+    return {'kind': 'model', 'parts': parts, 'label': 'the mist', 'ghost': True, 'stuck': True,
+            'note': ('The row goes on into the mist: cottages 12, 13 and 14 stand in it, and all the rest '
+                     'behind them. A guest sent past 14 walks in and is lost to view. Nothing in the resort '
+                     'knows how many cottages there are.')}
 
 
 INSIDE = ('RESORT INFINITY\n\n'
@@ -414,8 +453,10 @@ INSIDE = ('RESORT INFINITY\n\n'
           'desk, the guests.\n\n'
           'Go outside.')
 
-# the row: eleven cottages, fixed, numbered from the left
-row = [{'thing': cottage(n), 'x': n * 0.6 - 4.5, 'z': COTTAGE_Z} for n in range(1, 12)]
+# the row: eleven cottages in the clear, numbered from the left, and three
+# more in the mist
+row = [{'thing': cottage(n), 'x': n * 0.6 - 4.5, 'z': COTTAGE_Z} for n in range(1, 15)]
+row.append({'thing': mist(), 'x': MIST_X, 'z': MIST_Z})
 
 g1, g2, gates = [], [], []
 for k in range(1, 7):                                      # the first six, at the gate

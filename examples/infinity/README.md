@@ -185,8 +185,14 @@ read one.
 
 Problem 1: six guests house themselves at 1–6. Problem 2: your mover goes to
 the office, the office rings the bell, the six ask where to go and shuffle to
-6–11; then the five newcomers take 1–5. Eleven cottages, no two at the same
-address. Set the speed to 4× or 8×: eleven round trips at walking pace take a
+6–11; then the five newcomers take 1–5. Eleven cottages in the clear, no two
+at the same address — and **the mist** (Ken's idea) from just past cottage
+11 to the fence, thin at its near edge and thicker with every step in, with
+cottages 12, 13 and 14 standing half-seen inside it: the row is seen to go
+on rather than told to. A guest sent past 14 walks in and is lost to view.
+The mist is a model of see-through puffs (`opacity` on a part draws it
+unlit, without depth or shadow), a ghost so guests walk through it and stuck
+so a hand cannot carry the weather off. Set the speed to 4× or 8×: eleven round trips at walking pace take a
 while. To watch the whole of it done by a robot, see `meta/🎓 resort-teacher`.
 
 `make_resort.py` writes it.

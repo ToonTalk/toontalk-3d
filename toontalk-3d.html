@@ -7953,10 +7953,20 @@ function makeModel(rec) {
       : geo('BoxGeometry', sz[0], sz[1] ?? sz[0], sz[2] ?? sz[0]);
     const m = new THREE.Mesh(geom,
       new THREE.MeshStandardMaterial({ color: pt.color ?? '#c8c8c8', roughness: 0.65 }));
+    // A SEE-THROUGH PART: mist, glass, a ghost. Drawn without writing depth,
+    // so the parts behind it still show through (the resort's mist, which
+    // hides the row's end without ending it).
+    const seeThrough = pt.opacity != null && pt.opacity < 1;
+    if (seeThrough) {
+      // unlit, so mist reads as mist and not as a heap of shaded grey balls,
+      // and casting no shadow, since vapour throws none
+      m.material = new THREE.MeshBasicMaterial({ color: pt.color ?? '#ffffff', transparent: true,
+                                                 opacity: pt.opacity, depthWrite: false });
+    }
     if (pt.at) m.position.set(pt.at[0], pt.at[1], pt.at[2]);
     if (pt.rot) m.rotation.set(pt.rot[0] * Math.PI / 180, pt.rot[1] * Math.PI / 180,
                                pt.rot[2] * Math.PI / 180);
-    m.castShadow = true; m.receiveShadow = true;
+    m.castShadow = !seeThrough; m.receiveShadow = !seeThrough;
     g.add(m);
   }
   const box = new THREE.Box3().setFromObject(g);

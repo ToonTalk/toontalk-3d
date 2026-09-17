@@ -3760,14 +3760,17 @@ async function resortCheck(D, win) {
   // the runner houses have folded away, and nothing of the machinery is on the grass
   let left = 0; fd.__ctx.root.traverse(o => { if (o !== fd && o.userData?.kind === 'room') left++; });
   const grassRooms = grass().filter(t => t.userData.kind === 'room' && !t.__owner).length;   // houses, not the guests' folded trays
-  const tidy = left === 0 && grassRooms === 13;
+  const tidy = left === 0 && grassRooms === 16;   // 14 cottages (three in the mist) and the two desks
   D.speed(1);
-  const ok = cottages.length === 11 && guests.length === 11 && shape && order === '1,2,3,4,5,6' && housed1 && firstWalk
+  const mist = grass().find(t => t.userData.kind === 'model' && t.userData.label === 'the mist');
+  const misty = !!mist && mist.userData.ghost === true && mist.userData.stuck === true && mist.userData.parts.every(pt => pt.opacity < 0.5)
+    && cottages.filter(c => c.position.x > 2.4).length === 3;          // 12, 13 and 14 stand in it
+  const ok = cottages.length === 14 && misty && guests.length === 11 && shape && order === '1,2,3,4,5,6' && housed1 && firstWalk
     && taken && movedUp && newcomers && distinct && midway && tidy;
   put((ok ? 'PASS' : 'FAIL') + ' Resort Infinity: the guests walk, guest 1 first, and eleven find eleven cottages  (cottages=' + cottages.length
       + ' guests=' + guests.length + ' original-shape=' + shape + ' letters=' + order + ' housed-1-to-6=' + housed1 + ' first-to-walk=' + walked[0]
       + ' robot-taken-in=' + taken + ' moved-up-five=' + movedUp + ' newcomers-1-to-5=' + newcomers + ' distinct=' + distinct + ' glides=' + midway
-      + ' tidy=' + tidy + ' runners-left=' + left + ' grass-rooms=' + grassRooms + ')', ok ? 'pass' : 'fail');
+      + ' tidy=' + tidy + ' runners-left=' + left + ' grass-rooms=' + grassRooms + ' mist-over-12-and-up=' + misty + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 

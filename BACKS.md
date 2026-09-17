@@ -7904,3 +7904,18 @@ every thing's tip now: a named thing's line begins with its name -- "to the
 moving office" -- a bird -- drop something on her... -- unless the line
 names it already. Covered in robotTipCheck.
 
+## The mist
+
+Ken: a cloud obscuring cottages 12 and up, so the resort is seen to go on
+for ever rather than told so by a pad. The mist is a model of eighty
+see-through puffs from just past cottage 11 to the fence, thin at its near
+edge (opacity 0.14) and thicker with every step in (0.46 at the fence),
+over the row and the guests' line in front of it; cottages 12, 13 and 14
+stand inside, real houses half-seen, and a guest sent further walks in and
+is lost to view. A model part may carry `opacity` now: it is drawn unlit
+(lit, the puffs were a heap of shaded grey balls), without writing depth,
+casting no shadow (vapour throws none) -- and the overlap check already
+left parts under half opacity out of a thing's footprint. The mist is a
+ghost, so the guests walk through it, and stuck, so a hand cannot carry the
+weather away. The fence pad says what the mist shows.
+
