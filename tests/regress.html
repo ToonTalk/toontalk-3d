@@ -4303,8 +4303,8 @@ async function resortTeacherCheck(D, win) {
   return ok;
 }
 
-// CODEX'S REPORT (17 September 2026). A fresh 1 off the stack typed 2 gave
-// 12; the first digit is the number now, the next digits add on. A robot no
+// CODEX'S REPORT (17 September 2026). A fresh 1 off the stack typed 2 gives
+// 12, and stays so (Ken: fix the manual, not the number). A robot no
 // longer sets itself going when Ruby's loosening makes its thought fit (Ken:
 // "the user may intend to erase multiple things"); Start runs it. The
 // loading overlay is out of the accessibility tree once the scene is up.
@@ -4352,10 +4352,80 @@ async function codexCheck(D, win) {
   const finalV = String(D.mine()?.userData.value?.n), finalHint = doc.getElementById('hint').textContent.slice(0, 80);
   const ranOnStart = Number(finalV) === v0 + 3;             // three rounds of adding a fresh 1
   D.rounds(ROUNDS); D.speed(1);
-  const ok = loadingGone && isFresh && after2 === '2' && after25 === '25' && afterBack === '2' && notFresh === '12' && stopped1 && waits && ranOnStart;
-  put((ok ? 'PASS' : 'FAIL') + ' a fresh number takes its first digit, a loosening waits for Start, the loading overlay is gone  (loading-gone=' + loadingGone + ' [' + loadingWhy + ']'
+  const ok = loadingGone && isFresh && after2 === '12' && after25 === '125' && afterBack === '12' && notFresh === '12' && stopped1 && waits && ranOnStart;   // digits go on the end (Ken kept it so; the manual says it)
+  put((ok ? 'PASS' : 'FAIL') + ' digits go on the end, a loosening waits for Start, the loading overlay is gone  (loading-gone=' + loadingGone + ' [' + loadingWhy + ']'
       + ' fresh=' + isFresh + ' typed-2=' + after2 + ' then-5=' + after25 + ' backspace=' + afterBack + ' not-fresh-2=' + notFresh
       + ' stopped-after-one=' + stopped1 + ' waits-after-loosening=' + waits + ' ran-on-start=' + ranOnStart + ' [' + finalV + ' ' + JSON.stringify(finalHint) + '])', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// FOUR OF KEN'S, 17 September. A 3D turtle's trail set down after Dusty had
+// it ran into the table (its aim is a quarter turn; its rest assumed it lay
+// flat); Enter in a pad's close-up writes a new line and Ctrl+Enter comes
+// back; Pause stops the robots and nothing else; and a letter a thing did not
+// understand is said so even when a robot inside a panel sent it.
+async function kenRoundCheck(D, win) {
+  const doc = win.document;
+  const key = (k, mods = {}) => { doc.activeElement?.blur?.(); win.dispatchEvent(new win.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...mods })); };
+  const top = D.bounds().top;
+  // 1. the trail stands on the table, however it is turned
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: {"kind": "trail", "aim": [0.5000000000000001, -0.4999999999999999, -0.5, -0.5], "segs": [{"x0": 0.1995, "y0": 0, "z0": -0.137, "x1": 0.1995, "y1": 0, "z1": -0.017, "ink": 1621224, "wide": 2}, {"x0": 0.1995, "y0": 0, "z0": -0.017, "x1": 0.2381, "y1": 0.041, "z1": 0.0889, "ink": 1621224, "wide": 2}, {"x0": 0.2381, "y0": 0.041, "z0": 0.0889, "x1": 0.3036, "y1": 0.1159, "z1": 0.1561, "ink": 1621224, "wide": 2}, {"x0": 0.3036, "y0": 0.1159, "z0": 0.1561, "x1": 0.378, "y1": 0.2091, "z1": 0.169, "ink": 1621224, "wide": 2}, {"x0": 0.378, "y0": 0.2091, "z0": 0.169, "x1": 0.4411, "y1": 0.3012, "z1": 0.1249, "ink": 1621224, "wide": 2}, {"x0": 0.4411, "y0": 0.3012, "z0": 0.1249, "x1": 0.4755, "y1": 0.3726, "z1": 0.0349, "ink": 1621224, "wide": 2}, {"x0": 0.4755, "y0": 0.3726, "z0": 0.0349, "x1": 0.4705, "y1": 0.409, "z1": -0.0794, "ink": 1621224, "wide": 2}, {"x0": 0.4705, "y0": 0.409, "z0": -0.0794, "x1": 0.4249, "y1": 0.404, "z1": -0.1903, "ink": 1621224, "wide": 2}, {"x0": 0.4249, "y0": 0.404, "z0": -0.1903, "x1": 0.3469, "y1": 0.3614, "z1": -0.271, "ink": 1621224, "wide": 2}, {"x0": 0.3469, "y0": 0.3614, "z0": -0.271, "x1": 0.2527, "y1": 0.2938, "z1": -0.3019, "ink": 1621224, "wide": 2}, {"x0": 0.2527, "y0": 0.2938, "z0": -0.3019, "x1": 0.1622, "y1": 0.2198, "z1": -0.2752, "ink": 1621224, "wide": 2}, {"x0": 0.1622, "y0": 0.2198, "z0": -0.2752, "x1": 0.0943, "y1": 0.1592, "z1": -0.1969, "ink": 1621224, "wide": 2}]}, x: 0.2, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  const trail = (() => { for (let i = 0; i < 4; i++) if (D.bench(i)?.userData.kind === 'trail') return D.bench(i); return null; })();
+  const minY = () => { trail.updateMatrixWorld(true); const bb = new D.THREE.Box3(); trail.traverse(o => { if (o.isMesh) bb.expandByObject(o, true); }); return bb.min.y; };
+  const loaded = minY() >= top - 0.002;
+  D.hold(trail); await frames(D, 5); D.clickBench(-0.5, 1.9); await frames(D, 40);
+  const dropped = minY() >= top - 0.002;
+  // 2. Enter in the close-up writes; Ctrl+Enter comes back
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'text', text: 'one' }, x: 0.2, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  const pad = D.bench(0)?.userData.kind === 'text' ? D.bench(0) : D.bench(1);
+  D.hold(pad); await frames(D, 5);
+  key('Enter'); for (let k = 0; k < 20; k++) { D.holdLook(0.2); await frames(D, 2); }   // the close-up
+  const closeUp = !!D.straightOn;
+  key('Enter'); await frames(D, 3); key('t'); key('w'); key('o'); await frames(D, 3);
+  const wrote = pad.userData.text === 'one\ntwo' && !!D.straightOn;
+  key('Enter', { ctrlKey: true }); for (let k = 0; k < 20; k++) { D.holdLook(0.2); await frames(D, 2); }   // the suite drives the close-up's clock by hand
+  const cameBack = !D.straightOn && pad.userData.text === 'one\ntwo';
+  D.clickBench(0.2, 1.7); await frames(D, 10);
+  // 3. Pause: the robots hold still, a ball keeps rolling
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '0', d: '1' }, op: '+' }, x: -0.4, z: 1.6 },
+    { thing: { kind: 'text', text: 'ball', speed: { x: 0.02, z: 0 } }, x: -1.3, z: 2.1 },   // slow: the wall is far
+    { thing: { kind: 'robot', name: 'adder', condition: { kind: 'wildNumber' }, program: [{ type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [] } }], trainedOn: { kind: 'number', value: { n: '0', d: '1' }, op: '+' }, team: [] }, x: 0.8, z: 1.5 } ] });
+  await slowSettle(D, 1500);
+  const num = D.bench(0)?.userData.kind === 'number' ? D.bench(0) : D.bench(1);
+  const ball = (() => { for (let i = 0; i < 4; i++) if (D.bench(i)?.userData.text === 'ball') return D.bench(i); return null; })();
+  D.hold(num); await frames(D, 5); D.giveRobot(); await slowSettle(D, 3000);
+  D.speed('instant'); D.rounds(1000); D.run(); await frames(D, 30);
+  const vBefore = Number(D.mine()?.userData.value?.n), xBefore = ball.position.x;
+  D.pause(true); await frames(D, 60);
+  const vPaused = Number(D.mine()?.userData.value?.n), xPaused = ball.position.x;
+  await frames(D, 60);
+  const robotsStill = Number(D.mine()?.userData.value?.n) === vPaused && vPaused >= vBefore;
+  const xAfter = ball.position.x;
+  const ballRolls = xAfter > xPaused + 0.005 && xPaused > xBefore;
+  D.pause(false); await frames(D, 30);
+  const robotsAgain = Number(D.mine()?.userData.value?.n) > vPaused;
+  D.doc.getElementById('runBtn').click(); await slowSettle(D, 3000); D.rounds(ROUNDS); D.speed(1);
+  // 4. a letter nobody understood, sent by a robot on a panel, is said so out here
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'text', text: 'the target', lid: 'TGT1', evt: 'evt-TGT1' }, x: -0.8, z: 1.7 },
+    { thing: { kind: 'text', text: 'poster', gadget: true, lid: 'PST1', evt: 'evt-PST1', boundTo: 'TGT1',
+      panel: { kind: 'world', v: 3, bench: [], active: { kind: 'robot', name: 'post it', condition: { kind: 'box', holes: [{ kind: 'anyBird' }, { kind: 'anyBox' }] },
+        program: [{ type: 'copy', at: { c: 'given', path: [1] } }, { type: 'put', at: { c: 'given', path: [0] } }], trainedOn: null, team: [] },
+        stations: { stand: { kind: 'box', holes: [{ kind: 'bird', nestId: 0, nestGuid: null, liveId: 'TGT1', label: 'to the target' },
+          { kind: 'box', holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'positon' }, { kind: 'number', value: { n: '2', d: '1' } }] }] } } } }, x: 0.6, z: 1.7 } ] });
+  await slowSettle(D, 1500);
+  const poster = (() => { for (let i = 0; i < 4; i++) if (D.bench(i)?.userData.text === 'poster') return D.bench(i); return null; })();
+  D.switchGadget(poster, true, true); await frames(D, 90);
+  const hint = doc.getElementById('hint').textContent;
+  const complained = /the target.*did not understand \[set \| positon \| 2\]/.test(hint) && /It answers/.test(hint);
+  D.switchGadget(poster, false, true); await frames(D, 10);
+  const ok = loaded && dropped && closeUp && wrote && cameBack && robotsStill && ballRolls && robotsAgain && complained;
+  put((ok ? 'PASS' : 'FAIL') + ' a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  (trail-loaded=' + loaded + ' trail-dropped=' + dropped
+      + ' close-up=' + closeUp + ' enter-writes=' + wrote + ' ctrl-enter-back=' + cameBack + ' robots-still=' + robotsStill + ' ball-rolls=' + ballRolls + ' robots-again=' + robotsAgain
+      + ' complained=' + complained + (complained ? '' : ' hint=' + JSON.stringify(hint.slice(0, 120))) + ' ball-x=' + [xBefore, xPaused, xAfter].map(v => +v.toFixed(2)).join('>') + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -6865,9 +6935,12 @@ async function runOne(D, spec) {
   let rlOK = true;
   try { rlOK = want('resortLate') || want('resortSlow') ? await resortLateCheck(D, frame.contentWindow) : true; }
   catch (e) { rlOK = false; put('FAIL Resort Infinity by hand  ' + e.message, 'fail'); }
+  let krOK = true;
+  try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
+  catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
   let cdxOK = true;
   try { cdxOK = want('codex') ? await codexCheck(D, frame.contentWindow) : true; }
-  catch (e) { cdxOK = false; put('FAIL a fresh number takes its first digit, a loosening waits for Start, the loading overlay is gone  ' + e.message, 'fail'); }
+  catch (e) { cdxOK = false; put('FAIL digits go on the end, a loosening waits for Start, the loading overlay is gone  ' + e.message, 'fail'); }
   let rtcOK = true;
   try { rtcOK = want('resortTeacher') || want('teacherSlow') ? await resortTeacherCheck(D, frame.contentWindow) : true; }
   catch (e) { rtcOK = false; put('FAIL the resort teacher solves the resort  ' + e.message, 'fail'); }
@@ -7027,7 +7100,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

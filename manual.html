@@ -257,10 +257,10 @@ learned</b> for a robot you have just taught, and <b>Start the robot</b> for
 one that arrived trained.</p>
 
 <h2 id="numbers">Numbers</h2>
-<p>Numbers come off their stack as <b>1</b>s. While holding one, type digits to
-set its value (the first digit typed on a fresh one <em>is</em> its value;
-digits after that add on, and <kbd>Backspace</kbd> takes one off),
-<kbd>-</kbd> to make it negative, and <kbd>*</kbd> <kbd>/</kbd>
+<p>Numbers come off their stack as <b>1</b>s. While holding one, type digits
+and they go on the end — a 1 typed <kbd>2</kbd> is 12, and <kbd>Backspace</kbd>
+takes the last digit off, so 12 backspaced twice and typed <kbd>7</kbd> is 7
+— <kbd>-</kbd> to make it negative, and <kbd>*</kbd> <kbd>/</kbd>
 <kbd>^</kbd> to choose what it <em>does</em> when dropped on another number
 (adding is the default — and adding a negative <em>is</em> subtraction).
 Dropping a number on a number combines them: the arriving one applies its
@@ -287,7 +287,8 @@ cleanly: as soon as the last few you typed spell a name, the number takes it.</p
 <h2 id="pads">Pads</h2>
 <p>Pads are paper for words. Type on a held pad to write
 (<kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line; <kbd>Enter</kbd> on its own
-looks at the pad close up and <kbd>Escape</kbd> comes back; <kbd>Ctrl</kbd>+<kbd>V</kbd>
+looks at the pad close up, where Enter writes new lines and
+<kbd>Ctrl</kbd>+<kbd>Enter</kbd> or <kbd>Escape</kbd> comes back; <kbd>Ctrl</kbd>+<kbd>V</kbd>
 pastes). Drop one pad on
 <em>the left edge</em> of another and it reads first; on <em>the right edge</em>
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
@@ -308,8 +309,9 @@ riding number shows its <em>value</em> and nothing else — no operation badge
 and no frame — and is kept inside the edges of the pad it is on.</p>
 <div class="try">
   <div class="cap"><b>Try it:</b> pick up "Talk" and drop it on the right edge
-  of "Toon". Take a 1 from the number stack, type <kbd>2</kbd>, and drop it on a
-  pad: it rides there. Or drop a pad on the 2 to pick out its second letter.</div>
+  of "Toon". Take a 1 from the number stack, press <kbd>Backspace</kbd> and
+  type <kbd>2</kbd>, and drop it on a pad: it rides there. Or drop a pad on
+  the 2 to pick out its second letter.</div>
   <iframe loading="lazy" src="toontalk-3d.html?demo=pads"></iframe>
 </div>
 
@@ -517,7 +519,7 @@ the bubble and the daydream rewinds; the robot keeps the lesson.</p>
 before it will run. Give a trained robot something that fits and it gets to
 work at once, repeating <b>while the condition still matches</b> — a finite
 job ends itself, because at the end the condition stops fitting or the robot
-dozes on an empty nest. The bar’s <b>Pause</b> button holds the whole world
+dozes on an empty nest. The bar’s <b>Pause</b> button holds every robot
 still, mid-stride, and Run carries on exactly from there. Drop one trained robot on another to form a <b>team</b>: the members
 line up on the floor behind the leader, each with its own small thought over
 its head, and whichever one recognises what the team was given walks up to the
@@ -1044,10 +1046,11 @@ bird serves the same nest, a copied nest joins the original’s flock, and both
 bats hear the same pointer.</p>
 
 <p><b>Pause stops the robots, and only the robots.</b> While it is paused no
-robot takes a fresh turn and nothing drifts under a speed a behaviour gave it
-— but your hands still work, Mimi still copies, birds finish their deliveries
-and eggs still hatch. Press Run and the robots carry on from where they
-stood.</p>
+robot takes a fresh turn, at the bench, in a house or on a panel — but
+everything else goes on: your hands work, Mimi copies, birds finish their
+deliveries, eggs hatch, and a thing moving under a speed a robot gave it keeps
+moving (a ball does not stop because its robots did). Press Run and the
+robots carry on from where they stood.</p>
 
 <p><b>A game resizes whole — and still plays.</b> Hold a scene — a pitch
 with its ball and bat riding on it — and the + and − buttons on the card
@@ -1066,9 +1069,9 @@ speed rests where it is when you press &ldquo;.&rdquo; on it, and goes on again
 at the same speed when you press SPACE &mdash; whether the speed came from a
 behaviour bound to it or from a message you sent by hand.</p>
 
-<p><b>A paused workshop looks paused.</b> Nothing is moving, so there is no
-motion to notice the absence of: the light goes cold and low instead, and the
-ground goes blue. Press Run and the warmth comes back.</p>
+<p><b>A paused workshop looks paused.</b> A robot holding still is easy to
+miss, so the light goes cold and low instead, and the ground goes blue. Press
+Run and the warmth comes back.</p>
 
 <p><b>A named thing is not spare words.</b> Pads join at the edges &mdash;
 &ldquo;Talk&rdquo; on the right of &ldquo;Toon&rdquo; makes

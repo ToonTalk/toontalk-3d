@@ -230,7 +230,7 @@
     <option value="inf">Instant</option>
   </select>
   <button id="pauseBtn"
-    title="Pause everything — every robot, behaviour, bird and moving thing, mid-stride. Click again and it all carries on exactly where it stopped.">⏸ Pause</button>
+    title="Pause the robots — every robot, at the bench, in a house or on a panel, mid-stride. Everything else goes on: birds, moving things, your hands. Click again and the robots carry on where they stopped.">⏸ Pause</button>
   <span class="sep"></span>
   <button id="undoBtn"
     title="Undo the last move — picking up, putting down, typing, joining, vacuuming, erasing. Ctrl+Z works too.">Undo</button>
@@ -429,10 +429,10 @@ one that arrived trained.
 
 ## Numbers
 
-Numbers come off their stack as 1s. While holding one, type digits to
-set its value (the first digit typed on a fresh one is its value;
-digits after that add on, and Backspace takes one off),
-- to make it negative, and * /
+Numbers come off their stack as 1s. While holding one, type digits
+and they go on the end — a 1 typed 2 is 12, and Backspace
+takes the last digit off, so 12 backspaced twice and typed 7 is 7
+— - to make it negative, and * /
 ^ to choose what it does when dropped on another number
 (adding is the default — and adding a negative is subtraction).
 Dropping a number on a number combines them: the arriving one applies its
@@ -459,7 +459,8 @@ cleanly: as soon as the last few you typed spell a name, the number takes it.
 
 Pads are paper for words. Type on a held pad to write
 (Shift+Enter for a new line; Enter on its own
-looks at the pad close up and Escape comes back; Ctrl+V
+looks at the pad close up, where Enter writes new lines and
+Ctrl+Enter or Escape comes back; Ctrl+V
 pastes). Drop one pad on
 the left edge of another and it reads first; on the right edge
 and it reads last — "Talk" dropped on the right of "Toon" makes "ToonTalk".
@@ -483,8 +484,9 @@ riding number shows its value and nothing else — no operation badge
 and no frame — and is kept inside the edges of the pad it is on.
 
 Try it: pick up "Talk" and drop it on the right edge
-of "Toon". Take a 1 from the number stack, type 2, and drop it on a
-pad: it rides there. Or drop a pad on the 2 to pick out its second letter.
+of "Toon". Take a 1 from the number stack, press Backspace and
+type 2, and drop it on a pad: it rides there. Or drop a pad on
+the 2 to pick out its second letter.
 
 Pictures
 A pad's face can carry a picture as well as words. Drag an image file
@@ -703,7 +705,7 @@ Its thought bubble shows the condition: the shape it must be given
 before it will run. Give a trained robot something that fits and it gets to
 work at once, repeating while the condition still matches — a finite
 job ends itself, because at the end the condition stops fitting or the robot
-dozes on an empty nest. The bar’s Pause button holds the whole world
+dozes on an empty nest. The bar’s Pause button holds every robot
 still, mid-stride, and Run carries on exactly from there. Drop one trained robot on another to form a team: the members
 line up on the floor behind the leader, each with its own small thought over
 its head, and whichever one recognises what the team was given walks up to the
@@ -1267,10 +1269,11 @@ bird serves the same nest, a copied nest joins the original’s flock, and both
 bats hear the same pointer.
 
 Pause stops the robots, and only the robots. While it is paused no
-robot takes a fresh turn and nothing drifts under a speed a behaviour gave it
-— but your hands still work, Mimi still copies, birds finish their deliveries
-and eggs still hatch. Press Run and the robots carry on from where they
-stood.
+robot takes a fresh turn, at the bench, in a house or on a panel — but
+everything else goes on: your hands work, Mimi copies, birds finish their
+deliveries, eggs hatch, and a thing moving under a speed a robot gave it keeps
+moving (a ball does not stop because its robots did). Press Run and the
+robots carry on from where they stood.
 
 A game resizes whole — and still plays. Hold a scene — a pitch
 with its ball and bat riding on it — and the + and − buttons on the card
@@ -1289,9 +1292,9 @@ speed rests where it is when you press . on it, and goes on again
 at the same speed when you press SPACE — whether the speed came from a
 behaviour bound to it or from a message you sent by hand.
 
-A paused workshop looks paused. Nothing is moving, so there is no
-motion to notice the absence of: the light goes cold and low instead, and the
-ground goes blue. Press Run and the warmth comes back.
+A paused workshop looks paused. A robot holding still is easy to
+miss, so the light goes cold and low instead, and the ground goes blue. Press
+Run and the warmth comes back.
 
 A named thing is not spare words. Pads join at the edges —
 Talk on the right of Toon makes
@@ -4379,7 +4382,7 @@ function makeNumber(value, op = '+', lite = false) {
   }
   g.__paintSecondary = () => { if (!built) return; paintSecondary(); g.__facesStale = false; };
 
-  g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; delete g.userData.fresh; draw(); };
+  g.setValue = (v, o) => { g.userData.value = v; if (o) g.userData.op = o; draw(); };
   g.setOp = (o) => { g.userData.op = o; draw(); };
   // the face override, for a wildcard in a thought bubble
   g.setFaceText = (t) => { g.userData.faceText = t; draw(); };
@@ -6546,6 +6549,37 @@ function makeLiveBird(X) {
 }
 
 // --- delivery: one message at a time ----------------------------------------
+// A LETTER NOBODY UNDERSTOOD IS SAID SO, EVEN FROM INSIDE. Ken: "If a message
+// is given to a thing's bird that isn't properly formed or spelled there
+// should be some kind of error feedback." There was, for a hand's letter --
+// and none at all for a robot's, because a robot works inside a house or a
+// panel, and say() is silent offstage. The complaint is kept and said the
+// moment the stage is yours again, once per wording every few seconds so a
+// behaviour posting sixty times a second says it once.
+const msgWords = (msg) => msg?.userData?.kind === 'box'
+  ? '[' + msg.userData.holes.map(h => h.thing
+      ? (h.thing.userData.kind === 'text' ? (h.thing.userData.text ?? '').trim().slice(0, 20)
+        : h.thing.userData.kind === 'number' ? ratShort(h.thing.userData.value)
+        : h.thing.userData.kind === 'box' ? 'a box' : 'a ' + h.thing.userData.kind)
+      : '_').join(' | ') + ']'
+  : msg?.userData?.kind === 'text' ? '“' + (msg.userData.text ?? '').trim().slice(0, 20) + '”'
+  : msg?.userData?.kind === 'number' ? ratShort(msg.userData.value)
+  : 'that';
+let mailComplaint = null, mailComplaintSaid = '', mailComplaintAt = 0;
+function mailRefused(X, msg, answers) {
+  const who = panelName(X);
+  const line = `${who[0].toUpperCase()}${who.slice(1)} did not understand ${msgWords(msg)} — the letter is dropped. It answers ${answers}`;
+  if (offstage()) { mailComplaint = line; return; }
+  sayMailComplaint(line);
+}
+const mailSay = (line) => { if (offstage()) mailComplaint = line; else sayMailComplaint(line); };   // a complaint about a letter, kept if offstage
+function sayMailComplaint(line) {
+  if (line === mailComplaintSaid && performance.now() - mailComplaintAt < 4000) return;
+  mailComplaintSaid = line; mailComplaintAt = performance.now();
+  sayAttn(line);
+}
+const PLACE_ANSWERS = '[set | position | [across | away]], [move | across | n], [set | facing | n], [set | speed | [across | away]], '
+  + '[set | size | n], [set | switch | on], [query | position | bird] and [listen | touch | bird]';
 function deliverToThing(X, msg) {
   X.__msgN = (X.__msgN || 0) + 1;   // messages ever received; a probe's odometer
   // ...and the last few, in words, for a probe that asks what came
@@ -6586,11 +6620,11 @@ function lookMsg(X, msg) {
   const shown = v?.userData.kind === 'number' ? ratShort(v.userData.value) : value;
   msg.removeFromParent();
   if (value == null) {
-    sayAttn(`[set | ${prop} | ...] wants a third hole saying what to set it to.`);
+    mailSay(`[set | ${prop} | ...] wants a third hole saying what to set it to.`);
     return true;
   }
   const complaint = setLookProp(X, prop, value);
-  if (complaint) sayAttn(complaint);
+  if (complaint) mailSay(complaint);
   else say(`${panelName(X)[0].toUpperCase()}${panelName(X).slice(1)}: ${prop} is ${shown} now.`);
   return true;
 }
@@ -6651,7 +6685,7 @@ function handleLiveMsg_(X, msg) {
       // the badge travels whole: fetch-and-add in a single message
       const r = applyOp(X.userData.value, msg.userData.op, msg.userData.value);
       msg.removeFromParent();
-      if (!r) return sayAttn('That operation does not apply to what it holds — the message is dropped.');
+      if (!r) return mailSay('That operation does not apply to what it holds — the message is dropped.');
       if (ratEq(r, X.userData.value)) return;    // the echo rule: no change, no event
       X.setValue(r);
       emitLiveEvent(X);
@@ -6676,7 +6710,7 @@ function handleLiveMsg_(X, msg) {
         const v = msg.userData.holes[2]?.thing;
         msg.removeFromParent();
         if ((what?.userData.text ?? '').trim().toLowerCase() !== 'value' || v?.userData.kind !== 'number') {
-          return sayAttn('[set | value | n] is what a number can be told \u2014 a pad saying value, then a number.');
+          return mailSay('[set | value | n] is what a number can be told \u2014 a pad saying value, then a number.');
         }
         if (ratEq(v.userData.value, X.userData.value)) return;    // the echo rule
         X.setValue(v.userData.value);
@@ -6695,7 +6729,7 @@ function handleLiveMsg_(X, msg) {
         // kind; what is left here is a number's own one
         if (cname === 'switch') { if (rb) sendViaBird(rb, makeEventNest(X, 'switch')); return; }
         if (cname && cname !== 'value') {
-          return sayAttn(`A number's own channel is its VALUE — “${cname}” is not one it has. `
+          return mailSay(`A number's own channel is its VALUE — “${cname}” is not one it has. `
             + 'Every thing on the table also has position, edge, touch and its switch.');
         }
         if (rb) sendViaBird(rb, makeEventNest(X, 'value'));
@@ -6703,10 +6737,10 @@ function handleLiveMsg_(X, msg) {
       }
       if (switchMsg(X, msg, word)) return;
       msg.removeFromParent();
-      return sayAttn(`Its panel does not know “${word ?? 'that'}” yet — a badged number, [query | bird], [listen | bird] or [set | value | n] is what a number answers.`);
+      return mailRefused(X, msg, 'a badged number, [query | bird], [listen | bird], [set | value | n], [set | switch | on] and the place messages every thing answers.');
     }
     msg.removeFromParent();
-    return sayAttn('A number answers badged numbers and [query | bird] boxes — that message is dropped.');
+    return mailRefused(X, msg, 'a badged number, [query | bird], [listen | bird], [set | value | n] and the place messages every thing answers.');
   }
   if (X.userData.kind === 'sound') {
     const word = mk === 'box'
@@ -6723,17 +6757,15 @@ function handleLiveMsg_(X, msg) {
     }
     if (word === 'play') { playSound(X); return; }
     if (word === 'stop') { stopSound(X); return; }
-    return sayAttn('A sound answers [play], [stop], and a [frequency | seconds | shape] box.');
+    return mailRefused(X, msg, '[play], [stop], a [frequency | seconds | shape] box and the place messages.');
   }
   if (X.userData.kind === 'text') {
     msg.removeFromParent();
-    return sayAttn('A pad answers [set | background | grey], [set | colour | white], '
-      + '[set | font | sans] and [set | width | 2] / [set | height | 1/3] '
-      + '— its info notebook has them ready to take out.');
+    return mailRefused(X, msg, '[set | background | grey], [set | colour | white], [set | font | sans], '
+      + '[set | width | 2], [set | height | 1/3] (its info notebook has them ready), and the place messages: ' + PLACE_ANSWERS + '.');
   }
-  // other kinds find their vocabularies with pictures (Stage 3)
   msg.removeFromParent();
-  sayAttn('Only numbers, pads and sounds answer messages so far — the rest of the vocabulary arrives with behaviours.');
+  mailRefused(X, msg, 'the place messages: ' + PLACE_ANSWERS + '.');
 }
 // A change announces itself: the new value lands on every nest of the flock.
 function emitLiveEvent(X) {
@@ -8262,19 +8294,19 @@ function switchMsg(X, msg, verb) {
   const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
   msg.removeFromParent();
   if (verb === 'listen') {
-    if (!rb) { sayAttn('[listen | switch | bird] wants a bird to answer to.'); return true; }
+    if (!rb) { mailSay('[listen | switch | bird] wants a bird to answer to.'); return true; }
     ensureLive(X);
     sendViaBird(rb, makeEventNest(X, 'switch'));
     return true;
   }
   if (verb === 'query') {
-    if (!rb) { sayAttn('[query | switch | bird] wants a bird to answer to.'); return true; }
+    if (!rb) { mailSay('[query | switch | bird] wants a bird to answer to.'); return true; }
     sendViaBird(rb, makeText(X.userData.switchedOn ? 'on' : 'off'));
     return true;
   }
   if (verb === 'set') {
     const w = word(hole(2));
-    if (w !== 'on' && w !== 'off') { sayAttn('[set | switch | on] or [set | switch | off] is how a switch is thrown by mail.'); return true; }
+    if (w !== 'on' && w !== 'off') { mailSay('[set | switch | on] or [set | switch | off] is how a switch is thrown by mail.'); return true; }
     const on = w === 'on';
     if (isGadget(X) || X.userData.kind === 'yard') switchGadget(X, on, true);
     else if (!switchBound(X, on)) say(`Nothing on ${panelName(X)}\u2019s panel is ready to run.`);
@@ -8306,7 +8338,7 @@ function placeMsg(X, msg) {
   msg.removeFromParent();
   if (verb === 'listen') {
     const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-    if (!rb) { sayAttn(`[listen | ${what} | bird] wants a bird to answer to.`); return true; }
+    if (!rb) { mailSay(`[listen | ${what} | bird] wants a bird to answer to.`); return true; }
     sendViaBird(rb, makeEventNest(X, what === 'position' ? 'position' : what));
     return true;
   }
@@ -8317,12 +8349,12 @@ function placeMsg(X, msg) {
     const cur = X.userData.sz ?? 1;
     if (verb === 'query') {
       const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-      if (!rb) { sayAttn('[query | size | bird] wants a bird to answer to.'); return true; }
+      if (!rb) { mailSay('[query | size | bird] wants a bird to answer to.'); return true; }
       sendViaBird(rb, makeNumber(rat(BigInt(Math.round(cur * 100)), 100n)));
       return true;
     }
     const v = num2(arg);
-    if (v == null) { sayAttn('[' + verb + ' | size | ...] wants a number \u2014 1 is natural size.'); return true; }
+    if (v == null) { mailSay('[' + verb + ' | size | ...] wants a number \u2014 1 is natural size.'); return true; }
     const next = Math.min(3, Math.max(0.25, Math.round((verb === 'set' ? v : cur + v) * 100) / 100));
     if (next === cur) return true;               // the echo rule: no change, no event
     if (X.setPadSize) X.setPadSize(next);
@@ -8351,7 +8383,7 @@ function placeMsg(X, msg) {
   if (verb === 'bind') {
     const given = hole(1);
     if (!isGadget(given)) {
-      sayAttn('[bind | behaviour] wants a behaviour in its second hole \u2014 a pad whose panel holds robots.');
+      mailSay('[bind | behaviour] wants a behaviour in its second hole \u2014 a pad whose panel holds robots.');
       return true;
     }
     // OUT OF THE LETTER NOW -- the letter is disposed of when this returns --
@@ -8394,7 +8426,7 @@ function placeMsg(X, msg) {
     }
     const shape = what === 'box' ? 'cube' : what;
     if (!['sphere', 'cube', 'tube', 'cone'].includes(shape)) {
-      sayAttn('[drop | sphere | 1/10] \u2014 or cube, tube, cone: a solid of that size, '
+      mailSay('[drop | sphere | 1/10] \u2014 or cube, tube, cone: a solid of that size, '
         + 'set down where the thing stands, in the pen\u2019s colour.');
       return true;
     }
@@ -8408,14 +8440,14 @@ function placeMsg(X, msg) {
   if (what === 'shown') {
     if (verb === 'query') {
       const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-      if (!rb) { sayAttn('[query | shown | bird] wants a bird to answer to.'); return true; }
+      if (!rb) { mailSay('[query | shown | bird] wants a bird to answer to.'); return true; }
       sendViaBird(rb, makeText(X.visible ? 'yes' : 'no'));
       return true;
     }
     const w = word(arg);
     const on = ['yes', 'true', 'on', 'shown'].includes(w) ? true
       : ['no', 'false', 'off', 'hidden'].includes(w) ? false : null;
-    if (on == null) { sayAttn('[set | shown | yes] or [set | shown | no].'); return true; }
+    if (on == null) { mailSay('[set | shown | yes] or [set | shown | no].'); return true; }
     if (X.visible === on) return true;              // the echo rule
     X.visible = on;
     emitChannel(X, 'shown', () => makeText(on ? 'yes' : 'no'), 1);
@@ -8426,12 +8458,12 @@ function placeMsg(X, msg) {
   if (what === 'up') {
     if (verb === 'query') {
       const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-      if (!rb) { sayAttn('[query | up | bird] wants a bird to answer to.'); return true; }
+      if (!rb) { mailSay('[query | up | bird] wants a bird to answer to.'); return true; }
       sendViaBird(rb, makeNumber(rat(BigInt(Math.round(upOf(X) * 1000)), 1000n)));
       return true;
     }
     const v = num2(arg);
-    if (v == null) { sayAttn('[set | up | 1/2] or [move | up | 1/4] \u2014 how high it floats.'); return true; }
+    if (v == null) { mailSay('[set | up | 1/2] or [move | up | 1/4] \u2014 how high it floats.'); return true; }
     const before = upOf(X);
     setUp(X, verb === 'set' ? v : upOf(X) + v);
     // going straight up is a move like any other, and the pen should show it
@@ -8450,7 +8482,7 @@ function placeMsg(X, msg) {
   if (AIM_AXES[what]) {
     const v = num2(arg);
     if (v == null || verb === 'set') {
-      sayAttn(`[move | ${what} | 30] \u2014 a turn of so many degrees about the thing's own `
+      mailSay(`[move | ${what} | 30] \u2014 a turn of so many degrees about the thing's own `
         + (what === 'roll' ? 'line of travel' : what === 'pitch' ? 'left-and-right axis' : 'upright')
         + '. Turns are always MOVE: they are relative by nature, which is the point of them.');
       return true;
@@ -8460,9 +8492,9 @@ function placeMsg(X, msg) {
   }
   if (what === 'forward') {
     const v = num2(arg);
-    if (v == null) { sayAttn('[move | forward | 30] \u2014 that far along the way it is pointing.'); return true; }
+    if (v == null) { mailSay('[move | forward | 30] \u2014 that far along the way it is pointing.'); return true; }
     const at = spot3(X);
-    if (!at) { sayAttn(`${panelName(X)} is not anywhere it can move.`); return true; }
+    if (!at) { mailSay(`${panelName(X)} is not anywhere it can move.`); return true; }
     const step = forwardOf(X).multiplyScalar(v);
     setUp(X, upOf(X) + step.y);
     placeThing(X, at.x + step.x, at.z + step.z);
@@ -8478,13 +8510,13 @@ function placeMsg(X, msg) {
   if (what === 'facing') {
     if (verb === 'query') {
       const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-      if (!rb) { sayAttn('[query | facing | bird] wants a bird to answer to.'); return true; }
+      if (!rb) { mailSay('[query | facing | bird] wants a bird to answer to.'); return true; }
       sendViaBird(rb, makeNumber(rat(BigInt(Math.round(facingOf(X))), 1n)));
       return true;
     }
     const v = num2(arg);
     if (v == null) {
-      sayAttn('[set | facing | 90] or [move | facing | 30] \u2014 degrees clockwise, '
+      mailSay('[set | facing | 90] or [move | facing | 30] \u2014 degrees clockwise, '
         + 'and 0 points at the far edge.');
       return true;
     }
@@ -8494,7 +8526,7 @@ function placeMsg(X, msg) {
   if (what === 'pen') {
     if (verb === 'query') {
       const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-      if (!rb) { sayAttn('[query | pen | bird] wants a bird to answer to.'); return true; }
+      if (!rb) { mailSay('[query | pen | bird] wants a bird to answer to.'); return true; }
       sendViaBird(rb, makeText(X.userData.pen ? 'down' : 'up'));
       return true;
     }
@@ -8502,7 +8534,7 @@ function placeMsg(X, msg) {
     const wide = num2(arg);
     if (wide != null) {
       if (!(wide > 0) || wide > 40) {
-        sayAttn('[set | pen | 3] \u2014 how many ordinary widths wide the line is, up to forty.');
+        mailSay('[set | pen | 3] \u2014 how many ordinary widths wide the line is, up to forty.');
         return true;
       }
       X.userData.penWide = wide;
@@ -8517,7 +8549,7 @@ function placeMsg(X, msg) {
         penLast.delete(X);       // a new colour starts a new line, not a joint
         return true;
       }
-      sayAttn('[set | pen | down], [set | pen | up], [set | pen | clear], '
+      mailSay('[set | pen | down], [set | pen | up], [set | pen | clear], '
         + '[set | pen | red] or [set | pen | 3] \u2014 down, it draws a line wherever it goes.');
       return true;
     }
@@ -8547,7 +8579,7 @@ function placeMsg(X, msg) {
       : Object.values(stations).some(st => st.occupant === X) ? 'on the robot\u2019s own desk'
       : X.parent && X.parent !== benchRoot ? 'somewhere other than the table \u2014 in a house, on a nest, or on a pad'
       : 'nowhere in the world at the moment';
-    sayAttn(`${panelName(X)} is ${where}, so it has no place of its own to move. `
+    mailSay(`${panelName(X)} is ${where}, so it has no place of its own to move. `
       + 'Put it on the table and it will have one.');
     // and the detail a bug report needs, which a sentence cannot carry
     const chain = [];
@@ -8558,7 +8590,7 @@ function placeMsg(X, msg) {
   }
   if (verb === 'query') {
     const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-    if (!rb) { sayAttn(`[query | ${what} | bird] wants a bird to answer to.`); return true; }
+    if (!rb) { mailSay(`[query | ${what} | bird] wants a bird to answer to.`); return true; }
     const v0 = speedOf(X);
     sendViaBird(rb, what === 'position' ? placeBox(here.x, here.z)
       : what === 'speed' ? speedBox(v0.x, v0.z)
@@ -8572,12 +8604,12 @@ function placeMsg(X, msg) {
     const word = (arg?.userData.kind === 'text' ? (arg.userData.text ?? '') : '').trim().toLowerCase();
     if (verb === 'query') {
       const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
-      if (!rb) { sayAttn('[query | solid | bird] wants a bird to answer to.'); return true; }
+      if (!rb) { mailSay('[query | solid | bird] wants a bird to answer to.'); return true; }
       sendViaBird(rb, makeText(X.userData.ghost ? 'no' : 'yes'));
       return true;
     }
     if (!['yes', 'no', 'true', 'false', 'on', 'off'].includes(word)) {
-      sayAttn('[set | solid | yes] or [set | solid | no] \u2014 a thing that is not solid is '
+      mailSay('[set | solid | yes] or [set | solid | no] \u2014 a thing that is not solid is '
         + 'scenery, and everything passes through it.');
       return true;
     }
@@ -8591,7 +8623,7 @@ function placeMsg(X, msg) {
   if (what === 'speed') {
     const holes = arg?.userData.kind === 'box' ? arg.userData.holes.map(h => h.thing) : null;
     if (!holes || holes.length < 2) {
-      sayAttn('[' + verb + ' | speed | ...] wants a box of two \u2014 across and away. '
+      mailSay('[' + verb + ' | speed | ...] wants a box of two \u2014 across and away. '
         + 'Leave a hole empty to leave that one alone.');
       return true;
     }
@@ -8612,14 +8644,14 @@ function placeMsg(X, msg) {
     const holes = arg?.userData.kind === 'box' ? arg.userData.holes.map(h => h.thing) : null;
     const ax = holes ? num2(holes[0]) : null, az = holes ? num2(holes[1]) : null;
     if (ax == null || az == null) {
-      sayAttn(`[${verb} | position | ...] wants a box of two numbers \u2014 across and away.`);
+      mailSay(`[${verb} | position | ...] wants a box of two numbers \u2014 across and away.`);
       return true;
     }
     nx = verb === 'set' ? ax : here.x + ax;
     nz = verb === 'set' ? az : here.z + az;
   } else {
     const v = num2(arg);
-    if (v == null) { sayAttn(`[${verb} | ${what} | ...] wants a number.`); return true; }
+    if (v == null) { mailSay(`[${verb} | ${what} | ...] wants a number.`); return true; }
     if (what === 'across') nx = verb === 'set' ? v : here.x + v;
     else nz = verb === 'set' ? v : here.z + v;
   }
@@ -10096,6 +10128,8 @@ function processDirtyRooms() {
   // behaviours given by mail while a panel was current: set down now, in the
   // world their things are in
   if (!offstage() && pendingBinds.length) runPendingBinds();
+  // ...and a letter a thing did not understand, refused while a house had the stage
+  if (!offstage() && mailComplaint) { const c = mailComplaint; mailComplaint = null; sayMailComplaint(c); }
   if (roomWorkBusy || mode === 'training') return;
   // THE SCHEDULER BELONGS TO THE OUTER WORLD. Hydrating a house, and dropping
   // something into one, both drive that house's own world at Instant -- and
@@ -12002,6 +12036,21 @@ function putOnBench(thing, at, byUser = false) {
     }
   }
   else if (thing.userData.facing) setFacing(thing, thing.userData.facing);
+  // STANDING ON THE TABLE, WHICHEVER WAY IT IS TURNED. A trail's rest of a
+  // few millimetres assumes it lies flat; a 3D turtle's trail carries a
+  // quarter turn in its aim, and set down after Dusty had it, half of it
+  // ran into the table (Ken's spiral). Measured after the turn: whatever
+  // hangs below the top is lifted to it.
+  if (thing.userData.aim && (thing.userData.kind === 'trail' || thing.userData.kind === 'model')) {
+    thing.updateMatrixWorld(true);
+    const bb = new THREE.Box3();
+    thing.traverse(o => { if (o.isMesh && o !== thing.__labelNode) bb.expandByObject(o, true); });
+    if (!bb.isEmpty()) {
+      const minY = benchRoot.worldToLocal(new THREE.Vector3(0, bb.min.y, 0)).y;   // in the bench's own frame
+      const under = BENCH_TOP + 0.004 - minY;
+      if (under > 0) { thing.position.y += under; thing.__baseY = thing.position.y; }
+    }
+  }
   if (thing.userData.up) thing.position.y += thing.userData.up;
   if (!benchThings.includes(thing)) benchThings.push(thing);
   if (thing.userData.kind === 'robot') {
@@ -13354,11 +13403,13 @@ function roomWorking(t) {
   return Object.values(t.__ctx?.occ ?? {}).some(dirtyRoomWithin);
 }
 function advanceWorldClocks(dt, worldRuns = true) {
-  // Paused stops what BEHAVIOURS drive: things moving under a speed a robot
-  // gave them (and the robots' own turns, gated elsewhere). Birds finish
-  // their deliveries, eggs hatch, tools answer, and every cosmetic stir goes
-  // on -- a pause is the robots holding still, not the world's air freezing.
-  if (worldRuns) advanceMovers(dt);
+  // A PAUSE IS THE ROBOTS HOLDING STILL, and nothing else (Ken: "pause
+  // should stop all robots but I don't see why it should stop anything
+  // else"). Their turns are gated elsewhere; a thing moving under a speed a
+  // robot gave it keeps moving, birds finish their deliveries, eggs hatch,
+  // tools answer, and every cosmetic stir goes on. worldRuns is kept for the
+  // chimneys below: a robot holding still is what a pause looks like.
+  advanceMovers(dt);
   advanceWiggle(dt);
   advanceWobbles(dt);
   advanceRetiring(dt);
@@ -16476,11 +16527,6 @@ function userTakeFromStack(st) {
   pushUndo();
   const obj = st.cubes.pop();
   refillStack(st, true);
-  // A FRESH NUMBER TAKES THE FIRST DIGIT AS ITS VALUE. The stack's 1 is a
-  // stand-in for "a number", and typing 2 on it gave 12 (Codex's report;
-  // the manual's "take a 1 and type 2"). The first digit replaces it; digits
-  // after that add on, as they always did.
-  if (obj?.userData.kind === 'number') obj.userData.fresh = true;
   if (obj) takeIntoHand(obj);
 }
 // THE GOAL IS SHOWN, NOT TAKEN. A puzzle puts what it wants on the table in
@@ -20584,8 +20630,8 @@ $('pauseBtn').onclick = () => {
   $('pauseBtn').classList.toggle('on', simPaused);
   if (!simPaused) checkWaiting();   // whoever was woken by a paused-time delivery
   say(simPaused
-    ? 'Paused — the robots hold still. Your hands, the birds and the machines '
-      + 'all keep working. Press Run and the robots carry on.'
+    ? 'Paused — the robots hold still. Everything else goes on: your hands, the birds, '
+      + 'the machines, whatever is moving. Press Run and the robots carry on.'
     : 'Running again.');
 };
 $('undoBtn').onclick = () => { if (!busy && mode !== 'replay') undo(); };
@@ -20904,15 +20950,24 @@ addEventListener('keydown', (e) => {
   // for, and it is why space went into Ken's label -- so this asks for one on
   // the table, or riding on one that is.
   if (e.key === 'Enter' && mode === 'world' && !e.shiftKey) {
-    // ANY THING, not only a pad. A pad fills the screen because a pad is a
-    // page; a number, a box, a bird or a house is flown up to and looked at
-    // from the front, which is what "zoomed in on it" asks for.
-    // HOLDING SOMETHING TOO (Ken): the thing under the pointer if there is
-    // one, else the thing in your hand -- a pad in the hand fills the screen
-    // where it is, still yours to type on. Shift+Enter is the new line.
-    const t = lastMoveEv ? resolve(lastMoveEv) : null;
-    const thing = (t?.kind === 'thing' ? t.thing : null) ?? held ?? null;
-    if (thing) { e.preventDefault(); lookStraightOn(thing); return; }
+    // IN THE CLOSE-UP, ENTER WRITES. A pad filling the screen is a page being
+    // written on, and Enter there is a new line (Ken: "a second Enter
+    // restores the camera... it should just make multi-line text").
+    // Ctrl+Enter, like Escape, comes back; on anything but a pad in the
+    // hand a second Enter still comes back, since there is nothing to write.
+    if (straightOn && !straightOn.leaving) {
+      if (e.ctrlKey || e.metaKey || held?.userData.kind !== 'text') { e.preventDefault(); comeBackFrom(); return; }
+    } else {
+      // ANY THING, not only a pad. A pad fills the screen because a pad is a
+      // page; a number, a box, a bird or a house is flown up to and looked at
+      // from the front, which is what "zoomed in on it" asks for.
+      // HOLDING SOMETHING TOO (Ken): the thing under the pointer if there is
+      // one, else the thing in your hand -- a pad in the hand fills the screen
+      // where it is, still yours to type on. Shift+Enter is the new line.
+      const t = lastMoveEv ? resolve(lastMoveEv) : null;
+      const thing = (t?.kind === 'thing' ? t.thing : null) ?? held ?? null;
+      if (thing) { e.preventDefault(); lookStraightOn(thing); return; }
+    }
   }
   // ...and in there the arrows turn it, the way they turn what you hold.
   // NOT IN A PAD'S CLOSEUP: that is a game being played, the arrows are very
@@ -21212,7 +21267,9 @@ addEventListener('keydown', (e) => {
       return sayAttn('In this puzzle the keyboard does not reach pads.');
     }
     if (e.key === 'Backspace') { pushUndo(); H.setText(H.userData.text.slice(0, -1)); e.preventDefault(); }
-    else if (e.key === 'Enter' && e.shiftKey) { pushUndo(); H.setText(H.userData.text + '\n'); }
+    else if (e.key === 'Enter' && (e.shiftKey || (straightOn && !straightOn.leaving)) && !e.ctrlKey && !e.metaKey) {
+      pushUndo(); H.setText(H.userData.text + '\n');    // Shift+Enter, or a plain Enter in the close-up
+    }
     else if (labelKey) { pushUndo(); H.setText(H.userData.text + e.key); sfx('type'); }
     refreshUI();
     return;
@@ -21295,14 +21352,12 @@ addEventListener('keydown', (e) => {
     // fraction outright
     pushUndo();
     const sign = v.n < 0n ? -1n : 1n;
-    const mag = H.userData.fresh ? 0n : v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;   // fresh off the stack: the digit IS the number
-    delete H.userData.fresh;
+    const mag = v.d === 1n ? (v.n < 0n ? -v.n : v.n) : 0n;
     H.setValue(rat(sign * (mag * 10n + BigInt(key))));
     sfx('type');
     refreshUI();
   } else if (key === 'Backspace') {
     pushUndo();
-    delete H.userData.fresh;
     H.setValue(v.d === 1n ? rat(v.n / 10n) : rat(0));
     refreshUI(); e.preventDefault();
   } else if (key === '-') {
@@ -23179,11 +23234,15 @@ renderer.setAnimationLoop((now) => {
   // step queue drains whenever the floor is yours, and a machine you set
   // something on still finishes. Paused, a robot caught mid-round freezes
   // where it stands and carries on from there when you press Run.
-  if (worldReady && (!simPaused || mode !== 'replay')) {
-    if (speed === Infinity) { fastForward(); advanceWorldClocks(dt, !simPaused); }
+  // A PAUSED RUN: the robot's steps wait, the world's clocks go on (Ken:
+  // "pause should stop all robots but I don't see why it should stop
+  // anything else") -- birds, gliding things, a ball under a speed.
+  if (worldReady) {
+    if (simPaused && mode === 'replay') advanceWorldClocks(speed === Infinity ? dt : dt * speed, false);
+    else if (speed === Infinity) { fastForward(); advanceWorldClocks(dt, !simPaused); }
     else tick(dt * speed, !simPaused);
   }
-  if (worldReady && !simPaused) {
+  if (worldReady) {              // paused or not: a pause is the robots', and a touch is post
     sweepTouches(now);          // costs nothing until something is listening
     sweepYard(now);             // ...and neither does this, until the yard is spoken to
   }
@@ -26428,12 +26487,13 @@ window.__nano = {
     const acc = { tick: 0, touches: 0, rooms: 0, lod: 0, total: 0 };
     for (let i = 0; i < n; i++) {
       const t0 = performance.now();
-      if (worldReady && (!simPaused || mode !== 'replay')) {
-        if (speed === Infinity) { fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
+      if (worldReady) {
+        if (simPaused && mode === 'replay') advanceWorldClocks(speed === Infinity ? 1 / 60 : (1 / 60) * speed, false);
+        else if (speed === Infinity) { fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
         else tick((1 / 60) * speed, !simPaused);
       }
       const t1 = performance.now();
-      if (worldReady && !simPaused) { sweepTouches(now + i * 17); sweepYard(now + i * 17); }
+      if (worldReady) { sweepTouches(now + i * 17); sweepYard(now + i * 17); }
       const t2 = performance.now();
       if (worldReady && !simPaused && !busy && !queue.length && !current && mode === 'world') {
         processDirtyRooms();
@@ -26449,11 +26509,12 @@ window.__nano = {
   },
   frame(n = 1, now = performance.now()) {
     for (let i = 0; i < n; i++) {
-      if (worldReady && (!simPaused || mode !== 'replay')) {
-        if (speed === Infinity) { renderFrameNo++; fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
+      if (worldReady) {
+        if (simPaused && mode === 'replay') { renderFrameNo++; advanceWorldClocks(speed === Infinity ? 1 / 60 : (1 / 60) * speed, false); }
+        else if (speed === Infinity) { renderFrameNo++; fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
         else tick((1 / 60) * speed, !simPaused);
       }
-      if (worldReady && !simPaused) { sweepTouches(now + i * 17); sweepYard(now + i * 17); }
+      if (worldReady) { sweepTouches(now + i * 17); sweepYard(now + i * 17); }
       if (worldReady && !simPaused && !busy && !queue.length && !current && mode === 'world') {
         processDirtyRooms();
       }

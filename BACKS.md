@@ -7944,3 +7944,41 @@ Ken had ChatGPT Codex test the workshop (17 September). Done from it:
   front of the reader, not "take a little robot".
 Covered in codexCheck; rubyView and thoughtView press Start after Ruby now.
 
+## Four of Ken's, after the Codex round
+
+- DIGITS GO ON THE END, and stay so: Ken: "revert #3 and instead fix the
+  manual so picking up a 1 and typing '2' results in 12." The fresh-number
+  rule is gone; the manual says a 1 typed 2 is 12 and Backspace takes the
+  last digit off.
+- ENTER IN THE CLOSE-UP WRITES. Ken: "when in closeup mode a second Enter
+  restores the camera... it should just make multi-line text. And
+  control-enter restores the camera." A pad filling the screen is a page
+  being written on: Enter there is a new line; Ctrl+Enter, like Escape,
+  comes back; on anything but a pad in the hand a second Enter still comes
+  back, since there is nothing to write. Shift+Enter is the new line
+  anywhere.
+- PAUSE IS THE ROBOTS'. Ken: "pause should stop all robots but I don't see
+  why it should stop anything else." Movers, touches and the yard's sweeps
+  no longer stop with it, and a PAUSED RUN keeps the world's clocks going
+  while the robot's steps wait (before, a paused replay froze birds, glides
+  and balls too). The button, the message and the manual say so. The suite
+  drives the close-up's own clock by hand (holdLook), since it lives in the
+  render loop.
+- A LETTER NOBODY UNDERSTOOD IS SAID SO, EVEN FROM INSIDE. Ken: "If a
+  message is given to a thing's bird that isn't properly formed or spelled
+  there should be some kind of error feedback." There was, for a hand's
+  letter -- and none for a robot's, because a robot works inside a house or
+  a panel and say() is silent offstage. Every complaint about a letter
+  (placeMsg, lookMsg, switchMsg and the kinds' own refusals) goes through
+  mailSay/mailRefused now: "The target did not understand [set | positon |
+  2] -- the letter is dropped. It answers ...", kept while a house has the
+  stage and said the moment the stage is yours, once per wording every few
+  seconds. The stale "Only numbers, pads and sounds answer messages" is
+  gone: every thing answers the place messages.
+- A TURNED TRAIL STANDS ON THE TABLE. Ken's spiral, a 3D turtle's trail with
+  a quarter turn in its aim, set down after Dusty had it, ran into the
+  table: its rest of four millimetres assumed it lay flat. putOnBench
+  measures a turned trail or model after the turn and lifts whatever hangs
+  below the top.
+Covered in kenRoundCheck.
+
