@@ -7893,3 +7893,14 @@ it holds the houses still), and gives each pupil to its bird. The moving
 office, the bell pad, the by-hand office lesson and the three-robot teacher
 are gone. Kept: the guests' kept-bell robots (a bell before an address still
 happens, since the office rings the moment your robot arrives).
+
+## A named thing is introduced by its name
+
+Ken, over the bird whose plate read "to the moving office": "the tooltip
+should mention the label if the bird has one - there are probably other
+tooltips that should be enhanced similarly." Boxes and models led with their
+names; birds, nests, numbers, houses and the rest did not. `withLabel` wraps
+every thing's tip now: a named thing's line begins with its name -- "to the
+moving office" -- a bird -- drop something on her... -- unless the line
+names it already. Covered in robotTipCheck.
+

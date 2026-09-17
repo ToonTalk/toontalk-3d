@@ -4094,8 +4094,13 @@ async function robotTipCheck(D) {
   const mk = (name, n, team = []) => ({ name, team, program: Array.from({ length: n }, () => ({ type: 'noop' })), note: '', condition: null });
   const named = mk('Next address', 5), five = mk('Move up five', 3), anon = mk(null, 4), anon2 = mk(null, 2);
   const team = mk('Next address', 5, [five]), mixed = mk('Ann', 1, [anon2]), twoAnon = mk(null, 2, [anon2]);
-  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'text', text: 'a pad' }, x: 0.2, z: 1.7 }] });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'text', text: 'a pad' }, x: 0.2, z: 1.7 },
+    { thing: { kind: 'bird', nestId: 9909, nestGuid: 'tip-probe', label: 'to the desk' }, x: -0.6, z: 1.7 },
+    { thing: { kind: 'nest', id: 9909, guid: 'tip-probe', hasEgg: false, pile: [], label: 'the desk' }, x: -1.2, z: 1.7 }] });
   await slowSettle(D, 1500);
+  // a named thing is introduced by its name (Ken, over a bird "to the moving office")
+  const bird = D.bench(1), nest = D.bench(2);
+  const namedTip = D.tip(bird).startsWith('\u201cto the desk\u201d \u2014 a bird') && D.tip(nest).startsWith('\u201cthe desk\u201d \u2014 an empty nest');
   const pad = D.bench(0); D.hold(pad); await frames(D, 5);
   const t = {
     named: D.tipBot(named), team: D.tipBot(team), mixed: D.tipBot(mixed), anon: D.tipBot(anon), twoAnon: D.tipBot(twoAnon),
@@ -4108,9 +4113,9 @@ async function robotTipCheck(D) {
     && t.twoAnon.startsWith('Drop that on the robots: they wake')
     && /Drop that on \u201cBob\u201d: it wakes, grows, and watches you/.test(t.fresh)
     && t.thoughtNamed.startsWith('The little thought of \u201cNext address\u201d \u2014 empty your hand first')
-    && t.thoughtAnon.startsWith('The robot\u2019s little thought \u2014 empty your hand first');
+    && t.thoughtAnon.startsWith('The robot\u2019s little thought \u2014 empty your hand first') && namedTip;
   D.place(pad, 0.2, 1.7); await frames(D, 5);
-  put((ok ? 'PASS' : 'FAIL') + ' the tooltip names the robot, or says the robot(s), and the thought asks for an empty hand  ' + (ok ? '' : JSON.stringify(t)), ok ? 'pass' : 'fail');
+  put((ok ? 'PASS' : 'FAIL') + ' the tooltip names the robot, or says the robot(s), and the thought asks for an empty hand  (named-things-introduced=' + namedTip + ')' + (ok ? '' : JSON.stringify(t)), ok ? 'pass' : 'fail');
   return ok;
 }
 

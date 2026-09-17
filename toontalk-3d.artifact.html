@@ -30597,8 +30597,20 @@ function botWho(bot) {
   return { who, they: 'they', their: 'their', them: 'them', plural: true, steps };
 }
 const capWho = (w) => w[0].toUpperCase() + w.slice(1);
+// A THING WITH A NAME IS INTRODUCED BY IT. Ken, over a bird whose plate read
+// "to the moving office": "the tooltip should mention the label if the bird
+// has one - there are probably other tooltips that should be enhanced
+// similarly". Boxes and models already led with theirs; every named thing
+// does now, unless its line names it already.
+function withLabel(t, tip) {
+  if (!tip || t?.kind !== 'thing') return tip;
+  const label = t.thing?.userData?.label;
+  if (!label || tip.includes(label)) return tip;
+  const rest = /^(A|An|The) /.test(tip) ? tip[0].toLowerCase() + tip.slice(1) : tip;
+  return `“${label}” — ${rest}`;
+}
 function tipFor(t) {
-  const base = tipForInner(t);
+  const base = withLabel(t, tipForInner(t));
   if (!dropHints || !inHand()) return base;
   let m = null;
   try { m = dropMeaning(t); } catch { m = null; }
