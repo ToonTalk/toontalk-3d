@@ -9482,6 +9482,13 @@ function activeTeamSize(room) {
   return b ? b.team.length + 1 : 0;
 }
 function roomDrop(room, dropped, refuse) {
+  // NOR A HOUSE INSIDE ITSELF: a held house dropped on its own door made a
+  // parent its own descendant, and every frame after that overflowed the
+  // stack -- the page hangs. By hand the held thing hides from the pointer;
+  // a scripted click found the way.
+  if (dropped === room || isDescendantOf(room, dropped)) {
+    return refuse('A house does not go inside itself. Set it down on the bench instead.');
+  }
   // A THING DOES NOT GO INSIDE ITS OWN PANEL: the panel is the thing's, so
   // the thing would end up holding itself -- a loop that every save, undo
   // and copy walked until the stack ran out (Ken's wandering pad, dropped

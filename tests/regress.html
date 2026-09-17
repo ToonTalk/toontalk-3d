@@ -3709,12 +3709,16 @@ async function diagonalCheck(D) {
 // 5 -- eleven guests, eleven distinct cottages. A [set | position] on the
 // grass glides rather than jumps.
 async function resortCheck(D, win) {
+  const P = async (at) => { try { await fetch('/capture?name=suiteprog', { method: 'POST', body: JSON.stringify({ at: 'resort:' + at, t: Math.round(performance.now() / 1000) }) }); } catch (e2) {} };
+  await P('start');
   const w = await (await fetch('../examples/infinity/🏨 resort-infinity.world.json')).json();
-  D.worldIn(w); await slowSettle(D, 2000);
-  D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
-  const grass = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  D.worldIn(w); await slowSettle(D, 2000); await P('world-in');
+  D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500); await P('in-yard');
+  const grass = () => { const o = []; for (let i = 0; i < 90; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const guests = grass().filter(t => t.userData.kind === 'model' && /^(new )?guest \d/.test(t.userData.label || ''));
-  const cottages = grass().filter(t => t.userData.kind === 'room');
+  const cottages = grass().filter(t => t.userData.kind === 'room' && /^cottage/.test(t.userData.label || ''));
+  const office = grass().find(t => t.userData.kind === 'room' && t.userData.label === 'the moving office');
+  const bell = grass().find(t => t.userData.kind === 'text' && t.userData.text === 'ring the bell');
   const desk = grass().find(t => t.userData.kind === 'box');
   const nest = desk.userData.holes.map(h => h.thing).find(t => t?.userData.kind === 'nest');
   const bots = D.benchBots();
@@ -3722,10 +3726,14 @@ async function resortCheck(D, win) {
   const runBtn = win.document.getElementById('runBtn');
   const cottageX = (n) => n * 0.6 - 4.5;
   const atCottage = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.05 && Math.abs(g.position.z - 5.2) < 0.05;
+  // THE CLERK IS ALONE at the desk now; the mover works in the office
+  const alone = !!addr && !!mover && addr.__bot.team.length === 0 && !!office && !!bell;
+  await P('found alone=' + alone);
   D.hold(desk); await frames(D, 30); D.clickBot(addr); await frames(D, 90);
+  await P('desk-given');
   if (!/Stop/.test(runBtn.textContent)) runBtn.onclick();   // the drop sets a trained clerk to work
   await frames(D, 60);
-  D.speed('instant');
+  D.speed('instant'); await P('instant');
   const macro1 = grass().find(t => t.userData.text === 'the guests');
   D.switchGadget(macro1, true, true);
   // the letters land together, oldest first: guest 1's at the bottom
@@ -3739,22 +3747,15 @@ async function resortCheck(D, win) {
     guests.slice(0, 6).forEach((g, i) => { if (!walked.includes(i + 1) && atCottage(g, i + 1)) walked.push(i + 1); });
   }
   const housed1 = guests.slice(0, 6).every((g, i) => atCottage(g, i + 1));
-  const firstWalk = walked[0] === 1;
-  // a glide, not a jump: a guest is seen part-way between the gate and its cottage
-  // (measured on the last walker: its z passes through the open ground)
-  // -- checked below on the newcomers, sampled every frame
-  // problem 2
-  for (let k = 0; k < 600 && !/Start|Run/.test(runBtn.textContent); k++) await frames(D, 1);
-  // the clerk is a team from the start: "Move up five" is on it already
-  const team = !mover && D.active && D.active.team === 1;
-  runBtn.onclick(); await frames(D, 60);
-  const ding = grass().find(t => t.userData.kind === 'text' && t.userData.text === 'everybody move up five');
-  const bell = grass().find(t => t.userData.kind === 'bird' && t.userData.label === 'to every guest');
-  D.hold(ding); await frames(D, 30); D.clickThing(bell); await frames(D, 30);
-  for (let k = 0; k < 6000 && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)); k++) await frames(D, 1);
-  const movedUp = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6));
-  for (let k = 0; k < 600 && !/Start|Run/.test(runBtn.textContent); k++) await frames(D, 1);
-  runBtn.onclick(); await frames(D, 60);
+  const firstWalk = walked[0] === 1; await P('housed=' + housed1);
+  // problem 2: the bell rings once and switches itself off; the shipped
+  // mover dropped on the office answers every housed guest
+  D.switchGadget(bell, true, true); await frames(D, 60);
+  const rangOnce = bell.userData.switchedOn === false;
+  D.hold(mover); await frames(D, 30); D.clickThing(office); await frames(D, 30);
+  const inside = /steps inside/.test(win.document.getElementById('hint').textContent); await P('mover-inside=' + inside);
+  for (let k = 0; k < 6000 && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)); k++) { await frames(D, 1); if (k % 100 === 0) await P('moving k=' + k + ' at=' + guests.slice(0, 6).map(g => Math.round((g.position.x + 4.5) / 0.6 * 10) / 10).join(',') + ' office-dirty=' + office.userData.dirty + ' hint=' + win.document.getElementById('hint').textContent.slice(0, 80)); }
+  const movedUp = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)); await P('moved=' + movedUp);
   const macro2 = grass().find(t => t.userData.text === 'five more guests');
   D.switchGadget(macro2, true, true);
   let midway = false;
@@ -3762,15 +3763,22 @@ async function resortCheck(D, win) {
     await frames(D, 1);
     if (!midway) midway = guests.slice(6).some(g => g.position.z > 5.4 && g.position.z < 7.2);
   }
-  const newcomers = guests.slice(6).every((g, i) => atCottage(g, i + 1));
+  const newcomers = guests.slice(6).every((g, i) => atCottage(g, i + 1)); await P('newcomers=' + newcomers);
   const xs = guests.map(g => Math.round(g.position.x * 100));
   const distinct = new Set(xs).size === 11;
+  // a second ring moves everybody five more: the bell is not spent (the
+  // first six walk off past cottage 11, to the edge of the grass)
+  D.switchGadget(bell, true, true); await frames(D, 60);
+  const beyond = (g) => g.position.x >= cottageX(11) - 0.05 && Math.abs(g.position.z - 5.2) < 0.05;
+  for (let k = 0; k < 6000 && !(guests.slice(6).every((g, i) => atCottage(g, i + 6)) && guests.slice(0, 6).every(beyond)); k++) await frames(D, 1);
+  const again = guests.slice(6).every((g, i) => atCottage(g, i + 6)) && guests.slice(0, 6).every(beyond);
   D.speed(1);
-  const ok = cottages.length === 11 && guests.length === 11 && order === '1,2,3,4,5,6' && housed1 && firstWalk
-    && team && movedUp && newcomers && distinct && midway;
+  const ok = cottages.length === 11 && guests.length === 11 && alone && order === '1,2,3,4,5,6' && housed1 && firstWalk
+    && rangOnce && inside && movedUp && newcomers && distinct && midway && again;
   put((ok ? 'PASS' : 'FAIL') + ' Resort Infinity: the guests walk, guest 1 first, and eleven find eleven cottages  (cottages=' + cottages.length
-      + ' guests=' + guests.length + ' letters=' + order + ' housed-1-to-6=' + housed1 + ' first-to-walk=' + walked[0]
-      + ' team=' + team + ' moved-up-five=' + movedUp + ' newcomers-1-to-5=' + newcomers + ' distinct=' + distinct + ' glides=' + midway + ')', ok ? 'pass' : 'fail');
+      + ' guests=' + guests.length + ' clerk-alone=' + alone + ' letters=' + order + ' housed-1-to-6=' + housed1 + ' first-to-walk=' + walked[0]
+      + ' bell-rang-once=' + rangOnce + ' mover-inside=' + inside + ' moved-up-five=' + movedUp + ' newcomers-1-to-5=' + newcomers + ' distinct=' + distinct + ' glides=' + midway
+      + ' rings-again=' + again + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -4019,7 +4027,7 @@ async function lessonWaitingCheck(D) {
   D.speed('inf');
   D.rounds(1); D.run(); await slowSettle(D, 30000);
   const ran = String(num.userData.value.n) === '7' && String(D.mine([1])?.userData.value.n) === '4';
-  D.rounds(0); D.speed(1);
+  D.rounds(ROUNDS); D.speed(1);
   D.clickRaw({ kind: 'exitDoor' }); await slowSettle(D, 4000);
   const out = D.worldsDeep() === 0;
   const ok = waiting && lesson && toldInDream && learned && rewound && ran && out;
@@ -4076,7 +4084,7 @@ async function taughtBackCheck(D) {
     && !given.userData.holes[0]?.thing && !given.userData.holes[1]?.thing && D.sched().stands === 1;
   const builtWhy = JSON.stringify({ ctx: !!c, active: c?.activeBot?.name ?? null, steps: c?.activeBot?.program?.length ?? null, stand: c?.standOcc?.userData.kind ?? null,
     h0: given.userData.holes[0]?.thing?.userData.kind ?? null, h1: given.userData.holes[1]?.thing?.userData.kind ?? null, stands: D.sched().stands, said: D.doc.getElementById('hint').textContent.slice(0, 100) });
-  D.rounds(0); D.speed(1);
+  D.rounds(ROUNDS); D.speed(1);
   const ok = boxTaken && pupilTaken && taught && rewound && built;
   put((ok ? 'PASS' : 'FAIL') + ' a robot takes back the little robot it taught  (box-taken=' + boxTaken + ' pupil-taken=' + pupilTaken
       + ' taught=' + taught + ' rewound=' + rewound + (rewound ? '' : ' ' + rewoundWhy) + ' built-on-the-panel=' + built + (built ? '' : ' ' + builtWhy) + ')', ok ? 'pass' : 'fail');
@@ -4139,6 +4147,24 @@ async function voiceVolumeCheck(D, W) {
 // box hole should pick it up when clicked" -- it said "That hole is empty".
 // The robot's empty claw does the same in a lesson, where a take of the hole
 // itself would have aborted the lesson.
+// A HOUSE DOES NOT GO INSIDE ITSELF. A held house dropped on its own door
+// made a parent its own descendant and every frame after overflowed the
+// stack -- found while scripting the office, the shape of a hang.
+async function selfHouseCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: { kind: 'room', label: 'a house', opaque: false, dirty: false,
+    world: { kind: 'world', v: 3, bench: [], stations: {}, active: null } }, x: 0.2, z: 1.7 }] });
+  await slowSettle(D, 1500);
+  let room = null; for (let i = 0; i < 6; i++) { const t = D.bench(i); if (t?.userData.kind === 'room') room = t; }
+  D.hold(room); await frames(D, 5);
+  let threw = false;
+  try { D.clickRaw({ kind: 'roomDoor', room }); await frames(D, 30); } catch (e) { threw = true; }
+  const refused = /does not go inside itself/.test(D.doc.getElementById('hint').textContent);
+  const down = !D.heldPos() && room.parent != null && D.worldsDeep() === 0;
+  const ok = !threw && refused && down;
+  put((ok ? 'PASS' : 'FAIL') + ' a house dropped on its own door is refused  (threw=' + threw + ' refused=' + refused + ' set-down=' + down + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function emptyHoleCheck(D) {
   const world = () => ({ kind: 'world', v: 4, stations: {}, active: null, bench: [
     { thing: { kind: 'box', holes: [{ kind: 'number', value: { n: '3', d: '1' } }, null] }, x: 0.2, z: 1.7 },
@@ -4161,26 +4187,31 @@ async function emptyHoleCheck(D) {
   return ok;
 }
 
-// THE RESORT IN KEN'S ORDER. "testing infinity resort led to the robot not
-// doing anything when given the nest after starting 'the guests'... I tried
-// it 2 more times and it worked fine except that the old guests didn't move
-// 5 cottages over". The guests write first, the desk goes to the clerk with
-// the letters already piled, then Start; and the bell is rung while the run
-// is still going, as a player rings it.
+// THE RESORT BY HAND, IN KEN'S ORDER. "The point of this activity is the
+// user should come up with the solution": the guests write first, the desk
+// goes to the clerk with the letters piled (the drop sets it to work), the
+// bell is rung, and a FRESH robot is dropped on the moving office and taught
+// there -- take the letter off the office post, +5, give the number to the
+// bird, Dusty takes the letter, Ruby loosens the number -- then the five
+// more. Named resortSlow, the same at 4x.
 async function resortLateCheck(D, win) {
   const w = await (await fetch('../examples/infinity/🏨 resort-infinity.world.json')).json();
+  w.yard.bench.push({ thing: { kind: 'robot', name: 'fresh', program: [], team: [] }, x: -2.2, z: 2.4 });
   D.worldIn(w); await slowSettle(D, 2000);
   D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
-  const grass = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const grass = () => { const o = []; for (let i = 0; i < 90; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const guests = grass().filter(t => t.userData.kind === 'model' && /^(new )?guest \d/.test(t.userData.label || ''));
   const desk = grass().find(t => t.userData.kind === 'box');
   const nest = desk.userData.holes.map(h => h.thing).find(t => t?.userData.kind === 'nest');
+  const office = grass().find(t => t.userData.kind === 'room' && t.userData.label === 'the moving office');
+  const bell = grass().find(t => t.userData.kind === 'text' && t.userData.text === 'ring the bell');
   const addr = D.benchBots().find(b => /address/i.test(b.__bot?.name || ''));
+  const fresh = D.benchBots().find(b => b.__bot?.name === 'fresh');
   const runBtn = win.document.getElementById('runBtn');
   const cottageX = (n) => n * 0.6 - 4.5;
   const atCottage = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.05 && Math.abs(g.position.z - 5.2) < 0.05;
   const t0 = performance.now();
-  const slow = CHECKS_FILTER.some(w => 'resortslow'.includes(w) && w.length > 6);   // named: at 4x, as the ABOUT pad advises (~3 min)
+  const slow = CHECKS_FILTER.some(w2 => 'resortslow'.includes(w2) && w2.length > 6);   // named: at 4x, as the ABOUT pad advises (~4 min)
   D.speed(slow ? 4 : 'instant');
   const prog = async (at, k) => { if (k % 300) return; try { await fetch('/capture?name=suiteprog', { method: 'POST',
     body: JSON.stringify({ at, k, pile: (nest.userData.pile || []).length, guests: guests.slice(0, 6).map(g => [Math.round(g.position.x * 100) / 100, Math.round(g.position.z * 100) / 100]),
@@ -4196,11 +4227,28 @@ async function resortLateCheck(D, win) {
   await frames(D, 60);
   for (let k = 0; k < (slow ? 20000 : 4000) && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 1)); k++) { await frames(D, 1); await prog('resort-house', k); }
   const housed1 = guests.slice(0, 6).every((g, i) => atCottage(g, i + 1));
-  const stillRunning = !/Start|Run/.test(runBtn.textContent);
-  // the bell, rung while the clerk still works
-  const ding = grass().find(t => t.userData.kind === 'text' && t.userData.text === 'everybody move up five');
-  const bell = grass().find(t => t.userData.kind === 'bird' && t.userData.label === 'to every guest');
-  D.hold(ding); await frames(D, 30); D.clickThing(bell); await frames(D, 30);
+  // the bell, then the mover taught by hand inside the office
+  D.switchGadget(bell, true, true); await frames(D, 60);
+  D.hold(fresh); await frames(D, 10); D.clickThing(office); await frames(D, 30);
+  const goIn = /go in to train it/.test(win.document.getElementById('hint').textContent);
+  D.clickRaw({ kind: 'roomDoor', room: office }); await slowSettle(D, 3000);
+  const lesson = D.helperState().mode === 'training' && D.mine([0])?.userData.kind === 'nest' && (D.mine([0]).userData.pile || []).length === 6;
+  const T = async (st, n = 40) => { D.teach(st); await slowSettle(D, n * 17 + 1500); };
+  const topN = String(D.mine([0])?.userData.pile?.at(-1)?.userData.holes?.[0]?.thing?.userData.value?.n);
+  await T({ type: 'take', at: { c: 'given', path: [0], nest: true } });
+  await T({ type: 'put', at: { c: 's0', path: [] } });
+  await T({ type: 'newNumber' });
+  await T({ type: 'setValue', value: D.rat(5), op: '+' });
+  await T({ type: 'put', at: { c: 's0', path: [0] } });
+  const added = String(D.at('s0', [0])?.userData.value?.n) === String(Number(topN) + 5);
+  await T({ type: 'take', at: { c: 's0', path: [0] } });
+  await T({ type: 'put', at: { c: 's0', path: [1] } }, 80);
+  await T({ type: 'vacuum', at: { c: 's0', path: [] } }, 80);
+  D.rubyOn(true); D.clickCond([0, 0]); await slowSettle(D, 2000); D.rubyOn(false);
+  const loosened = /any number/.test(win.document.getElementById('hint').textContent);
+  D.exit(); await slowSettle(D, 2000);
+  D.clickRaw({ kind: 'exitDoor' }); await slowSettle(D, 2000);
+  const out = D.worldsDeep() === 0;
   for (let k = 0; k < (slow ? 20000 : 6000) && !guests.slice(0, 6).every((g, i) => atCottage(g, i + 6)); k++) { await frames(D, 1); await prog('resort-move', k); }
   const movedUp = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6));
   // and the five more, switched on straight after
@@ -4211,10 +4259,11 @@ async function resortLateCheck(D, win) {
   const oldStayed = guests.slice(0, 6).every((g, i) => atCottage(g, i + 6));
   const secs = Math.round((performance.now() - t0) / 1000);
   D.speed(1);
-  const ok = piled === 6 && wentToWork && housed1 && movedUp && newcomers && oldStayed;
+  const ok = piled === 6 && wentToWork && housed1 && goIn && lesson && added && loosened && out && movedUp && newcomers && oldStayed;
   const at = (gs) => gs.map(g => Math.round((g.position.x + 4.5) / 0.6 * 10) / 10).join(',');
-  put((ok ? 'PASS' : 'FAIL') + ' Resort Infinity, the guests first and the bell mid-run  (piled=' + piled + ' went-to-work-on-the-drop=' + wentToWork + ' housed-1-to-6=' + housed1
-      + ' still-running-after=' + stillRunning + ' moved-up-five=' + movedUp + ' newcomers-1-to-5=' + newcomers + ' old-at-6-to-11=' + oldStayed
+  put((ok ? 'PASS' : 'FAIL') + ' Resort Infinity by hand: the guests first, the mover taught in the office  (piled=' + piled + ' went-to-work-on-the-drop=' + wentToWork + ' housed-1-to-6=' + housed1
+      + ' go-in-to-train=' + goIn + ' lesson-on-the-post=' + lesson + ' added-5=' + added + ' loosened=' + loosened + ' back-out=' + out
+      + ' moved-up-five=' + movedUp + ' newcomers-1-to-5=' + newcomers + ' old-at-6-to-11=' + oldStayed
       + ' guests-at=' + at(guests.slice(0, 6)) + ' newcomers-at=' + at(guests.slice(6)) + ' secs=' + secs + ')', ok ? 'pass' : 'fail');
   return ok;
 }
@@ -6724,7 +6773,10 @@ async function runOne(D, spec) {
   catch (e) { mtchOK = false; put('FAIL a robot teaches robots to write to the perch  ' + e.message, 'fail'); }
   let rlOK = true;
   try { rlOK = want('resortLate') || want('resortSlow') ? await resortLateCheck(D, frame.contentWindow) : true; }
-  catch (e) { rlOK = false; put('FAIL Resort Infinity, the guests first and the bell mid-run  ' + e.message, 'fail'); }
+  catch (e) { rlOK = false; put('FAIL Resort Infinity by hand  ' + e.message, 'fail'); }
+  let shOK = true;
+  try { shOK = want('selfHouse') ? await selfHouseCheck(D) : true; }
+  catch (e) { shOK = false; put('FAIL a house dropped on its own door is refused  ' + e.message, 'fail'); }
   let ehOK = true;
   try { ehOK = want('emptyHole') ? await emptyHoleCheck(D) : true; }
   catch (e) { ehOK = false; put('FAIL an empty hand or claw on an empty hole takes the box  ' + e.message, 'fail'); }
@@ -6878,7 +6930,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

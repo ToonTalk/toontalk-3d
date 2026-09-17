@@ -149,23 +149,28 @@ and its robots move it. What lands says who runs:
 | the nest | what lands | who runs |
 |---|---|---|
 | a guest's | a number | *Stand at my address*: work out `x = n × 0.6 − 4.5` and tell my cottage to stand there |
-| a guest's | a pad | *Move when told to*: the desk's announcement, to every guest at once; write to the desk asking where to move to |
-| the desk's | `[number \| bird]` | *Next address*: a new guest asking |
-| the desk's | `[pad \| number \| bird]` | *Move up five*: a guest already housed |
+| a guest's | a pad | *Move when told to*: the bell; write `[where I live \| bird]` to the moving office |
+| the desk's | `[number \| bird]` | the clerk: a new guest asking where to live |
+| the office's | `[number \| bird]` | the mover: a guest already housed, asking where to move |
 
 Each cottage carries its own robots — the macro pad **the guests** holds one
 behaviour per cottage, and one press of SPACE starts all six. That is the
 resort's machinery, and the visitor never touches it. What is *theirs* is the
-arithmetic: a three-step robot at the desk that gives a guest their address,
-and a second that adds five, on its team from the start (a clerk you train
-yourself needs *Move up five* dropped on it).
+arithmetic, and the point of the activity is that they come up with it: a
+three-step robot at the desk that gives a guest their address (problem 1),
+and a robot that adds five (problem 2). The second works in the **moving
+office**, a glass house by the desk with a post of its own, because the bench
+holds one working robot and the clerk is standing there: drop a fresh robot
+on the office, go in, and the lesson begins on the office post. **Ring the
+bell** is a behaviour: SPACE on it gives every housed guest the pad "a move,
+please" through the bird *to every guest*, then switches itself off by its
+own perch bird, so it rings once a press. Both answers, *Next address* and
+*Move up five*, lie by the fence for whoever would rather read one.
 
-Problem 1: six guests house themselves at 1–6. Problem 2: announce "everybody
-move up five" to every guest (a pad given to the bird *to every guest*, whose
-nest every guest's nest answers to as an alias) and
-the six shuffle to 6–11; then the five newcomers take 1–5. Eleven cottages,
-no two at the same address. Set the speed to 4× or 8×: eleven round trips at
-walking pace take a while.
+Problem 1: six guests house themselves at 1–6. Problem 2: ring the bell, and
+the six ask the office where to go and shuffle to 6–11; then the five
+newcomers take 1–5. Eleven cottages, no two at the same address. Set the
+speed to 4× or 8×: eleven round trips at walking pace take a while.
 
 `make_resort.py` writes it.
 

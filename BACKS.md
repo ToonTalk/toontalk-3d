@@ -7720,3 +7720,58 @@ picture guest 6 still stood at cottage 6, so the clerk had answered nobody's
 move: the bell was not rung, or the clerk's auto-run was held by a Stop
 (the old "press Start"). The problem 2 pad now says the clerk must be at
 work, the button reading Stop, and the checks cover that order.
+
+## The moving office: problem 2 is yours to solve
+
+Ken: "I gave the bird the 'move up 5' message and nothing happened. But also
+the point of this activity is the user should come up with the solution.
+Something like resort_infinity.htm -- the user for problem 2 trains a robot
+that receives [cottage-number | bird] and computes cottage-number+5 and gives
+it to the bird. This robot is sent to the clerk who asks each guest for its
+number and then runs the robot with the appropriate box."
+
+So problem 2 is the player's again. The shipped "Move up five" is off the
+clerk's team and lies by the fence with "Next address", answers for whoever
+would rather read one. The player's mover cannot stand at the bench, since
+the clerk is working there and the bench holds one working robot -- so it
+works in THE MOVING OFFICE, a glass house by the desk whose stand holds a box
+with a post of its own. Drop a fresh robot on the office and it steps inside
+behind the desk; click the door and the lesson begins on that post (the
+lesson-waiting rule), letters on it if the bell has been rung: take the
+letter off the post onto a spot, drop a +5 on its number, give the number
+to the bird, Dusty takes the empty letter, Ruby loosens the number. Leave,
+and it works inside, where you can watch through the glass. The guest's
+"Move when told to" now writes [where I live | my own bird] to the office
+and throws the bell's pad away, the same letter shape as problem 1's, which
+is what Ken asked for.
+
+THE BELL IS A BEHAVIOUR, "ring the bell": one robot that gives every guest
+the pad "a move, please" through the bird "to every guest" (every guest's
+nest answers to the bell's name as an alias) and then sends [set | switch |
+off] to the bird on the perch -- to itself -- so it rings once a press and
+can be rung again. The loose bird and the two announcement pads are gone;
+Ken did not see why they were there, and now nothing on the grass is a
+mystery: two macros, the bell, the desk, the office, the pads, the answers.
+
+Training pads say what nobody had said: a thought is exact at first, so Ruby
+must erase the number in it, and letters must lie on the post before a
+robot can be taught to take one -- the guests first, then the clerk; the
+bell first, then the mover.
+
+Found while scripting the office: a held house dropped on its own door made
+a parent its own descendant, and every frame after overflowed the stack --
+the shape of a hang. roomDrop refuses a house dropped into itself. By hand
+the held thing hides from the pointer, so this is a guard, not Ken's hang;
+that one is still not reproduced.
+
+Checks: resortCheck (shipped answers: bell rings once, the mover dropped on
+the office, a second ring moves everyone five more), resortLateCheck (Ken's
+order, a fresh robot taught inside the office by hand; resortSlow by name at
+4x), selfHouseCheck.
+
+And the resort's "order flake" was never the app's: two lesson checks ended
+with `D.rounds(0)`, a round limit of nought, so every run after them in the
+same tab stopped before its first round -- the clerk answered nobody, the
+guests stayed at the gate, and a check waiting six thousand frames for them
+looked like a hang. They restore the suite's limit now.
+
