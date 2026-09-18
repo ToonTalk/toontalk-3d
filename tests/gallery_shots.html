@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- THE GALLERY'S PICTURES. Open with the dev server up (node serve.js 8311):
+     for each world on gallery/route.json it loads the app, opens the world,
+     runs it the way its card says, takes one frame and posts it to
+     captures/gallery-<n>.jpg. Then: python gallery/make_gallery.py --shots
+     ?only=5,12 shoots those alone. -->
+<html lang="en">
+<head><meta charset="utf-8"><title>gallery shots</title>
+<style>
+  body { margin: 0; background: #111; color: #ddd; font: 13px/1.4 system-ui, sans-serif; }
+  #log { padding: 8px; white-space: pre-wrap; max-height: 30vh; overflow: auto; }
+  iframe { width: 1280px; height: 720px; border: 0; display: block; }
+</style></head>
+<body>
+<div id="log">starting…</div>
+<iframe id="app" src="../toontalk-3d.html?demo=1&bust=gallery"></iframe>
+<script>
+const log = (s) => { document.getElementById('log').textContent += '\n' + s; };
+const frame = document.getElementById('app');
+const only = (new URLSearchParams(location.search).get('only') || '').split(',').filter(Boolean).map(Number);
+let VNOW = 1000;
+const fnow = () => (VNOW += 17);
+const breathe = () => new Promise(r => setTimeout(r, 0));
+async function frames(D, n) { for (let i = 0; i < n; i++) { D.frame(1, fnow()); if ((i & 7) === 7) await breathe(); } }
+async function settle(D, n) { await frames(D, n); }
+function things(D) { const a = []; for (let i = 0; i < 40; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; }
+async function shoot(D, i, name, shot) {
+  const w = await (await fetch('../examples/' + name + '.world.json')).json();
+  D.worldIn(w); await settle(D, 120);
+  D.speed('inf'); D.rounds(shot === 'lever' ? 30 : 400);
+  const ts = things(D);
+  if (shot === 'give') {
+    const arg = ts.find(t => ['box', 'scale'].includes(t.userData.kind));
+    const bot = ts.find(t => t.userData.kind === 'robot');
+    if (arg && bot) { D.clickThing(arg); await settle(D, 60); D.clickBot(bot); await settle(D, 900); }
+  } else if (shot === 'lever') {
+    const room = ts.find(t => t.userData.kind === 'room');
+    if (room) { D.clickRaw({ kind: 'roomLever', room }); await settle(D, 600); }
+  } else if (shot === 'run') {
+    const box = D.stations.stand?.occupant;
+    if (box) { D.hold(box); await settle(D, 10); D.giveRobot(); await settle(D, 900); }
+  } else if (shot === 'space') {
+    const g = ts.find(t => t.userData.gadget) ?? ts.find(t => t.userData.panel || t.userData.panelWorld) ?? ts.find(t => t.userData.kind === 'model');
+    if (g) { try { D.switchGadget(g, true, true); } catch (e) { try { D.switchBound(g, true); } catch (e2) {} } await settle(D, 150); }
+  } else if (shot === 'yard') {
+    D.clickRaw({ kind: 'yardDoor' }); await settle(D, 200);
+  }
+  D.speed(1); D.rounds(8);
+  await settle(D, 20);
+  // one pose for the table, a closer one for a drawing, the file's own if it has one
+  if (shot !== 'yard' && !w.camera) {
+    D.orbitStart();
+    if (shot === 'run') { D.camera.position.set(0.7, 1.95, 2.75); D.camera.lookAt(0, 1.1, 1.55); }
+    else { D.camera.position.set(0, 2.75, 4.35); D.camera.lookAt(0, 0.85, 1.6); }
+  }
+  const png = D.snapshot(960);
+  const r = await fetch('/capture?name=gallery-' + String(i).padStart(2, '0'), { method: 'POST', body: png });
+  log(i + ' ' + name + ' -> ' + (r.ok ? 'ok' : 'FAILED ' + r.status));
+  if (shot === 'space') { try { const g = ts.find(t => t.userData.gadget); if (g) D.switchGadget(g, false, true); } catch (e) {} }
+  if (shot === 'yard') { try { D.clickRaw({ kind: 'yardDoor' }); await settle(D, 100); } catch (e) {} }
+}
+(async () => {
+  for (let i = 0; i < 300; i++) { if (frame.contentWindow.__nano?.frame) break; await new Promise(r => setTimeout(r, 100)); }
+  const D = frame.contentWindow.__nano;
+  await new Promise(r => setTimeout(r, 1500));
+  const route = await (await fetch('../gallery/route.json')).json();
+  for (const e of route) {
+    if (only.length && !only.includes(e.i)) continue;
+    try { await shoot(D, e.i, e.name, e.shot); }
+    catch (err) { log(e.i + ' ' + e.name + ' threw: ' + err.message); }
+  }
+  log('done');
+  document.title = 'SHOTS DONE';
+})();
+</script>
+</body>
+</html>

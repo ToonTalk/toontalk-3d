@@ -2197,7 +2197,11 @@ back: things land in your hand, worlds replace the workshop.
 
 Finished programs live in the
 examples
-folder. Download one and use Import file to load it. The last five
+folder. The examples gallery (also in the
+⋮ menu) lays them out in the order to learn them — what each teaches,
+what it needs first, a picture, how to run it, and one thing to change and
+predict — and opens any of them in the workshop with Start this world
+over on the card. Or download one and use Import file. Five
 are ports of Ken Kahn's own ToonTalk 3 programs, move for move.
 
 Each example is a file in the examples folder, and the file name is worth
@@ -22790,6 +22794,13 @@ loadModel('robot_v4.glb', (gltf) => {
     sndRow.append(sb, sv);
     menu.appendChild(sndRow);
     refreshSnd();
+    const glb = document.createElement('button');
+    glb.id = 'galleryBtn';
+    glb.title = 'Every example in the order to learn them: what each teaches, what it needs, a picture, and something to change and predict.';
+    glb.textContent = '\u{1F5BC} Examples gallery';
+    glb.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); window.open('gallery.html', '_blank'); };
+    if (!/^https?:$/.test(location.protocol)) glb.style.display = 'none';   // a single-file build carries no gallery
+    menu.appendChild(glb);
     const fp = document.createElement('button');
     fp.id = 'firstBtn';
     fp.title = 'The first project, step by step, here in the workshop: a robot that counts.';
@@ -22974,6 +22985,9 @@ loadModel('robot_v4.glb', (gltf) => {
         if (!rec || rec.kind !== 'world') return;
         const tooNew = fileTooNew(rec, 'workshop');
         if (tooNew) return sayAttn(tooNew);
+        // remembered under its file name, so "Start this world over" is on
+        // the card for a world the gallery opened (a puzzle keeps its own)
+        if (!rec.name) rec.name = wantWorld;
         worldIn(rec);
         loadedWorldName = wantWorld.split('/').pop();
         say('Workshop loaded: ' + loadedWorldName + '.' + yardWords(rec));
@@ -24421,7 +24435,7 @@ function applyRules(rules) {
   btn('importBtn', tools.includes('import'));
   btn('devicesBtn', tools.includes('devices'));
   btn('undoBtn', rules?.undo !== false);
-  btn('againBtn', !!(worldName && worldLibrary[worldName] && (rules || puzzleInfo)));
+  btn('againBtn', !!(worldName && worldLibrary[worldName]));   // any world the workshop remembers by name: a puzzle, a lesson, one the gallery opened
   { const b = document.getElementById('againBtn'); if (b) b.textContent = puzzleInfo?.puzzle || rules ? 'Start this puzzle over' : 'Start this world over'; }
 }
 // what Marty knows about the puzzle, for a brain that is asked about it
@@ -26833,6 +26847,14 @@ window.__nano = {
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },
   utter(said) { return utterance(said); },             // made, not spoken: its volume is the slider's
   heldNode() { return held; },
+  snapshot(width = 720) {                 // one rendered frame, scaled, as a JPEG data URL (the gallery's pictures)
+    renderer.render(scene, camera);
+    const src = renderer.domElement, k = Math.min(1, width / src.width);
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(src.width * k); cv.height = Math.round(src.height * k);
+    cv.getContext('2d').drawImage(src, 0, 0, cv.width, cv.height);
+    return cv.toDataURL('image/jpeg', 0.86);
+  },
   familiar(key, n) { if (n != null) { let f = {}; try { f = JSON.parse(mineGet(FAMILIAR_KEY) || '{}') || {}; } catch {} f[key] = n; mineSet(FAMILIAR_KEY, JSON.stringify(f)); } return familiar(key); },
   demoNotebook(rec) { suiteNotebookRec = rec ?? null; },   // the suite's notebook, in a demo that has none
   nestsByGuid(guid) { return { all: allNests.filter(n2 => nestAnswersTo(n2, guid)).length, inScene: allNestsByGuid(guid).length, registered: allNests.length }; },

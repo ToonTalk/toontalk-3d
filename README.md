@@ -285,7 +285,8 @@ To run it locally, it needs any static server; the repo assumes port 8311.
 node serve.js 8311
 ```
 
-Then open <http://localhost:8311/toontalk-3d.html>. The **?** button in the
+Then open <http://localhost:8311/toontalk-3d.html>. `gallery.html` is every
+example world in the order to learn them, each opening in the workshop. The **?** button in the
 toolbar opens `manual.html` — a guided handbook whose illustrations are live
 embedded workshops (the app itself in an iframe with a small canned scene), so
 every example can actually be tried.

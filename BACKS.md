@@ -8200,3 +8200,26 @@ in any language -- and the box's labels go in brackets after them. Done:
 Its wider suggestions -- a gallery with prerequisites and screenshots, an
 ordered route, a visible team-member selector, experiments inside the
 worlds -- are for Ken to weigh.
+
+## The examples gallery
+
+ChatGPT's review asked for "a gallery with prerequisites, approximate
+complexity, a screenshot, Run, Reset, and one 'change this and predict'
+prompt"; Ken: "let's do 4 now". gallery.html, written by
+gallery/make_gallery.py from a route of all 57 example worlds in seven
+groups -- first steps, things that talk, numbers and data, houses and
+state, games, infinity, meta -- each with what it teaches, what it needs
+(links back), a size counted from the file (every robot, in teams, houses
+and panels, and the longest program), how to run it, and one change to
+predict. The pictures are tests/gallery_shots.html's: the app in an iframe,
+each world opened and run the way its card says (give, lever, Start, SPACE,
+or the yard), one frame from D.snapshot (a new hook), posted to captures/
+and copied in by --shots. "Open in the workshop" is ?world=, which now
+remembers the world under its file name so Start this world over is on the
+card (the button shows for any remembered named world, not only puzzles).
+An Examples gallery entry in the ⋮ menu, hidden in a single-file build.
+
+Also: 🎨 random-colour (Ken): a pad with a robot on its back that rolls a die
+and picks the Nth [name | ink] pair from a list by splitting the list at the
+roll, then [set | background], [set | text] and [set | colour] to itself; a
+round a frame, seven colours in the first second. randomColourCheck.

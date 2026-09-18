@@ -1,8 +1,12 @@
 # Examples
 
 Saved worlds, one folder per subject, every file named with a picture of what
-it is. Load one with the **Import file** button (or drag the file onto the
-page); the *Exploring Infinity* sheets and the puzzles open theirs for you.
+it is. **The [gallery](../gallery.html) lays them out in the order to learn
+them** -- what each teaches, what it needs first, a picture, how to run it and
+one thing to change and predict -- and opens any of them in the workshop
+(`gallery/make_gallery.py` writes it; `tests/gallery_shots.html` takes the
+pictures). Or load one with the **Import file** button (or drag the file onto
+the page); the *Exploring Infinity* sheets and the puzzles open theirs for you.
 Most worlds lay text pads on the table -- what the program is, and how to run
 it -- so the instructions arrive with the program. They are ordinary pads:
 vacuum them away with Dusty once you know the drill. The lessons introduce
