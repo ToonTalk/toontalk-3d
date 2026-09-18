@@ -14,33 +14,33 @@
 #   p9  a box of three zeros in the second hole of a box (Mimi copies)
 #   p10 a box of six zeros from a box of two (copies joined side by side)
 #   p11 the door code, 77, from a box of powers of two (a sum, by choosing)
-#   p12 a half -- a 2 wearing a divide badge
-#   p13 a million from a 10 and a times-ten badge, copied five times
-#   p14 A, B and C on pads, in a box -- the first that lets you type
-#   p15 the seconds in a year: 365 x 24 x 60 x 60, four numbers with badges
-#   p16 a word from two pads joined at the edge -- order matters
-#   p17 three quarters: a 1, a divide-by-four and a times-three
-#   p18 which is bigger, 3/4 or 2/3: on a scale, the bigger on the left
-#   p19 a box of 24 zeros from a box of three, doubled by copying and joining
-#   p20 a robot moves stuck numbers across into a second box, in reverse
+#   p13 a half -- a 2 wearing a divide badge
+#   p14 a million from a 10 and a times-ten badge, copied five times
+#   p15 A, B and C on pads, in a box -- the first that lets you type
+#   p16 the seconds in a year: 365 x 24 x 60 x 60, four numbers with badges
+#   p17 a word from two pads joined at the edge -- order matters
+#   p18 three quarters: a 1, a divide-by-four and a times-three
+#   p19 which is bigger, 3/4 or 2/3: on a scale, the bigger on the left
+#   p20 a box of 24 zeros from a box of three, doubled by copying and joining
+#   p21 a robot moves stuck numbers across into a second box, in reverse
 #       (a round that empties what it reads stops by itself)
-#   p21 the same robot, other numbers: its thought is too fussy, so Ruby
-#   p22 a robot counts the letters in the post, with Dusty and the number
+#   p22 the same robot, other numbers: its thought is too fussy, so Ruby
+#   p23 a robot counts the letters in the post, with Dusty and the number
 #       stack; it dozes when the nest is empty
-#   p23 a robot makes a box of exactly ten zeros, one more hole a round --
+#   p24 a robot makes a box of exactly ten zeros, one more hole a round --
 #       another one you have to stop in time
-#   p24 the same robot with a SCALE: it counts the holes it makes against a
+#   p25 the same robot with a SCALE: it counts the holes it makes against a
 #       number in the other pan and stops by itself when the pans balance
-#   p25 1,024 again, by a doubler that weighs itself against 1,000 and stops
-#   p26 the biggest of three, found with a scale by hand
-#   p27 a pair sorted into a box, smaller first, by hand
-#   p28 a robot sorts a scale's pans -- stuck numbers, one run
-#   p29 a box of letters poured onto a blank pad becomes the word
-#   p30 a word dropped into a box with no holes comes apart, a letter a hole
-#   p31 the third letter of "Marty": a pad dropped on a number picks it out
-#   p32 down to one
-#   p33 two robots, one team: a box tipping each way, a thought for each
-#   p34 sort three: a team of four robots, trained on a practice box: a halver that weighs itself against 1 and stops
+#   p26 1,024 again, by a doubler that weighs itself against 1,000 and stops
+#   p27 the biggest of three, found with a scale by hand
+#   p28 a pair sorted into a box, smaller first, by hand
+#   p29 a robot sorts a scale's pans -- stuck numbers, one run
+#   p30 a box of letters poured onto a blank pad becomes the word
+#   p31 a word dropped into a box with no holes comes apart, a letter a hole
+#   p32 the third letter of "Marty": a pad dropped on a number picks it out
+#   p33 down to one
+#   p34 two robots, one team: a box tipping each way, a thought for each
+#   p35 sort three: a team of four robots, trained on a practice box: a halver that weighs itself against 1 and stops
 #
 # Each is its own world file; the app carries the whole set by name (see
 # embed_puzzles.py), and a server can fetch any of them.
@@ -72,10 +72,10 @@ def ship_stage(n):
 
 SHIP_NOTES = {
     'p10': ' Look at the ship: it has begun to straighten up.',
-    'p20': ' The ship stands straight now — what you have built is holding it.',
-    'p25': ' There is a light on in the porthole: the computer is coming back to life.',
-    'p30': ' The beacon on the nose is lit. It could fly again.',
-    'p34': ' The ship is whole. Whatever you make from here, it is yours.',
+    'p21': ' The ship stands straight now — what you have built is holding it.',
+    'p26': ' There is a light on in the porthole: the computer is coming back to life.',
+    'p31': ' The beacon on the nose is lit. It could fly again.',
+    'p35': ' The ship is whole. Whatever you make from here, it is yours.',
 }
 
 
@@ -197,7 +197,7 @@ def puzzle(name, intro, *rest, **kw):                           # noqa: F811
 # was (Ken: "why do we need a box -- original ToonTalk did but we don't").
 P7 = puzzle(
     'p7',
-    'Last of all the computer needs exactly 1,024 — and there is only a 1. A '
+    'Last of all for the ship, the computer needs exactly 1,024 — and there is only a 1. A '
     'robot can double a number, but a doubling robot never stops by itself: '
     'you will have to stop it in time. Ask me for a hint if you need one.',
     'exactly 1,024',
@@ -493,15 +493,15 @@ puzzle(
           nest(10012, 'p11-reply', 'from the judge'),        # noqa: F405
           judge('the judge', 10011, 'p11-post', 10012, 'p11-reply',
                 right=num(77),                               # noqa: F405
-                on_right=next_note('') + [load('p35')],
+                on_right=next_note('') + [load('p12')],
                 notes=['77 — the door opens. Next: a bigger number, this year.'],
                 sorry='Not quite — the code is exactly 77. Each number in '
                       'the box may be used once.')),
     scenery=SCENERY)
 
-# --- p12: a half --------------------------------------------------------------
+# --- p13: a half --------------------------------------------------------------
 puzzle(
-    'p12',
+    'p13',
     'The computer divides as well as adds. That 2 wears a divide badge: '
     'dropped on a number, it divides the number by 2 instead of adding. We '
     'need a half.',
@@ -514,18 +514,18 @@ puzzle(
     rules(),
     table([num(1), num(2, op='/')],                          # noqa: F405
           fixed(num(1, 2), 'we need this'),                  # noqa: F405
-          bird(10021, 'p12-post', 'give me your answer'),    # noqa: F405
-          nest(10022, 'p12-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10021, 'p12-post', 10022, 'p12-reply',
+          bird(10021, 'p13-post', 'give me your answer'),    # noqa: F405
+          nest(10022, 'p13-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10021, 'p13-post', 10022, 'p13-reply',
                 right=num(1, 2),                             # noqa: F405
-                on_right=next_note('') + [load('p13')],
+                on_right=next_note('') + [load('p14')],
                 notes=['A half — the computer can share now. Next: a '
                        'million.'])),
     scenery=SCENERY)
 
-# --- p13: a million -----------------------------------------------------------
+# --- p14: a million -----------------------------------------------------------
 puzzle(
-    'p13',
+    'p14',
     'The computer needs a million. You have a 10, a 10 wearing a times '
     'badge, and Mimi.',
     'a million',
@@ -540,18 +540,18 @@ puzzle(
     rules(tools=['mimi']),
     table([num(10), num(10, op='*')],                        # noqa: F405
           fixed(num(1000000), 'we need this'),               # noqa: F405
-          bird(10031, 'p13-post', 'give me your answer'),    # noqa: F405
-          nest(10032, 'p13-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10031, 'p13-post', 10032, 'p13-reply',
+          bird(10031, 'p14-post', 'give me your answer'),    # noqa: F405
+          nest(10032, 'p14-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10031, 'p14-post', 10032, 'p14-reply',
                 right=num(1000000),                          # noqa: F405
-                on_right=next_note('') + [load('p14')],
+                on_right=next_note('') + [load('p15')],
                 notes=['A million! Next: the computer wants letters.'],
                 sorry='Not quite — exactly one million, six figures of it.')),
     scenery=SCENERY)
 
-# --- p14: A, B and C ----------------------------------------------------------
+# --- p15: A, B and C ----------------------------------------------------------
 puzzle(
-    'p14',
+    'p15',
     'The computer needs more than numbers — it needs letters and words. Put '
     'a capital A, a B and a C on these blank pads, in the box in that order, '
     'and give the box to the bird.',
@@ -565,11 +565,11 @@ puzzle(
     rules(typing={'numbers': False, 'pads': True}),
     table([pad(''), pad(''), pad(''), empty_box(3)],         # noqa: F405
           fixed(box(txt('A'), txt('B'), txt('C')), 'we need this'),   # noqa: F405
-          bird(10041, 'p14-post', 'give me your answer'),    # noqa: F405
-          nest(10042, 'p14-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10041, 'p14-post', 10042, 'p14-reply',
+          bird(10041, 'p15-post', 'give me your answer'),    # noqa: F405
+          nest(10042, 'p15-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10041, 'p15-post', 10042, 'p15-reply',
                 right=box(txt('A'), txt('B'), txt('C')),     # noqa: F405
-                on_right=next_note('') + [load('p15')],
+                on_right=next_note('') + [load('p16')],
                 notes=['A, B, C — the computer can spell. Next: a whole '
                        'year, in seconds.'],
                 sorry='Not quite — capital A, B and C, one to a pad, in that '
@@ -579,9 +579,9 @@ puzzle(
 # ============================================================================
 # The third batch: multiplying, words, fractions, a scale, and doubling boxes.
 
-# --- p15: the seconds in a year -----------------------------------------------
+# --- p16: the seconds in a year -----------------------------------------------
 puzzle(
-    'p15',
+    'p16',
     'The computer keeps time in seconds, and it wants to know how many there '
     'are in a year: 365 days, 24 hours in a day, 60 minutes in an hour, 60 '
     'seconds in a minute. Three of these wear times badges. Give the bird '
@@ -596,20 +596,20 @@ puzzle(
     rules(),
     table([num(365), num(24, op='*'), num(60, op='*'), num(60, op='*')],   # noqa: F405
           fixed(num(31536000), 'we need this'),              # noqa: F405
-          bird(10051, 'p15-post', 'give me your answer'),    # noqa: F405
-          nest(10052, 'p15-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10051, 'p15-post', 10052, 'p15-reply',
+          bird(10051, 'p16-post', 'give me your answer'),    # noqa: F405
+          nest(10052, 'p16-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10051, 'p16-post', 10052, 'p16-reply',
                 right=num(31536000),                         # noqa: F405
-                on_right=next_note('') + [load('p16')],
+                on_right=next_note('') + [load('p17')],
                 notes=['31,536,000 seconds — the computer can keep a '
                        'calendar. Next: a word.'],
                 sorry='Not quite — 365 × 24 × 60 × 60. Each badge lands '
                       'once; Start over if one is spent.')),
     scenery=SCENERY)
 
-# --- p16: a word ------------------------------------------------------------
+# --- p17: a word ------------------------------------------------------------
 puzzle(
-    'p16',
+    'p17',
     'The computer needs a word, and it needs it on one pad: “ToonTalk”. '
     'Give the bird the pad.',
     'one pad that says ToonTalk',
@@ -622,19 +622,19 @@ puzzle(
     rules(),
     table([pad('Toon'), pad('Talk')],                        # noqa: F405
           fixed(pad('ToonTalk'), 'we need this'),            # noqa: F405
-          bird(10061, 'p16-post', 'give me your answer'),    # noqa: F405
-          nest(10062, 'p16-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10061, 'p16-post', 10062, 'p16-reply',
+          bird(10061, 'p17-post', 'give me your answer'),    # noqa: F405
+          nest(10062, 'p17-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10061, 'p17-post', 10062, 'p17-reply',
                 right=txt('ToonTalk'),                       # noqa: F405
-                on_right=next_note('') + [load('p17')],
+                on_right=next_note('') + [load('p18')],
                 notes=['ToonTalk, on one pad. Next: three quarters.'],
                 sorry='Not quite — one pad reading exactly ToonTalk; the '
                       'right-hand edge puts Talk after Toon.')),
     scenery=SCENERY)
 
-# --- p17: three quarters ------------------------------------------------------
+# --- p18: three quarters ------------------------------------------------------
 puzzle(
-    'p17',
+    'p18',
     'The computer needs three quarters. You have a 1, a 4 wearing a divide '
     'badge and a 3 wearing a times badge. Dividing and multiplying are '
     'badges here — the number underneath is what changes.',
@@ -648,17 +648,17 @@ puzzle(
     rules(),
     table([num(1), num(4, op='/'), num(3, op='*')],          # noqa: F405
           fixed(num(3, 4), 'we need this'),                  # noqa: F405
-          bird(10071, 'p17-post', 'give me your answer'),    # noqa: F405
-          nest(10072, 'p17-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10071, 'p17-post', 10072, 'p17-reply',
+          bird(10071, 'p18-post', 'give me your answer'),    # noqa: F405
+          nest(10072, 'p18-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10071, 'p18-post', 10072, 'p18-reply',
                 right=num(3, 4),                             # noqa: F405
-                on_right=next_note('') + [load('p18')],
+                on_right=next_note('') + [load('p19')],
                 notes=['Three quarters. Next: which is bigger?'])),
     scenery=SCENERY)
 
-# --- p18: which is bigger ------------------------------------------------------
+# --- p19: which is bigger ------------------------------------------------------
 puzzle(
-    'p18',
+    'p19',
     'The computer cannot tell which is bigger, three quarters or two thirds. '
     'Put them on the scale — the bigger one on the LEFT — and give the bird '
     'the scale.',
@@ -671,19 +671,19 @@ puzzle(
     rules(),
     table([num(3, 4), num(2, 3), scale(None, None)],         # noqa: F405
           fixed(scale(num(3, 4), num(2, 3)), 'we need this'),   # noqa: F405
-          bird(10081, 'p18-post', 'give me your answer'),    # noqa: F405
-          nest(10082, 'p18-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10081, 'p18-post', 10082, 'p18-reply',
+          bird(10081, 'p19-post', 'give me your answer'),    # noqa: F405
+          nest(10082, 'p19-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10081, 'p19-post', 10082, 'p19-reply',
                 right=scale(num(3, 4), num(2, 3)),           # noqa: F405
-                on_right=next_note('') + [load('p19')],
+                on_right=next_note('') + [load('p20')],
                 notes=['Three quarters it is — the scale says so. Next: a '
                        'long box of zeros.'],
                 sorry='Not quite — the bigger number goes in the LEFT pan.')),
     scenery=SCENERY)
 
-# --- p19: twenty-four zeros ------------------------------------------------------
+# --- p20: twenty-four zeros ------------------------------------------------------
 puzzle(
-    'p19',
+    'p20',
     'The computer needs a box with exactly 24 zeros. You have a box of three, '
     'and Mimi.',
     'a box with exactly 24 zeros in it',
@@ -697,11 +697,11 @@ puzzle(
     rules(tools=['mimi']),
     table([box(num(0), num(0), num(0))],                     # noqa: F405
           fixed(box(*[num(0) for _ in range(24)]), 'we need this'),   # noqa: F405
-          bird(10091, 'p19-post', 'give me your answer'),    # noqa: F405
-          nest(10092, 'p19-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10091, 'p19-post', 10092, 'p19-reply',
+          bird(10091, 'p20-post', 'give me your answer'),    # noqa: F405
+          nest(10092, 'p20-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10091, 'p20-post', 10092, 'p20-reply',
                 right=box(*[num(0) for _ in range(24)]),     # noqa: F405
-                on_right=next_note('') + [load('p20')],
+                on_right=next_note('') + [load('p21')],
                 notes=['Twenty-four zeros exactly. Next: a robot that turns '
                        'a box round.'],
                 sorry='Not quite — exactly 24 zeros. Too few? Copy and join '
@@ -712,12 +712,12 @@ puzzle(
 # The fourth batch: robots. One plans, one counts and stops by itself, one
 # has to be stopped.
 
-# --- p20: turn the numbers round ------------------------------------------------
+# --- p21: turn the numbers round ------------------------------------------------
 # Two boxes: the numbers are moved ACROSS, last to first. A round that empties
 # the box it reads cannot fit its own thought again, so the robot stops by
 # itself -- where a swap inside one box would reverse it back for ever.
 puzzle(
-    'p20',
+    'p21',
     'The computer wants these numbers the other way round — 1, 2, 3 — in the '
     'empty box beside them. They are stuck fast in their holes: your fingers '
     'cannot shift them, but a robot’s claw can. Train the robot and give the '
@@ -737,19 +737,19 @@ puzzle(
            ROBOT],
           fixed(box(empty_box(3), box(stuck(num(1)), stuck(num(2)), stuck(num(3)))),   # noqa: F405
                 'we need this'),
-          bird(10101, 'p20-post', 'give me your answer'),    # noqa: F405
-          nest(10102, 'p20-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10101, 'p20-post', 10102, 'p20-reply',
+          bird(10101, 'p21-post', 'give me your answer'),    # noqa: F405
+          nest(10102, 'p21-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10101, 'p21-post', 10102, 'p21-reply',
                 right=box(empty_box(3), box(stuck(num(1)), stuck(num(2)), stuck(num(3)))),   # noqa: F405
-                on_right=next_note('') + [load('p21')],
+                on_right=next_note('') + [load('p22')],
                 notes=['1, 2, 3 — the robot turned them round. Next: the '
                        'same robot, other numbers.'],
                 sorry='Not quite — 1, 2, 3 in the second box, in that order, '
                       'and the first box empty.')),
     scenery=SCENERY)
 
-# --- p21: the same robot, other numbers ----------------------------------------
-# The robot from p20, already trained -- and too fussy: its thought names the
+# --- p22: the same robot, other numbers ----------------------------------------
+# The robot from p21, already trained -- and too fussy: its thought names the
 # very numbers it first saw. Ruby is the whole puzzle.
 REVERSER = robot(                                             # noqa: F405
     'the turner',
@@ -764,7 +764,7 @@ REVERSER = robot(                                             # noqa: F405
          'until Ruby has erased them.')
 
 puzzle(
-    'p21',
+    'p22',
     'Here is the robot you trained, and three different numbers — stuck fast '
     'again. Give it the box and see what happens: it remembers exactly the '
     'numbers it first saw. Ruby is here. The computer wants 4, 6, 8 in that '
@@ -783,23 +783,23 @@ puzzle(
            REVERSER],
           fixed(box(empty_box(3), box(stuck(num(4)), stuck(num(6)), stuck(num(8)))),   # noqa: F405
                 'we need this'),
-          bird(10131, 'p21-post', 'give me your answer'),    # noqa: F405
-          nest(10132, 'p21-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10131, 'p21-post', 10132, 'p21-reply',
+          bird(10131, 'p22-post', 'give me your answer'),    # noqa: F405
+          nest(10132, 'p22-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10131, 'p22-post', 10132, 'p22-reply',
                 right=box(empty_box(3), box(stuck(num(4)), stuck(num(6)), stuck(num(8)))),   # noqa: F405
-                on_right=next_note('') + [load('p22')],
+                on_right=next_note('') + [load('p23')],
                 notes=['4, 6, 8 — one robot, any numbers. Next: counting '
                        'the post.'],
                 sorry='Not quite — 4, 6, 8 in the second box, in that order, '
                       'and the first box empty.')),
     scenery=SCENERY)
 
-# --- p22: count the post --------------------------------------------------------
+# --- p23: count the post --------------------------------------------------------
 # Dusty rather than a bird: a bird has to fly home between rounds, and the
 # robot's thought wants her back in her hole. What the robot holds IS its own
 # thing, so Dusty may take it even in a lesson.
 puzzle(
-    'p22',
+    'p23',
     'Letters keep arriving for the computer, and it wants to know how many. '
     'There are four on that nest. Train a robot to count them and give the '
     'bird the count. Dusty and Ruby are here, and the robot may take a '
@@ -818,28 +818,28 @@ puzzle(
      'wake Ruby and loosen the letter and the count. Give it the box, press '
      'Run, and when it dozes take the 4 out and give it to the bird.'],
     rules(stacks=['numbers'], tools=['dusty', 'ruby']),
-    table([box(nest(10213, 'p22-pile', 'the post',
+    table([box(nest(10213, 'p23-pile', 'the post',
                     pile=[pad('A'), pad('B'), pad('C'), pad('D')]),   # noqa: F405
                dict(num(0), label='the count')),            # noqa: F405
            ROBOT],
           fixed(num(4), 'we need this'),                     # noqa: F405
-          bird(10211, 'p22-post', 'give me your answer'),    # noqa: F405
-          nest(10212, 'p22-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10211, 'p22-post', 10212, 'p22-reply',
+          bird(10211, 'p23-post', 'give me your answer'),    # noqa: F405
+          nest(10212, 'p23-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10211, 'p23-post', 10212, 'p23-reply',
                 right=num(4),                                # noqa: F405
-                on_right=next_note('') + [load('p23')],
+                on_right=next_note('') + [load('p24')],
                 notes=['Four letters — counted by a robot. Next: ten '
                        'zeros, and you have to stop it.'],
                 sorry='Not quite — the count of the letters on the nest, '
                       'a plain 4.')),
     scenery=SCENERY)
 
-# --- p23: exactly ten zeros ------------------------------------------------------
+# --- p24: exactly ten zeros ------------------------------------------------------
 # The given box holds the growing box in its first hole and a SEED box of one
 # zero in its second: a round copies the seed and joins the copy on, so the
 # box grows by one hole a round -- and never stops.
 puzzle(
-    'p23',
+    'p24',
     'The computer wants a box with exactly ten zeros, made by a robot. In '
     'the first hole of this box is a box of one zero to grow; in the second, '
     'another to copy from. A robot that makes a box longer never stops by '
@@ -868,11 +868,11 @@ puzzle(
     rules(tools=['mimi', 'ruby']),
     table([box(box(num(0)), box(num(0))), ROBOT],             # noqa: F405
           fixed(box(*[num(0) for _ in range(10)]), 'we need this'),   # noqa: F405
-          bird(10231, 'p23-post', 'give me your answer'),    # noqa: F405
-          nest(10232, 'p23-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10231, 'p23-post', 10232, 'p23-reply',
+          bird(10231, 'p24-post', 'give me your answer'),    # noqa: F405
+          nest(10232, 'p24-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10231, 'p24-post', 10232, 'p24-reply',
                 right=box(*[num(0) for _ in range(10)]),     # noqa: F405
-                on_right=next_note('') + [load('p24')],
+                on_right=next_note('') + [load('p25')],
                 notes=['Ten zeros exactly, by robot. Next: a robot that '
                        'knows when to stop.'],
                 sorry='Not quite — exactly ten zeros, the box itself out of '
@@ -880,14 +880,14 @@ puzzle(
                       'round. Too many? Start over.')),
     scenery=SCENERY)
 
-# --- p24: a robot that knows when to stop ------------------------------------------
+# --- p25: a robot that knows when to stop ------------------------------------------
 # The grower again, with a scale in the third hole: a count in the left pan
 # and the number wanted in the right. While the scale tips right the thought
 # fits; when the pans balance it does not, and the robot stops on its own --
 # which is how a robot makes a box of ANY number of zeros: change the number
 # in the right pan.
 puzzle(
-    'p24',
+    'p25',
     'Last time you had to stop the robot yourself. This time it should know '
     'when to stop: the computer wants seven zeros, and the box has a scale in '
     'its third hole with a count in one pan and the 7 in the other. A robot '
@@ -913,11 +913,11 @@ puzzle(
     rules(stacks=['numbers'], tools=['mimi', 'ruby']),
     table([box(box(num(0)), box(num(0)), scale(num(1), num(7))), ROBOT],   # noqa: F405
           fixed(box(*[num(0) for _ in range(7)]), 'we need this'),   # noqa: F405
-          bird(10241, 'p24-post', 'give me your answer'),    # noqa: F405
-          nest(10242, 'p24-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10241, 'p24-post', 10242, 'p24-reply',
+          bird(10241, 'p25-post', 'give me your answer'),    # noqa: F405
+          nest(10242, 'p25-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10241, 'p25-post', 10242, 'p25-reply',
                 right=box(*[num(0) for _ in range(7)]),      # noqa: F405
-                on_right=next_note('') + [load('p25')],
+                on_right=next_note('') + [load('p26')],
                 notes=['Seven zeros, and the robot stopped by itself. Change '
                        'the number in the pan and it would make any number '
                        'of them. Next: 1,024 again — hands off this time.'],
@@ -928,9 +928,9 @@ puzzle(
 # ============================================================================
 # The fifth batch: scales that stop robots, scales by hand, and letters.
 
-# --- p25: 1,024, hands off -------------------------------------------------------
+# --- p26: 1,024, hands off -------------------------------------------------------
 puzzle(
-    'p25',
+    'p26',
     'Remember 1,024, and how you had to stop the robot yourself? This time '
     'the robot should stop on its own. The number is in the left pan of a '
     'scale and 1,000 is in the right; the computer wants the first doubling '
@@ -952,23 +952,23 @@ puzzle(
     rules(tools=['mimi', 'ruby']),
     table([box(scale(num(1), num(1000))), ROBOT],             # noqa: F405
           fixed(num(1024), 'we need this'),                  # noqa: F405
-          bird(10251, 'p25-post', 'give me your answer'),    # noqa: F405
-          nest(10252, 'p25-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10251, 'p25-post', 10252, 'p25-reply',
+          bird(10251, 'p26-post', 'give me your answer'),    # noqa: F405
+          nest(10252, 'p26-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10251, 'p26-post', 10252, 'p26-reply',
                 right=num(1024),                             # noqa: F405
-                on_right=next_note('') + [load('p26')],
+                on_right=next_note('') + [load('p27')],
                 notes=['1,024, and nobody had to watch it. Next: the '
                        'biggest of three.'],
                 sorry='Not quite — 1,024 exactly, the first doubling past a '
                       'thousand.')),
     scenery=SCENERY)
 
-# --- p26: the biggest of three ---------------------------------------------------
+# --- p27: the biggest of three ---------------------------------------------------
 # Fractions close enough that nobody can tell by eye, and a SIGN for the goal
 # rather than the answer itself (Ken: "some puzzles like 26 should not show
 # the answer").
 puzzle(
-    'p26',
+    'p27',
     'The computer wants the biggest of these three fractions, and neither it '
     'nor you can tell by looking which that is — but a scale can. Give the '
     'bird the biggest.',
@@ -983,19 +983,19 @@ puzzle(
     rules(),
     table([num(5, 7), num(8, 11), num(13, 18), scale(None, None)],    # noqa: F405
           fixed(pad('the biggest of the three'), 'we need this'),   # noqa: F405
-          bird(10261, 'p26-post', 'give me your answer'),    # noqa: F405
-          nest(10262, 'p26-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10261, 'p26-post', 10262, 'p26-reply',
+          bird(10261, 'p27-post', 'give me your answer'),    # noqa: F405
+          nest(10262, 'p27-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10261, 'p27-post', 10262, 'p27-reply',
                 right=num(8, 11),                            # noqa: F405
-                on_right=next_note('') + [load('p27')],
+                on_right=next_note('') + [load('p28')],
                 notes=['8/11 — the scale knew. Next: two in order.'],
                 sorry='Not quite — the scale tips toward the bigger; keep '
                       'the winner on and try the others against it.')),
     scenery=SCENERY)
 
-# --- p27: a pair in order ---------------------------------------------------------
+# --- p28: a pair in order ---------------------------------------------------------
 puzzle(
-    'p27',
+    'p28',
     'The computer wants these two fractions in a box, the smaller one first. '
     'Which is smaller is for the scale to say.',
     'a box with the smaller fraction first',
@@ -1008,24 +1008,24 @@ puzzle(
     rules(),
     table([num(7, 12), num(5, 9), scale(None, None), empty_box(2)],   # noqa: F405
           fixed(pad('the smaller one first'), 'we need this'),   # noqa: F405
-          bird(10271, 'p27-post', 'give me your answer'),    # noqa: F405
-          nest(10272, 'p27-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10271, 'p27-post', 10272, 'p27-reply',
+          bird(10271, 'p28-post', 'give me your answer'),    # noqa: F405
+          nest(10272, 'p28-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10271, 'p28-post', 10272, 'p28-reply',
                 right=box(num(5, 9), num(7, 12)),            # noqa: F405
-                on_right=next_note('') + [load('p28')],
+                on_right=next_note('') + [load('p29')],
                 notes=['5/9 then 7/12. Next: a robot that sorts.'],
                 sorry='Not quite — the smaller fraction in the first hole; '
                       'the scale tips toward the bigger.')),
     scenery=SCENERY)
 
-# --- p28: a robot sorts the pans ------------------------------------------------------
+# --- p29: a robot sorts the pans ------------------------------------------------------
 # Sorting is swapping what is out of order, and this is the smallest piece of
 # it: two stuck fractions in the pans of a scale, tipping left; the robot
 # swaps them through the spare hole. One run: once swapped, the scale tips
 # right and the thought no longer fits. Puzzle 33 sorts three with a team
 # built round this robot.
 puzzle(
-    'p28',
+    'p29',
     'Sorting is swapping what is out of order, over and over — and this is '
     'the smallest piece of it. Two fractions are stuck in a scale’s pans, '
     'the bigger one on the left, and the computer wants the smaller one on '
@@ -1045,20 +1045,20 @@ puzzle(
     rules(),
     table([box(scale(stuck(num(7, 9)), stuck(num(5, 7))), None), ROBOT],   # noqa: F405
           fixed(box(scale(stuck(num(5, 7)), stuck(num(7, 9))), None), 'we need this'),   # noqa: F405
-          bird(10281, 'p28-post', 'give me your answer'),    # noqa: F405
-          nest(10282, 'p28-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10281, 'p28-post', 10282, 'p28-reply',
+          bird(10281, 'p29-post', 'give me your answer'),    # noqa: F405
+          nest(10282, 'p29-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10281, 'p29-post', 10282, 'p29-reply',
                 right=box(scale(stuck(num(5, 7)), stuck(num(7, 9))), None),   # noqa: F405
-                on_right=next_note('') + [load('p29')],
+                on_right=next_note('') + [load('p30')],
                 notes=['5/7 on the left, 7/9 on the right — sorted by robot. '
                        'Next: letters into a word.'],
                 sorry='Not quite — the smaller fraction in the LEFT pan, and '
                       'the spare hole empty.')),
     scenery=SCENERY)
 
-# --- p29: letters into a word -------------------------------------------------------
+# --- p30: letters into a word -------------------------------------------------------
 puzzle(
-    'p29',
+    'p30',
     'The computer has the letters of a word, one to a hole, and it wants the '
     'word on one pad. There is a blank pad here.',
     'one pad that says Toon',
@@ -1069,20 +1069,20 @@ puzzle(
     rules(),
     table([box(pad('T'), pad('o'), pad('o'), pad('n')), pad('')],   # noqa: F405
           fixed(pad('Toon'), 'we need this'),                # noqa: F405
-          bird(10291, 'p29-post', 'give me your answer'),    # noqa: F405
-          nest(10292, 'p29-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10291, 'p29-post', 10292, 'p29-reply',
+          bird(10291, 'p30-post', 'give me your answer'),    # noqa: F405
+          nest(10292, 'p30-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10291, 'p30-post', 10292, 'p30-reply',
                 right=txt('Toon'),                           # noqa: F405
-                on_right=next_note('') + [load('p30')],
+                on_right=next_note('') + [load('p31')],
                 notes=['Toon, on one pad. Next: the other way round.'])),
     scenery=SCENERY)
 
-# --- p30: a word into letters ---------------------------------------------------------
+# --- p31: a word into letters ---------------------------------------------------------
 # The mould is not provided: the box stack is, and the hint says how a box
 # gets no holes (Ken: "hint how to make a 0-hole box rather than just provide
 # it").
 puzzle(
-    'p30',
+    'p31',
     'Now the computer wants a word taken apart: one letter to a hole. Here '
     'is the word, and the stack of boxes. A box with no holes at all is a '
     'mould — and a box has as many holes as you tell it.',
@@ -1096,18 +1096,18 @@ puzzle(
     rules(stacks=['boxes']),
     table([pad('Talk')],                                     # noqa: F405
           fixed(box(pad('T'), pad('a'), pad('l'), pad('k')), 'we need this'),   # noqa: F405
-          bird(10301, 'p30-post', 'give me your answer'),    # noqa: F405
-          nest(10302, 'p30-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10301, 'p30-post', 10302, 'p30-reply',
+          bird(10301, 'p31-post', 'give me your answer'),    # noqa: F405
+          nest(10302, 'p31-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10301, 'p31-post', 10302, 'p31-reply',
                 right=box(txt('T'), txt('a'), txt('l'), txt('k')),   # noqa: F405
-                on_right=next_note('') + [load('p31')],
+                on_right=next_note('') + [load('p32')],
                 notes=['T, a, l, k — four holes. Next: one letter out of '
                        'a word.'])),
     scenery=SCENERY)
 
-# --- p31: the third letter -----------------------------------------------------------
+# --- p32: the third letter -----------------------------------------------------------
 puzzle(
-    'p31',
+    'p32',
     'The computer wants one letter out of a word: the third letter of '
     '“Marty”. A number can pick a letter out of a pad.',
     'a pad that says r',
@@ -1119,23 +1119,23 @@ puzzle(
     rules(),
     table([pad('Marty'), num(3)],                            # noqa: F405
           fixed(pad('r'), 'we need this'),                   # noqa: F405
-          bird(10311, 'p31-post', 'give me your answer'),    # noqa: F405
-          nest(10312, 'p31-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10311, 'p31-post', 10312, 'p31-reply',
+          bird(10311, 'p32-post', 'give me your answer'),    # noqa: F405
+          nest(10312, 'p32-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10311, 'p32-post', 10312, 'p32-reply',
                 right=txt('r'),                              # noqa: F405
-                on_right=next_note('') + [load('p32')],
+                on_right=next_note('') + [load('p33')],
                 notes=['r — the third letter. Next: halving down to one.'],
                 sorry='Not quite — the third letter of Marty, on its own '
                       'pad.')),
     scenery=SCENERY)
 
-# --- p32: down to one --------------------------------------------------------------------
+# --- p33: down to one --------------------------------------------------------------------
 # The 64 and the 1 are stuck (Ken: "too easy to cheat and grab the 1 from the
 # scale"), and a stuck thing can only be moved by a claw INSIDE what the robot
 # was given -- so the robot cannot pull the 1 out for you either. The answer
 # is the whole box, its scale balanced.
 puzzle(
-    'p32',
+    'p33',
     'The computer wants this box with its 64 halved down to 1, so that the '
     'scale balances: 1 against 1. The 64 and the 1 are stuck fast, so only a '
     'robot can work on them — and the 2 wearing a divide badge, in the third '
@@ -1158,18 +1158,18 @@ puzzle(
     rules(tools=['mimi', 'ruby']),
     table([box(scale(stuck(num(64)), stuck(num(1))), num(2, op='/')), ROBOT],   # noqa: F405
           fixed(box(scale(stuck(num(1)), stuck(num(1))), num(2, op='/')), 'we need this'),   # noqa: F405
-          bird(10321, 'p32-post', 'give me your answer'),    # noqa: F405
-          nest(10322, 'p32-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10321, 'p32-post', 10322, 'p32-reply',
+          bird(10321, 'p33-post', 'give me your answer'),    # noqa: F405
+          nest(10322, 'p33-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10321, 'p33-post', 10322, 'p33-reply',
                 right=box(scale(stuck(num(1)), stuck(num(1))), num(2, op='/')),   # noqa: F405
-                on_right=next_note('') + [load('p33')],
+                on_right=next_note('') + [load('p34')],
                 notes=['Down to one, and it knew where to stop. Next: two '
                        'robots, one run.'],
                 sorry='Not quite — the whole box, its scale balanced at 1 '
                       'against 1, and the ÷2 back in its hole.')),
     scenery=SCENERY)
 
-# --- p33: two robots, one team ----------------------------------------------------------
+# --- p34: two robots, one team ----------------------------------------------------------
 # The first team puzzle, kept small (Ken: 33 was too complex for the first
 # puzzle involving teams). Two boxes, each a scale with two stuck fractions
 # and a spare hole -- one tipping LEFT, the other RIGHT. In each the smaller
@@ -1182,7 +1182,7 @@ PAIR_L = box(scale(stuck(num(5, 6)), stuck(num(4, 5))), None)   # noqa: F405
 PAIR_R = box(scale(stuck(num(4, 5)), stuck(num(5, 6))), None)   # noqa: F405
 PAIR_DONE = box(scale(stuck(num(4, 5)), None), stuck(num(5, 6)))   # noqa: F405
 puzzle(
-    'p33',
+    'p34',
     'Two robots, one team. Here are two boxes, and in each the computer '
     'wants the smaller of the two stuck fractions left alone in the scale, '
     'the bigger one moved out to the spare hole. One scale tips left, the '
@@ -1206,11 +1206,11 @@ puzzle(
     rules(tools=['ruby']),
     table([PAIR_L, PAIR_R, empty_box(2), ROBOT, ROBOT],   # noqa: F405
           fixed(box(PAIR_DONE, PAIR_DONE), 'we need this'),   # noqa: F405
-          bird(10331, 'p33-post', 'give me your answer'),    # noqa: F405
-          nest(10332, 'p33-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10331, 'p33-post', 10332, 'p33-reply',
+          bird(10331, 'p34-post', 'give me your answer'),    # noqa: F405
+          nest(10332, 'p34-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10331, 'p34-post', 10332, 'p34-reply',
                 right=box(PAIR_DONE, PAIR_DONE),               # noqa: F405
-                on_right=next_note('') + [load('p34')],
+                on_right=next_note('') + [load('p35')],
                 notes=['Both done — 4/5 stays, 5/6 moves out, whichever way '
                        'the scale tipped. Next: a team of four sorts three.'],
                 sorry='Not quite — both boxes in the two-hole box, each with '
@@ -1218,7 +1218,7 @@ puzzle(
                       'bigger in the spare hole.')),
     scenery=SCENERY)
 
-# --- p34: sort three ---------------------------------------------------------------------
+# --- p35: sort three ---------------------------------------------------------------------
 # The sorting challenge Ken expected after 28. Four robots make a team: the
 # swapper from 28 (scale tipping LEFT: swap the pans through hole 5, the spare
 # that stays empty in every phase -- hole 4 is where the biggest number parks), and
@@ -1235,7 +1235,7 @@ PRACTICE = box(scale(num(2, 3), num(3, 5)), num(5, 8), None, None, None)     # n
 TO_SORT = box(scale(stuck(num(11, 15)), stuck(num(7, 9))), stuck(num(4, 5)), None, None, None)   # noqa: F405
 SORTED = box(scale(None, None), stuck(num(11, 15)), stuck(num(7, 9)), stuck(num(4, 5)), None)   # noqa: F405
 puzzle(
-    'p34',
+    'p35',
     'The sorting challenge. The computer wants the box on the middle row '
     'sorted: its three fractions in holes 2, 3 and 4, smallest first, the '
     'scale empty, and the fifth hole — the swapper’s spare — empty too. They '
@@ -1270,9 +1270,9 @@ puzzle(
     rules(stacks=['minis'], tools=['ruby', 'dusty', 'mimi']),
     table([PRACTICE],
           fixed(SORTED, 'we need this'),
-          bird(10341, 'p34-post', 'give me your answer'),    # noqa: F405
-          nest(10342, 'p34-reply', 'from the judge'),        # noqa: F405
-          judge('the judge', 10341, 'p34-post', 10342, 'p34-reply',
+          bird(10341, 'p35-post', 'give me your answer'),    # noqa: F405
+          nest(10342, 'p35-reply', 'from the judge'),        # noqa: F405
+          judge('the judge', 10341, 'p35-post', 10342, 'p35-reply',
                 right=SORTED,
                 on_right=next_note('') + [load('p36')],
                 notes=['11/15, 7/9, 4/5 — sorted by a team of four. Thank '
@@ -1283,7 +1283,7 @@ puzzle(
     scenery=SCENERY)
 
 
-# --- p35: this year, from powers of two ---------------------------------------
+# --- p12: this year, from powers of two ---------------------------------------
 # Played after the door code. The judge does not KNOW the year: it asks the
 # computer (a bird to it is in its box), takes the year out of the date box,
 # and drops it on a copy of your answer with a minus badge -- exactly zero
@@ -1293,14 +1293,14 @@ live_bird = lambda lid, label: {'kind': 'bird', 'nestId': 0, 'nestGuid': None,  
 def year_judge():
     #  0 post  1 reply bird  2 note  3 sorry  4 bird to computer  5 date nest
     #  6 [query | date | _]  7 bird to date nest  8 held answer  9 answer minus year
-    work = box(nest(10351, 'p35-post', 'the post'),                       # noqa: F405
-               bird(10352, 'p35-reply', 'to the player'),                 # noqa: F405
+    work = box(nest(10351, 'p12-post', 'the post'),                       # noqa: F405
+               bird(10352, 'p12-reply', 'to the player'),                 # noqa: F405
                pad('This year — the log is dated. Next: a number smaller than one.'),
                pad('Not quite — the year the computer keeps, from these powers of two, each used once.'),
                live_bird('COMPUTER', 'to the computer'),
-               nest(10353, 'p35-date', 'the date'),                       # noqa: F405
+               nest(10353, 'p12-date', 'the date'),                       # noqa: F405
                box(txt('query'), txt('date'), None),                      # noqa: F405
-               bird(10353, 'p35-date', 'to the date nest'),               # noqa: F405
+               bird(10353, 'p12-date', 'to the date nest'),               # noqa: F405
                None, None)
     N = [None] * 10
     def cond(**at):
@@ -1309,7 +1309,7 @@ def year_judge():
             c[int(k[1:])] = v
         return box(*c)                                                    # noqa: F405
     right = robot('the judge', cond(h9=num(0)),                           # noqa: F405
-                  next_note('') + [vac('given', 8), vac('given', 9), load('p12')],   # noqa: F405
+                  next_note('') + [vac('given', 8), vac('given', 9), load('p13')],   # noqa: F405
                   note='Your answer minus the year came to exactly zero: right. Sends the note and opens the next puzzle.')
     wrong = robot('the judge (not this year)', cond(h9=ANYNUM),           # noqa: F405
                   [copy('given', 3), put('given', 1),                     # noqa: F405
@@ -1346,7 +1346,7 @@ for _pw in [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]:
 worked = ' + '.join(str(x) for x in powers)
 
 puzzle(
-    'p35',
+    'p12',
     'The ship’s log wants dating, and the computer keeps the year. Make THIS '
     'YEAR from the powers of two in this box, each used at most once, and give '
     'it to the bird. The judge asks the computer what year it is, so this '
@@ -1363,8 +1363,8 @@ puzzle(
     table([box(num(1), num(2), num(4), num(8), num(16), num(32), num(64), num(128),   # noqa: F405
                num(256), num(512), num(1024))],                       # noqa: F405
           fixed(pad('this year'), 'we need this'),                    # noqa: F405
-          bird(10351, 'p35-post', 'give me your answer'),             # noqa: F405
-          nest(10352, 'p35-reply', 'from the judge'),                 # noqa: F405
+          bird(10351, 'p12-post', 'give me your answer'),             # noqa: F405
+          nest(10352, 'p12-reply', 'from the judge'),                 # noqa: F405
           year_judge()),
 )
 

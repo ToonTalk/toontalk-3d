@@ -2,12 +2,12 @@
  "kind": "world",
  "v": 3,
  "name": "p18",
- "intro": "The computer cannot tell which is bigger, three quarters or two thirds. Put them on the scale \u2014 the bigger one on the LEFT \u2014 and give the bird the scale.",
- "goal": "a scale with the bigger of \u00be and \u2154 on the left",
+ "intro": "The computer needs three quarters. You have a 1, a 4 wearing a divide badge and a 3 wearing a times badge. Dividing and multiplying are badges here \u2014 the number underneath is what changes.",
+ "goal": "three quarters",
  "hints": [
-  "A scale has two pans. Drop a number in each and it tips toward the bigger one.",
-  "Try them one way; if the scale tips to the right, swap them.",
-  "Here\u2019s what I\u2019d do: drop the \u00be in the left pan and the \u2154 in the right \u2014 the scale tips left. Give the bird the scale."
+  "A divide badge divides the number it lands on; a times badge multiplies it.",
+  "One divided by four is a quarter; a quarter times three is three quarters.",
+  "Here\u2019s what I\u2019d do: drop the \u00f74 on the 1 \u2014 it reads \u00bc \u2014 then drop the \u00d73 on that. Give the bird the \u00be."
  ],
  "rules": {
   "stacks": [],
@@ -23,33 +23,34 @@
    "thing": {
     "kind": "number",
     "value": {
-     "n": "3",
-     "d": "4"
+     "n": "1",
+     "d": "1"
     },
     "op": "+"
    },
-   "x": -0.39,
+   "x": -0.38,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "number",
     "value": {
-     "n": "2",
-     "d": "3"
+     "n": "4",
+     "d": "1"
     },
-    "op": "+"
+    "op": "/"
    },
-   "x": -0.01,
+   "x": 0.0,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "scale",
-    "holes": [
-     null,
-     null
-    ]
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "1"
+    },
+    "op": "*"
    },
    "x": 0.38,
    "z": 2.05
@@ -57,7 +58,7 @@
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10081,
+    "nestId": 10071,
     "nestGuid": "p18-post",
     "label": "give me your answer"
    },
@@ -67,7 +68,7 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10082,
+    "id": 10072,
     "guid": "p18-reply",
     "hasEgg": false,
     "pile": [],
@@ -78,31 +79,18 @@
   },
   {
    "thing": {
-    "kind": "scale",
-    "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "3",
-       "d": "4"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "2",
-       "d": "3"
-      },
-      "op": "+"
-     }
-    ],
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "4"
+    },
+    "op": "+",
     "fixed": true,
     "label": "we need this",
     "size": 1.5
    },
    "z": 1.2,
-   "x": 1.25
+   "x": 1.27
   },
   {
    "thing": {
@@ -120,7 +108,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10081,
+         "id": 10071,
          "guid": "p18-post",
          "hasEgg": false,
          "pile": [],
@@ -128,17 +116,17 @@
         },
         {
          "kind": "bird",
-         "nestId": 10082,
+         "nestId": 10072,
          "nestGuid": "p18-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Three quarters it is \u2014 the scale says so. Next: a long box of zeros."
+         "text": "Three quarters. Next: which is bigger?"
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 the bigger number goes in the LEFT pan."
+         "text": "Not quite. Look at what we need, and try again."
         }
        ]
       }
@@ -150,25 +138,12 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "scale",
-         "holes": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "3",
-            "d": "4"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "2",
-            "d": "3"
-           },
-           "op": "+"
-          }
-         ]
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "4"
+         },
+         "op": "+"
         },
         null,
         null,

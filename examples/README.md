@@ -11,7 +11,7 @@ vacuum them away with Dusty once you know the drill.
 |---|---|
 | [`behaviours/`](behaviours/) | the anima-gadgets: a shelf of behaviours to drop on your own things, and the turtles |
 | [`games/`](games/) | 🏓 Pong three ways and 👾 Space Invaders -- games built from the ordinary parts, made to be read as well as played |
-| [`puzzles/`](puzzles/) | the puzzle set the app carries (`p1` to `p34`); `MAKING-PUZZLES.md` says how to write one |
+| [`puzzles/`](puzzles/) | the puzzle set the app carries (`p1` to `p39`, numbered in the order they are played); `MAKING-PUZZLES.md` says how to write one |
 | [`infinity/`](infinity/) | all eight *Exploring Infinity* activities, 🏨 Resort Infinity, and 📮 Zeno's postman |
 | [`numbers/`](numbers/) | 🔀 swap, ❗ factorial, 🐇 Fibonacci twice, and 🌡️ a gauge -- what a number, a scale and a live number can do |
 | [`lists/`](lists/) | 🔢 n-to-1, 🔗 append, 🔁 reverse -- lazy lists, a link at a time, each with a converter to a flat box |

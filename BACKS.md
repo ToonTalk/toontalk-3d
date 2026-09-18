@@ -8139,3 +8139,35 @@ after a single intended run in a puzzle reading like failure (P5, P20);
 p7's "Last of all" read as "last puzzle"; the year puzzle showing as
 "Puzzle 35" between 11 and 12; single-round stepping (the Rounds limit
 does it) and an undo for an overshot run.
+
+## Ken's box round, and the puzzles renumbered
+
+THE PUZZLES RUN IN THE ORDER THEY ARE PLAYED. The year puzzle was p35,
+played between p11 and p12 ("Next puzzle unexpectedly numbered 35"). It is
+p12 now and p12..p34 are p13..p35; p36..p39 stay. Guids, judges' load
+steps, the suite's lists and fixtures (p34_pair, p34_team) renamed together;
+a visitor's saved place in the Puzzle game is a name and so may point one
+puzzle along. p7's "Last of all" reads "Last of all for the ship".
+
+ADVICE WEARS OUT (Ken: "a user who has used Ruby several times will be
+annoyed to hear it"). A familiarity register, kept with the visitor's
+settings (tt3d.familiar): every loosening -- Ruby's or Dusty's -- is
+counted, and from the third on the Ruby/Dusty how-to is left out of the
+stop and mismatch lines. Other advice can join by name; nothing else does
+yet.
+
+A BOX SAYS ITS HOLES: [query | holes | bird] to a bird to a box answers
+with the count. The Nth hole is still reached by splitting at N.
+
+THE HALVES STAND IN ORDER. A box split on spot 1 put the rest on the next
+free spot -- spot 2, which stood to the LEFT, so [c|d] left of [a|b] (Ken's
+picture). Which spot holds which half is what trained robots address
+(swapping them broke the grammar's Scribe in teamOutCheck), so the spots
+moved instead: spot 1 is now at the left of each row and they read
+rightwards. Positions only; every saved program means what it meant.
+
+RUBY ON A BOX'S FRAME MEANS THE BOX: any box in one click, whatever its
+holes said. The redirect to "the first hole that still has detail" stays
+for a scale's frame (a pan was meant) and for the cloud round the thought.
+Ken: "I only was able after making all the holes accept anything."
+kenBoxesCheck covers the four.

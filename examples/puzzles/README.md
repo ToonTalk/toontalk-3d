@@ -43,7 +43,7 @@ opens the world at once.
 
 **To make your own, read [MAKING-PUZZLES.md](MAKING-PUZZLES.md).**
 
-`make_puzzles.py` writes p1 to p34 (after the original tutorial: a box with 1
+`make_puzzles.py` writes p1 to p39, numbered in the order they are played (after the original tutorial: a box with 1
 and 2; a 4 from two 2s; a box with 8, 16 and 32, joined by dropping boxes on
 each other's sides; a zero from a 3 and a −3; a box of two zeros made by a
 robot you train, with Mimi; the total of the numbers on a nest, by a robot
@@ -66,7 +66,7 @@ of three and a pair in order, with a scale by hand; a robot that swaps a
 scale's stuck pans; letters poured into a word and a word into letters; the
 third letter of a word picked out by a number; a halver weighed against
 1; two boxes tipping opposite ways, a robot for each and a team that takes
-either; and a team of four that sorts three; and p35, played after the door code: THIS YEAR from the powers of two up to 1,024 -- the judge asks the computer what year it is and subtracts, so the puzzle is right in any year). Marty's ship lies on the floor behind every table as `scenery`; a small
+either; and a team of four that sorts three; and p12, right after the door code: THIS YEAR from the powers of two up to 1,024 -- the judge asks the computer what year it is and subtracts, so the puzzle is right in any year). Marty's ship lies on the floor behind every table as `scenery`; a small
 goal carries `size` on its thing and stands larger.
 
 There is no Rounds control: a robot runs until its thought stops fitting, so
@@ -98,7 +98,7 @@ sensors, countdowns, timers inside a number, about a third of the
 tutorial) is not here yet; the computer bird is the first piece of it.
 ## The second arc: the 3D things
 
-Played after p34. Each of these judges does not wait to be handed a thing:
+Played after p35 (p36 to p39). Each of these judges does not wait to be handed a thing:
 it holds a bird to the lion (or to the yard) and ASKS once you give its own
 bird the pad that says done, and reads the answer off its post. Give the
 wrong thing, or say done too soon, and the "not quite" pad comes back with

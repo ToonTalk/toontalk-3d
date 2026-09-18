@@ -1245,10 +1245,10 @@ async function scalePanCheck(D) {
 // SORTING BY TEAM. Puzzle 34's four robots -- the swapper (scale tipping
 // left: swap through hole 5) and three movers keyed on which hole is full --
 // sort any three fractions and stop by themselves. The team in
-// p33_team.json is the intended solution; the first design used hole 4 as
+// p34_team.json is the intended solution; the first design used hole 4 as
 // the swapper's spare and ADDED two fractions together, caught by this run.
 async function sortTeamCheck(D) {
-  const world = await (await fetch('p33_team.json')).json();
+  const world = await (await fetch('p34_team.json')).json();
   D.worldIn(world);
   await slowSettle(D, 2000);
   const fr = (t) => t?.userData?.value ? String(t.userData.value.n) + '/' + String(t.userData.value.d) : null;
@@ -1302,7 +1302,7 @@ async function badgeWeightCheck(D) {
 // left pan and the bigger in the spare hole. A robot's thought keeps the
 // tilt, so neither alone takes both boxes.
 async function pairTeamCheck(D) {
-  const world = await (await fetch('p33_pair.json')).json();
+  const world = await (await fetch('p34_pair.json')).json();
   D.worldIn(world);
   await slowSettle(D, 2000);
   const fr = (t) => t?.userData?.value ? String(t.userData.value.n) + '/' + String(t.userData.value.d) : null;
@@ -1332,7 +1332,7 @@ async function pairTeamCheck(D) {
 // orbits or zooms -- a run's steps blinking the subject in and out must not
 // hand it back.
 async function smartCamCheck(D) {
-  const world = await (await fetch('p33_pair.json')).json();
+  const world = await (await fetch('p34_pair.json')).json();
   D.worldIn(world);
   await slowSettle(D, 2000);
   D.smartCam(true);
@@ -1398,7 +1398,7 @@ async function smartCamCheck(D) {
 // THE THOUGHT VIEW. After a lesson, and when red parts appear, the camera
 // pulls back to hold the robot and its thought, and stays there.
 async function thoughtViewCheck(D) {
-  const rec = await (await fetch('../examples/puzzles/p21.world.json')).json();
+  const rec = await (await fetch('../examples/puzzles/p22.world.json')).json();
   D.worldIn(rec);
   await slowSettle(D, 3000);
   D.smartCam(true);
@@ -1434,7 +1434,7 @@ async function thoughtViewCheck(D) {
   // 2. a lesson, with an UNTRAINED robot (a trained one given a box runs
   //    instead): puzzle 28's. The camera comes in on the box; leaving, it
   //    pulls back to the thought the lesson made.
-  const rec2 = await (await fetch('../examples/puzzles/p28.world.json')).json();
+  const rec2 = await (await fetch('../examples/puzzles/p29.world.json')).json();
   D.worldIn(rec2);
   await slowSettle(D, 3000);
   D.smartCam(true);
@@ -3824,7 +3824,7 @@ async function computerCheck(D) {
   // the year puzzle
   const year = now.getFullYear();
   const play = async (answer) => {
-    const pw = await (await fetch('../examples/puzzles/p35.world.json')).json();
+    const pw = await (await fetch('../examples/puzzles/p12.world.json')).json();
     pw.bench.push({ thing: { kind: 'number', value: { n: String(answer), d: '1' } }, x: 1.4, z: 2.2 });
     D.worldIn(pw); await slowSettle(D, 2000);
     D.speed('instant');
@@ -3840,7 +3840,7 @@ async function computerCheck(D) {
   const wrong = await play(year - 1);
   const right = await play(year);
   const wrongOK = wrong.pile.includes(String(year - 1)) && wrong.pile.includes('text') && !wrong.next;
-  const rightOK = right.pile.length === 1 && right.pile[0] === 'text' && right.next === 'p12';
+  const rightOK = right.pile.length === 1 && right.pile[0] === 'text' && right.next === 'p13';
   const ok = timeOK && dateOK && clockOK && refused && told && climbs && rests && wrongOK && rightOK;
   put((ok ? 'PASS' : 'FAIL') + ' a bird to the computer, a timer from robots, and the year puzzle  (time=' + timeOK + ' date=' + dateOK
       + ' clock=' + clockOK + ' refuses-weather=' + refused + ' told-42=' + told + ' timer-climbs=' + climbs + ' rests-on-dot=' + rests
@@ -4659,12 +4659,12 @@ async function lessonsCheck(D) {
 // house's own worldIn used to pull the notebook in off the table and set a
 // spare one on its first work spot, so the year puzzle's judge filed its
 // letter to the computer instead of sending it and waited for ever
-// (ChatGPT's audit, p35). The suite never had a record, so never saw it.
+// (ChatGPT's audit, p12). The suite never had a record, so never saw it.
 async function houseNotebookCheck(D) {
   // the suite's app runs in demo, which keeps no notebook: this check hands it one
   D.demoNotebook({ kind: 'notebook', v: 4, pages: [{ kind: 'number', value: { n: '7', d: '1' } }, { kind: 'text', text: 'a page' }], page: 0, at: { x: 0.95, z: 1.33 } });
   const things = () => { const a = []; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; };
-  const pw = await (await fetch('../examples/puzzles/p35.world.json')).json();
+  const pw = await (await fetch('../examples/puzzles/p12.world.json')).json();
   pw.bench.push({ thing: { kind: 'number', value: { n: String(new Date().getFullYear()), d: '1' } }, x: 1.4, z: 2.2 });
   D.worldIn(pw); await slowSettle(D, 2000);
   const room = things().find(t => t.userData.kind === 'room');
@@ -4679,7 +4679,7 @@ async function houseNotebookCheck(D) {
   D.hold(n); await frames(D, 10); D.clickThing(bird);
   for (let k = 0; k < 900 && !(reply.userData.pile || []).length; k++) await frames(D, 1);
   await frames(D, 30); D.speed(1);
-  const judged = (reply.userData.pile || []).length === 1 && D.nextWorld === 'p12';
+  const judged = (reply.userData.pile || []).length === 1 && D.nextWorld === 'p13';
   D.demoNotebook(null);
   D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1000);
   const ok = inHouse === 0 && onTable && spots.length === 0 && judged;
@@ -4714,6 +4714,66 @@ async function padWordsCheck(D) {
   const tipOK = /holding 0, 0, 0, 0 and 2 more/.test(tip || '');
   const ok = wrote && figures && answered && tipOK;
   put((ok ? 'PASS' : 'FAIL') + ' a pad\u2019s words are data, and a box\u2019s tooltip counts the rest  (set-text=' + wrote + ' number-writes-figures=' + figures + ' query-answers=' + answered + ' tooltip-more=' + tipOK + (tipOK ? '' : ' tip=' + JSON.stringify(String(tip).slice(0, 100))) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// KEN'S BOX ROUND, 19 September. A box answers [query | holes | bird] with
+// its hole count; a box split on a work spot in a lesson leaves its halves
+// in order, the first to the left of the second; Ruby aimed at a box's own
+// frame makes the thought "any box" in one click; and the Ruby how-to wears
+// out once a visitor has loosened a thought three times.
+async function kenBoxesCheck(D, win) {
+  const doc = win.document;
+  const txt = (t) => ({ kind: 'text', text: t }), num = (n) => ({ kind: 'number', value: { n: String(n), d: '1' }, op: '+' });
+  const box = (...h) => ({ kind: 'box', holes: h });
+  const things = () => { const a = []; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; };
+  // 1. how many holes
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'box', holes: [num(1), num(2), num(3), num(4)], lid: 'BX1', evt: 'evt-BX1' }, x: -0.6, z: 1.6 },
+    { thing: { kind: 'nest', id: 9813, guid: 'holes-answers', label: 'answers', pile: [] }, x: 0.5, z: 1.7 } ] });
+  await slowSettle(D, 1500);
+  const nest = things().find(t => t.userData.kind === 'nest');
+  D.post('BX1', box(txt('query'), txt('holes'), { kind: 'bird', nestId: 9813, nestGuid: 'holes-answers' })); await frames(D, 30);
+  const top = nest.userData.pile?.[0];
+  const holesOK = top?.userData.kind === 'number' && String(top.userData.value.n) === '4';
+  // 2. the halves stand in order on the desk: [a|b|c|d] split at 2 in a lesson
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'box', holes: [txt('a'), txt('b'), txt('c'), txt('d')] }, x: -0.4, z: 1.6 },
+    { thing: { kind: 'robot', name: 'splitter', condition: null, program: [], trainedOn: null, team: [] }, x: 0.8, z: 1.5 } ] });
+  await slowSettle(D, 1500);
+  const abcd = things().find(t => t.userData.kind === 'box');
+  D.hold(abcd); await frames(D, 5); D.giveRobot(); await slowSettle(D, 3000);
+  const lesson = D.helperState().mode === 'training';
+  D.teach({ type: 'newNumber' }); await slowSettle(D, 2000);              // a 1 in hand
+  D.teach({ type: 'setValue', value: D.rat(2), op: '+' }); await slowSettle(D, 1000);
+  D.teach({ type: 'put', at: { c: 's0', path: [] } }); await slowSettle(D, 2000);   // the 2 on spot 1
+  D.teach({ type: 'take', at: { c: 'given', path: [] } }); await slowSettle(D, 2000);
+  D.teach({ type: 'put', at: { c: 's0', path: [] } }); await slowSettle(D, 3000);   // the box on the 2: split
+  const st = D.stations;
+  const first = (b) => b?.userData.holes?.[0]?.thing?.userData.text ?? null;
+  const s0 = st.s0?.occupant, s1 = st.s1?.occupant;
+  const halves = { s0: first(s0), s1: first(s1), s0x: st.s0?.point?.x, s1x: st.s1?.point?.x };
+  const orderOK = halves.s0 === 'a' && halves.s1 === 'c' && halves.s0x < halves.s1x;
+  // 3. Ruby on the box's own frame: any box
+  D.rubyOn(true); D.clickCond([]); await slowSettle(D, 3000); D.rubyOn(false);
+  const anyBox = D.condWords ? /any box/i.test(String(D.condWords())) : true;
+  D.exit(); await slowSettle(D, 2000);
+  // 4. the how-to wears out: three loosenings recorded -> no Ruby advice in the stop line
+  const was = D.familiar('loosen');
+  D.familiar('loosen', 3);
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: num(1), x: -0.4, z: 1.6 },
+    { thing: { kind: 'robot', name: 'adder', condition: { kind: 'number', value: { n: '1', d: '1' }, op: '+' }, program: [{ type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [] } }], trainedOn: num(1), team: [] }, x: 0.8, z: 1.5 } ] });
+  await slowSettle(D, 1500);
+  const one = things().find(t => t.userData.kind === 'number');
+  D.hold(one); await frames(D, 5); D.giveRobot(); await slowSettle(D, 2500);
+  D.speed('instant'); D.run(); await slowSettle(D, 4000); D.speed(1);
+  const stopLine = doc.getElementById('hint').textContent;
+  const noAdvice = /stopped|only runs/.test(stopLine) && !/Ruby/.test(stopLine);
+  D.familiar('loosen', was);
+  const ok = holesOK && lesson && orderOK && anyBox && noAdvice;
+  put((ok ? 'PASS' : 'FAIL') + ' a box says its holes, halves stand in order, Ruby on the frame means any box, the how-to wears out  (holes=' + holesOK + ' lesson=' + lesson
+      + ' halves=' + JSON.stringify(halves) + ' any-box=' + anyBox + ' no-advice-when-familiar=' + noAdvice + (noAdvice ? '' : ' line=' + JSON.stringify(stopLine.slice(0, 120))) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -5836,7 +5896,7 @@ async function puzzleCheckBody(D, w, at) {
 async function puzzleSetCheck(D) {
   const line = [];
   let ok = true;
-  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p12', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28', 'p29', 'p30', 'p31', 'p32', 'p33', 'p34', 'p35', 'p36', 'p37', 'p38', 'p39']) {
+  for (const name of ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11', 'p13', 'p14', 'p15', 'p16', 'p17', 'p18', 'p19', 'p20', 'p21', 'p22', 'p23', 'p24', 'p25', 'p26', 'p27', 'p28', 'p29', 'p30', 'p31', 'p32', 'p33', 'p34', 'p35', 'p12', 'p36', 'p37', 'p38', 'p39']) {
     const rec = await (await fetch('../examples/puzzles/' + name + '.world.json')).json();
     D.worldIn(rec);
     await slowSettle(D, 3000);
@@ -5850,8 +5910,8 @@ async function puzzleSetCheck(D) {
     // wanted rather than the thing itself, so the answer is built here and
     // held up to the judge's thought instead.
     const SIGN_ANSWERS = {
-      p26: { kind: 'number', value: { n: '8', d: '11' }, op: '+' },
-      p27: { kind: 'box', holes: [{ kind: 'number', value: { n: '5', d: '9' }, op: '+' },
+      p27: { kind: 'number', value: { n: '8', d: '11' }, op: '+' },
+      p28: { kind: 'box', holes: [{ kind: 'number', value: { n: '5', d: '9' }, op: '+' },
                                   { kind: 'number', value: { n: '7', d: '12' }, op: '+' }] },
       // the second arc: the judge ASKS the lion (or the yard) and reads its answer
       p36: { kind: 'box', holes: [{ kind: 'number', value: { n: '1', d: '2' }, op: '+' },
@@ -7250,6 +7310,9 @@ async function runOne(D, spec) {
   let pwOK = true;
   try { pwOK = want('padWords') ? await padWordsCheck(D) : true; }
   catch (e) { pwOK = false; put('FAIL a pad\u2019s words are data  ' + e.message, 'fail'); }
+  let kbxOK = true;
+  try { kbxOK = want('kenBoxes') ? await kenBoxesCheck(D, frame.contentWindow) : true; }
+  catch (e) { kbxOK = false; put('FAIL a box says its holes, halves stand in order  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7415,7 +7478,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

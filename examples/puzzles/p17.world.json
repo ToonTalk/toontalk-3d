@@ -2,12 +2,12 @@
  "kind": "world",
  "v": 3,
  "name": "p17",
- "intro": "The computer needs three quarters. You have a 1, a 4 wearing a divide badge and a 3 wearing a times badge. Dividing and multiplying are badges here \u2014 the number underneath is what changes.",
- "goal": "three quarters",
+ "intro": "The computer needs a word, and it needs it on one pad: \u201cToonTalk\u201d. Give the bird the pad.",
+ "goal": "one pad that says ToonTalk",
  "hints": [
-  "A divide badge divides the number it lands on; a times badge multiplies it.",
-  "One divided by four is a quarter; a quarter times three is three quarters.",
-  "Here\u2019s what I\u2019d do: drop the \u00f74 on the 1 \u2014 it reads \u00bc \u2014 then drop the \u00d73 on that. Give the bird the \u00be."
+  "Drop a pad on the edge of another pad \u2014 or set it down with its edge over the other\u2019s \u2014 and the words join into one.",
+  "Which edge matters: \u201cTalk\u201d dropped on the RIGHT edge of \u201cToon\u201d reads ToonTalk; on the left edge it reads TalkToon.",
+  "Here\u2019s what I\u2019d do: pick up the Talk pad and drop it on the right-hand edge of the Toon pad. Give the bird the ToonTalk pad."
  ],
  "rules": {
   "stacks": [],
@@ -21,44 +21,24 @@
  "bench": [
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "1",
-     "d": "1"
-    },
-    "op": "+"
+    "kind": "text",
+    "text": "Toon"
    },
-   "x": -0.38,
+   "x": -0.24,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "4",
-     "d": "1"
-    },
-    "op": "/"
+    "kind": "text",
+    "text": "Talk"
    },
-   "x": 0.0,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "number",
-    "value": {
-     "n": "3",
-     "d": "1"
-    },
-    "op": "*"
-   },
-   "x": 0.38,
+   "x": 0.24,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10071,
+    "nestId": 10061,
     "nestGuid": "p17-post",
     "label": "give me your answer"
    },
@@ -68,7 +48,7 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10072,
+    "id": 10062,
     "guid": "p17-reply",
     "hasEgg": false,
     "pile": [],
@@ -79,18 +59,14 @@
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "3",
-     "d": "4"
-    },
-    "op": "+",
+    "kind": "text",
+    "text": "ToonTalk",
     "fixed": true,
     "label": "we need this",
     "size": 1.5
    },
    "z": 1.2,
-   "x": 1.27
+   "x": 1.19
   },
   {
    "thing": {
@@ -108,7 +84,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10071,
+         "id": 10061,
          "guid": "p17-post",
          "hasEgg": false,
          "pile": [],
@@ -116,17 +92,17 @@
         },
         {
          "kind": "bird",
-         "nestId": 10072,
+         "nestId": 10062,
          "nestGuid": "p17-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Three quarters. Next: which is bigger?"
+         "text": "ToonTalk, on one pad. Next: three quarters."
         },
         {
          "kind": "text",
-         "text": "Not quite. Look at what we need, and try again."
+         "text": "Not quite \u2014 one pad reading exactly ToonTalk; the right-hand edge puts Talk after Toon."
         }
        ]
       }
@@ -138,12 +114,8 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "number",
-         "value": {
-          "n": "3",
-          "d": "4"
-         },
-         "op": "+"
+         "kind": "text",
+         "text": "ToonTalk"
         },
         null,
         null,

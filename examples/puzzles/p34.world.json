@@ -2,24 +2,18 @@
  "kind": "world",
  "v": 3,
  "name": "p34",
- "intro": "The sorting challenge. The computer wants the box on the middle row sorted: its three fractions in holes 2, 3 and 4, smallest first, the scale empty, and the fifth hole \u2014 the swapper\u2019s spare \u2014 empty too. They are stuck fast, and too close to tell apart by eye. A team of four robots can do it \u2014 the swapper you know and three that each move a number \u2014 trained on the practice box at the front, which holds other fractions. Robots come from the stack of little robots, and Mimi will copy the practice box before you train on it, so a slip costs you a copy, not a fresh start. The ship is whole. Whatever you make from here, it is yours.",
- "goal": "the box with its three fractions in order after the empty scale, smallest first",
+ "intro": "Two robots, one team. Here are two boxes, and in each the computer wants the smaller of the two stuck fractions left alone in the scale, the bigger one moved out to the spare hole. One scale tips left, the other right \u2014 and a robot remembers which way its scale tipped, so the robot you train on one box refuses the other. Train one robot for each, drop one on the other to make a team, and the team takes either box. Put both finished boxes in the two-hole box and give it to the bird.",
+ "goal": "a box holding the two finished boxes: in each, the smaller fraction alone in the left pan and the bigger in the spare hole",
  "hints": [
-  "Sorting three is three compare-and-swaps. The scale compares; the swapper swaps when it tips left. Three more robots move numbers in and out of the pans, and each knows its turn by which hole is full: 2, 3 or 4. Hole 5 is the swapper\u2019s spare, and stays empty.",
-  "The swapper first, on the practice box (its scale tips left): left pan to hole 5, right pan to the left pan, hole 5 to the right pan. Leave. Wake Ruby and loosen both pans to \u201cany number\u201d; wake Dusty and take hole 2 out of its thought, so anything or nothing may be there.",
-  "Run the swapper on the practice box: the smaller fraction is now on the left. Train the second robot on that: left pan to hole 3, then hole 2 to the left pan. Ruby: loosen both pans and hole 2 to any number. Its thought says tipping RIGHT \u2014 keep that.",
-  "Run the second robot once. Train the third on what you see: right pan to hole 4, then hole 3 to the right pan. Ruby: both pans and hole 3.",
-  "Run the third once, then the swapper once more, since the scale tips left again. Train the fourth: left pan to hole 2, right pan to hole 3. Ruby: both pans and hole 4.",
-  "Drop the robots on one another to make a team. Give the team the middle box and press Run: it swaps and moves until the scale is empty and the three are in order. Give the bird the box."
+  "A team is tried in order: the first robot whose thought fits takes the round. Two robots with different thoughts, one for each way the scale can tip.",
+  "On the box tipping LEFT: left pan to the spare hole, then right pan to the left pan. Leave; wake Ruby and loosen both pans to \u201cany number\u201d. Its thought says tipping left.",
+  "On the box tipping RIGHT, with the other robot: right pan to the spare hole. Leave; Ruby on both pans. Its thought says tipping right.",
+  "Drop one robot on the other: a team of two. Give the team a box and press Run; take the finished box out and give it the other. Put both in the two-hole box and give the bird that box."
  ],
  "rules": {
-  "stacks": [
-   "minis"
-  ],
+  "stacks": [],
   "tools": [
-   "ruby",
-   "dusty",
-   "mimi"
+   "ruby"
   ],
   "typing": {
    "numbers": false,
@@ -38,41 +32,97 @@
        {
         "kind": "number",
         "value": {
-         "n": "2",
-         "d": "3"
+         "n": "5",
+         "d": "6"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
        },
        {
         "kind": "number",
         "value": {
-         "n": "3",
+         "n": "4",
          "d": "5"
         },
-        "op": "+"
+        "op": "+",
+        "stuck": true
        }
       ]
      },
+     null
+    ]
+   },
+   "x": -1.02,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
      {
-      "kind": "number",
-      "value": {
-       "n": "5",
-       "d": "8"
-      },
-      "op": "+"
+      "kind": "scale",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "4",
+         "d": "5"
+        },
+        "op": "+",
+        "stuck": true
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "5",
+         "d": "6"
+        },
+        "op": "+",
+        "stuck": true
+       }
+      ]
      },
-     null,
+     null
+    ]
+   },
+   "x": -0.4,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
      null,
      null
     ]
    },
-   "x": 0.0,
+   "x": 0.22,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": null,
+    "program": [],
+    "team": []
+   },
+   "x": 0.72,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "robot",
+    "name": null,
+    "program": [],
+    "team": []
+   },
+   "x": 1.12,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10341,
+    "nestId": 10331,
     "nestGuid": "p34-post",
     "label": "give me your answer"
    },
@@ -82,7 +132,7 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10342,
+    "id": 10332,
     "guid": "p34-reply",
     "hasEgg": false,
     "pile": [],
@@ -96,46 +146,70 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "scale",
+      "kind": "box",
       "holes": [
-       null,
-       null
+       {
+        "kind": "scale",
+        "holes": [
+         {
+          "kind": "number",
+          "value": {
+           "n": "4",
+           "d": "5"
+          },
+          "op": "+",
+          "stuck": true
+         },
+         null
+        ]
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "5",
+         "d": "6"
+        },
+        "op": "+",
+        "stuck": true
+       }
       ]
      },
      {
-      "kind": "number",
-      "value": {
-       "n": "11",
-       "d": "15"
-      },
-      "op": "+",
-      "stuck": true
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "7",
-       "d": "9"
-      },
-      "op": "+",
-      "stuck": true
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "4",
-       "d": "5"
-      },
-      "op": "+",
-      "stuck": true
-     },
-     null
+      "kind": "box",
+      "holes": [
+       {
+        "kind": "scale",
+        "holes": [
+         {
+          "kind": "number",
+          "value": {
+           "n": "4",
+           "d": "5"
+          },
+          "op": "+",
+          "stuck": true
+         },
+         null
+        ]
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "5",
+         "d": "6"
+        },
+        "op": "+",
+        "stuck": true
+       }
+      ]
+     }
     ],
     "fixed": true,
-    "label": "we need this"
+    "label": "we need this",
+    "size": 1.5
    },
    "z": 1.2,
-   "x": 1.05
+   "x": 1.09
   },
   {
    "thing": {
@@ -153,7 +227,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10341,
+         "id": 10331,
          "guid": "p34-post",
          "hasEgg": false,
          "pile": [],
@@ -161,17 +235,17 @@
         },
         {
          "kind": "bird",
-         "nestId": 10342,
+         "nestId": 10332,
          "nestGuid": "p34-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "11/15, 7/9, 4/5 \u2014 sorted by a team of four. Thank you! (More puzzles are on the way.)"
+         "text": "Both done \u2014 4/5 stays, 5/6 moves out, whichever way the scale tipped. Next: a team of four sorts three."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 the three fractions in holes 2, 3 and 4, smallest first, both pans empty, and hole 5 empty."
+         "text": "Not quite \u2014 both boxes in the two-hole box, each with the smaller fraction alone in the left pan and the bigger in the spare hole."
         }
        ]
       }
@@ -186,40 +260,63 @@
          "kind": "box",
          "holes": [
           {
-           "kind": "scale",
+           "kind": "box",
            "holes": [
-            null,
-            null
+            {
+             "kind": "scale",
+             "holes": [
+              {
+               "kind": "number",
+               "value": {
+                "n": "4",
+                "d": "5"
+               },
+               "op": "+",
+               "stuck": true
+              },
+              null
+             ]
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "5",
+              "d": "6"
+             },
+             "op": "+",
+             "stuck": true
+            }
            ]
           },
           {
-           "kind": "number",
-           "value": {
-            "n": "11",
-            "d": "15"
-           },
-           "op": "+",
-           "stuck": true
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "7",
-            "d": "9"
-           },
-           "op": "+",
-           "stuck": true
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "4",
-            "d": "5"
-           },
-           "op": "+",
-           "stuck": true
-          },
-          null
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "scale",
+             "holes": [
+              {
+               "kind": "number",
+               "value": {
+                "n": "4",
+                "d": "5"
+               },
+               "op": "+",
+               "stuck": true
+              },
+              null
+             ]
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "5",
+              "d": "6"
+             },
+             "op": "+",
+             "stuck": true
+            }
+           ]
+          }
          ]
         },
         null,
@@ -265,7 +362,7 @@
        },
        {
         "type": "load",
-        "name": "p36"
+        "name": "p35"
        }
       ],
       "trainedOn": null,
@@ -449,50 +546,6 @@
    },
    "x": -1.35,
    "z": 1.2
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "scale",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "11",
-         "d": "15"
-        },
-        "op": "+",
-        "stuck": true
-       },
-       {
-        "kind": "number",
-        "value": {
-         "n": "7",
-         "d": "9"
-        },
-        "op": "+",
-        "stuck": true
-       }
-      ]
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "4",
-       "d": "5"
-      },
-      "op": "+",
-      "stuck": true
-     },
-     null,
-     null,
-     null
-    ]
-   },
-   "x": 0.75,
-   "z": 1.55
   }
  ],
  "stations": {},

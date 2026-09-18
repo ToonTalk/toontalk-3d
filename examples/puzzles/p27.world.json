@@ -2,12 +2,12 @@
  "kind": "world",
  "v": 3,
  "name": "p27",
- "intro": "The computer wants these two fractions in a box, the smaller one first. Which is smaller is for the scale to say.",
- "goal": "a box with the smaller fraction first",
+ "intro": "The computer wants the biggest of these three fractions, and neither it nor you can tell by looking which that is \u2014 but a scale can. Give the bird the biggest.",
+ "goal": "the biggest of the three fractions",
  "hints": [
-  "Put both on the scale and see which way it tips.",
-  "The lighter pan holds the smaller one; that one goes in the first hole.",
-  "Here\u2019s what I\u2019d do: put both on the scale. The pan that goes up holds the smaller fraction: put that one in the first hole and the other in the second, and give the bird the box."
+  "A scale tips toward the bigger number, fractions included. Put two in its pans.",
+  "Keep the heavier one on the scale and try it against the third.",
+  "Here\u2019s what I\u2019d do: put two on the scale and see which way it tips; take the lighter one off and put the third in its place. Whichever is still on the heavy side at the end is the biggest \u2014 give it to the bird."
  ],
  "rules": {
   "stacks": [],
@@ -23,24 +23,36 @@
    "thing": {
     "kind": "number",
     "value": {
-     "n": "7",
-     "d": "12"
+     "n": "5",
+     "d": "7"
     },
     "op": "+"
    },
-   "x": -0.7,
+   "x": -0.58,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "number",
     "value": {
-     "n": "5",
-     "d": "9"
+     "n": "8",
+     "d": "11"
     },
     "op": "+"
    },
-   "x": -0.32,
+   "x": -0.2,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "13",
+     "d": "18"
+    },
+    "op": "+"
+   },
+   "x": 0.18,
    "z": 2.05
   },
   {
@@ -51,24 +63,13 @@
      null
     ]
    },
-   "x": 0.07,
-   "z": 2.05
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     null,
-     null
-    ]
-   },
-   "x": 0.58,
+   "x": 0.57,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10271,
+    "nestId": 10261,
     "nestGuid": "p27-post",
     "label": "give me your answer"
    },
@@ -78,7 +79,7 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10272,
+    "id": 10262,
     "guid": "p27-reply",
     "hasEgg": false,
     "pile": [],
@@ -90,7 +91,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "the smaller one first",
+    "text": "the biggest of the three",
     "fixed": true,
     "label": "we need this",
     "size": 1.5
@@ -114,7 +115,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10271,
+         "id": 10261,
          "guid": "p27-post",
          "hasEgg": false,
          "pile": [],
@@ -122,17 +123,17 @@
         },
         {
          "kind": "bird",
-         "nestId": 10272,
+         "nestId": 10262,
          "nestGuid": "p27-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "5/9 then 7/12. Next: a robot that sorts."
+         "text": "8/11 \u2014 the scale knew. Next: two in order."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 the smaller fraction in the first hole; the scale tips toward the bigger."
+         "text": "Not quite \u2014 the scale tips toward the bigger; keep the winner on and try the others against it."
         }
        ]
       }
@@ -144,25 +145,12 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "number",
-           "value": {
-            "n": "5",
-            "d": "9"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "7",
-            "d": "12"
-           },
-           "op": "+"
-          }
-         ]
+         "kind": "number",
+         "value": {
+          "n": "8",
+          "d": "11"
+         },
+         "op": "+"
         },
         null,
         null,

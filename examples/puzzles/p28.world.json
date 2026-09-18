@@ -2,12 +2,12 @@
  "kind": "world",
  "v": 3,
  "name": "p28",
- "intro": "Sorting is swapping what is out of order, over and over \u2014 and this is the smallest piece of it. Two fractions are stuck in a scale\u2019s pans, the bigger one on the left, and the computer wants the smaller one on the left. They are too close to tell apart by eye, and stuck too fast for your fingers \u2014 the scale says which is bigger, and only a robot\u2019s claw can swap them. The box has a spare hole. A team of these will sort three, soon.",
- "goal": "a box holding a scale with the smaller fraction in its left pan",
+ "intro": "The computer wants these two fractions in a box, the smaller one first. Which is smaller is for the scale to say.",
+ "goal": "a box with the smaller fraction first",
  "hints": [
-  "A pan holds one thing, like a hole. To swap two things you need somewhere to put one of them first.",
-  "Move the left one to the spare hole; move the right one to the left pan; move the spare one to the right pan.",
-  "Here\u2019s what I\u2019d do. Drop the box on the robot. In its imagination: click the 7/9, click the spare hole; click the 5/7, click the left pan; click the 7/9 in the spare hole, click the right pan. Leave the thought bubble and give the bird the box."
+  "Put both on the scale and see which way it tips.",
+  "The lighter pan holds the smaller one; that one goes in the first hole.",
+  "Here\u2019s what I\u2019d do: put both on the scale. The pan that goes up holds the smaller fraction: put that one in the first hole and the other in the second, and give the bird the box."
  ],
  "rules": {
   "stacks": [],
@@ -21,51 +21,54 @@
  "bench": [
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "scale",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "7",
-         "d": "9"
-        },
-        "op": "+",
-        "stuck": true
-       },
-       {
-        "kind": "number",
-        "value": {
-         "n": "5",
-         "d": "7"
-        },
-        "op": "+",
-        "stuck": true
-       }
-      ]
-     },
-     null
-    ]
+    "kind": "number",
+    "value": {
+     "n": "7",
+     "d": "12"
+    },
+    "op": "+"
    },
-   "x": -0.2,
+   "x": -0.7,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "robot",
-    "name": null,
-    "program": [],
-    "team": []
+    "kind": "number",
+    "value": {
+     "n": "5",
+     "d": "9"
+    },
+    "op": "+"
    },
-   "x": 0.31,
+   "x": -0.32,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "scale",
+    "holes": [
+     null,
+     null
+    ]
+   },
+   "x": 0.07,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     null,
+     null
+    ]
+   },
+   "x": 0.58,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10281,
+    "nestId": 10271,
     "nestGuid": "p28-post",
     "label": "give me your answer"
    },
@@ -75,7 +78,7 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10282,
+    "id": 10272,
     "guid": "p28-reply",
     "hasEgg": false,
     "pile": [],
@@ -86,39 +89,14 @@
   },
   {
    "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "scale",
-      "holes": [
-       {
-        "kind": "number",
-        "value": {
-         "n": "5",
-         "d": "7"
-        },
-        "op": "+",
-        "stuck": true
-       },
-       {
-        "kind": "number",
-        "value": {
-         "n": "7",
-         "d": "9"
-        },
-        "op": "+",
-        "stuck": true
-       }
-      ]
-     },
-     null
-    ],
+    "kind": "text",
+    "text": "the smaller one first",
     "fixed": true,
     "label": "we need this",
     "size": 1.5
    },
    "z": 1.2,
-   "x": 1.09
+   "x": 1.19
   },
   {
    "thing": {
@@ -136,7 +114,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10281,
+         "id": 10271,
          "guid": "p28-post",
          "hasEgg": false,
          "pile": [],
@@ -144,17 +122,17 @@
         },
         {
          "kind": "bird",
-         "nestId": 10282,
+         "nestId": 10272,
          "nestGuid": "p28-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "5/7 on the left, 7/9 on the right \u2014 sorted by robot. Next: letters into a word."
+         "text": "5/9 then 7/12. Next: a robot that sorts."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 the smaller fraction in the LEFT pan, and the spare hole empty."
+         "text": "Not quite \u2014 the smaller fraction in the first hole; the scale tips toward the bigger."
         }
        ]
       }
@@ -169,29 +147,21 @@
          "kind": "box",
          "holes": [
           {
-           "kind": "scale",
-           "holes": [
-            {
-             "kind": "number",
-             "value": {
-              "n": "5",
-              "d": "7"
-             },
-             "op": "+",
-             "stuck": true
-            },
-            {
-             "kind": "number",
-             "value": {
-              "n": "7",
-              "d": "9"
-             },
-             "op": "+",
-             "stuck": true
-            }
-           ]
+           "kind": "number",
+           "value": {
+            "n": "5",
+            "d": "9"
+           },
+           "op": "+"
           },
-          null
+          {
+           "kind": "number",
+           "value": {
+            "n": "7",
+            "d": "12"
+           },
+           "op": "+"
+          }
          ]
         },
         null,

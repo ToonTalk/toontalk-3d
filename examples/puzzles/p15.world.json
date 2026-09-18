@@ -2,75 +2,63 @@
  "kind": "world",
  "v": 3,
  "name": "p15",
- "intro": "The computer keeps time in seconds, and it wants to know how many there are in a year: 365 days, 24 hours in a day, 60 minutes in an hour, 60 seconds in a minute. Three of these wear times badges. Give the bird the answer.",
- "goal": "the seconds in a year",
+ "intro": "The computer needs more than numbers \u2014 it needs letters and words. Put a capital A, a B and a C on these blank pads, in the box in that order, and give the box to the bird.",
+ "goal": "a box with A, B and C on pads, in that order",
  "hints": [
-  "A number wearing a times badge multiplies the number it lands on.",
-  "Start with the 365 and drop the badge numbers on it, one after another: days, then hours, then minutes, then seconds.",
-  "Here\u2019s what I\u2019d do: drop the \u00d724 on the 365 (8,760), then the first \u00d760 on that (525,600), then the other \u00d760 (31,536,000). Give the bird the 31,536,000."
+  "Hold a pad and press a letter key: the keyboard writes on what you hold.",
+  "A capital letter \u2014 hold Shift. Backspace takes a letter back.",
+  "Here\u2019s what I\u2019d do: pick up a pad, press Shift and A, drop it in the first hole; the same with B into the second and C into the third; give the box to the bird."
  ],
  "rules": {
   "stacks": [],
   "tools": [],
   "typing": {
    "numbers": false,
-   "pads": false
+   "pads": true
   },
   "undo": true
  },
  "bench": [
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "365",
-     "d": "1"
-    },
-    "op": "+"
+    "kind": "text",
+    "text": ""
    },
-   "x": -0.57,
+   "x": -0.86,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "24",
-     "d": "1"
-    },
-    "op": "*"
+    "kind": "text",
+    "text": ""
    },
-   "x": -0.19,
+   "x": -0.38,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "60",
-     "d": "1"
-    },
-    "op": "*"
+    "kind": "text",
+    "text": ""
    },
-   "x": 0.19,
+   "x": 0.1,
    "z": 2.05
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "60",
-     "d": "1"
-    },
-    "op": "*"
+    "kind": "box",
+    "holes": [
+     null,
+     null,
+     null
+    ]
    },
-   "x": 0.57,
+   "x": 0.72,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10051,
+    "nestId": 10041,
     "nestGuid": "p15-post",
     "label": "give me your answer"
    },
@@ -80,7 +68,7 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10052,
+    "id": 10042,
     "guid": "p15-reply",
     "hasEgg": false,
     "pile": [],
@@ -91,18 +79,26 @@
   },
   {
    "thing": {
-    "kind": "number",
-    "value": {
-     "n": "31536000",
-     "d": "1"
-    },
-    "op": "+",
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "text",
+      "text": "A"
+     },
+     {
+      "kind": "text",
+      "text": "B"
+     },
+     {
+      "kind": "text",
+      "text": "C"
+     }
+    ],
     "fixed": true,
-    "label": "we need this",
-    "size": 1.5
+    "label": "we need this"
    },
    "z": 1.2,
-   "x": 1.27
+   "x": 1.14
   },
   {
    "thing": {
@@ -120,7 +116,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10051,
+         "id": 10041,
          "guid": "p15-post",
          "hasEgg": false,
          "pile": [],
@@ -128,17 +124,17 @@
         },
         {
          "kind": "bird",
-         "nestId": 10052,
+         "nestId": 10042,
          "nestGuid": "p15-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "31,536,000 seconds \u2014 the computer can keep a calendar. Next: a word."
+         "text": "A, B, C \u2014 the computer can spell. Next: a whole year, in seconds."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 365 \u00d7 24 \u00d7 60 \u00d7 60. Each badge lands once; Start over if one is spent."
+         "text": "Not quite \u2014 capital A, B and C, one to a pad, in that order."
         }
        ]
       }
@@ -150,12 +146,21 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "number",
-         "value": {
-          "n": "31536000",
-          "d": "1"
-         },
-         "op": "+"
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "A"
+          },
+          {
+           "kind": "text",
+           "text": "B"
+          },
+          {
+           "kind": "text",
+           "text": "C"
+          }
+         ]
         },
         null,
         null,

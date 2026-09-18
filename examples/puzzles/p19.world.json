@@ -2,19 +2,16 @@
  "kind": "world",
  "v": 3,
  "name": "p19",
- "intro": "The computer needs a box with exactly 24 zeros. You have a box of three, and Mimi.",
- "goal": "a box with exactly 24 zeros in it",
+ "intro": "The computer cannot tell which is bigger, three quarters or two thirds. Put them on the scale \u2014 the bigger one on the LEFT \u2014 and give the bird the scale.",
+ "goal": "a scale with the bigger of \u00be and \u2154 on the left",
  "hints": [
-  "Mimi copies a whole box. Set it on her platform and take the copy; take the box back off the platform.",
-  "Boxes join side to side: a box of three and a copy of it make six.",
-  "Three, six, twelve, twenty-four: three doublings.",
-  "Here\u2019s what I\u2019d do: copy and join to make six; copy and join to make twelve; copy and join to make twenty-four; give the bird the box. A box that long shows its ends and says how many holes are between."
+  "A scale has two pans. Drop a number in each and it tips toward the bigger one.",
+  "Try them one way; if the scale tips to the right, swap them.",
+  "Here\u2019s what I\u2019d do: drop the \u00be in the left pan and the \u2154 in the right \u2014 the scale tips left. Give the bird the scale."
  ],
  "rules": {
   "stacks": [],
-  "tools": [
-   "mimi"
-  ],
+  "tools": [],
   "typing": {
    "numbers": false,
    "pads": false
@@ -24,261 +21,88 @@
  "bench": [
   {
    "thing": {
-    "kind": "box",
+    "kind": "number",
+    "value": {
+     "n": "3",
+     "d": "4"
+    },
+    "op": "+"
+   },
+   "x": -0.39,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "number",
+    "value": {
+     "n": "2",
+     "d": "3"
+    },
+    "op": "+"
+   },
+   "x": -0.01,
+   "z": 2.05
+  },
+  {
+   "thing": {
+    "kind": "scale",
     "holes": [
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     }
+     null,
+     null
     ]
    },
-   "x": 0.0,
+   "x": 0.38,
    "z": 2.05
   },
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10091,
+    "nestId": 10081,
     "nestGuid": "p19-post",
     "label": "give me your answer"
    },
-   "x": 1.05,
-   "z": 2.05
+   "x": -0.55,
+   "z": 1.55
   },
   {
    "thing": {
     "kind": "nest",
-    "id": 10092,
+    "id": 10082,
     "guid": "p19-reply",
     "hasEgg": false,
     "pile": [],
     "label": "from the judge"
    },
-   "x": 1.55,
-   "z": 2.05
+   "x": -0.05,
+   "z": 1.55
   },
   {
    "thing": {
-    "kind": "box",
+    "kind": "scale",
     "holes": [
      {
       "kind": "number",
       "value": {
-       "n": "0",
-       "d": "1"
+       "n": "3",
+       "d": "4"
       },
       "op": "+"
      },
      {
       "kind": "number",
       "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "0",
-       "d": "1"
+       "n": "2",
+       "d": "3"
       },
       "op": "+"
      }
     ],
     "fixed": true,
-    "label": "we need this"
+    "label": "we need this",
+    "size": 1.5
    },
    "z": 1.2,
-   "x": 0.1
+   "x": 1.25
   },
   {
    "thing": {
@@ -296,7 +120,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10091,
+         "id": 10081,
          "guid": "p19-post",
          "hasEgg": false,
          "pile": [],
@@ -304,17 +128,17 @@
         },
         {
          "kind": "bird",
-         "nestId": 10092,
+         "nestId": 10082,
          "nestGuid": "p19-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "Twenty-four zeros exactly. Next: a robot that turns a box round."
+         "text": "Three quarters it is \u2014 the scale says so. Next: a long box of zeros."
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 exactly 24 zeros. Too few? Copy and join again. Too many? Start over."
+         "text": "Not quite \u2014 the bigger number goes in the LEFT pan."
         }
        ]
       }
@@ -326,197 +150,21 @@
        "kind": "box",
        "holes": [
         {
-         "kind": "box",
+         "kind": "scale",
          "holes": [
           {
            "kind": "number",
            "value": {
-            "n": "0",
-            "d": "1"
+            "n": "3",
+            "d": "4"
            },
            "op": "+"
           },
           {
            "kind": "number",
            "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
-           },
-           "op": "+"
-          },
-          {
-           "kind": "number",
-           "value": {
-            "n": "0",
-            "d": "1"
+            "n": "2",
+            "d": "3"
            },
            "op": "+"
           }

@@ -447,7 +447,11 @@ the left, on the right side and they go on the right — and shrinking a box
 splits the extra holes off as a box of their own.</p>
 <p><b>Drop a box on a whole number</b> and it splits there: a box of five
 dropped on a <b>2</b> becomes a box of the first two and a box of the rest.
-That, with an empty box for the end, is how a robot walks along an array.</p>
+That, with an empty box for the end, is how a robot walks along an array. On
+a robot&rsquo;s desk the first half stands where the number was and the rest
+on the next work spot to its right. A box also says how many holes it has:
+<code>[query | holes | bird]</code> to a bird to the box answers with the
+number.</p>
 <p>Scales have two pans that work exactly like holes; the beam tips toward the
 larger number. A drop on the scale itself lands in the pan on that side, and
 a pan with something in it takes the drop onto that thing. A badge number
@@ -608,7 +612,7 @@ Escape reaches the workshop. Enter works with something in your hand too.
 <em>examples/games/👾 space-invaders</em> is built to be read this way.</p>
 <p>The little desks beside the robot are its <b>work spots</b> — its own
 scratch space, cleared onto the table when it finishes, so nothing left there
-is ever lost. A spot sizes what you set on it the way a hole does: something
+is ever lost. They read left to right, spot 1 at the left of each row. A spot sizes what you set on it the way a hole does: something
 too wide, a box of eight holes say, sits there smaller rather than hanging over
 its neighbours, and comes back to full size the moment it is picked up.
 A robot shown setting something down on an <b>empty</b> spot uses the next
@@ -667,7 +671,9 @@ he goes over and takes just the name off; the thing stays. Typing while
 holding a model, a bird, a nest, a house, a sound, a scale or a notebook
 names it. <b>Ruby the eraser generalises</b>: wake her and
 click a part of a thought — a 7 becomes <em>any number</em>, then
-<em>anything</em>. She also erases real things in place: an erased number
+<em>anything</em>. Click a box&rsquo;s own frame and the whole box becomes
+<em>any box</em>, whatever its holes said; click a hole to loosen that hole
+alone. She also erases real things in place: an erased number
 stands for any number, which is how you build a robot's expectations by hand.
 Waking one settles the other, and whoever is awake fidgets.</p>
 
@@ -1839,8 +1845,8 @@ puzzles &mdash; a box with 1 and 2, a 4, a box with 8, 16 and 32, a zero, a
 box of two zeros made by a robot you train, the total of the numbers on a
 nest (the first that needs Ruby), and exactly 1,024 from a robot that doubles
 and will not stop by itself, so you press Stop when the number says 512 &mdash;
-and twenty-eight more after them (boxes inside boxes, more zeros, the door
-code 77 from powers of two, a half, a million, letters on pads and letters
+and thirty-two more after them (boxes inside boxes, more zeros, the door
+code 77 from powers of two, this year from the same powers, a half, a million, letters on pads and letters
 poured into words, the seconds in a year, fractions, scales by hand, and
 robots: one moves stuck numbers across, one counts the post, one grows a box
 you have to stop, and several that weigh what they make against a number in

@@ -2,16 +2,25 @@
  "kind": "world",
  "v": 3,
  "name": "p35",
- "intro": "The ship\u2019s log wants dating, and the computer keeps the year. Make THIS YEAR from the powers of two in this box, each used at most once, and give it to the bird. The judge asks the computer what year it is, so this puzzle is right in any year.",
- "goal": "this year, as a number",
+ "intro": "The sorting challenge. The computer wants the box on the middle row sorted: its three fractions in holes 2, 3 and 4, smallest first, the scale empty, and the fifth hole \u2014 the swapper\u2019s spare \u2014 empty too. They are stuck fast, and too close to tell apart by eye. A team of four robots can do it \u2014 the swapper you know and three that each move a number \u2014 trained on the practice box at the front, which holds other fractions. Robots come from the stack of little robots, and Mimi will copy the practice box before you train on it, so a slip costs you a copy, not a fresh start. The ship is whole. Whatever you make from here, it is yours.",
+ "goal": "the box with its three fractions in order after the empty scale, smallest first",
  "hints": [
-  "Which year is it? The devices notebook has a bird to the computer, and [query | date | bird] answers with [year | month | day].",
-  "Every number is a sum of powers of two, each used at most once. Take the biggest that fits under the year, then the biggest that fits under what is left, and so on.",
-  "For 2026 that is 1024 + 512 + 256 + 128 + 64 + 32 + 8 + 2: take the 1024 out and drop the others on it in turn, then give it to the bird."
+  "Sorting three is three compare-and-swaps. The scale compares; the swapper swaps when it tips left. Three more robots move numbers in and out of the pans, and each knows its turn by which hole is full: 2, 3 or 4. Hole 5 is the swapper\u2019s spare, and stays empty.",
+  "The swapper first, on the practice box (its scale tips left): left pan to hole 5, right pan to the left pan, hole 5 to the right pan. Leave. Wake Ruby and loosen both pans to \u201cany number\u201d; wake Dusty and take hole 2 out of its thought, so anything or nothing may be there.",
+  "Run the swapper on the practice box: the smaller fraction is now on the left. Train the second robot on that: left pan to hole 3, then hole 2 to the left pan. Ruby: loosen both pans and hole 2 to any number. Its thought says tipping RIGHT \u2014 keep that.",
+  "Run the second robot once. Train the third on what you see: right pan to hole 4, then hole 3 to the right pan. Ruby: both pans and hole 3.",
+  "Run the third once, then the swapper once more, since the scale tips left again. Train the fourth: left pan to hole 2, right pan to hole 3. Ruby: both pans and hole 4.",
+  "Drop the robots on one another to make a team. Give the team the middle box and press Run: it swaps and moves until the scale is empty and the three are in order. Give the bird the box."
  ],
  "rules": {
-  "stacks": [],
-  "tools": [],
+  "stacks": [
+   "minis"
+  ],
+  "tools": [
+   "ruby",
+   "dusty",
+   "mimi"
+  ],
   "typing": {
    "numbers": false,
    "pads": false
@@ -24,93 +33,37 @@
     "kind": "box",
     "holes": [
      {
-      "kind": "number",
-      "value": {
-       "n": "1",
-       "d": "1"
-      },
-      "op": "+"
+      "kind": "scale",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "2",
+         "d": "3"
+        },
+        "op": "+"
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "3",
+         "d": "5"
+        },
+        "op": "+"
+       }
+      ]
      },
      {
       "kind": "number",
       "value": {
-       "n": "2",
-       "d": "1"
+       "n": "5",
+       "d": "8"
       },
       "op": "+"
      },
-     {
-      "kind": "number",
-      "value": {
-       "n": "4",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "8",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "16",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "32",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "64",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "128",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "256",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "512",
-       "d": "1"
-      },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "1024",
-       "d": "1"
-      },
-      "op": "+"
-     }
+     null,
+     null,
+     null
     ]
    },
    "x": 0.0,
@@ -119,7 +72,7 @@
   {
    "thing": {
     "kind": "bird",
-    "nestId": 10351,
+    "nestId": 10341,
     "nestGuid": "p35-post",
     "label": "give me your answer"
    },
@@ -129,7 +82,7 @@
   {
    "thing": {
     "kind": "nest",
-    "id": 10352,
+    "id": 10342,
     "guid": "p35-reply",
     "hasEgg": false,
     "pile": [],
@@ -140,14 +93,49 @@
   },
   {
    "thing": {
-    "kind": "text",
-    "text": "this year",
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "scale",
+      "holes": [
+       null,
+       null
+      ]
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "11",
+       "d": "15"
+      },
+      "op": "+",
+      "stuck": true
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "7",
+       "d": "9"
+      },
+      "op": "+",
+      "stuck": true
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "4",
+       "d": "5"
+      },
+      "op": "+",
+      "stuck": true
+     },
+     null
+    ],
     "fixed": true,
-    "label": "we need this",
-    "size": 1.5
+    "label": "we need this"
    },
    "z": 1.2,
-   "x": 1.19
+   "x": 1.05
   },
   {
    "thing": {
@@ -165,7 +153,7 @@
        "holes": [
         {
          "kind": "nest",
-         "id": 10351,
+         "id": 10341,
          "guid": "p35-post",
          "hasEgg": false,
          "pile": [],
@@ -173,55 +161,18 @@
         },
         {
          "kind": "bird",
-         "nestId": 10352,
+         "nestId": 10342,
          "nestGuid": "p35-reply",
          "label": "to the player"
         },
         {
          "kind": "text",
-         "text": "This year \u2014 the log is dated. Next: a number smaller than one."
+         "text": "11/15, 7/9, 4/5 \u2014 sorted by a team of four. Thank you! (More puzzles are on the way.)"
         },
         {
          "kind": "text",
-         "text": "Not quite \u2014 the year the computer keeps, from these powers of two, each used once."
-        },
-        {
-         "kind": "bird",
-         "nestId": 0,
-         "nestGuid": null,
-         "liveId": "COMPUTER",
-         "label": "to the computer"
-        },
-        {
-         "kind": "nest",
-         "id": 10353,
-         "guid": "p35-date",
-         "hasEgg": false,
-         "pile": [],
-         "label": "the date"
-        },
-        {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "text",
-           "text": "query"
-          },
-          {
-           "kind": "text",
-           "text": "date"
-          },
-          null
-         ]
-        },
-        {
-         "kind": "bird",
-         "nestId": 10353,
-         "nestGuid": "p35-date",
-         "label": "to the date nest"
-        },
-        null,
-        null
+         "text": "Not quite \u2014 the three fractions in holes 2, 3 and 4, smallest first, both pans empty, and hole 5 empty."
+        }
        ]
       }
      },
@@ -231,26 +182,69 @@
       "condition": {
        "kind": "box",
        "holes": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
         {
-         "kind": "number",
-         "value": {
-          "n": "0",
-          "d": "1"
-         },
-         "op": "+"
-        }
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "scale",
+           "holes": [
+            null,
+            null
+           ]
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "11",
+            "d": "15"
+           },
+           "op": "+",
+           "stuck": true
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "7",
+            "d": "9"
+           },
+           "op": "+",
+           "stuck": true
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "4",
+            "d": "5"
+           },
+           "op": "+",
+           "stuck": true
+          },
+          null
+         ]
+        },
+        null,
+        null,
+        null
        ]
       },
       "program": [
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
        {
         "type": "take",
         "at": {
@@ -270,288 +264,12 @@
         }
        },
        {
-        "type": "vacuum",
-        "at": {
-         "c": "given",
-         "path": [
-          8
-         ]
-        }
-       },
-       {
-        "type": "vacuum",
-        "at": {
-         "c": "given",
-         "path": [
-          9
-         ]
-        }
-       },
-       {
         "type": "load",
-        "name": "p12"
+        "name": "p36"
        }
       ],
       "trainedOn": null,
       "team": [
-       {
-        "kind": "robot",
-        "name": "the judge (not this year)",
-        "condition": {
-         "kind": "box",
-         "holes": [
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          {
-           "kind": "wildNumber"
-          }
-         ]
-        },
-        "program": [
-         {
-          "type": "copy",
-          "at": {
-           "c": "given",
-           "path": [
-            3
-           ]
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "given",
-           "path": [
-            1
-           ]
-          }
-         },
-         {
-          "type": "take",
-          "at": {
-           "c": "given",
-           "path": [
-            8
-           ]
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "given",
-           "path": [
-            1
-           ]
-          }
-         },
-         {
-          "type": "vacuum",
-          "at": {
-           "c": "given",
-           "path": [
-            9
-           ]
-          }
-         }
-        ],
-        "trainedOn": null,
-        "team": [],
-        "note": "Your answer minus the year was not zero. Sends back a copy of the \"not quite\" pad, then the answer itself."
-       },
-       {
-        "kind": "robot",
-        "name": "the judge (does the sum)",
-        "condition": {
-         "kind": "box",
-         "holes": [
-          null,
-          null,
-          null,
-          null,
-          null,
-          {
-           "kind": "anyBox"
-          },
-          null,
-          null,
-          {
-           "kind": "wildNumber"
-          },
-          null
-         ]
-        },
-        "program": [
-         {
-          "type": "copy",
-          "at": {
-           "c": "given",
-           "path": [
-            8
-           ]
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "given",
-           "path": [
-            9
-           ]
-          }
-         },
-         {
-          "type": "take",
-          "at": {
-           "c": "given",
-           "path": [
-            5
-           ],
-           "nest": true
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "s0",
-           "path": []
-          }
-         },
-         {
-          "type": "take",
-          "at": {
-           "c": "s0",
-           "path": [
-            0
-           ]
-          }
-         },
-         {
-          "type": "setOp",
-          "op": "-"
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "given",
-           "path": [
-            9
-           ]
-          }
-         },
-         {
-          "type": "vacuum",
-          "at": {
-           "c": "s0",
-           "path": []
-          }
-         }
-        ],
-        "trainedOn": null,
-        "team": [],
-        "note": "The date has come back from the computer. Takes the year out of it, gives it a minus badge and drops it on a copy of your answer."
-       },
-       {
-        "kind": "robot",
-        "name": "the judge (asks the computer)",
-        "condition": {
-         "kind": "box",
-         "holes": [
-          {
-           "kind": "wildNumber"
-          },
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null
-         ]
-        },
-        "program": [
-         {
-          "type": "take",
-          "at": {
-           "c": "given",
-           "path": [
-            0
-           ],
-           "nest": true
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "given",
-           "path": [
-            8
-           ]
-          }
-         },
-         {
-          "type": "copy",
-          "at": {
-           "c": "given",
-           "path": [
-            6
-           ]
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "s0",
-           "path": []
-          }
-         },
-         {
-          "type": "copy",
-          "at": {
-           "c": "given",
-           "path": [
-            7
-           ]
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "s0",
-           "path": [
-            2
-           ]
-          }
-         },
-         {
-          "type": "take",
-          "at": {
-           "c": "s0",
-           "path": []
-          }
-         },
-         {
-          "type": "put",
-          "at": {
-           "c": "given",
-           "path": [
-            4
-           ]
-          }
-         }
-        ],
-        "trainedOn": null,
-        "team": [],
-        "note": "A number has arrived. Keeps it, and asks the computer what year it is."
-       },
        {
         "kind": "robot",
         "name": "the judge (not a box like that)",
@@ -563,10 +281,61 @@
           },
           null,
           null,
-          null,
-          null,
-          null,
-          null,
+          null
+         ]
+        },
+        "program": [
+         {
+          "type": "copy",
+          "at": {
+           "c": "given",
+           "path": [
+            3
+           ]
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         },
+         {
+          "type": "take",
+          "at": {
+           "c": "given",
+           "path": [
+            0
+           ],
+           "nest": true
+          }
+         },
+         {
+          "type": "put",
+          "at": {
+           "c": "given",
+           "path": [
+            1
+           ]
+          }
+         }
+        ],
+        "trainedOn": null,
+        "team": [],
+        "note": "The answer is a box, but not the one the computer wants. It sends back a copy of the \u201cnot quite\u201d pad by the reply bird, and then the answer itself."
+       },
+       {
+        "kind": "robot",
+        "name": "the judge (not a number)",
+        "condition": {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "wildNumber"
+          },
           null,
           null,
           null
@@ -613,7 +382,7 @@
         ],
         "trainedOn": null,
         "team": [],
-        "note": "The answer is a box, but the computer wants a number."
+        "note": "The answer is a number, but not the one the computer wants. It sends back a copy of the \u201cnot quite\u201d pad by the reply bird, and then the answer itself."
        },
        {
         "kind": "robot",
@@ -626,12 +395,6 @@
           },
           null,
           null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null,
           null
          ]
         },
@@ -676,16 +439,60 @@
         ],
         "trainedOn": null,
         "team": [],
-        "note": "The answer is a pad, but the computer wants a number."
+        "note": "The answer is a pad, but not the one the computer wants. It sends back a copy of the \u201cnot quite\u201d pad by the reply bird, and then the answer itself."
        }
       ],
-      "note": "Your answer minus the year came to exactly zero: right. Sends the note and opens the next puzzle."
+      "note": "The judge. It dozes on the post nest until an answer arrives, and this member knows a right one: it takes the answer off the nest and sends the note that follows out by the reply bird, and opens the next puzzle."
      }
     },
     "judge": true
    },
    "x": -1.35,
    "z": 1.2
+  },
+  {
+   "thing": {
+    "kind": "box",
+    "holes": [
+     {
+      "kind": "scale",
+      "holes": [
+       {
+        "kind": "number",
+        "value": {
+         "n": "11",
+         "d": "15"
+        },
+        "op": "+",
+        "stuck": true
+       },
+       {
+        "kind": "number",
+        "value": {
+         "n": "7",
+         "d": "9"
+        },
+        "op": "+",
+        "stuck": true
+       }
+      ]
+     },
+     {
+      "kind": "number",
+      "value": {
+       "n": "4",
+       "d": "5"
+      },
+      "op": "+",
+      "stuck": true
+     },
+     null,
+     null,
+     null
+    ]
+   },
+   "x": 0.75,
+   "z": 1.55
   }
  ],
  "stations": {},
