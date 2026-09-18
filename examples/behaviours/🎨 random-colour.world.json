@@ -1,0 +1,779 @@
+{
+ "kind": "world",
+ "v": 3,
+ "bench": [
+  {
+   "thing": {
+    "kind": "text",
+    "text": "random colour",
+    "gadget": true,
+    "lid": "G920",
+    "evt": "evt-G920",
+    "look": {
+     "bg": "#ffffff",
+     "ink": "#111111",
+     "font": "sans",
+     "h": 0.42
+    },
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "red"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "orange"
+            },
+            {
+             "kind": "text",
+             "text": "black"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "yellow"
+            },
+            {
+             "kind": "text",
+             "text": "black"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "green"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "blue"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "indigo"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "violet"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          }
+         ],
+         "holeLabels": [
+          "red",
+          "orange",
+          "yellow",
+          "green",
+          "blue",
+          "indigo",
+          "violet"
+         ]
+        },
+        {
+         "kind": "die",
+         "faces": 7
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "-1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "background"
+          },
+          null
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "colour"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "text"
+          },
+          null
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "colour"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "colour"
+          },
+          null
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "ink"
+         ]
+        }
+       ],
+       "holeLabels": [
+        "pick",
+        "colours",
+        "die",
+        "one less",
+        "paper",
+        "words",
+        "ink"
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Painter",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "wildDie"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        }
+       ]
+      },
+      "program": [
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s1",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s2",
+         "path": []
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s2",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          4,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4,
+          2
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          5,
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s2",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          6,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "perch",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          5
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "perch",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          6
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "perch",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s1",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "s2",
+         "path": []
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          4,
+          2
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          5,
+          2
+         ]
+        }
+       },
+       {
+        "type": "vacuum",
+        "at": {
+         "c": "given",
+         "path": [
+          6,
+          2
+         ]
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "red"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "orange"
+            },
+            {
+             "kind": "text",
+             "text": "black"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "yellow"
+            },
+            {
+             "kind": "text",
+             "text": "black"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "green"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "blue"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "indigo"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "text",
+             "text": "violet"
+            },
+            {
+             "kind": "text",
+             "text": "white"
+            }
+           ],
+           "holeLabels": [
+            "colour",
+            "ink"
+           ]
+          }
+         ],
+         "holeLabels": [
+          "red",
+          "orange",
+          "yellow",
+          "green",
+          "blue",
+          "indigo",
+          "violet"
+         ]
+        },
+        {
+         "kind": "die",
+         "faces": 7
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "-1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "background"
+          },
+          null
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "colour"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "text"
+          },
+          null
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "colour"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "colour"
+          },
+          null
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "ink"
+         ]
+        }
+       ],
+       "holeLabels": [
+        "pick",
+        "colours",
+        "die",
+        "one less",
+        "paper",
+        "words",
+        "ink"
+       ]
+      },
+      "team": [],
+      "note": "Each round: the die lands on pick and a -1 makes it 0 to 6. A copy of pick goes on spot 1 and a copy of the colour list is dropped on it, which splits the list there; the rest starts with the colour wanted, a [name | ink] pair. The name fills the paper and words letters, the ink the ink letter, and all three go to the bird on the perch: this pad. Then it tidies up for the next round."
+     }
+    }
+   },
+   "x": 0.0,
+   "z": 1.55
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "RANDOM COLOUR\n\nA pad with a robot on its\nback. Each round it rolls a\ndie and picks a colour from\na LIST -- a box of seven\n[name | ink] pairs -- then\nsends itself three letters:\n  [set | background | name]\n  [set | text | name]\n  [set | colour | ink]\n\nPress SPACE on it. \".\" stops."
+   },
+   "x": -1.3,
+   "z": 2.1
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "PICKING THE Nth\n\nThe die lands on a number\nas its roll; a -1 makes it\n0 to 6. A copy of the list\ndropped on that number\nSPLITS there, and the rest\nbegins with the colour\nwanted.\n\nHold the pad and press\nCtrl+P to watch the robot\ndo it."
+   },
+   "x": -0.55,
+   "z": 2.1
+  },
+  {
+   "thing": {
+    "kind": "text",
+    "text": "MORE COLOURS\n\nOpen the panel, take the\ncolour list off the desk,\nand join another [name |\nink] pair on its right edge.\nThen hold the die and type\nthe new number of faces.\n\nAny colour the browser\nknows by name works --\ntry \"hotpink\", \"gold\" and\n\"teal\"."
+   },
+   "x": 0.2,
+   "z": 2.1
+  }
+ ],
+ "stations": {},
+ "active": null
+}

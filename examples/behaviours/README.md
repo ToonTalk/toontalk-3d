@@ -243,3 +243,16 @@ The three Pongs are in [`../games/`](../games/), the airplane's flight in
 [`../infinity/`](../infinity/) with the other infinities. Their write-ups went
 with them. What stays here is the shelf and the single behaviours it is made
 of, and the turtles.
+
+## 🎨 random-colour.world.json
+
+A pad with a robot on its back (Ken, 19 Sep). Each round the Painter rolls a
+die and picks a colour from a LIST -- a box of seven `[name | ink]` pairs,
+the rainbow to begin with -- and sends the pad three letters: `[set |
+background | name]`, `[set | text | name]` and `[set | colour | ink]`, an
+ink that reads against the paper. Picking the Nth is the workshop's own
+idiom: the die lands on a number as its roll, a -1 makes it 0..6, and a copy
+of the list dropped on that number splits there -- the rest begins with the
+one wanted. Press SPACE on the pad; it runs a round a frame. To add a colour,
+join another pair on the list's right edge and give the die a face.
+Regenerate with `python make_random_colour.py`.

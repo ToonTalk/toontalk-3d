@@ -11,7 +11,7 @@ instructions in their README.
 
 | folder | what is in it |
 |---|---|
-| [`behaviours/`](behaviours/) | the anima-gadgets: a shelf of behaviours to drop on your own things, and the turtles |
+| [`behaviours/`](behaviours/) | the anima-gadgets: a shelf of behaviours to drop on your own things, the turtles, and 🎨 a pad that paints itself a random colour from a list |
 | [`games/`](games/) | 🏓 Pong three ways and 👾 Space Invaders -- games built from the ordinary parts, made to be read as well as played |
 | [`puzzles/`](puzzles/) | the puzzle set the app carries (`p1` to `p39`, numbered in the order they are played); `MAKING-PUZZLES.md` says how to write one |
 | [`infinity/`](infinity/) | all eight *Exploring Infinity* activities, 🏨 Resort Infinity, and 📮 Zeno's postman |
