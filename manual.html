@@ -353,7 +353,12 @@ can set it. Send the thing's own bird a box:</p>
 <tr><td><code>[set | font | sans]</code></td><td>one of <em>serif</em>, <em>sans</em>, <em>mono</em>, <em>round</em></td></tr>
 <tr><td><code>[set | width | 2]</code></td><td>pads only, in pad-widths</td></tr>
 <tr><td><code>[set | height | 1/3]</code></td><td>pads only</td></tr>
+<tr><td><code>[set | text | pad]</code></td><td>pads only: takes the words of the pad in the last hole (a number writes its figures)</td></tr>
+<tr><td><code>[query | text | bird]</code></td><td>pads only: sends that bird a pad of its words</td></tr>
 </table>
+<p>A pad&rsquo;s <b>words</b> are data the same way, so a robot on the back of a
+label can rewrite it: a die rolled each round, a box of colour names, and
+<code>[set | text | pad]</code> is a label that changes its mind.</p>
 <p><b>Every whole number says itself in English</b> on one of its faces, however
 big it is: “one hundred twenty-three billion four hundred fifty-six million…”.
 The names are built the way English builds them, out of Latin numerals, so they

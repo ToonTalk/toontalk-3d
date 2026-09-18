@@ -8093,3 +8093,49 @@ the clamp -- the turtle's order boxes 0.40 apart at 0.48 wide, the library's
 star at z 0.80 (off the table, clamped onto a gadget), activity1's RUN pad
 at z 2.80 (clamped onto a nest). Spaced by measurement; overlapCheck is
 clean over all 55 worlds.
+
+## ChatGPT's puzzle audit, first round
+
+Its playthrough notes (Ken's puzzle-audit folder, 18 September), through the
+app's own UI with a named notebook. What was found and fixed:
+
+P35 BLOCKED -- "no acceptance, rejection or Next after a minute": the
+year puzzle's judge never got the date. Reproduced by hand with a named
+visitor, and NOT in the suite, whose app runs in demo mode and keeps no
+notebook: a house's world is opened through worldIn like any other, and
+worldIn's settleNotebook, run offstage, pulled the player's notebook in off
+the table and into the house, and ensureMainNotebook set a spare one on the
+house's first work spot -- so the judge's "put s0" filed its letter to the
+computer in a notebook instead of sending it, and waited on the date for
+ever. Neither runs offstage now; a robot in a house that reads or files in
+the notebook reaches yours on the table (mainNotebook falls back to the top
+world). The suite can now be handed a notebook record in demo
+(D.demoNotebook) and houseNotebookCheck plays p35 with one: old build
+in-house=1 judged=false, new build in-house=0 judged=true. This bug touched
+every world with a house whenever the visitor had a notebook -- the resort,
+the bank, the puzzles' judges -- and none of the suite's 250 checks could
+see it. Worth remembering: the suite's demo mode is a blind spot for
+anything the notebook touches.
+
+P6 STALE CONDITION LINE: Ruby's loosening rewrote the card's "runs on a box
+of 4 and 0" only inside a lesson; now always.
+
+TOOLTIP TRUNCATION (P10, P19): "holding 0, 0, 0, 0" for a box of six now
+says "and 2 more".
+
+SUCCESS SAID: the puzzle idle line reads "Solved -- the judge sent its
+letter, and the Next puzzle is on this card" once the judge has offered the
+next world; before, it went on asking for the answer.
+
+Also this round, from Ken: MARTY'S CARD, CLOSED, STAYS CLOSED -- his
+commentary on a run and his narration of steps no longer open it (a new
+world's introduction still does); and A PAD'S WORDS ARE DATA -- [set | text
+| pad] writes the words of the pad in the last hole (a number writes its
+figures), [query | text | bird] sends a pad of them; on the pad's info
+notebook and in the manual's look table. padWordsCheck.
+
+Left for Ken (discussed, not changed): the "red parts / wake Ruby" line
+after a single intended run in a puzzle reading like failure (P5, P20);
+p7's "Last of all" read as "last puzzle"; the year puzzle showing as
+"Puzzle 35" between 11 and 12; single-round stepping (the Rounds limit
+does it) and an undo for an overshot run.

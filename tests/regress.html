@@ -4654,6 +4654,69 @@ async function lessonsCheck(D) {
   return ok;
 }
 
+// YOUR NOTEBOOK STAYS ON YOUR TABLE when a world with a house opens.
+// With a notebook record in the browser (a named visitor with pages), the
+// house's own worldIn used to pull the notebook in off the table and set a
+// spare one on its first work spot, so the year puzzle's judge filed its
+// letter to the computer instead of sending it and waited for ever
+// (ChatGPT's audit, p35). The suite never had a record, so never saw it.
+async function houseNotebookCheck(D) {
+  // the suite's app runs in demo, which keeps no notebook: this check hands it one
+  D.demoNotebook({ kind: 'notebook', v: 4, pages: [{ kind: 'number', value: { n: '7', d: '1' } }, { kind: 'text', text: 'a page' }], page: 0, at: { x: 0.95, z: 1.33 } });
+  const things = () => { const a = []; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; };
+  const pw = await (await fetch('../examples/puzzles/p35.world.json')).json();
+  pw.bench.push({ thing: { kind: 'number', value: { n: String(new Date().getFullYear()), d: '1' } }, x: 1.4, z: 2.2 });
+  D.worldIn(pw); await slowSettle(D, 2000);
+  const room = things().find(t => t.userData.kind === 'room');
+  let inHouse = 0; room.__ctx.root.traverse(o => { if (o.userData?.kind === 'notebook') inHouse++; });
+  const nbs = things().filter(t => t.userData.kind === 'notebook');
+  const onTable = nbs.length === 1 && nbs[0].userData.main && (nbs[0].userData.pages || []).length === 2;
+  const spots = Object.entries(room.__ctx.occ || {}).filter(([k, v]) => /^s\d+$/.test(k) && v?.occupant).map(([k]) => k);
+  D.speed('instant');
+  const n = things().find(t => t.userData.kind === 'number' && !t.userData.fixed && String(t.userData.value.n) === String(new Date().getFullYear()));
+  const bird = things().find(t => t.userData.kind === 'bird' && t.userData.label === 'give me your answer');
+  const reply = things().find(t => t.userData.kind === 'nest' && t.userData.label === 'from the judge');
+  D.hold(n); await frames(D, 10); D.clickThing(bird);
+  for (let k = 0; k < 900 && !(reply.userData.pile || []).length; k++) await frames(D, 1);
+  await frames(D, 30); D.speed(1);
+  const judged = (reply.userData.pile || []).length === 1 && D.nextWorld === 'p12';
+  D.demoNotebook(null);
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1000);
+  const ok = inHouse === 0 && onTable && spots.length === 0 && judged;
+  put((ok ? 'PASS' : 'FAIL') + ' your notebook stays on your table when a house opens, and the year puzzle judges  (in-house=' + inHouse + ' on-table=' + onTable
+      + ' house-spots-taken=' + JSON.stringify(spots) + ' judged=' + judged + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A PAD'S WORDS ARE DATA: [set | text | pad] rewrites them (a number writes
+// its figures), [query | text | bird] sends a pad of them; and a box's
+// tooltip says how many more it holds than the four it names.
+async function padWordsCheck(D) {
+  const txt = (t) => ({ kind: 'text', text: t }), num = (n, d = 1) => ({ kind: 'number', value: { n: String(n), d: String(d) } });
+  const box = (...h) => ({ kind: 'box', holes: h });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'text', text: 'red', lid: 'LBL1', evt: 'evt-LBL1' }, x: -0.8, z: 1.6 },
+    { thing: { kind: 'nest', id: 9812, guid: 'words-answers', label: 'answers', pile: [] }, x: 0.3, z: 1.7 },
+    { thing: { kind: 'box', holes: [num(0), num(0), num(0), num(0), num(0), num(0)] }, x: 1.0, z: 1.9 } ] });
+  await slowSettle(D, 1500);
+  const things = () => { const a = []; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; };
+  const pad = things().find(t => t.userData.kind === 'text' && t.userData.lid === 'LBL1');
+  const nest = things().find(t => t.userData.kind === 'nest');
+  D.post('LBL1', box(txt('set'), txt('text'), txt('blue'))); await frames(D, 10);
+  const wrote = pad.userData.text === 'blue';
+  D.post('LBL1', box(txt('set'), txt('words'), num(3, 4))); await frames(D, 10);
+  const figures = pad.userData.text === '3/4';
+  D.post('LBL1', box(txt('query'), txt('text'), { kind: 'bird', nestId: 9812, nestGuid: 'words-answers' })); await frames(D, 30);
+  const top = nest.userData.pile?.[0];
+  const answered = top?.userData.kind === 'text' && top.userData.text === '3/4';
+  const sixBox = things().find(t => t.userData.kind === 'box');
+  const tip = D.tip(sixBox) ?? '';
+  const tipOK = /holding 0, 0, 0, 0 and 2 more/.test(tip || '');
+  const ok = wrote && figures && answered && tipOK;
+  put((ok ? 'PASS' : 'FAIL') + ' a pad\u2019s words are data, and a box\u2019s tooltip counts the rest  (set-text=' + wrote + ' number-writes-figures=' + figures + ' query-answers=' + answered + ' tooltip-more=' + tipOK + (tipOK ? '' : ' tip=' + JSON.stringify(String(tip).slice(0, 100))) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function stopwatchCheck(D) {
   const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
@@ -7181,6 +7244,12 @@ async function runOne(D, spec) {
   let lsnOK = true;
   try { lsnOK = want('lessons') ? await lessonsCheck(D) : true; }
   catch (e) { lsnOK = false; put('FAIL the lessons draw what they say  ' + e.message, 'fail'); }
+  let hnbOK = true;
+  try { hnbOK = want('houseNotebook') ? await houseNotebookCheck(D) : true; }
+  catch (e) { hnbOK = false; put('FAIL your notebook stays on your table when a house opens  ' + e.message, 'fail'); }
+  let pwOK = true;
+  try { pwOK = want('padWords') ? await padWordsCheck(D) : true; }
+  catch (e) { pwOK = false; put('FAIL a pad\u2019s words are data  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7346,7 +7415,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

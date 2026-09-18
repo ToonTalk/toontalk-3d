@@ -555,6 +555,12 @@ messagewhat it does
 [set | font | sans]one of serif, sans, mono, round
 [set | width | 2]pads only, in pad-widths
 [set | height | 1/3]pads only
+[set | text | pad]pads only: takes the words of the pad in the last hole (a number writes its figures)
+[query | text | bird]pads only: sends that bird a pad of its words
+
+A pads words are data the same way, so a robot on the back of a
+label can rewrite it: a die rolled each round, a box of colour names, and
+[set | text | pad] is a label that changes its mind.
 
 Every whole number says itself in English on one of its faces, however
 big it is: “one hundred twenty-three billion four hundred fifty-six million…”.
@@ -3212,6 +3218,7 @@ function noiseFx(dur, { at = 0, from = 800, to = 300, q = 1.2, gain = 0.3 } = {}
 // its sounds, flashes, messages and panel updates are pure cost. This one
 // check is most of what makes a hundred live houses affordable.
 const offstage = () => worldStack.length > 0;
+let martyClosedByUser = false;      // Marty's card, closed by hand: his commentary must not open it again
 function sfx(name) {
   if (offstage()) return;
   if (sndMuted) return;
@@ -5570,7 +5577,7 @@ async function martyCommentary(kind, subject, why = null) {
       let words = String(reply).trim();
       const m = words.match(/"say"\s*:\s*"((?:[^"\\]|\\.)*)"/);
       if (m) words = m[1].replace(/\\n/g, ' ').replace(/\\"/g, '"');
-      martyUI.style.display = 'block';
+      if (!martyClosedByUser) martyUI.style.display = 'block';
       martySay(words.slice(0, 700));
       return words.slice(0, 700);
     }
@@ -6678,8 +6685,34 @@ function handleLiveMsg_(X, msg) {
     return mailRefused(X, msg, '[play], [stop], a [frequency | seconds | shape] box and the place messages.');
   }
   if (X.userData.kind === 'text') {
+    // A PAD'S WORDS ARE DATA TOO. Ken, from a talk with Marty: "robots on the
+    // back of a text pad could be using the die to change the colour name
+    // every cycle" -- and there was no message that changes a pad's words.
+    // [set | text | pad] writes the pad's words on this one (a number writes
+    // its figures); [query | text | bird] sends a pad of them.
+    if (mk === 'box') {
+      const hole = (i) => msg.userData.holes[i]?.thing ?? null;
+      const word = (t2) => t2?.userData.kind === 'text' ? (t2.userData.text ?? '').trim().toLowerCase() : null;
+      const verb = word(hole(0)), what = word(hole(1));
+      if ((what === 'text' || what === 'words') && (verb === 'set' || verb === 'query')) {
+        const v = hole(2);
+        if (verb === 'set') {
+          const t = v?.userData.kind === 'text' ? (v.userData.text ?? '')
+            : v?.userData.kind === 'number' ? ratText(v.userData.value) : null;
+          msg.removeFromParent();
+          if (t == null) { mailSay('[set | text | pad] \u2014 the third hole is a pad whose words this one takes, or a number.'); return; }
+          if (X.setText) X.setText(t); else X.userData.text = t;
+          return;
+        }
+        const rb = msg.userData.holes.map(h => h.thing).find(t2 => t2?.userData.kind === 'bird');
+        msg.removeFromParent();
+        if (!rb) { mailSay('[query | text | bird] wants a bird to answer to.'); return; }
+        sendViaBird(rb, makeText(X.userData.text ?? ''));
+        return;
+      }
+    }
     msg.removeFromParent();
-    return mailRefused(X, msg, '[set | background | grey], [set | colour | white], [set | font | sans], '
+    return mailRefused(X, msg, '[set | text | pad], [query | text | bird], [set | background | grey], [set | colour | white], [set | font | sans], '
       + '[set | width | 2], [set | height | 1/3] (its info notebook has them ready), and the place messages: ' + PLACE_ANSWERS + '.');
   }
   msg.removeFromParent();
@@ -6918,6 +6951,10 @@ const INFO_PAGES = {
 // is why a LABEL -- grey paper, white writing, wide and short -- is not a
 // feature but four messages, and a robot can be shown how to make one.
 INFO_PAGES.text = [
+  { kind: 'text', text: 'ITS WORDS\n\n[set | text | pad]\n\nwrites the words of the\nlast pad on this one (a\nnumber writes its figures).\n\n[query | text | bird]\nsends a pad of its words\nto that bird.\n\nTake the box opposite and\nwrite on its last pad.' },
+  { kind: 'box', holeLabels: ['what to do', 'which', 'to what'],
+    holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'text' },
+            { kind: 'text', text: 'hello' }] },
   { kind: 'text', text: 'WHAT A PAD LOOKS LIKE\n\nis data, so it can be set,\nso a robot can set it.\n\nSend its bird\n[set | property | value].\n\nTake the box opposite,\nwrite another colour on\nits last pad, and give it\nto the bird.' },
   { kind: 'box', holeLabels: ['what to do', 'which', 'to what'],
     holes: [{ kind: 'text', text: 'set' }, { kind: 'text', text: 'background' },
@@ -11113,21 +11150,35 @@ const containerText = (c) => /^s\d+$/.test(c) ? `spot ${+c.slice(1) + 1}`
 // could be picked up and carried about was created afresh -- a second one,
 // from the same pages -- whenever the table alone was looked at.
 const isMainNB = (t) => t?.userData?.kind === 'notebook' && t.userData.main;
+let suiteNotebookRec = null;      // a notebook record the suite asks to be kept, demo or not
+// ONE NOTEBOOK, YOURS, WHEREVER THE STAGE IS. A house's world is opened
+// through worldIn like any other, and worldIn set a notebook down as
+// furniture -- so every hydrated house got a blank notebook of its own,
+// on its first work spot, and the year puzzle's judge, told to put a
+// letter on s0, filed it in the notebook instead and waited on the date
+// for ever (ChatGPT's audit: p35 "no acceptance, rejection or Next"). It
+// depended on the browser having a notebook record to place. Offstage, the
+// notebook is the one on YOUR table: a robot in a house reads and files
+// in the same book you do.
 const mainNotebook = () =>
   benchThings.find(isMainNB)
   ?? (isMainNB(held) ? held : null)
   ?? dustyBag.find(isMainNB)
   ?? (yardIn?.things ?? []).find(isMainNB)
   ?? (curCtx?.yard?.things ?? []).find(isMainNB)
+  ?? (offstage() && curCtx !== topCtx ? (topCtx.bench ?? []).find(isMainNB) ?? (topCtx.yard?.things ?? []).find(isMainNB) ?? null : null)
   ?? null;
 // One main notebook, restored from this browser. It belongs to the workshop
 // rather than to any world, so loading a world leaves it where it is.
 function ensureMainNotebook() {
   if (mainNotebook()) return mainNotebook();
-  if (new URLSearchParams(location.search).get('demo')) return null;
-  let rec = null;
+  if (offstage()) return null;      // a house has no notebook of its own: yours is the one
+  // the suite runs in demo, notebook-less -- which is how a notebook pulled
+  // into a house went unseen. A check may hand it a record to keep instead.
+  if (new URLSearchParams(location.search).get('demo') && !suiteNotebookRec) return null;
+  let rec = suiteNotebookRec ? JSON.parse(JSON.stringify(suiteNotebookRec)) : null;
   const fresh = new URLSearchParams(location.search).has('fresh');
-  if (!fresh) { try { rec = JSON.parse(localStorage.getItem(nbKey()) || 'null'); } catch {} }
+  if (!fresh && !rec) { try { rec = JSON.parse(localStorage.getItem(nbKey()) || 'null'); } catch {} }
   // a notebook this browser cannot read is left untouched rather than
   // overwritten by a blank one -- the pages are still there for a newer build
   if (rec && fileTooNew(rec)) { notebookLocked = true; rec = null; }
@@ -11150,6 +11201,7 @@ function ensureMainNotebook() {
 // still the place you left it, and it goes back there in a world that leaves
 // it room.
 function settleNotebook() {
+  if (offstage()) return;           // a house being opened must not pull your notebook in off the table
   const nb = mainNotebook();
   if (!nb || nb.parent !== benchRoot || yardIn) return;
   const at = nb.userData.wants ?? { x: nb.position.x, z: nb.position.z };
@@ -17582,8 +17634,12 @@ function dustyErase(path) {
       // loosening the pupil's thought is part of what the teacher does
       if (teaching && mode === 'training' && activeBot === teaching.inner) {
         teaching.outer.program.push({ type: 'taught', step: { type: 'erase', path: path.slice() } });
-        renderProgram();
       }
+      // ...and the card's own line says what the thought asks NOW. It was
+      // rewritten only in a lesson: the cubes turned to "?" while "runs on a
+      // box of 4 and 0" stood through the run and the wait, until a pickup
+      // redrew it (ChatGPT's audit, puzzle 6).
+      renderProgram();
       // ...AND WHAT STILL DOES NOT FIT STAYS RED. rebuildCondition throws the
       // marks away with the nodes they were on, so an erasure that was not
       // enough left a thought with nothing red in it and a card claiming it
@@ -18883,7 +18939,7 @@ function worldIn(data) {
   // A PUZZLE INTRODUCES ITSELF, the way Marty met you at the rocket: he says
   // what is wanted, out loud if he is speaking, and the card says it too.
   if (!merging && !offstage() && puzzleInfo?.intro) {
-    if (typeof martyUI !== 'undefined' && martyUI) martyUI.style.display = 'block';
+    if (typeof martyUI !== 'undefined' && martyUI) { martyUI.style.display = 'block'; martyClosedByUser = false; }   // a new world is a new occasion
     if (typeof martySay === 'function') {
       martySay(puzzleInfo.intro);
       if (martyNewcomer) { martySay(lookAroundOffer(true)); martyNewcomer = false; }
@@ -19348,7 +19404,7 @@ function narrationHold(text) {
       // being read aloud -- is not said at all: the robot works on rather
       // than standing still while he catches up.
       if (!line || !narratedRun || !narrationLive()) { this.quiet = true; this.dur = 0; return; }
-      if (martyUI) martyUI.style.display = 'block';
+      if (martyUI && !martyClosedByUser) martyUI.style.display = 'block';
       martySay(line);
       // a reading pace on the sequencer's own clock without his voice; with
       // it, the hold below waits for the words and this is a breath after
@@ -20410,7 +20466,10 @@ function refreshUI() {
                                 : 'Give the robot something to start training it.') :
     // in a puzzle the idle line is the puzzle's, not the workshop's -- and it
     // says what the controls do rather than repeating Marty
-    puzzleInfo?.puzzle ? `Puzzle ${String(puzzleInfo.name || '').replace(/^p/, '')} — give the bird your answer; ask Marty for a hint; Start over is on this card.`
+    // ...and SOLVED says solved: the audit found success shown only by the
+    // Next button and the judge's letter, under an idle line still asking
+    puzzleInfo?.puzzle ? (nextWorld ? `Solved — the judge sent its letter, and the Next puzzle is on this card.`
+                          : `Puzzle ${String(puzzleInfo.name || '').replace(/^p/, '')} — give the bird your answer; ask Marty for a hint; Start over is on this card.`)
                : 'Take a little robot from its stack and set it on the table.';
 }
 
@@ -22035,7 +22094,10 @@ function tipForInner(t) {
         const kind = x.userData.kind === 'text' ? 'pad' : x.userData.kind === 'number' ? ratShort(x.userData.value) : x.userData.kind;
         return nm && nm !== kind ? `a ${kind} \u201c${nm}\u201d` : (x.userData.kind === 'number' ? kind : `a ${kind}`);
       });
-      const holding = inside.length ? `, holding ${inside.join(', ')}` : '';
+      // ...the first four, and said to be the first four: "holding 0, 0, 0, 0"
+      // for a box of six read as four (ChatGPT's audit)
+      const filled = ud.holes.filter(h => h.thing).length;
+      const holding = inside.length ? `, holding ${inside.join(', ')}${filled > inside.length ? ` and ${filled - inside.length} more` : ''}` : '';
       return (ud.label ? `\u201c${ud.label}\u201d \u2014 a box with ` : 'A box with ')
         + `${ud.holes.length} hole${ud.holes.length > 1 ? 's' : ''}${holding} \u2014 a hole holds anything: numbers, pads, boxes, even a robot.`
         + (TIP ? ' Click a hole to fill it.' : ' Click to pick it up.');
@@ -26231,9 +26293,15 @@ function swapNotebook() {
 // submission: see the note in askWho.
 let martyAskNow = () => {};
 let martyGreeted = false;
+// A CLOSED CARD STAYS CLOSED. Ken: "If the user closes the Marty card it
+// should not reappear even if Marty continues commentary on a robot's
+// actions." His commentary and his narration of a run used to open it
+// again; now they are said into a closed card (and aloud, if his voice is
+// on) until you open it -- or a new world opens and introduces itself.
 function toggleMartyPanel() {
   const on = martyUI.style.display === 'none';
   martyUI.style.display = on ? 'block' : 'none';
+  martyClosedByUser = !on;
   if (on && !martyGreeted) {
     martyGreeted = true;
     martySay(`Hi${nameTag(true)}! I\u2019m Marty. Ask me anything about the workshop \u2014 or say \u201cshow me\u201d and one of: `
@@ -26249,7 +26317,7 @@ function toggleMartyPanel() {
   }
   if (on) { martyModeLine(); document.getElementById('martyIn').focus(); }
 }
-document.getElementById('martyClose').onclick = () => { martyUI.style.display = 'none'; };
+document.getElementById('martyClose').onclick = () => { martyUI.style.display = 'none'; martyClosedByUser = true; };
 document.getElementById('againBtn').onclick = () => { if (!busy) startWorldOver(); };
 document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld(); };
 {
@@ -26684,6 +26752,8 @@ window.__nano = {
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },
   utter(said) { return utterance(said); },             // made, not spoken: its volume is the slider's
   heldNode() { return held; },
+  demoNotebook(rec) { suiteNotebookRec = rec ?? null; },   // the suite's notebook, in a demo that has none
+  nestsByGuid(guid) { return { all: allNests.filter(n2 => nestAnswersTo(n2, guid)).length, inScene: allNestsByGuid(guid).length, registered: allNests.length }; },
   fromStack(id) { userTakeFromStack(stations[id]); },          // even where the demo hides the stacks
   taught() { return taughtNow.map(b => ({ name: b.name, stand: !!b.__taughtStand, atDesk: taughtAtDesk(b), occ: b.__taughtStand?.occupant?.userData?.kind ?? null })); },
   tipBot(b) { return tipFor({ kind: 'botThing', bot: b.__bot ?? b }); },
