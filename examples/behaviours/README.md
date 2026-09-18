@@ -40,7 +40,9 @@ on a number.
 
 ## 📚 library.world.json
 
-Twelve gadgets since 28 Aug. The second six (make_library2.py): grow and
+Sixteen gadgets on the shelf (the suite calls it "the shelf is fifteen" and
+counts the star). The first ten are in make_library.py, the six that need
+arithmetic on what a channel hands over are in make_library2.py: grow and
 shrink when touched (dozing on the touch channel; a hit is [move | size |
 1/4]), make a sound on hit (gives "play" to the bell riding in its work
 box), reverse on collision (sets the step away from what it hit, like the
@@ -49,7 +51,7 @@ limit (weighs the speed against the limit on a scale — the scale is the if;
 born too fast so SPACE alone demonstrates it), and send 1 to the score when
 hit (a badged +1 to the score in its work box).
 
-The shelf: six gadgets and a star to try them on.
+The shelf, and a star to try them on:
 
 | gadget | how it works |
 |---|---|
@@ -59,13 +61,14 @@ The shelf: six gadgets and a star to try them on.
 | wrapping at the edges | the same shape, but sends `[set \| across \| ∓3/2]` instead of flipping |
 | following the pointer | the pointer device gives `[across \| away]`; a thing takes `[set \| position \| …]`; the robot puts one inside the other |
 | moving with the arrow keys | five robots on the keyboard nest, one per arrow and one that swallows anything else so a stray key cannot stop the team |
-| wandering | one robot: a die of 3, a −2 and a ×1/25 land on each step in turn, and a copy goes to the bird — drop it on a zoo animal (`make_wandering.py`) |
-
-Six, not the twelve the plan calls for. The remaining six in the starter set —
-grow and shrink when touched, make a sound on hit, reverse on collision, a
-speed limit, send a message to the score — all want either a **size message**
-or arithmetic on what the `touch` channel hands over, and are the next thing to
-build.
+| following up and down | the pointer's *away* only |
+| bouncing at a speed | the same bounce, but the world's clock does the moving: `[set \| speed \| …]` |
+| wandering | one robot: a die of 3, a −2 and a ×30 land on the turn in turn, then a yaw and a forward step go to the bird — drop it on a zoo animal (`make_wandering.py`) |
+| grow / shrink when bumped | doze on the touch channel; a hit is `[move \| size \| ±1/4]` |
+| make a sound on hit | gives "play" to the bell riding in its work box |
+| reverse on collision / reverse a speed on collision | set the step (or the speed) away from what was hit; edges are bouncing's job — bind both for pong-ball physics |
+| speed limit | weighs the speed against the limit on a scale — the scale is the if |
+| send 1 to the score when hit | a badged +1 to the score in its work box |
 
 Regenerate with `python make_library.py`.
 

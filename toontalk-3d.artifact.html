@@ -28662,9 +28662,13 @@ function nextIteration() {
     if (!stations.stand.occupant) {
       finishRun();
       markRoomDone();
-      return sayAttn(runCount
+      // ...and the way back, for a world that can be started over (ChatGPT's
+      // review: "keep a visible restart invitation after completion")
+      const again = (worldName && worldLibrary[worldName] && !puzzleInfo?.puzzle)
+        ? ' Start this world over is on the card at the right.' : '';
+      return sayAttn((runCount
         ? `Ran ${roundsSaid()} — then swept its own box away: finished, for good.`
-        : 'It swept its own box away — finished.');
+        : 'It swept its own box away — finished.') + again);
     }
     const alone = members.length === 1;
     // The leader's thought is the one you can reach, so it is the one that
@@ -29561,6 +29565,30 @@ const holeName = (at) => {
   }
   return at.nest ? `the pile on ${base}` : base;
 };
+// ...AND THE LABELS, IN BRACKETS. Hole numbers are what a step says -- they
+// work in any language -- and where the box the robot was shown labels its
+// holes, the card adds them: "hole 4.6 (letters › pink ink) of what it was
+// given" (ChatGPT's review of the lessons; Ken: numbers primary, labels
+// parenthetically).
+function labelsAlong(rec, path) {
+  const out = [];
+  let r = rec;
+  for (const i of path) {
+    if (!r || (r.kind !== 'box' && r.kind !== 'scale')) return null;
+    const lab = r.holeLabels?.[i];
+    out.push(lab ? String(lab).trim() : '');
+    r = r.holes?.[i];
+  }
+  return out.some(Boolean) ? out.map(l => l || '·').join(' › ') : null;
+}
+function describeFor(s, trained) {
+  const base = describe(s);
+  if (!trained || !s?.at || s.at.c !== 'given' || !s.at.path?.length) return base;
+  const labs = labelsAlong(trained, s.at.path);
+  if (!labs) return base;
+  const holeTxt = 'hole ' + s.at.path.map(i => i + 1).join('.');
+  return base.includes(holeTxt) ? base.replace(holeTxt, holeTxt + ' (' + labs + ')') : base;
+}
 function describe(s) {
   return s.type === 'newNumber' ? 'take a new number'
        : s.type === 'newBox' ? 'take a new box'
@@ -29695,7 +29723,7 @@ function renderProgram(list = null) {
   ul.replaceChildren(...shown.map((s, i) => {
     const li = document.createElement('li');
     const n = document.createElement('span'); n.className = 'n'; n.textContent = String(i + 1);
-    const d = document.createElement('span'); d.textContent = describe(s);
+    const d = document.createElement('span'); d.textContent = describeFor(s, about?.trainedOn ?? null);
     li.append(n, d);
     return li;
   }));

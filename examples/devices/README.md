@@ -1,7 +1,7 @@
 # Devices
 
 The workshop's own senses, as **nests**. Take one out of the Devices notebook
-(the **Devices** button in the ⋮ menu) and it is already wired up: what happens
+(the **Devices** button on the card at the right, beside Import file) and it is already wired up: what happens
 lands on it.
 
 There is no new machinery here at all, and that is the point. A robot facing a

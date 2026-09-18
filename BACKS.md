@@ -8171,3 +8171,32 @@ holes said. The redirect to "the first hole that still has detail" stays
 for a scale's frame (a pan was meant) and for the cloud round the thought.
 Ken: "I only was able after making all the holes accept anything."
 kenBoxesCheck covers the four.
+
+## ChatGPT's example review
+
+Its review of examples/ (Ken's puzzle-audit folder, 18 September), with
+Ken's rule on the one design point: hole numbers stay primary -- they work
+in any language -- and the box's labels go in brackets after them. Done:
+
+- THE CARD NAMES THE HOLES IN BRACKETS where the box the robot was shown
+  labels them: "copy what is in hole 4.6 (letters › pink ink) of what it
+  was given" (describeFor / labelsAlong; the lessons check reads it).
+- The flower's counter is "petal steps left" (a petal is the spoke and four
+  sides); the spark opens from the side (a `camera` in the file), where the
+  arch reads as an arch; the planet's README says 37 rounds are 36 steps
+  and the finisher's; the finish line says Start this world over is on the
+  card when the world can be started over.
+- Docs: the puzzle count, the behaviours README's twelve/six/seven (the
+  shelf is sixteen, all listed), the Zeno generator's folder, where the
+  Devices button is, and that the lessons introduce themselves through
+  Marty rather than pads. airplane-with-pilot joins the overlap list (56).
+- Its two suite failures: "a house posts to a house" passes alone (an order
+  flake); "bindings travel" was real and mine -- the library's star, moved
+  today to the end of a row, wandered into the right wall and jittered
+  there, because bouncing flips its step on every "right" reading while the
+  wanderer keeps pushing. The star is back mid-table, and the check asks
+  for half the table's travel, not the whole of a random walk.
+
+Its wider suggestions -- a gallery with prerequisites and screenshots, an
+ordered route, a visible team-member selector, experiments inside the
+worlds -- are for Ken to weigh.

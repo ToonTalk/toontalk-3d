@@ -25,7 +25,8 @@ robots, boxes, numbers and birds.
    robot**.
 3. Press **Start this world over** before running again or experimenting:
    the last robot puts the work box away, so pressing Start again is not a
-   fresh run.
+   fresh run. (To change the numbers first, take the work box off the desk
+   before it is put away, or open a fresh copy of the world.)
 4. Click the condition line above *Trained actions* to see the next robot in
    the team. Each robot carries a note saying what its job is.
 
@@ -62,7 +63,8 @@ The work box has four holes:
 | 4 | −1 | counts one step |
 
 **Step and turn:** put the pen down → walk forward → turn 20° → add −1 to
-steps left. **Rest at zero:** lift the pen → put away the work box.
+steps left. **Rest at zero:** lift the pen → put away the work box. The
+workshop counts 37 rounds: 36 steps and the finisher's one.
 
 Eighteen turns of 20° make a full turn, so thirty-six steps go twice round
 the same ring. The sun stays still: this is a drawing recipe, not gravity.
@@ -76,10 +78,11 @@ sun will not move to the new centre by itself.
 **The idea:** four sides make a square petal; six petals on six spokes make
 a flower.
 
-The five holes hold **petals left (6)**, **sides left (5)**, **flower
-bird**, **letters**, and **spare numbers**. The spare numbers are "five
-again" and "one less". "Five again" carries the *set* badge, so it replaces
-the side count instead of adding to it.
+The five holes hold **petals left (6)**, **petal steps left (5)**, **flower
+bird**, **letters**, and **spare numbers**. A petal is five steps: the spoke
+out, then four sides. The spare numbers are "five again" and "one less".
+"Five again" carries the *set* badge, so it replaces the step count instead
+of adding to it.
 
 The petals stand a little way out from the centre, on **spokes drawn in
 invisible ink**: `[set | pen | invisible]` keeps the pen drawing, unseen, so
@@ -92,16 +95,16 @@ The four robots have separate jobs:
 1. **Draw the stalk and rest:** when petals left is zero, pink ink and pen
    down again, draw down 0.35 to the table, lift the pen, come back up, and
    put away the work box.
-2. **Go out to the petal:** when sides left is five, walk out along a spoke
-   in invisible ink, then pink again; that counts as a side.
-3. **Back to the centre:** when sides left is zero, turn about and walk the
-   spoke back in invisible ink, turn to the next spoke, subtract one petal,
-   and set sides left to five again.
+2. **Go out to the petal:** when petal steps left is five, walk out along a
+   spoke in invisible ink, then pink again; that is the first step.
+3. **Back to the centre:** when petal steps left is zero, turn about and walk
+   the spoke back in invisible ink, turn to the next spoke, subtract one
+   petal, and set petal steps left to five again.
 4. **Draw one side:** put the pen down, walk 0.09, turn 90°, and subtract one
-   side.
+   step.
 
-Watch the two counters: sides counts 5, 4, 3, 2, 1, 0 for each petal; petals
-counts down once per petal. That is a repeat inside another repeat. The
+Watch the two counters: petal steps counts 5, 4, 3, 2, 1, 0 for each petal;
+petals counts down once per petal. That is a repeat inside another repeat. The
 flower head is flat, with a stalk going down into the third dimension.
 
 **Try:** set petals left to 3 and change "next spoke" from 240° to 300°.
@@ -113,6 +116,7 @@ Then sweep the flower up with Dusty: it comes up as one thing.
 **The idea:** keep moving forward, but make the upward step smaller each
 time.
 
+The world opens looking from the side, where the arch reads as an arch.
 The five holes hold **jumps left (20)**, **spark bird**, **letters**,
 **gravity (−1/100)**, and **one less (−1)**.
 

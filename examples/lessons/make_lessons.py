@@ -103,21 +103,21 @@ def flower():
         'stalk down', 'pen up', 'back to centre'])
     spare = labelled([n(5, 'set'), n(-1)], ['five again', 'one less'])
     work = labelled([n(6), n(5), my_thing(), letters, spare],
-                    ['petals left', 'sides left', 'my flower bird', 'letters', 'spare numbers'])
+                    ['petals left', 'petal steps left', 'my flower bird', 'letters', 'spare numbers'])
     return team(work, [
         worker(work, 'Draw the stalk and rest', [(0, n(0))],
                send([3, 5], [2]) + send([3, 0], [2]) + send([3, 8], [2]) + send([3, 9], [2]) + send([3, 10], [2]) + [finish],
                'When no petals remain: pink ink and pen down again (the spoke back was in invisible ink), draw down to the table, lift the pen and return to the centre. Put away the work box.'),
         worker(work, 'Go out to the petal', [(0, ANYNUM), (1, n(5))],                    # noqa: F405
                send([3, 3], [2]) + send([3, 4], [2]) + send([3, 5], [2]) + change([4, 1], [1]),
-               'A petal begins. Walk out along a spoke in invisible ink, so the petals stand apart but the whole flower stays one drawing; then pink again, and count the spoke as a side.'),
+               'A petal begins. Walk out along a spoke in invisible ink, so the petals stand apart but the whole flower stays one drawing; then pink again. The spoke is the first of the five petal steps.'),
         worker(work, 'Back to the centre', [(0, ANYNUM), (1, n(0))],                     # noqa: F405
                send([3, 3], [2]) + send([3, 6], [2]) + send([3, 4], [2]) + send([3, 7], [2])
                + change([4, 1], [0]) + change([4, 0], [1]),
-               'A square is finished. In invisible ink, turn about and walk the spoke back to the centre; turn to the next spoke, count one petal, and put five back into sides left.'),
+               'A square is finished. In invisible ink, turn about and walk the spoke back to the centre; turn to the next spoke, count one petal, and put five back into petal steps left.'),
         worker(work, 'Draw one side', [(0, ANYNUM), (1, ANYNUM)],                       # noqa: F405
                send([3, 0], [2]) + send([3, 1], [2]) + send([3, 2], [2]) + change([4, 1], [1]),
-               'Put the pen down, walk one side, turn a square corner, and count one side.'),
+               'Put the pen down, walk one side, turn a square corner, and count one step.'),
     ])
 
 
@@ -170,13 +170,17 @@ def card(lid, name, panel):
             'panel': json.loads(json.dumps(panel))}
 
 
-def lesson(name, intro, actors, panel, thing_lid):
+def lesson(name, intro, actors, panel, thing_lid, camera=None):
     """A lesson world: the team at the main desk, its bird addressed to the
-    thing on the table."""
+    thing on the table -- and, for a drawing that reads best from one side,
+    the view it opens at."""
     p = json.loads(json.dumps(panel).replace('MYTHING', thing_lid))
-    return {'kind': 'world', 'v': 4, 'name': name, 'intro': intro,
-            'bench': [{'thing': a, 'x': x, 'z': z} for x, z, a in actors],
-            'stations': p['stations'], 'active': p['active']}
+    w = {'kind': 'world', 'v': 4, 'name': name, 'intro': intro,
+         'bench': [{'thing': a, 'x': x, 'z': z} for x, z, a in actors],
+         'stations': p['stations'], 'active': p['active']}
+    if camera:
+        w['camera'] = camera
+    return w
 
 
 def write_json(name, rec):
@@ -209,7 +213,10 @@ WORLDS = [
         'smaller. Twenty jumps draw an arch. Two robots share the jobs: fly one step, and hide and rest. The '
         'README in examples/lessons has experiments to try.',
         [(0, 1.5, actor('spark-1', '#ffca55', 0.05, 0.025, 0))],
-        spark(), 'spark-1')),
+        spark(), 'spark-1',
+        # from the side, so the arch reads as an arch (from the front it stood
+        # nearly vertical behind the robot)
+        camera={'at': [1.3, 1.45, 1.7], 'look': [0.0, 1.22, 1.7]})),
 ]
 CARDS = [
     ('🌸 flower-helper.thing.json', card('flower-helper', 'Draw a flower', flower())),

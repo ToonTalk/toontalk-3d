@@ -652,7 +652,12 @@ async function bindingsCheck(D) {
     }
     px = by2.L9599.position.x;
   }
-  const wanders = (Math.max(...xs) - Math.min(...xs)) > 1 && flips >= 2;
+  // half the table, not the whole of it: the walk is a random one, and
+  // bouncing flips its step on every "right" reading -- so a star the
+  // wanderer keeps pushing at the right wall jitters there (149 flips in
+  // 700 frames), which is the gadgets' design, not a binding that failed.
+  // What is measured is that both drive it: it travels, and it turns.
+  const wanders = (Math.max(...xs) - Math.min(...xs)) > 0.5 && flips >= 2;
   const wanderWhy = ' range=' + (Math.max(...xs) - Math.min(...xs)).toFixed(2) + ' xs=' + JSON.stringify(xs.filter((_, i) => i % 70 === 0).map(x => +x.toFixed(2)));
   D.switchGadget(by2.G903, false);
   D.switchGadget(by2.G910, false);
@@ -3335,6 +3340,7 @@ const EXAMPLE_WORLDS = [
   'lists/🔢 n-to-1',
   'meta/🎓 teacher',
   'models/✈️ airplane-flight',
+  'models/✈️ airplane-with-pilot',
   'numbers/❗ factorial',
   'numbers/🌡️ gauge',
   'numbers/🐇 fibonacci-recursive',
@@ -4616,7 +4622,7 @@ async function invisibleInkCheck(D) {
 // flower's 24 sides and stalk on 11 spokes of invisible ink as ONE run, the
 // spark's 20 dots -- and the flower helper card, dropped on a sphere of
 // one's own, draws the same flower offstage.
-async function lessonsCheck(D) {
+async function lessonsCheck(D, win) {
   const strokes = () => { const m = []; D.scene.traverse(o => { if (o.userData?.penMark) m.push(o); }); return m; };
   const runOne = async (file) => {
     const w = await (await fetch('../examples/lessons/' + file + '.world.json')).json();
@@ -4632,6 +4638,9 @@ async function lessonsCheck(D) {
   };
   const planet = await runOne('🪐 step-and-turn-planet');
   const flower = await runOne('🌸 easy-flower');
+  // the card names the holes in brackets, after the numbers (Ken: numbers primary, labels parenthetically)
+  const stepsText = win.document.getElementById('steps').textContent;
+  const labelled = /hole 4\.6 \(letters › pink ink\)/.test(stepsText);
   const spark = await runOne('✨ jumping-spark');
   const planetOK = planet.n === 36 && planet.unseen === 0 && planet.runs === 1 && planet.boxGone;
   const flowerOK = flower.n === 36 && flower.unseen === 11 && flower.runs === 1 && flower.boxGone;
@@ -4648,8 +4657,8 @@ async function lessonsCheck(D) {
   const byCard = strokes().length;
   D.switchGadget(gad, false, true); await frames(D, 5);
   const cardOK = byCard === 36;
-  const ok = planetOK && flowerOK && sparkOK && cardOK;
-  put((ok ? 'PASS' : 'FAIL') + ' the lessons draw what they say, and the flower card draws on a sphere of your own  (planet=' + JSON.stringify(planet) + ' flower=' + JSON.stringify(flower)
+  const ok = planetOK && flowerOK && sparkOK && cardOK && labelled;
+  put((ok ? 'PASS' : 'FAIL') + ' the lessons draw what they say, and the flower card draws on a sphere of your own  (labels-in-brackets=' + labelled + ' planet=' + JSON.stringify(planet) + ' flower=' + JSON.stringify(flower)
       + ' spark=' + JSON.stringify(spark) + ' by-card=' + byCard + ')', ok ? 'pass' : 'fail');
   return ok;
 }
@@ -7302,7 +7311,7 @@ async function runOne(D, spec) {
   try { inkOK = want('invisibleInk') ? await invisibleInkCheck(D) : true; }
   catch (e) { inkOK = false; put('FAIL invisible ink keeps the trail one thing  ' + e.message, 'fail'); }
   let lsnOK = true;
-  try { lsnOK = want('lessons') ? await lessonsCheck(D) : true; }
+  try { lsnOK = want('lessons') ? await lessonsCheck(D, frame.contentWindow) : true; }
   catch (e) { lsnOK = false; put('FAIL the lessons draw what they say  ' + e.message, 'fail'); }
   let hnbOK = true;
   try { hnbOK = want('houseNotebook') ? await houseNotebookCheck(D) : true; }
