@@ -8024,3 +8024,13 @@ exactLoadCheck. (Its "against the edge" advisory during the garden's initial
 positioning did not reproduce here in 667 rounds; it is the shape of the
 mid-glide measurement fixed on 17 September -- [set | position] measured
 from a glide's old target -- and its test ran on the public site that day.)
+
+## A model's plaque is measured to the model
+
+ChatGPT: "the planet labels were large compared with the planets and
+obscured the animation." A model's name plate was 0.3 wide whatever the
+model -- a box's is never wider than the box, and now a model's is the same:
+no wider than the model and a little (1.3x), never narrower than 0.12, which
+is as narrow as reads up close. Measured: a pea of a planet 0.1 across wears
+a 0.13 plate; a shed keeps 0.3. Covered in modelPlaqueCheck. Hover already
+begins with the name (the named-things round), so a plaque can be small.

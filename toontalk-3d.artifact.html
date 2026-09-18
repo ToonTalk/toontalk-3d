@@ -14001,7 +14001,14 @@ function setThingLabel(thing, text) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   const kind = thing.userData.kind;
-  const w = kind === 'box' ? Math.min(0.44, thing.userData.width * 0.85) : 0.3;
+  // A MODEL'S PLAQUE IS MEASURED TO THE MODEL, as a box's is to the box: a
+  // planet the size of a pea wore a name plate wider than its orbit
+  // (ChatGPT's clockwork). Never wider than the thing and a little, never
+  // narrower than can be read up close.
+  let mbb = null;
+  if (kind === 'model') { mbb = new THREE.Box3().setFromObject(thing); if (!mbb.isEmpty()) { thing.updateMatrixWorld(); mbb.applyMatrix4(_labM.copy(thing.matrixWorld).invert()); } }
+  const w = kind === 'box' ? Math.min(0.44, thing.userData.width * 0.85)
+    : (mbb && !mbb.isEmpty()) ? Math.min(0.3, Math.max(0.12, (mbb.max.x - mbb.min.x) * 1.3)) : 0.3;
   const plate = new THREE.Mesh(geo('PlaneGeometry', w, w / 4),
     new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
   if (kind === 'box') plate.position.set(0, 0, (thing.userData.holeW + 0.07) / 2 + 0.004);
@@ -14023,11 +14030,9 @@ function setThingLabel(thing, text) {
   else if (kind === 'model') {
     // Measured onto the thing: over its top, just in front of its face, and
     // centred on it across. A model read from a file may be any shape at all.
-    const bb = new THREE.Box3().setFromObject(thing);
+    const bb = mbb;
     if (bb.isEmpty()) plate.position.set(0, 0.27, 0.06);   // its meshes are still being read
     else {
-      thing.updateMatrixWorld();
-      bb.applyMatrix4(_labM.copy(thing.matrixWorld).invert());
       plate.position.set((bb.min.x + bb.max.x) / 2,
                          bb.max.y + w / 8 + 0.02,
                          Math.max(bb.max.z + 0.01, 0.02));
