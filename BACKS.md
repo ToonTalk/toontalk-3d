@@ -8007,3 +8007,20 @@ takes up from there. (Ken asked whether a reset-camera button was a good
 idea: yes, and this is how it works.) And "As big as the ground" reads "As
 big as the table" indoors (Ken).
 
+
+## A saved arrangement loads exactly
+
+ChatGPT, after building three worlds by script: "Automatic separation moved
+pots away from stems and the fountain nozzle away from its launch point.
+Saved arrangements should survive loading exactly." Measured: its garden's
+three pens, saved in their pots, stood a row behind them after every load.
+The shove (clearBenchSpot) was for a hand's near-miss and for what the stacks
+hand out, and it ran on every put-down, loading included. Now a world file's
+things -- and undo's -- go exactly where the file says, clamped to the table
+and nothing more; a hand's drop still keeps clear. Our own examples: only
+the library had two things on one spot (reverse a speed on collision stood
+on reverse on collision), moved apart in make_library.py. Covered in
+exactLoadCheck. (Its "against the edge" advisory during the garden's initial
+positioning did not reproduce here in 667 rounds; it is the shape of the
+mid-glide measurement fixed on 17 September -- [set | position] measured
+from a glide's old target -- and its test ran on the public site that day.)

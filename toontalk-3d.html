@@ -11872,8 +11872,14 @@ function holeOwnerOf(thing) {
 // A free spot near the one asked for. A saved world laid out on a wider
 // table -- or two things aimed at the same place -- would otherwise stack
 // invisibly, one thing hiding inside another.
+// A SAVED ARRANGEMENT IS THE AUTHOR'S. The shove is for a hand's near-miss
+// and for things the stacks hand out; a world file says where each thing
+// stands, and loading it (or undoing back to it) puts them exactly there,
+// clamped to the table and nothing more. ChatGPT's garden had its pens
+// standing in their pots and found them shoved a row back on every load.
+let placingSaved = false;
 function clearBenchSpot(thing, x, z) {
-  if (benchThings.length > 80) return { x, z };      // a crowded table: leave it
+  if (placingSaved || benchThings.length > 80) return { x, z };   // theirs, or a crowded table: leave it
   const half = (thing.userData.width || 0.3) / 2;
   const clash = (X, Z) => benchThings.some(o => {
     if (o === thing || !o.parent) return false;
@@ -18766,7 +18772,7 @@ function worldIn(data) {
     // an all-empty notebook holds nothing worth doubling the library for
     if (b.thing?.kind === 'notebook' && (b.thing.pages || []).every(p2 => !p2)) return;
     const t = thingIn(b.thing, nests, birds);
-    if (t) putOnBench(t, { x: b.x, z: b.z });
+    if (t) { placingSaved = true; try { putOnBench(t, { x: b.x, z: b.z }); } finally { placingSaved = false; } }
   });
   // the yard's things: built the way bench things are, then set aside on the
   // ground's own list until the back door is opened
@@ -18900,7 +18906,7 @@ function restoreWorld(snap) {
   benchThings.length = 0;
   (snap.bench || []).forEach(b => {
     const t = b.bot ?? buildThing(b.spec);
-    putOnBench(t, b.at);
+    placingSaved = true; try { putOnBench(t, b.at); } finally { placingSaved = false; }
   });
   (snap.piles || []).forEach(p => {
     p.nest.userData.pile.forEach(t => t.removeFromParent());

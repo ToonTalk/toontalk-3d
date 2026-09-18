@@ -4471,6 +4471,30 @@ async function guideCheck(D, win) {
   return ok;
 }
 
+// A SAVED ARRANGEMENT LOADS EXACTLY. Two things a file puts at one spot
+// stand at that spot (ChatGPT's pens in their pots were shoved a row back);
+// a hand's near-miss is still kept clear, and undo puts things back where
+// they were, not where the shove would have them.
+async function exactLoadCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'number', value: { n: '1', d: '1' } }, x: 0.2, z: 1.7 },
+    { thing: { kind: 'number', value: { n: '2', d: '1' } }, x: 0.2, z: 1.7 },
+    { thing: { kind: 'text', text: 'pad' }, x: 0.5, z: 1.7 } ] });
+  await slowSettle(D, 1500);
+  const at = []; for (let i = 0; i < 5; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind !== 'notebook') at.push([t.position.x, t.position.z]); }
+  const near = (a, x, z) => Math.abs(a[0] - x) < 1e-3 && Math.abs(a[1] - z) < 1e-3;
+  const exact = at.length === 3 && near(at[0], 0.2, 1.7) && near(at[1], 0.2, 1.7) && near(at[2], 0.5, 1.7);
+  // a hand's drop beside the pad still keeps clear of it
+  D.fromStack('numbers'); await frames(D, 5);
+  const dropped = D.heldNode();
+  D.clickBench(0.36, 1.7); await frames(D, 20);
+  const shoved = !!dropped && dropped.parent && Math.hypot(dropped.position.x - 0.36, dropped.position.z - 1.7) > 0.08;
+  const ok = exact && shoved;
+  put((ok ? 'PASS' : 'FAIL') + ' a saved arrangement loads exactly; a hand\u2019s near-miss is kept clear  (exact=' + exact
+      + ' at=' + JSON.stringify(at.map(a => a.map(v => +v.toFixed(2)))) + ' hand-shoved=' + shoved + (dropped ? ' dropped-at=' + [dropped.position.x, dropped.position.z].map(v => +v.toFixed(2)) : '') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function stopwatchCheck(D) {
   const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
@@ -6980,6 +7004,9 @@ async function runOne(D, spec) {
   let fpjOK = true;
   try { fpjOK = want('guide') ? await guideCheck(D, frame.contentWindow) : true; }
   catch (e) { fpjOK = false; put('FAIL the first project guides step by step  ' + e.message, 'fail'); }
+  let exlOK = true;
+  try { exlOK = want('exactLoad') ? await exactLoadCheck(D) : true; }
+  catch (e) { exlOK = false; put('FAIL a saved arrangement loads exactly  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7145,7 +7172,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

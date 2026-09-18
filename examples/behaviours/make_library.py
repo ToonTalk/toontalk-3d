@@ -330,7 +330,7 @@ bench = [
     {'thing': SIX['reversing'], 'x': 0.15, 'z': 1.48},
     {'thing': SIX['limiting'], 'x': 0.15, 'z': 1.81},
     {'thing': SIX['scoring'], 'x': 0.70, 'z': 1.48},
-    {'thing': SIX['reversing_speed'], 'x': 0.15, 'z': 1.48},
+    {'thing': SIX['reversing_speed'], 'x': 0.70, 'z': 1.15},   # was on top of reversing
     {'thing': wandering_g, 'x': 1.25, 'z': 1.48},
 
     {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.28},           # noqa: F405
