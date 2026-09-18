@@ -1531,9 +1531,13 @@ staircase built out of many small turns actually close.
 The pen has a colour and a width.
 [set | pen | red] draws in red from there on; [set | pen | 3]
 makes the line three ordinary widths wide. Each stroke keeps the colour and
-width it was drawn with, so one drawing can change its mind halfway. And
-chalk comes off: wake Dusty and point him at a stroke and that stroke goes,
-leaving the rest of the line.
+width it was drawn with, so one drawing can change its mind halfway.
+[set | pen | invisible] (or transparent) is ink nobody can
+see: the pen goes on drawing, so a drawing whose parts stand apart — a
+flowers petals, the eyes of a face — stays ONE trail from pen
+down to pen up, one thing for Dusty to sweep up and one thing to save; any
+colour brings the ink back. And chalk comes off: wake Dusty and point him at
+a stroke and that stroke goes, leaving the rest of the line.
 
 Which way a thing points. [set | facing | 90] turns a thing,
 [move | facing | 30] turns it further, and [query | facing |
@@ -7920,12 +7924,19 @@ const PEN_CAP = 600;
 // draws, so two turtles on one table can draw in different colours and a
 // single turtle can change its mind halfway along a line.
 const PEN_INK = 0x2f4a3a;
+// INVISIBLE INK. [set | pen | invisible] (or transparent) keeps the pen
+// drawing -- the run goes on, the strokes are there -- unseen, so a drawing
+// with parts apart (a flower's petals, a face) is one trail: one thing for
+// Dusty, one thing saved. Any colour brings the ink back. Ken's idea, in
+// place of a "make sculpture" command: pen up would have ended the trail.
+const PEN_NONE = -1;
 const penMats = new Map();              // colour -> material, one apiece
 function penMatFor(hex) {
   let m = penMats.get(hex);
-  if (!m) { m = new THREE.MeshBasicMaterial({ color: hex }); penMats.set(hex, m); }
+  if (!m) { m = hex === PEN_NONE ? new THREE.MeshBasicMaterial({ visible: false }) : new THREE.MeshBasicMaterial({ color: hex }); penMats.set(hex, m); }
   return m;
 }
+const inkUnseen = (m, ink) => { if (ink === PEN_NONE) { m.visible = false; m.castShadow = false; } return m; };
 // WHICH RUN a stroke belongs to. A run is one pen-down to one pen-up, which
 // is what a person means by "the trail": lifting the pen starts a new one.
 let penRunSeq = 0;
@@ -7936,7 +7947,7 @@ function penStroke(X, field, fsz, x0, z0, x1, z1, y0 = 0, y1 = 0) {
   const dx = x1 - x0, dy = y1 - y0, dz = z1 - z0;
   const len = Math.hypot(dx, dy, dz);
   if (len < 1e-4) return;
-  const m = new THREE.Mesh(geo('BoxGeometry', 1, 1, 1), penMatFor(penColourOf(X)));
+  const m = inkUnseen(new THREE.Mesh(geo('BoxGeometry', 1, 1, 1), penMatFor(penColourOf(X))), penColourOf(X));
   // in DISPLAY space: on a field the thing's coordinates are the field's own
   // units, so the stroke is scaled back to what the eye sees
   const k = field ? fsz : 1;
@@ -8001,7 +8012,7 @@ function dropShape(X, shape, size) {
     : Math.max(0.004, (X.__baseY ?? X.position?.y ?? 0) - (X.userData?.rest ?? 0.0225) + 0.004);
   const y = floor + upOf(X) * k;
   const q = aimOf(X);
-  const m = shapeMesh(shape, size * k, penMatFor(penColourOf(X)));
+  const m = inkUnseen(shapeMesh(shape, size * k, penMatFor(penColourOf(X))), penColourOf(X));
   m.position.set(at.x * k, y, at.z * k);
   orientShape(m, shape, q);
   m.userData.penMark = X;
@@ -8023,7 +8034,7 @@ function makeTrail(segs) {
   let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
   for (const sg of segs || []) {
     if (sg.shape) {
-      const m2 = shapeMesh(sg.shape, sg.size, penMatFor(sg.ink ?? PEN_INK));
+      const m2 = inkUnseen(shapeMesh(sg.shape, sg.size, penMatFor(sg.ink ?? PEN_INK)), sg.ink);
       m2.position.set(sg.at[0], sg.at[1], sg.at[2]);
       orientShape(m2, sg.shape,
         sg.rot ? new THREE.Quaternion(sg.rot[0], sg.rot[1], sg.rot[2], sg.rot[3])
@@ -8037,7 +8048,7 @@ function makeTrail(segs) {
     const len = Math.hypot(dx, dy, dz);
     if (len < 1e-5) continue;
     const thick = 0.014 * (sg.wide ?? 1);
-    const m = new THREE.Mesh(geo('BoxGeometry', 1, 1, 1), penMatFor(sg.ink ?? PEN_INK));
+    const m = inkUnseen(new THREE.Mesh(geo('BoxGeometry', 1, 1, 1), penMatFor(sg.ink ?? PEN_INK)), sg.ink);
     m.scale.set(len, dy ? thick : 0.003, thick);
     m.position.set((sg.x0 + sg.x1) / 2, ((sg.y0 ?? 0) + (sg.y1 ?? 0)) / 2, (sg.z0 + sg.z1) / 2);
     m.rotation.set(0, -Math.atan2(dz, dx), Math.atan2(dy, Math.hypot(dx, dz)), 'YZX');
@@ -8592,13 +8603,17 @@ function placeMsg(X, msg) {
     if (word === 'clear') { penClear(X); return true; }
     // ...and a COLOUR is a colour: [set | pen | red] draws in red from here on
     if (!['down', 'up'].includes(word)) {
+      if (word === 'invisible' || word === 'transparent') {
+        X.userData.penInk = PEN_NONE;   // the line goes on, unseen: no break, nothing can show in the wrong ink
+        return true;
+      }
       if (word && colourOK(word)) {
         X.userData.penInk = new THREE.Color(word).getHex();
         penLast.delete(X);       // a new colour starts a new line, not a joint
         return true;
       }
       mailSay('[set | pen | down], [set | pen | up], [set | pen | clear], '
-        + '[set | pen | red] or [set | pen | 3] \u2014 down, it draws a line wherever it goes.');
+        + '[set | pen | red], [set | pen | invisible] or [set | pen | 3] \u2014 down, it draws a line wherever it goes.');
       return true;
     }
     if (word === 'down') {

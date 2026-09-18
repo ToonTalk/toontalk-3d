@@ -313,7 +313,7 @@ NEW = ('THE SECOND SIX\n\n'
 star = live(pad('*', bg='#1b2233', ink='#ffd23f', font='sans'), 'L9599')   # noqa: F405
 
 bench = [
-    {'thing': star, 'x': 0.35, 'z': 0.80},      # a row of its own in front: at (0.35, 1.15) it rode on "bouncing at a speed"
+    {'thing': star, 'x': 1.25, 'z': 1.15},      # the front row's free end (z 0.80 was off the table and clamped onto "bouncing at a speed")
 
     {'thing': moving_right, 'x': -1.50, 'z': 1.15},
     {'thing': moving_left, 'x': -1.50, 'z': 1.48},

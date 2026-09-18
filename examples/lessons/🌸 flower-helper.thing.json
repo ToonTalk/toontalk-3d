@@ -1,0 +1,2263 @@
+{
+  "kind": "thing",
+  "v": 3,
+  "thing": {
+    "kind": "text",
+    "text": "Draw a flower",
+    "gadget": true,
+    "lid": "flower-helper",
+    "evt": "evt-flower-helper",
+    "look": {
+      "bg": "#fff1ba",
+      "ink": "#24334d",
+      "font": "sans",
+      "h": 0.2
+    },
+    "note": "Pick me up and press Ctrl+P to look inside. My bird talks to the thing I am attached to.",
+    "panel": {
+      "kind": "world",
+      "v": 4,
+      "bench": [],
+      "stations": {
+        "stand": {
+          "kind": "box",
+          "holes": [
+            {
+              "kind": "number",
+              "value": {
+                "n": "6",
+                "d": "1"
+              },
+              "op": "+"
+            },
+            {
+              "kind": "number",
+              "value": {
+                "n": "5",
+                "d": "1"
+              },
+              "op": "+"
+            },
+            {
+              "kind": "bird",
+              "nestId": null,
+              "nestGuid": null,
+              "liveId": "MYTHING",
+              "label": "my thing"
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "down"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "forward"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "9",
+                        "d": "100"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "yaw"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "90",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "invisible"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "forward"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "3",
+                        "d": "50"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "hotpink"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "yaw"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "180",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "yaw"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "240",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "up"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "-7",
+                        "d": "20"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "up"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "up"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "7",
+                        "d": "20"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                }
+              ],
+              "holeLabels": [
+                "pen down",
+                "one side",
+                "square corner",
+                "invisible ink",
+                "one spoke",
+                "pink ink",
+                "about turn",
+                "next spoke",
+                "stalk down",
+                "pen up",
+                "back to centre"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "5",
+                    "d": "1"
+                  },
+                  "op": "set"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "-1",
+                    "d": "1"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "five again",
+                "one less"
+              ]
+            }
+          ],
+          "holeLabels": [
+            "petals left",
+            "sides left",
+            "my flower bird",
+            "letters",
+            "spare numbers"
+          ]
+        }
+      },
+      "active": {
+        "kind": "robot",
+        "name": "Draw the stalk and rest",
+        "condition": {
+          "kind": "box",
+          "holes": [
+            {
+              "kind": "number",
+              "value": {
+                "n": "0",
+                "d": "1"
+              },
+              "op": "+"
+            },
+            null,
+            null,
+            null,
+            null
+          ],
+          "holeLabels": [
+            "petals left",
+            "sides left",
+            "my flower bird",
+            "letters",
+            "spare numbers"
+          ]
+        },
+        "program": [
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                3,
+                5
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                2
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                3,
+                0
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                2
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                3,
+                8
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                2
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                3,
+                9
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                2
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                3,
+                10
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                2
+              ]
+            }
+          },
+          {
+            "type": "vacuum",
+            "at": {
+              "c": "given",
+              "path": []
+            }
+          }
+        ],
+        "trainedOn": {
+          "kind": "box",
+          "holes": [
+            {
+              "kind": "number",
+              "value": {
+                "n": "6",
+                "d": "1"
+              },
+              "op": "+"
+            },
+            {
+              "kind": "number",
+              "value": {
+                "n": "5",
+                "d": "1"
+              },
+              "op": "+"
+            },
+            {
+              "kind": "bird",
+              "nestId": null,
+              "nestGuid": null,
+              "liveId": "MYTHING",
+              "label": "my thing"
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "down"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "forward"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "9",
+                        "d": "100"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "yaw"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "90",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "invisible"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "forward"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "3",
+                        "d": "50"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "hotpink"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "yaw"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "180",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "yaw"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "240",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "up"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "-7",
+                        "d": "20"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "up"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "up"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "7",
+                        "d": "20"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                }
+              ],
+              "holeLabels": [
+                "pen down",
+                "one side",
+                "square corner",
+                "invisible ink",
+                "one spoke",
+                "pink ink",
+                "about turn",
+                "next spoke",
+                "stalk down",
+                "pen up",
+                "back to centre"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "5",
+                    "d": "1"
+                  },
+                  "op": "set"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "-1",
+                    "d": "1"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "five again",
+                "one less"
+              ]
+            }
+          ],
+          "holeLabels": [
+            "petals left",
+            "sides left",
+            "my flower bird",
+            "letters",
+            "spare numbers"
+          ]
+        },
+        "team": [
+          {
+            "kind": "robot",
+            "name": "Go out to the petal",
+            "condition": {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "wildNumber"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "5",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                null,
+                null,
+                null
+              ],
+              "holeLabels": [
+                "petals left",
+                "sides left",
+                "my flower bird",
+                "letters",
+                "spare numbers"
+              ]
+            },
+            "program": [
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    3
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    4
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    5
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    4,
+                    1
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "trainedOn": {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "6",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "5",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                {
+                  "kind": "bird",
+                  "nestId": null,
+                  "nestGuid": null,
+                  "liveId": "MYTHING",
+                  "label": "my thing"
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "down"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "forward"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "9",
+                            "d": "100"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "90",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "invisible"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "forward"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "3",
+                            "d": "50"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "hotpink"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "180",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "240",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "-7",
+                            "d": "20"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "7",
+                            "d": "20"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    }
+                  ],
+                  "holeLabels": [
+                    "pen down",
+                    "one side",
+                    "square corner",
+                    "invisible ink",
+                    "one spoke",
+                    "pink ink",
+                    "about turn",
+                    "next spoke",
+                    "stalk down",
+                    "pen up",
+                    "back to centre"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "5",
+                        "d": "1"
+                      },
+                      "op": "set"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "-1",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "five again",
+                    "one less"
+                  ]
+                }
+              ],
+              "holeLabels": [
+                "petals left",
+                "sides left",
+                "my flower bird",
+                "letters",
+                "spare numbers"
+              ]
+            },
+            "team": [],
+            "note": "A petal begins. Walk out along a spoke in invisible ink, so the petals stand apart but the whole flower stays one drawing; then pink again, and count the spoke as a side."
+          },
+          {
+            "kind": "robot",
+            "name": "Back to the centre",
+            "condition": {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "wildNumber"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "0",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                null,
+                null,
+                null
+              ],
+              "holeLabels": [
+                "petals left",
+                "sides left",
+                "my flower bird",
+                "letters",
+                "spare numbers"
+              ]
+            },
+            "program": [
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    3
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    6
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    4
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    7
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    4,
+                    1
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    0
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    4,
+                    0
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "trainedOn": {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "6",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "5",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                {
+                  "kind": "bird",
+                  "nestId": null,
+                  "nestGuid": null,
+                  "liveId": "MYTHING",
+                  "label": "my thing"
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "down"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "forward"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "9",
+                            "d": "100"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "90",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "invisible"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "forward"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "3",
+                            "d": "50"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "hotpink"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "180",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "240",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "-7",
+                            "d": "20"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "7",
+                            "d": "20"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    }
+                  ],
+                  "holeLabels": [
+                    "pen down",
+                    "one side",
+                    "square corner",
+                    "invisible ink",
+                    "one spoke",
+                    "pink ink",
+                    "about turn",
+                    "next spoke",
+                    "stalk down",
+                    "pen up",
+                    "back to centre"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "5",
+                        "d": "1"
+                      },
+                      "op": "set"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "-1",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "five again",
+                    "one less"
+                  ]
+                }
+              ],
+              "holeLabels": [
+                "petals left",
+                "sides left",
+                "my flower bird",
+                "letters",
+                "spare numbers"
+              ]
+            },
+            "team": [],
+            "note": "A square is finished. In invisible ink, turn about and walk the spoke back to the centre; turn to the next spoke, count one petal, and put five back into sides left."
+          },
+          {
+            "kind": "robot",
+            "name": "Draw one side",
+            "condition": {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "wildNumber"
+                },
+                {
+                  "kind": "wildNumber"
+                },
+                null,
+                null,
+                null
+              ],
+              "holeLabels": [
+                "petals left",
+                "sides left",
+                "my flower bird",
+                "letters",
+                "spare numbers"
+              ]
+            },
+            "program": [
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    0
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    1
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    4,
+                    1
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "trainedOn": {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "6",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "5",
+                    "d": "1"
+                  },
+                  "op": "+"
+                },
+                {
+                  "kind": "bird",
+                  "nestId": null,
+                  "nestGuid": null,
+                  "liveId": "MYTHING",
+                  "label": "my thing"
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "down"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "forward"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "9",
+                            "d": "100"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "90",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "invisible"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "forward"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "3",
+                            "d": "50"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "hotpink"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "180",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "yaw"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "240",
+                            "d": "1"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "-7",
+                            "d": "20"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "move"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "up"
+                        },
+                        {
+                          "kind": "number",
+                          "value": {
+                            "n": "7",
+                            "d": "20"
+                          },
+                          "op": "+"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
+                    }
+                  ],
+                  "holeLabels": [
+                    "pen down",
+                    "one side",
+                    "square corner",
+                    "invisible ink",
+                    "one spoke",
+                    "pink ink",
+                    "about turn",
+                    "next spoke",
+                    "stalk down",
+                    "pen up",
+                    "back to centre"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "5",
+                        "d": "1"
+                      },
+                      "op": "set"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "-1",
+                        "d": "1"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "five again",
+                    "one less"
+                  ]
+                }
+              ],
+              "holeLabels": [
+                "petals left",
+                "sides left",
+                "my flower bird",
+                "letters",
+                "spare numbers"
+              ]
+            },
+            "team": [],
+            "note": "Put the pen down, walk one side, turn a square corner, and count one side."
+          }
+        ],
+        "note": "When no petals remain: pink ink and pen down again (the spoke back was in invisible ink), draw down to the table, lift the pen and return to the centre. Put away the work box."
+      }
+    }
+  }
+}

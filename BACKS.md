@@ -8062,3 +8062,34 @@ strokes in one run, the flower its 24 sides and stalk in one run, the spark
 its twenty dots; and the flower helper card, bound to a sphere 0.35 up and
 switched on, drew all 25 strokes offstage within half a second -- the stall
 they saw was their browser's background tab, not the card route.
+
+## Invisible ink, and the lessons
+
+INVISIBLE INK (Ken, in place of my "drop one trail on another to join
+them", which cannot reach a sculpture whose parts stand apart): [set | pen |
+invisible] -- or transparent -- keeps the pen drawing, unseen. The run goes
+on, so a drawing with parts apart is one trail for Dusty and one thing to
+save; any colour brings the ink back. Built as a colour: PEN_NONE (-1) in
+penInk, a material nobody sees, the mesh unseen, the segment saved with ink
+-1 and rebuilt unseen. Measured (invisibleInkCheck): a line, an unseen line
+and a red line are one run of three strokes, Dusty takes all three, and the
+saved trail keeps its gap. Not changed: a colour change still breaks the
+line (BACKS, "the pen"), so the first move after [set | pen | red] draws
+nothing until a pen down -- the lessons put the pen down after each colour.
+
+THE LESSONS: ChatGPT's redone three moved into examples/lessons, its way of
+working kept -- a team at the main desk, a labelled work box, letters
+copied to the bird, the finisher first -- in a generator of our own
+(make_lessons.py) so they rebuild like the rest. Changed in the move:
+numbers in lowest terms (36000000/1000000 was 36); and the flower's petals
+stand off the centre on spokes of invisible ink, so it is one drawing (four
+robots now: go out to the petal, draw one side, back to the centre, the
+stalk). Measured (lessonsCheck): planet 36 strokes one run, flower 36 with
+11 unseen one run, spark 20 dots; the flower helper card on a sphere of
+one's own draws the same 36 offstage.
+
+Loading exactly found three of our own layouts leaning on the shove and
+the clamp -- the turtle's order boxes 0.40 apart at 0.48 wide, the library's
+star at z 0.80 (off the table, clamped onto a gadget), activity1's RUN pad
+at z 2.80 (clamped onto a nest). Spaced by measurement; overlapCheck is
+clean over all 55 worlds.

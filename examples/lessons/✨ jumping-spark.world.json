@@ -1,0 +1,681 @@
+{
+  "kind": "world",
+  "v": 4,
+  "name": "A jumping spark",
+  "intro": "Start the team. The spark moves up and forward, leaves a dot, and makes its next upward step a little smaller. Twenty jumps draw an arch. Two robots share the jobs: fly one step, and hide and rest. The README in examples/lessons has experiments to try.",
+  "bench": [
+    {
+      "thing": {
+        "kind": "model",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.025
+            ],
+            "color": "#ffca55",
+            "at": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "ghost": true,
+        "lid": "spark-1",
+        "evt": "evt-spark-1",
+        "up": 0.05,
+        "facing": 0,
+        "penInk": 16763477,
+        "penWide": 2
+      },
+      "x": 0,
+      "z": 1.5
+    }
+  ],
+  "stations": {
+    "stand": {
+      "kind": "box",
+      "holes": [
+        {
+          "kind": "number",
+          "value": {
+            "n": "20",
+            "d": "1"
+          },
+          "op": "+"
+        },
+        {
+          "kind": "bird",
+          "nestId": null,
+          "nestGuid": null,
+          "liveId": "spark-1",
+          "label": "my thing"
+        },
+        {
+          "kind": "box",
+          "holes": [
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "move"
+                },
+                {
+                  "kind": "text",
+                  "text": "up"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "1",
+                    "d": "10"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "move"
+                },
+                {
+                  "kind": "text",
+                  "text": "forward"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "1",
+                    "d": "50"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "drop"
+                },
+                {
+                  "kind": "text",
+                  "text": "sphere"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "1",
+                    "d": "50"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "set"
+                },
+                {
+                  "kind": "text",
+                  "text": "shown"
+                },
+                {
+                  "kind": "text",
+                  "text": "no"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            }
+          ],
+          "holeLabels": [
+            "upward step",
+            "forward step",
+            "leave a dot",
+            "hide"
+          ]
+        },
+        {
+          "kind": "number",
+          "value": {
+            "n": "-1",
+            "d": "100"
+          },
+          "op": "+"
+        },
+        {
+          "kind": "number",
+          "value": {
+            "n": "-1",
+            "d": "1"
+          },
+          "op": "+"
+        }
+      ],
+      "holeLabels": [
+        "jumps left",
+        "my spark bird",
+        "letters",
+        "gravity",
+        "one less"
+      ]
+    }
+  },
+  "active": {
+    "kind": "robot",
+    "name": "Hide and rest",
+    "condition": {
+      "kind": "box",
+      "holes": [
+        {
+          "kind": "number",
+          "value": {
+            "n": "0",
+            "d": "1"
+          },
+          "op": "+"
+        },
+        null,
+        null,
+        null,
+        null
+      ],
+      "holeLabels": [
+        "jumps left",
+        "my spark bird",
+        "letters",
+        "gravity",
+        "one less"
+      ]
+    },
+    "program": [
+      {
+        "type": "copy",
+        "at": {
+          "c": "given",
+          "path": [
+            2,
+            3
+          ]
+        }
+      },
+      {
+        "type": "put",
+        "at": {
+          "c": "given",
+          "path": [
+            1
+          ]
+        }
+      },
+      {
+        "type": "vacuum",
+        "at": {
+          "c": "given",
+          "path": []
+        }
+      }
+    ],
+    "trainedOn": {
+      "kind": "box",
+      "holes": [
+        {
+          "kind": "number",
+          "value": {
+            "n": "20",
+            "d": "1"
+          },
+          "op": "+"
+        },
+        {
+          "kind": "bird",
+          "nestId": null,
+          "nestGuid": null,
+          "liveId": "spark-1",
+          "label": "my thing"
+        },
+        {
+          "kind": "box",
+          "holes": [
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "move"
+                },
+                {
+                  "kind": "text",
+                  "text": "up"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "1",
+                    "d": "10"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "move"
+                },
+                {
+                  "kind": "text",
+                  "text": "forward"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "1",
+                    "d": "50"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "drop"
+                },
+                {
+                  "kind": "text",
+                  "text": "sphere"
+                },
+                {
+                  "kind": "number",
+                  "value": {
+                    "n": "1",
+                    "d": "50"
+                  },
+                  "op": "+"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "text",
+                  "text": "set"
+                },
+                {
+                  "kind": "text",
+                  "text": "shown"
+                },
+                {
+                  "kind": "text",
+                  "text": "no"
+                }
+              ],
+              "holeLabels": [
+                "action",
+                "what",
+                "amount"
+              ]
+            }
+          ],
+          "holeLabels": [
+            "upward step",
+            "forward step",
+            "leave a dot",
+            "hide"
+          ]
+        },
+        {
+          "kind": "number",
+          "value": {
+            "n": "-1",
+            "d": "100"
+          },
+          "op": "+"
+        },
+        {
+          "kind": "number",
+          "value": {
+            "n": "-1",
+            "d": "1"
+          },
+          "op": "+"
+        }
+      ],
+      "holeLabels": [
+        "jumps left",
+        "my spark bird",
+        "letters",
+        "gravity",
+        "one less"
+      ]
+    },
+    "team": [
+      {
+        "kind": "robot",
+        "name": "Fly one step",
+        "condition": {
+          "kind": "box",
+          "holes": [
+            {
+              "kind": "wildNumber"
+            },
+            null,
+            null,
+            null,
+            null
+          ],
+          "holeLabels": [
+            "jumps left",
+            "my spark bird",
+            "letters",
+            "gravity",
+            "one less"
+          ]
+        },
+        "program": [
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                2,
+                0
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                1
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                2,
+                1
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                1
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                2,
+                2
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                1
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                3
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                2,
+                0,
+                2
+              ]
+            }
+          },
+          {
+            "type": "copy",
+            "at": {
+              "c": "given",
+              "path": [
+                4
+              ]
+            }
+          },
+          {
+            "type": "put",
+            "at": {
+              "c": "given",
+              "path": [
+                0
+              ]
+            }
+          }
+        ],
+        "trainedOn": {
+          "kind": "box",
+          "holes": [
+            {
+              "kind": "number",
+              "value": {
+                "n": "20",
+                "d": "1"
+              },
+              "op": "+"
+            },
+            {
+              "kind": "bird",
+              "nestId": null,
+              "nestGuid": null,
+              "liveId": "spark-1",
+              "label": "my thing"
+            },
+            {
+              "kind": "box",
+              "holes": [
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "up"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "1",
+                        "d": "10"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "move"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "forward"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "1",
+                        "d": "50"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "drop"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "sphere"
+                    },
+                    {
+                      "kind": "number",
+                      "value": {
+                        "n": "1",
+                        "d": "50"
+                      },
+                      "op": "+"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "shown"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "no"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
+                }
+              ],
+              "holeLabels": [
+                "upward step",
+                "forward step",
+                "leave a dot",
+                "hide"
+              ]
+            },
+            {
+              "kind": "number",
+              "value": {
+                "n": "-1",
+                "d": "100"
+              },
+              "op": "+"
+            },
+            {
+              "kind": "number",
+              "value": {
+                "n": "-1",
+                "d": "1"
+              },
+              "op": "+"
+            }
+          ],
+          "holeLabels": [
+            "jumps left",
+            "my spark bird",
+            "letters",
+            "gravity",
+            "one less"
+          ]
+        },
+        "team": [],
+        "note": "Move up and forward. Leave a dot. Subtract a little from the number in the upward-step letter, then count one jump."
+      }
+    ],
+    "note": "After 20 jumps, hide the spark and put away the work box. Its dots remain."
+  }
+}

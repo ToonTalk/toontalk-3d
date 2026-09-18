@@ -99,7 +99,7 @@ bench = [
     {'thing': nest(*B, label='B: evens'), 'x': 1.05, 'z': 2.20},
 
     {'thing': txt(ABOUT), 'x': -1.20, 'z': 2.40},
-    {'thing': txt(RUN), 'x': 0.20, 'z': 2.80},
+    {'thing': txt(RUN), 'x': 1.48, 'z': 2.19},   # z 2.80 was off the table and clamped onto the odds nest
 ]
 
 if __name__ == '__main__':

@@ -22,6 +22,7 @@ vacuum them away with Dusty once you know the drill.
 | [`sounds/`](sounds/) | 🎹 tones, 🔉 transforms and 🎵 a melody: what a sound is and how one is made |
 | [`images/`](images/) | 🖼️ pictures, 📸 an album, 🏷️ naming: what a picture is, which is a pad |
 | [`devices/`](devices/) | ⌨️ keys and 🖱️ pointer: the workshop's own senses, as nests |
+| [`lessons/`](lessons/) | 🪐 a step-and-turn planet, 🌸 an easy flower, ✨ a jumping spark: three small drawing lessons written by ChatGPT -- one team, one labelled work box, a finisher that recognises zero -- with the same teams as helper cards; the flower's spokes are in invisible ink |
 | [`meta/`](meta/) | 🎓 the teacher: a robot trained to train a robot, ToonTalk Reborn's way; 🎓 telling and 🎓 timer-teacher: robots that teach robots to write to the perch |
 
 `numbers/` and `lists/` hold the ports of Ken's own ToonTalk 3 programs, from

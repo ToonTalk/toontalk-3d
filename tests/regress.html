@@ -3303,6 +3303,9 @@ const EXAMPLE_WORLDS = [
   'behaviours/🐢 turtle3d',
   'behaviours/🐾 following',
   'behaviours/📚 library',
+  'lessons/🪐 step-and-turn-planet',
+  'lessons/🌸 easy-flower',
+  'lessons/✨ jumping-spark',
   'behaviours/🦋 wandering',
   'behaviours/🪐 ellipse',
   'devices/⌨️ keys',
@@ -4566,6 +4569,88 @@ async function roundAtomicCheck(D) {
   D.rounds(ROUNDS); D.speed(1);
   const ok = sampled > 20 && apart === 0 && maxSeen >= 12000;
   put((ok ? 'PASS' : 'FAIL') + ' a round is the unit of a frame at Instant  (frames-sampled=' + sampled + ' seen-apart=' + apart + ' reached=' + maxSeen + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// INVISIBLE INK. [set | pen | invisible] keeps the pen drawing unseen: a
+// line, an unseen line and a red line are one run of three strokes, Dusty
+// sweeps all three up as one trail, and the trail keeps its gap when saved
+// and loaded. Ken's way of making a drawing with parts apart one thing.
+async function invisibleInkCheck(D) {
+  const txt = (t) => ({ kind: 'text', text: t }), num = (n, d = 1) => ({ kind: 'number', value: { n: String(n), d: String(d) } });
+  const box = (...h) => ({ kind: 'box', holes: h });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'text', text: 'P', lid: 'INK1', evt: 'evt-INK1' }, x: -0.8, z: 1.6 } ] });
+  await slowSettle(D, 1500);
+  const post = async (m) => { D.post('INK1', m); await frames(D, 12); };
+  await post(box(txt('set'), txt('pen'), txt('down')));
+  await post(box(txt('move'), txt('forward'), num(2, 10)));
+  await post(box(txt('set'), txt('pen'), txt('invisible')));
+  await post(box(txt('move'), txt('forward'), num(2, 10)));
+  await post(box(txt('set'), txt('pen'), txt('red')));
+  await post(box(txt('set'), txt('pen'), txt('down')));
+  await post(box(txt('move'), txt('forward'), num(2, 10)));
+  const marks = []; D.scene.traverse(o => { if (o.userData?.penMark) marks.push(o); });
+  const runs = new Set(marks.map(m => m.userData.penRun)).size;
+  const seen = marks.map(m => m.visible !== false && m.material.visible !== false);
+  const drawn = marks.length === 3 && runs === 1 && seen.join() === 'true,false,true';
+  const mark = marks[0];
+  D.dusty(true); D.clickRaw({ kind: 'penMark', mark, owner: mark.userData.penMark }); await settle(D, 20000); D.dusty(false);
+  const left = []; D.scene.traverse(o => { if (o.userData?.penMark) left.push(o); });
+  const sweptAll = left.length === 0;
+  D.clickRaw({ kind: 'dustyBag' }); await settle(D, 15000);
+  if (D.state.held) { D.clickBench(0.6, 1.4); await settle(D, 20000); }
+  D.worldIn(JSON.parse(JSON.stringify(D.worldOut()))); await slowSettle(D, 2000);
+  let trail = null; for (let i = 0; i < 14; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'trail') trail = t; }
+  const segs = trail?.userData.segs ?? [];
+  const meshes = []; trail?.traverse(o => { if (o.isMesh) meshes.push(o.visible !== false && o.material.visible !== false); });
+  const kept = segs.length === 3 && segs[1].ink === -1 && meshes.join() === 'true,false,true';
+  const ok = drawn && sweptAll && kept;
+  put((ok ? 'PASS' : 'FAIL') + ' invisible ink keeps the trail one thing  (strokes=' + marks.length + ' runs=' + runs + ' seen=' + seen.join('/') + ' swept-all=' + sweptAll
+      + ' saved-segs=' + segs.length + ' gap-kept=' + kept + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// THE LESSONS (ChatGPT's three, in examples/lessons): each runs to its
+// finisher and draws what it says -- the planet's 36 steps in one ring, the
+// flower's 24 sides and stalk on 11 spokes of invisible ink as ONE run, the
+// spark's 20 dots -- and the flower helper card, dropped on a sphere of
+// one's own, draws the same flower offstage.
+async function lessonsCheck(D) {
+  const strokes = () => { const m = []; D.scene.traverse(o => { if (o.userData?.penMark) m.push(o); }); return m; };
+  const runOne = async (file) => {
+    const w = await (await fetch('../examples/lessons/' + file + '.world.json')).json();
+    D.worldIn(w); await slowSettle(D, 2000);
+    D.speed('inf'); D.rounds(1000);
+    const box = D.stations.stand.occupant;
+    D.hold(box); await frames(D, 5); D.giveRobot();
+    await slowSettle(D, 60000);
+    for (let i = 0; i < 40; i++) D.frame(1, fnow());
+    D.rounds(ROUNDS); D.speed(1);
+    const m = strokes();
+    return { n: m.length, unseen: m.filter(x => x.visible === false).length, runs: new Set(m.map(x => x.userData.penRun)).size, boxGone: !D.stations.stand.occupant };
+  };
+  const planet = await runOne('🪐 step-and-turn-planet');
+  const flower = await runOne('🌸 easy-flower');
+  const spark = await runOne('✨ jumping-spark');
+  const planetOK = planet.n === 36 && planet.unseen === 0 && planet.runs === 1 && planet.boxGone;
+  const flowerOK = flower.n === 36 && flower.unseen === 11 && flower.runs === 1 && flower.boxGone;
+  const sparkOK = spark.n === 20 && spark.unseen === 0 && spark.runs === 1 && spark.boxGone;
+  // the helper card on a sphere of one's own
+  const card = await (await fetch('../examples/lessons/🌸 flower-helper.thing.json')).json();
+  const g = JSON.parse(JSON.stringify(card.thing)); g.boundTo = 'ROSE1';
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'model', parts: [{ shape: 'sphere', size: [0.03, 0.03, 0.03], color: '#ff88aa' }], label: 'rose', lid: 'ROSE1', evt: 'evt-ROSE1', up: 0.35, facing: 0 }, x: 0.0, z: 1.55 },
+    { thing: g, x: 0.7, z: 1.9 } ] });
+  await slowSettle(D, 2000);
+  const gad = (() => { for (let j = 0; j < 6; j++) { const t = D.bench(j); if (t?.userData.gadget) return t; } return null; })();
+  D.switchGadget(gad, true, true); await frames(D, 120);
+  const byCard = strokes().length;
+  D.switchGadget(gad, false, true); await frames(D, 5);
+  const cardOK = byCard === 36;
+  const ok = planetOK && flowerOK && sparkOK && cardOK;
+  put((ok ? 'PASS' : 'FAIL') + ' the lessons draw what they say, and the flower card draws on a sphere of your own  (planet=' + JSON.stringify(planet) + ' flower=' + JSON.stringify(flower)
+      + ' spark=' + JSON.stringify(spark) + ' by-card=' + byCard + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -7090,6 +7175,12 @@ async function runOne(D, spec) {
   let raOK = true;
   try { raOK = want('roundAtomic') ? await roundAtomicCheck(D) : true; }
   catch (e) { raOK = false; put('FAIL a round is the unit of a frame at Instant  ' + e.message, 'fail'); }
+  let inkOK = true;
+  try { inkOK = want('invisibleInk') ? await invisibleInkCheck(D) : true; }
+  catch (e) { inkOK = false; put('FAIL invisible ink keeps the trail one thing  ' + e.message, 'fail'); }
+  let lsnOK = true;
+  try { lsnOK = want('lessons') ? await lessonsCheck(D) : true; }
+  catch (e) { lsnOK = false; put('FAIL the lessons draw what they say  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7255,7 +7346,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

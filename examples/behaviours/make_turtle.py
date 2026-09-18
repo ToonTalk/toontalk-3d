@@ -236,24 +236,24 @@ TRY = ('TO DRAW A SQUARE\n\n'
 bench = [
     # the bird stands in FRONT with nothing behind her; the shell has the
     # middle; the orders make one spaced row on the left
-    {'thing': post, 'x': 1.05, 'z': 1.30},
+    {'thing': post, 'x': 1.10, 'z': 1.30},      # spaced by measurement (overlapCheck): nothing rides on anything since loading places exactly
     {'thing': shell, 'x': 0.25, 'z': 1.60},
     # beside the bird, not off in the far corner: the working set --
     # behaviour, bird, shell -- reads as one group
-    {'thing': turtle, 'x': 1.30, 'z': 1.30},
+    {'thing': turtle, 'x': 1.44, 'z': 1.30},
 
-    {'thing': fwd, 'x': -1.48, 'z': 1.62},
-    {'thing': back, 'x': -1.08, 'z': 1.62},
-    {'thing': turn, 'x': -1.48, 'z': 1.90},
-    {'thing': turn30, 'x': -1.08, 'z': 1.90},
-    {'thing': pendown, 'x': -0.65, 'z': 1.62},
-    {'thing': penup, 'x': -0.65, 'z': 1.90},
+    {'thing': fwd, 'x': -1.41, 'z': 1.62},
+    {'thing': back, 'x': -0.89, 'z': 1.62},
+    {'thing': turn, 'x': -1.41, 'z': 1.90},
+    {'thing': turn30, 'x': -0.89, 'z': 1.90},
+    {'thing': pendown, 'x': -0.40, 'z': 1.62},
+    {'thing': penup, 'x': -0.40, 'z': 1.90},
 
     # ...and what the pen is like, in a row of its own
-    {'thing': pen_red, 'x': -1.52, 'z': 1.32},
-    {'thing': pen_blue, 'x': -0.86, 'z': 1.32},
-    {'thing': pen_thick, 'x': -0.22, 'z': 1.32},
-    {'thing': pen_thin, 'x': 0.42, 'z': 1.32},
+    {'thing': pen_red, 'x': -1.34, 'z': 1.32},
+    {'thing': pen_blue, 'x': -0.67, 'z': 1.32},
+    {'thing': pen_thick, 'x': 0.00, 'z': 1.32},
+    {'thing': pen_thin, 'x': 0.67, 'z': 1.32},
 
     {'thing': txt(ABOUT), 'x': -0.10, 'z': 2.32},           # noqa: F405
     {'thing': txt(HOW), 'x': 0.60, 'z': 2.32},              # noqa: F405
