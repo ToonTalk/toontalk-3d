@@ -66,15 +66,15 @@ if __name__ == '__main__':
              'turtle\'s own words.')
 
     RUN = ('TO RUN IT\n\n'
-           'Set Speed to Instant and\n'
-           'give the work box to the\n'
-           'Wanderer.\n\n'
-           'The star drifts about the\n'
-           'table, nowhere in\n'
-           'particular.\n\n'
-           'Hold the die and type 5:\n'
-           'it turns right more often\n'
-           'than left, and circles. Why?')
+           'Press SPACE on the star: it\n'
+           'drifts about the table,\n'
+           'nowhere in particular. "."\n'
+           'stops it.\n\n'
+           'THE ROBOT IS ON ITS BACK.\nHold the star and press\nCtrl+P (or the gear on the\nholding card) to go through\nits door and watch the\nrobot at work. Escape\ncomes back out.\n\n'
+           'In there, hold the die and\n'
+           'type 5: it turns right more\n'
+           'often than left, and\n'
+           'circles. Why?')
 
     WHY = ('IN THE YARD\n\n'
            'Set the zoo out, carry this\n'
@@ -88,13 +88,12 @@ if __name__ == '__main__':
            'number, and a bird carries\n'
            'a message.')
 
+    # PACKAGED (Ken, 19 Sep): the Wanderer and its box on the star's own panel.
     bench = [
-        {'thing': star, 'x': -1.30, 'z': 1.20},
-        {'thing': bot, 'x': -1.45, 'z': 1.62},
-        {'thing': work, 'x': -0.45, 'z': 1.62},
+        {'thing': gadget('*', STAR, bot, work, look=dict(bg='#1b2233', ink='#ffd23f', font='sans')), 'x': -1.30, 'z': 1.40},
 
         {'thing': txt(RUN), 'x': -1.45, 'z': 2.15},          # noqa: F405
         {'thing': txt(WHY), 'x': -0.75, 'z': 2.15},          # noqa: F405
         {'thing': txt(ABOUT), 'x': -0.05, 'z': 2.15},        # noqa: F405
     ]
-    write_beh('🦋 wandering', bench, perch=to(STAR, 'to the star'))
+    write_beh('🦋 wandering', bench)

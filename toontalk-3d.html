@@ -30,6 +30,8 @@
   #title h1 .badge.training { background: rgba(127,212,255,.2); color: var(--think); }
   #title p { margin: 0; font-size: 12px; color: var(--dim); }
   #hint { margin-top: 8px !important; color: var(--accent) !important; }
+  .guideGlow { box-shadow: 0 0 0 3px #ffd27a, 0 0 16px #ffd27a !important; animation: guidePulse 1.2s ease-in-out infinite; }
+  @keyframes guidePulse { 0%, 100% { box-shadow: 0 0 0 3px #ffd27a, 0 0 10px #ffd27a; } 50% { box-shadow: 0 0 0 5px #ffd27a, 0 0 22px #ffd27a; } }
   #title.attn { animation: attn 0.65s ease 3; }
   @keyframes attn {
     0%, 100% { background: var(--panel); }
@@ -827,6 +829,14 @@ Closeups nest: in a closeup of a panel,
 Escape brings you back to the panel it stands on; only the last
 Escape reaches the workshop. Enter works with something in your hand too.
 examples/games/👾 space-invaders is built to be read this way.
+
+Projects. The ⋮ menus Projects… walks four small
+projects step by step here in the workshop — a robot that counts, a box
+of two numbers, a bird and her nest, a robot on a box — with a ring of
+light on the thing to reach for next and a glow on the button to press.
+Nothing is done for you; finishing one offers the others. Settings…
+in the same menu gathers the switches — sound, voices, hints, the camera,
+how much Marty helps — and opens once for a new name.
 
 The little desks beside the robot are its work spots — its own
 scratch space, cleared onto the table when it finishes, so nothing left there
@@ -14895,68 +14905,145 @@ function combine(slot, incoming, isHole, fromWorld, side, dropPoint) {
 
 let scaleBobT = 0;                 // the undecided scales' shared clock
 const flashes = [];
-// THE FIRST PROJECT, IN THE WORKSHOP. Codex's report: "the initial
-// instruction to take a robot does not explain the complete first
-// interaction. Offer a small guided sequence with highlighted stack, table,
-// robot, and input targets." The manual's first project, step by step, each
-// step said when the one before is seen to be done -- the workshop watches
-// what you do rather than what you click -- with a ring of light on the
-// thing to reach for. Nothing is done for you: it is your robot.
-let guide = null;                       // { i } while the first project is on
-let guideRing = null;
-const GUIDE_STEPS = [
-  { say: 'The first project: a robot that counts. Take a little robot from its stack and set it on the table.',
-    at: () => stackPoint('minis'),
-    done: () => benchThings.some(t => t.userData.kind === 'robot') || !!activeBot },
-  { say: 'Now give it something to work on: take a number from the number stack (it is a 1) and drop it on the robot. Its thought bubble opens \u2014 you are teaching it.',
-    at: () => stackPoint('numbers'),
-    done: () => mode === 'training' },
-  { say: 'In the bubble, show it one step: take another number from the number stack and drop it on the number it was given. That adds 1.',
-    at: () => stackPoint('numbers'),
-    done: () => mode === 'training' && program.some(st => st.type === 'put') },
-  { say: 'That is the whole lesson. Leave the bubble with the button under the title: the table is as you left it, and the robot keeps what it learned.',
-    at: () => null,
-    done: () => mode !== 'training' && !!activeBot?.program.length },
-  { say: 'Press Run what it learned. It does the step once and stops: its thought wants exactly a 1, and what it holds is a 2 now.',
-    at: () => null,
-    done: () => activeBot?.program.length && runsBegun > guide.runs && runCount >= 1 && mode === 'world' },
-  { say: 'Wake Ruby the eraser \u2014 click her, beside the copier \u2014 and click the 1 in the thought bubble. It becomes any number.',
-    at: () => helperPoint('ruby'),
-    done: () => !!activeBot && condition && condition.kind !== 'number' },
-  { say: 'Press Run again. It counts \u2014 3, 4, 5\u2026 \u2014 as long as what it holds is a number, which is always. Pause holds it still, Stop ends the run. That was the whole language: a lesson shown once, a thought that says what it waits for, and Ruby turning one example into a rule.',
-    at: () => null,
-    done: () => runsBegun > guide.runs && runCount >= 2 },   // a new run of two rounds or more: it counts (at Instant the whole run is over before a frame)
+// THE PROJECTS, IN THE WORKSHOP. Codex's report: "the initial instruction
+// to take a robot does not explain the complete first interaction. Offer a
+// small guided sequence with highlighted stack, table, robot, and input
+// targets." Each project is the manual's kind of first step, walked here:
+// the workshop watches what you DO rather than what you click -- each step
+// is said when the one before is seen to be done -- with a ring of light on
+// the thing to reach for NEXT (the stack, then the robot once the number is
+// in your hand: Ken, "after picking up a 1 from the stack it doesn't
+// highlight the 1 on the work area"), and a glow on the button to press.
+// Nothing is done for you. Finishing one offers the others (Ken: "maybe
+// after completing the first one a menu of a few more projects appears").
+let guide = null;                       // { id, i, runs } while a project is on
+let guideRing = null, guideGlowEl = null;
+const PROJECTS_DONE = 'tt3d.projects-done';
+const wp = (o) => o?.getWorldPosition(new THREE.Vector3()) ?? null;
+const benchFind = (pick) => benchThings.find(pick) ?? null;
+const heldIs = (kind) => held?.userData.kind === kind;
+const robotOnTable = () => benchFind(t => t.userData.kind === 'robot') ?? activeBot?.node ?? null;
+const holePoint = (box, i) => { const a = box?.userData.holes?.[i]?.anchor; return a ? wp(a) : null; };
+const twoNumberBox = () => benchFind(t => t.userData.kind === 'box' && !t.userData.fixed && t.userData.holes.length === 2
+  && t.userData.holes.every(h => h.thing?.userData.kind === 'number'));
+const PROJECTS = [
+  { id: 'count', title: 'A robot that counts', blurb: 'the manual\u2019s first project: one step, a thought, and Ruby', steps: [
+    { say: 'The first project: a robot that counts. Take a little robot from its stack and set it on the table.',
+      at: () => heldIs('robot') ? new THREE.Vector3(0, BENCH_TOP, 1.7) : stackPoint('minis'),
+      done: () => !!robotOnTable() },
+    { say: 'Now give it something to work on: take a number from the number stack (it is a 1) and drop it on the robot. Its thought bubble opens \u2014 you are teaching it.',
+      at: () => heldIs('number') ? wp(robotOnTable()) : stackPoint('numbers'),
+      done: () => mode === 'training' },
+    { say: 'In the bubble, show it one step: take another number from the number stack and drop it on the number it was given. That adds 1.',
+      at: () => heldIs('number') ? wp(stations.stand.occupant) : stackPoint('numbers'),
+      done: () => mode === 'training' && program.some(st => st.type === 'put') },
+    { say: 'That is the whole lesson. Leave the bubble with the button under the title: the table is as you left it, and the robot keeps what it learned.',
+      at: () => ({ el: 'exitBtn' }),
+      done: () => mode !== 'training' && !!activeBot?.program.length },
+    { say: 'Press Run what it learned. It does the step once and stops: its thought wants exactly a 1, and what it holds is a 2 now.',
+      at: () => ({ el: 'runBtn' }),
+      done: () => runsBegun > guide.runs && activeBot?.program.length && runCount >= 1 && mode === 'world' },
+    { say: 'Wake Ruby the eraser \u2014 click her, beside the copier \u2014 and click the 1 in the thought bubble. It becomes any number.',
+      at: () => rubyActive ? wp(condDisplay) : helperPoint('ruby'),
+      done: () => !!activeBot && condition && condition.kind !== 'number' },
+    { say: 'Press Run again. It counts \u2014 3, 4, 5\u2026 \u2014 as long as what it holds is a number, which is always. Pause holds it still, Stop ends the run. That was the whole language: a lesson shown once, a thought that says what it waits for, and Ruby turning one example into a rule.',
+      at: () => ({ el: 'runBtn' }),
+      done: () => runsBegun > guide.runs && runCount >= 2 },
+  ] },
+  { id: 'box', title: 'A box of two numbers', blurb: 'holes, and typing a number', steps: [
+    { say: 'A box of two numbers. Take a box from the box stack and set it on the table: it comes with two holes.',
+      at: () => heldIs('box') ? new THREE.Vector3(0, BENCH_TOP, 1.7) : stackPoint('boxes'),
+      done: () => !!benchFind(t => t.userData.kind === 'box' && !t.userData.fixed) },
+    { say: 'Take a number from the number stack and drop it in the first hole.',
+      at: () => heldIs('number') ? holePoint(benchFind(t => t.userData.kind === 'box' && !t.userData.fixed), 0) : stackPoint('numbers'),
+      done: () => !!benchFind(t => t.userData.kind === 'box' && !t.userData.fixed && t.userData.holes[0]?.thing?.userData.kind === 'number') },
+    { say: 'Take another number and, while you hold it, type 2: typing writes digits on the end of a number in your hand. Drop it in the second hole.',
+      at: () => heldIs('number') ? holePoint(benchFind(t => t.userData.kind === 'box' && !t.userData.fixed), 1) : stackPoint('numbers'),
+      done: () => !!twoNumberBox() },
+    { say: 'That is a box: two holes, two numbers, and it goes everywhere as one thing. Pick it up \u2014 the card at the top reads out what it holds \u2014 and set it down again.',
+      at: () => wp(twoNumberBox()),
+      done: () => heldIs('box') && held.userData.holes.length === 2 },
+  ] },
+  { id: 'bird', title: 'A bird and her nest', blurb: 'how things travel: give it to the bird', steps: [
+    { say: 'A bird and her nest. Take a nest from the nest stack and set it on the table. There is an egg in it.',
+      at: () => heldIs('nest') ? new THREE.Vector3(-0.5, BENCH_TOP, 1.7) : stackPoint('nests'),
+      done: () => !!benchFind(t => t.userData.kind === 'nest') },
+    { say: 'Watch the egg: it hatches, and the bird stands beside her nest. She is the way to that nest from anywhere.',
+      at: () => wp(benchFind(t => t.userData.kind === 'nest')),
+      done: () => !!benchFind(t => t.userData.kind === 'bird') },
+    { say: 'Take a number from the number stack and drop it on the bird. She flies it to her nest and comes back.',
+      at: () => heldIs('number') ? wp(benchFind(t => t.userData.kind === 'bird')) : stackPoint('numbers'),
+      done: () => (benchFind(t => t.userData.kind === 'nest')?.userData.pile ?? []).length >= 1 },
+    { say: 'Now pick the bird up and set her down at the far end of the table. Give her another number: wherever she is, it lands on her nest \u2014 underneath the first, since a nest keeps its post in order.',
+      at: () => heldIs('number') ? wp(benchFind(t => t.userData.kind === 'bird')) : (heldIs('bird') ? new THREE.Vector3(1.2, BENCH_TOP, 1.7) : wp(benchFind(t => t.userData.kind === 'bird'))),
+      done: () => (benchFind(t => t.userData.kind === 'nest')?.userData.pile ?? []).length >= 2 },
+  ] },
+  { id: 'holes', title: 'A robot on a box', blurb: 'a robot works inside a box\u2019s holes, and Ruby loosens two things', steps: [
+    { say: 'A robot on a box. You need a box of two numbers on the table (the second project makes one) and a little robot from its stack.',
+      at: () => !twoNumberBox() ? stackPoint('boxes') : heldIs('robot') ? new THREE.Vector3(0.6, BENCH_TOP, 1.7) : stackPoint('minis'),
+      done: () => !!twoNumberBox() && !!robotOnTable() },
+    { say: 'Give the box to the robot: pick it up and drop it on him. The bubble opens with the box inside.',
+      at: () => heldIs('box') ? wp(robotOnTable()) : wp(twoNumberBox()),
+      done: () => mode === 'training' && stations.stand.occupant?.userData.kind === 'box' },
+    { say: 'In the bubble: take the number out of the first hole and drop it on the number in the second. Dropping a number on a number adds them.',
+      at: () => heldIs('number') ? holePoint(stations.stand.occupant, 1) : holePoint(stations.stand.occupant, 0),
+      done: () => mode === 'training' && program.some(st => st.type === 'put' && st.at?.path?.[0] === 1) },
+    { say: 'Leave the bubble with the button under the title.',
+      at: () => ({ el: 'exitBtn' }),
+      done: () => mode !== 'training' && !!activeBot?.program.length },
+    { say: 'Wake Ruby and click each number in the thought bubble, so it reads any number and any number. Now it is a rule: it adds the first hole into the second, for any two numbers.',
+      at: () => rubyActive ? wp(condDisplay) : helperPoint('ruby'),
+      done: () => !!activeBot && condition?.kind === 'box' && condition.holes.every(h => !h || h.kind !== 'number') },
+    { say: 'Press Run what it learned. Then make another box of two numbers, give it to the robot, and Run again: the same lesson, any numbers.',
+      at: () => ({ el: 'runBtn' }),
+      done: () => runsBegun > guide.runs && runCount >= 1 },
+  ] },
 ];
-function guideStart() {
-  guide = { i: -1 };
+function projectsDone() { try { return JSON.parse(mineGet(PROJECTS_DONE) || '[]'); } catch { return []; } }
+function noteProjectDone(id) {
+  const d = projectsDone();
+  if (!d.includes(id)) { d.push(id); try { mineSet(PROJECTS_DONE, JSON.stringify(d)); } catch {} }
+}
+function guideStart(id = 'count') {
+  const proj = PROJECTS.find(pr => pr.id === id) ?? PROJECTS[0];
+  guide = { id: proj.id, i: -1, runs: runsBegun, steps: proj.steps };
   guideAdvance();
 }
 function guideStop(said = true) {
   guide = null;
-  if (guideRing) { guideRing.removeFromParent(); guideRing = null; }
-  if (said) say('The first project is over \u2014 the manual has more.');
+  guideMark(null);
+  if (said) say('The project is over \u2014 the manual has more.');
 }
 function guideAdvance() {
   if (!guide) return;
   guide.i += 1;
-  guide.runs = runsBegun;                 // a step that waits for a run waits for a NEW one
-  if (guide.i >= GUIDE_STEPS.length) return guideStop(false);
-  const st = GUIDE_STEPS[guide.i];
+  guide.runs = runsBegun;        // runs begun before this step: a run counts only if it starts now
+  if (guide.i >= guide.steps.length) return guideStop(false);
+  const st = guide.steps[guide.i];
   sayAttn(st.say);
-  guideMark(st.at());
+  guideMark(safeAt(st));
 }
+const safeAt = (st) => { try { return st.at(); } catch { return null; } };
 function guideMark(p) {
-  if (guideRing) { guideRing.removeFromParent(); guideRing = null; }
-  if (!p) return;
-  const ring = new THREE.Mesh(geo('TorusGeometry', 0.22, 0.025, 10, 40),
-    new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.85, depthWrite: false }));
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.set(p.x, p.y + 0.02, p.z);
-  ring.__t = 0;
-  scene.add(ring);
-  guideRing = ring;
+  if (guideGlowEl) { guideGlowEl.classList.remove('guideGlow'); guideGlowEl = null; }
+  if (p && p.el) {
+    if (guideRing) { guideRing.removeFromParent(); guideRing = null; }
+    const el = document.getElementById(p.el);
+    if (el) { el.classList.add('guideGlow'); guideGlowEl = el; }
+    return;
+  }
+  if (!p) { if (guideRing) { guideRing.removeFromParent(); guideRing = null; } return; }
+  if (!guideRing) {
+    const ring = new THREE.Mesh(geo('TorusGeometry', 0.22, 0.025, 10, 40),
+      new THREE.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.85, depthWrite: false }));
+    ring.rotation.x = -Math.PI / 2;
+    ring.__t = 0;
+    scene.add(ring);
+    guideRing = ring;
+  }
+  guideRing.position.set(p.x, p.y + 0.02, p.z);
 }
-// each frame: the ring breathes, and the step is judged done
+// each frame: the ring breathes and follows its target, and the step is judged done
 function guideTick(dt) {
   if (guideRing) {
     guideRing.__t += dt;
@@ -14965,11 +15052,56 @@ function guideTick(dt) {
     guideRing.material.opacity = 0.6 + 0.3 * Math.sin(guideRing.__t * 4);
   }
   if (!guide || offstage()) return;
-  const st = GUIDE_STEPS[guide.i];
-  if (st && st.done()) {
-    if (guide.i === GUIDE_STEPS.length - 1) return guideStop(false);
+  const st = guide.steps[guide.i];
+  if (!st) return;
+  let done = false;
+  try { done = !!st.done(); } catch { done = false; }
+  if (done) {
+    if (guide.i === guide.steps.length - 1) {
+      noteProjectDone(guide.id);
+      guideStop(false);
+      showProjectsCard(true);
+      return;
+    }
     guideAdvance();
+    return;
   }
+  guideMark(safeAt(st));      // the target moves with what you hold: the stack, then the robot
+}
+// THE PROJECTS CARD: the four, with ticks for the ones done. Offered when
+// one is finished, and in the menu as Projects.
+function showProjectsCard(afterOne = false) {
+  if (document.getElementById('projectsCard')) return;
+  const done = projectsDone();
+  const veil = document.createElement('div');
+  veil.id = 'projectsCard';
+  veil.style.cssText = 'position:fixed;inset:0;z-index:61;display:grid;place-items:center;background:rgba(8,10,14,.55);backdrop-filter:blur(2px)';
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.cssText = 'position:static;min-width:300px;max-width:min(92vw,440px);display:flex;flex-direction:column;gap:8px';
+  const h = document.createElement('b');
+  h.textContent = afterOne ? `Done${nameTag()} \u2014 another?` : 'Projects';
+  const p2 = document.createElement('p');
+  p2.style.cssText = 'margin:0;font-size:12px;color:var(--dim);max-width:40ch';
+  p2.textContent = 'Each is walked step by step here in the workshop, with a ring of light on the thing to reach for. Nothing is done for you.';
+  card.append(h, p2);
+  for (const pr of PROJECTS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.style.cssText = 'text-align:left;display:flex;gap:8px;align-items:baseline';
+    b.innerHTML = `<span style="min-width:1.2em">${done.includes(pr.id) ? '\u2713' : ''}</span><span><b>${pr.title}</b><br><span style="font-size:11px;color:var(--dim)">${pr.blurb}</span></span>`;
+    b.onclick = () => { veil.remove(); guideStart(pr.id); };
+    card.appendChild(b);
+  }
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;justify-content:flex-end';
+  const no = document.createElement('button'); no.type = 'button'; no.textContent = afterOne ? 'Not now' : 'Close';
+  no.onclick = () => veil.remove();
+  row.appendChild(no);
+  card.appendChild(row);
+  veil.appendChild(card);
+  document.body.appendChild(veil);
+  for (const ev of ['keydown', 'keyup', 'keypress', 'pointerdown', 'click']) veil.addEventListener(ev, (e) => e.stopPropagation());
 }
 function flash(pos) {
   if (speed === Infinity || offstage()) return;   // nothing to see
@@ -22843,9 +22975,9 @@ loadModel('robot_v4.glb', (gltf) => {
     menu.appendChild(glb);
     const fp = document.createElement('button');
     fp.id = 'firstBtn';
-    fp.title = 'The first project, step by step, here in the workshop: a robot that counts.';
-    fp.textContent = '\u{1F393} The first project';
-    fp.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); guideStart(); };
+    fp.title = 'Small projects walked step by step here in the workshop: a robot that counts, a box, a bird and her nest, a robot on a box.';
+    fp.textContent = '\u{1F393} Projects\u2026';
+    fp.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); showProjectsCard(false); };
     menu.appendChild(fp);
     const cb = document.createElement('button');
     cb.id = 'camBtn';
@@ -22871,6 +23003,13 @@ loadModel('robot_v4.glb', (gltf) => {
     };
     menu.appendChild(dh);
     refreshDh();
+    menuRefresh = () => { refreshCam(); refreshDh(); };
+    const stb = document.createElement('button');
+    stb.id = 'settingsBtn';
+    stb.title = 'Sound, voices, hints, the camera and Marty: the switches, all on one card.';
+    stb.textContent = '\u2699 Settings\u2026';
+    stb.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); showSettingsCard(false); };
+    menu.appendChild(stb);
     // WHAT IS HERE: Marty, the helpers, the stacks and the back door, each
     // with a box to tick -- a general way to take anything out of the
     // workshop when it is not wanted, and to bring it back (Ken). Remembered
@@ -26332,6 +26471,82 @@ function showWho() {
   el.appendChild(a);
 }
 // No prompt(): it silently does nothing inside an artifact. A card of our own.
+// THE SETTINGS CARD. Ken: "for brand new users something should show up so
+// they can set some flags such as speech input and output, drop hints, and
+// smart camera and perhaps also to customize Marty." The switches were
+// already there -- on the bar, in the menu, on Marty's card -- one place
+// each; this card gathers them, opens once for a new name after the door,
+// and is in the menu after that as Settings.
+let menuRefresh = () => {};
+const SETTINGS_SEEN = 'tt3d.settings-seen';
+function showSettingsCard(first) {
+  if (document.getElementById('settingsCard')) return;
+  const veil = document.createElement('div');
+  veil.id = 'settingsCard';
+  veil.style.cssText = 'position:fixed;inset:0;z-index:61;display:grid;place-items:center;background:rgba(8,10,14,.6);backdrop-filter:blur(2px)';
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.cssText = 'position:static;min-width:300px;max-width:min(92vw,440px);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:10px';
+  const h = document.createElement('b');
+  h.textContent = first ? `Welcome${nameTag(true)} \u2014 a few switches` : 'Settings';
+  const p2 = document.createElement('p');
+  p2.style.cssText = 'margin:0;font-size:12px;color:var(--dim);max-width:40ch';
+  p2.textContent = first
+    ? 'These are yours, kept with your name. Everything here can be changed later from the \u22EE menu, under Settings.'
+    : 'Kept with your name. The same switches are on the bar, in the \u22EE menu and on Marty\u2019s card.';
+  card.append(h, p2);
+  const row = (label, help, control) => {
+    const l = document.createElement('label');
+    l.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer';
+    const txt = document.createElement('span');
+    txt.style.flex = '1';
+    txt.innerHTML = label + (help ? `<br><span style="font-size:11px;color:var(--dim)">${help}</span>` : '');
+    l.append(control, txt);
+    card.appendChild(l);
+    return control;
+  };
+  const cb = (on, fn) => { const c = document.createElement('input'); c.type = 'checkbox'; c.checked = !!on; c.onchange = () => fn(c.checked); return c; };
+  const sec = (t) => { const d = document.createElement('div'); d.textContent = t; d.style.cssText = 'font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:4px'; card.appendChild(d); };
+  sec('Sound and voices');
+  row('Sound effects', 'the clicks, the whoosh of a bird, a robot\u2019s footsteps', cb(!sndMuted, (on) => setVolume(sndVol, !on)));
+  row('Read the workshop\u2019s messages aloud', 'the line under the table, spoken; its voice is chosen on the title card', cb(hintSayOn, (on) => { mineSet(HINT_SAY, on ? '1' : '0'); sayRowRefresh(); }));
+  if (window.speechSynthesis) row('Marty reads his replies aloud', 'his voice is chosen under \u201cHow Marty thinks\u201d on his card', cb(martyVoiceOn, (on) => { mineSet(MARTY_VOICE, on ? '1' : '0'); martyVoiceRefresh(); }));
+  if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11px;color:var(--dim)';
+    note.textContent = 'To talk to Marty instead of typing, press the microphone \u{1F3A4} on his card \u2014 it listens while you speak.';
+    card.appendChild(note);
+  }
+  sec('Help');
+  row('Drop hints', 'while you carry something, the tooltip says first what letting go here will do', cb(dropHints, (on) => { dropHints = on; try { localStorage.setItem('nano-toontalk.drophints', on ? '1' : '0'); } catch {} menuRefresh(); }));
+  row('Smart camera', 'in a lesson or a run the camera comes in on what the robot works on; off, it stays where you put it', cb(smartCam, (on) => { setSmartCam(on); menuRefresh(); }));
+  row('Marty comments on runs', 'what a robot is up to as it works \u2014 the idea, not the steps (needs a brain)', cb(martyCommentOn(), (on) => { mineSet(MARTY_COMMENT, on ? '1' : '0'); const c2 = document.getElementById('martyCommentCb'); if (c2) c2.checked = on; }));
+  {
+    const sel = document.createElement('select');
+    for (const [v, t] of [['guide', 'hints and demonstrations \u2014 the building is yours'], ['plan', 'plans a program with you, one question at a time'], ['programs', 'plans and hands you each move']]) {
+      const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o);
+    }
+    sel.value = martyHelp();
+    sel.style.cssText = 'font:inherit;font-size:12px;max-width:100%';
+    sel.onchange = () => { mineSet(MARTY_HELP, sel.value); const hs = document.getElementById('martyHelp'); if (hs) hs.value = sel.value; };
+    const l = document.createElement('div');
+    l.style.cssText = 'font-size:13px;display:flex;flex-direction:column;gap:4px';
+    l.innerHTML = 'How much Marty helps';
+    l.appendChild(sel);
+    card.appendChild(l);
+  }
+  const rowB = document.createElement('div');
+  rowB.style.cssText = 'display:flex;gap:6px;justify-content:flex-end;margin-top:4px';
+  const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'go'; ok.textContent = first ? 'Into the workshop' : 'Done';
+  ok.onclick = () => veil.remove();
+  rowB.appendChild(ok);
+  card.appendChild(rowB);
+  veil.appendChild(card);
+  document.body.appendChild(veil);
+  ok.focus();
+  for (const ev of ['keydown', 'keyup', 'keypress', 'pointerdown', 'click']) veil.addEventListener(ev, (e) => e.stopPropagation());
+  mineSet(SETTINGS_SEEN, '1');
+}
 function askWho(switching = false) {
   if (document.getElementById('whoCard')) return;
   const veil = document.createElement('div');
@@ -26405,12 +26620,13 @@ function askWho(switching = false) {
   document.body.appendChild(veil);
   input.focus();
   input.select();
-  const accept = () => { if (!takeName()) return; veil.remove(); };
+  const firstVisit = () => { if (!switching && currentUser && !mineGet(SETTINGS_SEEN)) showSettingsCard(true); };
+  const accept = () => { if (!takeName()) return; veil.remove(); firstVisit(); };
   ok.onclick = accept;
   if (play) play.onclick = () => {
     if (!takeName()) return;
     const pr = puzzleProgress();
-    if (!pr.at || pr.at === FIRST_PUZZLE && !pr.solved.length) { veil.remove(); startPuzzleGame(true); return; }
+    if (!pr.at || pr.at === FIRST_PUZZLE && !pr.solved.length) { veil.remove(); startPuzzleGame(true); firstVisit(); return; }
     // they have been here before: carry on, or begin again
     row.textContent = '';
     p.textContent = `You were on puzzle ${pr.at.replace(/^p/, '')}` + (pr.solved.length
@@ -26823,8 +27039,9 @@ window.__nano = {
   commentary(on) { mineSet(MARTY_COMMENT, on ? '1' : '0'); return martyCommentOn(); },
   narrating() { return { on: narratedRun, live: narrationLive(), opening: openingBusy }; },
   camReset() { camResetAll(); },
-  guide() { return guide ? { i: guide.i, say: GUIDE_STEPS[guide.i]?.say ?? null, ring: !!guideRing } : null; },
-  guideStart() { guideStart(); },
+  guide() { return guide ? { id: guide.id, i: guide.i, say: guide.steps[guide.i]?.say ?? null, ring: !!guideRing, glow: guideGlowEl?.id ?? null, ringAt: guideRing ? guideRing.position.toArray().map(v => +v.toFixed(2)) : null } : null; },
+  guideStart(id) { guideStart(id); },
+  projectsCard() { return !!document.getElementById('projectsCard'); },
   homeView() { homeView(); },
   helperState() { return { ruby: !!ruby, rubyOn: !!ruby?.parent, dusty: !!dusty, dustyOn: !!dusty?.parent, rules: worldRules?.tools ?? null, rubyActive, dustyActive, busy, mode, condShow: !!condShow, hasCond: !!condDisplay }; },
   helperAt(name) { return helperPoint(name); },

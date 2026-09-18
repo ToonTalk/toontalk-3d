@@ -6,148 +6,148 @@
    "thing": {
     "kind": "text",
     "text": "*",
+    "gadget": true,
+    "lid": "L9521",
+    "evt": "evt-L9521",
     "look": {
      "bg": "#2b1b33",
      "ink": "#7ee787",
      "font": "sans"
     },
-    "lid": "L9521",
-    "evt": "evt-L9521"
-   },
-   "x": -1.3,
-   "z": 1.2
-  },
-  {
-   "thing": {
-    "kind": "robot",
-    "name": "Follower",
-    "condition": {
-     "kind": "box",
-     "holes": [
-      {
-       "kind": "anyBox"
-      },
-      {
-       "kind": "anyBox"
-      }
-     ]
-    },
-    "program": [
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        1
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "s0",
-       "path": []
-      }
-     },
-     {
-      "type": "take",
-      "at": {
-       "c": "given",
-       "path": [
-        0
-       ],
-       "nest": true
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "s0",
-       "path": [
-        2
-       ]
-      }
-     },
-     {
-      "type": "take",
-      "at": {
-       "c": "s0",
-       "path": []
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "perch",
-       "path": []
-      }
-     }
-    ],
-    "trainedOn": {
-     "kind": "box",
-     "holes": [
-      {
-       "kind": "nest",
-       "id": 9522,
-       "guid": "dev-pointer",
-       "hasEgg": false,
-       "dev": true,
-       "label": "pointer",
-       "pile": []
-      },
-      {
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
        "kind": "box",
        "holes": [
         {
-         "kind": "text",
-         "text": "set"
+         "kind": "nest",
+         "id": 9522,
+         "guid": "dev-pointer",
+         "hasEgg": false,
+         "dev": true,
+         "label": "pointer",
+         "pile": []
         },
         {
-         "kind": "text",
-         "text": "position"
-        },
-        null
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "position"
+          },
+          null
+         ]
+        }
        ]
       }
-     ]
-    },
-    "team": [],
-    "note": "Copies the [set | position | _] template, takes the pointer\u2019s [across | away] off the nest, puts it in the empty hole, and gives the message to the bird on the perch. Nothing in it is about pointers: it dozes until a reading arrives."
-   },
-   "x": -1.45,
-   "z": 1.62
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "nest",
-      "id": 9522,
-      "guid": "dev-pointer",
-      "hasEgg": false,
-      "dev": true,
-      "label": "pointer",
-      "pile": []
      },
-     {
-      "kind": "box",
-      "holes": [
+     "active": {
+      "kind": "robot",
+      "name": "Follower",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        }
+       ]
+      },
+      "program": [
        {
-        "kind": "text",
-        "text": "set"
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
        },
        {
-        "kind": "text",
-        "text": "position"
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
        },
-       null
-      ]
+       {
+        "type": "take",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ],
+         "nest": true
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "s0",
+         "path": [
+          2
+         ]
+        }
+       },
+       {
+        "type": "take",
+        "at": {
+         "c": "s0",
+         "path": []
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "perch",
+         "path": []
+        }
+       }
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "nest",
+         "id": 9522,
+         "guid": "dev-pointer",
+         "hasEgg": false,
+         "dev": true,
+         "label": "pointer",
+         "pile": []
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "position"
+          },
+          null
+         ]
+        }
+       ]
+      },
+      "team": [],
+      "note": "Copies the [set | position | _] template, takes the pointer\u2019s [across | away] off the nest, puts it in the empty hole, and gives the message to the bird on the perch. Nothing in it is about pointers: it dozes until a reading arrives."
      }
-    ]
+    }
    },
-   "x": -0.45,
-   "z": 1.62
+   "x": -1.3,
+   "z": 1.4
   },
   {
    "thing": {
@@ -160,7 +160,7 @@
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nSet Speed to Instant and give\nthe work box to the Follower.\n\nNow move the pointer over the\ntable. The star follows your\nhand.\n\nIt dozes between moves: with\nnothing on the pointer nest\nthere is nothing to match."
+    "text": "TO RUN IT\n\nPress SPACE on the star, then\nmove the pointer over the\ntable: it follows your hand.\n\".\" stops it.\n\nTHE ROBOT IS ON ITS BACK.\nHold the star and press\nCtrl+P (or the gear on the\nholding card) to go through\nits door and watch the\nrobot at work. Escape\ncomes back out.\n\nIt dozes between moves: with\nnothing on the pointer nest\nthere is nothing to match."
    },
    "x": -0.75,
    "z": 2.15
@@ -174,14 +174,6 @@
    "z": 2.15
   }
  ],
- "stations": {
-  "perch": {
-   "kind": "bird",
-   "nestId": 0,
-   "nestGuid": null,
-   "liveId": "L9521",
-   "label": "to the star"
-  }
- },
+ "stations": {},
  "active": null
 }

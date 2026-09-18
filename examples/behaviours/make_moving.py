@@ -41,14 +41,13 @@ ABOUT = ('MOVING\n\n'
          'moving right".')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Speed to 8x and give the\n'
-       'work box to the Mover.\n\n'
-       'The star slides right and\n'
-       'stops at the table\'s edge.\n\n'
-       'Pick up the step, type a\n'
-       'minus, and it goes the other\n'
-       'way. Type a bigger number and\n'
-       'it goes faster.')
+       'Press SPACE on the star: it\n'
+       'slides right and stops at\n'
+       'the table\'s edge. "." stops.\n\n'
+       'THE ROBOT IS ON ITS BACK.\nHold the star and press\nCtrl+P (or the gear on the\nholding card) to go through\nits door and watch the\nrobot at work. Escape\ncomes back out.\n\n'
+       'In there, pick up the step,\n'
+       'type a minus, and it goes\n'
+       'the other way.')
 
 WHY = ('WHAT IS NOT HERE\n\n'
        'The robot does not know what\n'
@@ -64,14 +63,15 @@ WHY = ('WHAT IS NOT HERE\n\n'
        'whatever the panel belongs to.\n'
        'THAT is what a behaviour is.')
 
+# PACKAGED (Ken, 19 Sep): the Mover and its box are on the star's own panel,
+# and the star is the thing -- press SPACE on it; go through its door to
+# watch. The open layout it replaced is what the panel holds.
 bench = [
-    {'thing': star, 'x': -1.30, 'z': 1.20},
-    {'thing': mover, 'x': -1.45, 'z': 1.62},
-    {'thing': work, 'x': -0.55, 'z': 1.62},
+    {'thing': gadget('*', STAR, mover, work, look=dict(bg='#1b2233', ink='#ffd23f', font='sans')), 'x': -1.30, 'z': 1.40},
 
     {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.15},           # noqa: F405
     {'thing': txt(RUN), 'x': -0.75, 'z': 2.15},             # noqa: F405
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},             # noqa: F405
 ]
 
-write_beh('🏃 moving', bench, perch=to(STAR, 'to the star'))
+write_beh('🏃 moving', bench)

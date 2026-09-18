@@ -26,8 +26,8 @@ ROUTE = [
    'Give it the OTHER scale, the one already the right way round. Predict: does it run, and why not?', 'give'),
   ('behaviours/🏃 moving', 'First steps',
    'A behaviour is a letter to a bird: [move | across | 1/60] every round, and the star slides.',
-   ['numbers/🔀 swap'], 'Set Speed to 8× and give the work box to the Mover.',
-   'Pick up the step, type a minus. Predict which way the star goes — then make the number bigger.', 'give'),
+   ['numbers/🔀 swap'], 'Press SPACE on the star. The Mover is on its back: hold the star and press Ctrl+P to go through its door and watch.',
+   'In there, pick up the step and type a minus. Predict which way the star goes — then make the number bigger.', 'space'),
   ('lessons/🪐 step-and-turn-planet', 'First steps',
    'Repeated motion: walk a little, turn a little, thirty-six times, and a ring appears. Two robots share the work box.',
    ['behaviours/🏃 moving'], 'Press Start the robot. Instant shows the ring at once.',
@@ -55,16 +55,16 @@ ROUTE = [
    'Stop moving. Predict whether the robot keeps running — an empty nest is a robot asleep.', 'give'),
   ('behaviours/🐾 following', 'Things that talk',
    'The pointer reading put inside a [set | position | …] letter: the star follows your hand.',
-   ['devices/🖱️ pointer', 'behaviours/🏃 moving'], 'Set Speed to Instant, give the work box to the Follower, and move the pointer.',
-   'Change the letter to [move | position | …] instead of set. Predict: does the star follow, or run away?', 'give'),
+   ['devices/🖱️ pointer', 'behaviours/🏃 moving'], 'Press SPACE on the star and move the pointer. The Follower is on the star’s back: Ctrl+P to watch it.',
+   'Change the letter to [move | position | …] instead of set. Predict: does the star follow, or run away?', 'space'),
   ('behaviours/🏀 bouncing', 'Things that talk',
    'The edge is a reading; a team of robots differ only in the word they expect, and flipping a step is a ×−1 dropped on a number.',
-   ['behaviours/🏃 moving'], 'Set Speed to 8× and give the work box to the team leader.',
-   'Take the “at the right” robot out of the team. Predict what happens at the right edge.', 'give'),
+   ['behaviours/🏃 moving'], 'Press SPACE on the star. The team is on its back: Ctrl+P to go through its door and watch them take turns.',
+   'Take the “at the right” robot out of the team. Predict what happens at the right edge.', 'space'),
   ('behaviours/🦋 wandering', 'Things that talk',
    'Randomness is a die: a die of 3, a −2 and a ×30 land on the turn in turn, then a yaw and a step go to the bird.',
-   ['behaviours/🏀 bouncing'], 'Set Speed to Instant and give the work box to the Wanderer.',
-   'Hold the die and type 5. Predict: which way does the star circle, and why?', 'give'),
+   ['behaviours/🏀 bouncing'], 'Press SPACE on the star. The Wanderer is on its back: Ctrl+P to watch the die land.',
+   'In there, hold the die and type 5. Predict: which way does the star circle, and why?', 'space'),
   ('devices/⏱️ timer', 'Things that talk',
    'A stopwatch that is not built in: robots on the number’s own panel ask the computer the time and tell the number.',
    ['devices/🖱️ pointer'], 'Press SPACE on the number; "." rests it.',
@@ -256,6 +256,30 @@ ROUTE = [
    'Predict which of the two lessons it gives first, and why the order matters.', 'yard'),
 ]
 
+# READABLE TITLES (Ken): the file names are for the folder; a card wants words.
+TITLES = {
+  'numbers/🔀 swap': 'Swap', 'behaviours/🏃 moving': 'Moving', 'lessons/🪐 step-and-turn-planet': 'A step-and-turn planet',
+  'lessons/🌸 easy-flower': 'An easy flower', 'lessons/✨ jumping-spark': 'A jumping spark', 'behaviours/🎨 random-colour': 'Random colour',
+  'devices/⌨️ keys': 'The keyboard', 'devices/🖱️ pointer': 'The pointer', 'behaviours/🐾 following': 'Following the pointer',
+  'behaviours/🏀 bouncing': 'Bouncing', 'behaviours/🦋 wandering': 'Wandering', 'devices/⏱️ timer': 'A stopwatch',
+  'devices/🖥️ computer': 'The computer', 'behaviours/🐢 turtle': 'A turtle', 'behaviours/🐢 turtle3d': 'A turtle in the air',
+  'behaviours/🪐 ellipse': 'An ellipse', 'numbers/❗ factorial': 'Factorial', 'numbers/🐇 fibonacci': 'Fibonacci by houses',
+  'numbers/🐇 fibonacci-recursive': 'Fibonacci by promises', 'numbers/🌡️ gauge': 'A gauge of live numbers', 'lists/🔢 n-to-1': 'A list from n to 1',
+  'lists/🔗 append': 'Appending two lists', 'lists/🔁 reverse': 'Reversing a list', 'words/🔤 grammar': 'A grammar as data',
+  'words/📝 sentence-generator': 'A sentence factory', 'accounts/💰 account': 'Sally\u2019s account', 'accounts/🏦 bank-account': 'A bank account in a house',
+  'accounts/💳 live-account': 'A live account', 'infinity/📮 zeno': 'Zeno\u2019s postman', 'behaviours/📚 library': 'The shelf of behaviours',
+  'yard/🦁 zoo': 'The zoo', 'yard/🦓 zoo-keeper': 'The zoo keeper', 'models/✈️ airplane-flight': 'An airplane\u2019s flight',
+  'models/✈️ airplane-with-pilot': 'An airplane with its pilot', 'sounds/🎹 tones': 'Tones', 'sounds/🔉 transforms': 'Remaking a sound',
+  'sounds/🎵 melody': 'A melody', 'images/🖼️ pictures': 'Pictures', 'images/📸 album': 'An album', 'images/🏷️ naming': 'Naming pictures',
+  'games/🏓 pong-classic': 'Pong, from the parts', 'games/🏓 pong-gadgets': 'Pong, from the shelf', 'games/🏓 pong': 'Pong, with collisions',
+  'games/👾 space-invaders': 'Space Invaders', 'infinity/♾️ activity1-even-numbers': 'Even numbers', 'infinity/♾️ activity2-all-integers': 'All the integers',
+  'infinity/♾️ activity3-sequences-and-pairs': 'Sequences and pairs', 'infinity/♾️ activity4-all-fractions': 'All the fractions between 0 and 1',
+  'infinity/♾️ activity5-above-one': 'The fractions above one', 'infinity/♾️ activity6-all-rationals': 'All the rational numbers',
+  'infinity/♾️ activity7-any-interval': 'Any interval', 'infinity/♾️ activity8-counting-sequences': 'Counting the sequences',
+  'infinity/🏨 resort-infinity': 'Resort Infinity', 'meta/🎓 teacher': 'The teacher', 'meta/🎓 telling': 'Telling',
+  'meta/🎓 timer-teacher': 'The stopwatch teacher', 'meta/🎓 resort-teacher': 'The resort teacher',
+}
+
 GROUP_NOTES = {
   'First steps': 'One visible change, a small robot, a predictable result.',
   'Things that talk': 'Nests that receive the world, and letters to birds that change it.',
@@ -309,12 +333,13 @@ def main(copy_shots=False):
         path = os.path.join(ROOT, 'examples', name + '.world.json')
         rec = json.load(io.open(path, encoding='utf-8'))
         robots, longest = count_robots(rec)
-        title = name.split('/', 1)[1]
+        emoji = name.split('/', 1)[1].split(' ', 1)[0]
+        title = emoji + ' ' + TITLES.get(name, name.split('/', 1)[1].split(' ', 1)[-1])
         folder = name.split('/', 1)[0]
         url = 'toontalk-3d.html?world=' + quote('examples/' + name + '.world.json')
         pic = '%02d.jpg' % i
         has_pic = os.path.exists(os.path.join(HERE, pic))
-        needs_html = ''.join('<a href="#e%d">%s</a>' % (by_name[n], html.escape(n.split('/', 1)[1])) for n in needs if n in by_name)
+        needs_html = ''.join('<a href="#e%d">%s</a>' % (by_name[n], html.escape(TITLES.get(n, n.split('/', 1)[1]))) for n in needs if n in by_name)
         if group not in [g for g, _ in groups]:
             groups.append((group, []))
         groups[-1][1].append(f'''

@@ -70,15 +70,17 @@ ABOUT = ('BOUNCING\n\n'
          '  any     move')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Speed to 8x and give the\n'
-       'work box to the team leader.\n'
-       'It runs until you take the\n'
-       'box back or press Pause.\n\n'
-       'The star runs to the right\n'
-       'edge, turns round, runs back,\n'
-       'turns again, and keeps going.\n\n'
-       'Watch the team take turns:\n'
-       'the two turners look and step\n'
+       'Press SPACE on the star: it\n'
+       'runs to the right edge, turns\n'
+       'round, runs back, turns\n'
+       'again, and keeps going. "."\n'
+       'stops it.\n\n'
+       'THE TEAM IS ON ITS BACK. Hold\n'
+       'the star and press Ctrl+P (or\n'
+       'the gear on the holding card)\n'
+       'to go through its door and\n'
+       'watch them take turns: the\n'
+       'two turners look and step\n'
        'aside all the way across, and\n'
        'take the floor at the edge.')
 
@@ -99,14 +101,13 @@ WHY = ('WHY A READING\n\n'
        'the perch: out here, a bird\n'
        'to the star.')
 
+# PACKAGED (Ken, 19 Sep): the team and its box on the star's own panel.
 bench = [
-    {'thing': star, 'x': -1.30, 'z': 1.20},
-    {'thing': team, 'x': -1.45, 'z': 1.62},
-    {'thing': work, 'x': -0.45, 'z': 1.62},
+    {'thing': gadget('*', STAR, team, work, look=dict(bg='#1b2233', ink='#ffd23f', font='sans')), 'x': -1.30, 'z': 1.40},
 
     {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.15},           # noqa: F405
     {'thing': txt(RUN), 'x': -0.75, 'z': 2.15},             # noqa: F405
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},             # noqa: F405
 ]
 
-write_beh('🏀 bouncing', bench, perch=to(STAR, 'to the star'))
+write_beh('🏀 bouncing', bench)

@@ -109,12 +109,19 @@ LOOK = dict(bg='#2a2135', ink='#e8d7ff', font='sans', h=0.42)
 
 def gadget(name, lid, bot, work, look=None, bench=None):
     """A pad whose panel holds a robot team and the box it works on -- and,
-    when it needs company (a bell, a score), things on the panel's bench."""
-    return {'kind': 'text', 'text': name, 'gadget': True,
-            'lid': lid, 'evt': 'evt-' + lid,
-            'look': dict(look or LOOK),
-            'panel': {'kind': 'world', 'v': 3, 'bench': bench or [],
-                      'stations': {'stand': work}, 'active': bot}}
+    when it needs company (a bell, a score), things on the panel's bench.
+    Its face is a picture of what it does (_icons.py) with the name on the
+    band beneath, where there is one."""
+    from _icons import icon
+    g = {'kind': 'text', 'text': name, 'gadget': True,
+         'lid': lid, 'evt': 'evt-' + lid,
+         'look': dict(look or LOOK),
+         'panel': {'kind': 'world', 'v': 3, 'bench': bench or [],
+                   'stations': {'stand': work}, 'active': bot}}
+    pic = icon(name)
+    if pic:
+        g['img'] = pic
+    return g
 
 
 def write_beh(name, bench, folder=None, perch=None):

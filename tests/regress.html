@@ -4448,22 +4448,29 @@ async function guideCheck(D, win) {
   const doc = win.document, hint = () => doc.getElementById('hint').textContent;
   D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1500);
   const at = []; const step = (i, re) => { at.push([D.guide()?.i, hint().slice(0, 40)]); return D.guide()?.i === i && re.test(hint()); };
-  D.guideStart(); await frames(D, 3);
+  D.guideStart('count'); await frames(D, 3);
   const s0 = step(0, /Take a little robot/) && D.guide().ring;
   D.fromStack('minis'); await frames(D, 5); D.clickBench(0.6, 1.7); await frames(D, 20);
   const s1 = step(1, /number stack/);
-  D.fromStack('numbers'); await frames(D, 5); D.giveRobot(); await slowSettle(D, 3000);
+  // the ring follows what you hold: on the stack, then on the robot once the number is in hand
+  const ringOnStack = D.guide().ringAt;
+  D.fromStack('numbers'); await frames(D, 5);
+  const ringOnRobot = D.guide().ringAt;
+  const follows = !!ringOnStack && !!ringOnRobot && Math.hypot(ringOnStack[0] - ringOnRobot[0], ringOnStack[2] - ringOnRobot[2]) > 0.3
+    && Math.hypot(ringOnRobot[0] - 0.6, ringOnRobot[2] - 1.7) < 0.35;
+  D.giveRobot(); await slowSettle(D, 3000);
   const s2 = step(2, /show it one step/);
   D.teach({ type: 'newNumber' }); await slowSettle(D, 2000); D.teach({ type: 'put', at: { c: 'given', path: [] } }); await slowSettle(D, 2000);
-  const s3 = step(3, /Leave the bubble/);
+  const s3 = step(3, /Leave the bubble/) && D.guide().glow === 'exitBtn';   // the button glows
   D.exit(); await slowSettle(D, 2000);
-  const s4 = step(4, /Press Run what it learned/);
+  const s4 = step(4, /Press Run what it learned/) && D.guide().glow === 'runBtn';
   D.speed('instant'); D.run(); await slowSettle(D, 4000);
   const s5 = step(5, /Wake Ruby/) && D.guide().ring;
   D.rubyOn(true); D.clickCond([]); await slowSettle(D, 3000); D.rubyOn(false); await frames(D, 5);
   const s6 = step(6, /Press Run again/);
   D.rounds(5); D.run(); await slowSettle(D, 4000); D.rounds(ROUNDS); D.speed(1);
-  const over = D.guide() === null;
+  const over = D.guide() === null && D.projectsCard();   // ...and the other projects are offered
+  doc.getElementById('projectsCard')?.remove();
   // the home view: out of a close-up and back where it starts
   const pad = D.bench(0);
   const p0 = D.camera.position.clone();
@@ -4472,12 +4479,28 @@ async function guideCheck(D, win) {
   if (num) { D.lookAt(num, true); }
   const inClose = !!D.straightOn;
   D.homeView(); for (let k = 0; k < 60; k++) { D.holdLook(0.1); await frames(D, 1); }
-  const home = !D.straightOn && D.camera.position.distanceTo(new D.THREE.Vector3(0.40, 3.05, 5.45)) < 0.05;
+  const home = !D.straightOn && D.camera.position.z > 4.5 && D.camera.position.y > 2.5;   // back at the front of the table, out of the close-up
+  const homeWhy = ' cam=' + D.camera.position.toArray().map(v => +v.toFixed(2)).join(',') + ' straight=' + !!D.straightOn;
   const fitName = doc.getElementById('heldFit').textContent === 'As big as the table';
   D.clickBench(-0.5, 1.9); await frames(D, 5);
-  const ok = s0 && s1 && s2 && s3 && s4 && s5 && s6 && over && inClose && home && fitName;
-  put((ok ? 'PASS' : 'FAIL') + ' the first project guides step by step, the home view comes home, the fit button names the table  (steps=' + [s0, s1, s2, s3, s4, s5, s6].map(Number).join('') + ' over=' + over
-      + ' close-up=' + inClose + ' home=' + home + ' fit-name=' + fitName + (ok ? '' : ' seen=' + JSON.stringify(at)) + ')', ok ? 'pass' : 'fail');
+  // the second project, a box of two numbers, end to end
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1500);
+  D.guideStart('box'); await frames(D, 3);
+  const b0 = step(0, /Take a box/);
+  D.fromStack('boxes'); await frames(D, 5); D.clickBench(0.0, 1.7); await frames(D, 20);
+  const b1 = step(1, /first hole/);
+  const bx = (() => { for (let i = 0; i < 5; i++) { const t = D.bench(i); if (t?.userData.kind === 'box') return t; } return null; })();
+  D.fromStack('numbers'); await frames(D, 5); D.clickHole(bx, 0); await frames(D, 20);
+  const b2 = step(2, /type 2/);
+  D.fromStack('numbers'); await frames(D, 5); D.type(2, '+'); D.clickHole(bx, 1); await frames(D, 20);
+  const b3 = step(3, /Pick it up/);
+  D.hold(bx); await frames(D, 10);
+  const boxDone = D.guide() === null && D.projectsCard();
+  doc.getElementById('projectsCard')?.remove();
+  D.clickBench(0.0, 1.9); await frames(D, 5);
+  const ok = s0 && s1 && follows && s2 && s3 && s4 && s5 && s6 && over && b0 && b1 && b2 && b3 && boxDone && inClose && home && fitName;
+  put((ok ? 'PASS' : 'FAIL') + ' the projects guide step by step, the home view comes home, the fit button names the table  (steps=' + [s0, s1, s2, s3, s4, s5, s6].map(Number).join('') + ' ring-follows-the-hand=' + follows + ' box-project=' + [b0, b1, b2, b3, boxDone].map(Number).join('') + ' over=' + over
+      + ' close-up=' + inClose + ' home=' + home + (home ? '' : homeWhy) + ' fit-name=' + fitName + (ok ? '' : ' seen=' + JSON.stringify(at)) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 

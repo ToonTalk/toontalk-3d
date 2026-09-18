@@ -6,280 +6,280 @@
    "thing": {
     "kind": "text",
     "text": "*",
+    "gadget": true,
+    "lid": "L9513",
+    "evt": "evt-L9513",
     "look": {
      "bg": "#1b2233",
      "ink": "#ffd23f",
      "font": "sans"
     },
-    "lid": "L9513",
-    "evt": "evt-L9513"
-   },
-   "x": -1.3,
-   "z": 1.2
-  },
-  {
-   "thing": {
-    "kind": "robot",
-    "name": "Wanderer",
-    "condition": {
-     "kind": "box",
-     "holes": [
-      {
-       "kind": "anyBox"
-      },
-      {
-       "kind": "anyBox"
-      },
-      {
-       "kind": "wildDie"
-      },
-      {
-       "kind": "wildNumber"
-      },
-      {
-       "kind": "wildNumber"
-      }
-     ]
-    },
-    "program": [
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        2
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        1,
-        2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        3
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        1,
-        2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        4
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "given",
-       "path": [
-        1,
-        2
-       ]
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        1
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "perch",
-       "path": []
-      }
-     },
-     {
-      "type": "copy",
-      "at": {
-       "c": "given",
-       "path": [
-        0
-       ]
-      }
-     },
-     {
-      "type": "put",
-      "at": {
-       "c": "perch",
-       "path": []
-      }
-     }
-    ],
-    "trainedOn": {
-     "kind": "box",
-     "holes": [
-      {
+    "panel": {
+     "kind": "world",
+     "v": 3,
+     "bench": [],
+     "stations": {
+      "stand": {
        "kind": "box",
        "holes": [
         {
-         "kind": "text",
-         "text": "move"
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "forward"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "25"
+           },
+           "op": "+"
+          }
+         ]
         },
         {
-         "kind": "text",
-         "text": "forward"
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "yaw"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "die",
+         "faces": 3
         },
         {
          "kind": "number",
          "value": {
-          "n": "1",
-          "d": "25"
-         },
-         "op": "+"
-        }
-       ]
-      },
-      {
-       "kind": "box",
-       "holes": [
-        {
-         "kind": "text",
-         "text": "move"
-        },
-        {
-         "kind": "text",
-         "text": "yaw"
-        },
-        {
-         "kind": "number",
-         "value": {
-          "n": "0",
+          "n": "-2",
           "d": "1"
          },
          "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "30",
+          "d": "1"
+         },
+         "op": "*"
+        }
+       ]
+      }
+     },
+     "active": {
+      "kind": "robot",
+      "name": "Wanderer",
+      "condition": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "anyBox"
+        },
+        {
+         "kind": "wildDie"
+        },
+        {
+         "kind": "wildNumber"
+        },
+        {
+         "kind": "wildNumber"
         }
        ]
       },
-      {
-       "kind": "die",
-       "faces": 3
-      },
-      {
-       "kind": "number",
-       "value": {
-        "n": "-2",
-        "d": "1"
-       },
-       "op": "+"
-      },
-      {
-       "kind": "number",
-       "value": {
-        "n": "30",
-        "d": "1"
-       },
-       "op": "*"
-      }
-     ]
-    },
-    "team": [],
-    "note": "Each round, on the turn\u2019s number: a copy of the die lands (1, 2 or 3), then the -2 (-1, 0 or 1), then the x30 (-30, 0 or 30 degrees). A copy of the turn goes to the bird on the perch, then a copy of the forward step: a yaw, then a step the way it faces."
-   },
-   "x": -1.45,
-   "z": 1.62
-  },
-  {
-   "thing": {
-    "kind": "box",
-    "holes": [
-     {
-      "kind": "box",
-      "holes": [
+      "program": [
        {
-        "kind": "text",
-        "text": "move"
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          2
+         ]
+        }
        },
        {
-        "kind": "text",
-        "text": "forward"
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2
+         ]
+        }
        },
        {
-        "kind": "number",
-        "value": {
-         "n": "1",
-         "d": "25"
-        },
-        "op": "+"
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          3
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          4
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "given",
+         "path": [
+          1,
+          2
+         ]
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          1
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "perch",
+         "path": []
+        }
+       },
+       {
+        "type": "copy",
+        "at": {
+         "c": "given",
+         "path": [
+          0
+         ]
+        }
+       },
+       {
+        "type": "put",
+        "at": {
+         "c": "perch",
+         "path": []
+        }
        }
-      ]
-     },
-     {
-      "kind": "box",
-      "holes": [
-       {
-        "kind": "text",
-        "text": "move"
-       },
-       {
-        "kind": "text",
-        "text": "yaw"
-       },
-       {
-        "kind": "number",
-        "value": {
-         "n": "0",
-         "d": "1"
+      ],
+      "trainedOn": {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "forward"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "1",
+            "d": "25"
+           },
+           "op": "+"
+          }
+         ]
         },
-        "op": "+"
-       }
-      ]
-     },
-     {
-      "kind": "die",
-      "faces": 3
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "-2",
-       "d": "1"
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "yaw"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ]
+        },
+        {
+         "kind": "die",
+         "faces": 3
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "-2",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "30",
+          "d": "1"
+         },
+         "op": "*"
+        }
+       ]
       },
-      "op": "+"
-     },
-     {
-      "kind": "number",
-      "value": {
-       "n": "30",
-       "d": "1"
-      },
-      "op": "*"
+      "team": [],
+      "note": "Each round, on the turn\u2019s number: a copy of the die lands (1, 2 or 3), then the -2 (-1, 0 or 1), then the x30 (-30, 0 or 30 degrees). A copy of the turn goes to the bird on the perch, then a copy of the forward step: a yaw, then a step the way it faces."
      }
-    ]
+    }
    },
-   "x": -0.45,
-   "z": 1.62
+   "x": -1.3,
+   "z": 1.4
   },
   {
    "thing": {
     "kind": "text",
-    "text": "TO RUN IT\n\nSet Speed to Instant and\ngive the work box to the\nWanderer.\n\nThe star drifts about the\ntable, nowhere in\nparticular.\n\nHold the die and type 5:\nit turns right more often\nthan left, and circles. Why?"
+    "text": "TO RUN IT\n\nPress SPACE on the star: it\ndrifts about the table,\nnowhere in particular. \".\"\nstops it.\n\nTHE ROBOT IS ON ITS BACK.\nHold the star and press\nCtrl+P (or the gear on the\nholding card) to go through\nits door and watch the\nrobot at work. Escape\ncomes back out.\n\nIn there, hold the die and\ntype 5: it turns right more\noften than left, and\ncircles. Why?"
    },
    "x": -1.45,
    "z": 2.15
@@ -301,14 +301,6 @@
    "z": 2.15
   }
  ],
- "stations": {
-  "perch": {
-   "kind": "bird",
-   "nestId": 0,
-   "nestGuid": null,
-   "liveId": "L9513",
-   "label": "to the star"
-  }
- },
+ "stations": {},
  "active": null
 }

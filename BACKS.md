@@ -8247,3 +8247,34 @@ into Ken's notebook round after round while the notebook stood on the
 timer's work spot (the bug fixed in a7f8514). To clear such a notebook:
 Dusty with Shift held takes every page that reads the same as the one
 clicked. kenPanelCheck covers the gadget flag and the tidy.
+
+## Projects, a settings card, icons, and the behaviours packaged
+
+THE PROJECTS. The first project's ring stayed on the number stack after the
+number was in hand (Ken); now each step's target is re-read every frame --
+the stack, then the robot once the number is held, the given number in the
+bubble, Ruby then the thought -- and a button to press glows (exitBtn,
+runBtn). Three more projects: a box of two numbers, a bird and her nest, a
+robot on a box (holes as targets, Ruby on two numbers). Finishing one
+offers the others on a card, with ticks kept with the visitor's name;
+Projects... in the menu. A run counts for a step only if it began during
+the step (runs begun are snapshotted at every advance -- the stale
+runCount that skipped "Press Run" when the goldens had run first).
+
+THE SETTINGS CARD (Ken): sound, the workshop's messages aloud, Marty's
+voice, drop hints, the smart camera, Marty's commentary and how much he
+helps, all in one card, opened once for a new name after the door and from
+the menu as Settings... The switches themselves are the ones already on
+the bar, in the menu and on Marty's card; the card sets the same keys and
+refreshes those.
+
+ICONS ON THE ANIMA-GADGETS (Ken): _icons.py draws an SVG per shelf gadget
+-- the star and the one thing the behaviour does to it: arrows, walls, a
+pointer, a spark for a bump, a note, a +1, a die, colour swatches -- and
+gadget() puts it on the pad as its picture, the name on the band beneath.
+
+THE BEHAVIOUR WORLDS START PACKAGED (Ken: "it should start with the robots
+and box in a panel with instructions to go through the door to watch it
+work"): moving, bouncing, following and wandering are each one star with
+its robots and box on its own panel; SPACE runs it, Ctrl+P is the door. The
+gallery's titles are words now (All the rational numbers, Resort Infinity).

@@ -20,9 +20,11 @@ Unattached, a behaviour's panel is the inside of the pad itself. That is not a
 demonstration mode: it is what *my thing* means when nobody has said otherwise,
 which is why a gadget set down on the table does its own thing.
 
-The open-bench worlds (*moving*, *bouncing*, *following*, *wandering*) put the
-same robots on the table with a bird to the star standing on the perch: a
-robot trained to write to the perch can be tried out on anything that way.
+The four small worlds (*moving*, *bouncing*, *following*, *wandering*) are
+each one star with its behaviour packaged on its own panel (since 19 Sep;
+before that the robots stood in the open with a bird to the star on the
+perch). Press SPACE on the star; hold it and press Ctrl+P to go through its
+door and watch the robots at work, and change the step or the die in there.
 
 **Nothing here is built in.** There is no move, no bounce, no follow. There are
 messages a thing already answers —

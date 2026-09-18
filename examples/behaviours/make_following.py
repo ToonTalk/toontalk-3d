@@ -47,11 +47,11 @@ ABOUT = ('FOLLOWING\n\n'
          'to put one inside the other.')
 
 RUN = ('TO RUN IT\n\n'
-       'Set Speed to Instant and give\n'
-       'the work box to the Follower.\n\n'
-       'Now move the pointer over the\n'
-       'table. The star follows your\n'
-       'hand.\n\n'
+       'Press SPACE on the star, then\n'
+       'move the pointer over the\n'
+       'table: it follows your hand.\n'
+       '"." stops it.\n\n'
+       'THE ROBOT IS ON ITS BACK.\nHold the star and press\nCtrl+P (or the gear on the\nholding card) to go through\nits door and watch the\nrobot at work. Escape\ncomes back out.\n\n'
        'It dozes between moves: with\n'
        'nothing on the pointer nest\n'
        'there is nothing to match.')
@@ -71,14 +71,13 @@ WHY = ('THE TEST OF A DESIGN\n\n'
        'DATA and neither is a\n'
        'feature.')
 
+# PACKAGED (Ken, 19 Sep): the Follower and its box on the star's own panel.
 bench = [
-    {'thing': star, 'x': -1.30, 'z': 1.20},
-    {'thing': follower, 'x': -1.45, 'z': 1.62},
-    {'thing': work, 'x': -0.45, 'z': 1.62},
+    {'thing': gadget('*', STAR, follower, work, look=dict(bg='#2b1b33', ink='#7ee787', font='sans')), 'x': -1.30, 'z': 1.40},
 
     {'thing': txt(ABOUT), 'x': -1.45, 'z': 2.15},           # noqa: F405
     {'thing': txt(RUN), 'x': -0.75, 'z': 2.15},             # noqa: F405
     {'thing': txt(WHY), 'x': -0.05, 'z': 2.15},             # noqa: F405
 ]
 
-write_beh('🐾 following', bench, perch=to(STAR, 'to the star'))
+write_beh('🐾 following', bench)
