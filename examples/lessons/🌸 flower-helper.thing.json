@@ -181,10 +181,7 @@
                       "kind": "text",
                       "text": "pen"
                     },
-                    {
-                      "kind": "text",
-                      "text": "hotpink"
-                    }
+                    null
                   ],
                   "holeLabels": [
                     "action",
@@ -317,6 +314,28 @@
                     "what",
                     "amount"
                   ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "green"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
                 }
               ],
               "holeLabels": [
@@ -325,12 +344,13 @@
                 "square corner",
                 "invisible ink",
                 "one spoke",
-                "pink ink",
+                "petal ink",
                 "about turn",
                 "next spoke",
                 "stalk down",
                 "pen up",
-                "back to centre"
+                "back to centre",
+                "stalk ink"
               ]
             },
             {
@@ -357,6 +377,45 @@
                 "five again",
                 "one less"
               ]
+            },
+            {
+              "kind": "nest",
+              "id": 9601,
+              "guid": "petal-colours",
+              "hasEgg": false,
+              "pile": [
+                {
+                  "kind": "text",
+                  "text": "red"
+                },
+                {
+                  "kind": "text",
+                  "text": "orange"
+                },
+                {
+                  "kind": "text",
+                  "text": "gold"
+                },
+                {
+                  "kind": "text",
+                  "text": "green"
+                },
+                {
+                  "kind": "text",
+                  "text": "blue"
+                },
+                {
+                  "kind": "text",
+                  "text": "violet"
+                }
+              ],
+              "label": "colours"
+            },
+            {
+              "kind": "bird",
+              "nestId": 9601,
+              "nestGuid": "petal-colours",
+              "label": "to the colours"
             }
           ],
           "holeLabels": [
@@ -364,7 +423,9 @@
             "petal steps left",
             "my flower bird",
             "letters",
-            "spare numbers"
+            "spare numbers",
+            "colours",
+            "to the colours"
           ]
         }
       },
@@ -385,6 +446,8 @@
             null,
             null,
             null,
+            null,
+            null,
             null
           ],
           "holeLabels": [
@@ -392,7 +455,9 @@
             "petal steps left",
             "my flower bird",
             "letters",
-            "spare numbers"
+            "spare numbers",
+            "colours",
+            "to the colours"
           ]
         },
         "program": [
@@ -402,7 +467,7 @@
               "c": "given",
               "path": [
                 3,
-                5
+                11
               ]
             }
           },
@@ -661,10 +726,7 @@
                       "kind": "text",
                       "text": "pen"
                     },
-                    {
-                      "kind": "text",
-                      "text": "hotpink"
-                    }
+                    null
                   ],
                   "holeLabels": [
                     "action",
@@ -797,6 +859,28 @@
                     "what",
                     "amount"
                   ]
+                },
+                {
+                  "kind": "box",
+                  "holes": [
+                    {
+                      "kind": "text",
+                      "text": "set"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "pen"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "green"
+                    }
+                  ],
+                  "holeLabels": [
+                    "action",
+                    "what",
+                    "amount"
+                  ]
                 }
               ],
               "holeLabels": [
@@ -805,12 +889,13 @@
                 "square corner",
                 "invisible ink",
                 "one spoke",
-                "pink ink",
+                "petal ink",
                 "about turn",
                 "next spoke",
                 "stalk down",
                 "pen up",
-                "back to centre"
+                "back to centre",
+                "stalk ink"
               ]
             },
             {
@@ -837,6 +922,45 @@
                 "five again",
                 "one less"
               ]
+            },
+            {
+              "kind": "nest",
+              "id": 9601,
+              "guid": "petal-colours",
+              "hasEgg": false,
+              "pile": [
+                {
+                  "kind": "text",
+                  "text": "red"
+                },
+                {
+                  "kind": "text",
+                  "text": "orange"
+                },
+                {
+                  "kind": "text",
+                  "text": "gold"
+                },
+                {
+                  "kind": "text",
+                  "text": "green"
+                },
+                {
+                  "kind": "text",
+                  "text": "blue"
+                },
+                {
+                  "kind": "text",
+                  "text": "violet"
+                }
+              ],
+              "label": "colours"
+            },
+            {
+              "kind": "bird",
+              "nestId": 9601,
+              "nestGuid": "petal-colours",
+              "label": "to the colours"
             }
           ],
           "holeLabels": [
@@ -844,7 +968,9 @@
             "petal steps left",
             "my flower bird",
             "letters",
-            "spare numbers"
+            "spare numbers",
+            "colours",
+            "to the colours"
           ]
         },
         "team": [
@@ -867,6 +993,8 @@
                 },
                 null,
                 null,
+                null,
+                null,
                 null
               ],
               "holeLabels": [
@@ -874,7 +1002,9 @@
                 "petal steps left",
                 "my flower bird",
                 "letters",
-                "spare numbers"
+                "spare numbers",
+                "colours",
+                "to the colours"
               ]
             },
             "program": [
@@ -917,6 +1047,47 @@
                 }
               },
               {
+                "type": "take",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    5
+                  ],
+                  "nest": true
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    5,
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "copy",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    5,
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "put",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    6
+                  ]
+                }
+              },
+              {
                 "type": "copy",
                 "at": {
                   "c": "given",
@@ -931,6 +1102,17 @@
                 "at": {
                   "c": "given",
                   "path": [
+                    2
+                  ]
+                }
+              },
+              {
+                "type": "vacuum",
+                "at": {
+                  "c": "given",
+                  "path": [
+                    3,
+                    5,
                     2
                   ]
                 }
@@ -1117,10 +1299,7 @@
                           "kind": "text",
                           "text": "pen"
                         },
-                        {
-                          "kind": "text",
-                          "text": "hotpink"
-                        }
+                        null
                       ],
                       "holeLabels": [
                         "action",
@@ -1253,6 +1432,28 @@
                         "what",
                         "amount"
                       ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "green"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
                     }
                   ],
                   "holeLabels": [
@@ -1261,12 +1462,13 @@
                     "square corner",
                     "invisible ink",
                     "one spoke",
-                    "pink ink",
+                    "petal ink",
                     "about turn",
                     "next spoke",
                     "stalk down",
                     "pen up",
-                    "back to centre"
+                    "back to centre",
+                    "stalk ink"
                   ]
                 },
                 {
@@ -1293,6 +1495,45 @@
                     "five again",
                     "one less"
                   ]
+                },
+                {
+                  "kind": "nest",
+                  "id": 9601,
+                  "guid": "petal-colours",
+                  "hasEgg": false,
+                  "pile": [
+                    {
+                      "kind": "text",
+                      "text": "red"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "orange"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "gold"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "green"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "blue"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "violet"
+                    }
+                  ],
+                  "label": "colours"
+                },
+                {
+                  "kind": "bird",
+                  "nestId": 9601,
+                  "nestGuid": "petal-colours",
+                  "label": "to the colours"
                 }
               ],
               "holeLabels": [
@@ -1300,11 +1541,13 @@
                 "petal steps left",
                 "my flower bird",
                 "letters",
-                "spare numbers"
+                "spare numbers",
+                "colours",
+                "to the colours"
               ]
             },
             "team": [],
-            "note": "A petal begins. Walk out along a spoke in invisible ink, so the petals stand apart but the whole flower stays one drawing; then pink again. The spoke is the first of the five petal steps."
+            "note": "A petal begins. Walk out along a spoke in invisible ink, so the petals stand apart but the whole flower stays one drawing. Then the next colour: the top of the colours nest goes into the petal ink letter, a copy goes back to the nest by its bird (it lands underneath, so the colours go round), and the letter goes to the flower. The spoke is the first of the five petal steps."
           },
           {
             "kind": "robot",
@@ -1325,6 +1568,8 @@
                 },
                 null,
                 null,
+                null,
+                null,
                 null
               ],
               "holeLabels": [
@@ -1332,7 +1577,9 @@
                 "petal steps left",
                 "my flower bird",
                 "letters",
-                "spare numbers"
+                "spare numbers",
+                "colours",
+                "to the colours"
               ]
             },
             "program": [
@@ -1613,10 +1860,7 @@
                           "kind": "text",
                           "text": "pen"
                         },
-                        {
-                          "kind": "text",
-                          "text": "hotpink"
-                        }
+                        null
                       ],
                       "holeLabels": [
                         "action",
@@ -1749,6 +1993,28 @@
                         "what",
                         "amount"
                       ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "green"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
                     }
                   ],
                   "holeLabels": [
@@ -1757,12 +2023,13 @@
                     "square corner",
                     "invisible ink",
                     "one spoke",
-                    "pink ink",
+                    "petal ink",
                     "about turn",
                     "next spoke",
                     "stalk down",
                     "pen up",
-                    "back to centre"
+                    "back to centre",
+                    "stalk ink"
                   ]
                 },
                 {
@@ -1789,6 +2056,45 @@
                     "five again",
                     "one less"
                   ]
+                },
+                {
+                  "kind": "nest",
+                  "id": 9601,
+                  "guid": "petal-colours",
+                  "hasEgg": false,
+                  "pile": [
+                    {
+                      "kind": "text",
+                      "text": "red"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "orange"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "gold"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "green"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "blue"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "violet"
+                    }
+                  ],
+                  "label": "colours"
+                },
+                {
+                  "kind": "bird",
+                  "nestId": 9601,
+                  "nestGuid": "petal-colours",
+                  "label": "to the colours"
                 }
               ],
               "holeLabels": [
@@ -1796,7 +2102,9 @@
                 "petal steps left",
                 "my flower bird",
                 "letters",
-                "spare numbers"
+                "spare numbers",
+                "colours",
+                "to the colours"
               ]
             },
             "team": [],
@@ -1816,6 +2124,8 @@
                 },
                 null,
                 null,
+                null,
+                null,
                 null
               ],
               "holeLabels": [
@@ -1823,7 +2133,9 @@
                 "petal steps left",
                 "my flower bird",
                 "letters",
-                "spare numbers"
+                "spare numbers",
+                "colours",
+                "to the colours"
               ]
             },
             "program": [
@@ -2066,10 +2378,7 @@
                           "kind": "text",
                           "text": "pen"
                         },
-                        {
-                          "kind": "text",
-                          "text": "hotpink"
-                        }
+                        null
                       ],
                       "holeLabels": [
                         "action",
@@ -2202,6 +2511,28 @@
                         "what",
                         "amount"
                       ]
+                    },
+                    {
+                      "kind": "box",
+                      "holes": [
+                        {
+                          "kind": "text",
+                          "text": "set"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "pen"
+                        },
+                        {
+                          "kind": "text",
+                          "text": "green"
+                        }
+                      ],
+                      "holeLabels": [
+                        "action",
+                        "what",
+                        "amount"
+                      ]
                     }
                   ],
                   "holeLabels": [
@@ -2210,12 +2541,13 @@
                     "square corner",
                     "invisible ink",
                     "one spoke",
-                    "pink ink",
+                    "petal ink",
                     "about turn",
                     "next spoke",
                     "stalk down",
                     "pen up",
-                    "back to centre"
+                    "back to centre",
+                    "stalk ink"
                   ]
                 },
                 {
@@ -2242,6 +2574,45 @@
                     "five again",
                     "one less"
                   ]
+                },
+                {
+                  "kind": "nest",
+                  "id": 9601,
+                  "guid": "petal-colours",
+                  "hasEgg": false,
+                  "pile": [
+                    {
+                      "kind": "text",
+                      "text": "red"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "orange"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "gold"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "green"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "blue"
+                    },
+                    {
+                      "kind": "text",
+                      "text": "violet"
+                    }
+                  ],
+                  "label": "colours"
+                },
+                {
+                  "kind": "bird",
+                  "nestId": 9601,
+                  "nestGuid": "petal-colours",
+                  "label": "to the colours"
                 }
               ],
               "holeLabels": [
@@ -2249,14 +2620,16 @@
                 "petal steps left",
                 "my flower bird",
                 "letters",
-                "spare numbers"
+                "spare numbers",
+                "colours",
+                "to the colours"
               ]
             },
             "team": [],
             "note": "Put the pen down, walk one side, turn a square corner, and count one step."
           }
         ],
-        "note": "When no petals remain: pink ink and pen down again (the spoke back was in invisible ink), draw down to the table, lift the pen and return to the centre. Put away the work box."
+        "note": "When no petals remain: green ink and pen down again (the spoke back was in invisible ink), draw down to the table, lift the pen and return to the centre. Put away the work box."
       }
     }
   }

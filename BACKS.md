@@ -8223,3 +8223,27 @@ Also: 🎨 random-colour (Ken): a pad with a robot on its back that rolls a die
 and picks the Nth [name | ink] pair from a list by splitting the list at the
 roll, then [set | background], [set | text] and [set | colour] to itself; a
 round a frame, seven colours in the first second. randomColourCheck.
+
+## Ken's round of 19 September
+
+EACH PETAL ITS OWN COLOUR (the flower): the colours wait on a NEST in the
+work box -- a queue. Go out to the petal takes the top pad, puts it in the
+petal-ink letter, gives a copy back to the nest's own bird (it lands
+underneath) and sends the letter: six petals, six colours, going round.
+The stalk is green. Measured: seven inks over 36 strokes, one run.
+
+A PAD WITH A ROBOT AT ITS PANEL'S DESK IS A BEHAVIOUR. Ken put bouncing's
+robots and box on a pad's panel by hand and saved it; it ran when switched
+(switchBound had that case) but nothing had marked it a gadget, so it was
+not treated as one. The flag is set on load and when a panel folds. Also
+from him: a world opened by link (the gallery) asks no name of a visitor
+who has one, and the link comes off the address once the world is in, so a
+refresh is a fresh workshop; the door card offers the gallery; a "next
+member" button on the card (ChatGPT's point 1, Ken: yes); the lessons'
+experiments are TRY pads on their tables (point 3, Ken: yes).
+
+EIGHTEEN HUNDRED PAGES OF [query | time | _]: the timer's letter, filed
+into Ken's notebook round after round while the notebook stood on the
+timer's work spot (the bug fixed in a7f8514). To clear such a notebook:
+Dusty with Shift held takes every page that reads the same as the one
+clicked. kenPanelCheck covers the gadget flag and the tidy.

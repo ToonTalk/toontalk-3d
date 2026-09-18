@@ -91,26 +91,40 @@ def team(work, robots):
 
 
 # --- the three teams --------------------------------------------------------
+PETAL_COLOURS = ['red', 'orange', 'gold', 'green', 'blue', 'violet']   # one petal each, in this order
+
+
 def flower():
+    """Six petals, six colours. The colours wait on a NEST -- a queue: the
+    robot takes the top one for each petal and gives it back to the nest's
+    own bird, where it lands underneath, so the six go round (Ken: 'each
+    petal a different colour')."""
     letters = labelled([
         letter('set', 'pen', 'down'), letter('move', 'forward', 0.09), letter('move', 'yaw', 90),
-        letter('set', 'pen', 'invisible'), letter('move', 'forward', 0.06), letter('set', 'pen', 'hotpink'),
+        letter('set', 'pen', 'invisible'), letter('move', 'forward', 0.06), letter('set', 'pen', ''),
         letter('move', 'yaw', 180), letter('move', 'yaw', 240),
         letter('move', 'up', -0.35), letter('set', 'pen', 'up'), letter('move', 'up', 0.35),
+        letter('set', 'pen', 'green'),
     ], ['pen down', 'one side', 'square corner',
-        'invisible ink', 'one spoke', 'pink ink',
+        'invisible ink', 'one spoke', 'petal ink',
         'about turn', 'next spoke',
-        'stalk down', 'pen up', 'back to centre'])
+        'stalk down', 'pen up', 'back to centre', 'stalk ink'])
+    letters['holes'][5]['holes'][2] = None          # the petal ink's colour is filled in each petal
     spare = labelled([n(5, 'set'), n(-1)], ['five again', 'one less'])
-    work = labelled([n(6), n(5), my_thing(), letters, spare],
-                    ['petals left', 'petal steps left', 'my flower bird', 'letters', 'spare numbers'])
+    colours = nest(9601, 'petal-colours', 'colours', [txt(c) for c in PETAL_COLOURS])   # noqa: F405
+    back = bird(9601, 'petal-colours', 'to the colours')                                  # noqa: F405
+    work = labelled([n(6), n(5), my_thing(), letters, spare, colours, back],
+                    ['petals left', 'petal steps left', 'my flower bird', 'letters', 'spare numbers', 'colours', 'to the colours'])
     return team(work, [
         worker(work, 'Draw the stalk and rest', [(0, n(0))],
-               send([3, 5], [2]) + send([3, 0], [2]) + send([3, 8], [2]) + send([3, 9], [2]) + send([3, 10], [2]) + [finish],
-               'When no petals remain: pink ink and pen down again (the spoke back was in invisible ink), draw down to the table, lift the pen and return to the centre. Put away the work box.'),
+               send([3, 11], [2]) + send([3, 0], [2]) + send([3, 8], [2]) + send([3, 9], [2]) + send([3, 10], [2]) + [finish],
+               'When no petals remain: green ink and pen down again (the spoke back was in invisible ink), draw down to the table, lift the pen and return to the centre. Put away the work box.'),
         worker(work, 'Go out to the petal', [(0, ANYNUM), (1, n(5))],                    # noqa: F405
-               send([3, 3], [2]) + send([3, 4], [2]) + send([3, 5], [2]) + change([4, 1], [1]),
-               'A petal begins. Walk out along a spoke in invisible ink, so the petals stand apart but the whole flower stays one drawing; then pink again. The spoke is the first of the five petal steps.'),
+               send([3, 3], [2]) + send([3, 4], [2])
+               + [takeTop('given', 5), put('given', 3, 5, 2),                            # noqa: F405   the next colour, into the petal ink letter
+                  copy('given', 3, 5, 2), put('given', 6)]                              # noqa: F405   ...and a copy back under the pile
+               + send([3, 5], [2]) + [vac('given', 3, 5, 2)] + change([4, 1], [1]),      # noqa: F405
+               'A petal begins. Walk out along a spoke in invisible ink, so the petals stand apart but the whole flower stays one drawing. Then the next colour: the top of the colours nest goes into the petal ink letter, a copy goes back to the nest by its bird (it lands underneath, so the colours go round), and the letter goes to the flower. The spoke is the first of the five petal steps.'),
         worker(work, 'Back to the centre', [(0, ANYNUM), (1, n(0))],                     # noqa: F405
                send([3, 3], [2]) + send([3, 6], [2]) + send([3, 4], [2]) + send([3, 7], [2])
                + change([4, 1], [0]) + change([4, 0], [1]),
@@ -170,14 +184,32 @@ def card(lid, name, panel):
             'panel': json.loads(json.dumps(panel))}
 
 
-def lesson(name, intro, actors, panel, thing_lid, camera=None):
+# THE EXPERIMENTS, ON THE TABLE (ChatGPT's review; Ken: yes): each lesson's
+# "try" from the README as a pad beside the thing, so the invitation is in
+# the world rather than in a file.
+TRY = {
+    'planet': ('TRY\n\nChange steps left to 9.\nHow much of the ring will\nbe drawn? Then try 18.\n\n'
+               'Changing the turn changes\nthe ring\'s size and centre\ntoo; the sun stays put.\n\n'
+               'Start this world over is\non the card at the right.'),
+    'flower': ('TRY\n\nSet petals left to 3 and\n"next spoke" from 240 to\n300. Keep the square\ncorner at 90. Why do those\ntwo turns have different\njobs?\n\n'
+               'Then sweep the flower up\nwith Dusty: one thing.\n\n'
+               'The colours wait on a nest:\nput another on top.'),
+    'spark': ('TRY\n\nChange gravity to 0.\nPredict the shape before\nyou run. Then try -1/200.\n\n'
+              'Keep twenty jumps while\ncomparing, so only one\nthing changes.\n\n'
+              'The number that changes is\nINSIDE the upward-step\nletter.'),
+}
+
+
+def lesson(name, intro, actors, panel, thing_lid, camera=None, try_pad=None):
     """A lesson world: the team at the main desk, its bird addressed to the
     thing on the table -- and, for a drawing that reads best from one side,
     the view it opens at."""
     p = json.loads(json.dumps(panel).replace('MYTHING', thing_lid))
+    bench = [{'thing': a, 'x': x, 'z': z} for x, z, a in actors]
+    if try_pad:
+        bench.append({'thing': txt(TRY[try_pad]), 'x': -1.3, 'z': 2.1})            # noqa: F405
     w = {'kind': 'world', 'v': 4, 'name': name, 'intro': intro,
-         'bench': [{'thing': a, 'x': x, 'z': z} for x, z, a in actors],
-         'stations': p['stations'], 'active': p['active']}
+         'bench': bench, 'stations': p['stations'], 'active': p['active']}
     if camera:
         w['camera'] = camera
     return w
@@ -194,29 +226,30 @@ WORLDS = [
     ('🪐 step-and-turn-planet.world.json', lesson(
         'A step-and-turn planet',
         'Start the team. The planet walks a little and turns 20 degrees, again and again. After 36 steps it has '
-        'gone around twice. Two robots share the jobs: step and turn, and rest at zero. The README in '
-        'examples/lessons has experiments to try.',
+        'gone around twice. Two robots share the jobs: step and turn, and rest at zero. The pad on the table '
+        'has things to try.',
         [(0, 1.65, actor('sun', '#ffd45e', 0.25, 0.07)),
          (-0.03 / __import__('math').tan(__import__('math').pi / 18), 1.62, actor('blue-planet', '#55afff', 0.3, 0.02))],
-        orbit(20), 'blue-planet')),
+        orbit(20), 'blue-planet', try_pad='planet')),
     ('🌸 easy-flower.world.json', lesson(
         'An easy flower',
-        'Start the team to draw six square petals on spokes, and a stalk. Four robots share the jobs: go out to '
-        'the petal, draw one side, come back to the centre, and draw the stalk. The spokes are drawn in '
-        'invisible ink, so the whole flower is one drawing. Click the condition above Trained actions to see '
-        'the next team member. The README in examples/lessons has the whole recipe.',
-        [(0, 1.55, actor('pink-flower', HOTPINK, 0.35))],
-        flower(), 'pink-flower')),
+        'Start the team to draw six square petals on spokes, each its own colour, and a stalk. Four robots '
+        'share the jobs: go out to the petal, draw one side, come back to the centre, and draw the stalk. The '
+        'spokes are drawn in invisible ink, so the whole flower is one drawing, and the colours wait in a queue '
+        'on a nest. Click next member above Trained actions to see each robot. The pads on the table have '
+        'things to try.',
+        [(0, 1.55, actor('flower', '#2e8b57', 0.35))],
+        flower(), 'flower', try_pad='flower')),
     ('✨ jumping-spark.world.json', lesson(
         'A jumping spark',
         'Start the team. The spark moves up and forward, leaves a dot, and makes its next upward step a little '
-        'smaller. Twenty jumps draw an arch. Two robots share the jobs: fly one step, and hide and rest. The '
-        'README in examples/lessons has experiments to try.',
+        'smaller. Twenty jumps draw an arch. Two robots share the jobs: fly one step, and hide and rest. The pad '
+        'on the table has things to try.',
         [(0, 1.5, actor('spark-1', '#ffca55', 0.05, 0.025, 0))],
         spark(), 'spark-1',
         # from the side, so the arch reads as an arch (from the front it stood
         # nearly vertical behind the robot)
-        camera={'at': [1.3, 1.45, 1.7], 'look': [0.0, 1.22, 1.7]})),
+        camera={'at': [1.3, 1.45, 1.7], 'look': [0.0, 1.22, 1.7]}, try_pad='spark')),
 ]
 CARDS = [
     ('🌸 flower-helper.thing.json', card('flower-helper', 'Draw a flower', flower())),

@@ -9,7 +9,7 @@ is `make_lessons.py`; run it to rebuild the six files.
 | world | what it teaches | robots | biggest robot | work box |
 |---|---|---|---:|---:|
 | 🪐 `step-and-turn-planet` | repeated motion: walk a little, turn a little, and a ring appears | step and turn; rest at zero | 8 actions | 4 holes |
-| 🌸 `easy-flower` | a repeat inside a repeat: four sides make a square petal, six petals make a flower | go out to the petal; draw one side; back to the centre; draw the stalk and rest | 12 actions | 5 holes |
+| 🌸 `easy-flower` | a repeat inside a repeat: four sides make a square petal, six petals make a flower — each its own colour from a queue on a nest | go out to the petal; draw one side; back to the centre; draw the stalk and rest | 14 actions | 7 holes |
 | ✨ `jumping-spark` | a movement amount that changes over time: the upward step shrinks each jump | fly one step; hide and rest | 10 actions | 5 holes |
 
 No trigonometry, no long setup robot, no library of templates: ordinary
@@ -23,7 +23,8 @@ robots, boxes, numbers and birds.
 2. Marty says what the world is. Choose **Instant** to see the result at
    once, or a slower speed to watch the robots work. Press **Start the
    robot**.
-3. Press **Start this world over** before running again or experimenting:
+3. Each table has a TRY pad with things to change. Press **Start this world
+   over** before running again or experimenting:
    the last robot puts the work box away, so pressing Start again is not a
    fresh run. (To change the numbers first, take the work box off the desk
    before it is put away, or open a fresh copy of the world.)
@@ -78,9 +79,10 @@ sun will not move to the new centre by itself.
 **The idea:** four sides make a square petal; six petals on six spokes make
 a flower.
 
-The five holes hold **petals left (6)**, **petal steps left (5)**, **flower
-bird**, **letters**, and **spare numbers**. A petal is five steps: the spoke
-out, then four sides. The spare numbers are "five again" and "one less".
+The seven holes hold **petals left (6)**, **petal steps left (5)**, **flower
+bird**, **letters**, **spare numbers**, **colours** (a nest with six colour
+pads on it: red, orange, gold, green, blue, violet) and **to the colours**
+(the nest's own bird). A petal is five steps: the spoke out, then four sides. The spare numbers are "five again" and "one less".
 "Five again" carries the *set* badge, so it replaces the step count instead
 of adding to it.
 
@@ -88,15 +90,19 @@ The petals stand a little way out from the centre, on **spokes drawn in
 invisible ink**: `[set | pen | invisible]` keeps the pen drawing, unseen, so
 the six petals and the stalk stay ONE drawing -- one thing for Dusty to
 sweep up, one thing to save -- where a lifted pen would have ended the
-trail. `[set | pen | hotpink]` brings the ink back.
+trail. `[set | pen | colour]` brings the ink back — and each petal gets
+its own colour: the robot takes the top pad off the colours nest, puts it in
+the petal-ink letter, and gives a copy back to the nest's bird, where it
+lands underneath. A nest is a queue, so the six colours go round.
 
 The four robots have separate jobs:
 
-1. **Draw the stalk and rest:** when petals left is zero, pink ink and pen
+1. **Draw the stalk and rest:** when petals left is zero, green ink and pen
    down again, draw down 0.35 to the table, lift the pen, come back up, and
    put away the work box.
 2. **Go out to the petal:** when petal steps left is five, walk out along a
-   spoke in invisible ink, then pink again; that is the first step.
+   spoke in invisible ink, take the next colour off the nest (and send a copy
+   back to the bottom), and set the pen to it; that is the first step.
 3. **Back to the centre:** when petal steps left is zero, turn about and walk
    the spoke back in invisible ink, turn to the next spoke, subtract one
    petal, and set petal steps left to five again.
@@ -109,7 +115,8 @@ flower head is flat, with a stalk going down into the third dimension.
 
 **Try:** set petals left to 3 and change "next spoke" from 240° to 300°.
 Keep the square corner at 90°. Why do those two turns have different jobs?
-Then sweep the flower up with Dusty: it comes up as one thing.
+Then sweep the flower up with Dusty: it comes up as one thing. Put another
+colour pad on top of the colours nest and predict which petal gets it.
 
 ## ✨ A jumping spark
 

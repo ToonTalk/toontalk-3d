@@ -4635,16 +4635,17 @@ async function lessonsCheck(D, win) {
     for (let i = 0; i < 40; i++) D.frame(1, fnow());
     D.rounds(ROUNDS); D.speed(1);
     const m = strokes();
-    return { n: m.length, unseen: m.filter(x => x.visible === false).length, runs: new Set(m.map(x => x.userData.penRun)).size, boxGone: !D.stations.stand.occupant };
+    return { n: m.length, unseen: m.filter(x => x.visible === false).length, runs: new Set(m.map(x => x.userData.penRun)).size, boxGone: !D.stations.stand.occupant,
+             inks: new Set(m.map(x => x.userData.seg?.ink)).size };
   };
   const planet = await runOne('🪐 step-and-turn-planet');
   const flower = await runOne('🌸 easy-flower');
   // the card names the holes in brackets, after the numbers (Ken: numbers primary, labels parenthetically)
   const stepsText = win.document.getElementById('steps').textContent;
-  const labelled = /hole 4\.6 \(letters › pink ink\)/.test(stepsText);
+  const labelled = /hole 4\.12 \(letters › stalk ink\)/.test(stepsText);
   const spark = await runOne('✨ jumping-spark');
   const planetOK = planet.n === 36 && planet.unseen === 0 && planet.runs === 1 && planet.boxGone;
-  const flowerOK = flower.n === 36 && flower.unseen === 11 && flower.runs === 1 && flower.boxGone;
+  const flowerOK = flower.n === 36 && flower.unseen === 11 && flower.runs === 1 && flower.boxGone && flower.inks === 7;   // six petals, the stalk, and the unseen
   const sparkOK = spark.n === 20 && spark.unseen === 0 && spark.runs === 1 && spark.boxGone;
   // the helper card on a sphere of one's own
   const card = await (await fetch('../examples/lessons/🌸 flower-helper.thing.json')).json();
@@ -4809,6 +4810,40 @@ async function randomColourCheck(D) {
   const spots = ctx ? Object.entries(ctx.occ || {}).filter(([k, v]) => /^s\d+$/.test(k) && v?.occupant).map(([k]) => k) : ['?'];
   const ok = seen.size >= 4 && matched && spots.length === 0;
   put((ok ? 'PASS' : 'FAIL') + ' the random colour pad paints itself from its list  (colours-seen=' + seen.size + ' paper-and-ink-match=' + matched + ' spots-left=' + JSON.stringify(spots) + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// KEN'S, 19 September: a pad with a robot at its panel's desk is a
+// behaviour whether or not the file says so (his hand-made bounce ran when
+// switched, but nothing had called it a gadget); Dusty with Shift takes
+// every notebook page that reads the same (his eighteen hundred pages of
+// [query | time | _]); and a world opened by link asks no name of a visitor
+// who has one, and takes the link off the address.
+async function kenPanelCheck(D, win) {
+  const doc = win.document;
+  // 1. the hand-made bounce pad is a behaviour
+  const BOUNCE = {"kind": "text", "text": "*", "look": {"bg": "#1b2233", "ink": "#ffd23f", "font": "sans"}, "panel": {"kind": "world", "v": 3, "bench": [], "stations": {"stand": {"kind": "box", "holes": [{"kind": "box", "holes": [{"kind": "text", "text": "move"}, {"kind": "text", "text": "across"}, {"kind": "number", "value": {"n": "-1", "d": "40"}, "op": "+"}]}, {"kind": "nest", "id": 9512, "guid": "evt-L9511#edge", "hasEgg": false, "label": "edge", "pile": [{"kind": "text", "text": "none"}]}], "aim": [0, 0, 0, 1]}, "copyOut": null, "copyIn": null, "s0": null, "s1": null}, "active": {"kind": "robot", "name": "at the left", "program": [{"type": "newNumber"}, {"type": "setValue", "value": {"n": "-1", "d": "1"}, "op": "*"}, {"type": "put", "at": {"c": "given", "path": [0, 2]}}, {"type": "copy", "at": {"c": "given", "path": [0]}}, {"type": "put", "at": {"c": "perch", "path": []}}], "condition": {"kind": "box", "holes": [{"kind": "anyBox"}, {"kind": "text", "text": "left"}]}, "trainedOn": {"kind": "box", "holes": [{"kind": "box", "holes": [{"kind": "text", "text": "move"}, {"kind": "text", "text": "across"}, {"kind": "number", "value": {"n": "1", "d": "40"}, "op": "+"}]}, {"kind": "nest", "id": 9512, "guid": "evt-L9511#edge", "hasEgg": false, "label": "edge", "pile": [{"kind": "text", "text": "left"}]}]}, "note": "Leads the team. The edge reading says \u201cleft\u201d: drops a x-1 on the step\u2019s number to turn round, then sends the step.", "team": [{"kind": "robot", "name": "at the right", "program": [{"type": "newNumber"}, {"type": "setValue", "value": {"n": "-1", "d": "1"}, "op": "*"}, {"type": "put", "at": {"c": "given", "path": [0, 2]}}, {"type": "copy", "at": {"c": "given", "path": [0]}}, {"type": "put", "at": {"c": "perch", "path": []}}], "condition": {"kind": "box", "holes": [{"kind": "anyBox"}, {"kind": "text", "text": "right"}]}, "trainedOn": {"kind": "box", "holes": [{"kind": "box", "holes": [{"kind": "text", "text": "move"}, {"kind": "text", "text": "across"}, {"kind": "number", "value": {"n": "1", "d": "40"}, "op": "+"}]}, {"kind": "nest", "id": 9512, "guid": "evt-L9511#edge", "hasEgg": false, "label": "edge", "pile": [{"kind": "text", "text": "right"}]}]}, "note": "The edge reading says \u201cright\u201d: drops a x-1 on the step\u2019s number to turn round, then sends the step.", "team": []}, {"kind": "robot", "name": "moving", "program": [{"type": "copy", "at": {"c": "given", "path": [0]}}, {"type": "put", "at": {"c": "perch", "path": []}}], "condition": {"kind": "box", "holes": [{"kind": "anyBox"}, {"kind": "wildText"}]}, "trainedOn": {"kind": "box", "holes": [{"kind": "box", "holes": [{"kind": "text", "text": "move"}, {"kind": "text", "text": "across"}, {"kind": "number", "value": {"n": "1", "d": "40"}, "op": "+"}]}, {"kind": "nest", "id": 9512, "guid": "evt-L9511#edge", "hasEgg": false, "label": "edge", "pile": [{"kind": "text", "text": "none"}]}]}, "note": "Any other reading: sends the step. It comes last, so at an edge a turner gets the turn first.", "team": []}]}}, "lid": "L9511", "evt": "evt-L9511"};
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: BOUNCE, x: -0.5, z: 1.6 }] });
+  await slowSettle(D, 1500);
+  const star = (() => { for (let i = 0; i < 5; i++) { const t = D.bench(i); if (t?.userData.kind === 'text') return t; } return null; })();
+  const isGadget = !!star?.userData.gadget;
+  const x0 = star.position.x;
+  D.switchGadget(star, true, true); await frames(D, 150);
+  const moved = star.position.x - x0 > 0.3;
+  D.switchGadget(star, false, true); await frames(D, 5);
+  // 2. Dusty with Shift takes every page like this one
+  const A = { kind: 'box', holes: [{ kind: 'text', text: 'query' }, { kind: 'text', text: 'time' }, null] };
+  D.demoNotebook({ kind: 'notebook', v: 4, pages: [A, { kind: 'number', value: { n: '7', d: '1' } }, A, A, { kind: 'text', text: 'keep me' }], page: 0 });
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1500);
+  const nb = (() => { for (let i = 0; i < 5; i++) { const t = D.bench(i); if (t?.userData.kind === 'notebook') return t; } return null; })();
+  const before = nb.userData.pages.filter(Boolean).length;
+  D.dusty(true); D.shiftClick({ kind: 'nbItem', nb, slot: 0 }); await frames(D, 10); D.dusty(false);
+  const left = nb.userData.pages.filter(Boolean);
+  const tidied = before === 5 && left.length === 2 && left.every(pg => pg.kind !== 'box');
+  D.demoNotebook(null);
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 800);
+  const ok = isGadget && moved && tidied;
+  put((ok ? 'PASS' : 'FAIL') + ' a pad with a robot on its panel is a behaviour; Dusty with Shift clears every page alike  (is-gadget=' + isGadget + ' moved=' + moved + ' tidied=' + tidied + ' pages=' + before + '>' + left.length + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -7351,6 +7386,9 @@ async function runOne(D, spec) {
   let rcOK = true;
   try { rcOK = want('randomColour') ? await randomColourCheck(D) : true; }
   catch (e) { rcOK = false; put('FAIL the random colour pad paints itself  ' + e.message, 'fail'); }
+  let kpOK = true;
+  try { kpOK = want('kenPanel') ? await kenPanelCheck(D, frame.contentWindow) : true; }
+  catch (e) { kpOK = false; put('FAIL a pad with a robot on its panel is a behaviour  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7516,7 +7554,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

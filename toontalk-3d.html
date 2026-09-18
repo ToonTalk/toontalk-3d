@@ -898,6 +898,10 @@ alone. She also erases real things in place: an erased number
 stands for any number, which is how you build a robot's expectations by hand.
 Waking one settles the other, and whoever is awake fidgets.
 
+Dusty on a notebook page takes that entry; with Shift held he takes
+that entry and every other page that reads the same — the way to clear a
+notebook a robot has filed the same thing into a thousand times.
+
 Dusty takes a whole stack too: point him at one and it leaves the
 world — that is how a puzzle comes to have fewer stacks, and the rule is
 saved with the world. A cube of the stack rides on his head; click it and the
@@ -9512,6 +9516,8 @@ function closePanelTray(tray, byRobot = false) {
     && !Object.values(rec.stations ?? {}).some(Boolean));
   if (X) {
     X.userData.panelWorld = empty ? null : rec;
+    // ...and a pad whose panel now has a robot at its desk is a behaviour from here on
+    if (X.userData.kind === 'text' && rec?.active?.program?.length && rec.stations?.stand) X.userData.gadget = true;
     X.userData.panelSize = (tray.userData.pw !== 0.5 || tray.userData.pd !== 0.42)
       ? [tray.userData.pw, tray.userData.pd] : null;
     X.__panelTray = null;
@@ -15349,6 +15355,23 @@ function runRefusal(target) {
   }
   if (target.kind === 'nbItem') {
     const nb = target.nb, slot = target.slot;
+    // EVERY PAGE LIKE THIS ONE: Dusty with Shift held takes this entry and
+    // every other entry that reads the same. Ken's notebook came to hold
+    // eighteen hundred pages of [query | time | _] (the timer's letter,
+    // filed round after round while the notebook stood on the timer's work
+    // spot -- a bug since fixed), and a page at a time is no way to clear it.
+    if (dustyActive && !held && clickShift && nb.userData.pages[slot]) {
+      const key = JSON.stringify(nb.userData.pages[slot]);
+      const alike = nb.userData.pages.map((pg, i) => (pg && JSON.stringify(pg) === key ? i : -1)).filter(i => i >= 0);
+      pushUndo();
+      for (const i of alike) nb.userData.pages[i] = null;
+      // trailing empties fall away, so the notebook is as long as its last page
+      while (nb.userData.pages.length > 1 && !nb.userData.pages[nb.userData.pages.length - 1]) nb.userData.pages.pop();
+      if (nb.userData.page >= nb.userData.pages.length) nb.userData.page = Math.max(0, nb.userData.pages.length - 1) & ~1;
+      renderNotebook(nb); saveNotebook(nb);
+      say(`Dusty took ${alike.length} page${alike.length === 1 ? '' : 's'} that read the same.`);
+      return refreshUI();
+    }
     if (dustyActive && !held) {
       pushUndo();
       // he flies over and takes it, as he does everywhere else: the entry used
@@ -18714,7 +18737,11 @@ function thingInRaw(o, nests, birds) {
     if (o.md) t.userData.md = true;     // before the words: the first paint
     if (o.mdPage) t.userData.mdPage = o.mdPage;
     t.setText(o.text ?? '');            // of a page must already be a page
-    if (o.gadget) t.userData.gadget = true;
+    // A PAD WITH A ROBOT AT ITS PANEL'S DESK IS A BEHAVIOUR, whether or not
+    // the file says so: Ken put bouncing's robots and box on a pad's panel by
+    // hand, saved it, and found it did not run -- nothing had marked it a
+    // gadget, so SPACE and a drop on a thing did not treat it as one.
+    if (o.gadget || (o.panel?.active?.program && o.panel.stations?.stand)) t.userData.gadget = true;
     if (o.note) t.userData.note = o.note;
     if (o.boundTo) t.userData.boundTo = o.boundTo;
     if (o.givenBy) t.userData.givenBy = o.givenBy;
@@ -20368,6 +20395,17 @@ function renderProgram(list = null) {
                                               : `${teamView + 1} of ${team.length + 1}`) + ' — click for the next');
   el.textContent = parts.join(' · ');
   el.style.cursor = team.length ? 'pointer' : '';
+  // ...and a button for the next member, since "click for the next" on a line
+  // of text was easy to overlook (ChatGPT's review; Ken: yes)
+  if (team.length) {
+    const nb = document.createElement('button');
+    nb.type = 'button';
+    nb.textContent = 'next member ▸';
+    nb.title = 'The next robot of the team: its thought and its steps.';
+    nb.style.cssText = 'margin-left:8px;font-size:11px;padding:1px 7px;vertical-align:middle';
+    nb.onclick = (e) => { e.stopPropagation(); const t2 = cardBot().bot?.team ?? []; if (!t2.length) return; teamView = (teamView + 1) % (t2.length + 1); renderProgram(); };
+    el.appendChild(nb);
+  }
   if (!el.__wired) {
     el.__wired = true;
     el.addEventListener('click', () => {
@@ -22468,10 +22506,12 @@ renderer.domElement.addEventListener('pointerleave', () => {
   setWiggle(null);
 });
 addEventListener('blur', () => { tipEl.style.display = 'none'; setWiggle(null); });
+let clickShift = false;                 // Shift held on the click being handled
 renderer.domElement.addEventListener('click', (ev) => {
   if (swallowClick) { swallowClick = false; return; }   // a finger-drag already dropped it
   if (doorCarry) return setDoorDown();                    // wherever the click lands
-  handleClick(resolve(ev));
+  clickShift = !!ev.shiftKey;
+  try { handleClick(resolve(ev)); } finally { clickShift = false; }
 });
 // How tall the bottom bar is right now -- it wraps to more rows on a narrow
 // screen, so it is measured rather than guessed, and the world's floor rises
@@ -22968,7 +23008,11 @@ loadModel('robot_v4.glb', (gltf) => {
   } else {
     buildSayRow();
     showWho();
-    askWho();
+    // A VISITOR WHO HAS GIVEN THEIR NAME is not asked again when a link opens
+    // a world for them (the gallery's cards open ?world= in a new tab: Ken,
+    // "it shouldn't ask again for the name and display the free play button")
+    const byLink = !!new URLSearchParams(location.search).get('world');
+    if (!(byLink && currentUser)) askWho();
   }
 
   worldReady = true;
@@ -22991,6 +23035,9 @@ loadModel('robot_v4.glb', (gltf) => {
         worldIn(rec);
         loadedWorldName = wantWorld.split('/').pop();
         say('Workshop loaded: ' + loadedWorldName + '.' + yardWords(rec));
+        // the link has done its work: a refresh is a fresh workshop, not the
+        // example again (Ken) -- Start this world over is on the card for that
+        try { const u = new URL(location.href); u.searchParams.delete('world'); history.replaceState(null, '', u.pathname + (u.search || '') + u.hash); } catch {}
       })
       .catch(() => {});
   }
@@ -26330,16 +26377,6 @@ function askWho(switching = false) {
   // request; the original ToonTalk asked the same at its door.
   const mk = (text, cls) => { const b = document.createElement('button'); b.type = 'button';
     if (cls) b.className = cls; b.textContent = text; return b; };
-  const ok = mk(switching ? 'Switch' : 'Free play', 'go');
-  const play = switching ? null : mk('Puzzle game', 'go');
-  if (play) play.title = 'A series of puzzles, each a small world with a goal to make and a judge to give it to.';
-  if (play) row.appendChild(play);
-  row.appendChild(ok);
-  card.append(h, p, input, list, row);
-  veil.appendChild(card);
-  document.body.appendChild(veil);
-  input.focus();
-  input.select();
   const takeName = () => {
     const name = input.value.trim();
     if (!name) { input.focus(); return false; }
@@ -26348,6 +26385,26 @@ function askWho(switching = false) {
     if (!same) swapNotebook();
     return true;
   };
+  const ok = mk(switching ? 'Switch' : 'Free play', 'go');
+  const play = switching ? null : mk('Puzzle game', 'go');
+  if (play) play.title = 'A series of puzzles, each a small world with a goal to make and a judge to give it to.';
+  if (play) row.appendChild(play);
+  row.appendChild(ok);
+  card.append(h, p, input, list, row);
+  // ...and the third way in: the examples, in the order to learn them (only
+  // where the page is served, since a single-file build carries no gallery)
+  if (!switching && /^https?:$/.test(location.protocol)) {
+    const g = document.createElement('a');
+    g.href = 'gallery.html';
+    g.textContent = 'Or browse the examples gallery \u2192';
+    g.style.cssText = 'font-size:12px;color:var(--dim);text-align:right;text-decoration:underline';
+    g.onclick = (e) => { e.preventDefault(); if (!takeName()) return; location.href = 'gallery.html'; };
+    card.appendChild(g);
+  }
+  veil.appendChild(card);
+  document.body.appendChild(veil);
+  input.focus();
+  input.select();
   const accept = () => { if (!takeName()) return; veil.remove(); };
   ok.onclick = accept;
   if (play) play.onclick = () => {
@@ -26847,6 +26904,7 @@ window.__nano = {
   tip(t) { return tipFor({ kind: 'thing', thing: t }); },
   utter(said) { return utterance(said); },             // made, not spoken: its volume is the slider's
   heldNode() { return held; },
+  shiftClick(target) { clickShift = true; try { handleClick(target); } finally { clickShift = false; } },
   snapshot(width = 720) {                 // one rendered frame, scaled, as a JPEG data URL (the gallery's pictures)
     renderer.render(scene, camera);
     const src = renderer.domElement, k = Math.min(1, width / src.width);
