@@ -8034,3 +8034,31 @@ no wider than the model and a little (1.3x), never narrower than 0.12, which
 is as narrow as reads up close. Measured: a pea of a planet 0.1 across wears
 a 0.13 plate; a shed keeps 0.3. Covered in modelPlaqueCheck. Hover already
 begins with the name (the named-things round), so a plaque can be small.
+
+## An introduction is not a puzzle; a round is the unit of a frame
+
+ChatGPT's three lessons (toontalk-learning-examples) carry a name and an
+intro -- MAKING-PUZZLES.md's "what Marty says when the world opens" -- and
+the workshop announced each as "Puzzle 05 -- give the bird your answer",
+and importing one bookmarked the Puzzle game at a name it could never find
+again ("The puzzles could not be found"). A puzzle is a world with something
+wanted: a goal, hints or rules. An intro alone opens as an introduced
+example: Marty says it, the idle line is the workshop's, the bookmark is
+left alone, Marty is told the visitor opened a world that introduced itself,
+and Start over says "world". introOnlyCheck.
+
+A ROUND IS THE UNIT OF A FRAME AT INSTANT (Ken: "fixing instant mode sounds
+good"). fastForward's slice yielded to the frame wherever its fourteen
+milliseconds ran out -- between the two puts of a round as often as not, so
+a round that moves five planets could be drawn with three moved. The slice
+is now checked at the end of a round (the breath before nextIteration); a
+pathological round of thousands of steps still yields, at twelve slices.
+Measured: a robot adding one to each of two numbers, sampled at every frame
+of a 6000-round Instant run -- old build 1057 frames of 2256 saw them apart,
+new build none of 2037. Goldens byte-identical. roundAtomicCheck.
+
+The learning examples themselves, measured here: the planet draws its 36
+strokes in one run, the flower its 24 sides and stalk in one run, the spark
+its twenty dots; and the flower helper card, bound to a sphere 0.35 up and
+switched on, drew all 25 strokes offstage within half a second -- the stall
+they saw was their browser's background tab, not the card route.

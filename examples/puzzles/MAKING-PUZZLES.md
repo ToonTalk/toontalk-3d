@@ -40,7 +40,7 @@ Everything below is about those five.
 | field     | what it does |
 |-----------|--------------|
 | `name`    | how a robot's `load` step finds this world (`p2` finds `p2.world.json`), and the name progress is kept under |
-| `intro`   | what Marty says when the world opens |
+| `intro`   | what Marty says when the world opens. An intro alone does not make a puzzle: a world with a name and an intro and nothing wanted opens as an introduced example (Start over says "world"). A puzzle is a world with a `goal`, `hints` or `rules` |
 | `goal`    | what is wanted, in words — for the card and for Marty |
 | `hints`   | in order; a visitor who asks Marty for a hint gets the next one, and the last again once they run out. By convention the last is the whole answer, for the desperate |
 | `rules`   | which **stacks** still stand (`rooms`, `texts`, `nests`, `scales`, `dice`, `sounds`, `minis`, `numbers`, `boxes`); which **tools** are present (`mimi`, `dusty`, `ruby`, `notebook`, `save`, `import`, `devices`); whether the keyboard may write **numbers** and **pads**; whether **undo** is allowed; and optionally `maxSteps`, a cap on how many steps a robot may be taught |

@@ -13193,12 +13193,18 @@ function afterQueue() {
 // Instant speed: snap each step straight to its finished state instead of
 // simulating every frame of it. Stepping through the animation at a big dt
 // still cost seconds of blocking for a 20-round loop.
+// A ROUND IS THE UNIT OF A FRAME. The slice used to yield to the frame
+// wherever its fourteen milliseconds ran out, so a round that moves five
+// planets could be drawn with three of them moved (ChatGPT's clockwork:
+// "a way to complete one logical tick before displaying the next frame").
+// The time is checked at the end of a round, where the world is between
+// rounds; a pathological round of thousands of steps still yields.
 function fastForward(maxSteps = 100000, sliceMs = 14) {
   const t0 = performance.now();
   let n = 0;
   while ((current || queue.length) && n++ < maxSteps) {
     // yield to the frame so a 10000-round run scrolls by instead of hanging
-    if ((n & 63) === 0 && performance.now() - t0 > sliceMs) break;
+    if ((n & 1023) === 0 && performance.now() - t0 > 12 * sliceMs) break;
     if (!current) {
       current = queue.shift();
       if (!current) break;
@@ -13207,7 +13213,9 @@ function fastForward(maxSteps = 100000, sliceMs = 14) {
     if (current.hold && !current.hold()) break;   // a narrated step waits even at Instant
     current.update && current.update(1);
     current.end && current.end();
+    const roundEnd = current.__roundEnd;
     current = null;
+    if (roundEnd && performance.now() - t0 > sliceMs) break;
   }
   if (busy && !current && !queue.length) { busy = false; afterQueue(); }
 }
@@ -18751,10 +18759,17 @@ function worldIn(data) {
     nextWorld = null;
     { const b = document.getElementById('nextBtn'); if (b) b.style.display = 'none'; }
     worldName = data.name ?? null;
-    if (data.name && (data.intro || data.rules)) mineSet(PUZZLE_AT, data.name);   // where they are
-    puzzleInfo = (data.intro || data.goal || data.hints) ? {
+    // AN INTRODUCTION IS NOT A PUZZLE. `intro` is what Marty says when the
+    // world opens (MAKING-PUZZLES.md); a puzzle is a world with something
+    // wanted -- a goal, hints or rules. ChatGPT's three lessons carried a
+    // name and an intro and were announced as "Puzzle 05 -- give the bird
+    // your answer", and importing one bookmarked the Puzzle game at a name
+    // it could never find again.
+    const isPuzzle = !!(data.goal || (Array.isArray(data.hints) && data.hints.length) || data.rules);
+    if (data.name && isPuzzle) mineSet(PUZZLE_AT, data.name);   // where they are
+    puzzleInfo = (data.intro || isPuzzle) ? {
       name: data.name ?? null, intro: data.intro ?? null, goal: data.goal ?? null,
-      hints: Array.isArray(data.hints) ? data.hints.slice() : [] } : null;
+      hints: Array.isArray(data.hints) ? data.hints.slice() : [], puzzle: isPuzzle } : null;
     hintCounter = 0;
     applyRules(data.rules ?? null);
     showYardDoor();
@@ -19301,7 +19316,8 @@ function nextIteration() {
       runStep(step);
     });
   }
-  enqueue(pause(0.25), doNow(nextIteration));
+  const breath = pause(0.25); breath.__roundEnd = true;   // the world is between rounds here
+  enqueue(breath, doNow(nextIteration));
 }
 let narratedRun = false;
 // Said, then held until it has been taken in: spoken to the end with his
@@ -20379,7 +20395,7 @@ function refreshUI() {
                                 : 'Give the robot something to start training it.') :
     // in a puzzle the idle line is the puzzle's, not the workshop's -- and it
     // says what the controls do rather than repeating Marty
-    puzzleInfo ? `Puzzle ${String(puzzleInfo.name || '').replace(/^p/, '')} — give the bird your answer; ask Marty for a hint; Start over is on this card.`
+    puzzleInfo?.puzzle ? `Puzzle ${String(puzzleInfo.name || '').replace(/^p/, '')} — give the bird your answer; ask Marty for a hint; Start over is on this card.`
                : 'Take a little robot from its stack and set it on the table.';
 }
 
@@ -24248,10 +24264,12 @@ function applyRules(rules) {
   btn('devicesBtn', tools.includes('devices'));
   btn('undoBtn', rules?.undo !== false);
   btn('againBtn', !!(worldName && worldLibrary[worldName] && (rules || puzzleInfo)));
+  { const b = document.getElementById('againBtn'); if (b) b.textContent = puzzleInfo?.puzzle || rules ? 'Start this puzzle over' : 'Start this world over'; }
 }
 // what Marty knows about the puzzle, for a brain that is asked about it
 function puzzleContextText() {
   if (!puzzleInfo) return '';
+  if (!puzzleInfo.puzzle) return '\n\nThe visitor opened a world that introduced itself. What was said on arrival: ' + (puzzleInfo.intro || '');
   return '\n\nThe visitor is on a PUZZLE. What was said on arrival: ' + (puzzleInfo.intro || '')
     + (puzzleInfo.goal ? '\nWhat is wanted: ' + puzzleInfo.goal : '')
     + '\nJudging is exact: a box is matched hole by hole, IN ORDER, so [2 | 1] is not [1 | 2]; a number\u2019s operator badge counts too.'

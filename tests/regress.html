@@ -4509,6 +4509,66 @@ async function modelPlaqueCheck(D) {
   return ok;
 }
 
+// AN INTRODUCTION IS NOT A PUZZLE. A world with a name and an intro and
+// nothing wanted opens as itself: Marty says the intro, the idle line is the
+// workshop's, the Puzzle game's bookmark is left alone, and Start over says
+// "world". A world with a goal is a puzzle as ever.
+async function introOnlyCheck(D, win) {
+  const doc = win.document, ls = win.localStorage;
+  const keyAt = Object.keys(ls).find(k => k.startsWith('tt3d.puzzle-at'));
+  const before = keyAt ? ls.getItem(keyAt) : null;
+  D.worldIn({ kind: 'world', v: 4, name: '05 \u2014 A step-and-turn planet', intro: 'Start the team.', stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const info = D.puzzle;
+  const notPuzzle = !!info && info.puzzle === false && info.intro === 'Start the team.';
+  const idle = doc.getElementById('hint').textContent;
+  const idleIsWorkshop = /Take a little robot/.test(idle) || !/Puzzle/.test(idle);
+  const at = Object.keys(ls).filter(k => k.startsWith('tt3d.puzzle-at')).map(k => ls.getItem(k));
+  const bookmarkKept = !at.includes('05 \u2014 A step-and-turn planet');
+  const againWords = doc.getElementById('againBtn').textContent;
+  D.worldIn({ kind: 'world', v: 4, name: 'probe-pz', intro: 'Make a 4.', goal: 'a 4', stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  const isPuzzle = D.puzzle?.puzzle === true;
+  const againPuzzle = doc.getElementById('againBtn').textContent;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 800);
+  // the probe puzzle must not become where the Puzzle game continues from
+  for (const k of Object.keys(ls).filter(k => k.startsWith('tt3d.puzzle-at'))) { if (k === keyAt && before != null) ls.setItem(k, before); else ls.removeItem(k); }
+  const ok = notPuzzle && idleIsWorkshop && bookmarkKept && againWords === 'Start this world over' && isPuzzle && againPuzzle === 'Start this puzzle over';
+  put((ok ? 'PASS' : 'FAIL') + ' an introduction is not a puzzle  (intro-only=' + notPuzzle + ' idle-is-workshop=' + idleIsWorkshop + ' bookmark-kept=' + bookmarkKept
+      + ' again=' + JSON.stringify(againWords) + ' with-goal-is-puzzle=' + isPuzzle + ' again-puzzle=' + JSON.stringify(againPuzzle) + (before ? ' had=' + before : '') + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// A ROUND IS THE UNIT OF A FRAME AT INSTANT. A robot adds one to each of
+// two numbers every round; sampled at every frame of a long Instant run, the
+// two are never seen apart. (The slice used to yield wherever its time ran
+// out, between the two puts as often as not.)
+async function roundAtomicCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'box', holes: [{ kind: 'number', value: { n: '0', d: '1' }, op: '+' }, { kind: 'number', value: { n: '0', d: '1' }, op: '+' }] }, x: -0.4, z: 1.6 },
+    { thing: { kind: 'robot', name: 'twice', condition: { kind: 'box', holes: [{ kind: 'wildNumber' }, { kind: 'wildNumber' }] },
+      program: [{ type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [0] } }, { type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [1] } },
+                { type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [0] } }, { type: 'newNumber' }, { type: 'put', at: { c: 'given', path: [1] } }],
+      trainedOn: null, team: [] }, x: 0.8, z: 1.5 } ] });
+  await slowSettle(D, 1500);
+  const box = D.bench(0)?.userData.kind === 'box' ? D.bench(0) : D.bench(1);
+  D.hold(box); await frames(D, 5); D.speed('instant'); D.rounds(6000); D.giveRobot();
+  let apart = 0, sampled = 0, maxSeen = 0;
+  for (let i = 0; i < 4000; i++) {
+    D.frame(1, fnow());
+    const g = D.mine(); if (!g || g.userData.kind !== 'box') continue;
+    const a = Number(g.userData.holes[0]?.thing?.userData.value?.n), b = Number(g.userData.holes[1]?.thing?.userData.value?.n);
+    if (Number.isNaN(a) || Number.isNaN(b)) continue;
+    sampled++; maxSeen = Math.max(maxSeen, a);
+    if (a !== b) apart++;
+    if (D.sched().mode === 'world' && !D.sched().busy && i > 10) break;
+  }
+  D.rounds(ROUNDS); D.speed(1);
+  const ok = sampled > 20 && apart === 0 && maxSeen >= 12000;
+  put((ok ? 'PASS' : 'FAIL') + ' a round is the unit of a frame at Instant  (frames-sampled=' + sampled + ' seen-apart=' + apart + ' reached=' + maxSeen + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function stopwatchCheck(D) {
   const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
@@ -7024,6 +7084,12 @@ async function runOne(D, spec) {
   let mplOK = true;
   try { mplOK = want('modelPlaque') ? await modelPlaqueCheck(D) : true; }
   catch (e) { mplOK = false; put('FAIL a model\u2019s plaque is measured to the model  ' + e.message, 'fail'); }
+  let ioOK = true;
+  try { ioOK = want('introOnly') ? await introOnlyCheck(D, frame.contentWindow) : true; }
+  catch (e) { ioOK = false; put('FAIL an introduction is not a puzzle  ' + e.message, 'fail'); }
+  let raOK = true;
+  try { raOK = want('roundAtomic') ? await roundAtomicCheck(D) : true; }
+  catch (e) { raOK = false; put('FAIL a round is the unit of a frame at Instant  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7189,7 +7255,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK
