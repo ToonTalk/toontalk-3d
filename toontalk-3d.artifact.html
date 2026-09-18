@@ -15604,6 +15604,11 @@ function makeRoom(data = null) {
   g.userData = { kind: 'room', rest: 0, width: 0.5, world: data?.world ?? null,
                  opaque: data?.opaque ?? true, id, exitLabel: data?.exitLabel ?? null,
                  dirty: !!data?.dirty, judge: !!data?.judge };
+  // A PANEL SET DOWN ON A WORK SPOT stays a panel across a save: a ticker,
+  // one round a turn. Reloaded as a plain house it became a batch worker of
+  // forty rounds a turn, and Ken's ellipse, packed onto the star's panel
+  // that way, jumped 240 degrees at a time after a reload.
+  if (data?.panel) g.userData.panel = true;
   // a house saved while it was RUNNING is one somebody switched on, and post
   // may go on waking it -- see nestReceived
   if (data?.dirty) g.__switched = true;
@@ -15755,6 +15760,11 @@ function myThingOf(ctx = curCtx) {
   let tray = ctx?.room;
   if (!tray?.userData?.panel) return null;
   let X = tray.__owner;
+  // A PANEL SET DOWN ON ANOTHER THING'S PANEL, and saved, comes back with no
+  // thing of its own: "my thing" is then the thing whose panel it stands in
+  // (Ken packed the ellipse's panel onto the star's, and after a reload its
+  // letters had nowhere to go).
+  if (!X) { const up = trayHolding(tray); if (up) { tray = up; X = up.__owner; } }
   for (let guard = 0; guard < 16 && X; guard++) {
     const bound = X.userData.boundTo && liveReg.get(X.userData.boundTo);
     if (bound && bound !== X) { X = bound; continue; }
@@ -18578,13 +18588,26 @@ function switchNested(tray, on) {
     // world had captured the keeper's own work spots, copied into every
     // wiggle the keeper handed out.
     if (o !== tray && isGadget(o)) { parts.push(o); return; }
+    // ...and a PANEL SET DOWN on one of its spots is a part too: SPACE on the
+    // thing starts what stands on its panel, however it got there
+    if (o !== tray && o.userData?.kind === 'room' && o.userData.panel) { parts.push(o); return; }
     if (o !== tray && ['box', 'nest', 'scale'].includes(o.userData?.kind)) return;
     for (const c of (o.children || [])) walk(c);
   };
   walk(ctx.root);
   if (!parts.length) return 0;
   pushWorld(tray);
-  try { for (const g of parts) switchGadget(g, on, true); }
+  try {
+    for (const g of parts) {
+      if (g.userData.kind === 'room') {          // a set-down panel: switched the way its own tray would be
+        hydrateRoom(g);
+        g.userData.stepRounds = 0;
+        g.userData.dirty = on;
+        if (on) { delete g.userData.stopped; g.__switched = true; }
+        else { g.userData.stopped = true; delete g.__switched; }
+      } else switchGadget(g, on, true);
+    }
+  }
   finally { popWorld(); }
   return parts.length;
 }
@@ -27383,6 +27406,7 @@ function rigMimi(m) {
 }
 // a copier step tells her what to do with (0..1) of that step
 function mimiPose(phase, t) {
+  if (offstage()) return;               // her machine is on the table; a panel's copies are not hers to mime
   const rig = stations.copyOut?.__mimi?.__rig; if (!rig) return;
   const e = Math.sin(Math.PI * t);
   // She is small beside her machine -- the platform is above her head -- so
@@ -27405,6 +27429,10 @@ function mimiPose(phase, t) {
 // hands go down to it and open outward; from the platform they reach up and
 // open the same way -- "there you are".
 function mimiOffer(which) {
+  // ...out here, at your copier: a robot on a panel or in a house uses its
+  // own copier offstage, and Mimi was twitching sixty times a second beside
+  // the table while a behaviour copied its letters (Ken: 'Mimi vibrates')
+  if (offstage()) return;
   const rig = stations.copyOut?.__mimi?.__rig; if (!rig) return;
   rig.act = { which, t: 0, dur: 0.8 };
 }
@@ -27953,7 +27981,7 @@ function thingOutRaw(t) {
   if (ud.kind === 'notebook') return { kind: 'notebook', pages: ud.pages, page: ud.page };
   if (ud.kind === 'room') return { kind: 'room', world: t.__ctx ? ctxToRec(t) : ud.world,
                                    exitLabel: ud.exitLabel ?? undefined,
-                                   opaque: ud.opaque,
+                                   opaque: ud.opaque, panel: ud.panel || undefined,
                                    dirty: ud.dirty, id: ud.id, label: ud.label ?? undefined,
                                    judge: ud.judge || undefined };
   if (ud.kind === 'robot') return botOut(t.__bot);

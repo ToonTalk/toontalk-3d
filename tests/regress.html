@@ -4870,6 +4870,40 @@ async function kenPanelCheck(D, win) {
   return ok;
 }
 
+// KEN'S ELLIPSE ON THE STAR'S PANEL (19 September): a panel tray set down
+// on a work spot keeps being a panel across a save -- a ticker, one round a
+// turn -- where it came back as a house of forty rounds a turn and the star
+// jumped round its ellipse; and Mimi stands still while a behaviour on a
+// panel copies its letters (she twitched sixty times a second).
+async function panelOnSpotCheck(D) {
+  const w = await (await fetch('../examples/behaviours/🪐 ellipse.world.json')).json();
+  D.worldIn(w); await slowSettle(D, 1500);
+  const gad = (() => { for (let i = 0; i < 10; i++) { const t = D.bench(i); if (t?.userData.gadget) return t; } return null; })();
+  // its panel's record, put on a spot of a star's panel, saved and loaded
+  const panelRec = JSON.parse(JSON.stringify(gad.userData.panelWorld));
+  const star = { kind: 'text', text: '*', look: { bg: '#1b2233', ink: '#ffd23f', font: 'sans' }, lid: 'L9598', evt: 'evt-L9598',
+    panel: { kind: 'world', v: 3, bench: [], stations: { stand: null, s0: { kind: 'room', panel: true, world: panelRec, opaque: false, dirty: true, id: 4 } }, active: null } };
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [{ thing: star, x: -1.0, z: 1.6 }] });
+  await slowSettle(D, 1500);
+  const s2 = (() => { for (let i = 0; i < 10; i++) { const t = D.bench(i); if (t?.userData.kind === 'text' && t.userData.text === '*') return t; } return null; })();
+  const saved = D.worldOut();
+  const room = saved.bench.find(b => b.thing.text === '*')?.thing.panel?.stations?.s0;
+  const keptPanel = room?.kind === 'room' && room.panel === true;
+  // switched on, it moves the star a step a frame, not a lap a turn
+  const mimi = D.stations.copyOut?.__mimi; const rig = mimi?.__rig;
+  const pose0 = rig ? { ...rig.cur } : null;
+  D.switchBound(s2, true);
+  const xs = []; for (let k = 0; k < 90; k++) { await frames(D, 1); xs.push([+s2.position.x.toFixed(3), +s2.position.z.toFixed(3)]); }
+  D.switchBound(s2, false); await frames(D, 5);
+  let big = 0, moves = 0;
+  for (let k = 1; k < xs.length; k++) { const d = Math.hypot(xs[k][0] - xs[k - 1][0], xs[k][1] - xs[k - 1][1]); if (d > 0.001) moves++; if (d > 0.3) big++; }
+  const ticks = moves >= 30 && big === 0;      // many small steps, no forty-round jumps
+  const still = !rig || (!rig.act && !rig.target);
+  const ok = keptPanel && ticks && still;
+  put((ok ? 'PASS' : 'FAIL') + ' a panel on a work spot stays a ticker across a save, and Mimi stands still while it copies  (kept-panel=' + keptPanel + ' small-steps=' + moves + ' jumps=' + big + ' mimi-still=' + still + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function stopwatchCheck(D) {
   const things = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const numOf = (t) => t?.userData?.kind === 'number' ? Number(t.userData.value.n) / Number(t.userData.value.d) : NaN;
@@ -7412,6 +7446,9 @@ async function runOne(D, spec) {
   let kpOK = true;
   try { kpOK = want('kenPanel') ? await kenPanelCheck(D, frame.contentWindow) : true; }
   catch (e) { kpOK = false; put('FAIL a pad with a robot on its panel is a behaviour  ' + e.message, 'fail'); }
+  let posOK = true;
+  try { posOK = want('panelOnSpot') ? await panelOnSpotCheck(D) : true; }
+  catch (e) { posOK = false; put('FAIL a panel on a work spot stays a ticker  ' + e.message, 'fail'); }
   let krOK = true;
   try { krOK = want('kenRound') ? await kenRoundCheck(D, frame.contentWindow) : true; }
   catch (e) { krOK = false; put('FAIL a turned trail stands on the table, Enter writes in the close-up, Pause is the robots\u2019, a bad letter is said so  ' + e.message, 'fail'); }
@@ -7577,7 +7614,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

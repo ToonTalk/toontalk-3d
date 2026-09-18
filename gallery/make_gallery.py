@@ -367,6 +367,7 @@ def main(copy_shots=False):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ToonTalk 3D examples</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23b8241a'/%3E%3Crect x='5' y='5' width='10' height='10' rx='2' fill='%23fff'/%3E%3Crect x='17' y='5' width='10' height='10' rx='2' fill='%23ffd27a'/%3E%3Crect x='5' y='17' width='10' height='10' rx='2' fill='%237fe9ff'/%3E%3Crect x='17' y='17' width='10' height='10' rx='2' fill='%23fff'/%3E%3C/svg%3E">
 <style>
   :root {{ --bg: #f6f2e8; --ink: #1f1a14; --dim: #6b6152; --card: #fffdf8; --line: #e3dccb; --accent: #2f6d3a; --btn: #2f6d3a; --btnink: #fff; }}
   @media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) {{ --bg: #16171b; --ink: #ece7dc; --dim: #a39b8b; --card: #1f2126; --line: #33363d; --accent: #8fd19a; --btn: #3f8d4d; --btnink: #fff; }} }}

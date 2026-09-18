@@ -8278,3 +8278,20 @@ and box in a panel with instructions to go through the door to watch it
 work"): moving, bouncing, following and wandering are each one star with
 its robots and box on its own panel; SPACE runs it, Ctrl+P is the door. The
 gallery's titles are words now (All the rational numbers, Resort Infinity).
+
+## The ellipse on the star's panel
+
+Ken packed a behaviour a third way: he opened the ellipse gadget's panel,
+set the tray down on a work spot of the star's own panel, and it ran. Three
+things went wrong around it. MIMI VIBRATED: a robot on a panel uses its own
+copier offstage, and every take from it made her mime the hand-over at the
+table -- sixty times a second. Her mime and her pose are for the table's
+copier only now. A SMALL AND A LARGE ELLIPSE, and a lap that broke into a
+run to the right: his world also kept the gadget card itself, bound to the
+star, so two robots drove one star with two angles (that one is the world,
+not the workshop). And after a reload the set-down panel came back as a
+plain HOUSE -- forty rounds a turn, the star jumping 240 degrees at a time
+-- with no thing of its own for "my thing". A set-down panel keeps its
+panel flag across a save (a ticker), its "my thing" is the thing whose
+panel it stands in, and SPACE on that thing switches it with the rest.
+panelOnSpotCheck. Favicons for the gallery, the ledger and index (Ken).
