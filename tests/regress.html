@@ -3341,6 +3341,9 @@ const EXAMPLE_WORLDS = [
   'infinity/🏨 resort-infinity-3',
   'infinity/🏨 resort-infinity-4',
   'infinity/🏨 resort-infinity-5',
+  'meta/🎓 resort-teacher-3',
+  'meta/🎓 resort-teacher-4',
+  'meta/🎓 resort-teacher-5',
   'infinity/📮 zeno',
   'lists/🔁 reverse',
   'lists/🔗 append',
@@ -5113,6 +5116,51 @@ async function moreLessonsCheck(D) {
   put((ok ? 'PASS' : 'FAIL') + ' the garden, the clockwork and the fountain draw and move what they say  (garden=' + JSON.stringify(garden)
       + ' clockwork=' + JSON.stringify(clockwork) + ' fountain=' + JSON.stringify(fountain) + ')', ok ? 'pass' : 'fail');
   return ok;
+}
+
+// THE RESORT TEACHERS FOR 3, 4 AND 5: a robot given its box solves each
+// problem -- teaches the mover, waits for the bell (its own nest answers to
+// the bell's name), teaches or hands over the clerk, lets the newcomers in
+// -- and everybody visible ends at the cottage the arithmetic says.
+async function resortTeachersCheck(D) {
+  const cottageX = (n) => n * 0.6 - 4.5;
+  const at = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.06 && Math.abs(g.position.z - 5.2) < 0.06;
+  const grass = () => { const o = []; for (let i = 0; i < 120; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const WANT = {
+    '3': { 'red guest 1': 12, 'blue guest 1': 2, 'blue guest 5': 10, 'gold guest 1': 1, 'gold guest 2': 3, 'gold guest 6': 11 },
+    '4': { 'blue guest 1': 8, 'gold guest 1': 4, 'green guest 1': 3, 'plum guest 1': 2, 'teal guest 1': 1, 'green guest 3': 11, 'teal guest 3': 9 },
+    '5': { 'gold guest 1': 8, 'teal guest 1': 2, 'green guest 1': 6, 'rose guest 1': 1, 'rose guest 2': 3, 'lime guest 2': 5, 'lime guest 1': 7, 'rose guest 3': 9, 'lime guest 3': 11, 'brown guest 3': 13 },
+  };
+  const results = []; let allOK = true;
+  for (const n of ['3', '4', '5']) {
+    const w = await (await fetch('../examples/meta/\ud83c\udf93 resort-teacher-' + n + '.world.json')).json();
+    D.worldIn(w); await slowSettle(D, 2000);
+    D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+    const guests = grass().filter(t => t.userData.kind === 'model' && /guest \d/.test(t.userData.label || ''));
+    const byName = (nm) => guests.find(g => g.userData.label === nm);
+    const box = grass().find(t => t.userData.kind === 'box' && t.userData.holes.length === 11);
+    const teacher = D.benchBots().find(b => b.__bot?.name === 'the teacher');
+    D.speed('instant'); D.rounds(ROUNDS);
+    D.hold(box); await frames(D, 30); D.clickBot(teacher);
+    const done = () => Object.entries(WANT[n]).every(([nm, c]) => byName(nm) && at(byName(nm), c));
+    const where = () => Object.keys(WANT[n]).map(nm => nm + '@' + (byName(nm) ? ((byName(nm).position.x + 4.5) / 0.6).toFixed(1) : '?')).join(' ');
+    for (let k = 0; k < 9000 && !done(); k++) {
+      await frames(D, 1);
+      if (k % 300 === 0) { try { await fetch('/capture?name=suiteprog', { method: 'POST', body: JSON.stringify({ at: 'resortTeachers-' + n, k, where: where() }) }); } catch (e2) {} }
+      if ((k % 500) === 499) await breathe();
+    }
+    const ok = done();
+    // the last pad is the stop line
+    for (let k = 0; k < 2000 && D.helperState().mode !== 'world'; k++) await frames(D, 1);
+    const hint = D.doc.getElementById('hint').textContent;
+    const saidDone = /Done:/.test(hint);
+    allOK = allOK && ok && saidDone;
+    results.push(n + ':' + (ok ? 'ok' : 'FAIL') + '(said-done=' + saidDone + ' ' + where() + ')');
+    D.speed(1);
+  }
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1000);
+  put((allOK ? 'PASS' : 'FAIL') + ' the resort teachers solve problems 3, 4 and 5  (' + results.join('; ') + ')', allOK ? 'pass' : 'fail');
+  return allOK;
 }
 
 async function panelOnSpotCheck(D) {
@@ -7689,6 +7737,9 @@ async function runOne(D, spec) {
   let hawOK = true;
   try { hawOK = want('housesAtWork') ? await housesAtWorkCheck(D) : true; }
   catch (e) { hawOK = false; put('FAIL the houses still at work are counted  ' + e.message, 'fail'); }
+  let rtsOK = true;
+  try { rtsOK = want('resortTeachers') ? await resortTeachersCheck(D) : true; }
+  catch (e) { rtsOK = false; put('FAIL the resort teachers 3, 4, 5  ' + e.message, 'fail'); }
   let mlOK = true;
   try { mlOK = want('moreLessons') ? await moreLessonsCheck(D) : true; }
   catch (e) { mlOK = false; put('FAIL the garden, the clockwork and the fountain  ' + e.message, 'fail'); for (const l of String(e.stack || '').split('\n').slice(0, 6)) put('ERR   ' + l.trim(), 'dim'); }
@@ -7869,7 +7920,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK && rtsOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

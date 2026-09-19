@@ -11547,7 +11547,8 @@
        },
        {
         "kind": "wildText"
-       }
+       },
+       null
       ]
      },
      "program": [
@@ -11792,45 +11793,6 @@
          7
         ]
        }
-      },
-      {
-       "type": "copy",
-       "at": {
-        "c": "given",
-        "path": [
-         9
-        ]
-       }
-      },
-      {
-       "type": "put",
-       "at": {
-        "c": "given",
-        "path": [
-         8
-        ]
-       }
-      },
-      {
-       "type": "take",
-       "at": {
-        "c": "given",
-        "path": [
-         10
-        ]
-       }
-      },
-      {
-       "type": "speak"
-      },
-      {
-       "type": "put",
-       "at": {
-        "c": "given",
-        "path": [
-         10
-        ]
-       }
       }
      ],
      "trainedOn": {
@@ -11944,10 +11906,255 @@
        {
         "kind": "text",
         "text": "Done: the six guests are in cottages 6 to 11, the five newcomers in 1 to 5, and there is room for everyone still to come."
+       },
+       {
+        "kind": "nest",
+        "id": 9799,
+        "guid": "resort-teacher-bell",
+        "hasEgg": false,
+        "pile": [],
+        "label": "the bell, heard here",
+        "aliases": [
+         "resort-bell"
+        ]
        }
       ]
      },
-     "team": [],
+     "team": [
+      {
+       "kind": "robot",
+       "name": "Welcome five more, when the bell has rung",
+       "condition": {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "wildText"
+         },
+         null,
+         {
+          "kind": "anyBox"
+         },
+         null,
+         {
+          "kind": "anyBox"
+         },
+         {
+          "kind": "anyBird"
+         },
+         {
+          "kind": "anyBird"
+         },
+         {
+          "kind": "anyBird"
+         },
+         {
+          "kind": "anyBird"
+         },
+         {
+          "kind": "anyBox"
+         },
+         {
+          "kind": "wildText"
+         },
+         {
+          "kind": "wildText"
+         }
+        ]
+       },
+       "program": [
+        {
+         "type": "take",
+         "at": {
+          "c": "given",
+          "path": [
+           11
+          ],
+          "nest": true
+         }
+        },
+        {
+         "type": "put",
+         "at": {
+          "c": "s1",
+          "path": []
+         }
+        },
+        {
+         "type": "vacuum",
+         "at": {
+          "c": "s1",
+          "path": []
+         }
+        },
+        {
+         "type": "copy",
+         "at": {
+          "c": "given",
+          "path": [
+           9
+          ]
+         }
+        },
+        {
+         "type": "put",
+         "at": {
+          "c": "given",
+          "path": [
+           8
+          ]
+         }
+        },
+        {
+         "type": "take",
+         "at": {
+          "c": "given",
+          "path": [
+           10
+          ]
+         }
+        },
+        {
+         "type": "speak"
+        },
+        {
+         "type": "put",
+         "at": {
+          "c": "given",
+          "path": [
+           10
+          ]
+         }
+        }
+       ],
+       "trainedOn": {
+        "kind": "box",
+        "holes": [
+         {
+          "kind": "text",
+          "text": "Watch. I seat the guests, teach a clerk and give it to the front desk, teach a mover and give it to the moving office, and welcome five more."
+         },
+         {
+          "kind": "robot",
+          "name": "Next address",
+          "program": [],
+          "condition": null,
+          "trainedOn": null,
+          "team": [],
+          "note": "A pupil. The teacher shows it the clerk’s job on a practice letter: the number to the bird."
+         },
+         {
+          "kind": "box",
+          "holes": [
+           {
+            "kind": "number",
+            "value": {
+             "n": "7",
+             "d": "1"
+            },
+            "op": "+"
+           },
+           {
+            "kind": "bird",
+            "nestId": 9794,
+            "nestGuid": "resort-practice",
+            "label": "to the practice nest"
+           }
+          ],
+          "label": "a practice letter"
+         },
+         {
+          "kind": "robot",
+          "name": "Move up five",
+          "program": [],
+          "condition": null,
+          "trainedOn": null,
+          "team": [],
+          "note": "A pupil. The teacher shows it the mover’s job on a practice letter: five more on the number, then the number to the bird."
+         },
+         {
+          "kind": "box",
+          "holes": [
+           {
+            "kind": "number",
+            "value": {
+             "n": "3",
+             "d": "1"
+            },
+            "op": "+"
+           },
+           {
+            "kind": "bird",
+            "nestId": 9794,
+            "nestGuid": "resort-practice",
+            "label": "to the practice nest"
+           }
+          ],
+          "label": "a practice letter"
+         },
+         {
+          "kind": "bird",
+          "nestId": 0,
+          "nestGuid": null,
+          "liveId": "M1",
+          "label": "to the guests"
+         },
+         {
+          "kind": "bird",
+          "nestId": 9796,
+          "nestGuid": "resort-front-robot",
+          "label": "to the front desk"
+         },
+         {
+          "kind": "bird",
+          "nestId": 9797,
+          "nestGuid": "resort-office-robot",
+          "label": "to the moving office"
+         },
+         {
+          "kind": "bird",
+          "nestId": 0,
+          "nestGuid": null,
+          "liveId": "M2",
+          "label": "to five more guests"
+         },
+         {
+          "kind": "box",
+          "holes": [
+           {
+            "kind": "text",
+            "text": "set"
+           },
+           {
+            "kind": "text",
+            "text": "switch"
+           },
+           {
+            "kind": "text",
+            "text": "on"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "Done: the six guests are in cottages 6 to 11, the five newcomers in 1 to 5, and there is room for everyone still to come."
+         },
+         {
+          "kind": "nest",
+          "id": 9799,
+          "guid": "resort-teacher-bell",
+          "hasEgg": false,
+          "pile": [],
+          "label": "the bell, heard here",
+          "aliases": [
+           "resort-bell"
+          ]
+         }
+        ]
+       },
+       "team": [],
+       "note": "The two pupils are gone from the box and the bell’s pad has landed on the nest in hole 11: the office has rung it, so everybody housed is on the move. Throws the switch for five more guests and reads the last pad out."
+      }
+     ],
      "note": "A robot that solves Resort Infinity: seats the guests, teaches a little robot the clerk’s job on a practice letter and gives it to the bird to the front desk, teaches another the mover’s job (+5) and gives it to the bird to the moving office, then welcomes five more. Nothing here is new: a teaching, Ruby, a robot given to a bird and a switch thrown by mail are steps like any other."
     },
     "x": -1.45,
@@ -12065,6 +12272,17 @@
       {
        "kind": "text",
        "text": "Done: the six guests are in cottages 6 to 11, the five newcomers in 1 to 5, and there is room for everyone still to come."
+      },
+      {
+       "kind": "nest",
+       "id": 9799,
+       "guid": "resort-teacher-bell",
+       "hasEgg": false,
+       "pile": [],
+       "label": "the bell, heard here",
+       "aliases": [
+        "resort-bell"
+       ]
       }
      ]
     },

@@ -60,7 +60,13 @@ given = box(                                               # noqa: F405
     bird(*R.ROBOT_NESTS[R.OFFICE_G], label='to the moving office'),     # noqa: F405
     live_bird('M2', 'to five more guests'),
     msg('set', 'switch', 'on'),
-    LAST)
+    LAST,
+    # THE BELL, HEARD HERE TOO: a nest that answers to the bell's name. The
+    # office rings the bell when the mover arrives; the pad lands here as
+    # well, and only then does the teacher welcome the five more -- at
+    # Instant its whole round used to run before the office had a turn, so
+    # the newcomers were housed BEFORE the bell and moved up five as well.
+    dict(nest(9799, 'resort-teacher-bell', label='the bell, heard here'), aliases=[R.BELL]))   # noqa: F405
 
 speak = {'type': 'speak'}
 teach = lambda *p: {'type': 'teach', 'at': at('given', *p)}            # noqa: E731,F405
@@ -86,14 +92,21 @@ program = (switch_on(5)                                    # the guests write to
               pupil(1), put('given', 6)]                   # ...and the clerk given to the front desk: six guests housed  # noqa: F405
            + lesson(2, 4, R.move_robot)                    # the mover, taught on the other letter
            + [take('t2'), put('given', 4),                 # noqa: F405
-              pupil(2), put('given', 7)]                   # ...and given to the moving office: everybody moves up five  # noqa: F405
-           + switch_on(8)                                  # five more guests: 1 to 5
-           + [take('given', 10), speak, put('given', 10)])  # ...and say so (ChatGPT: the finish led with "Watch.")  # noqa: F405
+              pupil(2), put('given', 7)])                  # ...and given to the moving office: everybody moves up five  # noqa: F405
+# ...and when the bell has rung (the pad on the teacher's own nest, hole 11):
+after_bell = ([{'type': 'take', 'at': {'c': 'given', 'path': [11], 'nest': True}}, put('s1'), vac('s1')]   # the pad, heard and thrown away  # noqa: F405
+              + switch_on(8)                               # five more guests: 1 to 5
+              + [take('given', 10), speak, put('given', 10)])  # ...and say so (ChatGPT: the finish led with "Watch.")  # noqa: F405
 
+welcome = robot(                                           # noqa: F405
+    'Welcome five more, when the bell has rung',
+    box(WILDTEXT, None, ANYBOX, None, ANYBOX, ANYBIRD, ANYBIRD, ANYBIRD, ANYBIRD, ANYBOX, WILDTEXT, WILDTEXT),   # noqa: F405
+    after_bell, trained_on=given,
+    note='The two pupils are gone from the box and the bell' + RQ + 's pad has landed on the nest in hole 11: the office has rung it, so everybody housed is on the move. Throws the switch for five more guests and reads the last pad out.')
 teacher = robot(                                           # noqa: F405
     'the teacher',
-    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYBIRD, ANYBIRD, ANYBIRD, ANYBIRD, ANYBOX, WILDTEXT),   # noqa: F405
-    program, trained_on=given,
+    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYBIRD, ANYBIRD, ANYBIRD, ANYBIRD, ANYBOX, WILDTEXT, None),   # noqa: F405
+    program, trained_on=given, team=[welcome],
     note='A robot that solves Resort Infinity: seats the guests, teaches a little robot the '
          'clerk' + RQ + 's job on a practice letter and gives it to the bird to the front desk, teaches '
          'another the mover' + RQ + 's job (+5) and gives it to the bird to the moving office, then '

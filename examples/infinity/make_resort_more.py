@@ -274,7 +274,9 @@ TRAIN = ('HOW TO TRAIN ONE\n'
 FENCE = R.FENCE
 
 
-def write(name, about, problem, letters, housed_list, newcomers, macro, answers, extra_pads):
+def grass(housed_list, newcomers, macro):
+    """The resort itself: the row, everybody, the two macros, the desks and
+    their birds, the practice nest -- what a teacher world needs too."""
     gadgets_housed = [g for g, _ in housed_list]
     models = [m for _, m in housed_list] + [m for _, m in newcomers]
     housed_macro = R.macro('the guests already housed', 'MH', gadgets_housed,
@@ -283,8 +285,12 @@ def write(name, about, problem, letters, housed_list, newcomers, macro, answers,
                                  'guest, switched on: they are listening for the bell. Nothing in them knows '
                                  'how many guests there are.'))
     housed_macro['running'] = True
-    bench_yard = (row + models + [{'thing': housed_macro, 'x': 3.3, 'z': 6.2}, {'thing': macro, 'x': 3.3, 'z': 7.0}]
-                  + desk_things(letters) + [
+    return (row + models + [{'thing': housed_macro, 'x': 3.3, 'z': 6.2}, {'thing': macro, 'x': 3.3, 'z': 7.0}]
+            + desk_things([]))
+
+
+def write(name, about, problem, letters, housed_list, newcomers, macro, answers, extra_pads):
+    bench_yard = (grass(housed_list, newcomers, macro) + letters + [
         {'thing': txt(about), 'x': 1.4, 'z': 3.2},        # noqa: F405
         {'thing': txt(problem), 'x': 2.6, 'z': 3.2},      # noqa: F405
         {'thing': txt(TRAIN), 'x': 2.0, 'z': 3.9},        # noqa: F405
@@ -445,43 +451,46 @@ SQUARES = ('WHY GROWING SQUARES\n'
 GATE = lambda i, j: (-4.2 + 0.5 * (i - 1) + 1.7 * (j - 1), 7.0)   # noqa: E731
 MACRO_LOOK = {'bg': '#3b2c1f', 'ink': '#ffe8d9', 'font': 'sans', 'h': 0.42}
 
-if __name__ == '__main__':
-    # ---- problem 3 opens after problem 2: six red at 6..11, five blue at 1..5
-    housed3 = [housed(k, k, 1, 'red', k + 5) for k in range(1, 7)] \
-        + [housed(10 + k, k, 1, 'blue', k) for k in range(1, 6)]
-    new3 = [newcomer(20 + k, k, 2, 'gold', *GATE(k, 1)) for k in range(1, 7)]
-    write('\U0001f3e8 resort-infinity-3', ABOUT3, P3,
-          [{'thing': LETTER3(4, 2, 'a practice letter'), 'x': -0.9, 'z': 3.4},
-           {'thing': LETTER2(3, 'a practice letter'), 'x': -0.2, 'z': 3.4}],
-          housed3, new3,
-          R.macro('the gold group', 'M3', [g for g, _ in new3], MACRO_LOOK,
-                  note='The same machinery for the six gold newcomers, group 2. Switch it on once your mover has moved everybody and the odd cottages stand empty.'),
-          [{'thing': double_robot, 'x': -4.4, 'z': 2.5}, {'thing': odd_robot, 'x': -3.6, 'z': 2.5}],
-          [])
-    # ---- problem 4 opens after problem 3: blue at 2i (2..10), gold at 2i - 1 (1..11);
-    # red 1 and 2 stand at 12 and 14 in the mist, the other four are lost to view
-    housed4 = [housed(10 + k, k, 1, 'blue', 2 * k) for k in range(1, 6)] \
-        + [housed(20 + k, k, 2, 'gold', 2 * k - 1) for k in range(1, 7)] \
-        + [housed(k, k, 1, 'red', 2 * (k + 5)) for k in (1, 2)]
-    new4 = [newcomer(30 + 10 * j + i, i, j, c, *GATE(i, j)) for j, c in ((1, 'green'), (2, 'plum'), (3, 'teal')) for i in (1, 2, 3)]
-    write('\U0001f3e8 resort-infinity-4', ABOUT4, P4,
-          [{'thing': LETTER3(2, 3, 'a practice letter'), 'x': -0.9, 'z': 3.4},
-           {'thing': LETTER2(3, 'a practice letter'), 'x': -0.2, 'z': 3.4}],
-          housed4, new4,
-          R.macro('three groups', 'M4', [g for g, _ in new4], MACRO_LOOK,
-                  note='The same machinery for the nine newcomers: three green (group 1), three plum (group 2), three teal (group 3). Switch it on once your mover has moved everybody.'),
-          [{'thing': four_times_robot, 'x': -4.4, 'z': 2.5}, {'thing': four_apart_robot, 'x': -3.6, 'z': 2.5}],
-          [])
-    # ---- problem 5 opens after problem 4: blue 1 at 8, gold 1 at 4, gold 2 at 12 (the mist),
-    # and the nine at 4i - j; everybody else is lost to view
-    housed5 = [housed(11, 1, 1, 'blue', 8), housed(21, 1, 2, 'gold', 4), housed(22, 2, 2, 'gold', 12)] \
+def spec(n):
+    """Problem n as data: who is housed where when it opens, who waits at the
+    gate, the macro that lets them in, the answers, the pads."""
+    if n == 3:
+        # after problem 2: six red at 6..11, five blue at 1..5
+        housed_ = [housed(k, k, 1, 'red', k + 5) for k in range(1, 7)] \
+            + [housed(10 + k, k, 1, 'blue', k) for k in range(1, 6)]
+        new = [newcomer(20 + k, k, 2, 'gold', *GATE(k, 1)) for k in range(1, 7)]
+        macro = R.macro('the gold group', 'M3', [g for g, _ in new], MACRO_LOOK,
+                        note='The same machinery for the six gold newcomers, group 2. Switch it on once your mover has moved everybody and the odd cottages stand empty.')
+        return dict(name='\U0001f3e8 resort-infinity-3', about=ABOUT3, problem=P3, housed=housed_, new=new, macro=macro,
+                    letter3=(4, 2), letter2=3, mover=double_robot, clerk=odd_robot, extra=[], group_colours='gold')
+    if n == 4:
+        # after problem 3: blue at 2i (2..10), gold at 2i - 1 (1..11); red 1 and 2 at 12 and 14 in the mist
+        housed_ = [housed(10 + k, k, 1, 'blue', 2 * k) for k in range(1, 6)] \
+            + [housed(20 + k, k, 2, 'gold', 2 * k - 1) for k in range(1, 7)] \
+            + [housed(k, k, 1, 'red', 2 * (k + 5)) for k in (1, 2)]
+        new = [newcomer(30 + 10 * j + i, i, j, c, *GATE(i, j)) for j, c in ((1, 'green'), (2, 'plum'), (3, 'teal')) for i in (1, 2, 3)]
+        macro = R.macro('three groups', 'M4', [g for g, _ in new], MACRO_LOOK,
+                        note='The same machinery for the nine newcomers: three green (group 1), three plum (group 2), three teal (group 3). Switch it on once your mover has moved everybody.')
+        return dict(name='\U0001f3e8 resort-infinity-4', about=ABOUT4, problem=P4, housed=housed_, new=new, macro=macro,
+                    letter3=(2, 3), letter2=3, mover=four_times_robot, clerk=four_apart_robot, extra=[], group_colours='green, plum and teal')
+    # after problem 4: blue 1 at 8, gold 1 at 4, gold 2 at 12 (the mist), the nine at 4i - j
+    housed_ = [housed(11, 1, 1, 'blue', 8), housed(21, 1, 2, 'gold', 4), housed(22, 2, 2, 'gold', 12)] \
         + [housed(30 + 10 * j + i, i, j, c, 4 * i - j) for j, c in ((1, 'green'), (2, 'plum'), (3, 'teal')) for i in (1, 2, 3)]
-    new5 = [newcomer(60 + 10 * j + i, i, j, c, *GATE(i, j)) for j, c in ((1, 'rose'), (2, 'lime'), (3, 'brown')) for i in (1, 2, 3)]
-    write('\U0001f3e8 resort-infinity-5', ABOUT5, P5,
-          [{'thing': LETTER3(2, 3, 'a practice letter'), 'x': -0.9, 'z': 3.4},
-           {'thing': LETTER2(3, 'a practice letter'), 'x': -0.2, 'z': 3.4}],
-          housed5, new5,
-          R.macro('the groups', 'M5', [g for g, _ in new5], MACRO_LOOK,
-                  note='The same machinery for the newcomers at the gate: three rose (group 1), three lime (group 2), three brown (group 3) -- and there is no end of groups. Switch it on once your mover has moved everybody.'),
-          [{'thing': double_robot, 'x': -4.4, 'z': 2.5}, {'thing': squares_robot, 'x': 1.0, 'z': 2.5}],   # a team stands deeper: clear of the desk's bird
-          [{'thing': txt(SQUARES), 'x': 4.4, 'z': 3.9}])      # noqa: F405
+    new = [newcomer(60 + 10 * j + i, i, j, c, *GATE(i, j)) for j, c in ((1, 'rose'), (2, 'lime'), (3, 'brown')) for i in (1, 2, 3)]
+    macro = R.macro('the groups', 'M5', [g for g, _ in new], MACRO_LOOK,
+                    note='The same machinery for the newcomers at the gate: three rose (group 1), three lime (group 2), three brown (group 3) -- and there is no end of groups. Switch it on once your mover has moved everybody.')
+    return dict(name='\U0001f3e8 resort-infinity-5', about=ABOUT5, problem=P5, housed=housed_, new=new, macro=macro,
+                letter3=(2, 3), letter2=3, mover=double_robot, clerk=squares_robot, extra=[{'thing': txt(SQUARES), 'x': 4.4, 'z': 3.9}],   # noqa: F405
+                group_colours='rose, lime and brown')
+
+
+if __name__ == '__main__':
+    for n in (3, 4, 5):
+        S = spec(n)
+        write(S['name'], S['about'], S['problem'],
+              [{'thing': LETTER3(*S['letter3'], 'a practice letter'), 'x': -0.9, 'z': 3.4},
+               {'thing': LETTER2(S['letter2'], 'a practice letter'), 'x': -0.2, 'z': 3.4}],
+              S['housed'], S['new'], S['macro'],
+              [{'thing': S['mover'], 'x': -4.4, 'z': 2.5},
+               {'thing': S['clerk'], 'x': (1.0 if n == 5 else -3.6), 'z': 2.5}],   # a team stands deeper: clear of the desk's bird
+              S['extra'])

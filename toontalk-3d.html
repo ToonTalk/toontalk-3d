@@ -19632,7 +19632,8 @@ function runProgram() {
   activeBot.mini = false;
   activeBot.node.scale.setScalar(1);
   activeBot.root.scale.setScalar(1);
-  mode = 'replay'; busy = true; runCount = 0; runsBegun++; runLastWords = '';
+  mode = 'replay'; busy = true; runCount = 0; runsBegun++;
+  if (!offstage()) runLastWords = '';   // the table's run, not a house's: the desks' little houses ran between the teacher's last reading and its stop
   if (camWatchRun) { camWatchRun = false; if (smartCam) showViewSoon(runWatchPose); }
   // NOTHING WAITS FOR THE NARRATOR. Marty's opening line -- what the robot
   // is trying to achieve -- takes seconds to come and the whole of it was
@@ -19736,7 +19737,7 @@ function nextIteration() {
       // line a moment later, and the finish read as a failure (ChatGPT; Ken:
       // "a final reading of a text pad could address this"). The reading is
       // the stop line, and the reason it stopped follows.
-      const words = alone && runCount && runLastWords ? runLastWords : '';
+      const words = runCount && runLastWords ? runLastWords : '';   // a team's last reading too (the resort teacher's "Done: ...")
       sayAttn(words
         ? `\u201c${words}\u201d \u2014 finished, after ${roundsSaid()}.` + onward
         : alone
@@ -20286,7 +20287,7 @@ function actionSpeak() {
       const t = clawHeld?.userData.kind === 'text' ? (clawHeld.userData.text || '').trim() : '';
       if (!t) return;
       hintLastSpoken = t;                 // the card shows it; the pad's own voice says it, once
-      runLastWords = t;
+      if (onStage) runLastWords = t;
       if (onStage) say(t, 6000);
       speakText(t);
       this.dur = window.speechSynthesis && !sndMuted ? 0.3 : Math.min(6, 0.6 + 0.045 * t.length);

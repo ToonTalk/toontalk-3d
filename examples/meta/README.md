@@ -69,7 +69,27 @@ number), puts the letter back, picks the pupil up and gives it to the bird to
 the front desk — six guests walk to their cottages; teaches the second on the
 other letter with a +5 dropped on the number first and gives it to the bird
 to the moving office — the office rings the bell and everybody moves up five;
-and gives "five more guests" the switch letter. Nothing waits on anything:
-the desks do the waiting. The letter goes back in its hole before the pupil
+and gives "five more guests" the switch letter. The letter goes back in its hole before the pupil
 is picked up because a desk left aside with a box on it holds the houses
 still. Regenerate with `python make_resort_teacher.py`.
+
+**It waits for the bell.** At Instant the teacher's whole round used to run
+before the moving office had a turn, so the newcomers' switch was thrown
+before the bell rang — and the five, housed by then, heard the bell and
+moved up five too (the suite's "newcomers at 6–10"). The teacher's box has a
+nest that answers to the bell's name now; its second robot, "Welcome five
+more, when the bell has rung", dozes on that nest and runs when the office
+has rung it.
+
+## 🎓 resort-teacher-3, -4 and -5
+
+The same teacher for the other three problems (`make_resort_teachers.py`),
+each on the world of `infinity/🏨 resort-infinity-N`: it reads the first pad,
+teaches the mover on the two-hole letter (×2, or ×4 for problem 4) and gives
+it to the office bird, waits for the bell, teaches the clerk on the
+three-hole letter `[number | group | bird]` — problem 3: ×2 then −1; problem
+4: ×4 then a copy of the group wearing a minus sign, Ruby erasing both
+numbers — and gives it to the desk bird, throws the newcomers' switch, and
+reads the last pad. **Problem 5's clerk is a team** — Weigh and its three
+sums on a scale — and a lesson trains one robot, so that teacher brings the
+team ready-made in its box and hands it over, and its pad says so.

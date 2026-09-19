@@ -8437,3 +8437,25 @@ trails, not thirty), pads with things to try, and a camera for the garden
 and the clockwork. moreLessonsCheck. The gallery has 63 cards; the shots
 harness allows 1000 rounds (the garden is 667), and the overlap check lets
 a ghost stand in a thing (a pen in its pot).
+
+## The resort teachers for 3, 4 and 5 -- and the teacher waits for the bell
+
+Three more teacher worlds (make_resort_teachers.py): the teacher teaches
+the mover, waits for the bell, teaches the clerk on the three-hole letter
+(problem 4's minus sign is a copy of the group wearing one) and lets the
+newcomers in; problem 5's clerk is a TEAM on a scale and a lesson trains
+one robot, so that teacher brings the growing-squares team in its box and
+hands it over, and says so. THE TEACHER WAITS FOR THE BELL: at Instant its
+whole round ran before the moving office had a turn, so the newcomers'
+switch was thrown before the bell rang, and the newcomers -- housed by
+then -- heard the bell and moved as well. That was the suite's "newcomers
+at 6-10", failing since before today; in problem 3 it put the gold group
+at 2, 6, 10. The teacher's box has a nest that answers to the bell's name,
+and its second robot dozes on it and runs when the office has rung: the
+old resort teacher passes again (newcomers 1-5), resortTeachersCheck
+solves 3, 4 and 5. A team's last reading is its stop line too, and a
+house's run no longer wipes the table robot's last words. ChatGPT's
+resort-smoke.cjs: its server could not serve (a forward-slash root
+against resolve's backslashes) and it looked for the newcomers' macro by
+label where a pad has text; against the dev server it found everything
+else and saw the moves happen.

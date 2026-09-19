@@ -278,6 +278,18 @@ ROUTE = [
    'A robot solves Resort Infinity in front of you: it trains the two robots and gives them to the birds.',
    ['meta/🎓 timer-teacher', 'infinity/🏨 resort-infinity'], 'Go outside and give the teacher its box: it trains the two robots, gives them to the birds, and the guests are housed.',
    'Predict which of the two lessons it gives first, and why the order matters.', 'yard'),
+  ('meta/🎓 resort-teacher-3', 'Meta',
+   'A robot solves Resort Infinity 3: teaches the mover (×2), waits for the bell on a nest of its own, teaches the clerk (×2, then −1) on a three-hole letter, and lets the gold group in.',
+   ['meta/🎓 resort-teacher', 'infinity/🏨 resort-infinity-3'], 'Go outside and give the teacher its eleven-hole box: everybody doubles, the gold guests take the odd cottages, and it reads “Done” out.',
+   'Why does it wait for the bell before letting the newcomers in? Predict where the gold guests would end up if it did not.', 'yard'),
+  ('meta/🎓 resort-teacher-4', 'Meta',
+   'A robot solves Resort Infinity 4: teaches ×4 to the mover and 4i − j to the clerk — a copy of the group wearing a minus sign — and lets three groups in.',
+   ['meta/🎓 resort-teacher-3', 'infinity/🏨 resort-infinity-4'], 'Go outside and give the teacher its box: everybody moves to four times their address, and green, plum and teal fill three cottages in every four.',
+   'Read the clerk it taught: which step is the minus sign? Predict what the clerk would do to plum guest 2 without it.', 'yard'),
+  ('meta/🎓 resort-teacher-5', 'Meta',
+   'A robot solves Resort Infinity 5: teaches the mover and, since a lesson trains one robot and the clerk is a team on a scale, hands the growing-squares team over ready-made — and says so.',
+   ['meta/🎓 resort-teacher-4', 'infinity/🏨 resort-infinity-5'], 'Go outside and give the teacher its box: everybody doubles, the pairs (i, j) are numbered by growing squares, and rose, lime and brown take the odd cottages.',
+   'Could a teacher teach a team? Predict what the lesson would have to do that this one cannot.', 'yard'),
 ]
 
 # READABLE TITLES (Ken): the file names are for the folder; a card wants words.
@@ -305,6 +317,8 @@ TITLES = {
   'infinity/♾️ activity7-any-interval': 'Any interval', 'infinity/♾️ activity8-counting-sequences': 'Counting the sequences',
   'infinity/🏨 resort-infinity': 'Resort Infinity', 'meta/🎓 teacher': 'The teacher', 'meta/🎓 telling': 'Telling',
   'meta/🎓 timer-teacher': 'The stopwatch teacher', 'meta/🎓 resort-teacher': 'The resort teacher',
+  'meta/🎓 resort-teacher-3': 'The resort teacher, problem 3', 'meta/🎓 resort-teacher-4': 'The resort teacher, problem 4',
+  'meta/🎓 resort-teacher-5': 'The resort teacher, problem 5',
 }
 
 # WHAT YOU DO, apart from how much is inside (ChatGPT's gallery review:
@@ -317,7 +331,8 @@ for _n in ['numbers/🔀 swap', 'numbers/🐇 fibonacci-recursive', 'devices/�
            'infinity/♾️ activity2-all-integers', 'infinity/♾️ activity4-all-fractions', 'infinity/♾️ activity5-above-one',
            'infinity/♾️ activity6-all-rationals', 'infinity/♾️ activity7-any-interval', 'infinity/♾️ activity8-counting-sequences']:
     DO[_n] = 'try'
-for _n in ['words/📝 sentence-generator', 'games/👾 space-invaders', 'meta/🎓 teacher', 'meta/🎓 timer-teacher', 'meta/🎓 resort-teacher']:
+for _n in ['words/📝 sentence-generator', 'games/👾 space-invaders', 'meta/🎓 teacher', 'meta/🎓 timer-teacher', 'meta/🎓 resort-teacher',
+           'meta/🎓 resort-teacher-3', 'meta/🎓 resort-teacher-4', 'meta/🎓 resort-teacher-5']:
     DO[_n] = 'read'
 for _n in ['infinity/♾️ activity3-sequences-and-pairs', 'infinity/🏨 resort-infinity', 'infinity/🏨 resort-infinity-3', 'infinity/🏨 resort-infinity-4', 'infinity/🏨 resort-infinity-5']:
     DO[_n] = 'build'
