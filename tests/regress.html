@@ -4283,7 +4283,7 @@ async function resortTeacherCheck(D, win) {
   D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
   const grass = () => { const o = []; for (let i = 0; i < 90; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
   const guests = grass().filter(t => t.userData.kind === 'model' && /^(new )?guest \d/.test(t.userData.label || ''));
-  const box = grass().find(t => t.userData.kind === 'box' && t.userData.holes.length === 10);
+  const box = grass().find(t => t.userData.kind === 'box' && t.userData.holes.length >= 10);   // eleven since the teacher reads a last pad
   const teacher = D.benchBots().find(b => b.__bot?.name === 'the teacher');
   const fd = grass().find(t => t.userData.label === 'the front desk'), mo = grass().find(t => t.userData.label === 'the moving office');
   const cottageX = (n) => n * 0.6 - 4.5;
@@ -4960,11 +4960,14 @@ async function fairHousesCheck(D) {
   const N = 12;
   const w = { kind: 'world', v: 3, stations: {}, active: null,
     bench: Array.from({ length: N }, (_, i) => ({ thing: { kind: 'room', label: 'Counter ' + i, opaque: true, dirty: true, world: JSON.parse(JSON.stringify(inside)) }, x: -1.4 + (i % 6) * 0.5, z: 1.2 + Math.floor(i / 6) * 0.6 })) };
-  D.worldIn(w); await slowSettle(D, 2000);
+  // the limit and the speed BEFORE the world opens: a house that ran its
+  // eight rounds during the settle (the last check's limit) has stopped for
+  // good, and a limit raised afterwards does not wake it
   D.speed('inf'); D.rounds(1000000);
+  const lit0 = D.numbersMade();          // how many numbers were made lite and built, before
+  D.worldIn(w); await slowSettle(D, 2000);
   const rooms = []; for (let i = 0; i < 40; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'room') rooms.push(t); }
   const count = (r) => { const b = r.__ctx?.standOcc; const t = b?.userData?.holes?.[0]?.thing; return t ? Number(t.userData.value.n) : -1; };
-  const lit0 = D.numbersMade();          // how many numbers were made lite and built, before
   let longest = 0;
   for (let k = 0; k < 60; k++) { const a = performance.now(); D.frame(1, fnow()); longest = Math.max(longest, performance.now() - a); if ((k & 7) === 7) await breathe(); }
   const counts = rooms.map(count);

@@ -8376,3 +8376,22 @@ like frame(). fairHousesCheck: twelve solid counters in sixty Instant
 frames all ran (least a quarter of the most), 268,920 numbers made lite
 and none built, one built when a house went to glass, longest frame 319
 ms. Goldens byte-identical.
+
+## ChatGPT's regression follow-up
+
+Nine requests retested (19 Sep, afternoon). Fixed: SAVE while a bird was
+delivering said "Leave the thought bubble first" in world mode -- it says to
+wait for what is moving to settle (and so does a thing import); a copy
+taken off an album page and dropped BACK ON THE PICTURE said "Your hand is
+full" -- a drop on a filed entry is a drop on its page now; a last reading
+is SUCCESS FIRST ("...", finished, after N rounds) with no mismatch clause;
+the RESORT TEACHER reads a last pad ("Done: the six guests are in cottages
+6 to 11...") -- an eleventh hole, WILDTEXT in its thought; the TITLE CARD
+FOLDS to its first line and the hint on a short viewport (under 600 px --
+at 800x450 it covered the back door) and by its own -/+ button. Passed as
+retested: the stand-in bird (in order, nothing in the room behind), the
+lever's reach, Instant pipelines and Grammar with Pause reachable, solid
+to glass reveal, notebook aside, Projects and Settings for a new name. Not
+established: the Fibonacci houses line (the resort teacher showed it).
+Known: resortTeacherCheck fails on this and earlier builds (newcomers at
+6-10 in the suite; the live app seats them 1-5).

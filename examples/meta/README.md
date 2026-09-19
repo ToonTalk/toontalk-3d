@@ -58,8 +58,8 @@ Regenerate with `python make_timer_teacher.py`.
 
 🎓 **resort-teacher** — a robot solves Resort Infinity in front of you (Ken:
 "I still find infinity resort very confusing - can you make a meta example
-that solves it"). Out in the yard, at the table, one robot is given a
-ten-hole box: a pad, the two little robots to be taught, two practice
+that solves it"). Out in the yard, at the table, one robot is given an
+eleven-hole box: a pad, the two little robots to be taught, two practice
 letters, birds to "the guests", "to the front desk", "to the moving office"
 and "five more guests", and the switch letter `[set | switch | on]`. It gives
 "the guests" the switch letter and reads the pad; teaches the first little

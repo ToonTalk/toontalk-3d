@@ -6,7 +6,7 @@
 # example that solves it." And, on the first version: "I have the feeling
 # you've made it more complex than it needs to be" -- it was; the resort has
 # the original's shape now, and so has this. One robot at the table out in
-# the yard, given a ten-hole box:
+# the yard, given an eleven-hole box:
 #
 #   0 a pad it reads out first
 #   1 a little robot: the clerk to be     2 a practice letter, [7 | bird to the practice nest]
@@ -47,6 +47,7 @@ def fresh(bot, note):
 
 RQ, LQ, DQ = '’', '“', '”'
 FIRST = txt('Watch. I seat the guests, teach a clerk and give it to the front desk, teach a mover and give it to the moving office, and welcome five more.')   # noqa: F405
+LAST = txt('Done: the six guests are in cottages 6 to 11, the five newcomers in 1 to 5, and there is room for everyone still to come.')   # noqa: F405
 
 given = box(                                               # noqa: F405
     FIRST,
@@ -58,7 +59,8 @@ given = box(                                               # noqa: F405
     bird(*R.ROBOT_NESTS[R.DESK_G], label='to the front desk'),          # noqa: F405
     bird(*R.ROBOT_NESTS[R.OFFICE_G], label='to the moving office'),     # noqa: F405
     live_bird('M2', 'to five more guests'),
-    msg('set', 'switch', 'on'))
+    msg('set', 'switch', 'on'),
+    LAST)
 
 speak = {'type': 'speak'}
 teach = lambda *p: {'type': 'teach', 'at': at('given', *p)}            # noqa: E731,F405
@@ -85,11 +87,12 @@ program = (switch_on(5)                                    # the guests write to
            + lesson(2, 4, R.move_robot)                    # the mover, taught on the other letter
            + [take('t2'), put('given', 4),                 # noqa: F405
               pupil(2), put('given', 7)]                   # ...and given to the moving office: everybody moves up five  # noqa: F405
-           + switch_on(8))                                 # five more guests: 1 to 5
+           + switch_on(8)                                  # five more guests: 1 to 5
+           + [take('given', 10), speak, put('given', 10)])  # ...and say so (ChatGPT: the finish led with "Watch.")  # noqa: F405
 
 teacher = robot(                                           # noqa: F405
     'the teacher',
-    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYBIRD, ANYBIRD, ANYBIRD, ANYBIRD, ANYBOX),   # noqa: F405
+    box(WILDTEXT, ANYROBOT, ANYBOX, ANYROBOT, ANYBOX, ANYBIRD, ANYBIRD, ANYBIRD, ANYBIRD, ANYBOX, WILDTEXT),   # noqa: F405
     program, trained_on=given,
     note='A robot that solves Resort Infinity: seats the guests, teaches a little robot the '
          'clerk' + RQ + 's job on a practice letter and gives it to the bird to the front desk, teaches '
@@ -100,7 +103,7 @@ teacher = robot(                                           # noqa: F405
 ABOUT = ('THE RESORT TEACHER\n\n'
          'A robot that solves Resort\n'
          'Infinity in front of you.\n\n'
-         'Give it the ten-hole box:\n'
+         'Give it the eleven-hole box:\n'
          'the drop sets it to work.\n'
          'Then watch the grass: the\n'
          'guests write, a clerk is\n'
