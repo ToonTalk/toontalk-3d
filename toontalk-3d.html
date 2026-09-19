@@ -4080,6 +4080,7 @@ function drawWrapped(c, text, cx, cy, maxW, maxH, alt) {
 }
 
 const allNumbers = [];
+const numbersMade = { lite: 0, built: 0 };     // how many were ever made each way (D.numbersMade)
 function makeNumber(value, op = '+', lite = false) {
   const g = new THREE.Group();
   // `lite` skips all meshes and canvases: the hidden middle of a tall pile
@@ -4331,8 +4332,17 @@ function makeNumber(value, op = '+', lite = false) {
   // the face override, for a wildcard in a thought bubble
   g.setFaceText = (t) => { g.userData.faceText = t; draw(); };
   g.__redraw = draw;
-  g.__materialize = () => { if (!built) { build(); draw(); } };
-  if (!lite) g.__materialize();
+  g.__materialize = () => { if (!built) { build(); draw(); g.__lite = false; } };
+  // A NUMBER MADE WHERE NOBODY CAN SEE IT IS DATA UNTIL IT IS SEEN. Five
+  // 256x256 canvases, textures and materials are most of what a counter in
+  // a solid house costs (ChatGPT's audit: 43-65% of the frame, fourteen
+  // times slower than the same counter without them). Made offstage, a
+  // number stays lite; it is built the moment it can be seen -- the LOD
+  // sweep (seenFromHere) and the stage changes that force it, and the
+  // places a thing is put in view.
+  g.__lite = true;
+  if (!lite && !offstage()) g.__materialize();
+  numbersMade[g.__lite ? 'lite' : 'built']++;
   g.setValue(value);
   allNumbers.push(g);
   setPick(g, { kind: 'thing', thing: g });
@@ -6053,6 +6063,7 @@ function hydrateRoom(room) {
   return room.__ctx;
 }
 function mountRoomWorld(room) {
+  lodForce = true;
   const r = room.__ctx.root;
   r.scale.setScalar(worldScaleOf(room));
   r.rotation.set(0, 0, 0);        // a world that was entered was turned round
@@ -6309,6 +6320,7 @@ function makeRoom(data = null) {
   g.__contents = [];
   g.setOpaque = (on) => {
     g.userData.opaque = on;
+    lodForce = true;
     wallMat.opacity = on ? 1 : 0.22;
     roofMat.opacity = on ? 1 : 0.15;
     // through glass you can watch the work itself, so the chimney and its
@@ -9745,10 +9757,19 @@ const ROOM_DEPTH_MAX = 12;
 // Grammar and fractions runs timed out its browser). A shorter slice is the
 // same work over more frames, with room between them for a click.
 const ROOM_WORK_SLICE = 300;
-let roomWorkT0 = 0;
+let roomWorkT0 = 0, roomWorkFrame = -1;
 function runRoomWork(room, depth = 0, miOverride = null, chunkMax = null) {
   if (depth === 0 && roomWorkBusy) return;
-  if (depth === 0) roomWorkT0 = performance.now();
+  // ONE DEADLINE PER RENDERED FRAME, not per entry. The scheduler is reached
+  // from the frame loop, from tick() and from every afterQueue, and each
+  // entry started a fresh slice: a counter measured eighty rounds a frame,
+  // hundreds of milliseconds with no way in for a click (ChatGPT's audit).
+  // The slice belongs to the frame; a later entry in the same frame that
+  // finds it spent leaves the room for the next frame.
+  if (depth === 0) {
+    if (roomWorkFrame !== renderFrameNo) { roomWorkFrame = renderFrameNo; roomWorkT0 = performance.now(); }
+    else if (performance.now() - roomWorkT0 > ROOM_WORK_SLICE) return;
+  }
   if (depth > ROOM_DEPTH_MAX) return;
   if (depth > 0 && performance.now() - roomWorkT0 > ROOM_WORK_SLICE) return;
   hydrateRoom(room);
@@ -10040,6 +10061,7 @@ function sleepingRoom(t) {
   if (!c.activeBot?.waiting) return false;
   return (roomFrame - (t.__seen || 0)) < 30;
 }
+let roomCursor = 0;
 function findDirtyRoom(ignoreCooldown = false, skip = null, within = null) {
   // a house whose turn is on the stack right now must not be found again --
   // the bench is global, so a running house can see itself from inside
@@ -10072,7 +10094,23 @@ function findDirtyRoom(ignoreCooldown = false, skip = null, within = null) {
     if (hs) for (const h of hs) { const r = walk(h.thing); if (r) return r; }
     return null;
   };
-  for (const t of benchThings) { const r = walk(t); if (r) return r; }
+  // FROM WHERE THE LAST ONE WAS FOUND, round the table and back: the outer
+  // scheduler took one house per entry and always looked from the front, so
+  // with fifty counters the first few ran every frame and forty never ran
+  // at all (ChatGPT's audit). The inner search (ignoreCooldown) keeps its
+  // order: that is a house working through its own pipeline.
+  // (A search WITHIN one house's world keeps its order: that is the house
+  // working through its own pipeline. The revisits of siblings on the table
+  // from inside a turn rotate too, or the front of the table is favoured
+  // there as well.)
+  const n = benchThings.length;
+  const rotate = !within;
+  const start = rotate ? roomCursor % Math.max(1, n) : 0;
+  for (let k = 0; k < n; k++) {
+    const i = (start + k) % n;
+    const r = walk(benchThings[i]);
+    if (r) { if (rotate) roomCursor = i + 1; return r; }
+  }
   // rooms work wherever they sit -- the robot's desk included. This only
   // runs when the world is idle, so a mid-replay desk is never swapped away.
   if (stations.stand?.occupant) {
@@ -10326,6 +10364,7 @@ function enterRoom(room) {
     stashCtx(curCtx);
     curCtx.root.removeFromParent();
     worldTrail.push({ ctx: curCtx, room, at });
+    lodForce = true;                 // a new stage: what can be seen changed
     // the house's domain takes the stage at full size
     curCtx = innerCtx;
     WROOT = innerCtx.root;
@@ -10398,6 +10437,7 @@ function leaveRoom() {
   if (held) return say('Empty your hand to step back out.');
   if (busy || mode !== 'world' || roomWorkBusy) return say('Wait for the work to finish first.');
   worldTrail.pop();
+  lodForce = true;
   clearUndo();
   sfx('whoosh');
   // the house's domain folds back into its shell, at toy scale
@@ -12097,6 +12137,7 @@ function clearBenchSpot(thing, x, z) {
   return { x, z };
 }
 function putOnBench(thing, at, byUser = false) {
+  if (thing.__lite && !offstage()) thing.__materialize();
   // The table is the user's. A robot -- or a house running offstage -- that
   // needs to set something down uses a free work spot instead; robots can
   // never reach your table. Which hand is doing the putting is now said
@@ -12178,6 +12219,7 @@ const SPOT_W = 0.4;
 const spotScale = (thing) =>
   Math.max(0.35, Math.min(1, (SPOT_W * 0.95) / (thing.userData.width || 0.3)));
 function putOnStation(st, thing) {
+  if (thing.__lite && !offstage()) thing.__materialize();
   WROOT.add(thing);
   if (thing.__labelNode) thing.__labelNode.visible = true;
   thing.scale.setScalar(thing.userData.kind === 'robot' ? MINI
@@ -12188,6 +12230,7 @@ function putOnStation(st, thing) {
   if (st.kind === 'scratch') growScratchIfFull();
 }
 function putInHole(hole, thing) {
+  if (thing.__lite && !offstage()) thing.__materialize();
   hole.anchor.add(thing);
   thing.position.set(0, 0, 0);
   thing.quaternion.identity();
@@ -19119,6 +19162,7 @@ function clearWorld() {
 }
 function worldIn(data) {
   camResetAll();                 // a new world is a new occasion for the camera
+  lodForce = true;
   if (!offstage() && worldTrail.length) {
     // a fresh world replaces everything, wherever you were standing
     curCtx.root.removeFromParent();
@@ -23707,13 +23751,29 @@ function setupDemo(name) {
 // Numbers near the camera redraw with more digits and a finer canvas -- and
 // the same sweep is what keeps the registers from growing without bound, so it
 // is a function the test harness can call rather than a lump inside the frame.
+// CAN THIS BE SEEN FROM WHERE YOU STAND? Its own flag and every flag above
+// it; a world root that is not the stage is a house's miniature, seen only
+// through glass; nothing hangs from the scene at all when a stage is put
+// away (the outer world while you are in a house).
+function seenFromHere(node) {
+  for (let p = node; p; p = p.parent) {
+    if (p.visible === false) return false;
+    if (p.name === 'worldRoot' && p.parent !== scene) {
+      const room = p.parent;
+      if (!room || room.userData?.opaque) return false;
+    }
+    if (p === scene) return true;
+  }
+  return false;
+}
+let lodForce = false;                   // the stage changed: sweep at once
 function advanceLOD(dt) {
   // every frame, not every half second: a pad that has just been set down
   // where somebody can see it should not wait to have a face
   drainPaintDue();
   lodClock += dt;
-  if (lodClock <= 0.5) return;
-  lodClock = 0;
+  if (lodClock <= 0.5 && !lodForce) return;
+  lodClock = 0; lodForce = false;
   let lazyBudget = 30;
   for (let i = allNumbers.length - 1; i >= 0; i--) {
     const nmb = allNumbers[i];
@@ -23728,6 +23788,10 @@ function advanceLOD(dt) {
     // running. A number that becomes visible again gets its tier on the next
     // sweep, within the same half second.
     if (!nmb.visible) continue;
+    // ...nor one whose box, nest, house or stage is hidden -- and one made
+    // lite offstage that can be seen now gets its faces here
+    if (!seenFromHere(nmb)) continue;
+    if (nmb.__lite) { nmb.__materialize(); }
     const dist = camera.position.distanceTo(nmb.getWorldPosition(_lodV));
     const tier = dist < 3.6 ? 2 : 1;
     if (tier !== nmb.__lod) { nmb.__lod = tier; nmb.__facesLive = true; nmb.__redraw(); }
@@ -27104,6 +27168,10 @@ window.__nano = {
   // Houses and panels run from the FRAME loop, not from tick, so a headless
   // driver has to ask for their turn the way the frame does.
   rooms(n = 1) { for (let i = 0; i < n; i++) { renderFrameNo++; processDirtyRooms(); } },
+  // how many numbers are still lite (made offstage, never seen) and how many built
+  numbersMade() { return { ...numbersMade }; },
+  numbersLite() { let lite = 0, built = 0; for (const g of allNumbers) { if (!g.parent) continue; if (g.__lite) lite++; else built++; } return { lite, built }; },
+  lodSweep() { lodForce = true; advanceLOD(0); },
   // One whole frame, by hand: what the animation loop does, for a test that
   // cannot rely on the browser drawing anything. The GATES are the loop's own
   // gates, copied exactly -- a bug in them must fail here too.
@@ -27115,8 +27183,8 @@ window.__nano = {
     for (let i = 0; i < n; i++) {
       const t0 = performance.now();
       if (worldReady) {
-        if (simPaused && mode === 'replay') advanceWorldClocks(speed === Infinity ? 1 / 60 : (1 / 60) * speed, false);
-        else if (speed === Infinity) { fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
+        if (simPaused && mode === 'replay') { renderFrameNo++; advanceWorldClocks(speed === Infinity ? 1 / 60 : (1 / 60) * speed, false); }
+        else if (speed === Infinity) { renderFrameNo++; fastForward(); advanceWorldClocks(1 / 60, !simPaused); }
         else tick((1 / 60) * speed, !simPaused);
       }
       const t1 = performance.now();

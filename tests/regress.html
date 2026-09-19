@@ -4944,6 +4944,49 @@ async function birdAwayCheck(D) {
   return ok;
 }
 
+// CHATGPT'S PERFORMANCE AUDIT (19 September). Twelve solid houses, a
+// counter robot in each, all switched on: (1) every house gets turns --
+// the outer scheduler looked from the front of the table each entry, and
+// with fifty counters forty never ran; (2) the numbers a counter makes
+// where nobody can see them stay lite -- no canvases, no textures -- and
+// are built when a house's walls go to glass; (3) room work spends at most
+// one slice per rendered frame however many times the scheduler is entered.
+async function fairHousesCheck(D) {
+  const box = { kind: 'box', holes: [{ kind: 'number', value: { n: '0', d: '1' }, op: '+' }] };
+  const inside = { kind: 'world', v: 3, bench: [], stations: { stand: box },
+    active: { kind: 'robot', name: 'Counter', condition: { kind: 'box', holes: [{ kind: 'wildNumber' }] },
+      program: [{ type: 'newNumber' }, { type: 'setValue', value: { n: '1', d: '1' }, op: '+' }, { type: 'put', at: { c: 'given', path: [0] } }],
+      trainedOn: box, team: [] } };
+  const N = 12;
+  const w = { kind: 'world', v: 3, stations: {}, active: null,
+    bench: Array.from({ length: N }, (_, i) => ({ thing: { kind: 'room', label: 'Counter ' + i, opaque: true, dirty: true, world: JSON.parse(JSON.stringify(inside)) }, x: -1.4 + (i % 6) * 0.5, z: 1.2 + Math.floor(i / 6) * 0.6 })) };
+  D.worldIn(w); await slowSettle(D, 2000);
+  D.speed('inf'); D.rounds(1000000);
+  const rooms = []; for (let i = 0; i < 40; i++) { const t = D.bench(i); if (!t) break; if (t.userData.kind === 'room') rooms.push(t); }
+  const count = (r) => { const b = r.__ctx?.standOcc; const t = b?.userData?.holes?.[0]?.thing; return t ? Number(t.userData.value.n) : -1; };
+  const lit0 = D.numbersMade();          // how many numbers were made lite and built, before
+  let longest = 0;
+  for (let k = 0; k < 60; k++) { const a = performance.now(); D.frame(1, fnow()); longest = Math.max(longest, performance.now() - a); if ((k & 7) === 7) await breathe(); }
+  const counts = rooms.map(count);
+  const everyRan = rooms.length === N && counts.every(c => c > 0);
+  const fair = Math.min(...counts) * 4 >= Math.max(...counts);       // nobody starved: the least got a quarter of the most
+  const lit = D.numbersMade();
+  const liteInside = lit.lite - lit0.lite > 100 && lit.built - lit0.built <= 2;   // the counters' operands are data, not canvases
+  // glass walls: what is inside can be seen now, and is built
+  const liteNow = D.numbersLite();
+  rooms[0].setOpaque(false); D.lodSweep(); D.frame(2, fnow());
+  const lit2 = D.numbersLite();
+  const builtWhenSeen = lit2.built > liteNow.built;
+  // one slice a frame: a frame of room work never ran much past the slice (300 ms) plus one round
+  const sliced = longest < 900;
+  D.speed(1); D.rounds(ROUNDS);
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 800);
+  const ok = everyRan && fair && liteInside && builtWhenSeen && sliced;
+  put((ok ? 'PASS' : 'FAIL') + ' twelve solid counters all get turns, their numbers stay lite until seen, one slice a frame  (counts=' + JSON.stringify(counts)
+      + ' made-lite/built=' + (lit.lite - lit0.lite) + '/' + (lit.built - lit0.built) + ' in-view-before/after-glass=' + liteNow.built + '/' + lit2.built + ' longest-frame=' + Math.round(longest) + 'ms)', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function panelOnSpotCheck(D) {
   const w = await (await fetch('../examples/behaviours/🪐 ellipse.world.json')).json();
   D.worldIn(w); await slowSettle(D, 1500);
@@ -7518,6 +7561,9 @@ async function runOne(D, spec) {
   let hawOK = true;
   try { hawOK = want('housesAtWork') ? await housesAtWorkCheck(D) : true; }
   catch (e) { hawOK = false; put('FAIL the houses still at work are counted  ' + e.message, 'fail'); }
+  let fhOK = true;
+  try { fhOK = want('fairHouses') ? await fairHousesCheck(D) : true; }
+  catch (e) { fhOK = false; put('FAIL twelve solid counters  ' + e.message, 'fail'); }
   let bawOK = true;
   try { bawOK = want('birdAway') ? await birdAwayCheck(D) : true; }
   catch (e) { bawOK = false; put('FAIL a bird out on delivery leaves a stand-in  ' + e.message, 'fail'); }
@@ -7689,7 +7735,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

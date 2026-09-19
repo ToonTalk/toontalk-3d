@@ -8354,3 +8354,25 @@ asks for the time, activity 6 is "All the positive rationals", activity 7
 fills "term for term" rather than "at exactly the same rate".
 resortTeacher FAILS alone on this build AND the previous one (newcomers at
 6-10): pre-existing, not this round's -- ChatGPT saw the live app solve it.
+
+## ChatGPT's performance audit
+
+Fifty solid counters measured (19 Sep): one counter cost 90-130 ms a
+frame, five 256x256 canvases a number; ten houses 650 ms a frame; with
+fifty, forty never ran. Three changes. A NUMBER MADE WHERE NOBODY CAN SEE
+IT IS DATA UNTIL IT IS SEEN: makeNumber offstage stays lite; the LOD sweep
+asks seenFromHere (its own flag, every flag above it, and a house's
+miniature only through glass) and builds what has come into view; stage
+changes (worldIn, walking in and out, glass, mounting) force a sweep, and
+putOnBench / putInHole / putOnStation build a lite thing set down in view.
+ONE DEADLINE PER RENDERED FRAME: the scheduler is entered from the frame
+loop, tick() and every afterQueue, and each entry started a fresh slice;
+now the slice belongs to the frame (roomWorkFrame), and a later entry that
+finds it spent leaves the room for the next frame. A ROTATING START:
+findDirtyRoom looks from where the last house was found (roomCursor) --
+outer entries and the sibling revisits from inside a turn alike; a search
+within one house's own world keeps its order. profileFrames counts frames
+like frame(). fairHousesCheck: twelve solid counters in sixty Instant
+frames all ran (least a quarter of the most), 268,920 numbers made lite
+and none built, one built when a house went to glass, longest frame 319
+ms. Goldens byte-identical.
