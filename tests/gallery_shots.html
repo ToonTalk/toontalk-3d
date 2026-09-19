@@ -24,6 +24,42 @@ const breathe = () => new Promise(r => setTimeout(r, 0));
 async function frames(D, n) { for (let i = 0; i < n; i++) { D.frame(1, fnow()); if ((i & 7) === 7) await breathe(); } }
 async function settle(D, n) { await frames(D, n); }
 function things(D) { const a = []; for (let i = 0; i < 40; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; }
+// CLOSER: fit the camera to what the world is about -- its things (not the
+// instruction pads at the back, not the user's notebook), the desk and the
+// robot at it -- from the front right, a little above. Whole-workshop shots
+// all looked alike (ChatGPT's review).
+function fitCamera(D) {
+  const THREE = D.THREE, bb = new THREE.Box3(), v = new THREE.Vector3();
+  // the whole of each thing, a tall pile on a nest included (the first cut took positions, and the piles ran off the top)
+  // visible solid meshes only: a folded panel's tray is invisible and still solid to setFromObject, and it is huge
+  const add = (t, w = 0) => { if (!t) return; t.updateMatrixWorld(true); const bx = new THREE.Box3();
+    t.traverseVisible(o => { if (o.isMesh && !(o.material?.transparent && (o.material.opacity ?? 1) < 0.5)) bx.expandByObject(o); });
+    if (!bx.isEmpty()) bb.union(bx); else { t.getWorldPosition(v); bb.expandByPoint(v); } };
+  for (const t of things(D)) {
+    if (t.userData.main) continue;
+    if (t.userData.kind === 'text' && !t.userData.img && (t.userData.text || '').length > 60) continue;   // an instruction card
+    add(t, t.userData.width || 0.3);
+  }
+  const st = D.stations.stand;
+  if (st?.occupant) add(st.occupant, st.occupant.userData.width || 0.4);
+  for (const b of D.benchBots()) add(b, 0.4);
+  if (bb.isEmpty()) return false;
+  const c = bb.getCenter(new THREE.Vector3()), size = bb.getSize(new THREE.Vector3());
+  // a pile that runs off the top is better than a table seen from the ceiling: the height counts up to a point
+  const h = Math.min(size.y, 1.3);
+  c.y = bb.min.y + h / 2;
+  const radius = Math.max(0.45, Math.hypot(size.x, size.z) / 2 + 0.2, h / 2 + 0.25);
+  const cam = D.camera, fov = cam.fov * Math.PI / 180;
+  const hfov = 2 * Math.atan(Math.tan(fov / 2) * cam.aspect);
+  const dist = radius / Math.tan(Math.min(fov, hfov) / 2) * 1.08;
+  const dir = new THREE.Vector3(0.45, 0.8, 1.05).normalize();
+  cam.position.copy(c).addScaledVector(dir, dist);
+  cam.position.y = Math.max(cam.position.y, 1.35);
+  // the orbit controls re-aim the camera at THEIR target every frame: set that, not only lookAt
+  D.orbit.target.set(c.x, c.y + 0.05, c.z); D.orbit.update();
+  cam.lookAt(c.x, c.y + 0.05, c.z);
+  return true;
+}
 async function shoot(D, i, name, shot) {
   const w = await (await fetch('../examples/' + name + '.world.json')).json();
   D.worldIn(w); await settle(D, 120);
@@ -50,8 +86,8 @@ async function shoot(D, i, name, shot) {
   // one pose for the table, a closer one for a drawing, the file's own if it has one
   if (shot !== 'yard' && !w.camera) {
     D.orbitStart();
-    if (shot === 'run') { D.camera.position.set(0.7, 1.95, 2.75); D.camera.lookAt(0, 1.1, 1.55); }
-    else { D.camera.position.set(0, 2.75, 4.35); D.camera.lookAt(0, 0.85, 1.6); }
+    if (shot === 'run') { D.camera.position.set(0.7, 1.95, 2.75); D.orbit.target.set(0, 1.1, 1.55); D.orbit.update(); D.camera.lookAt(0, 1.1, 1.55); }
+    else if (!fitCamera(D)) { D.camera.position.set(0, 2.75, 4.35); D.orbit.target.set(0, 0.85, 1.6); D.orbit.update(); D.camera.lookAt(0, 0.85, 1.6); }
   }
   const png = D.snapshot(960);
   const r = await fetch('/capture?name=gallery-' + String(i).padStart(2, '0'), { method: 'POST', body: png });
@@ -63,6 +99,9 @@ async function shoot(D, i, name, shot) {
   for (let i = 0; i < 300; i++) { if (frame.contentWindow.__nano?.frame) break; await new Promise(r => setTimeout(r, 100)); }
   const D = frame.contentWindow.__nano;
   await new Promise(r => setTimeout(r, 1500));
+  // the harness owns the clock: the app's own loop kept the star sliding
+  // between the camera fit and the picture, so the star was off to the side
+  D.autoLoop(false);
   const route = await (await fetch('../gallery/route.json')).json();
   for (const e of route) {
     if (only.length && !only.includes(e.i)) continue;

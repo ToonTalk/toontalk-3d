@@ -8395,3 +8395,15 @@ to glass reveal, notebook aside, Projects and Settings for a new name. Not
 established: the Fibonacci houses line (the resort teacher showed it).
 Known: resortTeacherCheck fails on this and earlier builds (newcomers at
 6-10 in the suite; the live app seats them 1-5).
+
+THE GALLERY'S PICTURES COME IN CLOSER (ChatGPT's review, item 3: "several
+thumbnails show almost identical whole workshops"): tests/gallery_shots.html
+fits the camera to what the world is about -- its things (visible solid
+meshes only; a folded panel's tray is invisible and still solid to
+setFromObject, and huge), the desk and the robot at it, not the
+instruction cards at the back -- from the front right, a little above; a
+pile's height counts up to 1.3 m (a pile off the top beats a table seen
+from the ceiling). The harness owns the clock now (D.autoLoop(false)): the
+app's own loop kept the star sliding between the fit and the picture. The
+orbit target is aimed too (D.orbit), since the controls re-aim the camera
+at their target every frame. 'run' and yard shots keep their poses.
