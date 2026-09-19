@@ -8318,3 +8318,14 @@ search that folds empty sections away, and a way to the top; a card has a
 prerequisites are chips; the Open links say which world they open, and all
 of them open in ONE workshop tab (a named target) rather than a tab each.
 Not done: closer pictures of each result (a shot recipe per world, later).
+
+ChatGPT's second batch of tests (19 Sep): the Watcher's note said hole 1
+where its steps clear hole 2; the ellipse card told you to give a work box
+to a robot the world has not got (it is a pad and a star: drop the pad on
+the star's EDGE and SPACE -- the middle only rides), and the turtle's card
+and TRY pad now say the same about the shell. A parent robot's stop
+("none of them recognises the box") read as an error while its houses
+worked on: the stop line now adds "Its part is done -- N houses are still
+at work" when there are any (housesAtWork(): dirty, waiting on a nest, or
+not yet given a first turn). In the suite Fibonacci's houses finish inside
+the drop, so housesAtWorkCheck counts Zeno's two instead.

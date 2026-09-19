@@ -75,7 +75,7 @@ ROUTE = [
    'Ask for the date twice a minute apart. Predict which holes change.', 'load'),
   ('behaviours/🐢 turtle', 'Things that talk',
    'A Logo turtle that is not built in: a nest for orders, two robots, and a pen — forward and right are messages the turtle already answered.',
-   ['behaviours/🏀 bouncing'], 'Drop the turtle on the shell and press SPACE; give the bird “pendown”, then [forward] and [right 90] four times: a square is drawn on the table.',
+   ['behaviours/🏀 bouncing'], 'Drop the turtle pad on the shell’s EDGE — the middle makes it ride on the shell instead of steering it — and press SPACE; give the bird “pendown”, then [forward] and [right 90] four times: a square is drawn on the table.',
    'Give it [right | 120] instead of 90, three times. Predict the shape.', 'load'),
   ('behaviours/🐢 turtle3d', 'Things that talk',
    'The same turtle in its own frame: yaw, pitch and roll, so it can climb and draw in the air.',
@@ -83,7 +83,7 @@ ROUTE = [
    'Pitch up 45, forward, pitch down 45, forward. Predict where the line ends up.', 'load'),
   ('behaviours/🪐 ellipse', 'Things that talk',
    'An orbit from two numbers: a position set each round from a growing angle, sine and cosine as letters.',
-   ['behaviours/🦋 wandering'], 'Set Speed to Instant and give the work box to the robot: the star goes round and round an ellipse until you take the box back.',
+   ['behaviours/🦋 wandering'], 'Drop the ellipse pad on the star’s EDGE (the middle would only make it ride on the star) and press SPACE on the star: it goes round and round an ellipse; "." stops it, Ruby lets go.',
    'Change one of the two radii. Predict the shape before you look.', 'give'),
   # --------------------------------------------------------- numbers and data
   ('numbers/❗ factorial', 'Numbers and data',

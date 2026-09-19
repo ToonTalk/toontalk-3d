@@ -19,7 +19,7 @@ watcher = robot(
         put('given', 1),              # and into the hole
     ],
     trained_on=box(device(POINT, DEV_POINT, 'pointer'), box(num(0), num(0))),
-    note='Sweeps the old reading out of hole 1, takes the pointer’s [across | away] '
+    note='Sweeps the old reading out of hole 2, takes the pointer’s [across | away] '
          'off the nest, and puts it in: a live gauge of where your hand is.')
 
 # The second hole starts with a reading of its own -- zero, zero. A hole with

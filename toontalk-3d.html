@@ -10084,6 +10084,26 @@ function findDirtyRoom(ignoreCooldown = false, skip = null, within = null) {
   return null;
 }
 // The same walk, looking for houses whose work is over.
+// The houses on the table that are still working -- what a parent robot's
+// stop line counts. A house is dirty only for the frame its round takes;
+// between rounds its robot is WAITING on a nest (Fibonacci's children wait
+// for the grandchildren's answers), or it has not had its first turn yet.
+// One that stopped for good is neither; one folded, done or switched off by
+// "." is not at work.
+function housesAtWork() {
+  let n = 0;
+  const atWork = (t) => t.userData.dirty || t.__running || t.__entering
+    || !!t.__ctx?.activeBot?.waiting || (!t.__ctx && roomHasWorker(t));
+  const walk = (t) => {
+    if (!t) return;
+    if (t.userData?.kind === 'room' && !t.userData.panel && !t.userData.done && !t.userData.stopped && !t.__retiring && atWork(t)) n++;
+    const hs = holesOf(t);
+    if (hs) for (const h of hs) walk(h.thing);
+  };
+  for (const t of benchThings) walk(t);
+  for (const st of Object.values(stations)) if (st.occupant) walk(st.occupant);   // the box on the desk holds them, as often as not
+  return n;
+}
 function findDoneRoom() {
   const ready = (t) => t.userData.kind === 'room' && t.userData.done
     && !t.userData.panel && !t.__running && !t.__retiring;
@@ -19576,12 +19596,18 @@ function nextIteration() {
       // broken -- in a puzzle it has often just FINISHED -- and telling the
       // player to loosen it read as a correction. It is offered as a
       // possibility now, and the stop is reported as what it is.
+      // A PARENT THAT SENT ITS WORK INTO HOUSES stops as soon as its thought
+      // no longer fits -- Fibonacci's fib robot, with its two houses still
+      // at work -- and "stopped: no longer fits" read as an error (ChatGPT's
+      // gallery tests). It is its part done; the houses say so.
+      const houses = housesAtWork();
+      const onward = houses ? ` ${alone ? 'Its' : 'The team’s'} part is done — ${houses === 1 ? 'a house is' : houses + ' houses are'} still at work.` : '';
       sayAttn(alone
         ? (runCount
-          ? `Ran ${roundsSaid()} and stopped: what is on its desk no longer fits its thought${red.length ? ' (the red parts)' : ''}.` + loosen
+          ? `Ran ${roundsSaid()} and stopped: what is on its desk no longer fits its thought${red.length ? ' (the red parts)' : ''}.` + onward + loosen
           : 'Nothing recognises what it was given.' + (red.length ? ' If you want it to work on this, wake Ruby and click a red part of its thought to loosen it, or Dusty to take it away.' : ''))
         : (runCount
-          ? `Ran ${roundsSaid()} — stopped: every robot on the team looked, and none of them recognises the box. The leader’s thought is back, with what does not fit in red.`
+          ? `Ran ${roundsSaid()} — stopped: every robot on the team looked, and none of them recognises the box.` + onward + ' The leader’s thought is back, with what does not fit in red.'
           : 'Every robot on the team looked, and none of them recognises what it was given. The leader’s thought is back, with what does not fit in red.'));
     };
     // watched failing, one after another, before it says so
@@ -27268,6 +27294,7 @@ window.__nano = {
   matchOf(cond, t) { return matchState(cond, specOf(t)); },
   openPending() { openPendingWorld(); },
   startOver() { startWorldOver(); },
+  housesAtWork() { return housesAtWork(); },
   nextHint(q = 'hint') { return puzzleHint(q); },   // the card's own `hint` is a getter below
   // what is shaking under the pointer, if anything -- a closeup must be still
   wiggling() { return wiggle ? (wiggle.node.userData?.kind ?? 'node') : null; },
