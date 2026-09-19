@@ -4559,6 +4559,13 @@ async function introOnlyCheck(D, win) {
   const at = Object.keys(ls).filter(k => k.startsWith('tt3d.puzzle-at')).map(k => ls.getItem(k));
   const bookmarkKept = !at.includes('05 \u2014 A step-and-turn planet');
   const againWords = doc.getElementById('againBtn').textContent;
+  // ...and Start this world over says the introduction ONCE, not on top of
+  // itself (ChatGPT's gallery review: two copies after a reset)
+  const said = () => [...doc.getElementById('martyLog').children].filter(c => c.textContent === 'Start the team.').length;
+  const said1 = said();
+  D.startOver(); await slowSettle(D, 1500);
+  const said2 = said();
+  const onceOnStartOver = said1 === 1 && said2 === 1;
   D.worldIn({ kind: 'world', v: 4, name: 'probe-pz', intro: 'Make a 4.', goal: 'a 4', stations: {}, active: null, bench: [] });
   await slowSettle(D, 1500);
   const isPuzzle = D.puzzle?.puzzle === true;
@@ -4566,8 +4573,8 @@ async function introOnlyCheck(D, win) {
   D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 800);
   // the probe puzzle must not become where the Puzzle game continues from
   for (const k of Object.keys(ls).filter(k => k.startsWith('tt3d.puzzle-at'))) { if (k === keyAt && before != null) ls.setItem(k, before); else ls.removeItem(k); }
-  const ok = notPuzzle && idleIsWorkshop && bookmarkKept && againWords === 'Start this world over' && isPuzzle && againPuzzle === 'Start this puzzle over';
-  put((ok ? 'PASS' : 'FAIL') + ' an introduction is not a puzzle  (intro-only=' + notPuzzle + ' idle-is-workshop=' + idleIsWorkshop + ' bookmark-kept=' + bookmarkKept
+  const ok = notPuzzle && idleIsWorkshop && bookmarkKept && againWords === 'Start this world over' && isPuzzle && againPuzzle === 'Start this puzzle over' && onceOnStartOver;
+  put((ok ? 'PASS' : 'FAIL') + ' an introduction is not a puzzle  (intro-only=' + notPuzzle + ' idle-is-workshop=' + idleIsWorkshop + ' bookmark-kept=' + bookmarkKept + ' said-once-on-start-over=' + said1 + '/' + said2
       + ' again=' + JSON.stringify(againWords) + ' with-goal-is-puzzle=' + isPuzzle + ' again-puzzle=' + JSON.stringify(againPuzzle) + (before ? ' had=' + before : '') + ')', ok ? 'pass' : 'fail');
   return ok;
 }

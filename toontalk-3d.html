@@ -19185,7 +19185,11 @@ function worldIn(data) {
   if (!merging && !offstage() && puzzleInfo?.intro) {
     if (typeof martyUI !== 'undefined' && martyUI) { martyUI.style.display = 'block'; martyClosedByUser = false; }   // a new world is a new occasion
     if (typeof martySay === 'function') {
-      martySay(puzzleInfo.intro);
+      // STARTING OVER SAYS IT ONCE. "Start this world over" opens the same
+      // world again; when the introduction is already the last thing Marty
+      // said, saying it again only doubles it (ChatGPT's gallery review).
+      const last = document.getElementById('martyLog')?.lastElementChild?.textContent;
+      if (last !== plainWords(puzzleInfo.intro)) martySay(puzzleInfo.intro);
       if (martyNewcomer) { martySay(lookAroundOffer(true)); martyNewcomer = false; }
     }
     // ONE VOICE FOR THE STORY. Marty tells you what is wanted; the card said
@@ -19550,7 +19554,7 @@ function nextIteration() {
       // ...and the way back, for a world that can be started over (ChatGPT's
       // review: "keep a visible restart invitation after completion")
       const again = (worldName && worldLibrary[worldName] && !puzzleInfo?.puzzle)
-        ? ' Start this world over is on the card at the right.' : '';
+        ? ' \u201cStart this world over\u201d is on the title card.' : '';
       return sayAttn((runCount
         ? `Ran ${roundsSaid()} — then swept its own box away: finished, for good.`
         : 'It swept its own box away — finished.') + again);

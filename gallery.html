@@ -13,8 +13,13 @@
   header { padding: 28px 16px 8px; max-width: 1100px; margin: 0 auto; }
   h1 { font-size: 30px; margin: 0 0 6px; }
   header p { margin: 6px 0; max-width: 70ch; }
-  .toc { font-family: system-ui, sans-serif; font-size: 14px; color: var(--dim); }
-  .toc a { color: var(--accent); text-decoration: none; }
+  .bar { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); font-family: system-ui, sans-serif; font-size: 14px; }
+  .bar .in { max-width: 1100px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+  .bar a { color: var(--accent); text-decoration: none; }
+  .bar input { font: inherit; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); min-width: 200px; }
+  .bar .qn { color: var(--dim); }
+  .bar .top { margin-left: auto; }
+  .legend { font: 13px/1.5 system-ui, sans-serif; color: var(--dim); }
   main { max-width: 1100px; margin: 0 auto; padding: 0 16px 60px; }
   h2 { margin: 36px 0 4px; font-size: 22px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
   .note { margin: 0 0 14px; color: var(--dim); }
@@ -28,8 +33,16 @@
   .n { display: inline-block; min-width: 26px; text-align: center; background: var(--accent); color: #fff; border-radius: 13px; font: 600 13px/26px system-ui, sans-serif; margin-right: 4px; }
   .folder { font: 12px system-ui, sans-serif; color: var(--dim); margin-left: 6px; }
   p { margin: 0; }
-  .meta { font: 13px/1.4 system-ui, sans-serif; color: var(--dim); }
-  .meta a { color: var(--accent); text-decoration: none; margin-right: 6px; }
+  .meta, .needs { font: 13px/1.6 system-ui, sans-serif; color: var(--dim); }
+  .do { display: inline-block; padding: 1px 8px; border-radius: 10px; font-weight: 600; color: #fff; background: var(--accent); margin-right: 6px; }
+  .do-try { background: #2f6d3a; } .do-change { background: #8a5a12; } .do-read { background: #35558a; } .do-build { background: #8a2f5a; }
+  .chip { display: inline-block; padding: 0 8px; border: 1px solid var(--line); border-radius: 10px; color: var(--accent); text-decoration: none; margin: 1px 4px 1px 0; background: var(--bg); }
+  .opt { font: 13px/1.45 system-ui, sans-serif; color: var(--dim); border-left: 3px solid #8a5a12; padding-left: 8px; }
+  .card.optional { border-style: dashed; }
+  .tried { margin-left: 10px; color: var(--dim); cursor: pointer; }
+  .card.is-tried .n { background: var(--dim); }
+  .card.is-tried .n::after { content: ' ✓'; }
+  .hide { display: none; }
   .run, .try { font-size: 15px; }
   .open { margin-top: 6px; font: 13px system-ui, sans-serif; }
   .btn { display: inline-block; background: var(--btn); color: var(--btnink); padding: 6px 10px; border-radius: 6px; text-decoration: none; }
@@ -37,81 +50,94 @@
   footer { max-width: 1100px; margin: 0 auto; padding: 0 16px 40px; color: var(--dim); font: 13px system-ui, sans-serif; }
 </style>
 </head>
-<body>
+<body id="top">
 <header>
   <h1>The examples, in the order to learn them</h1>
-  <p>Every example world in <a href="https://github.com/ToonTalk/toontalk-3d/tree/main/examples">examples/</a>, as a route: what each one teaches, what it needs first, how big it is, how to run it, and one thing to change and predict before you run it again. Each opens in the <a href="toontalk-3d.html">workshop</a> with <em>Start this world over</em> on the card at the right; the <a href="manual.html">manual</a> explains the parts.</p>
-  <p class="toc"><a href="#first-steps">First steps</a> · <a href="#things-that-talk">Things that talk</a> · <a href="#numbers-and-data">Numbers and data</a> · <a href="#houses-and-state">Houses and state</a> · <a href="#games">Games</a> · <a href="#infinity">Infinity</a> · <a href="#meta">Meta</a></p>
+  <p>Every example world in <a href="https://github.com/ToonTalk/toontalk-3d/tree/main/examples">examples/</a>, as a route: what each one teaches, what it needs first, how to run it and what you should see, and one thing to change and predict before you run it again. Each opens in one <a href="toontalk-3d.html">workshop</a> tab, where the button <em>Start this world over</em> on the title card puts it back as it began; the <a href="manual.html">manual</a> explains the parts.</p>
+  <p class="legend">Each card says what you do — <span class="do do-try">try it</span> run it and predict, <span class="do do-change">change it</span> change one thing and predict, <span class="do do-read">read it</span> read the robots to predict, <span class="do do-build">build it</span> train a robot of your own — and, apart from that, how much is inside. Tick <em>tried</em> on a card and this browser remembers it.</p>
 </header>
+<nav class="bar"><div class="in"><a href="#first-steps">First steps</a><a href="#things-that-talk">Things that talk</a><a href="#numbers-and-data">Numbers and data</a><a href="#houses-and-state">Houses and state</a><a href="#games">Games</a><a href="#infinity">Infinity</a><a href="#meta">Meta</a><input type="search" id="q" placeholder="Search the 57 examples…" aria-label="Search the examples"><span class="qn" id="qn"></span><a class="top" href="#top">↑ top</a></div></nav>
 <main>
 <section>
   <h2 id="first-steps">First steps</h2>
   <p class="note">One visible change, a small robot, a predictable result.</p>
   <div class="grid">
-<article class="card" id="e1">
-  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%94%80%20swap.world.json" target="_blank" title="Open in the workshop"><img src="gallery/01.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e1" data-name="numbers/🔀 swap">
+  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%94%80%20swap.world.json" target="toontalk-workshop" aria-label="Open Swap in the workshop" title="Open Swap in the workshop (the workshop tab)"><img src="gallery/01.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">1</span> 🔀 Swap <span class="folder">numbers</span></h3>
+    
     <p class="teaches">A robot does one thing to what it is given, and stops when its thought no longer fits.</p>
-    <p class="meta"><b>small</b> — 1 robot, the longest 6 steps</p>
-    <p class="run"><b>Run:</b> Give the leaning scale to the Swap robot.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>small</b>, 1 robot, the longest 6 steps</span></p>
+    
+    <p class="run"><b>Run:</b> Give the leaning scale to the Swap robot: it swaps the two pans, the scale tips the other way, and the robot stops after one round.</p>
     <p class="try"><b>Change and predict:</b> Give it the OTHER scale, the one already the right way round. Predict: does it run, and why not?</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%94%80%20swap.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%94%80%20swap.world.json" target="toontalk-workshop" aria-label="Open Swap in the workshop" data-open="numbers/🔀 swap">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="numbers/🔀 swap"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e2">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%83%20moving.world.json" target="_blank" title="Open in the workshop"><img src="gallery/02.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e2" data-name="behaviours/🏃 moving">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%83%20moving.world.json" target="toontalk-workshop" aria-label="Open Moving in the workshop" title="Open Moving in the workshop (the workshop tab)"><img src="gallery/02.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">2</span> 🏃 Moving <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">A behaviour is a letter to a bird: [move | across | 1/60] every round, and the star slides.</p>
-    <p class="meta"><b>small</b> — 1 robot, the longest 2 steps · <b>needs</b> <a href="#e1">Swap</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the star. The Mover is on its back: hold the star and press Ctrl+P to go through its door and watch.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>small</b>, 1 robot, the longest 2 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e1">Swap</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the star: it slides right and stops at the table’s edge; &quot;.&quot; stops it early. The Mover is on its back: hold the star and press Ctrl+P to go through its door and watch.</p>
     <p class="try"><b>Change and predict:</b> In there, pick up the step and type a minus. Predict which way the star goes — then make the number bigger.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%83%20moving.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%83%20moving.world.json" target="toontalk-workshop" aria-label="Open Moving in the workshop" data-open="behaviours/🏃 moving">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🏃 moving"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e3">
-  <a class="pic" href="toontalk-3d.html?world=examples/lessons/%F0%9F%AA%90%20step-and-turn-planet.world.json" target="_blank" title="Open in the workshop"><img src="gallery/03.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e3" data-name="lessons/🪐 step-and-turn-planet">
+  <a class="pic" href="toontalk-3d.html?world=examples/lessons/%F0%9F%AA%90%20step-and-turn-planet.world.json" target="toontalk-workshop" aria-label="Open A step-and-turn planet in the workshop" title="Open A step-and-turn planet in the workshop (the workshop tab)"><img src="gallery/03.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">3</span> 🪐 A step-and-turn planet <span class="folder">lessons</span></h3>
+    
     <p class="teaches">Repeated motion: walk a little, turn a little, thirty-six times, and a ring appears. Two robots share the work box.</p>
-    <p class="meta"><b>medium</b> — 2 robots, the longest 8 steps · <b>needs</b> <a href="#e2">Moving</a></p>
-    <p class="run"><b>Run:</b> Press Start the robot. Instant shows the ring at once.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 2 robots, the longest 8 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e2">Moving</a></p>
+    <p class="run"><b>Run:</b> Press Start the robot: the planet walks and turns thirty-six times and a ring of dots appears round the sun. Instant shows the ring at once.</p>
     <p class="try"><b>Change and predict:</b> Change steps left to 9 before you start. How much of the ring will be drawn? Then try 18.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lessons/%F0%9F%AA%90%20step-and-turn-planet.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lessons/%F0%9F%AA%90%20step-and-turn-planet.world.json" target="toontalk-workshop" aria-label="Open A step-and-turn planet in the workshop" data-open="lessons/🪐 step-and-turn-planet">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="lessons/🪐 step-and-turn-planet"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e4">
-  <a class="pic" href="toontalk-3d.html?world=examples/lessons/%F0%9F%8C%B8%20easy-flower.world.json" target="_blank" title="Open in the workshop"><img src="gallery/04.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e4" data-name="lessons/🌸 easy-flower">
+  <a class="pic" href="toontalk-3d.html?world=examples/lessons/%F0%9F%8C%B8%20easy-flower.world.json" target="toontalk-workshop" aria-label="Open An easy flower in the workshop" title="Open An easy flower in the workshop (the workshop tab)"><img src="gallery/04.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">4</span> 🌸 An easy flower <span class="folder">lessons</span></h3>
+    
     <p class="teaches">A repeat inside a repeat: four sides make a square petal, six petals on spokes make a flower — each its own colour from a queue on a nest, and invisible ink keeps it one drawing.</p>
-    <p class="meta"><b>medium</b> — 4 robots, the longest 13 steps · <b>needs</b> <a href="#e3">A step-and-turn planet</a></p>
-    <p class="run"><b>Run:</b> Press Start the robot. The next member button above Trained actions shows each robot.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 4 robots, the longest 13 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e3">A step-and-turn planet</a></p>
+    <p class="run"><b>Run:</b> Press Start the robot: six square petals appear round a centre, each a different colour. The next member button above Trained actions shows each robot.</p>
     <p class="try"><b>Change and predict:</b> Set petals left to 3 and next spoke from 240° to 300°. Predict the flower; then sweep it up with Dusty — one thing.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lessons/%F0%9F%8C%B8%20easy-flower.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lessons/%F0%9F%8C%B8%20easy-flower.world.json" target="toontalk-workshop" aria-label="Open An easy flower in the workshop" data-open="lessons/🌸 easy-flower">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="lessons/🌸 easy-flower"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e5">
-  <a class="pic" href="toontalk-3d.html?world=examples/lessons/%E2%9C%A8%20jumping-spark.world.json" target="_blank" title="Open in the workshop"><img src="gallery/05.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e5" data-name="lessons/✨ jumping-spark">
+  <a class="pic" href="toontalk-3d.html?world=examples/lessons/%E2%9C%A8%20jumping-spark.world.json" target="toontalk-workshop" aria-label="Open A jumping spark in the workshop" title="Open A jumping spark in the workshop (the workshop tab)"><img src="gallery/05.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">5</span> ✨ A jumping spark <span class="folder">lessons</span></h3>
+    
     <p class="teaches">A movement amount that changes over time: gravity shrinks the upward step inside the letter each jump, and the dots draw an arch.</p>
-    <p class="meta"><b>medium</b> — 2 robots, the longest 10 steps · <b>needs</b> <a href="#e3">A step-and-turn planet</a></p>
-    <p class="run"><b>Run:</b> Press Start the robot. The world opens from the side, where the arch reads.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 2 robots, the longest 10 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e3">A step-and-turn planet</a></p>
+    <p class="run"><b>Run:</b> Press Start the robot: the spark rises and falls in twenty steps and leaves an arch of dots behind. The world opens from the side, where the arch reads.</p>
     <p class="try"><b>Change and predict:</b> Set gravity to 0. Predict the shape before running; then try −1/200.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lessons/%E2%9C%A8%20jumping-spark.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lessons/%E2%9C%A8%20jumping-spark.world.json" target="toontalk-workshop" aria-label="Open A jumping spark in the workshop" data-open="lessons/✨ jumping-spark">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="lessons/✨ jumping-spark"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e6">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8E%A8%20random-colour.world.json" target="_blank" title="Open in the workshop"><img src="gallery/06.jpg" alt="" loading="lazy"></a>
+<article class="card optional" id="e6" data-name="behaviours/🎨 random-colour">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8E%A8%20random-colour.world.json" target="toontalk-workshop" aria-label="Open Random colour in the workshop" title="Open Random colour in the workshop (the workshop tab)"><img src="gallery/06.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">6</span> 🎨 Random colour <span class="folder">behaviours</span></h3>
+    <p class="opt"><b>Optional challenge</b> — a bigger jump than the cards round it: a list split at a number to pick the Nth thing, and three letters to one pad. Skip it for now and come back after Things that talk.</p>
     <p class="teaches">A pad with a robot on its back: a die picks the Nth colour from a list by splitting the list there, and three letters paint the pad.</p>
-    <p class="meta"><b>large</b> — 1 robot, the longest 28 steps · <b>needs</b> <a href="#e2">Moving</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the pad; &quot;.&quot; stops it. Ctrl+P on it shows the robot at work.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 1 robot, the longest 28 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e2">Moving</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the pad: its colour changes again and again, one of the seven; &quot;.&quot; stops it. Ctrl+P on it shows the robot at work.</p>
     <p class="try"><b>Change and predict:</b> Open the panel and join another [name | ink] pair on the list, then give the die a face. Predict how often the new colour comes up.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8E%A8%20random-colour.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8E%A8%20random-colour.world.json" target="toontalk-workshop" aria-label="Open Random colour in the workshop" data-open="behaviours/🎨 random-colour">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🎨 random-colour"> tried</label></p>
   </div>
 </article></div>
 </section>
@@ -119,114 +145,134 @@
   <h2 id="things-that-talk">Things that talk</h2>
   <p class="note">Nests that receive the world, and letters to birds that change it.</p>
   <div class="grid">
-<article class="card" id="e7">
-  <a class="pic" href="toontalk-3d.html?world=examples/devices/%E2%8C%A8%EF%B8%8F%20keys.world.json" target="_blank" title="Open in the workshop"><img src="gallery/07.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e7" data-name="devices/⌨️ keys">
+  <a class="pic" href="toontalk-3d.html?world=examples/devices/%E2%8C%A8%EF%B8%8F%20keys.world.json" target="toontalk-workshop" aria-label="Open The keyboard in the workshop" title="Open The keyboard in the workshop (the workshop tab)"><img src="gallery/07.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">7</span> ⌨️ The keyboard <span class="folder">devices</span></h3>
+    
     <p class="teaches">The keyboard is a nest: every key lands on it, and a robot dozing on the nest wakes per key.</p>
-    <p class="meta"><b>small</b> — 1 robot, the longest 2 steps · <b>needs</b> <a href="#e2">Moving</a></p>
-    <p class="run"><b>Run:</b> Give the work box to the Scribe, then type.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>small</b>, 1 robot, the longest 2 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e2">Moving</a></p>
+    <p class="run"><b>Run:</b> Give the work box to the Scribe, then type: each key you press appears on the pad.</p>
     <p class="try"><b>Change and predict:</b> Type a space, then Backspace. Predict what the pad says — the Scribe joins whatever arrives.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%E2%8C%A8%EF%B8%8F%20keys.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%E2%8C%A8%EF%B8%8F%20keys.world.json" target="toontalk-workshop" aria-label="Open The keyboard in the workshop" data-open="devices/⌨️ keys">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="devices/⌨️ keys"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e8">
-  <a class="pic" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%B1%EF%B8%8F%20pointer.world.json" target="_blank" title="Open in the workshop"><img src="gallery/08.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e8" data-name="devices/🖱️ pointer">
+  <a class="pic" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%B1%EF%B8%8F%20pointer.world.json" target="toontalk-workshop" aria-label="Open The pointer in the workshop" title="Open The pointer in the workshop (the workshop tab)"><img src="gallery/08.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">8</span> 🖱️ The pointer <span class="folder">devices</span></h3>
+    
     <p class="teaches">The pointer is a nest too: a reading of [across | away] each move, and three steps keep a box up to date.</p>
-    <p class="meta"><b>small</b> — 1 robot, the longest 3 steps · <b>needs</b> <a href="#e7">The keyboard</a></p>
-    <p class="run"><b>Run:</b> Give the work box to the Watcher and move the pointer over the table.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>small</b>, 1 robot, the longest 3 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e7">The keyboard</a></p>
+    <p class="run"><b>Run:</b> Give the work box to the Watcher and move the pointer over the table: the two numbers in its box follow the pointer.</p>
     <p class="try"><b>Change and predict:</b> Stop moving. Predict whether the robot keeps running — an empty nest is a robot asleep.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%B1%EF%B8%8F%20pointer.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%B1%EF%B8%8F%20pointer.world.json" target="toontalk-workshop" aria-label="Open The pointer in the workshop" data-open="devices/🖱️ pointer">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="devices/🖱️ pointer"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e9">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%BE%20following.world.json" target="_blank" title="Open in the workshop"><img src="gallery/09.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e9" data-name="behaviours/🐾 following">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%BE%20following.world.json" target="toontalk-workshop" aria-label="Open Following the pointer in the workshop" title="Open Following the pointer in the workshop (the workshop tab)"><img src="gallery/09.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">9</span> 🐾 Following the pointer <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">The pointer reading put inside a [set | position | …] letter: the star follows your hand.</p>
-    <p class="meta"><b>small</b> — 1 robot, the longest 6 steps · <b>needs</b> <a href="#e8">The pointer</a><a href="#e2">Moving</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the star and move the pointer. The Follower is on the star’s back: Ctrl+P to watch it.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>small</b>, 1 robot, the longest 6 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e8">The pointer</a><a class="chip" href="#e2">Moving</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the star and move the pointer over the table: the star comes to your hand and stays with it. The Follower is on the star’s back: Ctrl+P to watch it.</p>
     <p class="try"><b>Change and predict:</b> Change the letter to [move | position | …] instead of set. Predict: does the star follow, or run away?</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%BE%20following.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%BE%20following.world.json" target="toontalk-workshop" aria-label="Open Following the pointer in the workshop" data-open="behaviours/🐾 following">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🐾 following"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e10">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%80%20bouncing.world.json" target="_blank" title="Open in the workshop"><img src="gallery/10.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e10" data-name="behaviours/🏀 bouncing">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%80%20bouncing.world.json" target="toontalk-workshop" aria-label="Open Bouncing in the workshop" title="Open Bouncing in the workshop (the workshop tab)"><img src="gallery/10.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">10</span> 🏀 Bouncing <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">The edge is a reading; a team of robots differ only in the word they expect, and flipping a step is a ×−1 dropped on a number.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 5 steps · <b>needs</b> <a href="#e2">Moving</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the star. The team is on its back: Ctrl+P to go through its door and watch them take turns.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 5 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e2">Moving</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the star: it runs to the right edge, turns round, runs back, and keeps going. The team is on its back: Ctrl+P to go through its door and watch them take turns.</p>
     <p class="try"><b>Change and predict:</b> Take the “at the right” robot out of the team. Predict what happens at the right edge.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%80%20bouncing.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%8F%80%20bouncing.world.json" target="toontalk-workshop" aria-label="Open Bouncing in the workshop" data-open="behaviours/🏀 bouncing">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🏀 bouncing"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e11">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%A6%8B%20wandering.world.json" target="_blank" title="Open in the workshop"><img src="gallery/11.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e11" data-name="behaviours/🦋 wandering">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%A6%8B%20wandering.world.json" target="toontalk-workshop" aria-label="Open Wandering in the workshop" title="Open Wandering in the workshop (the workshop tab)"><img src="gallery/11.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">11</span> 🦋 Wandering <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">Randomness is a die: a die of 3, a −2 and a ×30 land on the turn in turn, then a yaw and a step go to the bird.</p>
-    <p class="meta"><b>medium</b> — 1 robot, the longest 10 steps · <b>needs</b> <a href="#e10">Bouncing</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the star. The Wanderer is on its back: Ctrl+P to watch the die land.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 1 robot, the longest 10 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e10">Bouncing</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the star: it drifts about the table, turning at random. The Wanderer is on its back: Ctrl+P to watch the die land.</p>
     <p class="try"><b>Change and predict:</b> In there, hold the die and type 5. Predict: which way does the star circle, and why?</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%A6%8B%20wandering.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%A6%8B%20wandering.world.json" target="toontalk-workshop" aria-label="Open Wandering in the workshop" data-open="behaviours/🦋 wandering">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🦋 wandering"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e12">
-  <a class="pic" href="toontalk-3d.html?world=examples/devices/%E2%8F%B1%EF%B8%8F%20timer.world.json" target="_blank" title="Open in the workshop"><img src="gallery/12.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e12" data-name="devices/⏱️ timer">
+  <a class="pic" href="toontalk-3d.html?world=examples/devices/%E2%8F%B1%EF%B8%8F%20timer.world.json" target="toontalk-workshop" aria-label="Open A stopwatch in the workshop" title="Open A stopwatch in the workshop (the workshop tab)"><img src="gallery/12.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">12</span> ⏱️ A stopwatch <span class="folder">devices</span></h3>
+    
     <p class="teaches">A stopwatch that is not built in: robots on the number’s own panel ask the computer the time and tell the number.</p>
-    <p class="meta"><b>large</b> — 4 robots, the longest 21 steps · <b>needs</b> <a href="#e8">The pointer</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the number; &quot;.&quot; rests it.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 4 robots, the longest 21 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e8">The pointer</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the number: it counts up the milliseconds; &quot;.&quot; rests it, and SPACE goes on from there.</p>
     <p class="try"><b>Change and predict:</b> Drop a 0 with a set badge on it and start it again. Predict what it counts from.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%E2%8F%B1%EF%B8%8F%20timer.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%E2%8F%B1%EF%B8%8F%20timer.world.json" target="toontalk-workshop" aria-label="Open A stopwatch in the workshop" data-open="devices/⏱️ timer">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="devices/⏱️ timer"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e13">
-  <a class="pic" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%A5%EF%B8%8F%20computer.world.json" target="_blank" title="Open in the workshop"><img src="gallery/13.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e13" data-name="devices/🖥️ computer">
+  <a class="pic" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%A5%EF%B8%8F%20computer.world.json" target="toontalk-workshop" aria-label="Open The computer in the workshop" title="Open The computer in the workshop (the workshop tab)"><img src="gallery/13.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">13</span> 🖥️ The computer <span class="folder">devices</span></h3>
+    
     <p class="teaches">The workshop’s own machine answers letters: [query | time | bird], [query | date | bird], [query | clock | bird].</p>
-    <p class="meta"><b>small</b> — 0 robots, the longest 0 steps · <b>needs</b> <a href="#e12">A stopwatch</a></p>
-    <p class="run"><b>Run:</b> Take a letter off a notebook page, put a bird of your own in its last hole, and give it to the bird to the computer.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: no robots</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e12">A stopwatch</a></p>
+    <p class="run"><b>Run:</b> Take a letter off a notebook page, put a bird of your own in its last hole, and give it to the bird to the computer: the answer — the time, the date or the clock — lands on your bird’s nest.</p>
     <p class="try"><b>Change and predict:</b> Ask for the date twice a minute apart. Predict which holes change.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%A5%EF%B8%8F%20computer.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/devices/%F0%9F%96%A5%EF%B8%8F%20computer.world.json" target="toontalk-workshop" aria-label="Open The computer in the workshop" data-open="devices/🖥️ computer">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="devices/🖥️ computer"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e14">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle.world.json" target="_blank" title="Open in the workshop"><img src="gallery/14.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e14" data-name="behaviours/🐢 turtle">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle.world.json" target="toontalk-workshop" aria-label="Open A turtle in the workshop" title="Open A turtle in the workshop (the workshop tab)"><img src="gallery/14.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">14</span> 🐢 A turtle <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">A Logo turtle that is not built in: a nest for orders, two robots, and a pen — forward and right are messages the turtle already answered.</p>
-    <p class="meta"><b>large</b> — 4 robots, the longest 31 steps · <b>needs</b> <a href="#e10">Bouncing</a></p>
-    <p class="run"><b>Run:</b> Drop the turtle on the shell and press SPACE; give the bird “pendown”, then [forward] and [right 90] four times.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 4 robots, the longest 31 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e10">Bouncing</a></p>
+    <p class="run"><b>Run:</b> Drop the turtle on the shell and press SPACE; give the bird “pendown”, then [forward] and [right 90] four times: a square is drawn on the table.</p>
     <p class="try"><b>Change and predict:</b> Give it [right | 120] instead of 90, three times. Predict the shape.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle.world.json" target="toontalk-workshop" aria-label="Open A turtle in the workshop" data-open="behaviours/🐢 turtle">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🐢 turtle"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e15">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle3d.world.json" target="_blank" title="Open in the workshop"><img src="gallery/15.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e15" data-name="behaviours/🐢 turtle3d">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle3d.world.json" target="toontalk-workshop" aria-label="Open A turtle in the air in the workshop" title="Open A turtle in the air in the workshop (the workshop tab)"><img src="gallery/15.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">15</span> 🐢 A turtle in the air <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">The same turtle in its own frame: yaw, pitch and roll, so it can climb and draw in the air.</p>
-    <p class="meta"><b>large</b> — 7 robots, the longest 13 steps · <b>needs</b> <a href="#e14">A turtle</a></p>
-    <p class="run"><b>Run:</b> As the turtle, with pitch and roll orders on the table.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 7 robots, the longest 13 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e14">A turtle</a></p>
+    <p class="run"><b>Run:</b> As the turtle, with pitch and roll orders on the table: give it a pitch and a forward and the line leaves the table and climbs.</p>
     <p class="try"><b>Change and predict:</b> Pitch up 45, forward, pitch down 45, forward. Predict where the line ends up.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle3d.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%90%A2%20turtle3d.world.json" target="toontalk-workshop" aria-label="Open A turtle in the air in the workshop" data-open="behaviours/🐢 turtle3d">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🐢 turtle3d"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e16">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%AA%90%20ellipse.world.json" target="_blank" title="Open in the workshop"><img src="gallery/16.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e16" data-name="behaviours/🪐 ellipse">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%AA%90%20ellipse.world.json" target="toontalk-workshop" aria-label="Open An ellipse in the workshop" title="Open An ellipse in the workshop (the workshop tab)"><img src="gallery/16.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">16</span> 🪐 An ellipse <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">An orbit from two numbers: a position set each round from a growing angle, sine and cosine as letters.</p>
-    <p class="meta"><b>large</b> — 1 robot, the longest 28 steps · <b>needs</b> <a href="#e11">Wandering</a></p>
-    <p class="run"><b>Run:</b> Set Speed to Instant and give the work box to the robot.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 1 robot, the longest 28 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e11">Wandering</a></p>
+    <p class="run"><b>Run:</b> Set Speed to Instant and give the work box to the robot: the star goes round and round an ellipse until you take the box back.</p>
     <p class="try"><b>Change and predict:</b> Change one of the two radii. Predict the shape before you look.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%AA%90%20ellipse.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%AA%90%20ellipse.world.json" target="toontalk-workshop" aria-label="Open An ellipse in the workshop" data-open="behaviours/🪐 ellipse">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/🪐 ellipse"> tried</label></p>
   </div>
 </article></div>
 </section>
@@ -234,103 +280,121 @@
   <h2 id="numbers-and-data">Numbers and data</h2>
   <p class="note">Loops, recursion, lists and a grammar — data a robot reads rather than rules it was taught.</p>
   <div class="grid">
-<article class="card" id="e17">
-  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%E2%9D%97%20factorial.world.json" target="_blank" title="Open in the workshop"><img src="gallery/17.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e17" data-name="numbers/❗ factorial">
+  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%E2%9D%97%20factorial.world.json" target="toontalk-workshop" aria-label="Open Factorial in the workshop" title="Open Factorial in the workshop (the workshop tab)"><img src="gallery/17.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">17</span> ❗ Factorial <span class="folder">numbers</span></h3>
+    
     <p class="teaches">A loop with a scale for its test: the count climbs to N, the beam comes level, and the product goes to a bird.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 15 steps · <b>needs</b> <a href="#e1">Swap</a></p>
-    <p class="run"><b>Run:</b> Give the two-hole box to the Factorial robot.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 15 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e1">Swap</a></p>
+    <p class="run"><b>Run:</b> Give the two-hole box to the Factorial robot: the count climbs to 5, the scale comes level, and the product, 120, flies off with the bird.</p>
     <p class="try"><b>Change and predict:</b> Change 5 to 8 before you start. Predict the answer, and how many rounds it takes.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%E2%9D%97%20factorial.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%E2%9D%97%20factorial.world.json" target="toontalk-workshop" aria-label="Open Factorial in the workshop" data-open="numbers/❗ factorial">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="numbers/❗ factorial"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e18">
-  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci.world.json" target="_blank" title="Open in the workshop"><img src="gallery/18.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e18" data-name="numbers/🐇 fibonacci">
+  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci.world.json" target="toontalk-workshop" aria-label="Open Fibonacci by houses in the workshop" title="Open Fibonacci by houses in the workshop (the workshop tab)"><img src="gallery/18.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">18</span> 🐇 Fibonacci by houses <span class="folder">numbers</span></h3>
+    
     <p class="teaches">Recursion by houses: each call sends a copy of itself into two houses and the ones pile up on a nest to be summed.</p>
-    <p class="meta"><b>large</b> — 7 robots, the longest 35 steps · <b>needs</b> <a href="#e17">Factorial</a></p>
-    <p class="run"><b>Run:</b> Give the five-hole box to the Fib robot; when the smoke stops, give the [0, nest] box to the Sum robot.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 7 robots, the longest 35 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e17">Factorial</a></p>
+    <p class="run"><b>Run:</b> Give the five-hole box to the Fib robot; when the smoke stops, give the [0, nest] box to the Sum robot: it adds the ones up and stops at 21.</p>
     <p class="try"><b>Change and predict:</b> Ask for fib(5) instead of fib(8). Predict how many ones arrive.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci.world.json" target="toontalk-workshop" aria-label="Open Fibonacci by houses in the workshop" data-open="numbers/🐇 fibonacci">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="numbers/🐇 fibonacci"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e19">
-  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci-recursive.world.json" target="_blank" title="Open in the workshop"><img src="gallery/19.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e19" data-name="numbers/🐇 fibonacci-recursive">
+  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci-recursive.world.json" target="toontalk-workshop" aria-label="Open Fibonacci by promises in the workshop" title="Open Fibonacci by promises in the workshop (the workshop tab)"><img src="gallery/19.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">19</span> 🐇 Fibonacci by promises <span class="folder">numbers</span></h3>
+    
     <p class="teaches">The same recursion with promises: each call makes two nests and dozes until both answer.</p>
-    <p class="meta"><b>large</b> — 8 robots, the longest 45 steps · <b>needs</b> <a href="#e18">Fibonacci by houses</a></p>
-    <p class="run"><b>Run:</b> Give the seven-hole box to the fib robot.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>large</b>, 8 robots, the longest 45 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e18">Fibonacci by houses</a></p>
+    <p class="run"><b>Run:</b> Give the seven-hole box to the fib robot: houses appear and answer one another, and fib(6) arrives on the nest marked “the answer”.</p>
     <p class="try"><b>Change and predict:</b> Watch which house answers first. Predict whether the order matters to the answer.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci-recursive.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%90%87%20fibonacci-recursive.world.json" target="toontalk-workshop" aria-label="Open Fibonacci by promises in the workshop" data-open="numbers/🐇 fibonacci-recursive">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="numbers/🐇 fibonacci-recursive"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e20">
-  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%8C%A1%EF%B8%8F%20gauge.world.json" target="_blank" title="Open in the workshop"><img src="gallery/20.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e20" data-name="numbers/🌡️ gauge">
+  <a class="pic" href="toontalk-3d.html?world=examples/numbers/%F0%9F%8C%A1%EF%B8%8F%20gauge.world.json" target="toontalk-workshop" aria-label="Open A gauge of live numbers in the workshop" title="Open A gauge of live numbers in the workshop (the workshop tab)"><img src="gallery/20.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">20</span> 🌡️ A gauge of live numbers <span class="folder">numbers</span></h3>
+    
     <p class="teaches">Live numbers: two numbers that listen to each other, each change landing on an event nest, newest underneath.</p>
-    <p class="meta"><b>medium</b> — 2 robots, the longest 3 steps · <b>needs</b> <a href="#e13">The computer</a></p>
-    <p class="run"><b>Run:</b> Pull both levers up; drop a +3 on A and a ×2 on B.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 2 robots, the longest 3 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e13">The computer</a></p>
+    <p class="run"><b>Run:</b> Pull both levers up; drop a +3 on A and a ×2 on B: each change lands on the event nest, the newest underneath, and the other number answers.</p>
     <p class="try"><b>Change and predict:</b> Drop a +0 on A. Predict whether B moves — an update that changes nothing is swallowed.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%8C%A1%EF%B8%8F%20gauge.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/numbers/%F0%9F%8C%A1%EF%B8%8F%20gauge.world.json" target="toontalk-workshop" aria-label="Open A gauge of live numbers in the workshop" data-open="numbers/🌡️ gauge">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="numbers/🌡️ gauge"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e21">
-  <a class="pic" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%A2%20n-to-1.world.json" target="_blank" title="Open in the workshop"><img src="gallery/21.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e21" data-name="lists/🔢 n-to-1">
+  <a class="pic" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%A2%20n-to-1.world.json" target="toontalk-workshop" aria-label="Open A list from n to 1 in the workshop" title="Open A list from n to 1 in the workshop (the workshop tab)"><img src="gallery/21.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">21</span> 🔢 A list from n to 1 <span class="folder">lists</span></h3>
+    
     <p class="teaches">A lazy list, a link at a time: each round one link lands on a nest, and a box with no holes means the end.</p>
-    <p class="meta"><b>medium</b> — 4 robots, the longest 15 steps · <b>needs</b> <a href="#e17">Factorial</a></p>
-    <p class="run"><b>Run:</b> Give the two-hole box to the FinishList robot.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 4 robots, the longest 15 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e17">Factorial</a></p>
+    <p class="run"><b>Run:</b> Give the two-hole box to the FinishList robot: 5, 4, 3, 2, 1 land on the nest one a round, then a box with no holes.</p>
     <p class="try"><b>Change and predict:</b> Start from 3 instead of 5. Predict the pile on the nest, top to bottom.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%A2%20n-to-1.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%A2%20n-to-1.world.json" target="toontalk-workshop" aria-label="Open A list from n to 1 in the workshop" data-open="lists/🔢 n-to-1">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="lists/🔢 n-to-1"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e22">
-  <a class="pic" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%97%20append.world.json" target="_blank" title="Open in the workshop"><img src="gallery/22.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e22" data-name="lists/🔗 append">
+  <a class="pic" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%97%20append.world.json" target="toontalk-workshop" aria-label="Open Appending two lists in the workshop" title="Open Appending two lists in the workshop (the workshop tab)"><img src="gallery/22.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">22</span> 🔗 Appending two lists <span class="folder">lists</span></h3>
+    
     <p class="teaches">Two lazy lists joined: each link lands inside the promise the last one carried, so the answer grows from the outside in.</p>
-    <p class="meta"><b>medium</b> — 4 robots, the longest 13 steps · <b>needs</b> <a href="#e21">A list from n to 1</a></p>
-    <p class="run"><b>Run:</b> Give the three-hole box to the FinishAppend robot.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 4 robots, the longest 13 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e21">A list from n to 1</a></p>
+    <p class="run"><b>Run:</b> Give the three-hole box to the FinishAppend robot: the joined list grows on “both lists”, a link a round.</p>
     <p class="try"><b>Change and predict:</b> Give it two empty lists. Predict what arrives on “both lists”.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%97%20append.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%97%20append.world.json" target="toontalk-workshop" aria-label="Open Appending two lists in the workshop" data-open="lists/🔗 append">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="lists/🔗 append"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e23">
-  <a class="pic" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%81%20reverse.world.json" target="_blank" title="Open in the workshop"><img src="gallery/23.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e23" data-name="lists/🔁 reverse">
+  <a class="pic" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%81%20reverse.world.json" target="toontalk-workshop" aria-label="Open Reversing a list in the workshop" title="Open Reversing a list in the workshop (the workshop tab)"><img src="gallery/23.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">23</span> 🔁 Reversing a list <span class="folder">lists</span></h3>
+    
     <p class="teaches">Reversal by houses that wait on one another: the last link settles first.</p>
-    <p class="meta"><b>large</b> — 6 robots, the longest 30 steps · <b>needs</b> <a href="#e22">Appending two lists</a></p>
-    <p class="run"><b>Run:</b> Give the four-hole box to the Reverse robot.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 6 robots, the longest 30 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e22">Appending two lists</a></p>
+    <p class="run"><b>Run:</b> Give the four-hole box to the Reverse robot: a house appears for each link, and the list comes back the other way round.</p>
     <p class="try"><b>Change and predict:</b> Reverse a one-link list. Predict how many houses appear.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%81%20reverse.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/lists/%F0%9F%94%81%20reverse.world.json" target="toontalk-workshop" aria-label="Open Reversing a list in the workshop" data-open="lists/🔁 reverse">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="lists/🔁 reverse"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e24">
-  <a class="pic" href="toontalk-3d.html?world=examples/words/%F0%9F%94%A4%20grammar.world.json" target="_blank" title="Open in the workshop"><img src="gallery/24.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e24" data-name="words/🔤 grammar">
+  <a class="pic" href="toontalk-3d.html?world=examples/words/%F0%9F%94%A4%20grammar.world.json" target="toontalk-workshop" aria-label="Open A grammar as data in the workshop" title="Open A grammar as data in the workshop (the workshop tab)"><img src="gallery/24.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">24</span> 🔤 A grammar as data <span class="folder">words</span></h3>
+    
     <p class="teaches">A grammar read as data: a rule is a number, the robot splits a copy of the dictionary there and throws its die to choose.</p>
-    <p class="meta"><b>large</b> — 4 robots, the longest 27 steps · <b>needs</b> <a href="#e23">Reversing a list</a><a href="#e11">Wandering</a></p>
-    <p class="run"><b>Run:</b> Pull the lever; pull it again when you have enough sentences.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 4 robots, the longest 27 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e23">Reversing a list</a><a class="chip" href="#e11">Wandering</a></p>
+    <p class="run"><b>Run:</b> Pull the lever: sentences pile up on the nest, a new one each round; pull it again when you have enough.</p>
     <p class="try"><b>Change and predict:</b> Add a word to one alternative in the dictionary and pull the lever. Predict which sentences change — the robot is untouched.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/words/%F0%9F%94%A4%20grammar.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/words/%F0%9F%94%A4%20grammar.world.json" target="toontalk-workshop" aria-label="Open A grammar as data in the workshop" data-open="words/🔤 grammar">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="words/🔤 grammar"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e25">
-  <a class="pic" href="toontalk-3d.html?world=examples/words/%F0%9F%93%9D%20sentence-generator.world.json" target="_blank" title="Open in the workshop"><img src="gallery/25.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e25" data-name="words/📝 sentence-generator">
+  <a class="pic" href="toontalk-3d.html?world=examples/words/%F0%9F%93%9D%20sentence-generator.world.json" target="toontalk-workshop" aria-label="Open A sentence factory in the workshop" title="Open A sentence factory in the workshop (the workshop tab)"><img src="gallery/25.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">25</span> 📝 A sentence factory <span class="folder">words</span></h3>
+    
     <p class="teaches">A sentence factory in a glass room: the same idea with the rules fixed in the robots.</p>
-    <p class="meta"><b>large</b> — 20 robots, the longest 7 steps · <b>needs</b> <a href="#e24">A grammar as data</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the right wall; click the door to step inside and watch.</p>
+    <p class="meta"><span class="do do-read">read it</span> <span class="inside">inside: <b>large</b>, 20 robots, the longest 7 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e24">A grammar as data</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the right wall: sentences come out of the room; click the door to step inside and watch the team make them.</p>
     <p class="try"><b>Change and predict:</b> Step inside and read the team. Predict which robot would have to change to add an adjective.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/words/%F0%9F%93%9D%20sentence-generator.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/words/%F0%9F%93%9D%20sentence-generator.world.json" target="toontalk-workshop" aria-label="Open A sentence factory in the workshop" data-open="words/📝 sentence-generator">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="words/📝 sentence-generator"> tried</label></p>
   </div>
 </article></div>
 </section>
@@ -338,169 +402,199 @@
   <h2 id="houses-and-state">Houses and state</h2>
   <p class="note">What a house keeps to itself, what a live number tells, and things that are not numbers.</p>
   <div class="grid">
-<article class="card" id="e26">
-  <a class="pic" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B0%20account.world.json" target="_blank" title="Open in the workshop"><img src="gallery/26.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e26" data-name="accounts/💰 account">
+  <a class="pic" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B0%20account.world.json" target="toontalk-workshop" aria-label="Open Sally’s account in the workshop" title="Open Sally’s account in the workshop (the workshop tab)"><img src="gallery/26.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">26</span> 💰 Sally’s account <span class="folder">accounts</span></h3>
+    
     <p class="teaches">A box with a nest for requests: the robot whose thought carries the word wakes, serves it, and dozes again.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 6 steps · <b>needs</b> <a href="#e7">The keyboard</a></p>
-    <p class="run"><b>Run:</b> Give the account box to the Teller, then drop a message on the “requests” bird.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 6 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e7">The keyboard</a></p>
+    <p class="run"><b>Run:</b> Give the account box to the Teller, then drop a message on the “requests” bird: the balance changes and a slip comes back.</p>
     <p class="try"><b>Change and predict:</b> Send [withdraw | 500]. Predict what the balance does, and what comes back.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B0%20account.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B0%20account.world.json" target="toontalk-workshop" aria-label="Open Sally’s account in the workshop" data-open="accounts/💰 account">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="accounts/💰 account"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e27">
-  <a class="pic" href="toontalk-3d.html?world=examples/accounts/%F0%9F%8F%A6%20bank-account.world.json" target="_blank" title="Open in the workshop"><img src="gallery/27.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e27" data-name="accounts/🏦 bank-account">
+  <a class="pic" href="toontalk-3d.html?world=examples/accounts/%F0%9F%8F%A6%20bank-account.world.json" target="toontalk-workshop" aria-label="Open A bank account in a house in the workshop" title="Open A bank account in a house in the workshop (the workshop tab)"><img src="gallery/27.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">27</span> 🏦 A bank account in a house <span class="folder">accounts</span></h3>
+    
     <p class="teaches">State sealed in a house: nothing outside can reach the balance; the only way in is a request by bird.</p>
-    <p class="meta"><b>medium</b> — 4 robots, the longest 11 steps · <b>needs</b> <a href="#e26">Sally’s account</a></p>
-    <p class="run"><b>Run:</b> Drop a request on the bird marked “requests”.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>medium</b>, 4 robots, the longest 11 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e26">Sally’s account</a></p>
+    <p class="run"><b>Run:</b> Drop a request on the bird marked “requests”: the Teller inside answers with a slip, and the balance stays out of reach.</p>
     <p class="try"><b>Change and predict:</b> Try the −500 request. Predict which slip the Teller sends, and why the scale decides.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/accounts/%F0%9F%8F%A6%20bank-account.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/accounts/%F0%9F%8F%A6%20bank-account.world.json" target="toontalk-workshop" aria-label="Open A bank account in a house in the workshop" data-open="accounts/🏦 bank-account">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="accounts/🏦 bank-account"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e28">
-  <a class="pic" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B3%20live-account.world.json" target="_blank" title="Open in the workshop"><img src="gallery/28.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e28" data-name="accounts/💳 live-account">
+  <a class="pic" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B3%20live-account.world.json" target="toontalk-workshop" aria-label="Open A live account in the workshop" title="Open A live account in the workshop (the workshop tab)"><img src="gallery/28.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">28</span> 💳 A live account <span class="folder">accounts</span></h3>
+    
     <p class="teaches">A live number as the balance: two rooms deposit at once and every badge is applied whole, so the total is right however the rounds land.</p>
-    <p class="meta"><b>medium</b> — 2 robots, the longest 6 steps · <b>needs</b> <a href="#e27">A bank account in a house</a><a href="#e20">A gauge of live numbers</a></p>
-    <p class="run"><b>Run:</b> Pull both levers.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>medium</b>, 2 robots, the longest 6 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e27">A bank account in a house</a><a class="chip" href="#e20">A gauge of live numbers</a></p>
+    <p class="run"><b>Run:</b> Pull both levers: the two rooms deposit at once and the balance settles on the same total however the rounds fall.</p>
     <p class="try"><b>Change and predict:</b> Predict the final balance before you pull; then predict whether pulling one lever first changes it.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B3%20live-account.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/accounts/%F0%9F%92%B3%20live-account.world.json" target="toontalk-workshop" aria-label="Open A live account in the workshop" data-open="accounts/💳 live-account">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="accounts/💳 live-account"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e29">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%F0%9F%93%AE%20zeno.world.json" target="_blank" title="Open in the workshop"><img src="gallery/29.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e29" data-name="infinity/📮 zeno">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%F0%9F%93%AE%20zeno.world.json" target="toontalk-workshop" aria-label="Open Zeno’s postman in the workshop" title="Open Zeno’s postman in the workshop (the workshop tab)"><img src="gallery/29.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">29</span> 📮 Zeno’s postman <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Two houses and a bird between them: a halver and a totaller, the totaller asleep until the post comes.</p>
-    <p class="meta"><b>medium</b> — 2 robots, the longest 5 steps · <b>needs</b> <a href="#e27">A bank account in a house</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on each house.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>medium</b>, 2 robots, the longest 5 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e27">A bank account in a house</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on each house: the bird carries halves from the halver to the totaller, and the total climbs toward 1 without reaching it.</p>
     <p class="try"><b>Change and predict:</b> Pull only the totaller’s lever. Predict what it does with no post.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%F0%9F%93%AE%20zeno.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%F0%9F%93%AE%20zeno.world.json" target="toontalk-workshop" aria-label="Open Zeno’s postman in the workshop" data-open="infinity/📮 zeno">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/📮 zeno"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e30">
-  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%93%9A%20library.world.json" target="_blank" title="Open in the workshop"><img src="gallery/30.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e30" data-name="behaviours/📚 library">
+  <a class="pic" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%93%9A%20library.world.json" target="toontalk-workshop" aria-label="Open The shelf of behaviours in the workshop" title="Open The shelf of behaviours in the workshop (the workshop tab)"><img src="gallery/30.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">30</span> 📚 The shelf of behaviours <span class="folder">behaviours</span></h3>
+    
     <p class="teaches">A shelf of behaviours to drop on your own things: sixteen gadgets and a star to try them on.</p>
-    <p class="meta"><b>large</b> — 44 robots, the longest 10 steps · <b>needs</b> <a href="#e10">Bouncing</a></p>
-    <p class="run"><b>Run:</b> Drop a gadget on the star and press SPACE on it; &quot;.&quot; stops it; Ruby lets go.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 44 robots, the longest 10 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e10">Bouncing</a></p>
+    <p class="run"><b>Run:</b> Drop a gadget on the star and press SPACE on it: the star does what the gadget says; &quot;.&quot; stops it; Ruby lets go.</p>
     <p class="try"><b>Change and predict:</b> Drop bouncing AND wandering on the star. Predict what happens when it reaches the right wall.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%93%9A%20library.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/behaviours/%F0%9F%93%9A%20library.world.json" target="toontalk-workshop" aria-label="Open The shelf of behaviours in the workshop" data-open="behaviours/📚 library">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="behaviours/📚 library"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e31">
-  <a class="pic" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%81%20zoo.world.json" target="_blank" title="Open in the workshop"><img src="gallery/31.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e31" data-name="yard/🦁 zoo">
+  <a class="pic" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%81%20zoo.world.json" target="toontalk-workshop" aria-label="Open The zoo in the workshop" title="Open The zoo in the workshop (the workshop tab)"><img src="gallery/31.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">31</span> 🦁 The zoo <span class="folder">yard</span></h3>
+    
     <p class="teaches">The yard: seven animals on the grass behind the workshop, each a thing with a name.</p>
-    <p class="meta"><b>medium</b> — 1 robot, the longest 10 steps · <b>needs</b> <a href="#e30">The shelf of behaviours</a></p>
-    <p class="run"><b>Run:</b> Go out through the green back door.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 1 robot, the longest 10 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e30">The shelf of behaviours</a></p>
+    <p class="run"><b>Run:</b> Go out through the green back door: seven animals stand on the grass, each with its name.</p>
     <p class="try"><b>Change and predict:</b> Drop the wandering gadget on the lion and press SPACE. Predict where it goes.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%81%20zoo.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%81%20zoo.world.json" target="toontalk-workshop" aria-label="Open The zoo in the workshop" data-open="yard/🦁 zoo">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="yard/🦁 zoo"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e32">
-  <a class="pic" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%93%20zoo-keeper.world.json" target="_blank" title="Open in the workshop"><img src="gallery/32.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e32" data-name="yard/🦓 zoo-keeper">
+  <a class="pic" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%93%20zoo-keeper.world.json" target="toontalk-workshop" aria-label="Open The zoo keeper in the workshop" title="Open The zoo keeper in the workshop (the workshop tab)"><img src="gallery/32.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">32</span> 🦓 The zoo keeper <span class="folder">yard</span></h3>
+    
     <p class="teaches">A button that asks the yard who is there — [query | things | bird] — and gives every animal a wiggle.</p>
-    <p class="meta"><b>large</b> — 7 robots, the longest 9 steps · <b>needs</b> <a href="#e31">The zoo</a></p>
-    <p class="run"><b>Run:</b> Go outside and press SPACE on the keeper.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>large</b>, 7 robots, the longest 9 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e31">The zoo</a></p>
+    <p class="run"><b>Run:</b> Go outside and press SPACE on the keeper: every animal in the yard wiggles.</p>
     <p class="try"><b>Change and predict:</b> Carry one animal indoors first. Predict how many wiggle.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%93%20zoo-keeper.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/yard/%F0%9F%A6%93%20zoo-keeper.world.json" target="toontalk-workshop" aria-label="Open The zoo keeper in the workshop" data-open="yard/🦓 zoo-keeper">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="yard/🦓 zoo-keeper"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e33">
-  <a class="pic" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-flight.world.json" target="_blank" title="Open in the workshop"><img src="gallery/33.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e33" data-name="models/✈️ airplane-flight">
+  <a class="pic" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-flight.world.json" target="toontalk-workshop" aria-label="Open An airplane’s flight in the workshop" title="Open An airplane’s flight in the workshop (the workshop tab)"><img src="gallery/33.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">33</span> ✈️ An airplane’s flight <span class="folder">models</span></h3>
+    
     <p class="teaches">A toy airplane that takes off, flies a loop and lands: position, up and facing as letters over time.</p>
-    <p class="meta"><b>large</b> — 8 robots, the longest 13 steps · <b>needs</b> <a href="#e15">A turtle in the air</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the airplane.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 8 robots, the longest 13 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e15">A turtle in the air</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the airplane: it takes off, flies a loop, and lands.</p>
     <p class="try"><b>Change and predict:</b> Change the climb letter’s number. Predict how high the loop goes.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-flight.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-flight.world.json" target="toontalk-workshop" aria-label="Open An airplane’s flight in the workshop" data-open="models/✈️ airplane-flight">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="models/✈️ airplane-flight"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e34">
-  <a class="pic" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-with-pilot.world.json" target="_blank" title="Open in the workshop"><img src="gallery/34.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e34" data-name="models/✈️ airplane-with-pilot">
+  <a class="pic" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-with-pilot.world.json" target="toontalk-workshop" aria-label="Open An airplane with its pilot in the workshop" title="Open An airplane with its pilot in the workshop (the workshop tab)"><img src="gallery/34.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">34</span> ✈️ An airplane with its pilot <span class="folder">models</span></h3>
+    
     <p class="teaches">The same flight with a pilot aboard: a thing riding a thing, carried wherever it goes.</p>
-    <p class="meta"><b>large</b> — 8 robots, the longest 13 steps · <b>needs</b> <a href="#e33">An airplane’s flight</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the airplane.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 8 robots, the longest 13 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e33">An airplane’s flight</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the airplane: it flies its loop with the pilot aboard all the way.</p>
     <p class="try"><b>Change and predict:</b> Take the pilot off before take-off. Predict whether the flight changes.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-with-pilot.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/models/%E2%9C%88%EF%B8%8F%20airplane-with-pilot.world.json" target="toontalk-workshop" aria-label="Open An airplane with its pilot in the workshop" data-open="models/✈️ airplane-with-pilot">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="models/✈️ airplane-with-pilot"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e35">
-  <a class="pic" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B9%20tones.world.json" target="_blank" title="Open in the workshop"><img src="gallery/35.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e35" data-name="sounds/🎹 tones">
+  <a class="pic" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B9%20tones.world.json" target="toontalk-workshop" aria-label="Open Tones in the workshop" title="Open Tones in the workshop (the workshop tab)"><img src="gallery/35.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">35</span> 🎹 Tones <span class="folder">sounds</span></h3>
+    
     <p class="teaches">What a sound is: a frequency, seconds and a shape, made by a box dropped on a silent sound.</p>
-    <p class="meta"><b>small</b> — 0 robots, the longest 0 steps · <b>needs</b> <a href="#e1">Swap</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on a sound to hear it; drop the box on the silent one.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: no robots</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e1">Swap</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on a sound to hear it; drop the box on the silent one and it sings too, the waveform on its screen.</p>
     <p class="try"><b>Change and predict:</b> Change 440 to 880. Predict what you hear.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B9%20tones.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B9%20tones.world.json" target="toontalk-workshop" aria-label="Open Tones in the workshop" data-open="sounds/🎹 tones">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="sounds/🎹 tones"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e36">
-  <a class="pic" href="toontalk-3d.html?world=examples/sounds/%F0%9F%94%89%20transforms.world.json" target="_blank" title="Open in the workshop"><img src="gallery/36.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e36" data-name="sounds/🔉 transforms">
+  <a class="pic" href="toontalk-3d.html?world=examples/sounds/%F0%9F%94%89%20transforms.world.json" target="toontalk-workshop" aria-label="Open Remaking a sound in the workshop" title="Open Remaking a sound in the workshop (the workshop tab)"><img src="gallery/36.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">36</span> 🔉 Remaking a sound <span class="folder">sounds</span></h3>
+    
     <p class="teaches">A number dropped on a sound remakes it: ×2 is faster and an octave up, ×−1 plays it backwards.</p>
-    <p class="meta"><b>small</b> — 0 robots, the longest 0 steps · <b>needs</b> <a href="#e35">Tones</a></p>
-    <p class="run"><b>Run:</b> Drop the ×2 and the ×−1 on a sound.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: no robots</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e35">Tones</a></p>
+    <p class="run"><b>Run:</b> Drop the ×2 and the ×−1 on a sound, then SPACE to hear it: faster and an octave up, then backwards.</p>
     <p class="try"><b>Change and predict:</b> Drop ×1/2 twice. Predict the pitch.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/sounds/%F0%9F%94%89%20transforms.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/sounds/%F0%9F%94%89%20transforms.world.json" target="toontalk-workshop" aria-label="Open Remaking a sound in the workshop" data-open="sounds/🔉 transforms">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="sounds/🔉 transforms"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e37">
-  <a class="pic" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B5%20melody.world.json" target="_blank" title="Open in the workshop"><img src="gallery/37.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e37" data-name="sounds/🎵 melody">
+  <a class="pic" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B5%20melody.world.json" target="toontalk-workshop" aria-label="Open A melody in the workshop" title="Open A melody in the workshop (the workshop tab)"><img src="gallery/37.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">37</span> 🎵 A melody <span class="folder">sounds</span></h3>
+    
     <p class="teaches">A tune built the way a sentence is: a note longer each round, joined on the right edge.</p>
-    <p class="meta"><b>medium</b> — 1 robot, the longest 10 steps · <b>needs</b> <a href="#e36">Remaking a sound</a><a href="#e7">The keyboard</a></p>
-    <p class="run"><b>Run:</b> Give the work box to the Singer.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 1 robot, the longest 10 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e36">Remaking a sound</a><a class="chip" href="#e7">The keyboard</a></p>
+    <p class="run"><b>Run:</b> Give the work box to the Singer: the tune plays, a note longer each round.</p>
     <p class="try"><b>Change and predict:</b> Put the pitches on the nest in another order. Predict the tune.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B5%20melody.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/sounds/%F0%9F%8E%B5%20melody.world.json" target="toontalk-workshop" aria-label="Open A melody in the workshop" data-open="sounds/🎵 melody">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="sounds/🎵 melody"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e38">
-  <a class="pic" href="toontalk-3d.html?world=examples/images/%F0%9F%96%BC%EF%B8%8F%20pictures.world.json" target="_blank" title="Open in the workshop"><img src="gallery/38.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e38" data-name="images/🖼️ pictures">
+  <a class="pic" href="toontalk-3d.html?world=examples/images/%F0%9F%96%BC%EF%B8%8F%20pictures.world.json" target="toontalk-workshop" aria-label="Open Pictures in the workshop" title="Open Pictures in the workshop (the workshop tab)"><img src="gallery/38.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">38</span> 🖼️ Pictures <span class="folder">images</span></h3>
+    
     <p class="teaches">A picture is a pad: it takes the same letters, and rides on a pad like anything else.</p>
-    <p class="meta"><b>small</b> — 0 robots, the longest 0 steps · <b>needs</b> <a href="#e2">Moving</a></p>
-    <p class="run"><b>Run:</b> Look; then give the pictures the letters on the table.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: no robots</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e2">Moving</a></p>
+    <p class="run"><b>Run:</b> Look; then give the pictures the letters on the table: each one changes the way any pad would.</p>
     <p class="try"><b>Change and predict:</b> Send [set | width | 2]. Predict what happens to the picture on it.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/images/%F0%9F%96%BC%EF%B8%8F%20pictures.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/images/%F0%9F%96%BC%EF%B8%8F%20pictures.world.json" target="toontalk-workshop" aria-label="Open Pictures in the workshop" data-open="images/🖼️ pictures">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="images/🖼️ pictures"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e39">
-  <a class="pic" href="toontalk-3d.html?world=examples/images/%F0%9F%93%B8%20album.world.json" target="_blank" title="Open in the workshop"><img src="gallery/39.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e39" data-name="images/📸 album">
+  <a class="pic" href="toontalk-3d.html?world=examples/images/%F0%9F%93%B8%20album.world.json" target="toontalk-workshop" aria-label="Open An album in the workshop" title="Open An album in the workshop (the workshop tab)"><img src="gallery/39.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">39</span> 📸 An album <span class="folder">images</span></h3>
-    <p class="teaches">Pictures on a nest, taken off one at a time by a robot.</p>
-    <p class="meta"><b>small</b> — 0 robots, the longest 0 steps · <b>needs</b> <a href="#e38">Pictures</a></p>
-    <p class="run"><b>Run:</b> Give the work box to the robot.</p>
-    <p class="try"><b>Change and predict:</b> Add a picture of your own to the nest. Predict where it ends up.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/images/%F0%9F%93%B8%20album.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    
+    <p class="teaches">A notebook files things and a picture is a thing, so a notebook of pictures is an album — and no album was ever written.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: no robots</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e38">Pictures</a></p>
+    <p class="run"><b>Run:</b> Point at the album and press the left and right arrow keys, or click its gold corner tabs: six pages, a picture on each. Click a picture to lift it off its page as an ordinary pad; drop it back to file it.</p>
+    <p class="try"><b>Change and predict:</b> Drop the spare star picture on a blank page. Predict whether the arrow keys reach it — then click the spine and pick up the whole album at once.</p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/images/%F0%9F%93%B8%20album.world.json" target="toontalk-workshop" aria-label="Open An album in the workshop" data-open="images/📸 album">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="images/📸 album"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e40">
-  <a class="pic" href="toontalk-3d.html?world=examples/images/%F0%9F%8F%B7%EF%B8%8F%20naming.world.json" target="_blank" title="Open in the workshop"><img src="gallery/40.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e40" data-name="images/🏷️ naming">
+  <a class="pic" href="toontalk-3d.html?world=examples/images/%F0%9F%8F%B7%EF%B8%8F%20naming.world.json" target="toontalk-workshop" aria-label="Open Naming pictures in the workshop" title="Open Naming pictures in the workshop (the workshop tab)"><img src="gallery/40.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">40</span> 🏷️ Naming pictures <span class="folder">images</span></h3>
+    
     <p class="teaches">A team that names what it sees: seven pictures come off the nest and seven names pile up.</p>
-    <p class="meta"><b>large</b> — 6 robots, the longest 6 steps · <b>needs</b> <a href="#e39">An album</a><a href="#e10">Bouncing</a></p>
-    <p class="run"><b>Run:</b> Give the work box to the team leader.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>large</b>, 6 robots, the longest 6 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e39">An album</a><a class="chip" href="#e10">Bouncing</a></p>
+    <p class="run"><b>Run:</b> Give the work box to the team leader: seven pictures come off the nest and seven names pile up.</p>
     <p class="try"><b>Change and predict:</b> Put the star on the nest twice. Predict how many names arrive.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/images/%F0%9F%8F%B7%EF%B8%8F%20naming.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/images/%F0%9F%8F%B7%EF%B8%8F%20naming.world.json" target="toontalk-workshop" aria-label="Open Naming pictures in the workshop" data-open="images/🏷️ naming">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="images/🏷️ naming"> tried</label></p>
   </div>
 </article></div>
 </section>
@@ -508,48 +602,56 @@
   <h2 id="games">Games</h2>
   <p class="note">The full games are the destination; open one behaviour at a time.</p>
   <div class="grid">
-<article class="card" id="e41">
-  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-classic.world.json" target="_blank" title="Open in the workshop"><img src="gallery/41.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e41" data-name="games/🏓 pong-classic">
+  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-classic.world.json" target="toontalk-workshop" aria-label="Open Pong, from the parts in the workshop" title="Open Pong, from the parts in the workshop (the workshop tab)"><img src="gallery/41.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">41</span> 🏓 Pong, from the parts <span class="folder">games</span></h3>
+    
     <p class="teaches">Pong from the ordinary parts: a ball, a bat that follows the pointer, a counter, a pitch.</p>
-    <p class="meta"><b>large</b> — 10 robots, the longest 12 steps · <b>needs</b> <a href="#e10">Bouncing</a><a href="#e9">Following the pointer</a></p>
-    <p class="run"><b>Run:</b> Set Speed to Instant, point at the pitch and press ENTER, then SPACE.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 10 robots, the longest 12 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e10">Bouncing</a><a class="chip" href="#e9">Following the pointer</a></p>
+    <p class="run"><b>Run:</b> Set Speed to Instant, point at the pitch and press ENTER, then SPACE: the ball is in play and the bat follows your pointer up and down.</p>
     <p class="try"><b>Change and predict:</b> Make the ball’s step bigger. Predict whether the bat can keep up.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-classic.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-classic.world.json" target="toontalk-workshop" aria-label="Open Pong, from the parts in the workshop" data-open="games/🏓 pong-classic">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="games/🏓 pong-classic"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e42">
-  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-gadgets.world.json" target="_blank" title="Open in the workshop"><img src="gallery/42.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e42" data-name="games/🏓 pong-gadgets">
+  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-gadgets.world.json" target="toontalk-workshop" aria-label="Open Pong, from the shelf in the workshop" title="Open Pong, from the shelf in the workshop (the workshop tab)"><img src="gallery/42.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">42</span> 🏓 Pong, from the shelf <span class="folder">games</span></h3>
+    
     <p class="teaches">The same game built by dropping behaviours from the shelf on the ball and the bat.</p>
-    <p class="meta"><b>large</b> — 13 robots, the longest 10 steps · <b>needs</b> <a href="#e41">Pong, from the parts</a><a href="#e30">The shelf of behaviours</a></p>
-    <p class="run"><b>Run:</b> Press SPACE on the ball, then on the bat.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 13 robots, the longest 10 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e41">Pong, from the parts</a><a class="chip" href="#e30">The shelf of behaviours</a></p>
+    <p class="run"><b>Run:</b> Press SPACE on the ball, then on the bat: the ball bounces about the pitch and the bat follows the pointer.</p>
     <p class="try"><b>Change and predict:</b> Take the bouncing gadget off the ball. Predict what the ball does at the wall.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-gadgets.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong-gadgets.world.json" target="toontalk-workshop" aria-label="Open Pong, from the shelf in the workshop" data-open="games/🏓 pong-gadgets">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="games/🏓 pong-gadgets"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e43">
-  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong.world.json" target="_blank" title="Open in the workshop"><img src="gallery/43.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e43" data-name="games/🏓 pong">
+  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong.world.json" target="toontalk-workshop" aria-label="Open Pong, with collisions in the workshop" title="Open Pong, with collisions in the workshop (the workshop tab)"><img src="gallery/43.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">43</span> 🏓 Pong, with collisions <span class="folder">games</span></h3>
+    
     <p class="teaches">Pong with collisions: the ball bounces off anything on the table, so first clear the court.</p>
-    <p class="meta"><b>large</b> — 10 robots, the longest 9 steps · <b>needs</b> <a href="#e42">Pong, from the shelf</a></p>
-    <p class="run"><b>Run:</b> Vacuum the pads away, set Speed to Instant, and press SPACE on the ball.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>large</b>, 10 robots, the longest 9 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e42">Pong, from the shelf</a></p>
+    <p class="run"><b>Run:</b> Vacuum the pads away, set Speed to Instant, and press SPACE on the ball: it bounces off the walls and off the bat.</p>
     <p class="try"><b>Change and predict:</b> Leave one pad on the court. Predict the rally.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%8F%93%20pong.world.json" target="toontalk-workshop" aria-label="Open Pong, with collisions in the workshop" data-open="games/🏓 pong">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="games/🏓 pong"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e44">
-  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%91%BE%20space-invaders.world.json" target="_blank" title="Open in the workshop"><img src="gallery/44.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e44" data-name="games/👾 space-invaders">
+  <a class="pic" href="toontalk-3d.html?world=examples/games/%F0%9F%91%BE%20space-invaders.world.json" target="toontalk-workshop" aria-label="Open Space Invaders in the workshop" title="Open Space Invaders in the workshop (the workshop tab)"><img src="gallery/44.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">44</span> 👾 Space Invaders <span class="folder">games</span></h3>
+    
     <p class="teaches">A whole game to be read: a field, a ship on the arrow keys, bullets that vanish, invaders that are hit, a score.</p>
-    <p class="meta"><b>large</b> — 49 robots, the longest 9 steps · <b>needs</b> <a href="#e43">Pong, with collisions</a><a href="#e7">The keyboard</a></p>
-    <p class="run"><b>Run:</b> Point at the dark field and press SPACE; arrows move, up fires.</p>
+    <p class="meta"><span class="do do-read">read it</span> <span class="inside">inside: <b>large</b>, 49 robots, the longest 9 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e43">Pong, with collisions</a><a class="chip" href="#e7">The keyboard</a></p>
+    <p class="run"><b>Run:</b> Point at the dark field and press SPACE; arrows move, up fires: the invaders march, hits take them out, and the score climbs.</p>
     <p class="try"><b>Change and predict:</b> Open one invader’s panel. Predict which robot makes it drop down a row.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%91%BE%20space-invaders.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/games/%F0%9F%91%BE%20space-invaders.world.json" target="toontalk-workshop" aria-label="Open Space Invaders in the workshop" data-open="games/👾 space-invaders">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="games/👾 space-invaders"> tried</label></p>
   </div>
 </article></div>
 </section>
@@ -557,103 +659,121 @@
   <h2 id="infinity">Infinity</h2>
   <p class="note">Each activity has a finite trace to inspect before the argument about its continuation.</p>
   <div class="grid">
-<article class="card" id="e45">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity1-even-numbers.world.json" target="_blank" title="Open in the workshop"><img src="gallery/45.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e45" data-name="infinity/♾️ activity1-even-numbers">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity1-even-numbers.world.json" target="toontalk-workshop" aria-label="Open Even numbers in the workshop" title="Open Even numbers in the workshop (the workshop tab)"><img src="gallery/45.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">45</span> ♾️ Even numbers <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 1: three rooms in a pipeline, each waking as the first number reaches it, and the evens keep pace with the whole numbers.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 8 steps · <b>needs</b> <a href="#e29">Zeno’s postman</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the Add 1 room.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 8 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e29">Zeno’s postman</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the Add 1 room: the numbers pass down the pipeline and the nests fill, doubles keeping pace with the whole numbers.</p>
     <p class="try"><b>Change and predict:</b> Is there an even number on B that is not on doubled? Predict, then watch the two nests fill.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity1-even-numbers.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity1-even-numbers.world.json" target="toontalk-workshop" aria-label="Open Even numbers in the workshop" data-open="infinity/♾️ activity1-even-numbers">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity1-even-numbers"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e46">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity2-all-integers.world.json" target="_blank" title="Open in the workshop"><img src="gallery/46.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e46" data-name="infinity/♾️ activity2-all-integers">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity2-all-integers.world.json" target="toontalk-workshop" aria-label="Open All the integers in the workshop" title="Open All the integers in the workshop (the workshop tab)"><img src="gallery/46.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">46</span> ♾️ All the integers <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 2: the negatives merged in, fairly — Merge waits for the matching negative.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 8 steps · <b>needs</b> <a href="#e45">Even numbers</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the Add 1 room; pull it again when you have seen enough.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 8 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e45">Even numbers</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the Add 1 room: positives and negatives arrive on the merged nest in turn; pull it again when you have seen enough.</p>
     <p class="try"><b>Change and predict:</b> Predict the order on the merged nest before it fills.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity2-all-integers.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity2-all-integers.world.json" target="toontalk-workshop" aria-label="Open All the integers in the workshop" data-open="infinity/♾️ activity2-all-integers">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity2-all-integers"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e47">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity3-sequences-and-pairs.world.json" target="_blank" title="Open in the workshop"><img src="gallery/47.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e47" data-name="infinity/♾️ activity3-sequences-and-pairs">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity3-sequences-and-pairs.world.json" target="toontalk-workshop" aria-label="Open Sequences and pairs in the workshop" title="Open Sequences and pairs in the workshop (the workshop tab)"><img src="gallery/47.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">47</span> ♾️ Sequences and pairs <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 3: squares, and pairs [n, n²] — a sequence of boxes.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 12 steps · <b>needs</b> <a href="#e46">All the integers</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the Add 1 room.</p>
+    <p class="meta"><span class="do do-build">build it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 12 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e46">All the integers</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the Add 1 room: squares and [n, n²] pairs land on their nests.</p>
     <p class="try"><b>Change and predict:</b> Train a robot of your own for cubes and put it in the squarer’s place. Predict the pairs.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity3-sequences-and-pairs.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity3-sequences-and-pairs.world.json" target="toontalk-workshop" aria-label="Open Sequences and pairs in the workshop" data-open="infinity/♾️ activity3-sequences-and-pairs">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity3-sequences-and-pairs"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e48">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity4-all-fractions.world.json" target="_blank" title="Open in the workshop"><img src="gallery/48.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e48" data-name="infinity/♾️ activity4-all-fractions">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity4-all-fractions.world.json" target="toontalk-workshop" aria-label="Open All the fractions between 0 and 1 in the workshop" title="Open All the fractions between 0 and 1 in the workshop (the workshop tab)"><img src="gallery/48.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">48</span> ♾️ All the fractions between 0 and 1 <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 4: every fraction between 0 and 1, the scale pans as holes.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 12 steps · <b>needs</b> <a href="#e47">Sequences and pairs</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 12 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e47">Sequences and pairs</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room: fractions between 0 and 1 arrive on the nest, none missed.</p>
     <p class="try"><b>Change and predict:</b> Does 2/4 appear, and 1/2 as well? Predict, then look.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity4-all-fractions.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity4-all-fractions.world.json" target="toontalk-workshop" aria-label="Open All the fractions between 0 and 1 in the workshop" data-open="infinity/♾️ activity4-all-fractions">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity4-all-fractions"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e49">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity5-above-one.world.json" target="_blank" title="Open in the workshop"><img src="gallery/49.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e49" data-name="infinity/♾️ activity5-above-one">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity5-above-one.world.json" target="toontalk-workshop" aria-label="Open The fractions above one in the workshop" title="Open The fractions above one in the workshop (the workshop tab)"><img src="gallery/49.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">49</span> ♾️ The fractions above one <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 5: the fractions above one are the reciprocals of those below.</p>
-    <p class="meta"><b>medium</b> — 4 robots, the longest 12 steps · <b>needs</b> <a href="#e48">All the fractions between 0 and 1</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>medium</b>, 4 robots, the longest 12 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e48">All the fractions between 0 and 1</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room: each fraction below one lands with its reciprocal on the other nest.</p>
     <p class="try"><b>Change and predict:</b> Predict the first five on the reciprocals nest.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity5-above-one.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity5-above-one.world.json" target="toontalk-workshop" aria-label="Open The fractions above one in the workshop" data-open="infinity/♾️ activity5-above-one">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity5-above-one"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e50">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity6-all-rationals.world.json" target="_blank" title="Open in the workshop"><img src="gallery/50.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e50" data-name="infinity/♾️ activity6-all-rationals">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity6-all-rationals.world.json" target="toontalk-workshop" aria-label="Open All the rational numbers in the workshop" title="Open All the rational numbers in the workshop (the workshop tab)"><img src="gallery/50.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">50</span> ♾️ All the rational numbers <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 6: all the rationals, five rooms waking in turn, Merge keeping it fair.</p>
-    <p class="meta"><b>large</b> — 5 robots, the longest 12 steps · <b>needs</b> <a href="#e49">The fractions above one</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>large</b>, 5 robots, the longest 12 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e49">The fractions above one</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room: the five rooms wake in turn and the merged nest fills with every rational.</p>
     <p class="try"><b>Change and predict:</b> Predict where 3/2 comes in the merged order relative to 2/3.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity6-all-rationals.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity6-all-rationals.world.json" target="toontalk-workshop" aria-label="Open All the rational numbers in the workshop" data-open="infinity/♾️ activity6-all-rationals">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity6-all-rationals"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e51">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity7-any-interval.world.json" target="_blank" title="Open in the workshop"><img src="gallery/51.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e51" data-name="infinity/♾️ activity7-any-interval">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity7-any-interval.world.json" target="toontalk-workshop" aria-label="Open Any interval in the workshop" title="Open Any interval in the workshop (the workshop tab)"><img src="gallery/51.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">51</span> ♾️ Any interval <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 7: three nests filling at exactly the same rate — the pairing made visible.</p>
-    <p class="meta"><b>large</b> — 6 robots, the longest 12 steps · <b>needs</b> <a href="#e50">All the rational numbers</a></p>
-    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>large</b>, 6 robots, the longest 12 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e50">All the rational numbers</a></p>
+    <p class="run"><b>Run:</b> Pull the lever on the All Fractions room: three nests fill at exactly the same rate.</p>
     <p class="try"><b>Change and predict:</b> The argument is that ×2 can be undone. Predict what the halving room sends for 3/8.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity7-any-interval.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity7-any-interval.world.json" target="toontalk-workshop" aria-label="Open Any interval in the workshop" data-open="infinity/♾️ activity7-any-interval">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity7-any-interval"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e52">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity8-counting-sequences.world.json" target="_blank" title="Open in the workshop"><img src="gallery/52.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e52" data-name="infinity/♾️ activity8-counting-sequences">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity8-counting-sequences.world.json" target="toontalk-workshop" aria-label="Open Counting the sequences in the workshop" title="Open Counting the sequences in the workshop (the workshop tab)"><img src="gallery/52.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">52</span> ♾️ Counting the sequences <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Exploring Infinity 8: the team takes the first term of the first sequence, the second of the second… a diagonal.</p>
-    <p class="meta"><b>large</b> — 7 robots, the longest 15 steps · <b>needs</b> <a href="#e51">Any interval</a></p>
-    <p class="run"><b>Run:</b> Give the three Sequence boxes to the All Sequences bird and pull the three levers.</p>
+    <p class="meta"><span class="do do-try">try it</span> <span class="inside">inside: <b>large</b>, 7 robots, the longest 15 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e51">Any interval</a></p>
+    <p class="run"><b>Run:</b> Give the three Sequence boxes to the All Sequences bird and pull the three levers: the team takes a term from each in turn and the diagonal piles up.</p>
     <p class="try"><b>Change and predict:</b> Predict the first six terms the team takes, in order.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity8-counting-sequences.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%E2%99%BE%EF%B8%8F%20activity8-counting-sequences.world.json" target="toontalk-workshop" aria-label="Open Counting the sequences in the workshop" data-open="infinity/♾️ activity8-counting-sequences">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/♾️ activity8-counting-sequences"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e53">
-  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%F0%9F%8F%A8%20resort-infinity.world.json" target="_blank" title="Open in the workshop"><img src="gallery/53.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e53" data-name="infinity/🏨 resort-infinity">
+  <a class="pic" href="toontalk-3d.html?world=examples/infinity/%F0%9F%8F%A8%20resort-infinity.world.json" target="toontalk-workshop" aria-label="Open Resort Infinity in the workshop" title="Open Resort Infinity in the workshop (the workshop tab)"><img src="gallery/53.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">53</span> 🏨 Resort Infinity <span class="folder">infinity</span></h3>
+    
     <p class="teaches">Resort Infinity: cottages without end, guests to house and to move up five — the robots are yours to train.</p>
-    <p class="meta"><b>large</b> — 63 robots, the longest 20 steps · <b>needs</b> <a href="#e52">Counting the sequences</a></p>
-    <p class="run"><b>Run:</b> Go outside. Train a robot on the practice letter and give it to the front desk’s bird.</p>
+    <p class="meta"><span class="do do-build">build it</span> <span class="inside">inside: <b>large</b>, 63 robots, the longest 20 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e52">Counting the sequences</a></p>
+    <p class="run"><b>Run:</b> Go outside. Train a robot on the practice letter and give it to the front desk’s bird: each guest is answered and walks to its cottage.</p>
     <p class="try"><b>Change and predict:</b> Before you train: predict what the guest at cottage 1 must be told when five more arrive.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%F0%9F%8F%A8%20resort-infinity.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/infinity/%F0%9F%8F%A8%20resort-infinity.world.json" target="toontalk-workshop" aria-label="Open Resort Infinity in the workshop" data-open="infinity/🏨 resort-infinity">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="infinity/🏨 resort-infinity"> tried</label></p>
   </div>
 </article></div>
 </section>
@@ -661,51 +781,84 @@
   <h2 id="meta">Meta</h2>
   <p class="note">Robots that train robots. Read the pupil’s desired program first, then watch the teacher make it.</p>
   <div class="grid">
-<article class="card" id="e54">
-  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20teacher.world.json" target="_blank" title="Open in the workshop"><img src="gallery/54.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e54" data-name="meta/🎓 teacher">
+  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20teacher.world.json" target="toontalk-workshop" aria-label="Open The teacher in the workshop" title="Open The teacher in the workshop (the workshop tab)"><img src="gallery/54.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">54</span> 🎓 The teacher <span class="folder">meta</span></h3>
+    
     <p class="teaches">A robot that trains a robot: the pupil takes a desk, is shown its step, and has its thought loosened by Ruby.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 12 steps · <b>needs</b> <a href="#e17">Factorial</a></p>
-    <p class="run"><b>Run:</b> Give the four-hole box to the teacher and press Start; then click the pupil and press Start.</p>
+    <p class="meta"><span class="do do-read">read it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 12 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e17">Factorial</a></p>
+    <p class="run"><b>Run:</b> Give the four-hole box to the teacher and press Start: the pupil takes a desk and is taught; then click the pupil and press Start to see it do what it learned.</p>
     <p class="try"><b>Change and predict:</b> Predict what the pupil’s thought says after the lesson, before you look.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20teacher.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20teacher.world.json" target="toontalk-workshop" aria-label="Open The teacher in the workshop" data-open="meta/🎓 teacher">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="meta/🎓 teacher"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e55">
-  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20telling.world.json" target="_blank" title="Open in the workshop"><img src="gallery/55.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e55" data-name="meta/🎓 telling">
+  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20telling.world.json" target="toontalk-workshop" aria-label="Open Telling in the workshop" title="Open Telling in the workshop (the workshop tab)"><img src="gallery/55.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">55</span> 🎓 Telling <span class="folder">meta</span></h3>
+    
     <p class="teaches">A teacher whose pupil learns to write to the perch: [set | value | 5] lands on “what it told”.</p>
-    <p class="meta"><b>medium</b> — 3 robots, the longest 16 steps · <b>needs</b> <a href="#e54">The teacher</a><a href="#e2">Moving</a></p>
-    <p class="run"><b>Run:</b> Give the four-hole box to the teacher and press Start.</p>
+    <p class="meta"><span class="do do-change">change it</span> <span class="inside">inside: <b>medium</b>, 3 robots, the longest 16 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e54">The teacher</a><a class="chip" href="#e2">Moving</a></p>
+    <p class="run"><b>Run:</b> Give the four-hole box to the teacher and press Start: the pupil is taught, and [set | value | 5] lands on “what it told”.</p>
     <p class="try"><b>Change and predict:</b> Change the reading before the lesson. Predict the letter that lands.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20telling.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20telling.world.json" target="toontalk-workshop" aria-label="Open Telling in the workshop" data-open="meta/🎓 telling">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="meta/🎓 telling"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e56">
-  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20timer-teacher.world.json" target="_blank" title="Open in the workshop"><img src="gallery/56.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e56" data-name="meta/🎓 timer-teacher">
+  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20timer-teacher.world.json" target="toontalk-workshop" aria-label="Open The stopwatch teacher in the workshop" title="Open The stopwatch teacher in the workshop (the workshop tab)"><img src="gallery/56.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">56</span> 🎓 The stopwatch teacher <span class="folder">meta</span></h3>
+    
     <p class="teaches">A teacher that builds the stopwatch: robots that really ask the computer and really tell the number.</p>
-    <p class="meta"><b>large</b> — 9 robots, the longest 109 steps · <b>needs</b> <a href="#e55">Telling</a><a href="#e12">A stopwatch</a></p>
-    <p class="run"><b>Run:</b> Give the eleven-hole box to the teacher and press Start.</p>
+    <p class="meta"><span class="do do-read">read it</span> <span class="inside">inside: <b>large</b>, 9 robots, the longest 109 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e55">Telling</a><a class="chip" href="#e12">A stopwatch</a></p>
+    <p class="run"><b>Run:</b> Give the eleven-hole box to the teacher and press Start: four pupils are trained in turn and go on to a number’s panel; take the number out and SPACE on it, and it counts.</p>
     <p class="try"><b>Change and predict:</b> Predict which pupil asks and which tells, from their thoughts alone.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20timer-teacher.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20timer-teacher.world.json" target="toontalk-workshop" aria-label="Open The stopwatch teacher in the workshop" data-open="meta/🎓 timer-teacher">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="meta/🎓 timer-teacher"> tried</label></p>
   </div>
 </article>
-<article class="card" id="e57">
-  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20resort-teacher.world.json" target="_blank" title="Open in the workshop"><img src="gallery/57.jpg" alt="" loading="lazy"></a>
+<article class="card" id="e57" data-name="meta/🎓 resort-teacher">
+  <a class="pic" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20resort-teacher.world.json" target="toontalk-workshop" aria-label="Open The resort teacher in the workshop" title="Open The resort teacher in the workshop (the workshop tab)"><img src="gallery/57.jpg" alt="" loading="lazy"></a>
   <div class="body">
     <h3><span class="n">57</span> 🎓 The resort teacher <span class="folder">meta</span></h3>
+    
     <p class="teaches">A robot solves Resort Infinity in front of you: it trains the two robots and gives them to the birds.</p>
-    <p class="meta"><b>large</b> — 66 robots, the longest 30 steps · <b>needs</b> <a href="#e56">The stopwatch teacher</a><a href="#e53">Resort Infinity</a></p>
-    <p class="run"><b>Run:</b> Go outside and give the teacher its box.</p>
+    <p class="meta"><span class="do do-read">read it</span> <span class="inside">inside: <b>large</b>, 66 robots, the longest 30 steps</span></p>
+    <p class="needs"><b>Needs</b> <a class="chip" href="#e56">The stopwatch teacher</a><a class="chip" href="#e53">Resort Infinity</a></p>
+    <p class="run"><b>Run:</b> Go outside and give the teacher its box: it trains the two robots, gives them to the birds, and the guests are housed.</p>
     <p class="try"><b>Change and predict:</b> Predict which of the two lessons it gives first, and why the order matters.</p>
-    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20resort-teacher.world.json" target="_blank">Open in the workshop</a> <span class="dim">Start over is on the card at the right.</span></p>
+    <p class="open"><a class="btn" href="toontalk-3d.html?world=examples/meta/%F0%9F%8E%93%20resort-teacher.world.json" target="toontalk-workshop" aria-label="Open The resort teacher in the workshop" data-open="meta/🎓 resort-teacher">Open in the workshop ↗</a> <label class="tried"><input type="checkbox" data-tried="meta/🎓 resort-teacher"> tried</label></p>
   </div>
 </article></div>
 </section></main>
 <footer>The pictures are the worlds as they open, or after one run. Sizes are counted from the files: every robot, on the table, in a team, in a house or on a panel, and the longest program among them. Written by gallery/make_gallery.py.</footer>
+<script>
+(() => {
+  // THE SEARCH: the cards whose words match stay; a section with none left folds away.
+  const q = document.getElementById('q'), qn = document.getElementById('qn');
+  const cards = [...document.querySelectorAll('.card')];
+  const words = new Map(cards.map(c => [c, c.textContent.toLowerCase()]));
+  const filter = () => {
+    const s = q.value.trim().toLowerCase();
+    let n = 0;
+    for (const c of cards) { const on = !s || words.get(c).includes(s); c.classList.toggle('hide', !on); if (on) n++; }
+    for (const sec of document.querySelectorAll('main section')) sec.classList.toggle('hide', ![...sec.querySelectorAll('.card')].some(c => !c.classList.contains('hide')));
+    qn.textContent = s ? (n + ' of ' + cards.length) : '';
+  };
+  q.addEventListener('input', filter);
+  // THE TRIED MARKS: this browser's, and nobody else's (localStorage may be off: then the ticks last the page)
+  const KEY = 'tt3d.gallery.tried';
+  const load = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); } catch (e) { return new Set(); } };
+  const tried = load();
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...tried])); } catch (e) {} };
+  const show = () => { for (const c of cards) { const on = tried.has(c.dataset.name); c.classList.toggle('is-tried', on); const box = c.querySelector('[data-tried]'); if (box) box.checked = on; } };
+  document.addEventListener('change', e => { const n = e.target.dataset?.tried; if (!n) return; if (e.target.checked) tried.add(n); else tried.delete(n); save(); show(); });
+  document.addEventListener('click', e => { const n = e.target.closest?.('[data-open]')?.dataset.open; if (n && !tried.has(n)) { tried.add(n); save(); show(); } });
+  show();
+})();
+</script>
 </body>
 </html>

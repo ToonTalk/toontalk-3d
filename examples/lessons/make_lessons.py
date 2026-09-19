@@ -190,7 +190,7 @@ def card(lid, name, panel):
 TRY = {
     'planet': ('TRY\n\nChange steps left to 9.\nHow much of the ring will\nbe drawn? Then try 18.\n\n'
                'Changing the turn changes\nthe ring\'s size and centre\ntoo; the sun stays put.\n\n'
-               'Start this world over is\non the card at the right.'),
+               '"Start this world over" is\non the title card.'),
     'flower': ('TRY\n\nSet petals left to 3 and\n"next spoke" from 240 to\n300. Keep the square\ncorner at 90. Why do those\ntwo turns have different\njobs?\n\n'
                'Then sweep the flower up\nwith Dusty: one thing.\n\n'
                'The colours wait on a nest:\nput another on top.'),

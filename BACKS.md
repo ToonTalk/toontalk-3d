@@ -8295,3 +8295,26 @@ plain HOUSE -- forty rounds a turn, the star jumping 240 degrees at a time
 panel flag across a save (a ticker), its "my thing" is the thing whose
 panel it stands in, and SPACE on that thing switches it with the rest.
 panelOnSpotCheck. Favicons for the gallery, the ledger and index (Ken).
+
+## ChatGPT's gallery review
+
+Three confirmed problems and eight suggestions (19 September; Ken: "they
+look good to me"). THE ALBUM CARD described a robot taking pictures off a
+nest; the world is a notebook of pictures with no robot at all. The card
+says what the world is now, and make_gallery.py warns (and fails) when a
+card talks of a robot the file has not got. "START OVER IS ON THE CARD AT
+THE RIGHT" was said by the gallery, by the planet's TRY pad and by the
+finished-for-good line, and the button is on the title card at the top
+left: all three name the button by its label, "Start this world over", and
+the title card. STARTING OVER SAID THE INTRODUCTION TWICE: worldIn says it
+only when it is not already the last thing Marty said (introOnlyCheck
+asks). Of the suggestions: each card says what you DO (try it, change it,
+read it, build it -- Resort Infinity has sixty-three robots inside and asks
+you to train one) apart from how much is INSIDE; random colour is marked an
+optional challenge on the beginner route; every Run says the whole sequence
+and what you should see; a bar that stays put carries the sections, a
+search that folds empty sections away, and a way to the top; a card has a
+"tried" tick this browser remembers (ticked by opening it too); the
+prerequisites are chips; the Open links say which world they open, and all
+of them open in ONE workshop tab (a named target) rather than a tab each.
+Not done: closer pictures of each result (a shot recipe per world, later).
