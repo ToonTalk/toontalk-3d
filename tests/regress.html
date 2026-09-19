@@ -4907,6 +4907,43 @@ async function housesAtWorkCheck(D) {
   return ok;
 }
 
+// OUT ON DELIVERY (ChatGPT's runtime review, 19 September): a thing given to
+// a bird while she is away used to land in the hole behind her. A stand-in
+// keeps her place and what is given it waits; she takes it when she is back.
+// Here: a nest, a bird in a box's hole, two numbers. The first is given at
+// walking pace; mid-flight the second is dropped where she was; both end on
+// the nest, the hole holds the bird again, and the save has one bird.
+async function birdAwayCheck(D) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+    { thing: { kind: 'nest', id: 7101, guid: 'away-probe', hasEgg: false, pile: [], label: 'post' }, x: 1.2, z: 1.2 },
+    { thing: { kind: 'box', holes: [{ kind: 'bird', nestId: 7101, nestGuid: 'away-probe' }, { kind: 'number', value: { n: '1', d: '1' } }] }, x: -0.6, z: 1.7 },
+    { thing: { kind: 'number', value: { n: '5', d: '1' } }, x: 0.3, z: 2.1 },
+    { thing: { kind: 'number', value: { n: '6', d: '1' } }, x: 0.7, z: 2.1 }] });
+  await slowSettle(D, 2000); D.speed(1);
+  const things = () => { const a = []; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; };
+  const nest = things().find(t => t.userData.kind === 'nest');
+  const box = things().find(t => t.userData.kind === 'box');
+  const bird = box.userData.holes[0].thing;
+  const five = things().find(t => t.userData.kind === 'number' && String(t.userData.value.n) === '5');
+  const six = things().find(t => t.userData.kind === 'number' && String(t.userData.value.n) === '6');
+  D.hold(five); await frames(D, 10); D.clickThing(bird);
+  await frames(D, 20);                                  // mid-flight
+  const standIn = box.userData.holes[0].thing;
+  const ghostThere = !!standIn && standIn !== bird && standIn.__ghostOf === bird && standIn.userData.kind === 'bird';
+  const savedMid = D.worldOut();
+  const birdsSaved = JSON.stringify(savedMid).split('"kind":"bird"').length - 1;
+  D.hold(six); await frames(D, 10); D.clickThing(standIn);
+  await frames(D, 10);
+  const pending = (bird.__pending || []).length;
+  for (let k = 0; k < 600 && (nest.userData.pile || []).length < 2; k++) await frames(D, 1);
+  await frames(D, 80);
+  const pile = (nest.userData.pile || []).map(t => String(t.userData.value?.n));
+  const back = box.userData.holes[0].thing === bird && !bird.__ghost;
+  const ok = ghostThere && birdsSaved === 1 && pending === 1 && pile.length === 2 && pile.includes('5') && pile.includes('6') && back;
+  put((ok ? 'PASS' : 'FAIL') + ' a bird out on delivery leaves a stand-in that keeps what it is given  (stand-in=' + ghostThere + ' birds-in-save=' + birdsSaved + ' pending=' + pending + ' pile=' + JSON.stringify(pile) + ' back=' + back + ')', ok ? 'pass' : 'fail');
+  return ok;
+}
+
 async function panelOnSpotCheck(D) {
   const w = await (await fetch('../examples/behaviours/🪐 ellipse.world.json')).json();
   D.worldIn(w); await slowSettle(D, 1500);
@@ -7481,6 +7518,9 @@ async function runOne(D, spec) {
   let hawOK = true;
   try { hawOK = want('housesAtWork') ? await housesAtWorkCheck(D) : true; }
   catch (e) { hawOK = false; put('FAIL the houses still at work are counted  ' + e.message, 'fail'); }
+  let bawOK = true;
+  try { bawOK = want('birdAway') ? await birdAwayCheck(D) : true; }
+  catch (e) { bawOK = false; put('FAIL a bird out on delivery leaves a stand-in  ' + e.message, 'fail'); }
   let posOK = true;
   try { posOK = want('panelOnSpot') ? await panelOnSpotCheck(D) : true; }
   catch (e) { posOK = false; put('FAIL a panel on a work spot stays a ticker  ' + e.message, 'fail'); }
@@ -7649,7 +7689,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

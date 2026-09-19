@@ -35,7 +35,7 @@ first = txt('I am going to teach this little robot to count.')          # noqa: 
 last = txt('Now it counts: click it, and press Start.')                # noqa: F405
 pupil = {'kind': 'robot', 'name': 'the pupil', 'program': [], 'condition': None,
          'trainedOn': None, 'team': [],
-         'note': 'Untrained. The teacher gives it a box -- a count, and a 1 -- and '
+         'note': 'The pupil. The teacher gives it a box -- a count, and a 1 -- and '
                  'shows it how to count with them.'}
 counting = box(num(0), num(1))                                         # noqa: F405
 

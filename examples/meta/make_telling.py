@@ -30,7 +30,7 @@ first = txt('I am going to teach this little robot to tell its thing what it rea
 last = txt('Now it tells. Put it on any thing’s panel, with its box, and it tells that thing.')   # noqa: F405
 pupil = {'kind': 'robot', 'name': 'Tell', 'program': [], 'condition': None,
          'trainedOn': None, 'team': [],
-         'note': 'Untrained. The teacher gives it a box -- a nest with a reading on it, and a '
+         'note': 'The pupil. The teacher gives it a box -- a nest with a reading on it, and a '
                  '[set | value | _] letter -- and shows it how to tell the bird on the perch.'}
 work = box(nest(*READ, label='readings', pile=[num(5)]),   # noqa: F405
            box(txt('set'), txt('value'), None))            # noqa: F405

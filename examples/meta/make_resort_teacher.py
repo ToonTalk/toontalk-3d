@@ -42,7 +42,7 @@ msg = lambda *words: box(*[txt(w) for w in words])        # noqa: E731,F405
 def fresh(bot, note):
     """An untrained little robot with the name of the one it will become."""
     return {'kind': 'robot', 'name': bot['name'], 'program': [], 'condition': None,
-            'trainedOn': None, 'team': [], 'note': 'Untrained. ' + note}
+            'trainedOn': None, 'team': [], 'note': 'A pupil. ' + note}
 
 
 RQ, LQ, DQ = '’', '“', '”'

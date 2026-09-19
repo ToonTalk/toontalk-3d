@@ -9740,7 +9740,11 @@ function drainQueue(guard = 400) {
 const ROOM_DEPTH_MAX = 12;
 // One idle tick spends at most this much wall-clock on room work, however
 // deep the recursion; whatever is still dirty resumes on the next tick.
-const ROOM_WORK_SLICE = 1200;
+// 300, not 1200: at Instant a pipeline of rooms took the whole slice every
+// frame, and a frame of 1.2 s is a page that cannot hear Pause (ChatGPT's
+// Grammar and fractions runs timed out its browser). A shorter slice is the
+// same work over more frames, with room between them for a click.
+const ROOM_WORK_SLICE = 300;
 let roomWorkT0 = 0;
 function runRoomWork(room, depth = 0, miOverride = null, chunkMax = null) {
   if (depth === 0 && roomWorkBusy) return;
@@ -10933,7 +10937,31 @@ function findNestById(id) {
 function allNestsByGuid(guid) {
   return guid ? allNests.filter(n2 => nestAnswersTo(n2, guid) && inScene(n2)) : [];
 }
+// OUT ON DELIVERY. While a bird flies, a translucent stand-in keeps her
+// place -- the hole, the perch, the spot -- so what is given her while she is
+// away waits for her rather than landing in the hole behind her (ChatGPT
+// dropped a Sequence box where the All Sequences bird had been, and it went
+// into the room). A robot's thought still sees a bird there. She takes what
+// waited as soon as she is back, one flight after another.
+function ghostBird(bird) {
+  const g = makeBird(bird.__nest);
+  g.__ghostOf = bird;
+  g.userData.nestGuid = bird.userData.nestGuid;
+  if (bird.userData.liveId) g.userData.liveId = bird.userData.liveId;
+  if (bird.__liveTarget) g.__liveTarget = bird.__liveTarget;
+  g.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.38; o.castShadow = false; } });
+  return g;
+}
 function birdDeliver(bird, carried, fromClaw = false) {
+  if (bird.__ghostOf) {
+    const real = bird.__ghostOf;
+    if (carried) {
+      (real.__pending ??= []).push({ carried, fromClaw });
+      detach(carried); carried.removeFromParent();
+      if (!fromClaw && !offstage()) say('She is out on delivery \u2014 she takes it the moment she is back.');
+    }
+    return;
+  }
   // a bird addressed to a THING: the robot's gift goes to the owner whole
   if (bird.__liveTarget || bird.userData.liveId) {
     const gift = carried;
@@ -11057,6 +11085,11 @@ function birdDeliver(bird, carried, fromClaw = false) {
   detach(bird);
   WROOT.attach(bird);
   bird.__flying = true;
+  { const ghost = ghostBird(bird);
+    if (originHole) putInHole(originHole, ghost);
+    else if (originSt) putOnStation(originSt, ghost);
+    else putOnBench(ghost, { x: wasAt.x, z: wasAt.z });
+    bird.__ghost = ghost; }
   bird.add(thing);
   thing.position.set(0, -0.02, 0.16);
   thing.quaternion.identity();
@@ -11089,10 +11122,15 @@ function birdDeliver(bird, carried, fromClaw = false) {
     },
     end() {
       bird.__flying = false;
+      const ghost = bird.__ghost;
+      if (ghost) { bird.__ghost = null; detach(ghost); ghost.removeFromParent(); }
       if (originHole && !originHole.thing) putInHole(originHole, bird);
       else if (originSt && !originSt.occupant) putOnStation(originSt, bird);
       else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
       refreshUI();
+      // ...and what waited for her goes next, one flight at a time
+      const next = bird.__pending?.shift();
+      if (next) birdDeliver(bird, next.carried, next.fromClaw);
     },
   });
 }
@@ -11884,7 +11922,8 @@ function condText(c) {
   }
   if (c.kind === 'anyRoom') return 'a room';
   if (c.kind === 'wildNumber') return 'any number';
-  if (c.kind === 'text') return `the text “${c.text}”`;
+  // a picture is a pad too: its thought says so rather than showing empty quotes
+  if (c.kind === 'text') return c.img ? (c.text ? `the picture captioned “${c.text}”` : 'that picture') : `the text “${c.text}”`;
   if (c.kind === 'wildText') return 'any text';
   if (c.kind === 'anyBox') return 'any box — any number of holes';
   if (c.kind === 'wildScale') return 'any scale';
@@ -15203,10 +15242,21 @@ function resolve(ev) {
     if (o.__pick.kind === 'botThing' && mode !== 'world'
         && !(mode === 'training' && clawHeld && clawHeld.userData.kind !== 'robot' && teachable(o.__pick.bot))
         && !(mode === 'training' && !clawHeld && taughtIndex(o.__pick.bot) && taughtAtDesk(o.__pick.bot))) continue;
+    // A BIGGER TARGET THAN THE LEVER (ChatGPT: "tiny house switches can
+    // instead pick up a house"; Ken: finicky). A click on the house's own
+    // body within a hand's width of its lever is the lever -- nothing is
+    // added to the house, so nothing that measures it changes.
+    if (o.__pick.kind === 'thing' && o.__pick.thing?.userData?.kind === 'room' && o.__pick.thing.__lever && !held && !dustyActive && !rubyActive) {
+      const room = o.__pick.thing;
+      const at = room.__lever.getWorldPosition(_leverAt);
+      if (h.point.distanceTo(at) < LEVER_REACH * (room.scale?.x || 1)) return { kind: 'roomLever', room, point: h.point.clone() };
+    }
     return { ...o.__pick, point: h.point.clone() };
   }
   return null;
 }
+const _leverAt = new THREE.Vector3();
+const LEVER_REACH = 0.12;
 function visibleUp(node) {
   for (let p = node; p; p = p.parent) if (p.visible === false) return false;
   return true;
@@ -18625,6 +18675,7 @@ function fileTooNew(o, what = 'file') {
     : null;
 }
 function thingOut(t) {
+  if (t?.__ghostOf) t = t.__ghostOf;          // a stand-in saves as the bird herself
   const r = thingOutRaw(t);
   if (r && t?.userData?.erased) r.erased = true;
   // the panel rides with its thing: the open tray's live world, or the
@@ -19503,7 +19554,7 @@ function runProgram() {
   activeBot.mini = false;
   activeBot.node.scale.setScalar(1);
   activeBot.root.scale.setScalar(1);
-  mode = 'replay'; busy = true; runCount = 0; runsBegun++;
+  mode = 'replay'; busy = true; runCount = 0; runsBegun++; runLastWords = '';
   if (camWatchRun) { camWatchRun = false; if (smartCam) showViewSoon(runWatchPose); }
   // NOTHING WAITS FOR THE NARRATOR. Marty's opening line -- what the robot
   // is trying to achieve -- takes seconds to come and the whole of it was
@@ -19602,7 +19653,15 @@ function nextIteration() {
       // gallery tests). It is its part done; the houses say so.
       const houses = housesAtWork();
       const onward = houses ? ` ${alone ? 'Its' : 'The team’s'} part is done — ${houses === 1 ? 'a house is' : houses + ' houses are'} still at work.` : '';
-      sayAttn(alone
+      // A ROBOT THAT ENDED BY READING A PAD OUT -- the teacher's "Now it
+      // counts: click it, and press Start" -- had its words wiped by this
+      // line a moment later, and the finish read as a failure (ChatGPT; Ken:
+      // "a final reading of a text pad could address this"). The reading is
+      // the stop line, and the reason it stopped follows.
+      const words = alone && runCount && runLastWords ? runLastWords : '';
+      sayAttn(words
+        ? `\u201c${words}\u201d \u2014 and it stopped after ${roundsSaid()}: what is on its desk no longer fits its thought.` + onward
+        : alone
         ? (runCount
           ? `Ran ${roundsSaid()} and stopped: what is on its desk no longer fits its thought${red.length ? ' (the red parts)' : ''}.` + onward + loosen
           : 'Nothing recognises what it was given.' + (red.length ? ' If you want it to work on this, wake Ruby and click a red part of its thought to loosen it, or Dusty to take it away.' : ''))
@@ -20137,6 +20196,7 @@ function speakText(words) {
   if (v) u.voice = v;
   speechSynthesis.speak(u);
 }
+let runLastWords = '';                 // the last pad the robot read out this run
 function actionSpeak() {
   const onStage = !offstage();
   // ON THE SEQUENCER'S OWN CLOCK: the pause is a duration the tick counts
@@ -20148,6 +20208,7 @@ function actionSpeak() {
       const t = clawHeld?.userData.kind === 'text' ? (clawHeld.userData.text || '').trim() : '';
       if (!t) return;
       hintLastSpoken = t;                 // the card shows it; the pad's own voice says it, once
+      runLastWords = t;
       if (onStage) say(t, 6000);
       speakText(t);
       this.dur = window.speechSynthesis && !sndMuted ? 0.3 : Math.min(6, 0.6 + 0.045 * t.length);
@@ -20708,7 +20769,9 @@ function refreshUI() {
          : (OP_READS[HAND.userData.op] ?? ((n) => n))(ratShort(HAND.userData.value)))
       : kind === 'robot' ? (HAND.__bot.name ? `“${HAND.__bot.name}” the robot`
           : HAND.__bot.program.length ? 'a trained robot' : 'a robot')
-      : kind === 'text' ? (HAND.userData.text
+      : kind === 'text' ? (HAND.userData.img
+          ? (HAND.userData.text ? `a picture captioned “${HAND.userData.text.slice(0, 24)}”` : 'a picture')
+          : HAND.userData.text
           ? `a pad: “${HAND.userData.text.length > 24 ? HAND.userData.text.slice(0, 24) + '…' : HAND.userData.text}”`
           : 'a blank pad')
       : kind === 'room' ? ((HAND.__ctx || HAND.userData.world) ? 'a room with things inside' : 'an empty room')
@@ -21973,6 +22036,9 @@ function tipForInner(t) {
     }
     return `Page ${t.slot + 1} — ${what}. Click to take a COPY out; the page keeps its own.`;
   }
+  if (t.kind === 'thing' && t.thing?.userData?.kind === 'notebook' && t.thing.userData.main && !TIP && !dustyActive) {
+    return 'Your notebook \u2014 the spine picks it up, to put it where you like; the \u22ee menu moves it aside.';
+  }
   if (t.kind === 'nbFlip') {
     return t.dir < 0 ? 'Back a spread \u2014 the \u2190 key does the same.'
                      : 'On a spread \u2014 the \u2192 key does the same.';
@@ -23068,6 +23134,30 @@ loadModel('robot_v4.glb', (gltf) => {
     stb.textContent = '\u2699 Settings\u2026';
     stb.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); showSettingsCard(false); };
     menu.appendChild(stb);
+    // MOVE MY NOTEBOOK ASIDE (ChatGPT: the notebook lay over a world's
+    // things; Ken: moving it should be clearer and easier). The spine still
+    // picks it up; this puts it at the nearest clear spot to the front
+    // right, out of the way of whatever the world laid out.
+    const nbb = document.createElement('button');
+    nbb.id = 'notebookAsideBtn';
+    nbb.title = 'Put your notebook at the nearest clear spot, front right, off whatever it lies over. To put it anywhere, pick it up by its spine.';
+    nbb.textContent = '\ud83d\udcd3 Move my notebook aside';
+    nbb.onclick = () => {
+      document.getElementById('moreMenu').classList.remove('on');
+      const nb = mainNotebook();
+      if (!nb || nb.parent !== benchRoot) return say('Your notebook is not on the table.');
+      const w = (nb.userData.width ?? 0.86) * (nb.userData.sz ?? 1);
+      const desk = [];
+      for (const st of Object.values(stations)) if ((st.kind === 'scratch' || st.id === 'stand') && st.point) desk.push(st.point);
+      const spot = freeSpotNear({ x: BENCH.x1 - w / 2 - 0.1, z: BENCH.z1 - 0.25 }, w, nb, desk);
+      pushUndo();
+      nb.userData.wants = { x: spot.x, z: spot.z };
+      putOnBench(nb, spot);
+      nb.position.x = spot.x; nb.position.z = spot.z;
+      say('Your notebook is aside \u2014 pick it up by its spine to put it anywhere else.');
+      refreshUI();
+    };
+    menu.appendChild(nbb);
     // WHAT IS HERE: Marty, the helpers, the stacks and the back door, each
     // with a box to tick -- a general way to take anything out of the
     // workshop when it is not wanted, and to bring it back (Ken). Remembered

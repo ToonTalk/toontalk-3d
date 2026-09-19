@@ -8329,3 +8329,28 @@ worked on: the stop line now adds "Its part is done -- N houses are still
 at work" when there are any (housesAtWork(): dirty, waiting on a nest, or
 not yet given a first turn). In the suite Fibonacci's houses finish inside
 the drop, so housesAtWorkCheck counts Zeno's two instead.
+
+## ChatGPT's runtime review
+
+Fifty-seven cards run (19 Sep); Ken picked. A BIRD OUT ON DELIVERY leaves
+a translucent stand-in in her place -- hole, perch or spot -- and whatever
+is given the stand-in waits for her (ChatGPT dropped a Sequence box where
+the All Sequences bird had been and it went into the room behind). A
+robot's thought still sees a bird there; she takes what waited as soon as
+she is back, one flight after another; a save has one bird (birdAwayCheck).
+A ROBOT'S LAST READING STAYS: the teacher ends by reading "Now it counts:
+click it, and press Start", and the stop line wiped it a moment later, so
+the finish read as a failure; the reading is the stop line now, the reason
+after it. The pupils' notes no longer say Untrained. INSTANT'S SLICE is
+300 ms, not 1200: a 1.2 s frame is a page that cannot hear Pause (ChatGPT's
+Grammar and fractions runs timed out its browser). THE HOUSE LEVER has a
+reach: a click on the house's body within 12 cm of the lever is the lever
+(nothing added to the house, so nothing that measures it changes). MOVE MY
+NOTEBOOK ASIDE in the menu; the notebook's tip says the spine moves it.
+Pictures are described as pictures in the held line and in thoughts. The
+bank starts switched on. Gallery: the Pictures card asks for a letter off
+a notebook page (there are no letters on the table), the computer's try
+asks for the time, activity 6 is "All the positive rationals", activity 7
+fills "term for term" rather than "at exactly the same rate".
+resortTeacher FAILS alone on this build AND the previous one (newcomers at
+6-10): pre-existing, not this round's -- ChatGPT saw the live app solve it.

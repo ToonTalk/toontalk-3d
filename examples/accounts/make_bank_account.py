@@ -113,8 +113,10 @@ bank = {'kind': 'world', 'v': 1, 'bench': [],
         'stations': {'stand': account}, 'active': teller}
 
 world = {'kind': 'world', 'v': 1, 'bench': [
+    # SWITCHED ON from the start (ChatGPT's tests: a request went unanswered
+    # until the house was started by hand): a dozing Teller costs nothing
     {'thing': {'kind': 'room', 'label': 'The Bank', 'opaque': False,
-               'dirty': False, 'world': bank}, 'x': -0.45, 'z': 1.55},
+               'dirty': True, 'world': bank}, 'x': -0.45, 'z': 1.55},
     {'thing': {'kind': 'bird', 'nestId': REQ_ID, 'nestGuid': REQ_GUID,
                'label': 'requests'}, 'x': 0.55, 'z': 1.50},
     {'thing': {'kind': 'nest', 'id': REP_ID, 'guid': REP_GUID, 'hasEgg': False,
