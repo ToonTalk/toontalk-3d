@@ -1,0 +1,9459 @@
+{
+ "kind": "world",
+ "v": 4,
+ "name": "A firework fountain",
+ "intro": "Start the team for three bursts of eight coloured sparks. Every tick each spark moves by its velocities and stamps a dot, and gravity takes a little off its upward velocity, so it slows, turns and falls. After thirty ticks the sparks hide and the next burst turns 15 degrees. Instant plays it; the dots remain. The pad on the table has things to try.",
+ "bench": [
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "the fountain nozzle",
+    "parts": [
+     {
+      "shape": "cylinder",
+      "size": [
+       0.08,
+       0.12,
+       0.09
+      ],
+      "at": [
+       0,
+       0.045,
+       0
+      ],
+      "color": "#314156"
+     },
+     {
+      "shape": "cylinder",
+      "size": [
+       0.045,
+       0.045,
+       0.035
+      ],
+      "at": [
+       0,
+       0.095,
+       0
+      ],
+      "color": "#a8bdd1"
+     }
+    ],
+    "ghost": true
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-0",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#ff687c",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-0",
+    "evt": "evt-spark-0",
+    "up": 0.06,
+    "penInk": 16738428
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-1",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#ffc25b",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-1",
+    "evt": "evt-spark-1",
+    "up": 0.06,
+    "penInk": 16761435
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-2",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#eeef7c",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-2",
+    "evt": "evt-spark-2",
+    "up": 0.06,
+    "penInk": 15658876
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-3",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#72e0ad",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-3",
+    "evt": "evt-spark-3",
+    "up": 0.06,
+    "penInk": 7528621
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-4",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#57c8fa",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-4",
+    "evt": "evt-spark-4",
+    "up": 0.06,
+    "penInk": 5753082
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-5",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#9290ff",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-5",
+    "evt": "evt-spark-5",
+    "up": 0.06,
+    "penInk": 9605375
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-6",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#d189fa",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-6",
+    "evt": "evt-spark-6",
+    "up": 0.06,
+    "penInk": 13732346
+   }
+  },
+  {
+   "x": 0,
+   "z": 1.7,
+   "thing": {
+    "kind": "model",
+    "label": "spark-7",
+    "parts": [
+     {
+      "shape": "sphere",
+      "size": [
+       0.024
+      ],
+      "color": "#ff9bcf",
+      "at": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "ghost": true,
+    "lid": "spark-7",
+    "evt": "evt-spark-7",
+    "up": 0.06,
+    "penInk": 16751567
+   }
+  },
+  {
+   "x": -1.3,
+   "z": 2.2,
+   "thing": {
+    "kind": "text",
+    "text": "TRY\n\nSet \"gravity per tick\" to\n-1/250 (half). Predict the\nheight of the arches.\n\nSet \"lifetime per burst\" to\n15: do the sparks come\ndown before they hide?\n\nSet \"sideways speed\" to 0.\nWhat shape is a burst then?"
+   }
+  }
+ ],
+ "stations": {
+  "stand": {
+   "kind": "box",
+   "holes": [
+    {
+     "kind": "text",
+     "text": "launch"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "3",
+      "d": "1"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "0",
+      "d": "1"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "30",
+      "d": "1"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "-1",
+      "d": "125"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "3",
+      "d": "250"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-0",
+         "label": "to spark-0"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "59",
+          "d": "500"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "59",
+          "d": "500"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-1",
+         "label": "to spark-1"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "45",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "25"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "25"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-2",
+         "label": "to spark-2"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "90",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "61",
+          "d": "500"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "61",
+          "d": "500"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-3",
+         "label": "to spark-3"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "135",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "31",
+          "d": "250"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "31",
+          "d": "250"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-4",
+         "label": "to spark-4"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "180",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "63",
+          "d": "500"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "63",
+          "d": "500"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-5",
+         "label": "to spark-5"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "225",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "16",
+          "d": "125"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "16",
+          "d": "125"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-6",
+         "label": "to spark-6"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "270",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "13",
+          "d": "100"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "13",
+          "d": "100"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-7",
+         "label": "to spark-7"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "315",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "33",
+          "d": "250"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "33",
+          "d": "250"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "up"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "clear"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "position"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "17",
+            "d": "10"
+           },
+           "op": "+"
+          }
+         ]
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "up"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "50"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "shown"
+        },
+        {
+         "kind": "text",
+         "text": "yes"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#ff687c"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "0",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "15",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "360",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#ffc25b"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#eeef7c"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#72e0ad"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#57c8fa"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#9290ff"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#d189fa"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "pen"
+        },
+        {
+         "kind": "text",
+         "text": "#ff9bcf"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "flying"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "set"
+        },
+        {
+         "kind": "text",
+         "text": "shown"
+        },
+        {
+         "kind": "text",
+         "text": "no"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "-1",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "text",
+       "text": "launch"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "move"
+        },
+        {
+         "kind": "text",
+         "text": "across"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "move"
+        },
+        {
+         "kind": "text",
+         "text": "away"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "move"
+        },
+        {
+         "kind": "text",
+         "text": "up"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "text",
+         "text": "drop"
+        },
+        {
+         "kind": "text",
+         "text": "sphere"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "9",
+          "d": "500"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "action",
+        "what",
+        "amount"
+       ]
+      }
+     ],
+     "holeLabels": [
+      "set pen",
+      "set pen",
+      "set position",
+      "set up",
+      "set shown",
+      "set pen",
+      "0",
+      "15",
+      "360",
+      "set pen",
+      "set pen",
+      "set pen",
+      "set pen",
+      "set pen",
+      "set pen",
+      "set pen",
+      "flying",
+      "set shown",
+      "-1",
+      "launch",
+      "move across (changing)",
+      "move away (changing)",
+      "move up (changing)",
+      "drop sphere"
+     ]
+    }
+   ],
+   "holeLabels": [
+    "stage",
+    "bursts left",
+    "ticks left",
+    "lifetime per burst",
+    "gravity per tick",
+    "sideways speed",
+    "eight spark records",
+    "letters"
+   ]
+  }
+ },
+ "active": {
+  "kind": "robot",
+  "name": "Fountain complete",
+  "condition": {
+   "kind": "box",
+   "holes": [
+    {
+     "kind": "text",
+     "text": "launch"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "0",
+      "d": "1"
+     },
+     "op": "+"
+    },
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "holeLabels": [
+    "stage",
+    "bursts left",
+    "ticks left",
+    "lifetime per burst",
+    "gravity per tick",
+    "sideways speed",
+    "eight spark records",
+    "letters"
+   ]
+  },
+  "program": [
+   {
+    "type": "vacuum",
+    "at": {
+     "c": "given",
+     "path": []
+    }
+   }
+  ],
+  "trainedOn": {
+   "kind": "box",
+   "holes": [
+    {
+     "kind": "text",
+     "text": "launch"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "3",
+      "d": "1"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "0",
+      "d": "1"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "30",
+      "d": "1"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "-1",
+      "d": "125"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "number",
+     "value": {
+      "n": "3",
+      "d": "250"
+     },
+     "op": "+"
+    },
+    {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-0",
+         "label": "to spark-0"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "59",
+          "d": "500"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "59",
+          "d": "500"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-1",
+         "label": "to spark-1"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "45",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "25"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "3",
+          "d": "25"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-2",
+         "label": "to spark-2"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "90",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "61",
+          "d": "500"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "61",
+          "d": "500"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-3",
+         "label": "to spark-3"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "135",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "31",
+          "d": "250"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "31",
+          "d": "250"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-4",
+         "label": "to spark-4"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "180",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "63",
+          "d": "500"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "63",
+          "d": "500"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-5",
+         "label": "to spark-5"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "225",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "16",
+          "d": "125"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "16",
+          "d": "125"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-6",
+         "label": "to spark-6"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "270",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "13",
+          "d": "100"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "13",
+          "d": "100"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "bird",
+         "nestId": null,
+         "nestGuid": null,
+         "liveId": "spark-7",
+         "label": "to spark-7"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "315",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "33",
+          "d": "250"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "33",
+          "d": "250"
+         },
+         "op": "+"
+        }
+       ],
+       "holeLabels": [
+        "bird",
+        "launch angle",
+        "across velocity",
+        "away velocity",
+        "upward velocity",
+        "launch velocity"
+       ]
+      }
+     ]
+    },
+    {
+     "kind": "box",
+     "holes": [],
+     "holeLabels": []
+    }
+   ],
+   "holeLabels": [
+    "stage",
+    "bursts left",
+    "ticks left",
+    "lifetime per burst",
+    "gravity per tick",
+    "sideways speed",
+    "eight spark records",
+    "letters"
+   ]
+  },
+  "team": [
+   {
+    "kind": "robot",
+    "name": "Launch eight sparks",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "launch"
+      },
+      {
+       "kind": "wildNumber"
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "holeLabels": [
+      "stage",
+      "bursts left",
+      "ticks left",
+      "lifetime per burst",
+      "gravity per tick",
+      "sideways speed",
+      "eight spark records",
+      "letters"
+     ]
+    },
+    "program": [
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        5
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        9
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        10
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        11
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        12
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        13
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        14
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        15
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "cos"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        6
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "sin"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        5
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "*"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        7
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        8
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "mod"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        1
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     },
+     {
+      "type": "vacuum",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        16
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "launch"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "3",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "0",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "30",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "-1",
+        "d": "125"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "3",
+        "d": "250"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-0",
+           "label": "to spark-0"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "59",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "59",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-1",
+           "label": "to spark-1"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "45",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "25"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "25"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-2",
+           "label": "to spark-2"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "90",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "61",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "61",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-3",
+           "label": "to spark-3"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "135",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "31",
+            "d": "250"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "31",
+            "d": "250"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-4",
+           "label": "to spark-4"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "180",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "63",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "63",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-5",
+           "label": "to spark-5"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "225",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "16",
+            "d": "125"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "16",
+            "d": "125"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-6",
+           "label": "to spark-6"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "270",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "13",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "13",
+            "d": "100"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-7",
+           "label": "to spark-7"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "315",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "33",
+            "d": "250"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "33",
+            "d": "250"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "clear"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "position"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "17",
+              "d": "10"
+             },
+             "op": "+"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "50"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "shown"
+          },
+          {
+           "kind": "text",
+           "text": "yes"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ff687c"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "15",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "360",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ffc25b"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#eeef7c"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#72e0ad"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#57c8fa"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#9290ff"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#d189fa"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ff9bcf"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "flying"
+        }
+       ],
+       "holeLabels": [
+        "set pen",
+        "set pen",
+        "set position",
+        "set up",
+        "set shown",
+        "set pen",
+        "0",
+        "15",
+        "360",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "flying"
+       ]
+      }
+     ],
+     "holeLabels": [
+      "stage",
+      "bursts left",
+      "ticks left",
+      "lifetime per burst",
+      "gravity per tick",
+      "sideways speed",
+      "eight spark records",
+      "letters"
+     ]
+    },
+    "team": [],
+    "note": "Bursts are left: every spark back at the nozzle, shown, its old dots cleared, its upward velocity set to its launch velocity, its sideways velocities from its angle with cos and sin -- and its angle turned 15 degrees for the next burst. Ticks left set to the lifetime."
+   },
+   {
+    "kind": "robot",
+    "name": "Retire this burst",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "flying"
+      },
+      null,
+      {
+       "kind": "number",
+       "value": {
+        "n": "0",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "holeLabels": [
+      "stage",
+      "bursts left",
+      "ticks left",
+      "lifetime per burst",
+      "gravity per tick",
+      "sideways speed",
+      "eight spark records",
+      "letters"
+     ]
+    },
+    "program": [
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        17
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        18
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        1
+       ]
+      }
+     },
+     {
+      "type": "vacuum",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        19
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        0
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "launch"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "3",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "0",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "30",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "-1",
+        "d": "125"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "3",
+        "d": "250"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-0",
+           "label": "to spark-0"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "59",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "59",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-1",
+           "label": "to spark-1"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "45",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "25"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "25"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-2",
+           "label": "to spark-2"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "90",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "61",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "61",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-3",
+           "label": "to spark-3"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "135",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "31",
+            "d": "250"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "31",
+            "d": "250"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-4",
+           "label": "to spark-4"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "180",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "63",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "63",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-5",
+           "label": "to spark-5"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "225",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "16",
+            "d": "125"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "16",
+            "d": "125"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-6",
+           "label": "to spark-6"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "270",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "13",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "13",
+            "d": "100"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-7",
+           "label": "to spark-7"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "315",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "33",
+            "d": "250"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "33",
+            "d": "250"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "clear"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "position"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "17",
+              "d": "10"
+             },
+             "op": "+"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "50"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "shown"
+          },
+          {
+           "kind": "text",
+           "text": "yes"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ff687c"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "15",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "360",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ffc25b"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#eeef7c"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#72e0ad"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#57c8fa"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#9290ff"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#d189fa"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ff9bcf"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "flying"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "shown"
+          },
+          {
+           "kind": "text",
+           "text": "no"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "-1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "text",
+         "text": "launch"
+        }
+       ],
+       "holeLabels": [
+        "set pen",
+        "set pen",
+        "set position",
+        "set up",
+        "set shown",
+        "set pen",
+        "0",
+        "15",
+        "360",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "flying",
+        "set shown",
+        "-1",
+        "launch"
+       ]
+      }
+     ],
+     "holeLabels": [
+      "stage",
+      "bursts left",
+      "ticks left",
+      "lifetime per burst",
+      "gravity per tick",
+      "sideways speed",
+      "eight spark records",
+      "letters"
+     ]
+    },
+    "team": [],
+    "note": "No ticks left: every spark hidden, one burst fewer, and back to launching."
+   },
+   {
+    "kind": "robot",
+    "name": "Fly one tick",
+    "condition": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "flying"
+      },
+      null,
+      {
+       "kind": "wildNumber"
+      },
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     "holeLabels": [
+      "stage",
+      "bursts left",
+      "ticks left",
+      "lifetime per burst",
+      "gravity per tick",
+      "sideways speed",
+      "eight spark records",
+      "letters"
+     ]
+    },
+    "program": [
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        0,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        1,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        2,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        3,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        4,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        5,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        6,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        2
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        20
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        3
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        21
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "setOp",
+      "op": "set"
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22,
+        2
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        22
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        23
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        0
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        4
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        6,
+        7,
+        4
+       ]
+      }
+     },
+     {
+      "type": "copy",
+      "at": {
+       "c": "given",
+       "path": [
+        7,
+        18
+       ]
+      }
+     },
+     {
+      "type": "put",
+      "at": {
+       "c": "given",
+       "path": [
+        2
+       ]
+      }
+     }
+    ],
+    "trainedOn": {
+     "kind": "box",
+     "holes": [
+      {
+       "kind": "text",
+       "text": "launch"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "3",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "0",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "30",
+        "d": "1"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "-1",
+        "d": "125"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "number",
+       "value": {
+        "n": "3",
+        "d": "250"
+       },
+       "op": "+"
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-0",
+           "label": "to spark-0"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "59",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "59",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-1",
+           "label": "to spark-1"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "45",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "25"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "25"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-2",
+           "label": "to spark-2"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "90",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "61",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "61",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-3",
+           "label": "to spark-3"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "135",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "31",
+            "d": "250"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "31",
+            "d": "250"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-4",
+           "label": "to spark-4"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "180",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "63",
+            "d": "500"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "63",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-5",
+           "label": "to spark-5"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "225",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "16",
+            "d": "125"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "16",
+            "d": "125"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-6",
+           "label": "to spark-6"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "270",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "13",
+            "d": "100"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "13",
+            "d": "100"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "bird",
+           "nestId": null,
+           "nestGuid": null,
+           "liveId": "spark-7",
+           "label": "to spark-7"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "315",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "33",
+            "d": "250"
+           },
+           "op": "+"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "33",
+            "d": "250"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "bird",
+          "launch angle",
+          "across velocity",
+          "away velocity",
+          "upward velocity",
+          "launch velocity"
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "box",
+       "holes": [
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "clear"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "position"
+          },
+          {
+           "kind": "box",
+           "holes": [
+            {
+             "kind": "number",
+             "value": {
+              "n": "0",
+              "d": "1"
+             },
+             "op": "+"
+            },
+            {
+             "kind": "number",
+             "value": {
+              "n": "17",
+              "d": "10"
+             },
+             "op": "+"
+            }
+           ]
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "3",
+            "d": "50"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "shown"
+          },
+          {
+           "kind": "text",
+           "text": "yes"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ff687c"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "0",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "15",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "360",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ffc25b"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#eeef7c"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#72e0ad"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#57c8fa"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#9290ff"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#d189fa"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "pen"
+          },
+          {
+           "kind": "text",
+           "text": "#ff9bcf"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "flying"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "set"
+          },
+          {
+           "kind": "text",
+           "text": "shown"
+          },
+          {
+           "kind": "text",
+           "text": "no"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "number",
+         "value": {
+          "n": "-1",
+          "d": "1"
+         },
+         "op": "+"
+        },
+        {
+         "kind": "text",
+         "text": "launch"
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "across"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "away"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "move"
+          },
+          {
+           "kind": "text",
+           "text": "up"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "0",
+            "d": "1"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        },
+        {
+         "kind": "box",
+         "holes": [
+          {
+           "kind": "text",
+           "text": "drop"
+          },
+          {
+           "kind": "text",
+           "text": "sphere"
+          },
+          {
+           "kind": "number",
+           "value": {
+            "n": "9",
+            "d": "500"
+           },
+           "op": "+"
+          }
+         ],
+         "holeLabels": [
+          "action",
+          "what",
+          "amount"
+         ]
+        }
+       ],
+       "holeLabels": [
+        "set pen",
+        "set pen",
+        "set position",
+        "set up",
+        "set shown",
+        "set pen",
+        "0",
+        "15",
+        "360",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "set pen",
+        "flying",
+        "set shown",
+        "-1",
+        "launch",
+        "move across (changing)",
+        "move away (changing)",
+        "move up (changing)",
+        "drop sphere"
+       ]
+      }
+     ],
+     "holeLabels": [
+      "stage",
+      "bursts left",
+      "ticks left",
+      "lifetime per burst",
+      "gravity per tick",
+      "sideways speed",
+      "eight spark records",
+      "letters"
+     ]
+    },
+    "team": [],
+    "note": "Ticks are left: each spark moves by its three velocities, stamps a dot, and gravity comes off its upward velocity. Rising sparks slow, turn and fall. One tick fewer."
+   }
+  ],
+  "note": "Three bursts are done: puts the work box away. The last burst’s dots remain; the sparks are hidden."
+ },
+ "camera": {
+  "at": [
+   1.1,
+   1.7,
+   3.0
+  ],
+  "look": [
+   0.0,
+   1.3,
+   1.7
+  ]
+ }
+}

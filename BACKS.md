@@ -8407,3 +8407,33 @@ from the ceiling). The harness owns the clock now (D.autoLoop(false)): the
 app's own loop kept the star sliding between the fit and the picture. The
 orbit target is aimed too (D.orbit), since the controls re-aim the camera
 at their target every frame. 'run' and yard shots keep their poses.
+
+## Resort Infinity 3, 4 and 5
+
+The original's other three problems (Ken: "We never did problems 3 to 5";
+toontalk.com/Tools/Infinity/Doc/resort_infinity_guide.htm), each a world
+that opens where the last one ended (make_resort_more.py). A newcomer
+writes [my number | my group | bird] to the front desk now, as the
+original's did; a housed guest still writes [where I live | bird] to the
+office. 3: everybody doubles, the gold group takes the odd cottages. 4:
+everybody times four, guest i of group j takes 4i - j (a copy of the group
+wearing a minus sign). 5: everybody doubles and Weigh, a team of four, puts
+i and j on the pans of a fresh scale in the number's place -- the way
+Factorial does -- and one of three robots does Barrow's sum (j^2 - (i - 1)
+or (i - 1)^2 + j), doubles it less one, and sweeps the scale away. Every
+group has a colour, since the numbers start again each problem. A
+BEHAVIOUR SAVED RUNNING OPENS RUNNING: the housed guests must be listening
+for the bell, so a gadget pad's record carries `running` when its panel is
+switched on, and a world switches it on again -- for a yard thing when the
+back door opens (switched on indoors, its panel hung from nothing and the
+bell reached nobody). resortMoreCheck solves all three in minutes.
+
+CHATGPT'S THREE LARGER LESSONS (the garden, the clockwork, the fountain)
+are moved into our vocabulary in make_more_lessons.py: a port of its
+Program class (a letters box of constants, "dynamic" letters, set and
+apply), with fractions in lowest terms, each team ending by putting its
+box away, the garden's pen invisible between the parts of a flower (three
+trails, not thirty), pads with things to try, and a camera for the garden
+and the clockwork. moreLessonsCheck. The gallery has 63 cards; the shots
+harness allows 1000 rounds (the garden is 667), and the overlap check lets
+a ghost stand in a thing (a pen in its pot).

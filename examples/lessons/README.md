@@ -1,4 +1,25 @@
-# Lessons: three small drawing programs
+# Lessons: six drawing programs
+
+Three small ones (below) and, in `make_more_lessons.py`, three larger ones
+ChatGPT wrote on 17 September as programs 3, 5 and 6 of the same series,
+moved into the examples' vocabulary on the 19th:
+
+| world | what it teaches | robots | rounds |
+|---|---|---|---:|
+| 🌷 `flower-garden` | a repeat inside a repeat inside a repeat: twenty segments make a curved petal, petals a flower, three flowers a garden | garden complete; plant flower 1, 2, 3; finish flower; begin petal; next petal; draw petal segment | 667 |
+| 🔭 `planetary-clockwork` | angles into positions: sin and cos badges on a copy of the angle, the radius scaling it, the tilt lifting it; a moon that adds the blue planet's position to its own | clockwork complete; advance all four orbits | 121 |
+| 🎆 `firework-fountain` | velocity and gravity: three velocities per spark, moved by every tick, a dot stamped, gravity off the upward one; eight sparks reused for three bursts turned 15° | fountain complete; launch eight sparks; retire this burst; fly one tick | 97 |
+
+These keep ChatGPT's shape: the work box holds the stage (a word), the
+counters, the records of the things and a **letters** box of every constant
+and letter the robots use; a letter with a changing amount has that amount
+put into it first. What changed in the move: numbers are fractions in lowest
+terms; each team ends by putting its work box away with Dusty — finished,
+for good — instead of writing "done" and stopping on a mismatch; the
+garden's pen goes **invisible** between the parts of a flower rather than
+up, so each flower is one trail for Dusty and for saving; and the
+experiments are on pads by the things. The clockwork's tracks are part of
+the sun's stand, so loading cannot part them.
 
 Three lessons written by ChatGPT (18 September 2026) as simpler versions of
 three programs it had generated before, kept here as it wrote them -- the

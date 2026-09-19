@@ -12709,6 +12709,14 @@ function enterYard(byRobot = false) {
   buildGround(true);
   for (const t of yard.things) { benchRoot.add(t); benchThings.push(t); if (t.userData.speed) movers.add(t); }
   yard.things.length = 0;
+  // ...and what the yard's file saved RUNNING starts now that it stands on
+  // the ground: switched on indoors, its panel hung from nothing and the
+  // bell never reached the resort's housed guests
+  for (const t of benchThings) {
+    if (!t.userData?.startRunning) continue;
+    delete t.userData.startRunning;
+    try { switchGadget(t, true, true); } catch (e) { console.warn('could not restart', t.userData.text, e); }
+  }
   if (exitDoor) exitDoor.visible = false;
   paintYardSign();
   placeChanged();                     // the yard's own list and doors
@@ -18745,6 +18753,10 @@ function thingOut(t) {
     const size = tray ? [tray.userData.pw, tray.userData.pd] : t.userData?.panelSize;
     if (panel && size && (size[0] !== 0.5 || size[1] !== 0.42)) r.panelSize = size;
     if (t.userData?.lid) { r.lid = t.userData.lid; r.evt = t.userData.evtGuid; }
+    // A BEHAVIOUR SAVED RUNNING OPENS RUNNING (its panel switched on and not
+    // stopped by "."): Ken's reloaded ellipse card came back switched off,
+    // and the resort's housed guests must be listening for the bell.
+    if (t.userData?.gadget && tray && tray.userData.dirty && !tray.userData.stopped) r.running = true;
     if (t.userData?.liveId) r.liveId = t.userData.liveId;   // a live bird
     if (t.userData?.note && r.kind !== 'text') r.note = t.userData.note;   // a pad wrote its own
     if (t.userData?.givenBy && r.kind !== 'text') r.givenBy = t.userData.givenBy;
@@ -19030,6 +19042,7 @@ function thingInRaw(o, nests, birds) {
     // hand, saved it, and found it did not run -- nothing had marked it a
     // gadget, so SPACE and a drop on a thing did not treat it as one.
     if (o.gadget || (o.panel?.active?.program && o.panel.stations?.stand)) t.userData.gadget = true;
+    if (o.running) t.userData.startRunning = true;   // saved switched on: switched on again once the world stands
     if (o.note) t.userData.note = o.note;
     if (o.boundTo) t.userData.boundTo = o.boundTo;
     if (o.givenBy) t.userData.givenBy = o.givenBy;
@@ -19253,6 +19266,13 @@ function worldIn(data) {
       t.position.set(b.x, GROUND_Y + (t.userData.rest ?? 0) * t.scale.y, b.z);
       yard.things.push(t);
     }
+  }
+  // ...and whatever was saved running is switched on again, now that the
+  // things it is bound to stand where they were
+  for (const t of benchThings) {                         // the yard's wait until the back door opens
+    if (!t.userData?.startRunning) continue;
+    delete t.userData.startRunning;
+    try { switchGadget(t, true, true); } catch (e) { console.warn('could not restart', t.userData.text, e); }
   }
   if (data.yard?.lid || data.yard?.panel) {
     const n = yardNode(curCtx);

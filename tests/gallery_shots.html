@@ -63,7 +63,7 @@ function fitCamera(D) {
 async function shoot(D, i, name, shot) {
   const w = await (await fetch('../examples/' + name + '.world.json')).json();
   D.worldIn(w); await settle(D, 120);
-  D.speed('inf'); D.rounds(shot === 'lever' ? 30 : 400);
+  D.speed('inf'); D.rounds(shot === 'lever' ? 30 : 1000);   // the garden is 667 rounds
   const ts = things(D);
   if (shot === 'give') {
     const arg = ts.find(t => ['box', 'scale'].includes(t.userData.kind));

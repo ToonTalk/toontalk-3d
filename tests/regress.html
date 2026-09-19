@@ -3312,6 +3312,9 @@ const EXAMPLE_WORLDS = [
   'lessons/🪐 step-and-turn-planet',
   'lessons/🌸 easy-flower',
   'lessons/✨ jumping-spark',
+  'lessons/🌷 flower-garden',
+  'lessons/🔭 planetary-clockwork',
+  'lessons/🎆 firework-fountain',
   'behaviours/🦋 wandering',
   'behaviours/🪐 ellipse',
   'devices/⌨️ keys',
@@ -3335,6 +3338,9 @@ const EXAMPLE_WORLDS = [
   'infinity/♾️ activity7-any-interval',
   'infinity/♾️ activity8-counting-sequences',
   'infinity/🏨 resort-infinity',
+  'infinity/🏨 resort-infinity-3',
+  'infinity/🏨 resort-infinity-4',
+  'infinity/🏨 resort-infinity-5',
   'infinity/📮 zeno',
   'lists/🔁 reverse',
   'lists/🔗 append',
@@ -3391,7 +3397,7 @@ async function overlapCheck(D) {
     return out;
   };
   const bench = () => { const o = []; for (let i = 0; i < 80; i++) { const t = D.bench(i); if (!t) break;
-    if (!t.userData.main && !t.userData.panel) o.push(t); } return o; };
+    if (!t.userData.main && !t.userData.panel && !t.userData.ghost) o.push(t); } return o; };   // a ghost stands IN things by design: a pen in its pot, a planet on its stand
   let bad = 0;
   for (const w of EXAMPLE_WORLDS) {
     const rec = await (await fetch('../examples/' + w + '.world.json')).json();
@@ -4987,6 +4993,125 @@ async function fairHousesCheck(D) {
   const ok = everyRan && fair && liteInside && builtWhenSeen && sliced;
   put((ok ? 'PASS' : 'FAIL') + ' twelve solid counters all get turns, their numbers stay lite until seen, one slice a frame  (counts=' + JSON.stringify(counts)
       + ' made-lite/built=' + (lit.lite - lit0.lite) + '/' + (lit.built - lit0.built) + ' in-view-before/after-glass=' + liteNow.built + '/' + lit2.built + ' longest-frame=' + Math.round(longest) + 'ms)', ok ? 'pass' : 'fail');
+  return ok;
+}
+
+// RESORT INFINITY, PROBLEMS 3 TO 5 (the original's; 19 September). Each
+// world opens where the last ended, with the housed guests' machinery saved
+// RUNNING; the answers by the fence are given to the office bird (the mover)
+// and the desk bird (the clerk), the newcomers' macro is switched on, and
+// everybody visible ends at the cottage the arithmetic says.
+async function resortMoreCheck(D) {
+  const cottageX = (n) => n * 0.6 - 4.5;
+  const at = (g, n) => Math.abs(g.position.x - cottageX(n)) < 0.06 && Math.abs(g.position.z - 5.2) < 0.06;
+  const grass = () => { const o = []; for (let i = 0; i < 120; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const results = [];
+  const WORLDS = [
+    { file: '3', mover: 'Double', clerk: 'Odd cottages', macro: 'the gold group',
+      want: { 'red guest 1': 12, 'red guest 2': 14, 'blue guest 1': 2, 'blue guest 5': 10, 'gold guest 1': 1, 'gold guest 2': 3, 'gold guest 6': 11 },
+      housedWant: { 'red guest 1': 6, 'red guest 6': 11, 'blue guest 1': 1 } },
+    { file: '4', mover: 'Four times', clerk: 'Four apart', macro: 'three groups',
+      want: { 'blue guest 1': 8, 'gold guest 1': 4, 'gold guest 2': 12, 'green guest 1': 3, 'plum guest 1': 2, 'teal guest 1': 1, 'green guest 3': 11, 'plum guest 3': 10, 'teal guest 3': 9 },
+      housedWant: { 'blue guest 1': 2, 'gold guest 1': 1, 'gold guest 6': 11 } },
+    { file: '5', mover: 'Double', clerk: 'Weigh', macro: 'the groups',
+      want: { 'gold guest 1': 8, 'teal guest 1': 2, 'plum guest 1': 4, 'green guest 1': 6, 'teal guest 2': 10, 'plum guest 2': 12, 'green guest 2': 14,
+              'rose guest 1': 1, 'rose guest 2': 3, 'lime guest 2': 5, 'lime guest 1': 7, 'rose guest 3': 9, 'lime guest 3': 11, 'brown guest 3': 13 },
+      housedWant: { 'blue guest 1': 8, 'gold guest 1': 4, 'teal guest 1': 1, 'green guest 3': 11 } },
+  ];
+  let allOK = true;
+  for (const W of WORLDS) {
+    const w = await (await fetch('../examples/infinity/\ud83c\udfe8 resort-infinity-' + W.file + '.world.json')).json();
+    D.worldIn(w); await slowSettle(D, 2000);
+    D.clickRaw({ kind: 'yardDoor' }); await slowSettle(D, 2500);
+    const guests = grass().filter(t => t.userData.kind === 'model' && /guest \d/.test(t.userData.label || ''));
+    const byName = (n) => guests.find(g => g.userData.label === n);
+    const housedOK = Object.entries(W.housedWant).every(([n, c]) => byName(n) && at(byName(n), c));
+    const housedMacro = grass().find(t => t.userData.text === 'the guests already housed');
+    const listening = !!(housedMacro?.__panelTray?.userData.dirty);
+    const mover = D.benchBots().find(b => b.__bot?.name === W.mover);
+    const clerk = D.benchBots().find(b => b.__bot?.name === W.clerk);
+    const toOffice = grass().find(t => t.userData.kind === 'bird' && t.userData.label === 'to the moving office');
+    const toDesk = grass().find(t => t.userData.kind === 'bird' && t.userData.label === 'to the front desk');
+    const macro = grass().find(t => t.userData.text === W.macro);
+    D.speed('instant'); D.rounds(ROUNDS);
+    D.hold(mover); await frames(D, 20); D.clickThing(toOffice);
+    const housedColours = new Set(Object.keys(W.housedWant).map(n => n.split(' ')[0]));
+    const moved = () => Object.entries(W.want).filter(([n]) => housedColours.has(n.split(' ')[0])).every(([n, c]) => byName(n) && at(byName(n), c));
+    const prog = async (at, k) => { if (k % 300) return; try { await fetch('/capture?name=suiteprog', { method: 'POST', body: JSON.stringify({ at: 'resortMore-' + W.file + '-' + at, k, where: Object.keys(W.want).map(n => n + '@' + (byName(n) ? ((byName(n).position.x + 4.5) / 0.6).toFixed(1) : '?')).join(' ') }) }); } catch (e2) {} };
+    for (let k = 0; k < 6000 && !moved(); k++) { await frames(D, 1); await prog('moving', k); if ((k % 500) === 499) await breathe(); }
+    const movedOK = moved();
+    D.hold(clerk); await frames(D, 20); D.clickThing(toDesk); await frames(D, 60);
+    D.switchGadget(macro, true, true);
+    const housedAll = () => Object.entries(W.want).every(([n, c]) => byName(n) && at(byName(n), c));
+    for (let k = 0; k < 8000 && !housedAll(); k++) { await frames(D, 1); await prog('housing', k); if ((k % 500) === 499) await breathe(); }
+    const done = housedAll();
+    const where = Object.keys(W.want).map(n => n + '@' + (byName(n) ? ((byName(n).position.x + 4.5) / 0.6).toFixed(1) : '?')).join(' ');
+    const ok = housedOK && listening && movedOK && done;
+    allOK = allOK && ok;
+    results.push(W.file + ':' + (ok ? 'ok' : 'FAIL') + '(housed=' + housedOK + ' listening=' + listening + ' moved=' + movedOK + ' done=' + done + ' ' + where + ')');
+    D.speed(1);
+  }
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 1000);
+  put((allOK ? 'PASS' : 'FAIL') + ' Resort Infinity 3, 4 and 5 are solved by the answers at the fence  (' + results.join('; ') + ')', allOK ? 'pass' : 'fail');
+  return allOK;
+}
+
+// CHATGPT'S THREE LARGER LESSONS (17 Sep; moved into our vocabulary 19 Sep):
+// the garden draws three flowers as three trails (stem, leaves and petals
+// each, the pen invisible between them), the clockwork moves four bodies for
+// 120 ticks and the planets come home, the fountain stamps 240 dots a burst
+// and its last burst's dots remain. Each team ends by putting its box away.
+async function moreLessonsCheck(D) {
+  const strokes = () => { const m = []; D.scene.traverse(o => { if (o.userData?.penMark) m.push(o); }); return m; };
+  const dots = () => { const m = []; D.scene.traverse(o => { if (o.userData?.stamp || o.userData?.penDot) m.push(o); }); return m; };
+  const things = () => { const a = []; for (let i = 0; i < 30; i++) { const t = D.bench(i); if (!t) break; a.push(t); } return a; };
+  const open = async (file) => {
+    const w = await (await fetch('../examples/lessons/' + file + '.world.json')).json();
+    D.worldIn(w); await slowSettle(D, 2000);
+    D.speed('inf'); D.rounds(2000);
+    const box = D.stations.stand.occupant;
+    D.hold(box); await frames(D, 5); D.giveRobot();
+  };
+  const finish = async () => {
+    // until the team puts its box away: 667 rounds of 251 steps is minutes of frames, not seconds
+    for (let k = 0; k < 40000 && D.stations.stand.occupant; k++) { D.frame(1, fnow()); if ((k & 63) === 63) await breathe(); }
+    for (let i = 0; i < 40; i++) D.frame(1, fnow());
+    const gone = !D.stations.stand.occupant;
+    D.rounds(ROUNDS); D.speed(1);
+    return gone;
+  };
+  // the garden
+  await open('\ud83c\udf37 flower-garden');
+  const gardenGone = await finish();
+  const gm = strokes();
+  const garden = { n: gm.length, unseen: gm.filter(x => x.visible === false).length, runs: new Set(gm.map(x => x.userData.penRun)).size,
+                   inks: new Set(gm.map(x => x.userData.seg?.ink)).size, gone: gardenGone };
+  const gardenOK = garden.runs === 3 && garden.n - garden.unseen >= 680 && garden.inks >= 5 && garden.gone;
+  // the clockwork: the planets move, and after 120 ticks are back where they began
+  const cw = await (await fetch('../examples/lessons/\ud83d\udd2d planetary-clockwork.world.json')).json();
+  D.worldIn(cw); await slowSettle(D, 2000);
+  const planet = (lid) => things().find(t => t.userData.lid === lid);
+  const red0 = planet('red-planet').position.clone(), moon0 = planet('blue-moon').position.clone();
+  D.speed('inf'); D.rounds(2000);
+  D.hold(D.stations.stand.occupant); await frames(D, 5); D.giveRobot();
+  let maxMove = 0;
+  for (let k = 0; k < 4000; k++) { await frames(D, 1); maxMove = Math.max(maxMove, planet('red-planet').position.distanceTo(red0)); if (!D.stations.stand.occupant) break; }
+  const cwGone = await finish();
+  const redBack = planet('red-planet').position.distanceTo(red0) < 0.03;
+  const moonBack = planet('blue-moon').position.distanceTo(moon0) < 0.03;
+  const clockwork = { moved: +maxMove.toFixed(3), redBack, moonBack, gone: cwGone };
+  const clockworkOK = maxMove > 0.5 && redBack && moonBack && cwGone;
+  // the fountain: three bursts, 240 dots left from the last
+  await open('\ud83c\udf86 firework-fountain');
+  const fGone = await finish();
+  const fd = dots().length, fs = strokes().length;
+  const sparksHidden = things().filter(t => /^spark-/.test(t.userData.lid || '')).every(t => t.visible === false || t.userData.shown === false);
+  const fountain = { dots: fd, strokes: fs, hidden: sparksHidden, gone: fGone };
+  const fountainOK = (fd === 240 || fs === 240) && fGone;
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] }); await slowSettle(D, 800);
+  const ok = gardenOK && clockworkOK && fountainOK;
+  put((ok ? 'PASS' : 'FAIL') + ' the garden, the clockwork and the fountain draw and move what they say  (garden=' + JSON.stringify(garden)
+      + ' clockwork=' + JSON.stringify(clockwork) + ' fountain=' + JSON.stringify(fountain) + ')', ok ? 'pass' : 'fail');
   return ok;
 }
 
@@ -7564,6 +7689,12 @@ async function runOne(D, spec) {
   let hawOK = true;
   try { hawOK = want('housesAtWork') ? await housesAtWorkCheck(D) : true; }
   catch (e) { hawOK = false; put('FAIL the houses still at work are counted  ' + e.message, 'fail'); }
+  let mlOK = true;
+  try { mlOK = want('moreLessons') ? await moreLessonsCheck(D) : true; }
+  catch (e) { mlOK = false; put('FAIL the garden, the clockwork and the fountain  ' + e.message, 'fail'); for (const l of String(e.stack || '').split('\n').slice(0, 6)) put('ERR   ' + l.trim(), 'dim'); }
+  let rmOK = true;
+  try { rmOK = want('resortMore') ? await resortMoreCheck(D) : true; }
+  catch (e) { rmOK = false; put('FAIL Resort Infinity 3, 4 and 5  ' + e.message, 'fail'); for (const l of String(e.stack || '').split('\n').slice(0, 6)) put('ERR   ' + l.trim(), 'dim'); }
   let fhOK = true;
   try { fhOK = want('fairHouses') ? await fairHousesCheck(D) : true; }
   catch (e) { fhOK = false; put('FAIL twelve solid counters  ' + e.message, 'fail'); }
@@ -7738,7 +7869,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

@@ -197,6 +197,40 @@ while. To watch the whole of it done by a robot, see `meta/🎓 resort-teacher`.
 
 `make_resort.py` writes it.
 
+## 🏨 resort-infinity-3, -4 and -5
+
+The original's other three problems, each a world that opens where the last
+one ended (`make_resort_more.py` writes all three; the guide is
+toontalk.com/Tools/Infinity/Doc/resort_infinity_guide.htm). The housed
+guests' machinery is saved **running**, so they are listening for the bell
+the moment you step outside; a newcomer writes `[my number | my group |
+bird]` to the front desk now, as the original's did, and a housed guest
+still writes `[where I live | bird]` to the moving office. Every group has a
+colour, since group numbers start again with each problem: red and blue
+from problems 1 and 2, then gold; green, plum and teal; rose, lime and
+brown.
+
+- **3 — a new infinite group.** Every cottage is taken and adding five will
+  not do. Everybody moves from *i* to 2*i* (`Double`, by the fence) and the
+  gold newcomers take the odd cottages, 2*i* − 1 (`Odd cottages`).
+- **4 — three infinite groups.** Everybody moves from *i* to 4*i* (`Four
+  times`); guest *i* of group *j* takes 4*i* − *j* (`Four apart`: a ×4
+  dropped on the number, then a copy of the group wearing a minus sign).
+  Or solve it as problem 3 three times over.
+- **5 — infinitely many infinite groups.** Everybody doubles; a newcomer
+  (*i*, *j*) needs one whole number *n* of its own and takes cottage
+  2*n* − 1. `Weigh` is a team of four: it puts *i* and *j* on the pans of a
+  fresh scale in the number's place, and then one of three robots — the
+  scale tipping right (*i* < *j*): *n* = *j*² − (*i* − 1); tipping left or
+  level: *n* = (*i* − 1)² + *j* — does the sum, doubles it less one, gives
+  it to the bird and sweeps the scale away. That is Barrow's count of the
+  grid by growing squares; the pad "Why growing squares" lays it out, and
+  says why the classic answer (the *i*th power of the *j*th prime) leaves
+  most cottages empty for ever.
+
+Eleven cottages stand in the clear and the mist takes the rest: a guest
+sent past the fence stands at its far end, lost to view.
+
 ## Rebuilding
 
 ```bash

@@ -36,10 +36,22 @@ ROUTE = [
    'A repeat inside a repeat: four sides make a square petal, six petals on spokes make a flower — each its own colour from a queue on a nest, and invisible ink keeps it one drawing.',
    ['lessons/🪐 step-and-turn-planet'], 'Press Start the robot: six square petals appear round a centre, each a different colour. The next member button above Trained actions shows each robot.',
    'Set petals left to 3 and next spoke from 240° to 300°. Predict the flower; then sweep it up with Dusty — one thing.', 'run'),
+  ('lessons/🌷 flower-garden', 'First steps',
+   'A repeat inside a repeat inside a repeat: twenty segments make a curved petal, petals make a flower, three flowers make a garden — each flower one trail, the pen invisible between stem, leaves and petals.',
+   ['lessons/🌸 easy-flower'], 'Press Start the robot: three pens rise from their pots, grow a stem and two leaves, and draw 8, 10 and 12 tilted petals with a golden centre. Instant shows it at once; the team puts its box away when the garden is done.',
+   'Set flowers left to 1 and watch one flower. Then in the letters box change “move yaw” from 18 to 20. Predict the petal.', 'run'),
   ('lessons/✨ jumping-spark', 'First steps',
    'A movement amount that changes over time: gravity shrinks the upward step inside the letter each jump, and the dots draw an arch.',
    ['lessons/🪐 step-and-turn-planet'], 'Press Start the robot: the spark rises and falls in twenty steps and leaves an arch of dots behind. The world opens from the side, where the arch reads.',
    'Set gravity to 0. Predict the shape before running; then try −1/200.', 'run'),
+  ('lessons/🔭 planetary-clockwork', 'First steps',
+   'Angles into positions: every tick each angle grows by its own step, modulo 360, and sin and cos badges turn it into a place on a tilted track — three planets and a moon that adds the blue planet’s position to its own.',
+   ['lessons/✨ jumping-spark', 'behaviours/🪐 ellipse'], 'Press Start the robot: the planets go round the sun on their tracks and the moon round the blue planet, for 120 ticks; the periods are 30, 60, 120 and 15 ticks, so everybody comes home together.',
+   'Set ticks left to 30. Predict which planet gets all the way round. Then change the blue planet’s degrees per tick to 12 and predict the moon.', 'run'),
+  ('lessons/🎆 firework-fountain', 'First steps',
+   'Velocity and gravity: each spark keeps three velocities in its record, moves by them every tick and stamps a dot, and gravity comes off the upward one — so it slows, turns and falls. Eight sparks reused for three bursts.',
+   ['lessons/✨ jumping-spark'], 'Press Start the robot: eight coloured sparks rise from the nozzle in arches of dots, hide after thirty ticks, and burst again turned 15 degrees, three times; the last burst’s dots remain.',
+   'Set gravity per tick to −1/250. Predict the height of the arches. Then set sideways speed to 0 and predict the shape of a burst.', 'run'),
   ('behaviours/🎨 random-colour', 'First steps',
    'A pad with a robot on its back: a die picks the Nth colour from a list by splitting the list there, and three letters paint the pad.',
    ['behaviours/🏃 moving'], 'Press SPACE on the pad: its colour changes again and again, one of the seven; "." stops it. Ctrl+P on it shows the robot at work.',
@@ -237,6 +249,18 @@ ROUTE = [
    'Resort Infinity: cottages without end, guests to house and to move up five — the robots are yours to train.',
    ['infinity/♾️ activity8-counting-sequences'], 'Go outside. Train a robot on the practice letter and give it to the front desk’s bird: each guest is answered and walks to its cottage.',
    'Before you train: predict what the guest at cottage 1 must be told when five more arrive.', 'yard'),
+  ('infinity/🏨 resort-infinity-3', 'Infinity',
+   'Resort Infinity 3: a whole infinite group arrives at a full resort. Adding five will not do — everybody moves from i to 2i, and the newcomers take the odd cottages, 2i − 1.',
+   ['infinity/🏨 resort-infinity'], 'Go outside. Train a mover for the moving office (given [where I live | bird]) and a clerk for the front desk (given [number | group | bird]), give each to its bird, then SPACE on the gold group: everybody moves to the even cottages and the gold guests take the odd ones.',
+   'Before you train: which cottages come free when everybody doubles their address? How many is that?', 'yard'),
+  ('infinity/🏨 resort-infinity-4', 'Infinity',
+   'Resort Infinity 4: three infinite groups at once. Everybody moves from i to 4i; guest i of group j takes 4i − j — the group number is in the letter now.',
+   ['infinity/🏨 resort-infinity-3'], 'Go outside. A mover that multiplies by four, a clerk that computes 4i − j from the number and the group in the letter, and SPACE on three groups: green, plum and teal fill three cottages in every four.',
+   'Or solve it as problem 3 three times over. Predict where green guest 2 ends up either way.', 'yard'),
+  ('infinity/🏨 resort-infinity-5', 'Infinity',
+   'Resort Infinity 5: infinitely many infinite groups. Everybody doubles; a newcomer (i, j) gets one whole number n by counting the grid in growing squares — a scale weighs i against j to pick the sum — and takes cottage 2n − 1.',
+   ['infinity/🏨 resort-infinity-4'], 'Go outside. Give Double to the moving office and Weigh — a team of four: weigh, then one of two sums — to the front desk, then SPACE on the groups: rose, lime and brown take 1, 3, 5, 7, 9, 11 and on into the mist.',
+   'Read the pad “Why growing squares”. Predict n for (3, 2) and for (2, 3) before you look at the cottages.', 'yard'),
   # ------------------------------------------------------------- meta
   ('meta/🎓 teacher', 'Meta',
    'A robot that trains a robot: the pupil takes a desk, is shown its step, and has its thought loosened by Ruby.',
@@ -260,6 +284,9 @@ ROUTE = [
 TITLES = {
   'numbers/🔀 swap': 'Swap', 'behaviours/🏃 moving': 'Moving', 'lessons/🪐 step-and-turn-planet': 'A step-and-turn planet',
   'lessons/🌸 easy-flower': 'An easy flower', 'lessons/✨ jumping-spark': 'A jumping spark', 'behaviours/🎨 random-colour': 'Random colour',
+  'lessons/🌷 flower-garden': 'A flower garden', 'lessons/🔭 planetary-clockwork': 'A planetary clockwork', 'lessons/🎆 firework-fountain': 'A firework fountain',
+  'infinity/🏨 resort-infinity-3': 'Resort Infinity 3: a new infinite group', 'infinity/🏨 resort-infinity-4': 'Resort Infinity 4: three infinite groups',
+  'infinity/🏨 resort-infinity-5': 'Resort Infinity 5: infinitely many groups',
   'devices/⌨️ keys': 'The keyboard', 'devices/🖱️ pointer': 'The pointer', 'behaviours/🐾 following': 'Following the pointer',
   'behaviours/🏀 bouncing': 'Bouncing', 'behaviours/🦋 wandering': 'Wandering', 'devices/⏱️ timer': 'A stopwatch',
   'devices/🖥️ computer': 'The computer', 'behaviours/🐢 turtle': 'A turtle', 'behaviours/🐢 turtle3d': 'A turtle in the air',
@@ -292,7 +319,7 @@ for _n in ['numbers/🔀 swap', 'numbers/🐇 fibonacci-recursive', 'devices/�
     DO[_n] = 'try'
 for _n in ['words/📝 sentence-generator', 'games/👾 space-invaders', 'meta/🎓 teacher', 'meta/🎓 timer-teacher', 'meta/🎓 resort-teacher']:
     DO[_n] = 'read'
-for _n in ['infinity/♾️ activity3-sequences-and-pairs', 'infinity/🏨 resort-infinity']:
+for _n in ['infinity/♾️ activity3-sequences-and-pairs', 'infinity/🏨 resort-infinity', 'infinity/🏨 resort-infinity-3', 'infinity/🏨 resort-infinity-4', 'infinity/🏨 resort-infinity-5']:
     DO[_n] = 'build'
 # ...and the one card on the beginner route that is a bigger jump than its neighbours
 OPTIONAL = {
