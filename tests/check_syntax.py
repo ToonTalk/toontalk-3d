@@ -20,6 +20,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # loaded, logged nothing, and looked for all the world like an app that would
 # not boot -- twenty minutes of watching an empty log.
 MARKERS = ['switchScene', 'lookStraightOn', 'processDirtyRooms']
+# the CHAT build's module is minified, so its names are gone: strings survive
+CHAT_MARKERS = ['__TT_PACK_READY', 'Start this world over', 'martyLog']
 SUITE_MARKERS = ['runOne', 'slowSettle', 'markdownCheck']
 targets = sys.argv[1:] or [os.path.join(ROOT, 'toontalk-3d.html'),
                            os.path.join(ROOT, 'tests', 'regress.html')]
@@ -29,7 +31,7 @@ for path in targets:
     name = os.path.basename(path)
     src = io.open(path, encoding='utf-8').read()
     blocks = re.findall(r'<script(?![^>]*src=)[^>]*>(.*?)</script>', src, re.S)
-    want = SUITE_MARKERS if name == 'regress.html' else MARKERS
+    want = SUITE_MARKERS if name == 'regress.html' else CHAT_MARKERS if name.endswith('.chat.html') else MARKERS
     main = next((b for b in blocks if all(m in b for m in want)), None)
     if main is None:
         print('FAIL %s: no script block holds %s' % (name, want))
