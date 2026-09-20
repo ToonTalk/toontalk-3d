@@ -2171,7 +2171,8 @@ async function martyFactsCheck(D, w) {
   const all = []; for (let i = 0; i < 12; i++) { const t = D.bench(i); if (!t) break; all.push(t); }
   const gad = all.find(t => t.userData.gadget);
   const facts = D.gadgetFacts(gad) || '';
-  const box = /work box: \[a bird to my thing \| \[/.test(facts) && /a die \(1 to 3\)/.test(facts) && /badged “× 30”/.test(facts);
+  // the bird to my thing stands on the perch since the perch round, so the box begins with the move letter
+  const box = /work box: \[\[“move” \| “forward”/.test(facts) && /a die \(1 to 3\)/.test(facts) && /badged “× 30”/.test(facts);
   const annotated = /\(a die \(1 to 3\)\)/.test(facts);
   const subject = D.martySubjectOf('can you describe how the wandering thing works');
   D.leaveYard(); await slowSettle(D, 2000);
