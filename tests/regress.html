@@ -7364,9 +7364,17 @@ async function runOne(D, spec) {
 }
 
 (async () => {
-  // wait for the app to boot
-  for (let i = 0; i < 300; i++) {
+  // wait for the app to boot -- and the CHAT build (?app=../toontalk-3d.chat.html)
+  // waits for its pack, which a reader drops on it: the suite hands it over
+  // itself, so the minified page is checked like any other
+  let packGiven = false;
+  for (let i = 0; i < 600; i++) {
     if (ready(frame.contentWindow.__nano)) break;
+    if (!packGiven && typeof frame.contentWindow.__ttAcceptPack === 'function') {
+      packGiven = true;
+      try { frame.contentWindow.__ttAcceptPack(await (await fetch('../toontalk-3d-pack.json')).text()); put('the pack was handed to the chat build', 'dim'); }
+      catch (e) { put('FAIL the pack could not be handed over: ' + e.message, 'fail'); }
+    }
     await new Promise(r => setTimeout(r, 100));
   }
   const D = frame.contentWindow.__nano;

@@ -382,18 +382,27 @@ far tighter than 2.3 MB.
 python build_chat_artifact.py
 ```
 
-writes `toontalk-3d.chat.html` (about 500 KB) and `toontalk-3d-models.json`
-(about 1 MB). The small file is what goes to claude.ai. It sheds the two things
-that made the packed build large: three.js comes from `cdn.jsdelivr.net`, which
-the chat frame's content-security policy allows where `unpkg` — what the source
-uses — is not on the list; and the models are handed over by **the reader**,
-dropped on the page or chosen from a picker the first time, and kept in that
-browser afterwards. The idea is Ken's, from Comic Chat, where the same trick
-carries several megabytes of artwork into a frame that cannot fetch it.
+writes `toontalk-3d.chat.html` (about 560 KB) and `toontalk-3d-pack.json`
+(about 1.4 MB). The small file is what goes to claude.ai. It sheds three things
+that make the source 1.4 MB and the packed build 3.7 MB: three.js comes from
+`cdn.jsdelivr.net`, which the chat frame's content-security policy allows where
+`unpkg` — what the source uses — is not on the list; the module is **minified**
+with terser (half of it is comment; 1.25 MB becomes 535 KB, under the frame's
+~800 KB limit for one inline script, and the suite checks the minified page
+against the goldens like any other build); and the models, Marty's manual and
+the puzzle set go in **one pack handed over by the reader** — dropped on the
+page or chosen from a picker the first time, then kept gzipped in that
+browser's storage so it is asked for once. The idea is Ken's, from Comic Chat,
+where the same trick carries several megabytes of artwork into a frame that
+cannot fetch it. The code itself stays in the page: running code out of a
+dropped file would need `eval`, and whether the chat frame allows that is
+unmeasured — the prose was the fat, not the code.
 
 Nothing in the app knows the difference: `loadModel` already preferred a model
-in memory over a fetched one, so the loader only has to fill that in before the
-module starts.
+in memory over a fetched one, and the manual and the puzzles are put back as
+the two `<script type="text/plain">` blocks the app reads them from, before the
+module starts. terser comes from `npm install --no-save terser@5` in the
+project (or `npx --yes terser@5`, which the builder falls back to).
 
 ## The activity sheets
 

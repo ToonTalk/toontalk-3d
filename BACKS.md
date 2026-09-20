@@ -8459,3 +8459,19 @@ resort-smoke.cjs: its server could not serve (a forward-slash root
 against resolve's backslashes) and it looked for the newcomers' macro by
 label where a pad has text; against the dev server it found everything
 else and saw the moves happen.
+
+## The chat artifact, in a pack
+
+The chat build had grown to 1.45 MB (the artifact's publish cap is about
+950 KB, and one inline script may not pass about 800 KB). Ken: pull the
+resources and data out, as in Comic Chat, and have the reader upload a file
+once that the browser then keeps. So: the module is MINIFIED with terser
+(1.25 MB, half of it comment, becomes 535 KB -- the prose was the fat, not
+the code), and the models, Marty's manual and the puzzle set go in one
+toontalk-3d-pack.json (1.4 MB) that the loader asks for once and keeps
+gzipped in localStorage (631 KB); the manual and the puzzles are planted
+back as the two text/plain blocks the app reads. The shell is 560 KB. The
+code stays in the page: running it out of a dropped file needs eval, and
+whether the chat frame allows that is unmeasured. The suite hands the pack
+to the chat build itself (__ttAcceptPack), so the minified page is checked
+against the goldens: byte-identical, and every puzzle judges from the pack.
