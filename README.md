@@ -259,9 +259,10 @@ Undo (Ctrl+Z or the button) unwinds moves, typing, joins, vacuums, erasures —
 including recorded steps mid-lesson. Mode boundaries clear the history.
 
 `robot-demo.html` — the earlier standalone pick-up-and-put-down demo.
-`index.html` redirects to the released snapshot (`toontalk-3d-v1.html`; see
-`PLAN.md`), so the GitHub Pages root and a bare `node serve.js` land on the
-stable app while development continues in `toontalk-3d.html`.
+`index.html` redirects to `toontalk-3d.html`, so the GitHub Pages root and a
+bare `node serve.js` land on the workshop. (From 24 August to 20 September
+2026 it pointed at `toontalk-3d-v1.html`, a frozen snapshot, while the panels
+epic of `PLAN.md` ran in the canonical file; the snapshot stays as history.)
 
 Every sound effect is synthesised on the spot from oscillators and filtered
 noise — picks pop, drops thunk, combining rings, birds chirp, Dusty slurps,
@@ -274,10 +275,10 @@ whole app is still one HTML file.
 ## Running it
 
 To use it unmodified, no setup needed:
-<https://toontalk.github.io/toontalk-3d/> — the **released** build (a frozen
-snapshot, `toontalk-3d-v1.html`). The **work in progress** is always
-<https://toontalk.github.io/toontalk-3d/toontalk-3d.html>; while the panels
-epic (see `PLAN.md`) is under way the two can differ.
+<https://toontalk.github.io/toontalk-3d/> — the current build, which is
+`toontalk-3d.html` on `main`; the examples gallery is at
+<https://toontalk.github.io/toontalk-3d/gallery.html>. (`toontalk-3d-v1.html`
+is the snapshot of 24 August, kept as history.)
 
 To run it locally, it needs any static server; the repo assumes port 8311.
 
