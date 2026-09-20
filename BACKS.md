@@ -8475,3 +8475,27 @@ code stays in the page: running it out of a dropped file needs eval, and
 whether the chat frame allows that is unmeasured. The suite hands the pack
 to the chat build itself (__ttAcceptPack), so the minified page is checked
 against the goldens: byte-identical, and every puzzle judges from the pack.
+
+## The published artifact, and the sample capability
+
+Ken made the artifact in a claude.ai chat session and brought back a
+handoff of what it took (CHANGES-2026-09-20-claude-artifact.md), ported
+here. A PUBLISHED artifact does not carry the keyless fetch to Anthropic
+(that is the chat preview's proxy); it carries window.claude.use('sample')
+-- runtime contract 0.2.52 -- which calls Claude on the READER's account
+with their consent. hereThink uses it when it resolves: the instructions
+as the first user turn (no system field), the quick tier unless the model
+box says default or complex, its error codes mapped onto the kinds the
+panel explains (not_granted is "declined"). It takes 64 KiB in all and the
+manual is 110 KB, so that route gets a 40,000-character slice by relevance
+and one retry at 13,000 (Ken: "turns exceed the 64 KiB limit"); tooMuchFor
+knows prompt_too_large. hasAiHook is true when sample is live, so "here"
+is the default there again (it tested the shape of window.claude and got
+the published runtime backwards). The gallery links are absolute and no
+longer gated on http(s), which hid them in an artifact. The pack: fetched
+from the site first (a published artifact's connect-src refuses it, so
+there the drop screen shows), a .gz beside the .json because a click on
+.gz downloads where .json opens as text, and a dropped file may be either
+(the gzip magic says). The picker stays: drag-and-drop is desktop-only.
+Publish with capabilities { sample: {}, downloads: true } -- downloads was
+silently broken before, since nothing had been declared.

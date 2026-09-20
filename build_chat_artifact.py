@@ -54,7 +54,10 @@ PACK = os.path.join(HERE, 'toontalk-3d-pack.json')
 MODELS = ['robot_v4.glb', 'dusty_v11.glb', 'mimi_v1.glb']
 THREE_VERSION = '0.185.0'
 PACK_FORMAT = 'toontalk-3d-pack-2'
-PACK_URL = 'https://raw.githubusercontent.com/ToonTalk/toontalk-3d/main/toontalk-3d-pack.json'
+PACK_URL = 'https://toontalk.github.io/toontalk-3d/toontalk-3d-pack.json'
+# ...and gzipped beside it: a click on a .gz DOWNLOADS where a .json opens as
+# a page of text the reader then has to save (Ken's chat session, 20 Sep).
+# The builder writes both; commit both.
 
 s = io.open(SRC, encoding='utf-8').read()
 
@@ -80,6 +83,10 @@ pack['puzzlesGzip'] = 'data-gzip' in puzzles_attrs
 print('  packed the manual (%d KB) and the puzzle set (%d KB)' % (len(pack['manual']) // 1024, len(pack['puzzles']) // 1024))
 io.open(PACK, 'w', encoding='utf-8').write(json.dumps(pack))
 print('wrote %s (%.1f MB)' % (os.path.basename(PACK), os.path.getsize(PACK) / 1048576))
+import gzip
+with gzip.GzipFile(PACK + '.gz', 'wb', compresslevel=9, mtime=0) as gz:   # mtime 0: the same bytes for the same pack
+    gz.write(io.open(PACK, 'rb').read())
+print('wrote %s (%d KB)' % (os.path.basename(PACK) + '.gz', os.path.getsize(PACK + '.gz') // 1024))
 
 # ---------------------------------------------------------------- the shell
 # 1. the data blocks come out (the pack puts them back)
@@ -143,6 +150,7 @@ LOADER = r'''<script>
 (function () {
   var KEY = 'tt3d.pack.__FORMAT__.gz';
   var PACK_URL = '__PACK_URL__';
+  var PACK_GZ_URL = PACK_URL + '.gz';
   var el = document.getElementById('loading');
   var say = function (html) { if (el) el.innerHTML = html; };
   var note = function (m) {
@@ -206,9 +214,10 @@ LOADER = r'''<script>
         + '<div style="margin-bottom:14px">Robby, Dusty and Mimi’s 3D models, Marty’s '
         + 'manual and the puzzles are about a megabyte — more than an artifact may '
         + 'carry. Hand them over once and this browser will remember them.</div>'
-        + '<div style="margin-bottom:14px">Drop <a href="' + PACK_URL + '" '
-        + 'target="_blank" rel="noopener" style="color:#7fd3c6">'
-        + 'toontalk-3d-pack.json</a> anywhere on this page, or</div>'
+        + '<div style="margin-bottom:14px">Save <a href="' + PACK_GZ_URL + '" '
+        + 'download="toontalk-3d-pack.json.gz" style="color:#7fd3c6">'
+        + 'toontalk-3d-pack.json.gz</a> (a click downloads it) and drop the saved '
+        + 'file anywhere on this page, or</div>'
         + '<button id="ttPick" style="font:inherit;font-size:13px;color:#eafff0;'
         + 'background:#2f6b43;border:none;border-radius:8px;padding:8px 16px;'
         + 'cursor:pointer">Choose the file…</button>'
@@ -244,12 +253,27 @@ LOADER = r'''<script>
         });
       return;
     }
-    fresh();
+    // FETCH IT FIRST, and ask only if that fails: a page served from the site
+    // (or a chat preview) gets the pack with no gesture at all. A published
+    // artifact's policy refuses the fetch (connect-src 'self' and the font
+    // hosts), and there the drop screen is what a reader sees.
+    say('Fetching the pack…');
+    var fetched = null;
+    try { fetched = fetch(PACK_URL, { cache: 'force-cache' }); } catch (e) {}
+    Promise.resolve(fetched)
+      .then(function (r) { if (!r || !r.ok) throw new Error('no pack at ' + PACK_URL); return r.text(); })
+      .then(accept)
+      .catch(function () { fresh(); });
 
+    // a dropped file may be the .json or the .gz: the gzip magic says which
     var read = function (file) {
       if (!file) return;
       note('Reading…');
-      file.text().then(accept).catch(function (e) {
+      file.arrayBuffer().then(function (buf) {
+        var bytes = new Uint8Array(buf);
+        if (bytes.length > 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) return gunzip(bytes);
+        return new TextDecoder().decode(bytes);
+      }).then(accept).catch(function (e) {
         note(String((e && e.message) || e));
       });
     };
@@ -260,7 +284,7 @@ LOADER = r'''<script>
       if (!ev.target || ev.target.id !== 'ttPick') return;
       var inp = document.createElement('input');
       inp.type = 'file';
-      inp.accept = '.json,application/json';
+      inp.accept = '.json,.gz,application/json,application/gzip';
       inp.onchange = function () { read(inp.files && inp.files[0]); };
       inp.click();
     });
@@ -282,5 +306,9 @@ s = s.replace(anchor, LOADER + anchor)
 
 io.open(OUT, 'w', encoding='utf-8').write(s)
 print('wrote %s (%.0f KB)' % (os.path.basename(OUT), os.path.getsize(OUT) / 1024))
-print('\nUpload the .html to claude.ai and ask Claude to copy it into an artifact;')
-print('the reader drops toontalk-3d-pack.json on it the first time.')
+print('\nUpload the .html to claude.ai and ask Claude to copy it into an artifact,')
+print('PUBLISHED WITH capabilities: { sample: {}, downloads: true } -- sample is the')
+print('keyless Marty there (the viewer\'s own Claude, with their consent), downloads')
+print('is Save. A published artifact cannot fetch the pack, so the reader drops')
+print('toontalk-3d-pack.json.gz on it the first time; served from the site the')
+print('page fetches it itself. Commit both pack files.')

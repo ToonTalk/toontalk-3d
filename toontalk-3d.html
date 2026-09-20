@@ -7901,6 +7901,9 @@ const PEN_INK = 0x2f4a3a;
 // Dusty, one thing saved. Any colour brings the ink back. Ken's idea, in
 // place of a "make sculpture" command: pen up would have ended the trail.
 const PEN_NONE = -1;
+// the examples gallery is on the site: an absolute link, so a single-file
+// build and an artifact reach it too
+const GALLERY_URL = 'https://toontalk.github.io/toontalk-3d/gallery.html';
 const penMats = new Map();              // colour -> material, one apiece
 function penMatFor(hex) {
   let m = penMats.get(hex);
@@ -23175,8 +23178,10 @@ loadModel('robot_v4.glb', (gltf) => {
     glb.id = 'galleryBtn';
     glb.title = 'Every example in the order to learn them: what each teaches, what it needs, a picture, and something to change and predict.';
     glb.textContent = '\u{1F5BC} Examples gallery';
-    glb.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); window.open('gallery.html', '_blank'); };
-    if (!/^https?:$/.test(location.protocol)) glb.style.display = 'none';   // a single-file build carries no gallery
+    // ABSOLUTE, and from anywhere: a single-file build carries no gallery, but
+    // the site does, and gating the link on http(s) hid it inside an artifact
+    // -- which is where a reader is least able to find it (Ken, 20 Sep)
+    glb.onclick = () => { document.getElementById('moreMenu').classList.remove('on'); window.open(GALLERY_URL, '_blank'); };
     menu.appendChild(glb);
     const fp = document.createElement('button');
     fp.id = 'firstBtn';
@@ -25195,6 +25200,23 @@ async function nanoState() {
   } catch { return 'unavailable'; }
 }
 const NANO_MANUAL_BUDGET = 7000;
+// THE PUBLISHED ARTIFACT'S BRAIN. A published claude.ai artifact (runtime
+// contract 0.2.52, 20 Sep 2026) exposes window.claude.use('sample'): a call
+// to Claude that runs on the account of whoever is READING, with no key and a
+// consent prompt the first time. It resolves to a function, or to null --
+// not a viewer, not declared at publish (capabilities: { sample: {} }), or
+// disabled -- and the difference is by design invisible. Probed once here.
+// Its contract: input a string or [{role, content}] starting and ending with
+// a user turn, no system field, at most 64 KiB of text in all; tiers quick |
+// default | complex; it rejects with { code } -- prompt_too_large,
+// not_granted, sampling_disabled, rate_limited, session_expired,
+// not_declared, capability_disabled.
+let sampleFn = null;
+(async () => { try { sampleFn = (await window.claude?.use?.('sample')) ?? null; } catch { sampleFn = null; } })();
+// the size complaint of any brain, told apart from the rest: the built-in
+// model's quota, the sample route's 64 KiB
+const tooMuchFor = (e) => nanoTooMuch(e) || e?.code === 'prompt_too_large' || /exceed|64 KiB/i.test(e?.message || '');
+const SAMPLE_MANUAL_BUDGET = 40000;
 // "you gave me more than I can hold", however this build of Chrome says it
 const nanoTooMuch = (e) => e?.name === 'QuotaExceededError'
   || /quota|context|too (large|long)|token/i.test(e?.message || '');
@@ -25258,6 +25280,33 @@ class HereTrouble extends Error {
   constructor(msg, kind) { super(msg); this.kind = kind; }
 }
 async function hereThink(sys, q, history = null, cap = 900) {
+  // A PUBLISHED ARTIFACT: the viewer's own Claude, through the runtime's
+  // sample capability. No system field, so the instructions are the first
+  // user turn; the quick tier unless the model box says default or complex
+  // (the others think for five to sixty seconds before a word, which is wrong
+  // for a child chatting); the error codes are mapped onto the kinds the
+  // panel already explains, and copied on for the size retry.
+  if (sampleFn) {
+    const turns = [{ role: 'user', content: sys }];
+    for (const m of (history ?? martyHistory)) {
+      if ((m.role === 'user' || m.role === 'assistant') && m.content) turns.push({ role: m.role, content: String(m.content) });
+    }
+    turns.push({ role: 'user', content: q });
+    const tier = (localStorage.getItem('tt3d.marty-model.here') || '').trim();
+    const modelTier = ['quick', 'default', 'complex'].includes(tier) ? tier : 'quick';
+    let out;
+    try { out = await sampleFn(turns, { cache: false, modelTier }); }
+    catch (e) {
+      const code = e?.code;
+      const t = new HereTrouble(e?.message || String(code || e),
+        code === 'not_granted' ? 'declined' : code === 'session_expired' ? 'signedout' : code ? 'server' : 'blocked');
+      t.code = code;
+      throw t;
+    }
+    const text = typeof out === 'string' ? out : (out?.text ?? '');
+    if (!String(text).trim()) throw new HereTrouble('an empty answer', 'server');
+    return String(text);
+  }
   let res;
   try {
     res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -25326,7 +25375,7 @@ const MARTY_PROVIDERS = {
   // only one that fails for a reason they cannot see, since a signed-OUT
   // reader gets refused. See martyHereFail for how that is told apart.
   here: { label: 'Claude \u2014 no key, in a Claude artifact', say: 'Claude, keylessly',
-          model: 'claude-sonnet-5', keyless: true },
+          model: 'claude-sonnet-5', keyless: true },   // in a PUBLISHED artifact the model box takes a tier: quick, default or complex
 };
 // Being inside SOME frame is not enough to make the keyless route work, and
 // choosing it on that alone was wrong. Measured 2026-08-23: the Claude Code
@@ -25350,6 +25399,7 @@ const MARTY_PROVIDERS = {
 // "Chat artifacts use a different, flat window.claude; neither use() nor these
 // namespaces exist there."
 const hasAiHook = () => {
+  if (sampleFn) return true;                  // a published artifact with sample declared: the viewer's own Claude
   if (window.claude) return typeof window.claude.use !== 'function';
   try { return !/\[native code\]/.test(Function.prototype.toString.call(window.fetch)); }
   catch { return false; }
@@ -25364,7 +25414,10 @@ const martyModelOf = (p) => (localStorage.getItem('tt3d.marty-model.' + p)
 function martyBrainText() {
   const p = martyProv();
   if (p === 'here') {
-    return hasAiHook()
+    return sampleFn
+      ? 'Claude with no key at all \u2014 on the claude.ai account of whoever is '
+        + 'reading this, with their say-so'
+      : hasAiHook()
       ? 'Claude with no key at all \u2014 borrowing the claude.ai session of '
         + 'whoever is reading this'
       : 'his phrasebook \u2014 nothing here can carry a call out for the page, '
@@ -25524,13 +25577,18 @@ async function martyThink(q) {
           + manual + '\n=== end of manual ===' : '')
       + '\n\nOn the table right now:\n' + martyWorldText();
   };
-  const sys = sysAt(nano ? NANO_MANUAL_BUDGET : Infinity);
-  if (nano) {
+  // The sample route takes 64 KiB in all, and the manual alone is 110 KB:
+  // it gets the sections the question is about, forty thousand characters
+  // of them, and one more go at thirteen thousand if that was still too much
+  // (Ken, 20 Sep: "turns exceed the 64 KiB limit").
+  const sampled = prov === 'here' && !!sampleFn;
+  const sys = sysAt(nano ? NANO_MANUAL_BUDGET : sampled ? SAMPLE_MANUAL_BUDGET : Infinity);
+  if (nano || sampled) {
     try { return await askBrain(sys, q); }
     catch (e) {
       // still more than it can hold: one more go with the manual cut right back
-      if (!nanoTooMuch(e)) throw e;
-      return await askBrain(sysAt(Math.round(NANO_MANUAL_BUDGET / 3)), q);
+      if (!tooMuchFor(e)) throw e;
+      return await askBrain(sysAt(nano ? Math.round(NANO_MANUAL_BUDGET / 3) : 13000), q);
     }
   }
   return await askBrain(sys, q);
@@ -25648,7 +25706,10 @@ async function askMarty(q) {
     // never the network and never the key.
     if (e instanceof HereTrouble) { martyHereTrouble = e.kind; martyModeLine(); }
     martySay(e instanceof HereTrouble
-      ? (e.kind === 'blocked'
+      ? (e.kind === 'declined'
+          ? 'Claude is right here, but this page was not allowed to use your account \u2014 '
+            + e.message + '. Allow it when asked, or pick a brain with a key.'
+          : e.kind === 'blocked'
           ? 'The keyless route was stopped before it left the page \u2014 this frame\u2019s '
             + 'own rules refuse to call out. Signing in would not help; nothing was '
             + 'sent. Pick a brain with a key, or the Gemini inside Chrome.'
@@ -26855,14 +26916,14 @@ function askWho(switching = false) {
   if (play) row.appendChild(play);
   row.appendChild(ok);
   card.append(h, p, input, list, row);
-  // ...and the third way in: the examples, in the order to learn them (only
-  // where the page is served, since a single-file build carries no gallery)
-  if (!switching && /^https?:$/.test(location.protocol)) {
+  // ...and the third way in: the examples, in the order to learn them, on the
+  // site (an absolute link, so an artifact has it too)
+  if (!switching) {
     const g = document.createElement('a');
-    g.href = 'gallery.html';
+    g.href = GALLERY_URL;
     g.textContent = 'Or browse the examples gallery \u2192';
     g.style.cssText = 'font-size:12px;color:var(--dim);text-align:right;text-decoration:underline';
-    g.onclick = (e) => { e.preventDefault(); if (!takeName()) return; location.href = 'gallery.html'; };
+    g.onclick = (e) => { e.preventDefault(); if (!takeName()) return; location.href = GALLERY_URL; };
     card.appendChild(g);
   }
   veil.appendChild(card);

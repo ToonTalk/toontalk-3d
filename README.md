@@ -402,7 +402,21 @@ unmeasured — the prose was the fat, not the code.
 Nothing in the app knows the difference: `loadModel` already preferred a model
 in memory over a fetched one, and the manual and the puzzles are put back as
 the two `<script type="text/plain">` blocks the app reads them from, before the
-module starts. terser comes from `npm install --no-save terser@5` in the
+module starts. The page tries to fetch the pack from the site first and asks
+only when that is refused — which a published artifact's policy does, so there
+the reader saves `toontalk-3d-pack.json.gz` (a click downloads it) and drops it
+on the page once. The builder writes both pack files; commit both.
+
+**Publishing it (20 September 2026).** Ask Claude to publish the uploaded page
+with `capabilities: { sample: {}, downloads: true }`. `sample` is Marty's
+keyless brain in a *published* artifact: the runtime's `window.claude.use('sample')`
+calls Claude on the account of whoever is reading, with their consent the first
+time (the proxied keyless `fetch` only works in the chat preview). Its input
+takes no system field and at most 64 KiB in all, so Marty gets a 40,000-character
+slice of the manual there rather than the whole of it; the model box takes a
+tier, `quick` (the default — the others think for many seconds first),
+`default` or `complex`. `downloads` is what Save uses. Whether `sample` answers
+for a signed-in reader outside the publisher's organisation is not yet verified. terser comes from `npm install --no-save terser@5` in the
 project (or `npx --yes terser@5`, which the builder falls back to).
 
 ## The activity sheets
