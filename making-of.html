@@ -282,12 +282,13 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Twenty-one working days, 241 commits and one 24,000-line
+  <p class="standfirst">Twenty-seven working days, 293 commits and one 27,000-line
     file &mdash; the day the project stopped guessing at ToonTalk and went and
     read it, and everything that followed from the day a picture became a pad:
-    panels, games, puzzles, a yard, teams, a narrator, and robots that train
-    robots.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 14 September 2026</p>
+    panels, games, puzzles, a yard, teams, a narrator, robots that train
+    robots, Hilbert's resort in five problems &mdash; and a third voice at the
+    table, a tester that never slept.</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 20 September 2026</p>
 </header>
 
 <table class="stats">
@@ -299,20 +300,20 @@
   <thead>
     <tr><th scope="col"></th>
         <th scope="col">Before media<br><span class="when">16&ndash;24 Aug</span></th>
-        <th scope="col">Since<br><span class="when">25 Aug&ndash;14 Sep</span></th>
+        <th scope="col">Since<br><span class="when">25 Aug&ndash;20 Sep</span></th>
         <th scope="col">Total</th></tr>
   </thead>
   <tbody>
-    <tr><th scope="row">Working days</th><td>9</td><td>12</td><td>21</td></tr>
-    <tr><th scope="row">Commits</th><td>154</td><td>87</td><td>241</td></tr>
-    <tr><th scope="row">Prompts from Ken</th><td>180</td><td>189</td><td>369</td></tr>
-    <tr><th scope="row">Tool calls</th><td>5,491</td><td>10,194</td><td>15,685</td></tr>
-    <tr><th scope="row">Lines in the app</th><td>11,959</td><td>+12,956</td><td>24,915</td></tr>
-    <tr><th scope="row">Example worlds</th><td>18</td><td>+27</td><td>45</td></tr>
-    <tr><th scope="row">Puzzles</th><td>&mdash;</td><td>+34</td><td>34</td></tr>
-    <tr><th scope="row">Manual (lines)</th><td>544</td><td>+1,160</td><td>1,704</td></tr>
-    <tr><th scope="row">Regression checks</th><td>&mdash;</td><td>+99</td><td>99</td></tr>
-    <tr><th scope="row">The back of the book (lines)</th><td>577</td><td>+6,255</td><td>6,832</td></tr>
+    <tr><th scope="row">Working days</th><td>9</td><td>18</td><td>27</td></tr>
+    <tr><th scope="row">Commits</th><td>154</td><td>139</td><td>293</td></tr>
+    <tr><th scope="row">Prompts from Ken<br><span class="when">to 14 Sep</span></th><td>180</td><td>189</td><td>369</td></tr>
+    <tr><th scope="row">Tool calls<br><span class="when">to 14 Sep</span></th><td>5,491</td><td>10,194</td><td>15,685</td></tr>
+    <tr><th scope="row">Lines in the app</th><td>11,959</td><td>+15,724</td><td>27,683</td></tr>
+    <tr><th scope="row">Example worlds</th><td>18</td><td>+48</td><td>66</td></tr>
+    <tr><th scope="row">Puzzles</th><td>&mdash;</td><td>+39</td><td>39</td></tr>
+    <tr><th scope="row">Manual (lines)</th><td>544</td><td>+1,488</td><td>2,032</td></tr>
+    <tr><th scope="row">Regression checks</th><td>&mdash;</td><td>+146</td><td>146</td></tr>
+    <tr><th scope="row">The back of the book (lines)</th><td>577</td><td>+7,900</td><td>8,477</td></tr>
   </tbody>
 </table>
 <p class="statnote">A <em>prompt</em> is a message Ken typed; a <em>tool call</em>
@@ -321,7 +322,9 @@
   before media, fifty-four since: the second half is where measurement got
   cheaper than guessing, and most of each round went into proving the fix
   rather than making it. Both are counted from the session's own transcript
-  (the whole project is one session), with one rule for both halves.
+  (the whole project is one session), with one rule for both halves; the two
+  rows stop at 14 September, when the counting was last done. The other rows
+  are counted from the repository on 20 September.
   <em>The back of the book</em> is <code>BACKS.md</code>: one entry per round,
   saying what was asked, what was measured and what changed.</p>
 
@@ -1667,6 +1670,117 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 
 <section>
   <div class="col">
+    <div class="rail">Beyond the original</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge">&plus;</span>
+        <h2>What was not in ToonTalk</h2>
+      </div>
+      <p>Most of this workshop is the original, read carefully: numbers as
+        blocks, boxes with holes, birds and nests, robots that learn by being
+        shown, teams, houses that fold when their work is done, exact rational
+        arithmetic that never rounds. The audit file keeps that honest. But a
+        remake made thirty years later, in three dimensions, by two people who
+        could ask each other anything, was never going to stop at a copy. These
+        are the things a ToonTalk veteran will not recognise.</p>
+      <div class="split">
+        <div class="panel">
+          <h4>Things and places</h4>
+          <ul>
+            <li><strong>Rooms are things.</strong> A house is picked up, filed in a notebook, sent by bird, dropped into another house's box. The original's houses stood on a city grid and trucks built them; here recursion is a robot putting a copy of itself into a room, and a room whose robot has swept its own box away folds itself up.</li>
+            <li><strong>Every thing has a panel</strong> &mdash; a little world of its own, on its back, where robots work for that thing. The original gave pictures a flip side with robots on it; here a number, a sound, a house, a game and the yard itself all have one, and a <em>behaviour</em> is a panel you can pick up and drop on something else.</li>
+            <li><strong>A picture is a pad</strong>, and a sound is a thing with a waveform on its face. A number dropped on a sound remakes it: &times;2 is faster and an octave up, &times;&minus;1 plays it backwards.</li>
+            <li><strong>Live numbers</strong> that listen to each other, and event nests that fill as they change; a bank balance two rooms can pay into at once and never get wrong.</li>
+            <li><strong>The yard</strong>: a back door, grass in the table's place, animals with names, and Hilbert's resort with its row of cottages going on into the mist.</li>
+            <li><strong>Models</strong> built from a parts list, a pen that draws in three dimensions with a turtle's yaw, pitch and roll, and <em>invisible ink</em> so a drawing with gaps in it is still one thing.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Robots and people</h4>
+          <ul>
+            <li><strong>Letters to things.</strong> A robot changes the world by mail: <span class="mono">[set | position | &hellip;]</span> to a star, <span class="mono">[query | time | bird]</span> to the computer, <span class="mono">[query | things | bird]</span> to the yard. The keyboard, the pointer, a button and a collision are nests, so a robot facing one dozes until something happens.</li>
+            <li><strong>Robots that teach robots</strong>: a lesson is a gesture with the claw, and a teacher's box can hold pupils, practice letters and the birds to give them to. Two levels, and no further.</li>
+            <li><strong>A robot has a note</strong>, and a team has one per member; a trained-actions card that names holes by number and, in brackets, by what the box calls them.</li>
+            <li><strong>Marty</strong>: a narrator at the table with a brain when one is available, who says what a world is for, comments on a run, answers questions from the manual, and reads a robot's last words as its finish. The original's help was a manual.</li>
+            <li><strong>Puzzles are world files</strong> with a judge inside; thirty-nine of them, played in order, with a hint from Marty when you ask for one; sixty-six example worlds in a gallery that says what each teaches, what to do, and what to change and predict.</li>
+            <li><strong>Six faces of a number.</strong> Turn a number cube and it says itself in digits, in words, in standard form, as a decimal, as a continued fraction; a sine or a cosine is a badge a number can wear. Instant speed that keeps every round whole, and a scheduler that gives forty houses their turns.</li>
+          </ul>
+        </div>
+      </div>
+      <p>And the departures kept on purpose, from the day the manual was read:
+        Dusty removes and Ruby erases where the original had one character
+        with modes; the copier is a machine on the floor so a robot can use it
+        as you do; <span class="mono">mod</span> and <span class="mono">set</span>
+        are words. Each is a row in the audit file, argued for.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <div class="rail">A third voice</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge m">?</span>
+        <h2>The tester who never slept</h2>
+      </div>
+      <p>In the third week Ken brought a second model to the table. He gave
+        ChatGPT the published workshop and asked it to play, and it played the
+        way a good tester does: everything, in order, writing down what it saw.
+        Its reports came back as folders &mdash; a Markdown write-up, the
+        scripts it had driven the page with, screenshots, the world files it
+        had built &mdash; and Ken triaged them line by line: <em>ignore 1,
+        investigate 2, 3 would be very nice, let&rsquo;s discuss 5.</em> Then
+        the rounds went on as before, with one more source of observations
+        that never got tired.</p>
+      <p>It wrote before it tested. Three small drawing lessons in the
+        workshop&rsquo;s own file format &mdash; a step-and-turn planet, an easy
+        flower, a jumping spark &mdash; and three larger ones, a garden of
+        three flowers drawn by a repeat inside a repeat inside a repeat, a
+        planetary clockwork on sine and cosine badges, a firework fountain
+        under gravity; it ran each one live, counted the rounds, and wrote a
+        README in the voice of somebody who had read ours. They were moved into
+        the examples&rsquo; own vocabulary, fractions in lowest terms and
+        invisible ink where a flower would otherwise fall into petals, and they
+        are in the gallery now with its name on them.</p>
+      <p>Then it audited. All thirty-nine puzzles, one by one, with a note on
+        each; every example world; the gallery, twice &mdash; once reading, once
+        <em>running</em> all fifty-seven cards and saying for each whether it
+        had seen the promised result or merely a start. It found what a fresh
+        pair of eyes finds: the album&rsquo;s card describing a robot the world
+        had not got, a reset button described as being on the wrong side of
+        the screen, an introduction said twice after a reset, a letter given to
+        a bird who was away landing in the room behind her, a teacher whose
+        finish read as a failure, the title card hiding the back door at
+        800&times;450, a bank that would not answer until somebody started the
+        house by hand. Each one is a fix in the back of the book, and most
+        have a regression check with its name on it.</p>
+      <p>Its performance audit was the round that changed the most code. With
+        a headless browser and a stopwatch it measured a single counting robot
+        in a solid house at 87 to 130 milliseconds a frame, found that half of
+        it was five 256&times;256 canvases painted for every number nobody
+        would see, and showed the same counter fourteen times faster with them
+        deferred; it put fifty counters on the table and reported that forty of
+        them never ran. Numbers made where nobody can see them are data until
+        they are seen now, room work shares one deadline per frame, and houses
+        are visited from a rotating start &mdash; three changes it named, with
+        a check that twelve solid counters all get their turns.</p>
+      <p>It was wrong sometimes, and said so first. A save during a
+        bird&rsquo;s flight it first called data loss and then, on a second
+        look, a serializer limit behind a guard that prevents the loss; an
+        &ldquo;Instant makes the page unresponsive&rdquo; that a later run
+        could not reproduce. Its smoke test for the resort looked for a pad by
+        a label where a pad keeps its text, and its little file server refused
+        every request over a slash. None of that mattered much. What mattered
+        was the shape of the collaboration by the end: one model builds and
+        measures, another plays and reports, and the person at the table
+        decides &mdash; which is, come to think of it, what a workshop is for.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="col">
     <div class="rail">Still open</div>
     <div class="body">
       <div class="head">
@@ -1713,8 +1827,8 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 <footer class="end">
   <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
-  <p>Written from the repository's own history: 241 commits between 16 August
-  and 14 September 2026, the back of the book they were written into, and the
+  <p>Written from the repository's own history: 293 commits between 16 August
+  and 20 September 2026, the back of the book they were written into, and the
   audit file they kept arguing with. The figures at the top are counted from
   the git log and from the conversation's own transcript. Every prompt of the
   conversation is in <a href="the-ledger.html">the ledger</a>.</p>
