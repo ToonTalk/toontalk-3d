@@ -71,7 +71,8 @@
   .wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem 6rem; }
 
   /* the reading column, with a mono rail for dates and hashes */
-  .col { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .body { min-width: 0; }
   @media (min-width: 60rem) {
     .col { grid-template-columns: 9.5rem minmax(0, var(--measure)); gap: 0 2.75rem; }
   }
@@ -85,7 +86,8 @@
   }
   @media (max-width: 59.99rem) { .rail { padding: 1.5rem 0 0; } }
   .body > * + * { margin-top: 1.15rem; }
-  .body p { margin: 0; }
+  .body p { margin-bottom: 0; }
+  .body > :first-child, .body p:not(.body > p) { margin-top: 0; }
 
   /* ---- masthead ------------------------------------------------------ */
   header.top { padding: 5rem 0 2.5rem; }
@@ -174,6 +176,36 @@
   .body h3 + p { margin-top: .6rem; }
 
   a { color: var(--card); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+  section { scroll-margin-top: 1.5rem; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  .permalink {
+    flex: 0 0 auto; align-self: flex-end; margin-bottom: .9rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .9rem;
+    color: var(--ink-soft); text-decoration: none; opacity: 0;
+  }
+  .head:hover .permalink, .permalink:focus-visible { opacity: 1; }
+  @media (hover: none) { .permalink { opacity: .55; } }
+
+  /* ---- contents: the rail labels and the titles, in reading order ---- */
+  .toc { margin: 3rem 0 0; padding: 1.4rem 1.5rem 1.5rem; border: 1px solid var(--rule); background: var(--paper-2); }
+  .toc h2 {
+    font-size: .74rem; font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variation-settings: normal; font-weight: 500; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--card); border: 0; box-shadow: none;
+    padding: 0; margin: 0 0 1rem;
+  }
+  .toc ol { margin: 0; padding: 0; list-style: none; counter-reset: toc;
+            display: grid; gap: .3rem 2rem; grid-template-columns: 1fr; }
+  @media (min-width: 44rem) { .toc ol { grid-template-columns: 1fr 1fr; } }
+  .toc li { counter-increment: toc; display: flex; gap: .7rem; align-items: baseline; }
+  .toc li::before {
+    content: counter(toc); flex: 0 0 1.4rem; text-align: right;
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .72rem;
+    color: var(--ink-soft); font-variant-numeric: tabular-nums;
+  }
+  .toc a { color: var(--ink); text-decoration: none; line-height: 1.35; }
+  .toc a:hover { color: var(--card); text-decoration: underline; }
+  .toc a .rail { display: block; padding: 0; font-size: .62rem; }
   a:focus-visible { outline: 2px solid var(--robin); outline-offset: 3px; }
   code, .mono {
     font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -288,7 +320,7 @@
     panels, games, puzzles, a yard, teams, a narrator, robots that train
     robots, Hilbert's resort in five problems &mdash; and a third voice at the
     table, a tester that never slept.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 20 September 2026</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 21 September 2026</p>
 </header>
 
 <table class="stats">
@@ -325,22 +357,56 @@
   (the whole project is one session), with one rule for both halves; the two
   rows stop at 14 September, when the counting was last done. The other rows
   are counted from the repository on 20 September.
-  <em>The back of the book</em> is <code>BACKS.md</code>: one entry per round,
+  <em>The back of the book</em> is <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md"><code>BACKS.md</code></a>: one entry per round,
   saying what was asked, what was measured and what changed.</p>
 
 <p class="alsoby">Ken Kahn is writing about this project from the other side of
   the collaboration —
   <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">his
   post is here</a>. Every prompt of the conversation, in order, with what
-  each one changed, is in <a href="the-ledger.html">the ledger</a>.</p>
+  each one changed, is in <a href="https://toontalk.github.io/toontalk-3d/the-ledger.html">the ledger</a>.</p>
 
-<section>
+<nav class="toc" id="contents" aria-label="Contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#what-it-is"><span class="rail">What it is</span>A workshop you can pick up</a></li>
+    <li><a href="#idea-of-a-thing"><span class="rail">Days 1&ndash;3</span>Building from the idea of a thing</a></li>
+    <li><a href="#reading-the-manual"><span class="rail">18 Aug</span>Then we read the manual</a></li>
+    <li><a href="#reading-the-programs"><span class="rail">19&ndash;20 Aug</span>Then we read his programs</a></li>
+    <li><a href="#lesson-learned-twice"><span class="rail">20 Aug</span>The lesson, learned twice</a></li>
+    <li><a href="#the-wall"><span class="rail">21 Aug</span>The sixth day, and a wall</a></li>
+    <li><a href="#half-a-million-holes"><span class="rail">21 Aug</span>Half a million holes</a></li>
+    <li><a href="#design-and-tablet"><span class="rail">22 Aug</span>A design, and then a tablet</a></li>
+    <li><a href="#artifacts-and-faces"><span class="rail">23 Aug</span>Two kinds of artifact, and the faces of a number</a></li>
+    <li><a href="#the-first-panel"><span class="rail">24 Aug</span>The plan, and the first panel</a></li>
+    <li><a href="#birds-are-the-interface"><span class="rail">25 Aug</span>The wiggle, and birds become the interface</a></li>
+    <li><a href="#picture-is-a-pad"><span class="rail">25 August</span>A picture is a pad, and a sound is a speaker</a></li>
+    <li><a href="#key-press-is-mail"><span class="rail">25 August</span>A key press is mail</a></li>
+    <li><a href="#behaviours"><span class="rail">26 August</span>Behaviours you can pick up</a></li>
+    <li><a href="#pong"><span class="rail">The capstone</span>Pong, and nothing new in it</a></li>
+    <li><a href="#what-media-paid-back"><span class="rail">Since media</span>What media asked for, and what it paid back</a></li>
+    <li><a href="#nobody-planned"><span class="rail">Since media</span>Two things nobody planned</a></li>
+    <li><a href="#camera"><span class="rail">4&ndash;7 Sep</span>A camera with occasions</a></li>
+    <li><a href="#the-yard"><span class="rail">11 Sep</span>Out the back door</a></li>
+    <li><a href="#panels-all-the-way-down"><span class="rail">12 Sep</span>Panels all the way down</a></li>
+    <li><a href="#teams-and-notes"><span class="rail">13 Sep</span>A robot is a team, and every robot has a note</a></li>
+    <li><a href="#robots-teach-robots"><span class="rail">13&ndash;14 Sep</span>Robots that teach robots</a></li>
+    <li><a href="#the-loop"><span class="rail">How it worked</span>The loop</a></li>
+    <li><a href="#beyond-the-original"><span class="rail">Beyond the original</span>What was not in ToonTalk</a></li>
+    <li><a href="#chatgpt-testing"><span class="rail">A third voice</span>The tester who never slept</a></li>
+    <li><a href="#chatgpt-tests-marty"><span class="rail">The narrator, tested</span>ChatGPT tests Marty</a></li>
+    <li><a href="#what-is-missing"><span class="rail">Still open</span>What is missing, on purpose and not</a></li>
+  </ol>
+</nav>
+
+<section id="what-it-is">
   <div class="col">
     <div class="rail">What it is</div>
     <div class="body">
       <div class="head">
         <span class="badge">+</span>
         <h2>A workshop you can pick up</h2>
+        <a class="permalink" href="#what-it-is" aria-label="Link to this section">#</a>
       </div>
       <p><a href="https://en.wikipedia.org/wiki/ToonTalk">ToonTalk</a> is a
         programming language from 1995 that looks like a video game. You do not
@@ -359,13 +425,14 @@
   </div>
 </section>
 
-<section>
+<section id="idea-of-a-thing">
   <div class="col">
     <div class="rail">Days 1&ndash;3<br>bd30591 &rarr; 3bd714f</div>
     <div class="body">
       <div class="head">
         <span class="badge k">&times;</span>
         <h2>Building from the idea of a thing</h2>
+        <a class="permalink" href="#idea-of-a-thing" aria-label="Link to this section">#</a>
       </div>
       <p>The first three days were built from ToonTalk's <em class="term">reputation</em>
         — from what its ideas are famous for. That gets you further than it
@@ -388,18 +455,19 @@
   </div>
 </section>
 
-<section>
+<section id="reading-the-manual">
   <div class="col">
     <div class="rail">18 Aug<br>791ff2a<br>the pivot</div>
     <div class="body">
       <div class="head">
         <span class="badge r">=</span>
         <h2>Then we read the manual</h2>
+        <a class="permalink" href="#reading-the-manual" aria-label="Link to this section">#</a>
       </div>
       <p>On the third evening the work stopped and turned to two documents that
         had been sitting there the whole time: <b>the original ToonTalk manual</b>
         at toontalk.com, and <b>the original C++ source</b>. The output was not
-        code but a file called <code>DIVERGENCE.md</code> — every difference
+        code but a file called <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/DIVERGENCE.md"><code>DIVERGENCE.md</code></a> — every difference
         found, each marked <span class="mono">SAME</span>,
         <span class="mono">KEEP</span> (a deliberate improvement),
         <span class="mono">GAP</span> (something real we lacked), or
@@ -447,18 +515,19 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
       <blockquote>Semantics unlocks, current engine — <b>DONE</b>. Proven the
         same day: a sentence factory, doubly-recursive Fibonacci, and a
         message-passing bank account with a dozing teller.
-        <span class="attrib">DIVERGENCE.md, 19 August</span></blockquote>
+        <span class="attrib"><a href="https://github.com/ToonTalk/toontalk-3d/blob/main/DIVERGENCE.md">DIVERGENCE.md</a>, 19 August</span></blockquote>
     </div>
   </div>
 </section>
 
-<section>
+<section id="reading-the-programs">
   <div class="col">
     <div class="rail">19&ndash;20 Aug<br>4bd7e7e</div>
     <div class="body">
       <div class="head">
         <span class="badge k">&divide;</span>
         <h2>Then we read his programs</h2>
+        <a class="permalink" href="#reading-the-programs" aria-label="Link to this section">#</a>
       </div>
       <p>A manual tells you what a language <em>offers</em>. It does not tell
         you how anyone actually writes in it. The third source of truth arrived
@@ -488,18 +557,19 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         either side of it. Ours is a balance with two pans. Both of Ken's
         scale programs port cleanly by moving the compared numbers into the
         pans, and the difference is written down rather than papered over —
-        which is what <code>DIVERGENCE.md</code> is for.</p>
+        which is what <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/DIVERGENCE.md"><code>DIVERGENCE.md</code></a> is for.</p>
     </div>
   </div>
 </section>
 
-<section>
+<section id="lesson-learned-twice">
   <div class="col">
     <div class="rail">20 Aug<br>b0b1b31 &rarr; 621b0fa</div>
     <div class="body">
       <div class="head">
         <span class="badge m">?</span>
         <h2>The lesson, learned twice</h2>
+        <a class="permalink" href="#lesson-learned-twice" aria-label="Link to this section">#</a>
       </div>
       <p>The last day added <b>Marty the Martian</b>, an AI helper who lives in
         the workshop. He answers questions and — deliberately — never writes
@@ -528,13 +598,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="the-wall">
   <div class="col">
     <div class="rail">21 Aug<br>7cf18cd &rarr; e7c3edd</div>
     <div class="body">
       <div class="head">
         <span class="badge">□</span>
         <h2>The sixth day, and a wall</h2>
+        <a class="permalink" href="#the-wall" aria-label="Link to this section">#</a>
       </div>
       <p>The last day went looking for somewhere to put the thing. A build
         script now packs the whole workshop — three.js, the loader, both
@@ -578,13 +649,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="half-a-million-holes">
   <div class="col">
     <div class="rail">21 Aug<br>8b48ff5 &rarr; 2341b4b</div>
     <div class="body">
       <div class="head">
         <span class="badge r">&infin;</span>
         <h2>Half a million holes</h2>
+        <a class="permalink" href="#half-a-million-holes" aria-label="Link to this section">#</a>
       </div>
       <p>Then Ken trained a robot to copy the box it was working on and join
         the copy back on. It is a perfectly ordinary thing to teach — it
@@ -631,13 +703,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 </section>
 
 
-<section>
+<section id="design-and-tablet">
   <div class="col">
     <div class="rail">22 Aug<br>f363405 &rarr; 6645a44</div>
     <div class="body">
       <div class="head">
         <span class="badge k">↻</span>
         <h2>A design, and then a tablet</h2>
+        <a class="permalink" href="#design-and-tablet" aria-label="Link to this section">#</a>
       </div>
       <p>The seventh day opened on the one gap in the list above that is not a
         missing feature but a missing <em>idea</em>. ToonTalk has sensors — live
@@ -665,7 +738,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         the write-up says so, along with the disanalogy that matters: that store
         is monotonic and this one is not, so instead of confluence the design
         promises two smaller things it can actually keep.</p>
-      <p>None of it was built. It is <code>BACKS.md</code>, costed at six to
+      <p>None of it was built. It is <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md"><code>BACKS.md</code></a>, costed at six to
         nine working days, in the order semantics-then-payoff. Writing the
         design down and stopping is a choice this project had not made before.</p>
 
@@ -775,13 +848,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="artifacts-and-faces">
   <div class="col">
     <div class="rail">23 Aug<br>190a28a &rarr; cd17b1f</div>
     <div class="body">
       <div class="head">
         <span class="badge k">↻</span>
         <h2>Two kinds of artifact, and the faces of a number</h2>
+        <a class="permalink" href="#artifacts-and-faces" aria-label="Link to this section">#</a>
       </div>
       <p>The eighth day opened with a correction from the person who would
         know. A note had gone into the documentation saying that rooms only run
@@ -810,7 +884,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
       <p>Which leaves a size problem, because the packed build is 2.3&nbsp;MB
         and a chat artifact will not take it. The answer is Ken's own, from
         Comic Chat a month earlier: ask the reader for the assets. A third
-        build, <span class="mono">build_chat_artifact.py</span>, writes a
+        build, <a href="https://toontalk.github.io/toontalk-3d/build_chat_artifact.py"><span class="mono">build_chat_artifact.py</span></a>, writes a
         500&nbsp;KB file that takes three.js from a CDN the chat frame allows
         and asks whoever opens it to drop the two models in, once, and keeps
         them in that browser afterwards. Nothing inside the app knows the
@@ -870,13 +944,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="the-first-panel">
   <div class="col">
     <div class="rail">24 Aug<br>0a19b99 &rarr; 5e3dd49</div>
     <div class="body">
       <div class="head">
         <span class="badge k">↻</span>
         <h2>The plan, and the first panel</h2>
+        <a class="permalink" href="#the-first-panel" aria-label="Link to this section">#</a>
       </div>
       <p>The ninth day divided cleanly into finishing, designing, and — for
         the first time with a written plan in hand — building.</p>
@@ -896,7 +971,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         — because their dial changes what a click <em>does</em>, and that
         state lived on a button you had looked away from.</p>
       <h3>Three rounds of design</h3>
-      <p>Then BACKS.md tripled. Ken questioned the file's own title — in 2D
+      <p>Then <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md"><code>BACKS.md</code></a> tripled. Ken questioned the file's own title — in 2D
         every thing has an unseen reverse side; here a number spends all six
         faces and the back of a house is an outside wall — and the answer is
         a <b>panel</b>, a place glued to its thing, with every semantic in
@@ -912,14 +987,15 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         design rule — a behaviour must be one thing, so the copier takes all
         of it or none.</p>
       <h3>A plan, and a snapshot</h3>
-      <p>PLAN.md turned the design into six stages with acceptance criteria,
+      <p><a href="https://github.com/ToonTalk/toontalk-3d/blob/main/PLAN.md"><code>PLAN.md</code></a> turned the design into six stages with acceptance criteria,
         a decision table, a risk list, and a capstone: Pong, built only from
         pads and library behaviours. The release got its protection the same
-        hour — <span class="mono">toontalk-3d-v1.html</span>, a byte-identical
-        snapshot that <span class="mono">index.html</span> now points at, so
-        the epic can proceed in the canonical file without touching anybody's
-        released app. The session-bound regression harness became
-        <span class="mono">tests/regress.html</span> with pinned goldens:
+        hour — <a href="https://toontalk.github.io/toontalk-3d/toontalk-3d-v1.html"><span class="mono">toontalk-3d-v1.html</span></a>, a byte-identical
+        snapshot that <a href="https://toontalk.github.io/toontalk-3d/index.html"><span class="mono">index.html</span></a> pointed at until 20 September, so
+        the epic could proceed in the canonical file without touching anybody's
+        released app. (The root points at the workshop itself now; the
+        snapshot stays as history.) The session-bound regression harness became
+        <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/tests/regress.html"><span class="mono">tests/regress.html</span></a> with pinned goldens:
         nine worlds, byte-identical or FAIL.</p>
       <h3>Stage 1, the same evening</h3>
       <p>And then panels stopped being a document. Every thing in the
@@ -937,13 +1013,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="birds-are-the-interface">
   <div class="col">
     <div class="rail">25 Aug<br>40adb90 &rarr; ea5a83d</div>
     <div class="body">
       <div class="head">
         <span class="badge k">↻</span>
         <h2>The wiggle, and birds become the interface</h2>
+        <a class="permalink" href="#birds-are-the-interface" aria-label="Link to this section">#</a>
       </div>
       <p>The tenth day opened with a solved mystery. Ken pasted one console
         line — the tiny-robot trap firing with a stack trace — and the number
@@ -994,13 +1071,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="picture-is-a-pad">
   <div class="col">
     <div class="rail">25 August</div>
     <div class="body">
       <div class="head">
         <span class="badge">♫</span>
         <h2>A picture is a pad, and a sound is a speaker</h2>
+        <a class="permalink" href="#picture-is-a-pad" aria-label="Link to this section">#</a>
       </div>
       <p>Stage 3 was supposed to be about media, and the surprise was how
         little of it was about media. A picture is not a new kind of thing:
@@ -1168,13 +1246,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="key-press-is-mail">
   <div class="col">
     <div class="rail">25 August</div>
     <div class="body">
       <div class="head">
         <span class="badge">⌨</span>
         <h2>A key press is mail</h2>
+        <a class="permalink" href="#key-press-is-mail" aria-label="Link to this section">#</a>
       </div>
       <p>Stage 4 was down as “the Devices notebook” and turned out to
         be the shortest stage of the six, because almost all of it had already
@@ -1187,7 +1266,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         not been computed yet. It turns out to be exactly what waiting for a key
         press is. So a robot handed a keyboard nest wakes once per key, waits in
         between, and needs no event loop, no callback and no subscription. The
-        whole of <span class="mono">keys.world.json</span> is two steps: take
+        whole of <a href="https://toontalk.github.io/toontalk-3d/examples/devices/%E2%8C%A8%EF%B8%8F%20keys.world.json"><span class="mono">keys.world.json</span></a> is two steps: take
         the key off the nest, join it onto the pad. It types what you type.</p>
       <p>The other property arrived by construction rather than by decree. A
         device has to be read-only — nothing you build should be able to
@@ -1204,13 +1283,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="behaviours">
   <div class="col">
     <div class="rail">26 August</div>
     <div class="body">
       <div class="head">
         <span class="badge">✿</span>
         <h2>Behaviours you can pick up</h2>
+        <a class="permalink" href="#behaviours" aria-label="Link to this section">#</a>
       </div>
       <p>The Playground project shipped ToonTalk’s best answer to <em>how
         does a child reuse behaviour without reading code</em>: anima-gadgets,
@@ -1254,13 +1334,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="pong">
   <div class="col">
     <div class="rail">The capstone</div>
     <div class="body">
       <div class="head">
         <span class="badge">&#9679;</span>
         <h2>Pong, and nothing new in it</h2>
+        <a class="permalink" href="#pong" aria-label="Link to this section">#</a>
       </div>
       <p>&ldquo;Can you try to make the pong game.&rdquo; The plan had said the
         capstone should be built <em>only</em> out of pads and library
@@ -1330,13 +1411,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="what-media-paid-back">
   <div class="col">
     <div class="rail">Since media</div>
     <div class="body">
       <div class="head">
         <span class="badge">&#9835;</span>
         <h2>What media asked for, and what it paid back</h2>
+        <a class="permalink" href="#what-media-paid-back" aria-label="Link to this section">#</a>
       </div>
       <p>Media was supposed to be a stage of its own. It turned out to be a
         lever: almost nothing in it was about pictures or sounds, and almost
@@ -1381,13 +1463,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="nobody-planned">
   <div class="col">
     <div class="rail">Since media</div>
     <div class="body">
       <div class="head">
         <span class="badge k">?</span>
         <h2>Two things nobody planned</h2>
+        <a class="permalink" href="#nobody-planned" aria-label="Link to this section">#</a>
       </div>
       <h3>A helper with a brain</h3>
       <p>Marty the Martian was a signpost: a character who said where things
@@ -1439,13 +1522,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="camera">
   <div class="col">
     <div class="rail">4&ndash;7 Sep<br>ec65bf8 &rarr; 4f68301</div>
     <div class="body">
       <div class="head">
         <span class="badge r">&#9678;</span>
         <h2>A camera with occasions</h2>
+        <a class="permalink" href="#camera" aria-label="Link to this section">#</a>
       </div>
       <p>The smart camera arrived at the end of the first fortnight as one
         rule: come in on what the robot is working on, and let go the moment
@@ -1477,13 +1561,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="the-yard">
   <div class="col">
     <div class="rail">11 Sep<br>9b153a0 &rarr; 4f99f01</div>
     <div class="body">
       <div class="head">
         <span class="badge m">&#9634;</span>
         <h2>Out the back door</h2>
+        <a class="permalink" href="#the-yard" aria-label="Link to this section">#</a>
       </div>
       <p>Behind every place &mdash; the workshop, and every house &mdash; is
         open ground. The back door stands beside the tall door out, and through
@@ -1515,13 +1600,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="panels-all-the-way-down">
   <div class="col">
     <div class="rail">12 Sep<br>69e002f &rarr; 8857624</div>
     <div class="body">
       <div class="head">
         <span class="badge k">&#9635;</span>
         <h2>Panels all the way down</h2>
+        <a class="permalink" href="#panels-all-the-way-down" aria-label="Link to this section">#</a>
       </div>
       <p>A behaviour is a <em class="term">panel</em>: a little world with
         robots in it, bound to the thing it rides on. This was the day the
@@ -1546,13 +1632,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="teams-and-notes">
   <div class="col">
     <div class="rail">13 Sep<br>0f5c44f &rarr; 5a33666</div>
     <div class="body">
       <div class="head">
         <span class="badge">&#9783;</span>
         <h2>A robot is a team, and every robot has a note</h2>
+        <a class="permalink" href="#teams-and-notes" aria-label="Link to this section">#</a>
       </div>
       <p>A <strong>team</strong> is ToonTalk's case analysis, and it is also
         its loop. One robot leads and the members stand by it; each pass, the
@@ -1577,13 +1664,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="robots-teach-robots">
   <div class="col">
     <div class="rail">13&ndash;14 Sep<br>e4b70f9 &rarr; a4b274a</div>
     <div class="body">
       <div class="head">
         <span class="badge m">&#9881;</span>
         <h2>Robots that teach robots</h2>
+        <a class="permalink" href="#robots-teach-robots" aria-label="Link to this section">#</a>
       </div>
       <p>ToonTalk Reborn's first tour has a robot pick up a fresh robot, give
         it a number, start its training, make two gestures, stop, and name what
@@ -1624,13 +1712,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="the-loop">
   <div class="col">
     <div class="rail">How it worked</div>
     <div class="body">
       <div class="head">
         <span class="badge">&plusmn;</span>
         <h2>The loop</h2>
+        <a class="permalink" href="#the-loop" aria-label="Link to this section">#</a>
       </div>
       <p>The working rhythm never varied. Ken plays with the workshop and sends
         a batch of observations — often with screenshots, usually five or six
@@ -1668,13 +1757,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="beyond-the-original">
   <div class="col">
     <div class="rail">Beyond the original</div>
     <div class="body">
       <div class="head">
         <span class="badge">&plus;</span>
         <h2>What was not in ToonTalk</h2>
+        <a class="permalink" href="#beyond-the-original" aria-label="Link to this section">#</a>
       </div>
       <p>Most of this workshop is the original, read carefully: numbers as
         blocks, boxes with holes, birds and nests, robots that learn by being
@@ -1716,13 +1806,14 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="chatgpt-testing">
   <div class="col">
     <div class="rail">A third voice</div>
     <div class="body">
       <div class="head">
         <span class="badge m">?</span>
         <h2>The tester who never slept</h2>
+        <a class="permalink" href="#chatgpt-testing" aria-label="Link to this section">#</a>
       </div>
       <p>In the third week Ken brought a second model to the table. He gave
         ChatGPT the published workshop and asked it to play, and it played the
@@ -1742,8 +1833,8 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         README in the voice of somebody who had read ours. They were moved into
         the examples&rsquo; own vocabulary, fractions in lowest terms and
         invisible ink where a flower would otherwise fall into petals, and they
-        are in the gallery now with its name on them.</p>
-      <p>Then it audited. All thirty-nine puzzles, one by one, with a note on
+        are in <a href="https://toontalk.github.io/toontalk-3d/gallery.html">the gallery</a> now with its name on them.</p>
+      <p>Then it <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md#chatgpts-runtime-review">audited</a>. All thirty-nine puzzles, one by one, with a note on
         each; every example world; the gallery, twice &mdash; once reading, once
         <em>running</em> all fifty-seven cards and saying for each whether it
         had seen the promised result or merely a start. It found what a fresh
@@ -1755,7 +1846,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         800&times;450, a bank that would not answer until somebody started the
         house by hand. Each one is a fix in the back of the book, and most
         have a regression check with its name on it.</p>
-      <p>Its performance audit was the round that changed the most code. With
+      <p>Its <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md#chatgpts-performance-audit">performance audit</a> was the round that changed the most code. With
         a headless browser and a stopwatch it measured a single counting robot
         in a solid house at 87 to 130 milliseconds a frame, found that half of
         it was five 256&times;256 canvases painted for every number nobody
@@ -1779,13 +1870,70 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
   </div>
 </section>
 
-<section>
+<section id="chatgpt-tests-marty">
+  <div class="col">
+    <div class="rail">The narrator, tested</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge m">?</span>
+        <h2>ChatGPT tests Marty</h2>
+        <a class="permalink" href="#chatgpt-tests-marty" aria-label="Link to this section">#</a>
+      </div>
+      <p>On 21 September Ken pointed the tester at the narrator. ChatGPT
+        opened the workshop in a browser, gave Marty an OpenAI key, and asked
+        him the questions a newcomer asks &mdash; what a robot is, what happens
+        when you type a 2 onto a 1, whether he could build something with
+        you &mdash; and then did the same on the published claude.ai artifact,
+        where Marty answers on the reader&rsquo;s own account, and tabled the
+        two side by side. Ken&rsquo;s reading of the report was that some of
+        the shortcomings were the model&rsquo;s, but the first finding was
+        ours: the prompt still described a Ruby whose erasing set the robot
+        running, and Ruby had stopped doing that weeks before.</p>
+      <p>The two worst failures were the app&rsquo;s, not the model&rsquo;s.
+        Marty&rsquo;s robot demo said <em>off it goes &mdash; 4, 5, 6</em> over
+        a desk that stayed at 3: its script was written when loosening a
+        thought bubble started a run, and had not caught up. It presses Run
+        itself now, waits for the run to end, and its last line reads the
+        desk rather than promising it. And in the building mode, asked to
+        do the next step, Marty wrote <em>I put a little robot on the table
+        for us</em> &mdash; and none appeared, because a reply had no way to
+        touch the workshop at all. It has one way now: a reply may name a
+        stack, and Marty walks to it and sets one fresh thing on the table
+        with his own hands. The prompt says that is the only thing he can do
+        himself, and that he may claim it only in the reply that does it. A
+        check for each &mdash; the desk ends at 6; nothing is placed in the
+        hints mode whatever the brain says &mdash; sits in the suite beside
+        the earlier ones.</p>
+      <p>The rest was smaller and just as real. Typing digits
+        <em>appends</em> &mdash; a fresh 1 typed 2 reads 12 &mdash; and the
+        prompt had said it replaced. A robot whose thought fits keeps going,
+        so &ldquo;add one to any number&rdquo; counts on and on; the prompt had
+        implied a single pass. A stale <em>Show me</em> offer stayed under
+        later answers about something else. The provider selector showed
+        Claude while its label said OpenAI &mdash; the browser restoring an old
+        form choice after the script had run. And ChatGPT&rsquo;s accessibility
+        tree could read the key box, which is a text field with the
+        characters hidden because a password field would wake the password
+        manager, which Ken had ruled out; that one stays, and is written down.</p>
+      <p>Ken also settled the defaults from the report &mdash; gpt-5.6-luna
+        for OpenAI, gemini-3.8-flash for Google &mdash; and asked how they could
+        be changed after a release without a rebuild. They can now: a served
+        page reads <a href="https://toontalk.github.io/toontalk-3d/marty-models.json"><span class="mono">marty-models.json</span></a>
+        from the site at boot and takes its models unless the visitor has
+        typed their own. The round is
+        <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md#chatgpt-tests-marty">in the back of the book</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="what-is-missing">
   <div class="col">
     <div class="rail">Still open</div>
     <div class="body">
       <div class="head">
         <span class="badge k">&hellip;</span>
         <h2>What is missing, on purpose and not</h2>
+        <a class="permalink" href="#what-is-missing" aria-label="Link to this section">#</a>
       </div>
       <div class="split">
         <div class="panel">
@@ -1816,7 +1964,7 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         </div>
       </div>
       <p style="margin-top:2rem">Every one of those lines is a row in
-        <code>DIVERGENCE.md</code>, which is still the file the project argues
+        <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/DIVERGENCE.md"><code>DIVERGENCE.md</code></a>, which is still the file the project argues
         with. It is the closest thing this workshop has to a conscience: a
         written record of where it departs from the thing it admires, and
         why.</p>
@@ -1825,13 +1973,15 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
 </section>
 
 <footer class="end">
-  <p>ToonTalk 3D — source at github.com/ToonTalk/toontalk-3d. Built with three.js;
+  <p>ToonTalk 3D — the workshop is at <a href="https://toontalk.github.io/toontalk-3d/">toontalk.github.io/toontalk-3d</a>,
+  the manual at <a href="https://toontalk.github.io/toontalk-3d/manual.html">manual.html</a>, the source at
+  <a href="https://github.com/ToonTalk/toontalk-3d">github.com/ToonTalk/toontalk-3d</a>. Built with three.js;
   characters generated from Blender Python scripts. Original ToonTalk by Ken Kahn.</p>
   <p>Written from the repository's own history: 293 commits between 16 August
   and 20 September 2026, the back of the book they were written into, and the
   audit file they kept arguing with. The figures at the top are counted from
   the git log and from the conversation's own transcript. Every prompt of the
-  conversation is in <a href="the-ledger.html">the ledger</a>.</p>
+  conversation is in <a href="https://toontalk.github.io/toontalk-3d/the-ledger.html">the ledger</a>.</p>
   <p>Ken Kahn's own account of the project is
   <a href="https://docs.google.com/document/d/1gwSygWYhvqXttB8eqZZdZbAmCEYeMUI2RLeaKsx9sVE/edit?usp=sharing">here</a>.</p>
 </footer>

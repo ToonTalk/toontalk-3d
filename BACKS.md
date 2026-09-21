@@ -8531,3 +8531,23 @@ accessibility tree can still read it, as ChatGPT's did. DEFAULT MODELS:
 gpt-5.6-luna and gemini-3.8-flash (Ken), and marty-models.json on the site
 overrides the defaults after a release without a rebuild -- a served page
 fetches it at boot; a typed model still wins; an artifact keeps its build.
+
+## The making-of gets bookmarks
+
+Ken wants to link to sections of making-of.html. Every section has an id
+now (what-it-is ... chatgpt-testing, chatgpt-tests-marty, what-is-missing),
+a # permalink shows beside the heading on hover, and a contents list sits
+under the ledger paragraph: rail label and title, numbered, two columns
+when the page is wide. File names are links -- Markdown on github.com
+(BACKS.md, DIVERGENCE.md, PLAN.md, and the tester's rounds point at their
+own entries here by GitHub's heading anchors), everything else on the site
+(build_chat_artifact.py, index.html, the v1 snapshot, keys.world.json,
+gallery.html, manual.html, marty-models.json). tests/regress.html goes to
+github.com too, since opening it on the site would start a run. A new
+section, "ChatGPT tests Marty", follows the tester's. Two things the probe
+turned up while measuring: at a phone width the page scrolled sideways
+(the pre block in "Then we read the manual" set the grid column's
+min-content; minmax(0, 1fr) and min-width: 0 on the body), and paragraphs
+in a section had never had their 1.15rem gap -- .body p { margin: 0 }
+outranked .body > * + * from the page's first commit. Both fixed; the
+index.html sentence says the root points at the workshop now.
