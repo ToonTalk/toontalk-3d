@@ -1595,6 +1595,77 @@ async function cameraDemoCheck(D, w) {
   return ok;
 }
 
+// THE ROBOT DEMO RUNS WHAT IT TRAINED (ChatGPT, 21 Sep): it used to say
+// "off it goes -- 4, 5, 6" over a desk that stayed at 3, since Ruby's
+// loosening no longer starts a run. Now it presses Run for three rounds:
+// the desk ends at 6, and the last line reads the desk.
+async function robotDemoCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 2000);
+  const log = D.doc.getElementById('martyLog');
+  const lines0 = log ? log.children.length : 0;
+  let done = false;
+  D.speed(8); D.showStacks(true);          // the suite's app hides its stacks; Marty needs the minis and the numbers
+  const run = w.__marty.demo('robot').then(() => { done = true; });
+  for (let i = 0; i < 1500 && !done; i++) {
+    await frames(D, 20);
+    w.__marty.next();
+    await new Promise(r => setTimeout(r, 30));
+  }
+  await run;
+  await frames(D, 30);
+  const desk = D.stations.stand.occupant;
+  const value = desk?.userData?.value ? String(desk.userData.value.n) + (String(desk.userData.value.d) !== '1' ? '/' + desk.userData.value.d : '') : null;
+  const said = log ? [...log.children].slice(lines0).map(e => e.textContent) : [];
+  const last = said[said.length - 1] || '';
+  const ranThree = value === '6';
+  const readsDesk = /The desk shows 6\./.test(last);
+  const noFalsePromise = !said.some(l => /off it goes/.test(l));
+  const ok = ranThree && readsDesk && noFalsePromise && D.helperState().mode === 'world';
+  D.speed(1); D.showStacks(false);
+  put((ok ? 'PASS' : 'FAIL') + ' the robot demo runs what it trained  (desk=' + value + ' reads-desk=' + readsDesk + ' no-false-promise=' + noFalsePromise + ' beats=' + said.length + ' mode=' + D.helperState().mode + ')', ok ? 'pass' : 'fail');
+  if (!ok) { for (const l of said) put('ERR   said: ' + l.slice(0, 160), 'dim'); put('ERR   hint: ' + D.doc.getElementById('hint').textContent.slice(0, 160), 'dim'); }
+  return ok;
+}
+
+// MARTY'S ONE HANDS-ON MOVE FOR A BUILDING PARTNER (ChatGPT, 21 Sep: "I put a
+// little robot on the table for us" -- and none appeared). A reply may set
+// "fetch" to a stack, and one fresh thing from it is set on the table -- in
+// the building mode only; a reply without it places nothing, whatever it
+// says; a stale Show-me offer clears on the next answer.
+async function martyFetchCheck(D, w) {
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  D.showStacks(true);
+  const bench = () => { const o = []; for (let i = 0; i < 20; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+  const help0 = D.help();
+  let reply = '';
+  D.brain(async () => reply);
+  const ask = async (q, r) => { reply = r; await w.__marty.ask(q); for (let k = 0; k < 600 && D.martyBusy(); k++) await frames(D, 5); await frames(D, 20); };
+  try {
+    // hints mode: a fetch is not honoured, whatever the brain says
+    D.help('guide');
+    await ask('put a robot on the table', '{"say": "I put a robot on the table.", "demo": null, "fetch": "minis"}');
+    const guideBench = bench().length;
+    // an offer, then an answer about something else: the offer goes
+    await ask('show me fractions', '{"say": "Here is a demonstration.", "demo": "fractions", "fetch": null}');
+    const offered = !!D.doc.querySelector('#martyCtl button') && /Show me/.test(D.doc.getElementById('martyCtl').textContent);
+    await ask('what does a robot do', '{"say": "It repeats what it was shown.", "demo": null, "fetch": null}');
+    const cleared = !/Show me/.test(D.doc.getElementById('martyCtl').textContent);
+    // building mode: a fetch sets a robot on the table
+    D.help('plan');
+    await ask('I am stuck, do the next step', '{"say": "Let me set a little robot down for you.", "demo": null, "fetch": "minis"}');
+    const after = bench();
+    const robot = after.find(t => t.userData.kind === 'robot');
+    const said = [...D.doc.getElementById('martyLog').children].map(c => c.textContent);
+    const told = said.some(l => /on the table for you/.test(l));
+    const ok = guideBench === 0 && offered && cleared && !!robot && after.length === 1 && told;
+    put((ok ? 'PASS' : 'FAIL') + ' Marty sets one thing on the table for a building partner, and only then  (guide-placed=' + guideBench + ' offered=' + offered + ' cleared=' + cleared + ' robot=' + !!robot + ' on-table=' + after.length + ' told=' + told + ')', ok ? 'pass' : 'fail');
+    if (!ok) for (const l of said.slice(-6)) put('ERR   said: ' + l.slice(0, 140), 'dim');
+    return ok;
+  } finally { D.brain(null); D.help(help0); D.showStacks(false); }
+}
+
 // A ROBOT MAKING A VILLAGE: copies set down on a work spot it was shown
 // empty go to the next free spot when that one is taken -- not inside the
 // house already there -- and the spots keep clear of the stacks.
@@ -7746,6 +7817,12 @@ async function runOne(D, spec) {
   let hawOK = true;
   try { hawOK = want('housesAtWork') ? await housesAtWorkCheck(D) : true; }
   catch (e) { hawOK = false; put('FAIL the houses still at work are counted  ' + e.message, 'fail'); }
+  let mfcOK = true;
+  try { mfcOK = want('martyFetch') ? await martyFetchCheck(D, frame.contentWindow) : true; }
+  catch (e) { mfcOK = false; put('FAIL Marty sets one thing on the table  ' + e.message, 'fail'); }
+  let rdOK = true;
+  try { rdOK = want('robotDemo') ? await robotDemoCheck(D, frame.contentWindow) : true; }
+  catch (e) { rdOK = false; put('FAIL the robot demo runs what it trained  ' + e.message, 'fail'); }
   let rtsOK = true;
   try { rtsOK = want('resortTeachers') ? await resortTeachersCheck(D) : true; }
   catch (e) { rtsOK = false; put('FAIL the resort teachers 3, 4, 5  ' + e.message, 'fail'); }
@@ -7929,7 +8006,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK && rtsOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK && rtsOK && rdOK && mfcOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

@@ -1662,8 +1662,10 @@ A demonstration plays one narrated step at a time: Marty walks to the
 stack, fetches what he needs, carries it to the table, does one thing, and
 waits for you to click Next ▸ — Stop ends it, and so does asking him something else. When
 an answer of his suggests a demonstration, you get a Show me
-button rather than a surprise performance. He never builds programs for you —
-doing it yourself is the whole point.
+button rather than a surprise performance. In the ordinary setting he never
+builds programs for you — doing it yourself is the whole point; How Marty
+thinks has two settings that let him plan one with you, or build one
+together, described below.
 
 Marty thinks with whatever brain he has. Without one his replies are
 canned lines from a phrasebook — he can pick the right demonstration, but
@@ -1705,9 +1707,12 @@ the workshop's own gestures, saying the idea first so you can stop him and
 build it yourself; plans and builds a program together with you
 makes him a partner — he asks what the program should do, one question
 at a time, says the plan and checks it, hands you one move at a time and
-watches the table for it, and when you are stuck does the next step himself
-and hands the move after it back. He never builds the whole thing for you in
-any setting. Words
+watches the table for it, and when you are stuck does what he can himself
+— his hands-on move is to fetch one fresh thing from a stack and set
+it on the table (a little robot, a number, a box, a nest), or to offer a
+demonstration; he cannot train, erase or run anything for you, and he says
+so rather than claiming to — and hands the move after it back. He
+never builds the whole thing for you in any setting. Words
 chooses the workshop's words, or computing words too: with the second, the
 programmer's word stands beside each workshop word the first time it comes
 up — a thought (its condition), a bird (a message), a house (a
@@ -24508,8 +24513,13 @@ const MARTY_DEMOS = {
       do: () => handleClick({ kind: 'thing', thing: stations.stand.occupant }), hold: 500 },
     { say: 'Leave the bubble and the lesson is kept.', do: () => leaveTraining(), hold: 700 },
     { say: 'But its thought wants exactly a 3 — it would refuse anything else. Ruby can erase that…', do: (c) => { c.r = maxIter; maxIter = 3; handleClick({ kind: 'ruby' }); }, hold: 700 },
-    { say: '…to “any number”. And the moment its thought fits, off it goes — three rounds allowed.', do: () => handleClick({ kind: 'cond', path: [] }), hold: 1600 },
-    { say: 'Three rounds: 4, 5, 6. Doing the job once taught it; erasing made it general. Drop one trained robot on another to form a team.', do: (c) => { handleClick({ kind: 'ruby' }); maxIter = c.r; } },
+    { say: '…to “any number”. Erasing does not start it: a robot runs when you press Run what it learned. I allow it three rounds.', do: () => handleClick({ kind: 'cond', path: [] }), hold: 1200 },
+    // RUBY DOES NOT START A RUN any more, and this script still said "off it
+    // goes" and "4, 5, 6" over a desk that stayed at 3 (ChatGPT, 21 Sep).
+    // The demo presses Run itself and waits for the three rounds to end.
+    { say: 'Run! One round adds one: 4, 5, 6 — then it stops, since three is what I allowed.',
+      do: async () => { handleClick({ kind: 'ruby' }); await martyIdleWait(); $('runBtn').onclick(); await martyRunWait(); }, hold: 900 },
+    { say: () => 'The desk shows ' + (stations.stand.occupant?.userData?.value ? ratText(stations.stand.occupant.userData.value) : 'the result') + '. Doing the job once taught it; erasing made it general. Drop one trained robot on another to form a team.', do: (c) => { maxIter = c.r; } },
   ] },
   copier: { blurb: 'Mimi the copier', near: 'copyOut', steps: [
     { do: () => _mSt('numbers') },
@@ -24551,6 +24561,16 @@ const MARTY_DEMOS = {
     { say: 'Robots use the notebook too: write a name on a pad, drop it on, take a copy of what it finds. One program using another, by name.' },
   ] },
 };
+// ...and a RUN he set going, to its end: mode goes back to 'world' when the
+// robot stops, whether at the Rounds limit or because its thought no longer fits
+const martyRunWait = () => new Promise((res) => {
+  const t0 = performance.now();
+  const iv = setInterval(() => {
+    if ((mode !== 'replay' && !busy && !queue.length && !current) || performance.now() - t0 > 30000) {
+      clearInterval(iv); res();
+    }
+  }, 100);
+});
 const martyIdleWait = () => new Promise((res) => {
   const t0 = performance.now();
   const iv = setInterval(() => {
@@ -24595,6 +24615,29 @@ function martyRunWithCommentary() {
   if (t.userData.kind === 'robot') {
     if (activeBot?.node === t && stations.stand.occupant) return runProgram();
     return martySay('Give it something to work on first — drop a box on it — and I will talk you through the run.');
+  }
+}
+// Marty's one hands-on move for a building partner: walk to a stack, take
+// one fresh thing, set it on the table by the near edge -- the gestures of a
+// demonstration, with nothing narrated but the result.
+async function martyFetch(id) {
+  if (!STACK_IDS.includes(id) || !stations[id]) return;
+  if (martyBusyDemo || offstage() || mode !== 'world' || busy || held) {
+    return martySay('I would set one on the table for you, but the workshop is busy — set down what you hold, or wait for the robot, and ask again.');
+  }
+  if (helperShown.marty === false) setHelperShown('marty', true);
+  martyBusyDemo = true; martyPerforming = true;
+  try {
+    await _mSt(id); await martyIdleWait();
+    await _mBench(-0.2, 1.6); await martyIdleWait();
+    const t = _mLast();
+    martySay('There — ' + (t ? panelName(t) : 'it') + ' is on the table for you. Your move.');
+  } catch (e) {
+    martySay('Hm — I could not fetch that. (' + e.message + ')');
+  } finally {
+    martyBusyDemo = false; martyPerforming = false; martyLiftTarget = 0;
+    if (held && held.parent === martyNode.__hand) { const t = held; held = null; putOnBench(t, benchSpot()); refreshUI(); }
+    martyWalk(MARTY_HOME);
   }
 }
 function martyOfferDemo(id) {
@@ -25147,7 +25190,7 @@ const martyActivityText = () => {
   return b ? ACTIVITY_PEDAGOGY + '\n\nThe activity they are on now: ' + b : '';
 };
 
-const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits sets its value, the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
+const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits APPENDS to what it shows — a fresh 1 typed 2 reads 12 — so press Backspace first to clear it; the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, press Backspace, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more — erasing never starts it: a robot runs only when Run what it learned is pressed, and it repeats round after round for as long as its thought still fits what is on its desk, until Stop or the Rounds limit, so a robot that adds one to "any number" counts on and on rather than adding one once; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
 
 Rules for you:
 - The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
@@ -25159,7 +25202,7 @@ Rules for you:
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
 - Demos are FIXED scripts — the blurb after each name says exactly what it covers. Offer one ONLY if its blurb covers what was asked; if nothing covers it, set demo to null and say so plainly ("I have no demonstration of that, but here is how it works…"). Never promise a demo will use the visitor's own numbers or words, and never offer a demo you have already given for the same question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
-- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null"}`;
+- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null"} — "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
 // Marty answers from THE MANUAL, not from what a model imagines a workshop
 // like this might do -- that is what had him inventing ways to type a fraction
 // and denying that numbers show decimals at all. A live copy is preferred, so
@@ -25222,10 +25265,14 @@ const nanoTooMuch = (e) => e?.name === 'QuotaExceededError'
   || /quota|context|too (large|long)|token/i.test(e?.message || '');
 // The shape we parse, handed to the browser so it can hold the small model to
 // it -- left to itself it tends to answer in prose and lose the demo.
+// what Marty may set on the table for a visitor he is building with: one
+// fresh thing off one of these stacks
+const MARTY_FETCHABLE = ['minis', 'numbers', 'boxes', 'nests', 'scales', 'dice', 'texts'];
 const martyReplySchema = () => ({
   type: 'object',
   properties: { say: { type: 'string' },
-                demo: { enum: [...Object.keys(MARTY_DEMOS), null] } },
+                demo: { enum: [...Object.keys(MARTY_DEMOS), null] },
+                fetch: { enum: [...MARTY_FETCHABLE, null] } },
   required: ['say'],
   additionalProperties: false,
 });
@@ -25364,9 +25411,11 @@ async function nanoThink(sys, q, history = martyHistory, schema = null) {
   } finally { session.destroy?.(); }
 }
 const MARTY_PROVIDERS = {
+  // the cheap, current model of each (Ken, 21 Sep 2026); marty-models.json on
+  // the site overrides these after a release without a rebuild -- see below
   claude: { label: 'Claude', say: 'Claude', model: 'claude-sonnet-5' },
-  openai: { label: 'ChatGPT (OpenAI)', say: 'ChatGPT', model: 'gpt-5' },
-  gemini: { label: 'Gemini', say: 'Gemini', model: 'gemini-2.5-flash' },
+  openai: { label: 'ChatGPT (OpenAI)', say: 'ChatGPT', model: 'gpt-5.6-luna' },
+  gemini: { label: 'Gemini', say: 'Gemini', model: 'gemini-3.8-flash' },
   nano: { label: 'Gemini Nano (in Chrome, no key)', say: 'the Gemini inside Chrome',
           model: '', keyless: true },
   // Inside a published Claude artifact the messages endpoint answers WITHOUT a
@@ -25404,6 +25453,23 @@ const hasAiHook = () => {
   try { return !/\[native code\]/.test(Function.prototype.toString.call(window.fetch)); }
   catch { return false; }
 };
+// MODELS CHANGE FASTER THAN RELEASES. A served page asks the site for
+// marty-models.json -- {"claude": "...", "openai": "...", "gemini": "..."} --
+// and takes what it finds as the default for each provider; a model typed
+// into the panel still wins, and a single-file build or an artifact (which
+// cannot fetch) keeps what it was built with.
+(async () => {
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const r = await fetch('marty-models.json', { cache: 'no-store' });
+    if (!r.ok) return;
+    const m = await r.json();
+    for (const p of ['claude', 'openai', 'gemini']) if (typeof m[p] === 'string' && m[p].trim()) MARTY_PROVIDERS[p].model = m[p].trim();
+    if (typeof martyModeLine === 'function') martyModeLine();
+    const el = document.getElementById('martyModel'), pv = document.getElementById('martyProv');
+    if (el && pv && !localStorage.getItem('tt3d.marty-model.' + pv.value)) el.value = MARTY_PROVIDERS[pv.value]?.model || el.value;
+  } catch {}
+})();
 const martyProv = () => localStorage.getItem('tt3d.marty-provider')
   || (hasAiHook() ? 'here' : 'claude');
 const martyKeyOf = (p) => (localStorage.getItem('tt3d.marty-key.' + p)
@@ -25567,7 +25633,7 @@ async function martyThink(q) {
       + (martyHelp() === 'programs'
         ? '\nTHIS VISITOR HAS ASKED FOR MORE HELP: the rule about never building programs is lifted for them. When they ask for a program, you MAY plan one — as short numbered steps in the workshop’s own gestures (take a number from the stack, drop it on the robot, in the thought bubble click the copier…), naming which robot does what and why — and still say the idea first, in a sentence, so they can stop you and build it themselves. Two different ways of doing the same thing, compared, is a good answer. Never claim to have built anything: you plan, they build.'
         : martyHelp() === 'plan'
-        ? '\nTHIS VISITOR HAS ASKED YOU TO PLAN AND BUILD A PROGRAM TOGETHER. You are a partner, not the author. Work like this: (1) find out what the program should do -- ask ONE question at a time, in a child’s terms, and build on what they answer; (2) when the goal is clear, say the plan in two or three plain sentences -- which robot, what it is given, what it does each round -- and check it with them; (3) then hand over ONE next move at a time in the workshop’s own gestures (take a box from the stack, drop the number in its first hole, drop the box on the robot…) and wait for them to do it; you can see the table under "On the table right now", so notice when it is done and go on to the next move; (4) keep it moving: if they say they are stuck, or two replies in a row bring no progress, do the next step yourself -- a demonstration, or make the thing they need with Make -- say that you did, and hand the move after it back to them. Ask, then suggest, then do: never the whole program yourself, and never a lecture. Celebrate each step that works.'
+        ? '\nTHIS VISITOR HAS ASKED YOU TO PLAN AND BUILD A PROGRAM TOGETHER. You are a partner, not the author. Work like this: (1) find out what the program should do -- ask ONE question at a time, in a child’s terms, and build on what they answer; (2) when the goal is clear, say the plan in two or three plain sentences -- which robot, what it is given, what it does each round -- and check it with them; (3) then hand over ONE next move at a time in the workshop’s own gestures (take a box from the stack, drop the number in its first hole, drop the box on the robot…) and wait for them to do it; you can see the table under "On the table right now", so notice when it is done and go on to the next move; (4) keep it moving: if they say they are stuck, or two replies in a row bring no progress, do the next step yourself -- and the ONLY steps you can do are these: set "fetch" to a stack and one fresh thing from it is set on the table for them (minis is a little robot, numbers a 1, boxes a box, nests a nest with its egg, scales, dice, texts a blank pad), or offer a demonstration. You cannot drop, train, erase, run or build anything yourself: say you did something ONLY in the reply whose "fetch" does it, and otherwise say plainly that the next move is theirs. Then hand the move after it back to them. Ask, then suggest, then do: never the whole program yourself, and never a lecture. Celebrate each step that works.'
         : '')
       + (currentUser ? `\nThe person you are talking with is called ${currentUser}. Use their name now and then where it comes naturally — a greeting, a well done, a nudge — and not in every reply.` : '')
       + (yardIn ? '\nThe visitor is OUTSIDE, in the yard behind the workshop: open ground where things stand where they are put (a village, a zoo). What is listed as on the table stands on the grass; the table itself waits indoors. The green door on the left leads back in.' : '')
@@ -25730,7 +25796,7 @@ async function askMarty(q) {
     reply = null;
   }
   finally { doneThinking(); }
-  let text = null, demo = null;
+  let text = null, demo = null, fetchId = null;
   if (reply == null) {
     const off = martyOffline(q);
     text = off.say; demo = off.demo;
@@ -25743,7 +25809,7 @@ async function askMarty(q) {
     try {
       const m = reply.match(/\{[\s\S]*\}/);
       const j = JSON.parse(m ? m[0] : reply);
-      text = j.say; demo = j.demo;
+      text = j.say; demo = j.demo; fetchId = j.fetch;
     } catch {
       // a reply cut off mid-JSON must still read as Marty talking, not as
       // machinery: pull the words out of whatever arrived
@@ -25757,11 +25823,17 @@ async function askMarty(q) {
     }
   }
   martyHistory.push({ role: 'user', content: q },
-                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null }) });
+                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null, fetch: fetchId ?? null }) });
   if (martyHistory.length > 12) martyHistory = martyHistory.slice(-12);
   if (text) martySay(text);
+  // A NEW ANSWER SUPERSEDES THE OLD OFFER: the Show-me button of an earlier
+  // answer stayed under a later one about something else (ChatGPT, 21 Sep)
+  martyPendingDemo = null;
   if (demo && MARTY_DEMOS[demo]) martyOfferDemo(demo);
   else martyCtl();                           // the run-with-commentary button, if there is a subject
+  // ...and the one thing he can DO for a building partner: set a fresh thing
+  // from a stack on the table -- said only once it is there
+  if (fetchId && MARTY_FETCHABLE.includes(fetchId) && martyHelp() === 'plan') await martyFetch(fetchId);
 }
 
 // --- Marty makes THINGS ------------------------------------------------------
@@ -26411,7 +26483,7 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   // prompt, its own strictness and its own failures, so it gets its own key.
   + '<button type="button" id="martyMakeBtn" title="Marty makes you a TOY out of solid shapes — “a red sailboat”, “a teapot”, “a dragonfly”. It arrives on your table doing nothing at all: what it does is yours to train." '
   + 'style="background:#3b4a6b;border:none;border-radius:8px;color:#e6ecf7;padding:6px 10px;cursor:pointer">Make</button>'
-  + '<button type="button" id="martyDrawBtn" title="Marty draws you a PICTURE by walking a turtle \u2014 \u201ca snowflake\u201d, \u201ca spiral\u201d, \u201ca house with a tree\u201d. It arrives on a pad, and the orders he gives the turtle are the same words the turtle behaviour teaches." '
+  + '<button type="button" id="martyDrawBtn" title="Marty draws you a PICTURE \u2014 \u201ca snowflake\u201d, \u201ca spiral\u201d, \u201ca house with a tree\u201d. A brain that can paint paints it; otherwise he walks a turtle, and the orders he gives it are the same words the turtle behaviour teaches. It arrives on a pad." '
   + 'style="background:#4a3b6b;border:none;border-radius:8px;color:#e6ecf7;padding:6px 10px;cursor:pointer">Draw</button>'
   + '<button type="button" id="martyLookBtn" title="Marty shows how to look around: turn, zoom and slide the camera, with the mouse or with fingers." '
   + 'style="background:#3b5a6b;border:none;border-radius:8px;color:#e6ecf7;padding:6px 10px;cursor:pointer">Look around</button></div>'
@@ -26425,7 +26497,7 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + 'network to reach their company over. His demonstrations are the real workshop whichever he has.</div>'
   // one control to a line: side by side, the longest provider name squeezed
   // the model box down to a few letters
-  + '<select id="martyProv" style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit;box-sizing:border-box">'
+  + '<select id="martyProv" autocomplete="off" style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit;box-sizing:border-box">'
   + '<option value="here">Claude \u2014 no key, in a Claude artifact</option>'
   + '<option value="nano">Gemini Nano \u2014 no key, in Chrome</option>'
   + '<option value="claude">Claude \u2014 with an API key</option>'
@@ -26983,7 +27055,11 @@ function toggleMartyPanel() {
   if (on && !martyGreeted) {
     martyGreeted = true;
     martySay(`Hi${nameTag(true)}! I\u2019m Marty. Ask me anything about the workshop \u2014 or say \u201cshow me\u201d and one of: `
-      + Object.keys(MARTY_DEMOS).join(', ') + '. I never build programs, but I love showing how the pieces work.');
+      + Object.keys(MARTY_DEMOS).join(', ') + (martyHelp() === 'plan'
+        ? '. We are building together: tell me what you want a robot to do and I will ask, plan, and hand you each move.'
+        : martyHelp() === 'programs'
+        ? '. Ask me for a program and I will plan it with you, step by step; you build it.'
+        : '. I never build programs \u2014 the building is yours \u2014 but I love showing how the pieces work. Under \u201cHow Marty thinks\u201d you can ask me for more.'));
     // THE SPEECH INTERFACE, said once (Ken): the microphone to talk, the
     // speaker to silence him -- the microphone only where the browser has one
     const mic = document.getElementById('martyMic');
@@ -27149,6 +27225,10 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   }
   const showProv = () => {
     provEl.value = martyProv();
+    // a browser that restores form state on reload put an OLD choice back into
+    // the select after this ran, so the label said OpenAI and the selector
+    // Claude (ChatGPT in Edge, 21 Sep): the stored provider is the truth
+    if (provEl.value !== martyProv()) { provEl.value = 'claude'; localStorage.setItem('tt3d.marty-provider', 'claude'); }
     const spec = MARTY_PROVIDERS[provEl.value] ?? {};
     const keyless = !!spec.keyless;
     // No key box for a brain that needs none -- but the keyless Claude still
@@ -27161,6 +27241,7 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
     martyModeLine();
   };
   showProv();
+  provEl.closest('details')?.addEventListener('toggle', showProv);   // ...and again whenever the panel is opened
   provEl.onchange = () => {
     localStorage.setItem('tt3d.marty-provider', provEl.value);
     showProv();
@@ -27361,6 +27442,8 @@ window.__nano = {
   // Marty, for a check: a stand-in for the brain, and the commentary switch
   // that lives in the More menu -- so a narrated run can be watched here.
   brain(fn) { brainStandIn = fn ?? null; },
+  help(v) { if (v !== undefined) mineSet(MARTY_HELP, v); return martyHelp(); },     // the help mode, for a check
+  martyBusy() { return !!(martyBusyDemo || martyPerforming || martyThinking); },     // still thinking, fetching or demonstrating
   commentary(on) { mineSet(MARTY_COMMENT, on ? '1' : '0'); return martyCommentOn(); },
   narrating() { return { on: narratedRun, live: narrationLive(), opening: openingBusy }; },
   camReset() { camResetAll(); },
@@ -27459,6 +27542,7 @@ window.__nano = {
   demoNotebook(rec) { suiteNotebookRec = rec ?? null; },   // the suite's notebook, in a demo that has none
   nestsByGuid(guid) { return { all: allNests.filter(n2 => nestAnswersTo(n2, guid)).length, inScene: allNestsByGuid(guid).length, registered: allNests.length }; },
   fromStack(id) { userTakeFromStack(stations[id]); },          // even where the demo hides the stacks
+  showStacks(on = true) { for (const id of STACK_IDS) { const st = stations[id]; if (!st) continue; st.demoHidden = !on; if (st.__plinth) st.__plinth.visible = on; st.cubes.forEach(c => { c.visible = on; }); } },   // a check that needs Marty at a stack
   taught() { return taughtNow.map(b => ({ name: b.name, stand: !!b.__taughtStand, atDesk: taughtAtDesk(b), occ: b.__taughtStand?.occupant?.userData?.kind ?? null })); },
   tipBot(b) { return tipFor({ kind: 'botThing', bot: b.__bot ?? b }); },
   tipThought(b) { return tipFor({ kind: 'miniCond', bot: b.__bot ?? b }); },

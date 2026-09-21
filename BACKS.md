@@ -8499,3 +8499,35 @@ there the drop screen shows), a .gz beside the .json because a click on
 (the gzip magic says). The picker stays: drag-and-drop is desktop-only.
 Publish with capabilities { sample: {}, downloads: true } -- downloads was
 silently broken before, since nothing had been declared.
+
+## ChatGPT tests Marty
+
+A report of 21 Sep (Codex, in Edge, with gpt-5.6-terra), then the same
+tests on the published artifact: the two worst failures were the app's, not
+the model's. THE ROBOT DEMO said "off it goes -- 4, 5, 6" over a desk that
+stayed at 3: Ruby's loosening no longer starts a run, and the script had
+not caught up. It presses Run itself now (three rounds), waits for the run
+to end, and its last line reads the desk (robotDemoCheck: 3 -> 6). THE
+BUILDING PARTNER "put a little robot on the table" and none appeared: the
+reply had no way to touch the workshop. It has one now -- "fetch": a stack
+name, and one fresh thing from it is set on the table by Marty's own hands,
+in the building mode only -- and the prompt says that is the ONLY thing he
+can do himself and that he may claim it only in the reply that does it
+(martyFetchCheck: nothing placed in hints mode whatever the brain says; a
+robot placed in building mode; the line said after it is there). THE
+PROMPT learns two facts it had wrong: typing digits APPENDS (a fresh 1
+typed 2 reads 12; Backspace first), and erasing never starts a robot, which
+then repeats while its thought fits -- so "add one to any number" counts on
+and on. A STALE "Show me" offer stayed under later answers about something
+else: a new answer clears it. THE PROVIDER SELECTOR showed Claude while the
+label said OpenAI: a browser restoring form state on reload put an old
+choice back after the script ran -- autocomplete off on the select, and
+re-synced when the panel opens. The greeting says what the visitor's help
+mode allows; the Draw tooltip says a painting brain paints and the turtle
+is the fallback; the manual's "never builds programs" points at the two
+settings. The API-key box stays type=text with -webkit-text-security (a
+password field would wake the password manager, which Ken ruled out); an
+accessibility tree can still read it, as ChatGPT's did. DEFAULT MODELS:
+gpt-5.6-luna and gemini-3.8-flash (Ken), and marty-models.json on the site
+overrides the defaults after a release without a rebuild -- a served page
+fetches it at boot; a typed model still wins; an artifact keeps its build.
