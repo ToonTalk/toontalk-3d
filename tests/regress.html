@@ -1666,6 +1666,114 @@ async function martyFetchCheck(D, w) {
   } finally { D.brain(null); D.help(help0); D.showStacks(false); }
 }
 
+// YOUR HAND, BY WORD (Ken, 21 Sep: "an alternative way of controlling one's
+// hand" -- Marty not involved). A brain turns a sentence into steps and the
+// hand makes them through the same clicks and keys a person would. The brain
+// is a stand-in here: the check is of the hand, not the model. Only in the
+// build that has it (toontalk-3d-next.html); elsewhere it is skipped.
+async function handByWordCheck(D, w) {
+  if (!D.hand) { put('SKIP the hand, by word: not in this build', 'dim'); return true; }
+  D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+  await slowSettle(D, 1500);
+  D.showStacks(true);
+  const PLANS = {
+    'in a 3-hole box': { steps: [
+      { do: 'take', from: 'boxes', as: 'b' }, { do: 'type', text: '3' }, { do: 'drop' },
+      { do: 'take', from: 'numbers' }, { do: 'drop', on: 'b', hole: 0 } ], say: 'A 1 in a 3-hole box.' },
+    'ToonTalk': { steps: [ { do: 'take', from: 'texts' }, { do: 'type', text: 'ToonTalk' }, { do: 'drop' } ], say: 'A pad saying ToonTalk.' },
+    'a scale with 1 and 100': { steps: [
+      { do: 'take', from: 'scales', as: 's' }, { do: 'drop' },
+      { do: 'take', from: 'numbers' }, { do: 'drop', on: 's', hole: 0 },
+      { do: 'take', from: 'numbers' }, { do: 'type', text: '100' }, { do: 'drop', on: 's', hole: 1 },
+      { do: 'take', from: 'minis', as: 'r' }, { do: 'drop' },
+      { do: 'pickup', what: 's' }, { do: 'drop', on: 'r' } ], say: 'The robot has the scale.' },
+    'drop it on thing 99': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 99 } ], say: 'Dropped.' },
+    'the 1': null,   // filled in below, from the listing the brain is given
+  };
+  let lastQ = '';
+  D.brain(async (sys, q) => {
+    lastQ = q;
+    // the sentence alone: the listing names what is on the table, and once a pad says ToonTalk it would match too
+    const said = (q.match(/The person said: "([^"]*)"/) || [])[1] || '';
+    for (const k of Object.keys(PLANS)) if (said.includes(k) && PLANS[k]) return JSON.stringify(PLANS[k]);
+    if (/the 1\b/.test(said)) {
+      // "the 1" is the one on the table: the listing numbers it, and the plan points at that number
+      const m = q.match(/(\d+): the number 1\b/);
+      const box = q.match(/(\d+): a box with 2 holes/);
+      return JSON.stringify(m && box ? { steps: [ { do: 'pickup', what: +m[1] }, { do: 'drop', on: +box[1], hole: 1 } ], say: 'The 1 is in the box.' } : { steps: [], say: 'no 1 on the table' });
+    }
+    return '{"steps":[],"say":"I do not know that one."}';
+  });
+  const on0 = D.handOn();
+  try {
+    const bench = () => { const o = []; for (let i = 0; i < 40; i++) { const t = D.bench(i); if (!t) break; o.push(t); } return o; };
+    const bar = () => D.doc.getElementById('handBar').classList.contains('on');
+    // the suite holds the clock: while the hand works (activateBot's gift to the desk needs frames), step the world
+    // sliced on its own 10 ms, not SLICE_MS: with ?block=1 that is a day, and the hand's promise needs the event loop to settle
+    let handStage = '';
+    const driven = async (pr) => { let over = false; pr.then(() => { over = true; }, () => { over = true; });
+      let k = 0;
+      while (!over) { const t0 = performance.now(); do { D.step(1 / 60, 4); } while (!over && performance.now() - t0 < 10); await new Promise(r => setTimeout(r, 0));
+        if (++k % 200 === 0) { try { await fetch('/capture?name=suiteprog', { method: 'POST', body: JSON.stringify({ at: 'handByWord-' + handStage, k, hand: D.helperState().hand }) }); } catch (e2) {} } }
+      return pr; };
+    // a plan that stops leaves the hand as it was, for the person to decide: between cases here, set it down
+    const setDown = async () => { const st = D.helperState(); if (st.hand) { const t = w.__handHeld(); if (t) D.place(t, 0.9, 2.0); await frames(D, 10); }
+      // a gift to an untrained robot opens its thought bubble: leave it before the next sentence
+      if (D.helperState().mode === 'training') { D.doc.getElementById('exitBtn').onclick(); await slowSettle(D, 1500); } };
+    D.handOn(false); const hidden = !bar();
+    D.handOn(true); const shown = bar();
+    // 1. a fresh 1 into a fresh 3-hole box
+    handStage = 'r1';
+    const r1 = await driven(D.hand('Pick up a 1 and put it in a 3-hole box.'));
+    const box = bench().find(t => t.userData.kind === 'box' && t.userData.holes.length === 3);
+    const inBox = box?.userData.holes[0].thing;
+    const ok1 = r1.ok && !!box && inBox?.userData.kind === 'number' && String(inBox.userData.value.n) === '1' && !D.helperState().hand;
+    const listedBox = /the table is empty/i.test(lastQ) === false || true;
+    // 2. a pad with words on it
+    await setDown();
+    handStage = 'r2';
+    const r2 = await driven(D.hand('Create a text pad with “ToonTalk” on it.'));
+    const pad = bench().find(t => t.userData.kind === 'text' && t.userData.text === 'ToonTalk');
+    const ok2 = r2.ok && !!pad;
+    // 3. a scale with 1 and 100, given to a robot
+    await setDown();
+    handStage = 'r3';
+    const r3 = await driven(D.hand('Give a robot a scale with 1 and 100 on it.'));
+    const desk = D.stations.stand?.occupant;
+    const scale = desk?.userData.kind === 'scale' ? desk : bench().find(t => t.userData.kind === 'scale');
+    const pans = scale ? scale.userData.holes.map(h => h.thing ? String(h.thing.userData.value?.n ?? '?') : '-') : [];
+    const ok3 = r3.ok && !!scale && pans.join(',') === '1,100' && desk === scale && /thought bubble now/.test(r3.say);
+    // 4. a step that points at nothing stops the plan, and says so; the hand is left empty
+    await setDown();
+    handStage = 'r4';
+    const r4 = await driven(D.hand('Take a number and drop it on thing 99.'));
+    const ok4 = !r4.ok && r4.done === 1 && /no thing "99"/.test(r4.say) && !D.helperState().hand;
+    // 5. "the 1" is the one already on the table: the brain gets it numbered and points at that number
+    await setDown();
+    handStage = 'r5';
+    const r5 = await driven(D.hand('Take a box and put it down.'));   // no plan for this line: nothing happens
+    const boxes0 = bench().filter(t => t.userData.kind === 'box').length;
+    await driven(D.hand('put a 1 on the table'));   // no plan either
+    // give the brain a 1 and a 2-hole box to find by number
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [
+      { x: -0.4, z: 1.6, thing: { kind: 'number', value: { n: '1', d: '1' } } }, { x: 0.4, z: 1.6, thing: { kind: 'box', holes: [null, null] } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    handStage = 'r6';
+    const r6 = await driven(D.hand('Put the 1 in the box.'));
+    const box2 = bench().find(t => t.userData.kind === 'box' && t.userData.holes.length === 2);
+    const in2 = box2?.userData.holes[1].thing;
+    const ok6 = r6.ok && in2?.userData.kind === 'number' && String(in2.userData.value.n) === '1' && bench().filter(t => t.userData.kind === 'number').length === 0
+      && /1: the number 1/.test(lastQ) && /2: a box with 2 holes/.test(lastQ);
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6;
+    put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number'
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ')', ok ? 'pass' : 'fail');
+    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
+    if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
+    return ok;
+  } finally { D.brain(null); D.handOn(on0); D.showStacks(false); }
+}
+
 // A ROBOT MAKING A VILLAGE: copies set down on a work spot it was shown
 // empty go to the next free spot when that one is taken -- not inside the
 // house already there -- and the spots keep clear of the stacks.
@@ -7817,6 +7925,9 @@ async function runOne(D, spec) {
   let hawOK = true;
   try { hawOK = want('housesAtWork') ? await housesAtWorkCheck(D) : true; }
   catch (e) { hawOK = false; put('FAIL the houses still at work are counted  ' + e.message, 'fail'); }
+  let hbwOK = true;
+  try { hbwOK = want('handByWord') ? await handByWordCheck(D, frame.contentWindow) : true; }
+  catch (e) { hbwOK = false; put('FAIL the hand, by word  ' + e.message, 'fail'); }
   let mfcOK = true;
   try { mfcOK = want('martyFetch') ? await martyFetchCheck(D, frame.contentWindow) : true; }
   catch (e) { mfcOK = false; put('FAIL Marty sets one thing on the table  ' + e.message, 'fail'); }
@@ -8006,7 +8117,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK && rtsOK && rdOK && mfcOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK && rtsOK && rdOK && mfcOK && hbwOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

@@ -8551,3 +8551,58 @@ min-content; minmax(0, 1fr) and min-width: 0 on the body), and paragraphs
 in a section had never had their 1.15rem gap -- .body p { margin: 0 }
 outranked .body > * + * from the page's first commit. Both fixed; the
 index.html sentence says the root points at the workshop now.
+
+## Your hand, by word -- in a new file
+
+Ken (21 Sep): "an alternative way of controlling one's hand" -- say or type
+"pick up a 1 and put it in a 3-hole box" and the hand does it; Marty not
+involved; only when a brain is there; and the RELEASE IS NOT TO BE TOUCHED,
+so this is toontalk-3d-next.html, a copy of the released file with the
+feature in it, which becomes the release when Ken says. THE SWITCH is on the
+settings card ("Move your hand by word"), shown only when handBrainReady():
+a key for the chosen provider, Chrome's built-in model, or a published
+artifact's sample; the bar it opens sits top centre (bottom, under 1000 px)
+with an input and the same microphone Marty's card has. THE BRAIN gets
+HAND_SYSTEM (the eight steps -- take, pickup, type, drop, drop on N, drop
+in hole K, drop on a side, give, run -- and the rules: a fresh number is 1,
+"a" usually means fresh and "the" usually means the table, decide from the
+listing) plus handListing(): the table numbered 1..N, the bench robot and
+its desk, the hand. It is the brain that reads "a 1" against "the 1" (Ken:
+"the LLM decides ... based on the context"), not a rule here; a plan may
+name what it takes or sets down ("as":"b") and point at the name later, so
+a thing made mid-plan needs no index. THE HAND makes every step through
+handleClick and the keydown listener -- a synthetic KeyboardEvent on the
+window, the input blurred first so typingInAField() is false -- so a
+puzzle's typing rules, undo and a training in progress see exactly what a
+person's hand would do. Digits typed on a number REPLACE (Backspace to 0
+first): a fresh 1 typed 3 would read 13, and nobody asking for "a 3" wants
+that; a pad appends; a box takes its holes; a die its faces; naming by word
+is refused honestly. Each step is verified (something came to the hand; the
+hand is empty after a drop; the number reads what was asked) and the first
+one that fails stops the plan with its number, its text and why -- never a
+report of what did not happen (the Marty lesson). Order of a number's keys:
+digits, then the minus (a minus on 0 does nothing), then the operation.
+handByWordCheck drives it with a stand-in brain: a 1 into a 3-hole box, a
+pad saying ToonTalk, a scale of 1 and 100 given to a robot, a step at
+"thing 99" stopping after one step with the hand empty, and "the 1" found
+by its number in the listing; it SKIPs on a build without D.hand, so the
+full suite still runs against the release. Not done: naming things by word
+(editLabel opens a field), Dusty/Ruby/Mimi by word, and going through a
+panel door; the Marty card's "programs" mode still hands you moves rather
+than making them.
+Found on the way: a robot on the table answers to its own click target
+({kind:'botThing', bot}), not {kind:'thing'} -- the hand's drop on a robot
+fell through to "put it beside" until clickOn() knew; a box is a NEW node
+after a resize, so a plan's name for it follows the replacement; a click's
+point is a world Vector3, never a bare {x, z}; and giving an untrained
+robot something opens its thought bubble, so the report says "you are
+inside the robot's thought bubble now", a take from a stack in there says
+the stacks are outside it, and the check leaves the bubble (exitBtn)
+between sentences. The check drives frames while the hand works, sliced on
+its own 10 ms: with ?block=1 the suite's SLICE_MS is a day, and a loop that
+waits on a promise while never yielding waits for ever (three runs with no
+verdict). Ken typed his sentences to Marty and nothing moved, so the switch
+is also in the three-dot menu ("Move my hand by word", shown only with a
+brain, focusing the line when turned on), and Marty's prompt tells him,
+asked to move things, to say he cannot and point at that switch -- and never
+to say a thing is on the table unless that reply fetched it.

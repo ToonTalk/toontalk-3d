@@ -280,6 +280,26 @@ To use it unmodified, no setup needed:
 <https://toontalk.github.io/toontalk-3d/gallery.html>. (`toontalk-3d-v1.html`
 is the snapshot of 24 August, kept as history.)
 
+**The next build.** Since 21 September `toontalk-3d.html` is the released
+workshop and stays as it is; new work goes into `toontalk-3d-next.html`
+(<https://toontalk.github.io/toontalk-3d/toontalk-3d-next.html>), which will
+become the release when it is ready. What it has that the release does not:
+
+- **Your hand, by word.** Under Settings, *Move your hand by word* puts a
+  line at the top of the screen: say or type "pick up a 1 and put it in a
+  3-hole box", "create a text pad with ToonTalk on it", "give a robot a scale
+  with 1 and 100 on it", and your own hand does it -- the same clicks and
+  keys you would have made, so a puzzle's rules, undo and training all see
+  them. The brain is the one chosen under "How Marty thinks" (a key, Chrome's
+  built-in model, or a published artifact's), and it is the brain, not a
+  rule, that reads "a 1" as a fresh one off the stack and "the 1" as the one
+  on the table, from a numbered listing of what is there. The switch appears
+  only when a brain is available. Marty is not involved. A step that cannot
+  be made stops the plan and says which, and what it saw.
+
+The suite runs against it with `tests/regress.html?app=../toontalk-3d-next.html`;
+`handByWord` is its check.
+
 To run it locally, it needs any static server; the repo assumes port 8311.
 
 ```bash
