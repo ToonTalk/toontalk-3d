@@ -8682,3 +8682,28 @@ the bubble open and said; "copy it" -> leave, desk, Mimi: one 1 on the
 table (the copy), the original on the platform, the desk empty, and the
 listing the brain saw said INSIDE that robot's thought bubble. The
 microphone's looking away is measured by hand only.
+
+## The hand by word, inside the bubble: the claw
+
+Ken: "why did you write that the brain wasn't told that Mimi is outside
+the bubble when Mimi is inside (see screenshot)". She is, and so are the
+stacks: inside a thought bubble the app's clicks go through directRobot
+and become the robot's own steps -- a stack is newNumber/newBox (no
+robots), the copier is put at "in" and take at "out", a thing is set down
+on a SCRATCH SPOT (s0, s1...), never on the bench -- and the hand in play
+is the CLAW (clawHeld), with the given thing on the desk. The hand module
+had read the outer hand (held) and the outer bench and stations, so from
+inside it saw an empty world and reported "no thing 1"; the round before
+had wrongly written "outside" into the listing and the prompt. Now every
+"held" in the module is inHand(); inside, the listing numbers the robot's
+own containers (the desk, Mimi's platform and tray, the perch, the spots)
+and says the hand is the robot's claw and that the stacks and Mimi work
+in there (no new robots); a drop on the table finds the first free spot;
+"leave" needs an empty claw. Measured in the pane by text, driving frames:
+give it a 1 -> desk 1, bubble; copy it -> desk to claw, 1 on the platform,
+the copy on spot 1; leave -> world, desk 1 (the daydream rewinds); add a
+1 to the desk -> desk 2 inside; leave; run -> desk 2. Also: two robots on
+the table and "give" says which; "to": 2 gives to the second. The check
+(handByWordCheck) now holds copy-in-bubble (copyIn:1 s0:1) and
+leave-rewinds (stand:1). The "19-hour task" Ken saw is the dev server the
+preview started (node serve.js 8311); stopped at the end of the round.

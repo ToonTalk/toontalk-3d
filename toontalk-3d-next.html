@@ -26539,15 +26539,15 @@ const HAND_SYSTEM = `You move a person's HAND in ToonTalk 3D, a workshop where p
 The hand holds ONE thing at a time. Steps, in order:
 {"do":"take","from":S} takes a FRESH thing from stack S: "numbers" (a 1), "texts" (a blank pad), "boxes" (a box with 2 holes), "minis" (a robot), "scales" (a scale, two pans), "nests" (a nest), "dice" (a die), "rooms" (a house). The hand must be empty.
 {"do":"pickup","what":N} picks up thing N from the listing. The hand must be empty.
-{"do":"type","text":T} types on the held thing. A number becomes T ("100", "-5"; "+" "-" "*" "/" "^" typed on it choose what it does when dropped on another number: add, subtract, multiply, divide, power). A pad gets T written on it. A box gets T holes ("3"). A die gets T faces.
-{"do":"drop"} sets the held thing down on the table.
+{"do":"type","text":T} types on the inHand() thing. A number becomes T ("100", "-5"; "+" "-" "*" "/" "^" typed on it choose what it does when dropped on another number: add, subtract, multiply, divide, power). A pad gets T written on it. A box gets T holes ("3"). A die gets T faces.
+{"do":"drop"} sets the inHand() thing down on the table.
 {"do":"drop","on":N} drops it ON thing N: onto a number it combines; onto a robot it gives the robot the thing; onto a pad it rides on it.
 {"do":"drop","on":N,"hole":K} puts it into hole K of box or scale N, counting from 0 on the left; a scale's left pan is hole 0, its right pan hole 1.
-{"do":"drop","on":N,"side":"left"|"right"} joins a held pad onto pad N's side.
+{"do":"drop","on":N,"side":"left"|"right"} joins a inHand() pad onto pad N's side.
 {"do":"give"} hands it to the robot at the bench, or, with none there, to the only robot on the table; {"do":"give","to":N} names the robot. Giving an untrained robot something opens its thought bubble.
-{"do":"pickup","what":"desk"} takes what is on the bench robot's desk. {"do":"leave"} steps out of a robot's thought bubble (the hand must be empty).
+{"do":"pickup","what":"desk"} takes what is on the bench robot's desk. Inside a robot's thought bubble the hand is the robot's claw, the thing it was given starts in the claw, and the stacks and Mimi work there; {"do":"leave"} steps out when the lesson is done (the claw must be empty).
 {"do":"run"} presses Run so the robot at the bench works.
-{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. Mimi is also called the copier or the copy machine.
+{"do":"copy"} puts the inHand() thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. Mimi is also called the copier or the copy machine.
 {"do":"vacuum","what":N} has Dusty the vacuum remove thing N from the table for good. The hand must be empty (drop first).
 Any take, pickup, copy or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
 
@@ -26596,16 +26596,28 @@ function handThingText(t) {
 const handToolHere = (id) => (worldRules?.tools ?? TOOL_IDS).includes(id)
   && (id === 'mimi' ? !!stations.copyIn && !!stations.copyOut : true);
 function handListing() {
-  const things = benchThings.filter(t => !t.userData.main);
-  const lines = things.map((t, i) => (i + 1) + ': ' + handThingText(t));
+  const h = inHand();
+  const things = [], where = [];
+  for (const t of benchThings) if (!t.userData.main && t !== h) { things.push(t); where.push(''); }
+  if (mode === 'training') {
+    // the robot's own containers: its desk, the copier, the perch, the scratch spots
+    for (const [id, st] of Object.entries(stations)) {
+      const t = st?.occupant;
+      if (!t || t === h || st.kind === 'stack' || things.includes(t)) continue;
+      things.push(t);
+      where.push(id === 'stand' ? ' (on the robot\u2019s desk, "desk")' : id === 'copyIn' ? ' (on Mimi\u2019s platform, "platform")'
+        : id === 'copyOut' ? ' (in Mimi\u2019s tray)' : id === 'perch' ? ' (on the perch)' : '');
+    }
+  }
+  const lines = things.map((t, i) => (i + 1) + ': ' + handThingText(t) + where[i]);
   let text = lines.length ? 'On the table: ' + lines.join('; ') + '.' : 'The table is empty.';
   if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk ("desk")' : ', its desk empty') + '.';
-  if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): what is done here is what the robot learns; the stacks, Mimi and Dusty are outside it, so a copy or a fresh thing needs "leave" first.';
+  if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): the hand is the robot\u2019s own claw, and what is done here is what the robot learns. The stacks and Mimi work in here (no new robots); "leave" steps out when the lesson is done.';
   const here = [];
   if (handToolHere('mimi')) here.push('Mimi the copier' + (stations.copyIn?.occupant ? ' (on her platform: ' + handThingText(stations.copyIn.occupant) + ')' : ''));
   if (handToolHere('dusty')) here.push('Dusty the vacuum');
   text += here.length ? ' Here too: ' + here.join('; ') + '.' : ' Neither Mimi nor Dusty is in this workshop.';
-  text += held ? ' In the hand: ' + handThingText(held) + '.' : ' The hand is empty.';
+  text += h ? (mode === 'training' ? ' In the robot\u2019s claw: ' : ' In the hand: ') + handThingText(h) + '.' : (mode === 'training' ? ' The claw is empty.' : ' The hand is empty.');
   return { text, things };
 }
 function handPlanFrom(raw) {
@@ -26719,53 +26731,52 @@ async function handStep(step, things, names) {
   if (step.do === 'take') {
     const id = String(step.from || '');
     if (!STACK_IDS.includes(id)) return 'there is no stack called "' + id + '"';
-    if (mode === 'training') return 'the stacks are outside the robot’s thought bubble — leave it first (Leave thought bubble), or work with what is in here';
-    if (held) return 'the hand is already holding ' + handThingText(held);
+    if (mode === 'training' && id === 'minis') return 'a robot cannot make robots — leave the thought bubble to take one';
+    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     if (!stations[id]) return 'the ' + id + ' stack is not in this workshop';
     handleClick({ kind: 'station', id });
     await handSettle();
-    if (!held) return 'nothing came off the stack';
-    if (step.as) names.set(String(step.as), held);
+    if (!inHand()) return 'nothing came off the stack';
+    if (step.as) names.set(String(step.as), inHand());
     return true;
   }
   if (step.do === 'pickup' && step.what === 'desk') {
     const t = stations.stand?.occupant;
     if (!t) return 'nothing is on the robot\u2019s desk';
-    if (held) return 'the hand is already holding ' + handThingText(held);
+    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     clickOn(t);
     await handSettle();
-    if (held !== t) return 'it did not come off the desk';
-    if (step.as) names.set(String(step.as), held);
+    if (inHand() !== t) return 'it did not come off the desk';
+    if (step.as) names.set(String(step.as), inHand());
     return true;
   }
   if (step.do === 'pickup' && step.what === 'platform') {
     if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
-    if (held) return 'the hand is already holding ' + handThingText(held);
+    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     if (!stations.copyIn.occupant) return 'nothing is on Mimi\u2019s platform';
     handleClick({ kind: 'station', id: 'copyIn' });
     await handSettle();
-    if (!held) return 'it did not come off the platform';
-    if (step.as) names.set(String(step.as), held);
+    if (!inHand()) return 'it did not come off the platform';
+    if (step.as) names.set(String(step.as), inHand());
     return true;
   }
   if (step.do === 'copy') {
     if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
-    if (!held) return 'nothing is in the hand to copy';
-    if (mode === 'training') return 'Mimi is outside the robot\u2019s thought bubble \u2014 leave it first';
+    if (!inHand()) return 'nothing is in the hand to copy';
     if (stations.copyIn.occupant) return 'something is already on Mimi\u2019s platform \u2014 pick it up first ("platform")';
-    const orig = held;
+    const orig = inHand();
     handleClick({ kind: 'station', id: 'copyIn' });
     await handSettle();
-    if (held === orig) return 'Mimi did not take it';
+    if (inHand() === orig) return 'Mimi did not take it';
     handleClick({ kind: 'station', id: 'copyOut' });
     await handSettle();
-    if (!held || held === orig) return 'no copy came out of the tray';
-    if (step.as) names.set(String(step.as), held);
+    if (!inHand() || inHand() === orig) return 'no copy came out of the tray';
+    if (step.as) names.set(String(step.as), inHand());
     return true;
   }
   if (step.do === 'vacuum') {
     if (!handToolHere('dusty')) return 'Dusty is not in this workshop';
-    if (held) return 'set down what the hand holds first \u2014 Dusty takes things from the table';
+    if (inHand()) return 'set down what the hand holds first \u2014 Dusty takes things from the table';
     const t = ref(step.what);
     if (!t) return 'there is no thing "' + step.what + '" in the listing';
     if (!stillHere(t)) return 'that thing is gone already';
@@ -26781,29 +26792,29 @@ async function handStep(step, things, names) {
     const t = ref(step.what);
     if (!t) return 'there is no thing "' + step.what + '" in the listing';
     if (!stillHere(t)) return 'that thing is gone';
-    if (held) return 'the hand is already holding ' + handThingText(held);
+    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     clickOn(t);
     await handSettle();
-    if (held !== t) return 'it did not come to the hand';
-    if (step.as) names.set(String(step.as), held);
+    if (inHand() !== t) return 'it did not come to the hand';
+    if (step.as) names.set(String(step.as), inHand());
     return true;
   }
   if (step.do === 'type') {
-    if (!held) return 'nothing is in the hand to type on';
+    if (!inHand()) return 'nothing is in the hand to type on';
     const text = String(step.text ?? '');
-    const kind = held.userData.kind;
+    const kind = inHand().userData.kind;
     if (kind === 'number' || kind === 'die') {
       // digits REPLACE what was there: a fresh 1 typed 3 would read 13, and
       // nobody asking for "a 3" wants that
       if (kind === 'number' && worldRules?.typing?.numbers === false) return 'in this puzzle the keyboard does not reach numbers';
-      for (let i = 0; i < 24 && (kind === 'die' || held.userData.value.n !== 0n || held.userData.value.d !== 1n); i++) handKey('Backspace');
+      for (let i = 0; i < 24 && (kind === 'die' || inHand().userData.value.n !== 0n || inHand().userData.value.d !== 1n); i++) handKey('Backspace');
       const digits = text.replace(/[^0-9]/g, '');
       for (const ch of digits) handKey(ch);
       if (/-/.test(text) && digits) handKey('-');
       for (const ch of text.replace(/[0-9\-\s]/g, '')) handKey(ch);
       refreshUI();
       if (kind === 'number' && digits && !/[^0-9\-\s]/.test(text)) {
-        const v = held.userData.value;
+        const v = inHand().userData.value;
         const want = (/-/.test(text) ? '-' : '') + String(BigInt(digits));
         if (v.d !== 1n || String(v.n) !== want) return 'the number reads ' + ratShort(v) + ', not ' + want;
       }
@@ -26814,34 +26825,43 @@ async function handStep(step, things, names) {
       if (!Number.isFinite(n) || n < 0) return 'a box takes a number of holes, not "' + text + '"';
       // the box in hand is a NEW node after a resize: a name given to the
       // old one follows it, or the plan's next step finds "that thing is gone"
-      const old = held;
+      const old = inHand();
       if (n < 10) handKey(String(n)); else { pushUndo(); resizeHeldBox(n); }
       await handSettle();
-      if (!held || held.userData.holes.length !== n) return 'the box did not take ' + n + ' holes';
-      if (held !== old) for (const [k, v] of names) if (v === old) names.set(k, held);
+      if (!inHand() || inHand().userData.holes.length !== n) return 'the box did not take ' + n + ' holes';
+      if (inHand() !== old) for (const [k, v] of names) if (v === old) names.set(k, inHand());
       return true;
     }
     if (kind === 'text') {
       if (worldRules?.typing?.pads === false) return 'in this puzzle the keyboard does not reach pads';
-      const before = held.userData.text || '';
+      const before = inHand().userData.text || '';
       for (const ch of text) handKey(ch === '\n' ? 'Enter' : ch);
-      if (held.userData.text !== before + text) { pushUndo(); held.setText(before + text); }
+      if (inHand().userData.text !== before + text) { pushUndo(); inHand().setText(before + text); }
       refreshUI();
       return true;
     }
     return 'typing on ' + kind + ' names it, which the hand cannot do by word yet';
   }
   if (step.do === 'drop') {
-    if (!held) return 'nothing is in the hand to drop';
-    const it = held;
+    if (!inHand()) return 'nothing is in the hand to drop';
+    const it = inHand();
     if (step.on == null || step.on === '' || step.on === 'table') {
-      const sp = benchSpot();   // a click's point is a world Vector3, not a bare {x, z}
-      handleClick({ kind: 'bench', point: new THREE.Vector3(sp.x, 0, sp.z) });
+      if (mode === 'training') {
+        // inside the bubble the claw sets things down on the robot's own
+        // scratch spots, never on the bench: the first free spot, or a new one
+        let spot = null;
+        for (let k = 0; k < 12 && !spot; k++) { const st = stationOf('s' + k); if (st && !st.occupant) spot = st; }
+        if (!spot) return 'no free spot among the robot\u2019s things';
+        handleClick({ kind: 'station', id: spot.id });
+      } else {
+        const sp = benchSpot();   // a click's point is a world Vector3, not a bare {x, z}
+        handleClick({ kind: 'bench', point: new THREE.Vector3(sp.x, 0, sp.z) });
+      }
     } else {
       const t = ref(step.on);
       if (!t) return 'there is no thing "' + step.on + '" in the listing';
       if (!stillHere(t)) return 'that thing is gone';
-      if (t === held) return 'it cannot be dropped on itself';
+      if (t === inHand()) return 'it cannot be dropped on itself';
       if (step.hole != null) {
         const hs = t.userData.holes;
         if (!hs) return handThingText(t) + ' has no holes';
@@ -26857,13 +26877,13 @@ async function handStep(step, things, names) {
       }
     }
     await handSettle();
-    if (held === it) return 'that drop was refused \u2014 the hand still holds it';
+    if (inHand() === it) return 'that drop was refused \u2014 the hand still holds it';
     if (step.as) names.set(String(step.as), it);
     return true;
   }
   if (step.do === 'give') {
-    if (!held) return 'nothing is in the hand to give';
-    const it = held;
+    if (!inHand()) return 'nothing is in the hand to give';
+    const it = inHand();
     if (step.to != null) {
       const t = ref(step.to);
       if (!t) return 'there is no thing "' + step.to + '" in the listing';
@@ -26880,12 +26900,12 @@ async function handStep(step, things, names) {
       clickOn(bots[0]);
     }
     await handSettle();
-    if (held === it) return 'the robot did not take it';
+    if (inHand() === it) return 'the robot did not take it';
     return true;
   }
   if (step.do === 'leave') {
     if (mode !== 'training') return 'the hand is not inside a thought bubble';
-    if (held) return 'set down what the hand holds first, then leave';
+    if (inHand()) return 'set down what the hand holds first, then leave';
     $('exitBtn').onclick();
     await handSettle();
     if (mode === 'training') return 'could not leave the thought bubble';
@@ -26893,7 +26913,7 @@ async function handStep(step, things, names) {
   }
   if (step.do === 'run') {
     if (!activeBot) return 'no robot is at the bench to run';
-    if (held) return 'set down what the hand holds first';
+    if (inHand()) return 'set down what the hand holds first';
     $('runBtn').onclick();
     await handSettle();
     return true;
@@ -26984,7 +27004,7 @@ function handBarRefresh() {
 document.addEventListener('change', (e) => { if (/^marty(Prov|Key|Model)$/.test(e.target?.id || '')) setTimeout(handBarRefresh, 50); });
 document.addEventListener('input', (e) => { if (e.target?.id === 'martyKey') setTimeout(handBarRefresh, 50); });
 setTimeout(handBarRefresh, 0);
-window.__handHeld = () => held;
+window.__handHeld = () => inHand();
 
 const martyUI = document.createElement('div');
 martyUI.id = 'martyPanel';
