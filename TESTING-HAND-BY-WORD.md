@@ -72,7 +72,7 @@ Type each exactly, one at a time, and wait for ✓/✗ before the next.
 | A1 | `put a box on the table` | a box with 2 holes |
 | A2 | `pick up a 1 and put it in a 3-hole box` | a second box, 3 holes, a 1 in its left hole; the first box untouched |
 | A3 | `create a text pad with ToonTalk on it` | a pad saying ToonTalk |
-| A4 | `make a 12` | a number 12 (a fresh 1 typed 12 — not 112) |
+| A4 | `make a 12` | a number 12 |
 | A5 | `put a -5 on the table` | a number −5 |
 | A6 | `give a robot a scale with 1 and 100 on it` | a robot at the bench with a scale on its desk, 1 in the left pan, 100 in the right; the line says you are inside its thought bubble |
 | A7 | `leave` | back at the table; the scale still on the desk |
@@ -117,8 +117,8 @@ one already on the table. With one 2-hole box on the table:
 |---|---|---|
 | E1 | `copy it` | the 1 goes from the desk to Mimi's platform, and the copy is set on one of the robot's little spots |
 | E2 | `put a 2 in a box` | a box with 2 holes and a 2 in it, on a spot |
-| E3 | `take a robot` | refused: a robot cannot make robots inside its thought |
-| E4 | `leave` | refused while the claw holds something; empty the claw first (`put it down`), then `leave` works and the world rewinds |
+| E3 | `take a robot` | refused: the workshop's rule today is that a robot's steps cannot make robots (there is no such step); note the refusal's wording |
+| E4 | `leave` | back at the table, the world rewound; note what happened to the thing the claw was holding |
 
 ### Section F — refusals and edge cases (reload with `?fresh` first)
 
@@ -159,13 +159,24 @@ A short report with:
    but left the workshop in a strange state, a line that never came back.
 6. Rough timing: seconds from Enter to the first move, per provider.
 
+### Section H — names, the thought, doors, the notebook (reload with `?fresh` first)
+
+| # | Sentence | Expected |
+|---|---|---|
+| H1 | `take a nest and call it orders` | a nest on the table named "orders" (the name shows on it) |
+| H2 | `file the nest in the notebook` | the nest gone from the table, an entry "orders" in the notebook |
+| H3 | `take orders out of the notebook` | a copy of the nest in the hand or on the table; the notebook keeps its entry |
+| H4 | `go out to the yard` | the workshop's ground in the table's place, the table gone through the back door |
+| H5 | `come back in` | the table is back |
+| H6 | `put a robot on the table` then `give it a 3` | the 3 on the desk, inside the bubble |
+| H7 | `erase the 3 so it works for any number` | the robot's thought shows a blank number instead of 3 (Ruby, one step more general); the 3 stays on the desk |
+| H8 | `leave` then `run the robot with a 5` (or: `leave`, `give it a 5`, `run`) | the trained robot works on a 5 too — what it does depends on H6/H7's lesson; note the desk |
+
 ## Known limits (not bugs)
 
-- Naming things by word (a nest called "orders") is not done yet.
-- Ruby (erasing parts of a thought) and Dusty on parts of a thought are
-  not reachable by word.
-- Going through a panel door, the yard, and the notebook are not
-  reachable by word.
 - Inside a thought bubble the stacks give the robot's own things (no
-  robots), things go on the robot's spots, and leaving rewinds the
-  table — that is how ToonTalk lessons work.
+  robots: the workshop has no "make a robot" step for a robot), things
+  go on the robot's spots, and leaving rewinds the table — that is how
+  ToonTalk lessons work.
+- A panel's contents (the things inside a room) are listed only once the
+  hand is inside it; "go into the panel" of a thing takes it there.

@@ -301,8 +301,15 @@ become the release when it is ready. What it has that the release does not:
   the hand -- either box, either microphone. The line's microphone stays on
   until pressed again: a pause sends each sentence, or set a go phrase
   ("do it") on the settings card and what you say piles up until you end
-  with it. A log under the line keeps what was said and what came back;
-  the small triangle shows or hides it.
+  with it. A log keeps everything said -- the workshop's own lines, what
+  the hand was told and what came back; the small triangle on the line
+  shows it, and so does *What was said* on the title card. Inside a
+  thought bubble the hand is the robot's claw: the desk, its spots and
+  Mimi are listed and used, Ruby and Dusty can be sent at a part of the
+  thought ("erase the 3 so it works for any number"), and "leave" steps
+  out. Things can be named ("call it orders"), filed in the notebook and
+  taken back out by name, and the hand can go out to the yard, into the
+  panel on the back of a thing, and back.
 
 The suite runs against it with `tests/regress.html?app=../toontalk-3d-next.html`;
 `handByWord` is its check.

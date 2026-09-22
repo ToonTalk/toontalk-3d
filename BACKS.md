@@ -8707,3 +8707,48 @@ the table and "give" says which; "to": 2 gives to the second. The check
 (handByWordCheck) now holds copy-in-bubble (copyIn:1 s0:1) and
 leave-rewinds (stand:1). The "19-hour task" Ken saw is the dev server the
 preview started (node serve.js 8311); stopped at the end of the round.
+
+## The hand by word: names, the thought, the doors, the notebook, a log of all
+
+Ken's questions (22 Sep), each answered by measuring. "make a 12 -- not
+112": the doc's note, not the app; typing 2 on a fresh 1 reads 12 as it
+has for days, and the hand clears before it types, so "12" reads 12. "If
+a robot can train a robot why can't it make one?": the robot-step code
+says "It cannot make robots" for the minis stack (directRobot) and the
+back of the book records no reason -- a rule from when robots got the
+stacks, not a design; a newRobot step would need the step engine,
+replay, the notes and a check, so it is offered, not done. "You can
+leave while something is held": true, the exit button allows it and the
+thing taken inside goes with the daydream -- the hand's guard is gone and
+measured (a number taken in the bubble, leave, world, hand empty).
+"Naming things by word -- I don't remember this": the app's labels, typed
+on a held bird, nest, scale, box or robot (editLabel); the hand has
+"name" now (setThingLabel), and a nest called orders carries the name to
+its bird. Ruby and Dusty on the thought: "erase" and "remove" with a path
+of hole numbers from the given thing, the helper woken, the part clicked
+({kind:'cond', path}), the helper settled; measured on a box holding a 3:
+"a box of the number 3 and anything" -> erase [0] -> "a box of any number
+and anything" -> remove [0] -> "a box of anything and anything". The
+listing tells the brain the thought in words (condText). Doors: "go
+yard" and "go back" (the back door, yardIn), "open" (the panel tray out,
+openHeldPanel) and "go panel" (the tray's door, enterRoom); a walk
+through a door is not "busy", so the hand waits on the world itself --
+worldTrail, not worldStack, which is what offstage() reads and which a
+panel does not touch (two probes said "did not open" while the workshop
+said "You step inside"). The notebook: "file" (the held thing on the
+notebook) and "lookup" (the entry by label, text or number; nbItem for a
+copy); the listing names the entries. A LOG OF EVERYTHING SAID (Ken: the
+corner card should have a button): say() now writes every line into the
+hand's log as a dim entry, and the title card's "What was said" button
+shows the log free-standing, bottom left, whether or not the line is on;
+the log is a child of the body, since a hidden bar would hide it. The
+perch: Ken's robot tried to put a fresh nest on the perch and was told
+there is no bird on it -- the perch is where a robot's bird stands
+(panels keep their own bird there), so a nest is refused by the app, not
+the hand; whether a nest should be allowed there is a design question
+for Ken. handByWordCheck grew: name+file, lookup, yard out and back (the
+listing says so), ruby+dusty (the three thoughts), leave holding, panel
+in and out, the title-card button, 53 workshop lines in the log.
+TESTING-HAND-BY-WORD.md corrected (A4, E3, E4) and given Section H for
+the new verbs. Remote Control on this session was stuck "connecting";
+off and on again put it at "on".
