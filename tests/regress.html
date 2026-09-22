@@ -1689,6 +1689,8 @@ async function handByWordCheck(D, w) {
       { do: 'pickup', what: 's' }, { do: 'drop', on: 'r' } ], say: 'The robot has the scale.' },
     'Put a box on the table.': { steps: [ { do: 'take', from: 'boxes' }, { do: 'drop' } ], say: 'A box on the table.' },
     'copy a 7': { steps: [ { do: 'take', from: 'numbers' }, { do: 'type', text: '7' }, { do: 'copy', as: 'c' }, { do: 'drop' } ], say: 'A copy of the 7.' },
+    'give it a 1': { steps: [ { do: 'take', from: 'numbers' }, { do: 'give' } ], say: 'The robot has the 1.' },
+    'copy it': { steps: [ { do: 'leave' }, { do: 'pickup', what: 'desk' }, { do: 'copy', as: 'c' }, { do: 'drop' } ], say: 'A copy of the 1 is on the table.' },
     'drop it on thing 99': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 99 } ], say: 'Dropped.' },
     'the 1': null,   // filled in below, from the listing the brain is given
   };
@@ -1804,11 +1806,24 @@ async function handByWordCheck(D, w) {
     const ok10 = r10.ok && sevens() === 0 && !D.helperState().dustyActive;
     const r11 = await driven(D.hand('take it back'));
     const ok11 = r11.ok && sevens() === 1 && !D.stations.copyIn?.occupant;
+    // 12. Ken's own sequence: a robot on the table, "give it a 1" (no robot at the bench: the only one on the
+    // table is meant, and the bubble opens), then "copy it" from inside the bubble: leave, the desk, Mimi
+    await setDown();
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: 0.2, z: 1.7, thing: { kind: 'robot' } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    handStage = 'r12';
+    const r12 = await driven(D.hand('give it a 1'));
+    const desk12 = D.stations.stand?.occupant;
+    const ok12 = r12.ok && desk12?.userData.kind === 'number' && String(desk12.userData.value.n) === '1' && D.helperState().mode === 'training' && /thought bubble now/.test(r12.say);
+    const r13 = await driven(D.hand('copy it'));
+    const ones = bench().filter(t => t.userData.kind === 'number' && String(t.userData.value.n) === '1').length;
+    const ok13 = r13.ok && D.helperState().mode === 'world' && ones === 1 && String(D.stations.copyIn?.occupant?.userData?.value?.n) === '1' && !D.stations.stand?.occupant && /INSIDE that robot/.test(lastQ);
     const logN = D.doc.getElementById('handLog').children.length;
-    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && logN >= 18;
-    put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too; Mimi copies and Dusty removes'
-      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' log=' + logN + ')', ok ? 'pass' : 'fail');
-    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && logN >= 18;
+    put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too; Mimi copies and Dusty removes; give finds the table robot and copy leaves the bubble'
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-from-bubble=' + ok13 + ' log=' + logN + ')', ok ? 'pass' : 'fail');
+    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
     if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
     return ok;
   } finally { D.brain(null); D.handOn(on0); D.showStacks(false); }

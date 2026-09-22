@@ -8658,3 +8658,27 @@ the table and the original on the platform (Mimi named in the listing);
 "vacuum the 7" finds it by number and Dusty is asleep after; "take it
 back" brings the original off the platform; the log holds every exchange.
 The microphone itself cannot be driven headless; it is measured by hand.
+
+## The hand by word: give finds the robot, the microphone looks away, the desk
+
+Ken's log (22 Sep). "put a robot on the table" then "give it a 1" FAILED:
+"give" meant the robot at the bench and his was on the table. Now: give
+hands to the bench robot, or with none there to the ONLY robot on the
+table (two or more: say which, "to": N), or to "to". "copy it" with the 1
+on the robot's desk, inside its thought bubble, FAILED as "no thing 1 in
+the listing": the desk was described but not a place, and the brain was
+not told it was inside a bubble. The listing names the desk as a place
+("desk"), pickup takes from it, and inside a bubble it says so and that
+the stacks, Mimi and Dusty are outside, with "leave" (the exit button,
+hand empty) to step out; the prompt says "it" is the thing just handled or
+the one thing the sentence can mean, never an unlisted number. THE REPEATS
+("is no thing one in the listing", twice, as sentences of Ken's): the
+microphone left on heard the page READ ITS OWN MESSAGE ALOUD and sent it
+back. utterance() now counts every spoken line in and out (pageSpeaking,
+pageSpokeAt), and the microphone drops whatever arrives while the page is
+talking or within 1.5 s after, and empties its pile. handByWordCheck runs
+Ken's sequence: a robot on the table, "give it a 1" -> the 1 on the desk,
+the bubble open and said; "copy it" -> leave, desk, Mimi: one 1 on the
+table (the copy), the original on the platform, the desk empty, and the
+listing the brain saw said INSIDE that robot's thought bubble. The
+microphone's looking away is measured by hand only.

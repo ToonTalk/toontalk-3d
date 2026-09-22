@@ -3232,9 +3232,20 @@ function setVolume(v, muted) {
 // own engine, not the gain node, so every utterance is made here at the
 // slider's setting (muted: a robot's speak action says nothing at all, see
 // speakText; the hints and Marty keep their own switches and go quiet).
+// WHEN THE PAGE IS TALKING -- a hint read aloud, Marty, a robot reading a
+// pad -- a microphone left on hears it and would send it back as the
+// visitor's next sentence (Ken's log: "there is no thing one in the list",
+// twice). Every utterance counts itself in and out here, and the hand's
+// microphone drops whatever arrives while one is speaking or just after.
+let pageSpeaking = 0, pageSpokeAt = -1e9;
+const pageTalking = () => pageSpeaking > 0 || !!window.speechSynthesis?.speaking
+  || performance.now() - pageSpokeAt < 1500;
 function utterance(said) {
   const u = new SpeechSynthesisUtterance(said);
   u.volume = sndMuted ? 0 : sndVol;
+  u.addEventListener('start', () => { pageSpeaking++; });
+  const out = () => { pageSpeaking = Math.max(0, pageSpeaking - 1); pageSpokeAt = performance.now(); };
+  u.addEventListener('end', out); u.addEventListener('error', out);
   return u;
 }
 function tone(freq, dur, { type = 'sine', at = 0, slide = 0, gain = 0.25 } = {}) {
@@ -26533,18 +26544,20 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"drop","on":N} drops it ON thing N: onto a number it combines; onto a robot it gives the robot the thing; onto a pad it rides on it.
 {"do":"drop","on":N,"hole":K} puts it into hole K of box or scale N, counting from 0 on the left; a scale's left pan is hole 0, its right pan hole 1.
 {"do":"drop","on":N,"side":"left"|"right"} joins a held pad onto pad N's side.
-{"do":"give"} hands it to the robot at the bench, if one is there.
+{"do":"give"} hands it to the robot at the bench, or, with none there, to the only robot on the table; {"do":"give","to":N} names the robot. Giving an untrained robot something opens its thought bubble.
+{"do":"pickup","what":"desk"} takes what is on the bench robot's desk. {"do":"leave"} steps out of a robot's thought bubble (the hand must be empty).
 {"do":"run"} presses Run so the robot at the bench works.
 {"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. Mimi is also called the copier or the copy machine.
 {"do":"vacuum","what":N} has Dusty the vacuum remove thing N from the table for good. The hand must be empty (drop first).
 Any take, pickup, copy or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
 
-Rules: a fresh number is 1, so "a 3" is take numbers, type "3". "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 0. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.`;
+Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. A fresh number is 1, so "a 3" is take numbers, type "3". "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 0. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.`;
 const handReplySchema = () => ({
   type: 'object',
   properties: {
     steps: { type: 'array', items: { type: 'object', properties: {
-      do: { enum: ['take', 'pickup', 'type', 'drop', 'give', 'run', 'copy', 'vacuum'] },
+      do: { enum: ['take', 'pickup', 'type', 'drop', 'give', 'run', 'copy', 'vacuum', 'leave'] },
+      to: {},
       from: { type: 'string' }, what: {}, on: {}, hole: { type: 'integer' },
       side: { enum: ['left', 'right'] }, text: { type: 'string' }, as: { type: 'string' },
     }, required: ['do'] } },
@@ -26586,7 +26599,8 @@ function handListing() {
   const things = benchThings.filter(t => !t.userData.main);
   const lines = things.map((t, i) => (i + 1) + ': ' + handThingText(t));
   let text = lines.length ? 'On the table: ' + lines.join('; ') + '.' : 'The table is empty.';
-  if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk' : '') + '.';
+  if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk ("desk")' : ', its desk empty') + '.';
+  if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): what is done here is what the robot learns; the stacks, Mimi and Dusty are outside it, so a copy or a fresh thing needs "leave" first.';
   const here = [];
   if (handToolHere('mimi')) here.push('Mimi the copier' + (stations.copyIn?.occupant ? ' (on her platform: ' + handThingText(stations.copyIn.occupant) + ')' : ''));
   if (handToolHere('dusty')) here.push('Dusty the vacuum');
@@ -26711,6 +26725,16 @@ async function handStep(step, things, names) {
     handleClick({ kind: 'station', id });
     await handSettle();
     if (!held) return 'nothing came off the stack';
+    if (step.as) names.set(String(step.as), held);
+    return true;
+  }
+  if (step.do === 'pickup' && step.what === 'desk') {
+    const t = stations.stand?.occupant;
+    if (!t) return 'nothing is on the robot\u2019s desk';
+    if (held) return 'the hand is already holding ' + handThingText(held);
+    clickOn(t);
+    await handSettle();
+    if (held !== t) return 'it did not come off the desk';
     if (step.as) names.set(String(step.as), held);
     return true;
   }
@@ -26839,11 +26863,32 @@ async function handStep(step, things, names) {
   }
   if (step.do === 'give') {
     if (!held) return 'nothing is in the hand to give';
-    if (!activeBot) return 'no robot is at the bench \u2014 drop it on a robot instead';
     const it = held;
-    handleClick({ kind: 'station', id: 'stand' });
+    if (step.to != null) {
+      const t = ref(step.to);
+      if (!t) return 'there is no thing "' + step.to + '" in the listing';
+      if (t.userData.kind !== 'robot') return handThingText(t) + ' is not a robot';
+      clickOn(t);
+    } else if (activeBot) {
+      handleClick({ kind: 'station', id: 'stand' });
+    } else {
+      // no robot at the bench: the only robot on the table is the one meant
+      // (Ken: "put a robot on the table" then "give it a 1")
+      const bots = benchThings.filter(t => t.userData.kind === 'robot' && t.__bot);
+      if (!bots.length) return 'no robot is here to give it to \u2014 take one from the robots stack first';
+      if (bots.length > 1) return bots.length + ' robots are on the table \u2014 say which ("to": its number)';
+      clickOn(bots[0]);
+    }
     await handSettle();
     if (held === it) return 'the robot did not take it';
+    return true;
+  }
+  if (step.do === 'leave') {
+    if (mode !== 'training') return 'the hand is not inside a thought bubble';
+    if (held) return 'set down what the hand holds first, then leave';
+    $('exitBtn').onclick();
+    await handSettle();
+    if (mode === 'training') return 'could not leave the thought bubble';
     return true;
   }
   if (step.do === 'run') {
@@ -26895,6 +26940,7 @@ async function handStep(step, things, names) {
       rec.interimResults = true;
       rec.maxAlternatives = 1;
       rec.onresult = (e) => {
+        if (pageTalking()) { pile = ''; inp.value = ''; return; }   // the page's own voice, not the visitor's
         let interim = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
           const r = e.results[i];
