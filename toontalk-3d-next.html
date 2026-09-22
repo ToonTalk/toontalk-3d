@@ -33,6 +33,16 @@
             border-radius: 8px; padding: 6px 10px; }
   #handIn:disabled { opacity: .6; }
   #handStatus { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  #handLog { display: none; position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
+             max-height: 150px; overflow: auto; font-size: 12px; line-height: 1.4;
+             padding: 6px 10px; background: rgba(18,22,30,.94); border: 1px solid var(--edge);
+             border-radius: 8px; color: var(--ink); }
+  #handLog.on { display: block; }
+  #handLog .you { color: var(--dim); margin-top: 4px; }
+  #handLog .you:first-child { margin-top: 0; }
+  #handLog .no { color: #f0a091; }
+  #handLog .ok { color: #9ddc9d; }
+  #handMic.on { filter: drop-shadow(0 0 4px #f66); }
   @media (max-width: 1000px) { #handBar { top: auto; bottom: calc(var(--barh, 0px) + 10px);
                                           max-width: calc(100vw - 28px); } }
   /* FOLDED: the first line and the hint only. On a short viewport the whole
@@ -26525,14 +26535,16 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"drop","on":N,"side":"left"|"right"} joins a held pad onto pad N's side.
 {"do":"give"} hands it to the robot at the bench, if one is there.
 {"do":"run"} presses Run so the robot at the bench works.
-Any take, pickup or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
+{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. Mimi is also called the copier or the copy machine.
+{"do":"vacuum","what":N} has Dusty the vacuum remove thing N from the table for good. The hand must be empty (drop first).
+Any take, pickup, copy or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
 
 Rules: a fresh number is 1, so "a 3" is take numbers, type "3". "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 0. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.`;
 const handReplySchema = () => ({
   type: 'object',
   properties: {
     steps: { type: 'array', items: { type: 'object', properties: {
-      do: { enum: ['take', 'pickup', 'type', 'drop', 'give', 'run'] },
+      do: { enum: ['take', 'pickup', 'type', 'drop', 'give', 'run', 'copy', 'vacuum'] },
       from: { type: 'string' }, what: {}, on: {}, hole: { type: 'integer' },
       side: { enum: ['left', 'right'] }, text: { type: 'string' }, as: { type: 'string' },
     }, required: ['do'] } },
@@ -26541,6 +26553,8 @@ const handReplySchema = () => ({
   required: ['steps', 'say'],
 });
 const handWordsOn = () => mineGet(HAND_WORDS) === '1';
+const HAND_GO = 'hand-go';
+const handGoPhrase = () => (mineGet(HAND_GO) || '').trim();
 // A brain the hand can use: the same one Marty thinks with.
 const handBrainReady = () => {
   if (brainStandIn) return true;
@@ -26566,11 +26580,17 @@ function handThingText(t) {
   if (u.kind === 'die') return `a die of ${u.faces} faces` + label;
   return 'a ' + u.kind + label;
 }
+const handToolHere = (id) => (worldRules?.tools ?? TOOL_IDS).includes(id)
+  && (id === 'mimi' ? !!stations.copyIn && !!stations.copyOut : true);
 function handListing() {
   const things = benchThings.filter(t => !t.userData.main);
   const lines = things.map((t, i) => (i + 1) + ': ' + handThingText(t));
   let text = lines.length ? 'On the table: ' + lines.join('; ') + '.' : 'The table is empty.';
   if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk' : '') + '.';
+  const here = [];
+  if (handToolHere('mimi')) here.push('Mimi the copier' + (stations.copyIn?.occupant ? ' (on her platform: ' + handThingText(stations.copyIn.occupant) + ')' : ''));
+  if (handToolHere('dusty')) here.push('Dusty the vacuum');
+  text += here.length ? ' Here too: ' + here.join('; ') + '.' : ' Neither Mimi nor Dusty is in this workshop.';
   text += held ? ' In the hand: ' + handThingText(held) + '.' : ' The hand is empty.';
   return { text, things };
 }
@@ -26602,8 +26622,22 @@ function handStatus(text) {
   const inp = document.getElementById('handIn');
   if (inp) inp.disabled = !!text;
 }
+// WHAT WAS SAID AND WHAT CAME BACK, kept under the line so an older
+// exchange can be scrolled back to (Ken)
+function handLog(cls, text) {
+  const el = document.getElementById('handLog');
+  if (!el) return;
+  const d = document.createElement('div');
+  d.className = cls;
+  d.textContent = (cls === 'you' ? '\u25B8 ' : cls === 'ok' ? '\u2713 ' : '\u2717 ') + text;
+  el.appendChild(d);
+  while (el.children.length > 200) el.firstChild.remove();
+  if (!el.classList.contains('on')) el.classList.add('on');
+  el.scrollTop = el.scrollHeight;
+}
 function handReport(ok, text, done = 0) {
   if (ok) say(text, 5000); else sayAttn(text);
+  handLog(ok ? 'ok' : 'no', text);
   const el = document.getElementById('handStatus');
   if (el) { el.textContent = ok ? '\u2713' : '\u2717'; setTimeout(() => { if (el.textContent === (ok ? '\u2713' : '\u2717')) el.textContent = ''; }, 4000); }
   return { ok, say: text, done };
@@ -26616,6 +26650,7 @@ async function handDo(sentence) {
   if (mode !== 'world' && mode !== 'training') return handReport(false, 'Wait for the robot to finish.');
   if (busy) return handReport(false, 'Wait for what is moving to settle.');
   handBusy = true;
+  handLog('you', s);
   handStatus('thinking\u2026');
   if (document.activeElement?.blur) document.activeElement.blur();   // its keys must not read as typing in a field
   try {
@@ -26677,6 +26712,45 @@ async function handStep(step, things, names) {
     await handSettle();
     if (!held) return 'nothing came off the stack';
     if (step.as) names.set(String(step.as), held);
+    return true;
+  }
+  if (step.do === 'pickup' && step.what === 'platform') {
+    if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
+    if (held) return 'the hand is already holding ' + handThingText(held);
+    if (!stations.copyIn.occupant) return 'nothing is on Mimi\u2019s platform';
+    handleClick({ kind: 'station', id: 'copyIn' });
+    await handSettle();
+    if (!held) return 'it did not come off the platform';
+    if (step.as) names.set(String(step.as), held);
+    return true;
+  }
+  if (step.do === 'copy') {
+    if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
+    if (!held) return 'nothing is in the hand to copy';
+    if (mode === 'training') return 'Mimi is outside the robot\u2019s thought bubble \u2014 leave it first';
+    if (stations.copyIn.occupant) return 'something is already on Mimi\u2019s platform \u2014 pick it up first ("platform")';
+    const orig = held;
+    handleClick({ kind: 'station', id: 'copyIn' });
+    await handSettle();
+    if (held === orig) return 'Mimi did not take it';
+    handleClick({ kind: 'station', id: 'copyOut' });
+    await handSettle();
+    if (!held || held === orig) return 'no copy came out of the tray';
+    if (step.as) names.set(String(step.as), held);
+    return true;
+  }
+  if (step.do === 'vacuum') {
+    if (!handToolHere('dusty')) return 'Dusty is not in this workshop';
+    if (held) return 'set down what the hand holds first \u2014 Dusty takes things from the table';
+    const t = ref(step.what);
+    if (!t) return 'there is no thing "' + step.what + '" in the listing';
+    if (!stillHere(t)) return 'that thing is gone already';
+    if (!dustyActive) { handleClick({ kind: 'dusty' }); await handSettle(); }
+    if (!dustyActive) return 'Dusty would not wake';
+    clickOn(t);
+    await handSettle();
+    if (dustyActive) { handleClick({ kind: 'dusty' }); await handSettle(); }   // and settles again
+    if (benchThings.includes(t) && t.parent) return 'Dusty left it where it was';
     return true;
   }
   if (step.do === 'pickup') {
@@ -26790,32 +26864,65 @@ async function handStep(step, things, names) {
   bar.innerHTML = '<input id="handIn" autocomplete="off" placeholder="Tell your hand what to do \u2014 \u201cpick up a 1 and put it in a 3-hole box\u201d" '
     + 'title="Say or type what your hand should do. The brain chosen under \u201cHow Marty thinks\u201d turns it into the moves; Esc puts the keyboard back on the table.">'
     + '<button id="handMic" title="Say it" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px 4px">\u{1F3A4}</button>'
-    + '<span id="handStatus"></span>';
+    + '<span id="handStatus"></span>'
+    + '<button id="handLogBtn" title="Show or hide what was said and what the hand answered" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 4px;color:var(--dim)">\u25BE</button>'
+    + '<div id="handLog"></div>';
   document.body.appendChild(bar);
+  const logEl = bar.querySelector('#handLog');
+  bar.querySelector('#handLogBtn').onclick = () => { logEl.classList.toggle('on'); logEl.scrollTop = logEl.scrollHeight; };
   const inp = bar.querySelector('#handIn');
   inp.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { const t = inp.value.trim(); inp.value = ''; if (t) handDo(t); }
     else if (e.key === 'Escape') inp.blur();
     e.stopPropagation();
   });
+  // THE MICROPHONE STAYS ON until pressed again (Ken: "is there a way to
+  // keep the microphone on?"). Each pause ends an utterance, and an
+  // utterance is sent as it ends -- unless a GO PHRASE is set ("do it"),
+  // in which case what was said piles up until an utterance ends with the
+  // phrase, and the pile minus the phrase is sent. Chrome stops listening
+  // by itself after a while; while the switch is on it is started again.
   const mic = bar.querySelector('#handMic');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) mic.style.display = 'none';
   else {
-    let listening = null;
-    mic.onclick = () => {
-      if (listening) { listening.stop(); return; }
-      const rec = new SR();
+    let rec = null, on = false, pile = '';
+    const stop = () => { on = false; if (rec) { try { rec.stop(); } catch {} } mic.classList.remove('on'); mic.textContent = '\u{1F3A4}'; mic.title = 'Listen (stays on until pressed again)'; handStatus(''); };
+    const start = () => {
+      rec = new SR();
       rec.lang = navigator.language || 'en-US';
-      rec.interimResults = false;
+      rec.continuous = true;
+      rec.interimResults = true;
       rec.maxAlternatives = 1;
-      mic.textContent = '\u{1F534}';
-      listening = rec;
-      rec.onresult = (e) => { const t = e.results[0]?.[0]?.transcript?.trim(); if (t) { inp.value = t; handDo(t); } };
-      rec.onerror = (e) => { sayAttn('The microphone said: ' + (e.error || 'no')); };
-      rec.onend = () => { mic.textContent = '\u{1F3A4}'; listening = null; };
-      try { rec.start(); } catch { mic.textContent = '\u{1F3A4}'; listening = null; }
+      rec.onresult = (e) => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          const t = (r[0]?.transcript || '').trim();
+          if (!t) continue;
+          if (!r.isFinal) { interim += ' ' + t; continue; }
+          const go = handGoPhrase();
+          if (!go) { inp.value = ''; handDo(t); continue; }
+          pile = (pile + ' ' + t).trim();
+          const low = pile.toLowerCase(), g = go.toLowerCase();
+          const at = low.lastIndexOf(g);
+          if (at >= 0 && at >= low.length - g.length - 2) {
+            const said = pile.slice(0, at).replace(/[\s,.;:!?]+$/, '').trim();
+            pile = '';
+            inp.value = '';
+            if (said) handDo(said); else handStatus('say what to do, then \u201c' + go + '\u201d');
+          } else inp.value = pile;
+        }
+        if (interim) inp.value = (pile ? pile + ' ' : '') + interim.trim();
+      };
+      rec.onerror = (e) => { if (e.error === 'no-speech' || e.error === 'aborted') return; sayAttn('The microphone said: ' + (e.error || 'no')); if (e.error === 'not-allowed') stop(); };
+      rec.onend = () => { if (on) { try { rec.start(); } catch { stop(); } } };
+      try { rec.start(); } catch { stop(); return; }
+      on = true; pile = '';
+      mic.classList.add('on'); mic.textContent = '\u{1F534}';
+      mic.title = 'Listening \u2014 press to stop. ' + (handGoPhrase() ? 'Say \u201c' + handGoPhrase() + '\u201d when the sentence is complete.' : 'A pause sends what was said.');
     };
+    mic.onclick = () => { if (on) stop(); else start(); };
   }
 }
 function handBarRefresh() {
@@ -27279,6 +27386,14 @@ function showSettingsCard(first) {
   if (handBrainReady()) {
     row('Move your hand by word', 'a line at the top: say or type “pick up a 1 and put it in a 3-hole box” and your hand does it, thinking with the brain chosen under “How Marty thinks”',
         cb(handWordsOn(), (on) => { mineSet(HAND_WORDS, on ? '1' : '0'); handBarRefresh(); menuRefresh(); }));
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      const go = document.createElement('input');
+      go.type = 'text'; go.autocomplete = 'off'; go.value = handGoPhrase(); go.placeholder = 'e.g. do it';
+      go.style.cssText = 'font:inherit;font-size:12px;width:9em;background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:3px 6px';
+      go.onchange = () => mineSet(HAND_GO, go.value.trim());
+      go.addEventListener('keydown', (e) => e.stopPropagation());
+      row('Go phrase for the microphone', 'with the microphone left on, a pause sends each sentence; with a phrase here, what you say piles up until you end with it', go);
+    }
   } else {
     const note = document.createElement('div');
     note.style.cssText = 'font-size:11px;color:var(--dim)';

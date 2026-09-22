@@ -8629,3 +8629,32 @@ the question -- the first run tested the wrong string): "put a box on the
 table" said to Marty with the switch on puts a box on the table and he
 says his line; with it off, nothing lands and his context read OFF.
 martyFetch, robotDemo and martyFacts still pass on the next build.
+
+## The hand by word: Mimi, Dusty, a microphone that stays on, a log
+
+Ken (22 Sep): "put the one in the copier" -- "it didn't know about a
+copier"; "give the one to Mimi" -- "Mimi wasn't available". The prompt had
+never named her. Two verbs now: "copy" sets the held thing on Mimi's
+platform (station copyIn), takes the COPY from her tray (copyOut) into the
+hand, and the original stays on the platform until {"do":"pickup",
+"what":"platform"} asks it back; "vacuum" wakes Dusty if he is asleep,
+clicks the thing, and settles him again -- the hand must be empty, since
+Dusty takes from the table. The listing says which helpers are here
+(handToolHere: the world's tools rule, and for Mimi her two stations),
+with what is on her platform, so the brain can say honestly when one is
+not. THE MICROPHONE STAYS ON (Ken: "is there a way to keep the microphone
+on? Would a pause be a good signal? Or a special phrase like 'do it'"):
+continuous recognition, restarted when Chrome stops it by itself, off
+again when pressed; each pause ends an utterance and sends it -- unless a
+GO PHRASE is set on the settings card ("do it", kept per name under
+hand-go), in which case what is said piles up in the line, and an
+utterance ending with the phrase sends the pile minus the phrase. Both,
+since Ken asked which: a pause suits one-sentence orders, the phrase suits
+a sentence said in parts. A LOG UNDER THE LINE ("it would be nice to see
+the request and response, and to scroll to older ones") keeps each
+sentence and the hand's answer, 200 lines, scrolled to the newest, shown
+by the triangle on the line. handByWordCheck: a 7 copied leaves one 7 on
+the table and the original on the platform (Mimi named in the listing);
+"vacuum the 7" finds it by number and Dusty is asleep after; "take it
+back" brings the original off the platform; the log holds every exchange.
+The microphone itself cannot be driven headless; it is measured by hand.

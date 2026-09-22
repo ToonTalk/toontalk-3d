@@ -294,8 +294,15 @@ become the release when it is ready. What it has that the release does not:
   built-in model, or a published artifact's), and it is the brain, not a
   rule, that reads "a 1" as a fresh one off the stack and "the 1" as the one
   on the table, from a numbered listing of what is there. The switch appears
-  only when a brain is available. Marty is not involved. A step that cannot
-  be made stops the plan and says which, and what it saw.
+  only when a brain is available. A step that cannot be made stops the plan
+  and says which, and what it saw. Mimi and Dusty are targets too ("copy the
+  7", "vacuum the 3"); the original stays on Mimi's platform until asked
+  back. Said to Marty instead, with the switch on, the same sentence goes to
+  the hand -- either box, either microphone. The line's microphone stays on
+  until pressed again: a pause sends each sentence, or set a go phrase
+  ("do it") on the settings card and what you say piles up until you end
+  with it. A log under the line keeps what was said and what came back;
+  the small triangle shows or hides it.
 
 The suite runs against it with `tests/regress.html?app=../toontalk-3d-next.html`;
 `handByWord` is its check.
