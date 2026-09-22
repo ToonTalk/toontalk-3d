@@ -1687,11 +1687,18 @@ async function handByWordCheck(D, w) {
       { do: 'take', from: 'numbers' }, { do: 'type', text: '100' }, { do: 'drop', on: 's', hole: 1 },
       { do: 'take', from: 'minis', as: 'r' }, { do: 'drop' },
       { do: 'pickup', what: 's' }, { do: 'drop', on: 'r' } ], say: 'The robot has the scale.' },
+    'Put a box on the table.': { steps: [ { do: 'take', from: 'boxes' }, { do: 'drop' } ], say: 'A box on the table.' },
     'drop it on thing 99': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 99 } ], say: 'Dropped.' },
     'the 1': null,   // filled in below, from the listing the brain is given
   };
-  let lastQ = '';
+  let lastQ = '', martyQ = '';
   D.brain(async (sys, q) => {
+    if (!/You move a person's HAND/.test(sys)) {   // Marty's own prompt: he hands the sentence over, or points at the switch
+      martyQ = sys + '\n' + q;   // the context rides in the system prompt
+      const on = /hand-by-word switch is ON/.test(martyQ);
+      return JSON.stringify(on ? { say: 'Your hand is on it.', demo: null, fetch: null, hand: 'Put a box on the table.' }
+                               : { say: 'I cannot move your hand.', demo: null, fetch: null });
+    }
     lastQ = q;
     // the sentence alone: the listing names what is on the table, and once a pad says ToonTalk it would match too
     const said = (q.match(/The person said: "([^"]*)"/) || [])[1] || '';
@@ -1765,9 +1772,23 @@ async function handByWordCheck(D, w) {
     const in2 = box2?.userData.holes[1].thing;
     const ok6 = r6.ok && in2?.userData.kind === 'number' && String(in2.userData.value.n) === '1' && bench().filter(t => t.userData.kind === 'number').length === 0
       && /1: the number 1/.test(lastQ) && /2: a box with 2 holes/.test(lastQ);
-    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6;
-    put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number'
-      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ')', ok ? 'pass' : 'fail');
+    // 7. the same sentence said to MARTY, with the switch on, moves the hand; with it off, he points at the switch
+    const boxesBefore = bench().filter(t => t.userData.kind === 'box').length;
+    const martyLines = () => [...D.doc.getElementById('martyLog').children].map(c => c.textContent);
+    const n0 = martyLines().length;
+    handStage = 'r7';
+    await driven(w.__marty.ask('put a box on the table'));
+    for (let k = 0; k < 400 && D.martyBusy(); k++) await frames(D, 5);
+    await driven(new Promise(r => setTimeout(r, 300)));
+    const boxesAfter = bench().filter(t => t.userData.kind === 'box').length;
+    const ok7 = boxesAfter === boxesBefore + 1 && /switch is ON/.test(martyQ) && martyLines().slice(n0).some(l => /Your hand is on it/.test(l));
+    D.handOn(false);
+    await driven(w.__marty.ask('put a box on the table'));
+    for (let k = 0; k < 400 && D.martyBusy(); k++) await frames(D, 5);
+    const ok8 = bench().filter(t => t.userData.kind === 'box').length === boxesAfter && /switch is OFF/.test(martyQ);
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8;
+    put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too'
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ')', ok ? 'pass' : 'fail');
     if (!ok) for (const r of [r1, r2, r3, r4, r5, r6]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
     if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
     return ok;

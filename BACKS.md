@@ -8606,3 +8606,26 @@ is also in the three-dot menu ("Move my hand by word", shown only with a
 brain, focusing the line when turned on), and Marty's prompt tells him,
 asked to move things, to say he cannot and point at that switch -- and never
 to say a thing is on the table unless that reply fetched it.
+
+## The hand by word: either box, either microphone
+
+Ken turned the switch on and typed "put a box on the table" -- to Marty,
+who (as told) said he could not and pointed at the switch. Two things.
+THE LINE WAS NOT ALWAYS THERE: the switch is kept per visitor name
+(mineGet), and the bar was refreshed once at boot -- before a name typed
+on the "Who is working here?" card, so under a new name it stayed hidden
+until something else refreshed it. The name-setter refreshes it now, and
+the menu button's tick follows. EITHER BOX NOW MOVES THE HAND (Ken: "does
+it matter if I use the workshop or Marty's microphone button? ... should
+behave the same"): Marty's reply has a fourth field, "hand"; his context
+says whether the switch is ON, and when it is and the visitor tells him to
+pick up, put, drop, type on or move something, he puts the sentence there,
+word for word, says "Your hand is on it", and the app runs it through
+handDo -- so his microphone and the line's are the same door. With the
+switch OFF he still says he cannot and names the switch. One extra call
+only when a sentence is handed over. handByWordCheck's stand-in now
+answers Marty's prompt too (the context rides in the system prompt, not
+the question -- the first run tested the wrong string): "put a box on the
+table" said to Marty with the switch on puts a box on the table and he
+says his line; with it off, nothing lands and his context read OFF.
+martyFetch, robotDemo and martyFacts still pass on the next build.

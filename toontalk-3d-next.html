@@ -5673,6 +5673,10 @@ function nameTag(always = false) {
 let martyNewcomer = false;     // a name signed in here for the first time
 function setUser(name) {
   currentUser = String(name || '').trim().slice(0, 40);
+  // the hand-by-word switch is kept under this name: the line at the top
+  // follows the name, or it stays hidden until something else refreshes it
+  // (Ken: "the workshop microphone button isn't always available")
+  setTimeout(() => { try { handBarRefresh(); } catch (e) {} }, 0);
   try {
     const known = knownUsers();
     // A NAME HE HAS NOT MET is offered the look-around lesson at once (Ken,
@@ -25089,6 +25093,9 @@ function martyWorldText() {
   const lines = [];
   if (loadedWorldName) lines.push('The visitor has loaded the world file: ' + loadedWorldName);
   lines.push('Mode: ' + (mode === 'training' ? "inside a robot's thought (training)" : mode));
+  lines.push('The hand-by-word switch is ' + (handWordsOn() && handBrainReady()
+    ? 'ON: an instruction to move things goes in "hand", and the visitor\'s own hand makes the moves.'
+    : 'OFF: it is "Move my hand by word" in the \u22ee menu.'));
   if (held) lines.push("In the visitor's hand: " + d(held));
   if (activeBot) lines.push(`Robot at the bench: ${activeBot.name || '(unnamed)'} — ${activeBot.program.length} steps, runs on ${condText(activeBot.condition)}, team of ${activeBot.team.length + 1}${activeBot.waiting ? ', dozing on a bare nest' : ''}.`);
   if (stations.stand?.occupant) lines.push('On its desk: ' + d(stations.stand.occupant));
@@ -25224,7 +25231,7 @@ const martyActivityText = () => {
 };
 
 const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits APPENDS to what it shows — a fresh 1 typed 2 reads 12 — so press Backspace first to clear it; the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, press Backspace, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more — erasing never starts it: a robot runs only when Run what it learned is pressed, and it repeats round after round for as long as its thought still fits what is on its desk, until Stop or the Rounds limit, so a robot that adds one to "any number" counts on and on rather than adding one once; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
-If the visitor asks YOU to pick up, take, fetch, put, drop or move something ("pick up a fresh box"), say plainly that you cannot move their hand -- and that the workshop can: "Move my hand by word" in the \u22ee menu lets them say that sentence to the workshop itself, and their own hand does it. Never say a thing is on the table unless this very reply fetched it.
+If the visitor tells you to pick up, take, fetch, put, drop, type on or move something ("put a box on the table", "give the robot a 3"): when the context says the hand-by-word switch is ON, put their instruction in "hand", word for word, and in "say" one short line such as "Your hand is on it." -- the workshop's own hand makes the moves, not you, and it reports for itself. When the switch is OFF, say plainly that you cannot move their hand and that "Move my hand by word" in the \u22ee menu will let their own hand do it. Never say a thing is on the table unless this very reply fetched it.
 
 Rules for you:
 - The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
@@ -25236,7 +25243,7 @@ Rules for you:
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
 - Demos are FIXED scripts — the blurb after each name says exactly what it covers. Offer one ONLY if its blurb covers what was asked; if nothing covers it, set demo to null and say so plainly ("I have no demonstration of that, but here is how it works…"). Never promise a demo will use the visitor's own numbers or words, and never offer a demo you have already given for the same question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
-- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null"} — "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
+- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null", "hand": "sentence-or-null"} — "hand" is null unless the hand-by-word switch is ON and the visitor is telling you to move something (see above); "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
 // Marty answers from THE MANUAL, not from what a model imagines a workshop
 // like this might do -- that is what had him inventing ways to type a fraction
 // and denying that numbers show decimals at all. A live copy is preferred, so
@@ -25306,7 +25313,8 @@ const martyReplySchema = () => ({
   type: 'object',
   properties: { say: { type: 'string' },
                 demo: { enum: [...Object.keys(MARTY_DEMOS), null] },
-                fetch: { enum: [...MARTY_FETCHABLE, null] } },
+                fetch: { enum: [...MARTY_FETCHABLE, null] },
+                hand: { type: 'string' } },
   required: ['say'],
   additionalProperties: false,
 });
@@ -25830,7 +25838,7 @@ async function askMarty(q) {
     reply = null;
   }
   finally { doneThinking(); }
-  let text = null, demo = null, fetchId = null;
+  let text = null, demo = null, fetchId = null, handSay = null;
   if (reply == null) {
     const off = martyOffline(q);
     text = off.say; demo = off.demo;
@@ -25843,7 +25851,7 @@ async function askMarty(q) {
     try {
       const m = reply.match(/\{[\s\S]*\}/);
       const j = JSON.parse(m ? m[0] : reply);
-      text = j.say; demo = j.demo; fetchId = j.fetch;
+      text = j.say; demo = j.demo; fetchId = j.fetch; handSay = typeof j.hand === 'string' ? j.hand.trim() : null;
     } catch {
       // a reply cut off mid-JSON must still read as Marty talking, not as
       // machinery: pull the words out of whatever arrived
@@ -25857,7 +25865,7 @@ async function askMarty(q) {
     }
   }
   martyHistory.push({ role: 'user', content: q },
-                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null, fetch: fetchId ?? null }) });
+                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null, fetch: fetchId ?? null, hand: handSay || null }) });
   if (martyHistory.length > 12) martyHistory = martyHistory.slice(-12);
   if (text) martySay(text);
   // A NEW ANSWER SUPERSEDES THE OLD OFFER: the Show-me button of an earlier
@@ -25868,6 +25876,10 @@ async function askMarty(q) {
   // ...and the one thing he can DO for a building partner: set a fresh thing
   // from a stack on the table -- said only once it is there
   if (fetchId && MARTY_FETCHABLE.includes(fetchId) && martyHelp() === 'plan') await martyFetch(fetchId);
+  // ...and a sentence for the HAND, said to him by mistake or on purpose: with
+  // the switch on, either box and either microphone move the hand the same
+  // way (Ken: "does it matter if I use the workshop or Marty's microphone?")
+  if (handSay && handWordsOn() && handBrainReady()) await handDo(handSay);
 }
 
 // --- Marty makes THINGS ------------------------------------------------------
@@ -26810,7 +26822,10 @@ function handBarRefresh() {
   const bar = document.getElementById('handBar');
   if (bar) bar.classList.toggle('on', handWordsOn() && handBrainReady());
   const b = document.getElementById('handWordsBtn');
-  if (b) b.style.display = handBrainReady() ? '' : 'none';
+  if (b) {
+    b.style.display = handBrainReady() ? '' : 'none';
+    b.textContent = (handWordsOn() ? '\u2611' : '\u2610') + ' \u{1F590} Move my hand by word';
+  }
 }
 // the switch follows the key: when one is typed into Marty's card, the bar can appear
 document.addEventListener('change', (e) => { if (/^marty(Prov|Key|Model)$/.test(e.target?.id || '')) setTimeout(handBarRefresh, 50); });
