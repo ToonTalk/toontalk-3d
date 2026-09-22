@@ -44,7 +44,7 @@
   #handLog .ok { color: #9ddc9d; }
   #handLog .ws { color: var(--dim); font-style: italic; }
   #handLog .ws.attn { color: var(--accent); }
-  #handLog { position: fixed; top: 74px; left: 50%; right: auto; transform: translateX(-50%); width: min(720px, 92vw); z-index: 41; }
+  #handLog { position: fixed; top: 74px; left: auto; right: 14px; transform: none; width: min(420px, 92vw); max-height: 40vh; z-index: 41; }
   #handLog.free { left: 14px; top: auto; bottom: calc(var(--barh, 0px) + 10px); transform: none; width: min(520px, 92vw); max-height: 45vh; }
   @media (max-width: 1000px) { #handLog:not(.free) { top: auto; bottom: calc(var(--barh, 0px) + 62px); } }
   #handMic.on { filter: drop-shadow(0 0 4px #f66); }
@@ -19412,8 +19412,11 @@ function snapshotWorld() {
   // its open tray orphaned (the sweep then folds it away mid-daydream). Bench
   // things cannot change during a daydream -- robots cannot reach the table --
   // so the reference is safe.
+  // ...and a thing with RIDERS on it goes by reference too: a spec has no
+  // riders, so a pad carrying two numbers came back from a daydream bare
+  // (the tester's finding 2, 22 Sep: "the 12 and the -5 had vanished")
   snap.bench = benchThings.map(t =>
-    ['robot', 'nest', 'bird', 'room'].includes(t.userData.kind) || t.__panelTray
+    ['robot', 'nest', 'bird', 'room'].includes(t.userData.kind) || t.__panelTray || (t.__subs && t.__subs.length)
     ? { bot: t, at: { x: t.position.x, z: t.position.z } }
     : { spec: specOf(t, true), at: { x: t.position.x, z: t.position.z } });
   snap.piles = allNests.filter(n => n.parent)
@@ -26564,7 +26567,7 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"file"} files the held thing in the notebook; {"do":"lookup","name":T} takes a copy of what is filed under that name.
 Any take, pickup, copy, lookup or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
 
-Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. A fresh number is 1, so "a 3" is take numbers, type "3". "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 0. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.`;
+Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 0 of 2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 0. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.`;
 const handReplySchema = () => ({
   type: 'object',
   properties: {
@@ -26621,6 +26624,15 @@ function handListing() {
       where.push(id === 'stand' ? ' (on the robot\u2019s desk, "desk")' : id === 'copyIn' ? ' (on Mimi\u2019s platform, "platform")'
         : id === 'copyOut' ? ' (in Mimi\u2019s tray)' : id === 'perch' ? ' (on the perch)' : '');
     }
+  }
+  // what sits in a hole is a thing of its own, with its own number (the
+  // tester's finding 3: "put the 3 on the 1" with both in a box was refused
+  // for want of a way to name them)
+  const top = things.length;
+  for (let i = 0; i < top; i++) {
+    const hs = things[i].userData.holes;
+    if (!hs) continue;
+    hs.forEach((hh, k) => { if (hh.thing) { things.push(hh.thing); where.push(' (in hole ' + k + ' of ' + (i + 1) + ')'); } });
   }
   const lines = things.map((t, i) => (i + 1) + ': ' + handThingText(t) + where[i]);
   let text = lines.length ? 'On the table: ' + lines.join('; ') + '.' : 'The table is empty.';
@@ -26759,6 +26771,10 @@ async function handPanelOut(step, ref, clickOn) {
 async function handStep(step, things, names) {
   const ref = (r) => {
     if (typeof r === 'string' && names.has(r)) return names.get(r);
+    if (r === 'desk') return stations.stand?.occupant ?? null;
+    if (r === 'platform') return stations.copyIn?.occupant ?? null;
+    if (r === 'tray') return stations.copyOut?.occupant ?? null;
+    if (r === 'hand' || r === 'held' || r === 'claw') return inHand();
     const n = typeof r === 'number' ? r : parseInt(r, 10);
     if (Number.isFinite(n) && n >= 1 && n <= things.length) return things[n - 1];
     return null;
@@ -26830,7 +26846,7 @@ async function handStep(step, things, names) {
   }
   if (step.do === 'pickup') {
     const t = ref(step.what);
-    if (!t) return 'there is no thing "' + step.what + '" in the listing';
+    if (!t) return 'there is no thing "' + step.what + '" in the listing' + (step.what === 'desk' ? ' \u2014 the desk is empty' : '');
     if (!stillHere(t)) return 'that thing is gone';
     if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     clickOn(t);
@@ -26894,7 +26910,11 @@ async function handStep(step, things, names) {
         if (!spot) return 'no free spot among the robot\u2019s things';
         handleClick({ kind: 'station', id: spot.id });
       } else {
-        const sp = benchSpot();   // a click's point is a world Vector3, not a bare {x, z}
+        // CLEAR TABLE, not the nearest gap: a bench click beside a pad rides
+        // on it and a box set down against a box joins it, so the tester's
+        // 2-hole box became a 5-hole box and two numbers rode on the pad,
+        // all reported as done. Wide clearance, and the landing is checked.
+        const sp = freeSpotNear(benchSpot(), 0.9);
         handleClick({ kind: 'bench', point: new THREE.Vector3(sp.x, 0, sp.z) });
       }
     } else {
@@ -26918,6 +26938,15 @@ async function handStep(step, things, names) {
     }
     await handSettle();
     if (inHand() === it) return 'that drop was refused \u2014 the hand still holds it';
+    if (step.on == null || step.on === '' || step.on === 'table') {
+      // set down on the table means ON THE TABLE: not joined into a neighbour, not riding on one
+      const spot = mode === 'training' ? Object.values(stations).some(st => st?.occupant === it) : benchThings.includes(it);
+      if (!it.parent) return 'it joined what stood beside it \u2014 the table is crowded there';
+      if (!spot) {
+        const host = benchThings.find(t => (t.__subs || []).includes(it));
+        return host ? 'it landed on ' + handThingText(host) + ' and rides on it \u2014 the table is crowded there' : 'it did not stay on the table';
+      }
+    }
     if (step.as) names.set(String(step.as), it);
     return true;
   }
@@ -26930,6 +26959,7 @@ async function handStep(step, things, names) {
       if (t.userData.kind !== 'robot') return handThingText(t) + ' is not a robot';
       clickOn(t);
     } else if (activeBot) {
+      if (stations.stand?.occupant) return 'the robot\u2019s desk already holds ' + handThingText(stations.stand.occupant) + ' \u2014 take that first ("desk")';
       handleClick({ kind: 'station', id: 'stand' });
     } else {
       // no robot at the bench: the only robot on the table is the one meant

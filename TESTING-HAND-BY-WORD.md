@@ -169,8 +169,9 @@ A short report with:
 | H4 | `go out to the yard` | the workshop's ground in the table's place, the table gone through the back door |
 | H5 | `come back in` | the table is back |
 | H6 | `put a robot on the table` then `give it a 3` | the 3 on the desk, inside the bubble |
-| H7 | `erase the 3 so it works for any number` | the robot's thought shows a blank number instead of 3 (Ruby, one step more general); the 3 stays on the desk |
-| H8 | `leave` then `run the robot with a 5` (or: `leave`, `give it a 5`, `run`) | the trained robot works on a 5 too — what it does depends on H6/H7's lesson; note the desk |
+| H7 | `erase the 3 so it works for any number` | the robot's thought shows "any number" instead of 3 (Ruby, one step more general); the 3 stays on the desk |
+| H7b | `add a 1 to the 3 on the desk` | the desk shows 4 — the lesson now has a step. (A robot with no steps yet is retrained from scratch by its next gift, so without this step H8 would wipe H7's loosening.) |
+| H8 | `leave`, then `take the 3 off the desk and give the robot a 5`, then `run the robot` | the 3 must come off first (a robot's desk holds one thing); the robot adds 1 to the 5: the desk shows 6 |
 
 ## Known limits (not bugs)
 

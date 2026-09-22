@@ -8752,3 +8752,39 @@ in and out, the title-card button, 53 workshop lines in the log.
 TESTING-HAND-BY-WORD.md corrected (A4, E3, E4) and given Section H for
 the new verbs. Remote Control on this session was stuck "connecting";
 off and on again put it at "on".
+
+## The tester's report on the hand: seven findings
+
+Claude in Chrome (Fable 5.1) drove toontalk-3d-next.html on Ken's laptop
+with gpt-5.6-terra as the brain, 41 sentences from TESTING-HAND-BY-WORD.md,
+and wrote the report Ken linked (22 Sep). FINDING 1, the worst, was the
+hand's: "set it down" clicked the bench at benchSpot(), the nearest gap,
+and a bench click beside a pad rides on it and a box set down against a
+box joins it -- a 2-hole box became a 5-hole box, a 12 and a -5 rode on
+the pad -- and the report said done, since only the hand's emptiness was
+checked. Now freeSpotNear(benchSpot(), 0.9) finds clear table, and after
+a set-down the thing must be on the table itself: joined, it says "it
+joined what stood beside it"; riding, "it landed on the pad and rides on
+it". FINDING 2 was the app's: a pad carrying two numbers came back from a
+daydream bare. specOf has no riders, and snapshotWorld rebuilt bench
+things from specs; a thing with riders now travels by reference, as
+robots, nests, birds, rooms and panel-owners already did (undo had the
+same hole). FINDING 3: "put the 3 on the 1" with both in a box -- the
+listing described the holes but gave their contents no number to point
+at; now what sits in a hole is listed as a thing of its own ("in hole 0
+of 2"), and pickup by that number takes it out. FINDING 4: "drop on
+desk" -- the listing named the desk but ref() knew only numbers and
+names; desk, platform, tray and hand are places now. FINDING 5: "I can't
+make a bird" -- the prompt says birds come with nests. FINDING 6: a gift
+to a robot whose desk is full -- the hand refuses first, in the
+workshop's own words, and the prompt says to clear the desk. FINDING 7
+is the app's rule: a robot with no steps yet is retrained from scratch by
+its next gift, so Ruby's loosening does not survive a gift unless a step
+was taught; the doc's H7/H8 now teach a step first. C5 ("give it to
+Mimi") is "copy" in the prompt. The log stands at the right, out of the
+bench's way. handByWordCheck: clear-table (2,3 -- a 12 and a 3-hole box
+set down beside a pad and a 2-hole box, nothing rides, nothing joins),
+hole-things (the 3 out of hole 1 onto the 1: 4,-), desk-drop (the desk
+reads 2), full-desk (refused, "take that first"), riders-survive (1/1
+through a bubble). One run wrote no verdict: the dev server had died
+with the app restart, not the check.
