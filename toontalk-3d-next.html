@@ -26570,7 +26570,7 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"file"} files the held thing in the notebook; {"do":"lookup","name":T} takes a copy of what is filed under that name.
 Any take, pickup, copy, lookup or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
 
-Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 1 of #2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". A number dropped on a number already ADDS: to add, just drop it; type "*", "/", "^" or "-" only to do something else. Do ONLY what was said: never add a "leave", "give", "run" or "copy" the sentence did not ask for. "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 1. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.
+Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 1 of #2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". A number dropped on a number already ADDS: to add, just drop it; type "*", "/", "^" or "-" only to do something else. Do ONLY what was said: never add a "leave", "give", "run" or "copy" the sentence did not ask for. End with the hand EMPTY (drop what it holds) unless the sentence says to take, hold or pick up something. Things "(riding on #N)" ride on thing N; a panel's things are marked by where they stand in it. "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 1. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.
 
 Things in the listing are labelled #1, #2...; in a step write "#2" for thing #2 (never a bare 2, which could be read as the number two).
 
@@ -26607,6 +26607,7 @@ const handBrainReady = () => {
 // WHAT THE BRAIN IS TOLD: the table, numbered, then the bench and the hand.
 function handThingText(t) {
   const u = t.userData;
+  if (u.panel && t.__owner) return 'the panel (tray) of ' + handThingText(t.__owner);
   const label = u.label ? ` called "${u.label}"` : '';
   const inHoles = (hs) => hs.map((h, i) => h.thing ? `hole ${i + 1}: ${handThingText(h.thing)}` : null).filter(Boolean);
   if (u.kind === 'number') return 'the number ' + ratShort(u.value) + (u.op && u.op !== '+' ? ' with ' + u.op + ' on it' : '') + label;
@@ -26627,8 +26628,8 @@ function handListing() {
   const h = inHand();
   const things = [], where = [];
   for (const t of benchThings) if (!t.userData.main && t !== h) { things.push(t); where.push(''); }
-  if (mode === 'training') {
-    // the robot's own containers: its desk, the copier, the perch, the scratch spots
+  if (mode === 'training' || worldTrail.length) {
+    // the robot's own containers (inside a panel, the room's): its desk, the copier, the perch, the scratch spots
     for (const [id, st] of Object.entries(stations)) {
       const t = st?.occupant;
       if (!t || t === h || st.kind === 'stack' || things.includes(t)) continue;
@@ -26642,12 +26643,15 @@ function handListing() {
   // for want of a way to name them)
   const top = things.length;
   for (let i = 0; i < top; i++) {
+    for (const r of (things[i].__subs || [])) {
+      if (r.parent && r.visible && !r.userData.ghost && !r.__gone) { things.push(r); where.push(' (riding on #' + (i + 1) + ')'); }
+    }
     const hs = things[i].userData.holes;
     if (!hs) continue;
     hs.forEach((hh, k) => { if (hh.thing) { things.push(hh.thing); where.push(' (in hole ' + (k + 1) + ' of #' + (i + 1) + ')'); } });
   }
   const lines = things.map((t, i) => '#' + (i + 1) + ': ' + handThingText(t) + where[i]);
-  const place = yardIn ? 'the ground' : 'the table';
+  const place = yardIn ? 'the ground' : worldTrail.length ? 'your table (it came with you through the door; the things marked "on the desk", "on the perch" or on a spot belong to this panel)' : 'the table';
   let text = lines.length ? 'On ' + place + ': ' + lines.join('; ') + '.' : (yardIn ? 'The ground is empty.' : 'The table is empty.');
   if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk ("desk")' : ', its desk empty') + '.';
   if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): the hand is the robot\u2019s own claw, and what is done here is what the robot learns. The stacks and Mimi work in here (no new robots); "leave" steps out when the lesson is done.';
@@ -26725,6 +26729,13 @@ function handReport(ok, text, done = 0) {
 async function handDo(sentence) {
   const s = String(sentence || '').trim();
   if (!s) return { ok: false, say: '', done: 0 };
+  if (/^(\.|stop|stop it|stop the robot|halt)[.!]*$/i.test(s)) {
+    // the key "." on the page stops a run; typed into the line it did not (the tester's D5 and H8)
+    if (mode !== 'replay') return handReport(false, 'Nothing is running to stop.');
+    handLog('you', s);
+    $('runBtn').onclick();
+    return handReport(true, 'Stopping \u2014 the robot finishes the round it is in.');
+  }
   if (handBusy) return handReport(false, 'One thing at a time \u2014 the hand is still busy.');
   if (!handBrainReady()) return handReport(false, 'Moving the hand by word needs a brain \u2014 a key under \u201cHow Marty thinks\u201d.');
   if (mode !== 'world' && mode !== 'training') return handReport(false, 'Wait for the robot to finish.');
@@ -26882,8 +26893,13 @@ async function handStep(step0, things, names) {
   }
   if (step.do === 'vacuum') {
     if (!handToolHere('dusty')) return 'Dusty is not in this workshop';
-    if (inHand()) return 'set down what the hand holds first \u2014 Dusty takes things from the table';
     const t = ref(step.what);
+    if (t && inHand() && inHand() !== t) {
+      // Dusty takes from the table: the hand sets down what it holds first (the tester's C4)
+      const r = await handStep({ do: 'drop' }, things, names);
+      if (r !== true) return 'set down what the hand holds first \u2014 ' + r;
+    }
+    if (t && inHand() === t) { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }
     if (!t) return 'there is no thing "' + step.what + '" in the listing';
     if (!stillHere(t)) return 'that thing is gone already';
     if (!dustyActive) { handleClick({ kind: 'dusty' }); await handSettle(); }

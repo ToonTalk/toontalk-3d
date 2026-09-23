@@ -1715,6 +1715,12 @@ async function handByWordCheck(D, w) {
     'nano: empty take': { steps: [ { do: 'take', from: '' } ], say: '?' },
     'add a 1 with a plus': { steps: [ { do: 'take', from: 'numbers' }, { do: 'type', text: '+' }, { do: 'drop', on: '#2' } ], say: 'Added.' },
     'run it now': { steps: [ { do: 'run' } ], say: 'Ran.' },
+    'sol: give without saying which': { steps: [ { do: 'take', from: 'numbers' }, { do: 'give' } ], say: 'Given.' },
+    'sol: a robot inside': { steps: [ { do: 'take', from: 'minis' } ], say: 'A robot.' },
+    'sol: vacuum while holding': { steps: [ { do: 'take', from: 'numbers' }, { do: 'vacuum', what: '#1' } ], say: 'Vacuumed.' },
+    'sol: loosen': { steps: [ { do: 'erase', path: [] } ], say: 'Any number.' },
+    'sol: add on desk': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 'desk' } ], say: 'Added.' },
+    'sol: open the panel': { steps: [ { do: 'open', of: '#1' }, { do: 'drop' } ], say: 'The panel is out.' },
     'drop it on thing 99': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 99 } ], say: 'Dropped.' },
     'the 1': null,   // filled in below, from the listing the brain is given
   };
@@ -1987,13 +1993,57 @@ async function handByWordCheck(D, w) {
     await driven(D.hand('leave the bubble'));          // nothing taught
     const r38 = await driven(D.hand('run it now'));   // untrained
     const ok37 = !r37.ok && /inside the robot.s thought bubble/.test(r37.say) && !r38.ok && /not been trained/.test(r38.say);
+    // 39. the guards a strong brain routes around, fed fixed plans: two robots and no "which"; a robot taken inside a bubble
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: -0.5, z: 1.7, thing: { kind: 'robot' } }, { x: 0.5, z: 1.7, thing: { kind: 'robot' } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    handStage = 'r39';
+    const r39 = await driven(D.hand('sol: give without saying which'));
+    const ok39 = !r39.ok && /2 robots are on the table/.test(r39.say);
+    await setDown();
+    // 40. riders are listed with numbers of their own; the tray is "the panel (tray) of", not "a room"
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: -0.2, z: 1.7, thing: { kind: 'text', text: 'ToonTalk' } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    handStage = 'r40';
+    await driven(D.hand('ride a 7 on the pad'));
+    await driven(D.hand('x'));
+    const ok40a = /#2: the number 7 \(riding on #1\)/.test(lastQ);
+    const r40 = await driven(D.hand('sol: open the panel'));
+    await driven(D.hand('x'));
+    const ok40 = ok40a && r40.ok && /the panel \(tray\) of a pad saying "ToonTalk"/.test(lastQ) && !/: a room\b/.test(lastQ);
+    // 41. the hand sets down what it holds before Dusty takes something
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: 0.2, z: 1.7, thing: { kind: 'box', holes: [null, null] } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    const r41 = await driven(D.hand('sol: vacuum while holding'));
+    const ok41 = r41.ok && !bench().some(t => t.userData.kind === 'box') && bench().some(t => t.userData.kind === 'number') && !D.helperState().hand;
+    // 42. inside a bubble a robot cannot be taken -- the hand's own refusal; then "." in the line stops a repeating run
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: 0.2, z: 1.7, thing: { kind: 'robot' } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    handStage = 'r42';
+    await driven(D.hand('give it a 1'));
+    const r42 = await driven(D.hand('sol: a robot inside'));
+    const ok42 = !r42.ok && /cannot make robots/.test(r42.say);
+    await driven(D.hand('sol: loosen'));
+    await driven(D.hand('sol: add on desk'));
+    await driven(D.hand('leave the bubble'));
+    D.speed(1);
+    D.doc.getElementById('runBtn').onclick();
+    for (let k = 0; k < 200 && D.helperState().mode !== 'replay'; k++) await frames(D, 5);
+    const running = D.helperState().mode === 'replay';
+    const r43 = await driven(D.hand('.'));
+    for (let k = 0; k < 600 && D.helperState().mode === 'replay'; k++) await frames(D, 5);
+    const ok43 = running && r43.ok && /Stopping/.test(r43.say) && D.helperState().mode === 'world';
+    D.speed('inf');
     const saidBtn = !!D.doc.getElementById('saidLogBtn');
     const wsLines = [...D.doc.getElementById('handLog').children].filter(c => /\bws\b/.test(c.className)).length;
     const logN = D.doc.getElementById('handLog').children.length;
-    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && saidBtn && wsLines > 5 && logN >= 18;
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && saidBtn && wsLines > 5 && logN >= 18;
     put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too; Mimi copies and Dusty removes; give finds the table robot and the claw copies inside the bubble; names, the notebook, the yard, Ruby and Dusty on the thought, the panel door'
-      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
-    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
+    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38, r39, r40, r41, r42, r43]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
     if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
     if (!ok19) put('ERR   thoughts: ' + [t19, t20, t21].join(' | ').slice(0, 300), 'dim');
     return ok;

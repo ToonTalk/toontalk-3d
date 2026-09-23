@@ -198,7 +198,7 @@ Tick the switch again afterwards.
 | H6 | `put a robot on the table` then `give it a 3` | the 3 on the desk, inside the bubble |
 | H7 | `erase the 3 so it works for any number` | the robot's thought reads "any number" (Ruby); the 3 stays on the desk |
 | H7b | `add a 1 to the 3 on the desk` | the desk shows 4 — the lesson has a step (a robot with no steps is retrained by its next gift, which would undo H7) |
-| H8 | `leave`, then `take the 3 off the desk and give the robot a 5` | the 3 comes off first (the desk holds one thing); the robot is trained, so it starts at once and — its thought being "any number" — **keeps going**: 6, 7, 8… Stop it with "." and note that it counted on |
+| H8 | `leave`, then `take the 3 off the desk and give the robot a 5` | the 3 comes off first (the desk holds one thing); the robot is trained, so it starts at once and — its thought being "any number" — **keeps going**: 6, 7, 8… Stop it by typing "." (or "stop") into the line and note that it counted on |
 
 ### Section I — new since the first run (reload with `?fresh` first)
 
@@ -216,6 +216,9 @@ Tick the switch again afterwards.
 | I10 | press **What was said** on the title card | a log of the workshop's lines and every sentence and answer, scrollable |
 | I11 | `put a robot on the table`, `give it a 1`, then `run the robot` | ✗: the hand is inside the robot's thought bubble — leave it first (never ✓) |
 | I12 | `leave`, then `run the robot` | ✗: the robot has not been trained yet (nothing was taught, so leaving kept nothing) |
+| I13 | `put a 7 on the pad`, then (log the listing) | the listing shows the 7 as a thing of its own, "riding on" the pad |
+| I14 | `open the pad's panel` (log the listing) | the tray is listed as "the panel (tray) of a pad…", not "a room" |
+| I15 | `make a 7`, `copy the 7`, then `vacuum the 7 on the table` | the hand ends empty after each sentence, and Dusty takes the 7 without a refusal |
 
 ## What to report
 

@@ -8843,3 +8843,25 @@ trained yet"), so Ruby's work is lost unless a step was taught; and
 naming a nest names its bird, filing the nest leaves the bird. The
 suite's plans moved to 1-based holes; plus-keeps (4 + a 1 typed "+" is 5)
 and run-refuses (in a bubble, untrained) are new.
+
+## The hand by word with gpt-6-sol
+
+The third report (Claude in Chrome, 23 Sep, gpt-6-sol): 61 of 66, 29 of 31
+in the like-for-like sections, every Marty fix working -- run on the build
+just before the "+" and 1-based-holes round, so its "+" failures (D3, D5,
+H7b, H8) and "hole 0" are already fixed (the live page has the fix). New:
+RIDERS were missing from the listing -- now numbered like hole contents,
+"#2: the number 7 (riding on #1)". THE TRAY was listed as "a room" -- now
+"the panel (tray) of ...". INSIDE A PANEL the listing was only the table
+that came along -- now the room's own containers are listed too, and the
+table is named as having come through the door. "." TYPED IN THE LINE did
+not stop a run (only the key on the page did) -- "." or "stop" now presses
+the same Stop, and says the robot finishes its round. C4: a vacuum with
+something in the hand -- the hand sets it down first, and the prompt says
+to end with the hand empty unless told to hold. The guards a strong brain
+routes around (which robot, no robots in a bubble) are tested in the suite
+with fixed plans, as the report suggested: which-robot, no-robot-inside,
+dot-stops, set-down-for-dusty, riders+tray-listed. Not changed: the claw's
+animation dominates the time inside a bubble (11-28 s); a sentence sent
+to Marty with his card closed did not show in his history later
+(unreproduced).
