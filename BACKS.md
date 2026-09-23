@@ -9005,3 +9005,21 @@ that; the refusal now says how to use the computer's own dictation
 (Windows+H, Fn Fn, a phone keyboard's microphone) into the line, which
 works anywhere. handByWordCheck: open-that-thing, plan-made-labels,
 give-bird, bench-robot-listed.
+
+## The microphone in an artifact: advice instead of a refusal
+
+Ken (23 Sep): "add advice to the artifact when a user clicks on the
+microphone telling them how to use the operating system's speech
+recognition". The browser says before anything is tried whether a page may
+use the microphone -- document.permissionsPolicy (or featurePolicy)
+.allowsFeature('microphone') -- and a claude.ai artifact's frame may not.
+There a click on either microphone tries nothing: it puts the cursor in the
+field the words should land in (the hand's line, or Marty's question box)
+and says how to start the computer's own speech recognition for this
+system -- Windows+H (and "press Enter" under Voice Access), the Fn/Globe
+key twice on a Mac, Search+D on a Chromebook, the keyboard's microphone on
+a phone -- and the microphones' tooltips say so before the click. On a
+normal page the policy allows it and nothing changes; a refusal after a
+real attempt uses the same words. handByWordCheck's
+mic-advice-when-not-allowed (window.__micAllowed = false): no recognizer
+started, the cursor in the line, the advice in the log.

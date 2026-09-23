@@ -26842,13 +26842,34 @@ function handCamLook(t) {
 // THE MICROPHONE REFUSED: in a claude.ai artifact the frame is never granted
 // it, and no page can change that -- but the computer's own dictation types
 // into whatever text field has focus, in any page, so say how (Ken, 23 Sep)
+// MAY THIS PAGE USE THE MICROPHONE AT ALL? A claude.ai artifact's frame is
+// never granted it, and the browser says so before anything is tried; a
+// check may say otherwise through window.__micAllowed
+function micAllowed() {
+  if (typeof window.__micAllowed === 'boolean') return window.__micAllowed;
+  const pol = document.permissionsPolicy || document.featurePolicy;
+  try { return pol?.allowsFeature ? pol.allowsFeature('microphone') : true; } catch (e) { return true; }
+}
+// THE COMPUTER'S OWN SPEECH RECOGNITION types into whatever text field has
+// focus, in any page: how to start it, for the system this is
+function dictationHow() {
+  const ua = navigator.userAgent || '', plat = navigator.userAgentData?.platform || navigator.platform || '';
+  if (/Android|iPhone|iPad/i.test(ua)) return 'tap the microphone on your keyboard, and speak';
+  if (/Mac/i.test(plat) || /Mac OS X/.test(ua)) return 'press the Fn (Globe) key twice to start Dictation, speak, then press Return';
+  if (/CrOS/.test(ua)) return 'press Search+D to start dictation, speak, then press Enter';
+  return 'press Windows+H to start voice typing, speak, then press Enter (with Voice Access you can say \u201cpress Enter\u201d)';
+}
+// A MICROPHONE THAT MAY NOT LISTEN: the advice, and the cursor put in the
+// line the words should land in, so dictation starts in the right place
+function micAdvice(field, where) {
+  try { field?.focus(); } catch (e) {}
+  return 'This page can\u2019t use the microphone itself' + (window.top !== window ? ' \u2014 a Claude artifact isn\u2019t given one' : '')
+    + '. Your computer\u2019s own speech recognition works instead: the cursor is in ' + where + ' \u2014 ' + dictationHow() + '.';
+}
 function micRefusedWords(err) {
   if (err !== 'not-allowed' && err !== 'service-not-allowed') return 'The microphone said: ' + (err || 'no');
-  const mac = /Mac/i.test(navigator.platform || navigator.userAgent), phone = /Android|iPhone|iPad/i.test(navigator.userAgent);
-  const how = phone ? 'tap the microphone on your keyboard'
-    : mac ? 'press Fn twice (Dictation)' : 'press Windows+H (voice typing)';
   return 'This page is not allowed to use the microphone' + (window.top !== window ? ' (a page inside another page, such as a Claude artifact, is not given one)' : '')
-    + '. Your computer can still type what you say: click the line, ' + how + ', speak, then press Enter.';
+    + '. Your computer\u2019s own speech recognition can type what you say: click the line, then ' + dictationHow() + '.';
 }
 // A key the hand "presses": the same listener a real key reaches.
 const handKey = (key) => window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
@@ -27507,7 +27528,12 @@ async function handStepDo(step, things, names) {
       mic.classList.add('on'); mic.textContent = '\u{1F534}';
       mic.title = 'Listening \u2014 press to stop. ' + (handGoPhrase() ? 'Say \u201c' + handGoPhrase() + '\u201d when the sentence is complete.' : 'A pause sends what was said.');
     };
-    mic.onclick = () => { if (on) stop(); else start(); };
+    mic.onclick = () => {
+      if (on) return stop();
+      if (!micAllowed()) { const t = micAdvice(inp, 'the line at the top'); sayAttn(t); handLog('ws attn', t); return; }
+      start();
+    };
+    if (!micAllowed()) mic.title = 'Speak: in this page your computer\u2019s own speech recognition does the listening \u2014 click for how';
   }
 }
 function handBarRefresh() {
@@ -28259,8 +28285,10 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   if (!SR) mic.style.display = 'none';
   else {
     let listening = null;
+    if (!micAllowed()) mic.title = 'Ask by voice: in this page your computer\u2019s own speech recognition does the listening \u2014 click for how';
     mic.onclick = () => {
       if (listening) { listening.stop(); return; }
+      if (!micAllowed()) { martySay(micAdvice(document.getElementById('martyIn'), 'my question box')); return; }
       const rec = new SR();
       rec.lang = navigator.language || 'en-US';
       rec.interimResults = false;
