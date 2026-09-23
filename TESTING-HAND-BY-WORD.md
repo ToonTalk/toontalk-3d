@@ -246,6 +246,7 @@ Tick the switch again afterwards.
 | J7 | (a person, with the microphone) say `put a box on the table` | the answer is read aloud as well as shown |
 | J8 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the one back on your work area`, `put the original back` | inside the bubble: the copy goes on the robot's desk, then the original comes off Mimi's platform (the copy is set aside first) |
 | J9 | type a sentence, press Enter, then type another without clicking | the cursor is still in the line after the first one finishes |
+| J10 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the copy back on the desk`, `put the other one on top`, `leave`, `run`, then when it stops: `erase the 1 in its thought` | the thought becomes any number at the bench, without going back into the bubble; run again and it keeps adding |
 
 ## What to report
 

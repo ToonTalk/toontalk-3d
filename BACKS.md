@@ -9051,3 +9051,20 @@ refused inside the bubble: the set-down, take-off, pick-up-again dance
 that did it at the table works in the bubble too, with the claw's own
 spots. A drop on an empty platform is a copy. handByWordCheck:
 put-back-on-desk, drop-on-original-in-bubble, line-keeps-cursor, log-shut.
+
+## Loosening a stopped robot's thought, by words, at the bench
+
+Ken (23 Sep): trained a robot on a 1 (copy it, put the copy on top: it
+adds), ran it, and it "Ran 1× and stopped: what is on its desk no longer
+fits its thought (the red parts)", with the workshop's own advice to wake
+Ruby and click a red part. "Erase the one" and "erase the one in his
+thought bubble" were refused -- by the brain, since the listing showed a
+thought only inside a bubble, and by the hand, whose erase and remove
+refused outside training. The workshop has always taken Ruby and Dusty on
+the bench robot's thought (condition is that robot's), so now the hand does
+too: the listing at the bench gives the robot's thought and says when what
+is on its desk does NOT fit it, and the prompt says erase and remove work
+there. The line kept the cursor through the run (measured): a speech
+recognizer that stopped during a run is most likely Windows voice typing
+(Windows+H), which turns itself off after some seconds of silence; Voice
+Access stays on. handByWordCheck: erase-at-bench (cursor-after-run).
