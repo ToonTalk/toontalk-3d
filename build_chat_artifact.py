@@ -1,7 +1,12 @@
 # Builds toontalk-3d.chat.html -- the workshop as a claude.ai CHAT artifact,
 # plus toontalk-3d-pack.json, the pack it asks the reader for once.
 #
-#   python build_chat_artifact.py
+#   python build_chat_artifact.py          the release: toontalk-3d.html
+#   python build_chat_artifact.py --next   the next build: toontalk-3d-next.html
+#                                          -> toontalk-3d-next.chat.html, reading
+#                                          the release's own pack (its manual and
+#                                          puzzles must be the same -- asserted),
+#                                          and writing nothing of the release's
 #
 # WHY A THIRD BUILD. There are two artifact runtimes and they are not alike
 # (measured 2026-08-23):
@@ -48,8 +53,9 @@
 import io, os, re, json, base64, subprocess, sys, shutil, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, 'toontalk-3d.html')
-OUT = os.path.join(HERE, 'toontalk-3d.chat.html')
+NEXT = '--next' in sys.argv
+SRC = os.path.join(HERE, 'toontalk-3d-next.html' if NEXT else 'toontalk-3d.html')
+OUT = os.path.join(HERE, 'toontalk-3d-next.chat.html' if NEXT else 'toontalk-3d.chat.html')
 PACK = os.path.join(HERE, 'toontalk-3d-pack.json')
 MODELS = ['robot_v4.glb', 'dusty_v11.glb', 'mimi_v1.glb']
 THREE_VERSION = '0.185.0'
@@ -81,12 +87,21 @@ pack['manual'] = manual_text.strip()
 pack['puzzles'] = puzzles_text.strip()
 pack['puzzlesGzip'] = 'data-gzip' in puzzles_attrs
 print('  packed the manual (%d KB) and the puzzle set (%d KB)' % (len(pack['manual']) // 1024, len(pack['puzzles']) // 1024))
-io.open(PACK, 'w', encoding='utf-8').write(json.dumps(pack))
-print('wrote %s (%.1f MB)' % (os.path.basename(PACK), os.path.getsize(PACK) / 1048576))
-import gzip
-with gzip.GzipFile(PACK + '.gz', 'wb', compresslevel=9, mtime=0) as gz:   # mtime 0: the same bytes for the same pack
-    gz.write(io.open(PACK, 'rb').read())
-print('wrote %s (%d KB)' % (os.path.basename(PACK) + '.gz', os.path.getsize(PACK + '.gz') // 1024))
+if NEXT:
+    # the next build reads the RELEASE's pack: nothing of the release is
+    # rewritten, and a reader's cached pack still fits -- so the data it
+    # would pack must be what the released pack already holds
+    old = json.load(io.open(PACK, encoding='utf-8'))
+    for k in ('manual', 'puzzles', 'puzzlesGzip', 'format'):
+        assert old.get(k) == pack.get(k), "the next build's %s differs from the released pack: build a pack of its own" % k
+    print('  the released pack fits the next build (manual, puzzles, format unchanged)')
+else:
+    io.open(PACK, 'w', encoding='utf-8').write(json.dumps(pack))
+    print('wrote %s (%.1f MB)' % (os.path.basename(PACK), os.path.getsize(PACK) / 1048576))
+    import gzip
+    with gzip.GzipFile(PACK + '.gz', 'wb', compresslevel=9, mtime=0) as gz:   # mtime 0: the same bytes for the same pack
+        gz.write(io.open(PACK, 'rb').read())
+    print('wrote %s (%d KB)' % (os.path.basename(PACK) + '.gz', os.path.getsize(PACK + '.gz') // 1024))
 
 # ---------------------------------------------------------------- the shell
 # 1. the data blocks come out (the pack puts them back)
