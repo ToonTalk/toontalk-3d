@@ -285,7 +285,7 @@ workshop and stays as it is; new work goes into `toontalk-3d-next.html`
 (<https://toontalk.github.io/toontalk-3d/toontalk-3d-next.html>), which will
 become the release when it is ready. What it has that the release does not:
 
-- **Your hand, by word.** Under Settings, *Move your hand by word* puts a
+- **Your hand, by words.** Under Settings, *Move your hand by words* puts a
   line at the top of the screen: say or type "pick up a 1 and put it in a
   3-hole box", "create a text pad with ToonTalk on it", "give a robot a scale
   with 1 and 100 on it", and your own hand does it -- the same clicks and
@@ -301,9 +301,13 @@ become the release when it is ready. What it has that the release does not:
   the hand -- either box, either microphone. The line's microphone stays on
   until pressed again: a pause sends each sentence, or set a go phrase
   ("do it") on the settings card and what you say piles up until you end
-  with it. A log keeps everything said -- the workshop's own lines, what
+  with it. Where the page may not listen (a Claude artifact), the
+  computer's own dictation types into the line instead (Windows+H, Voice
+  Access, a Mac's Fn Fn), and the line keeps the cursor from one sentence
+  to the next. A log keeps everything said -- the workshop's own lines, what
   the hand was told and what came back; the small triangle on the line
-  shows it, and so does *What was said* on the title card. Inside a
+  shows it, and so does *What was said* on the title card; it stays shut
+  until asked for. Inside a
   thought bubble the hand is the robot's claw: the desk, its spots and
   Mimi are listed and used, Ruby and Dusty can be sent at a part of the
   thought ("erase the 3 so it works for any number"), and "leave" steps
@@ -313,7 +317,7 @@ become the release when it is ready. What it has that the release does not:
 - **For someone using voice alone.** The brain is told where each thing is
   on the screen as the person sees it -- left, middle or right, front or
   back, or out of view -- so "the box on the left" works. The camera moves
-  by word: turn left or right, look from higher or lower, come closer or
+  by words: turn left or right, look from higher or lower, come closer or
   go farther, slide, "look at the robot", and "reset the view". A question
   about what is here ("what's on the table?", "what am I holding?") is
   answered from the listing. And when a sentence was spoken, its answer is

@@ -5703,7 +5703,7 @@ function nameTag(always = false) {
 let martyNewcomer = false;     // a name signed in here for the first time
 function setUser(name) {
   currentUser = String(name || '').trim().slice(0, 40);
-  // the hand-by-word switch is kept under this name: the line at the top
+  // the hand-by-words switch is kept under this name: the line at the top
   // follows the name, or it stays hidden until something else refreshes it
   // (Ken: "the workshop microphone button isn't always available")
   setTimeout(() => { try { handBarRefresh(); } catch (e) {} }, 0);
@@ -21538,7 +21538,7 @@ const typingInAField = () => {
     || ['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName);
 };
 addEventListener('keydown', (e) => {
-  if (typingInAField()) return;
+  if (typingInAField() && !e.__hand) return;
   // Ctrl+V WITH AN EMPTY HAND reads a thing off the clipboard -- the text
   // Ctrl+C with a thing in hand writes -- into the hand, the way a dropped
   // file arrives
@@ -23377,7 +23377,7 @@ loadModel('robot_v4.glb', (gltf) => {
     hwb.id = 'handWordsBtn';
     hwb.title = 'Say or type what your hand should do \u2014 \u201cpick up a 1 and put it in a 3-hole box\u201d \u2014 on a line at the top of the screen, and your own hand does it. Thinks with the brain chosen under \u201cHow Marty thinks\u201d.';
     const hwbText = () => {
-      hwb.textContent = (handWordsOn() ? '\u2611' : '\u2610') + ' \u{1F590} Move my hand by word';
+      hwb.textContent = (handWordsOn() ? '\u2611' : '\u2610') + ' \u{1F590} Move my hand by words';
       hwb.style.display = handBrainReady() ? '' : 'none';
     };
     hwb.onclick = () => {
@@ -23385,7 +23385,7 @@ loadModel('robot_v4.glb', (gltf) => {
       mineSet(HAND_WORDS, handWordsOn() ? '0' : '1');
       handBarRefresh(); hwbText();
       if (handWordsOn()) { say('Your hand listens \u2014 say or type what it should do, on the line at the top.', 5000); setTimeout(() => document.getElementById('handIn')?.focus(), 50); }
-      else say('Your hand by word is off.');
+      else say('Moving your hand by words is off.');
     };
     menu.appendChild(hwb);
     setTimeout(hwbText, 0);
@@ -25197,9 +25197,9 @@ function martyWorldText() {
   const lines = [];
   if (loadedWorldName) lines.push('The visitor has loaded the world file: ' + loadedWorldName);
   lines.push('Mode: ' + (mode === 'training' ? "inside a robot's thought (training)" : mode));
-  lines.push('The hand-by-word switch is ' + (handWordsOn() && handBrainReady()
+  lines.push('The hand-by-words switch is ' + (handWordsOn() && handBrainReady()
     ? 'ON: an instruction to move things goes in "hand", and the visitor\'s own hand makes the moves.'
-    : 'OFF: it is "Move my hand by word" in the \u22ee menu.'));
+    : 'OFF: it is "Move my hand by words" in the \u22ee menu.'));
   if (held) lines.push("In the visitor's hand: " + d(held));
   if (activeBot) lines.push(`Robot at the bench: ${activeBot.name || '(unnamed)'} — ${activeBot.program.length} steps, runs on ${condText(activeBot.condition)}, team of ${activeBot.team.length + 1}${activeBot.waiting ? ', dozing on a bare nest' : ''}.`);
   if (stations.stand?.occupant) lines.push('On its desk: ' + d(stations.stand.occupant));
@@ -25335,7 +25335,7 @@ const martyActivityText = () => {
 };
 
 const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits APPENDS to what it shows — a fresh 1 typed 2 reads 12 — so press Backspace first to clear it; the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, press Backspace, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more — erasing never starts it: a robot runs only when Run what it learned is pressed, and it repeats round after round for as long as its thought still fits what is on its desk, until Stop or the Rounds limit, so a robot that adds one to "any number" counts on and on rather than adding one once; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
-If the visitor tells you to pick up, take, fetch, put, drop, type on or move something ("put a box on the table", "give the robot a 3"): when the context says the hand-by-word switch is ON, set "hand" to true and "say" to one short line such as "Your hand is on it." -- the workshop's own hand is given their sentence and makes the moves, not you, and it reports for itself. For anything else "hand" is false. When the switch is OFF, say plainly that you cannot move their hand and that "Move my hand by word" in the \u22ee menu will let their own hand do it. Never say a thing is on the table unless this very reply fetched it.
+If the visitor tells you to pick up, take, fetch, put, drop, type on or move something ("put a box on the table", "give the robot a 3"): when the context says the hand-by-words switch is ON, set "hand" to true and "say" to one short line such as "Your hand is on it." -- the workshop's own hand is given their sentence and makes the moves, not you, and it reports for itself. For anything else "hand" is false. When the switch is OFF, say plainly that you cannot move their hand and that "Move my hand by words" in the \u22ee menu will let their own hand do it. Never say a thing is on the table unless this very reply fetched it.
 
 Rules for you:
 - The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
@@ -25347,7 +25347,7 @@ Rules for you:
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
 - Demos are FIXED scripts — the blurb after each name says exactly what it covers. Offer one ONLY if its blurb covers what was asked; if nothing covers it, set demo to null and say so plainly ("I have no demonstration of that, but here is how it works…"). Never promise a demo will use the visitor's own numbers or words, and never offer a demo you have already given for the same question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
-- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null", "hand": false} — "hand" is true only when the hand-by-word switch is ON and the visitor is telling you to move something (see above); "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
+- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null", "hand": false} — "hand" is true only when the hand-by-words switch is ON and the visitor is telling you to move something (see above); "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
 // Marty answers from THE MANUAL, not from what a model imagines a workshop
 // like this might do -- that is what had him inventing ways to type a fraction
 // and denying that numbers show decimals at all. A live copy is preferred, so
@@ -26633,7 +26633,7 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"give"} hands it to the robot at the bench, or, with none there, to the only robot on the table; {"do":"give","to":N} names the robot. Giving an untrained robot something opens its thought bubble.
 {"do":"pickup","what":"desk"} takes what is on the bench robot's desk. Inside a robot's thought bubble the hand is the robot's claw, the thing it was given is on its desk ("desk"), and the stacks and Mimi work there; {"do":"leave"} steps out when the lesson is done.
 {"do":"run"} presses Run so the robot at the bench works.
-{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. Mimi is also called the copier or the copy machine.
+{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. After a copy, "put it back" or "put the 1 back" means the ORIGINAL, back where it came from: {"do":"pickup","what":"platform"}, then {"do":"drop","on":"desk"} if it came off the desk (set down what the hand holds first). {"do":"drop","on":"desk"} puts the held thing on an empty desk; "work area" and "workspace" mean the desk too. Mimi is also called the copier or the copy machine.
 {"do":"vacuum","what":N} has Dusty the vacuum remove thing N from the table for good. The hand must be empty (drop first).
 {"do":"name","text":T} names the held thing (a bird, nest, box, scale, die, robot...) -- pads and numbers take "type" instead.
 {"do":"erase","path":[...]} has Ruby make a part of the robot's thought one step more general (a 3 becomes any number); {"do":"remove","path":[...]} has Dusty make it anything at all. Only inside a thought bubble; the path is hole numbers (from 1) into the given thing, [] for the whole.
@@ -26752,6 +26752,7 @@ function handListing() {
   const place = yardIn ? 'the ground' : worldTrail.length ? 'your table (it came with you through the door; the things marked "on the desk", "on the perch" or on a spot belong to this panel)' : 'the table';
   let text = lines.length ? 'On ' + place + ': ' + lines.join('; ') + '.' : (yardIn ? 'The ground is empty.' : 'The table is empty.');
   if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk ("desk")' : ', its desk empty') + '.';
+  if (mode === 'training' && stations.stand && !stations.stand.occupant) text += ' The robot\u2019s desk ("desk") is empty: {"do":"drop","on":"desk"} puts the held thing back there.';
   if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): the hand is the robot\u2019s own claw, and what is done here is what the robot learns. The stacks and Mimi work in here (no new robots); "leave" steps out when the lesson is done.';
   const here = [];
   if (handToolHere('mimi')) here.push('Mimi the copier' + (stations.copyIn?.occupant ? ' (on her platform: ' + handThingText(stations.copyIn.occupant) + ')' : ''));
@@ -26872,12 +26873,17 @@ function micRefusedWords(err) {
     + '. Your computer\u2019s own speech recognition can type what you say: click the line, then ' + dictationHow() + '.';
 }
 // A key the hand "presses": the same listener a real key reaches.
-const handKey = (key) => window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+// It is marked as the hand's, so it reaches the workshop even while the
+// hand's own line has the cursor (a spoken line keeps it, for the next one).
+const handKey = (key) => { const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }); e.__hand = true; window.dispatchEvent(e); };
 function handStatus(text) {
   const el = document.getElementById('handStatus');
   if (el) el.textContent = text;
   const inp = document.getElementById('handIn');
-  if (inp) inp.disabled = !!text;
+  // READ-ONLY, not disabled: a disabled field loses the cursor, and the
+  // computer's own dictation (Windows+H, Voice Access) then had nowhere to
+  // type the next sentence -- Ken had to click the line after every one
+  if (inp) inp.readOnly = !!text;
 }
 // WHAT WAS SAID AND WHAT CAME BACK, kept under the line so an older
 // exchange can be scrolled back to (Ken)
@@ -26889,7 +26895,7 @@ function handLog(cls, text) {
   d.textContent = (cls === 'you' ? '\u25B8 ' : cls === 'ok' ? '\u2713 ' : cls.startsWith('ws') ? '\u00B7 ' : '\u2717 ') + text;
   el.appendChild(d);
   while (el.children.length > 200) el.firstChild.remove();
-  if (!el.classList.contains('on') && !cls.startsWith('ws')) el.classList.add('on');   // the workshop's own lines do not open it
+  // it opens only when asked for (the \u25BE on the line, or \u201cWhat was said\u201d): Ken
   el.scrollTop = el.scrollHeight;
 }
 function handReport(ok, text, done = 0) {
@@ -26919,13 +26925,14 @@ async function handDo(sentence, opts = {}) {
     return handReport(true, 'Stopping \u2014 the robot finishes the round it is in.');
   }
   if (handBusy) return handReport(false, 'One thing at a time \u2014 the hand is still busy.');
-  if (!handBrainReady()) return handReport(false, 'Moving the hand by word needs a brain \u2014 a key under \u201cHow Marty thinks\u201d.');
+  if (!handBrainReady()) return handReport(false, 'Moving the hand by words needs a brain \u2014 a key under \u201cHow Marty thinks\u201d.');
   if (mode !== 'world' && mode !== 'training') return handReport(false, 'Wait for the robot to finish.');
   if (busy) return handReport(false, 'Wait for what is moving to settle.');
   handBusy = true;
   handLog('you', s);
   handStatus('thinking\u2026');
-  if (document.activeElement?.blur) document.activeElement.blur();   // its keys must not read as typing in a field
+  const lineHadIt = document.activeElement?.id === 'handIn';
+  if (!lineHadIt && document.activeElement?.blur) document.activeElement.blur();   // its keys must not read as typing in a field
   try {
     const before = handListing();
     const q = before.text + '\nThe person said: "' + s.replace(/"/g, '\u201d') + '"';
@@ -26965,7 +26972,10 @@ async function handDo(sentence, opts = {}) {
     while (handHistory.length > 8) handHistory.shift();
     const going = mode === 'replay' ? ' \u2014 the robot is still running; say \u201cstop\u201d to stop it.' : '';
     return handReport(true, (plan.say || 'Done.') + entered + going, done);
-  } finally { handBusy = false; handStatus(''); }
+  } finally {
+    handBusy = false; handStatus('');
+    if (lineHadIt && handWordsOn()) { try { document.getElementById('handIn').focus(); } catch (e) {} }
+  }
 }
 // THE PANEL OF A THING comes out as a tray on the table (Ctrl+P): the thing
 // is picked up if it is not in the hand, and the tray is there afterwards.
@@ -27183,12 +27193,13 @@ async function handStepDo(step, things, names) {
       refreshUI();
       return true;
     }
-    return 'typing on ' + kind + ' names it, which the hand cannot do by word yet';
+    return 'typing on ' + kind + ' names it, which the hand cannot do by words yet';
   }
   if (step.do === 'drop') {
     if (!inHand() && (step.on == null || step.on === '' || step.on === 'table') && (handPrevDo === 'go' || handPrevDo === 'open')) return true;   // the door (or the panel) set it down already
     if (!inHand()) return 'nothing is in the hand to drop';
     const it = inHand();
+    let deskWasEmpty = false;
     if (step.on == null || step.on === '' || step.on === 'table') {
       if (mode === 'training') {
         // inside the bubble the claw sets things down on the robot's own
@@ -27205,6 +27216,14 @@ async function handStepDo(step, things, names) {
         const sp = freeSpotNear(benchSpot(), 0.9);
         handleClick({ kind: 'bench', point: new THREE.Vector3(sp.x, 0, sp.z) });
       }
+    } else if ((deskWasEmpty = step.on === 'desk' && !stations.stand?.occupant && (mode === 'training' || !!activeBot))) {
+      // THE EMPTY DESK IS A PLACE: "put the one back on your desk" after Mimi
+      // copied it (Ken, 23 Sep) found no thing called "desk", as the desk was
+      // empty. Inside the bubble it is the robot's "put it where I was
+      // given it"; at the bench it is giving the robot something.
+      handleClick({ kind: 'station', id: 'stand' });
+    } else if (step.on === 'platform' && !stations.copyIn?.occupant) {
+      return handStep({ do: 'copy', as: step.as }, things, names);
     } else {
       let t = ref(step.on);
       if (!t) return 'there is no thing "' + step.on + '" in the listing';
@@ -27214,7 +27233,7 @@ async function handStepDo(step, things, names) {
       // original off the platform first"). The hand does just that: sets down
       // what it holds, takes the original off onto the table, and picks its
       // own thing up again (Ken's "put the other one on the one")
-      if (mode === 'world' && t === stations.copyIn?.occupant) {
+      if (t === stations.copyIn?.occupant) {   // inside a bubble too: the claw sets its thing on a spot of its own
         const mine = inHand();
         let r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r;
         handleClick({ kind: 'station', id: 'copyIn' }); await handSettle();
@@ -27248,6 +27267,7 @@ async function handStepDo(step, things, names) {
         return host ? 'it landed on ' + handThingText(host) + ' and rides on it \u2014 the table is crowded there' : 'it did not stay on the table';
       }
     }
+    if (deskWasEmpty && mode === 'training' && stations.stand?.occupant !== it) return 'it did not go on the desk';
     if (step.as) names.set(String(step.as), it);
     return true;
   }
@@ -27542,7 +27562,7 @@ function handBarRefresh() {
   const b = document.getElementById('handWordsBtn');
   if (b) {
     b.style.display = handBrainReady() ? '' : 'none';
-    b.textContent = (handWordsOn() ? '\u2611' : '\u2610') + ' \u{1F590} Move my hand by word';
+    b.textContent = (handWordsOn() ? '\u2611' : '\u2610') + ' \u{1F590} Move my hand by words';
   }
 }
 // the switch follows the key: when one is typed into Marty's card, the bar can appear
@@ -27995,21 +28015,24 @@ function showSettingsCard(first) {
   }
   sec('Your hand');
   if (handBrainReady()) {
-    row('Move your hand by word', 'a line at the top: say or type “pick up a 1 and put it in a 3-hole box” and your hand does it, thinking with the brain chosen under “How Marty thinks”',
+    row('Move your hand by words', 'a line at the top: say or type “pick up a 1 and put it in a 3-hole box” and your hand does it, thinking with the brain chosen under “How Marty thinks”',
         cb(handWordsOn(), (on) => { mineSet(HAND_WORDS, on ? '1' : '0'); handBarRefresh(); menuRefresh(); }));
-    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+    row('Read your hand\u2019s answers aloud', 'always \u2014 when you speak to it they are read aloud anyway', cb(mineGet(HAND_SPEAK) === '1', (on) => mineSet(HAND_SPEAK, on ? '1' : '0')));
+    // A GO PHRASE is for this page's own microphone. Where the page may not
+    // listen (a Claude artifact) the computer's dictation does, and it has
+    // its own way to send: Enter, or "press Enter" to Voice Access (Ken)
+    if ((window.SpeechRecognition || window.webkitSpeechRecognition) && micAllowed()) {
       const go = document.createElement('input');
       go.type = 'text'; go.autocomplete = 'off'; go.value = handGoPhrase(); go.placeholder = 'e.g. do it';
       go.style.cssText = 'font:inherit;font-size:12px;width:9em;background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:3px 6px';
       go.onchange = () => mineSet(HAND_GO, go.value.trim());
       go.addEventListener('keydown', (e) => e.stopPropagation());
-      row('Read your hand\u2019s answers aloud', 'always \u2014 when you speak to it they are read aloud anyway', cb(mineGet(HAND_SPEAK) === '1', (on) => mineSet(HAND_SPEAK, on ? '1' : '0')));
-      row('Go phrase for the microphone', 'with the microphone left on, a pause sends each sentence; with a phrase here, what you say piles up until you end with it', go);
+      row('Go phrase for the \u{1F3A4} on the line', 'with the microphone left on, a pause sends each sentence; with a phrase here, what you say piles up until you end with it', go);
     }
   } else {
     const note = document.createElement('div');
     note.style.cssText = 'font-size:11px;color:var(--dim)';
-    note.textContent = 'Moving your hand by word needs a brain: give one a key under “How Marty thinks” on Marty’s card, and a switch appears here.';
+    note.textContent = 'Moving your hand by words needs a brain: give one a key under “How Marty thinks” on Marty’s card, and a switch appears here.';
     card.appendChild(note);
   }
   sec('Help');
@@ -28557,7 +28580,7 @@ window.__nano = {
   // Marty, for a check: a stand-in for the brain, and the commentary switch
   // that lives in the More menu -- so a narrated run can be watched here.
   brain(fn) { brainStandIn = fn ?? null; },
-  hand(s, o) { return handDo(s, o); },                                           // the hand, by word
+  hand(s, o) { return handDo(s, o); },                                           // the hand, by words
   handHeld() { return held; },                                             // what the hand holds, for a check to set down
   handOn(v) { if (v !== undefined) { mineSet(HAND_WORDS, v ? '1' : '0'); handBarRefresh(); } return handWordsOn(); },
   help(v) { if (v !== undefined) mineSet(MARTY_HELP, v); return martyHelp(); },     // the help mode, for a check

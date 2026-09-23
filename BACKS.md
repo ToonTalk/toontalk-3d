@@ -9023,3 +9023,31 @@ normal page the policy allows it and nothing changes; a refusal after a
 real attempt uses the same words. handByWordCheck's
 mic-advice-when-not-allowed (window.__micAllowed = false): no recognizer
 started, the cursor in the line, the advice in the log.
+
+## Windows voice typing and the hand: the cursor stays, the 1 goes back
+
+Ken (23 Sep), after Windows speech recognition worked with Marty and then
+with the hand: it "worked once and then I needed to click in the input
+area to give the next command". The line was DISABLED while the hand
+worked, and a disabled field loses the cursor, so dictation had nowhere to
+type the next sentence. It is read-only now, the hand's own key presses
+are marked so they reach the workshop past a focused line, and the cursor
+goes back to the line when the sentence came from it. "By word" is "by
+words" everywhere (Ken). The go phrase is for this page's own microphone
+only, so it is hidden where the page may not listen (an artifact): there
+the dictation's Enter, or "press Enter" to Voice Access, sends; "read your
+hand's answers aloud" is always on the card. The log opens only when asked
+for (the ▾ on the line, or "What was said"), never by itself.
+
+Inside a bubble, after "give the one to Mimi" the claw held the copy and
+the original stood on her platform; "put the one back on your work area"
+failed with no thing "desk" in the listing -- the desk was EMPTY, so it
+had no number. A drop "on":"desk" on an empty desk is now the robot's
+"put it where I was given it" (at the bench, giving the robot something),
+the listing says the desk is there and empty, and the prompt says that
+after a copy "put it back" means the original, and that "work area" is the
+desk. "Put the one back" (a drop on the original on her platform) was
+refused inside the bubble: the set-down, take-off, pick-up-again dance
+that did it at the table works in the bubble too, with the claw's own
+spots. A drop on an empty platform is a copy. handByWordCheck:
+put-back-on-desk, drop-on-original-in-bubble, line-keeps-cursor, log-shut.

@@ -1,7 +1,7 @@
-# Testing "your hand, by word" — instructions for a tester
+# Testing "your hand, by words" — instructions for a tester
 
 These are instructions for an agent driving a browser (Claude in Chrome,
-Codex, a person) to test the *hand by word* feature of ToonTalk 3D's next
+Codex, a person) to test the *hand by words* feature of ToonTalk 3D's next
 build, with a real language model behind it. The automated suite already
 proves the hand's own moves with a stand-in brain; what only a real brain
 can test is **whether the brain turns sentences into the right plan**.
@@ -60,7 +60,7 @@ model. The same instructions work for any provider.
    once** and wait until the panel says it is ready (gigabytes, once).
    For a cloud provider instead, choose it and **enter the API key
    yourself** — the tester must never type, read, copy or be told a key.
-4. ⋮ menu → **☑ 🖐 Move my hand by word**. A line appears at the top centre
+4. ⋮ menu → **☑ 🖐 Move my hand by words**. A line appears at the top center
    ("Tell your hand what to do…"). If it does not appear, the brain is not
    ready yet.
 5. Set **Speed** on the bar to **8×** (or **Instant**), so the claw's and
@@ -187,7 +187,7 @@ Type into **Marty's** box (not the top line):
 | G1 | `put a box on the table` | Marty's short line, then a ✓ line on his card with the hand's report, and a box on the table |
 | G2 | `what does Dusty do?` | an ordinary answer about Dusty; **nothing moves** |
 
-Then ⋮ → untick **Move my hand by word**, and again to Marty:
+Then ⋮ → untick **Move my hand by words**, and again to Marty:
 
 | # | Sentence | Expected |
 |---|---|---|
@@ -244,6 +244,8 @@ Tick the switch again afterwards.
 | J5 | `reset the view` | back to the usual view of the table |
 | J6 | `what am I holding?` | answered from the listing; nothing moves |
 | J7 | (a person, with the microphone) say `put a box on the table` | the answer is read aloud as well as shown |
+| J8 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the one back on your work area`, `put the original back` | inside the bubble: the copy goes on the robot's desk, then the original comes off Mimi's platform (the copy is set aside first) |
+| J9 | type a sentence, press Enter, then type another without clicking | the cursor is still in the line after the first one finishes |
 
 ## What to report
 

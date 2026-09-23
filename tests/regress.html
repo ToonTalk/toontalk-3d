@@ -1721,6 +1721,9 @@ async function handByWordCheck(D, w) {
     'sol: loosen': { steps: [ { do: 'erase', path: [] } ], say: 'Any number.' },
     'sol: add on desk': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 'desk' } ], say: 'Added.' },
     'sol: open the panel': { steps: [ { do: 'open', of: '#1' }, { do: 'drop' } ], say: 'The panel is out.' },
+    'pb: to the copier': { steps: [ { do: 'copy' } ], say: 'Copied.' },
+    'pb: back on the desk': { steps: [ { do: 'drop', on: 'desk' } ], say: 'On the desk.' },
+    'pb: a 2 on the one': { steps: [ { do: 'take', from: 'numbers' }, { do: 'type', text: '2' }, { do: 'drop', on: 'platform' } ], say: 'Added.' },
     'k: a nest': { steps: [ { do: 'take', from: 'nests' }, { do: 'drop' } ], say: 'A nest.' },
     'k: feed the bird': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 'bird' } ], say: 'Fed.' },
     'k: vacuum the nest': { steps: [ { do: 'vacuum', what: 'nest' } ], say: 'Gone.' },
@@ -1750,7 +1753,7 @@ async function handByWordCheck(D, w) {
       martyQ = sys + '\n' + q;   // the context rides in the system prompt
       // a weak brain's placeholder: "hand" as the word from the reply format, on a question -- nothing may move
       if (/what does Dusty do/.test(q)) return JSON.stringify({ say: 'Dusty removes things.', demo: null, fetch: null, hand: 'sentence' });
-      const on = /hand-by-word switch is ON/.test(martyQ);
+      const on = /hand-by-words switch is ON/.test(martyQ);
       return JSON.stringify(on ? { say: 'Your hand is on it.', demo: null, fetch: null, hand: true }
                                : { say: 'I cannot move your hand.', demo: null, fetch: null });
     }
@@ -2261,13 +2264,33 @@ async function handByWordCheck(D, w) {
     const r64 = await driven(D.hand('ar: give the bench robot a 5'));
     await driven(new Promise(r => setTimeout(r, 800)));
     const ok64 = r64.ok && /\(the robot at the bench/.test(lastQ) && String(D.stations.stand?.occupant?.userData?.value?.n) !== '1';
+    // 66. Ken (23 Sep): inside the bubble, after Mimi copied the 1, "put the one back on your work area"
+    // found no "desk" -- the empty desk is a place; and a drop on the original on her platform works in the bubble too
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: 0.2, z: 1.7, thing: { kind: 'robot' } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    const lineIn = D.doc.getElementById('handIn');
+    lineIn.focus();
+    const focusTook = D.doc.activeElement === lineIn;
+    await driven(D.hand('give it a 1'));
+    const r66 = await driven(D.hand('pb: to the copier'));
+    const copy66 = w.__handHeld();
+    const r67 = await driven(D.hand('pb: back on the desk'));
+    const ok66 = r66.ok && r67.ok && !!copy66 && D.stations.stand?.occupant === copy66 && !!D.stations.copyIn?.occupant && /\("desk"\) is empty/.test(lastQ);
+    const r68 = await driven(D.hand('pb: a 2 on the one'));
+    const spots68 = Object.values(D.stations).filter(st => /^s\d+$/.test(st?.id || '') && st.occupant).map(st => String(st.occupant.userData.value?.n));
+    const ok68 = r68.ok && !D.stations.copyIn?.occupant && spots68.includes('3');
+    // the line keeps the cursor after a sentence, and the log stays shut unless asked for
+    const ok69 = !focusTook || D.doc.activeElement === lineIn;
+    const ok70 = !D.doc.getElementById('handLog').classList.contains('on');
+    await driven(D.hand('leave the bubble'));
     const saidBtn = !!D.doc.getElementById('saidLogBtn');
     const wsLines = [...D.doc.getElementById('handLog').children].filter(c => /\bws\b/.test(c.className)).length;
     const logN = D.doc.getElementById('handLog').children.length;
-    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && ok57 && ok58 && ok59 && ok65 && ok60 && ok61 && ok63 && ok64 && saidBtn && wsLines > 5 && logN >= 18;
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && ok57 && ok58 && ok59 && ok65 && ok60 && ok61 && ok63 && ok64 && ok66 && ok68 && ok69 && ok70 && saidBtn && wsLines > 5 && logN >= 18;
     put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too; Mimi copies and Dusty removes; give finds the table robot and the claw copies inside the bubble; names, the notebook, the yard, Ruby and Dusty on the thought, the panel door'
-      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' platform-drop=' + ok57 + ' (' + nums57 + ') look-notebook=' + ok58 + ' mic-deaf-while-speaking=' + ok59 + ' mic-advice-when-not-allowed=' + ok65 + ' (' + micLog.join('>') + ') open-that-thing=' + ok60 + ' plan-made-labels=' + ok61 + ' give-bird=' + ok63 + ' bench-robot-listed=' + ok64 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
-    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r52, r53, r54, r55, r56, r57, r58, r60, r61, r62, r63, r64]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' platform-drop=' + ok57 + ' (' + nums57 + ') look-notebook=' + ok58 + ' mic-deaf-while-speaking=' + ok59 + ' mic-advice-when-not-allowed=' + ok65 + ' (' + micLog.join('>') + ') open-that-thing=' + ok60 + ' plan-made-labels=' + ok61 + ' give-bird=' + ok63 + ' bench-robot-listed=' + ok64 + ' put-back-on-desk=' + ok66 + ' drop-on-original-in-bubble=' + ok68 + ' (' + spots68 + ') line-keeps-cursor=' + ok69 + (focusTook ? '' : '(no focus here)') + ' log-shut=' + ok70 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
+    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r52, r53, r54, r55, r56, r57, r58, r60, r61, r62, r63, r64, r66, r67, r68]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
     if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
     if (!ok56) put('ERR   spoken: ' + JSON.stringify(spoke).slice(0, 300), 'dim');
     if (!ok19) put('ERR   thoughts: ' + [t19, t20, t21].join(' | ').slice(0, 300), 'dim');
