@@ -8977,3 +8977,31 @@ be overheard. A seam, window.__handSR, lets a check hand the line a
 stand-in recognizer: handByWordCheck's mic-deaf-while-speaking listens,
 has an answer spoken, sees abort and 🔇, feeds the echo and finds it
 dropped, and sees listening start again (start>speak>abort>start>stop).
+
+## The Claude artifact's report on the hand
+
+The first run of the hand inside the published claude.ai artifact (Claude
+in Chrome, 23 Sep; an artifact published before several rounds, so no
+"What was said", no answers, and the run crash still in it). With the
+viewer's Claude as the brain: 25 of 30 in the like-for-like sections.
+Its hand-side findings, now fixed. H1, A FALSE ✓: "open the pad's panel"
+with a 1 in the hand opened the NUMBER's panel -- handPanelOut took the
+held thing and never looked at "of"; now it sets the held thing down when
+"of" names another. H2: a thing the plan makes had no label -- the brain
+wrote "#2" for a fresh box, or named it "b" and wrote "#b"; now a thing a
+step brings to the hand joins the listing at the next number, and "#b"
+finds the name b. H3: "give the bird a 1" -- "a bird is not a robot";
+giving to a bird drops on her, and the prompt says how. H4: "give to #N"
+hit a 7 -- the robot at the bench was only prose in the listing; it is a
+numbered thing now ("the robot at the bench"), and giving to it checks
+its desk first. H5 (run silent) was the BigInt crash already fixed.
+Forgiving where one reading is the only sense: take or pickup with a full
+hand at the table sets down first; copy with an empty hand copies what is
+named or on the desk; lookup by a kind ("nest") finds the only entry of
+that kind. D3's half-lesson is the brain's and the workshop's (a failed
+plan's earlier steps were real steps). THE MICROPHONE IN AN ARTIFACT (Ken:
+"not allowed"): the frame is never granted it and no page can change
+that; the refusal now says how to use the computer's own dictation
+(Windows+H, Fn Fn, a phone keyboard's microphone) into the line, which
+works anywhere. handByWordCheck: open-that-thing, plan-made-labels,
+give-bird, bench-robot-listed.

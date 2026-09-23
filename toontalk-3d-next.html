@@ -26642,7 +26642,7 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"file"} files the held thing in the notebook; {"do":"lookup","name":T} takes a copy of what is filed under that name.
 Any take, pickup, copy, lookup or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
 
-Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 1 of #2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". A number dropped on a number already ADDS: to add, just drop it; type "*", "/", "^" or "-" only to do something else. Do ONLY what was said: never add a "leave", "give", "run" or "copy" the sentence did not ask for. End with the hand EMPTY (drop what it holds) unless the sentence says to take, hold or pick up something -- but never add a drop to "go" or "leave": a person going through a door or out of a thought bubble carries what they hold. Things "(riding on #N)" ride on thing N; a panel's things are marked by where they stand in it. "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 1. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.
+Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 1 of #2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. To give a bird something, drop it on the bird ("drop","on" the bird): she flies it to her nest. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". A number dropped on a number already ADDS: to add, just drop it; type "*", "/", "^" or "-" only to do something else. Do ONLY what was said: never add a "leave", "give", "run" or "copy" the sentence did not ask for. End with the hand EMPTY (drop what it holds) unless the sentence says to take, hold or pick up something -- but never add a drop to "go" or "leave": a person going through a door or out of a thought bubble carries what they hold. Things "(riding on #N)" ride on thing N; a panel's things are marked by where they stand in it. "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 1. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.
 
 Each thing's place ON THE SCREEN, as the person sees it, is in brackets: [left], [middle] or [right], and [front] or [back]; [out of view] when the camera does not show it -- use it for "the box on the left", "the robot at the back". Things in the listing are labelled #1, #2...; in a step write "#2" for thing #2 (never a bare 2, which could be read as the number two).
 
@@ -26729,6 +26729,9 @@ function handListing() {
         : id === 'copyOut' ? ' (in Mimi\u2019s tray)' : id === 'perch' ? ' (on the perch)' : '');
     }
   }
+  // THE ROBOT AT THE BENCH is not on the table, and was named only in prose:
+  // a brain that gave "to" it by number hit whatever held that number
+  if (activeBot?.node && !things.includes(activeBot.node)) { things.push(activeBot.node); where.push(' (the robot at the bench; its desk is "desk")'); }
   // what sits in a hole is a thing of its own, with its own number (the
   // tester's finding 3: "put the 3 on the 1" with both in a box was refused
   // for want of a way to name them)
@@ -26836,6 +26839,17 @@ function handCamLook(t) {
     enqueue(step);
   });
 }
+// THE MICROPHONE REFUSED: in a claude.ai artifact the frame is never granted
+// it, and no page can change that -- but the computer's own dictation types
+// into whatever text field has focus, in any page, so say how (Ken, 23 Sep)
+function micRefusedWords(err) {
+  if (err !== 'not-allowed' && err !== 'service-not-allowed') return 'The microphone said: ' + (err || 'no');
+  const mac = /Mac/i.test(navigator.platform || navigator.userAgent), phone = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  const how = phone ? 'tap the microphone on your keyboard'
+    : mac ? 'press Fn twice (Dictation)' : 'press Windows+H (voice typing)';
+  return 'This page is not allowed to use the microphone' + (window.top !== window ? ' (a page inside another page, such as a Claude artifact, is not given one)' : '')
+    + '. Your computer can still type what you say: click the line, ' + how + ', speak, then press Enter.';
+}
 // A key the hand "presses": the same listener a real key reaches.
 const handKey = (key) => window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
 function handStatus(text) {
@@ -26934,9 +26948,16 @@ async function handDo(sentence, opts = {}) {
 }
 // THE PANEL OF A THING comes out as a tray on the table (Ctrl+P): the thing
 // is picked up if it is not in the hand, and the tray is there afterwards.
-async function handPanelOut(step, ref, clickOn) {
+async function handPanelOut(step, ref, clickOn, setDown) {
   let h = inHand();
   if (!h && step.of == null) return 'pick the thing up first, or say whose panel ("of": its number)';
+  // the panel of THAT thing, not of whatever the hand happens to hold (the
+  // tester's I7: the number's panel opened, and the hand said the pad's had)
+  if (h && step.of != null) {
+    const want = ref(step.of);
+    if (!want) return 'there is no thing "' + step.of + '" in the listing';
+    if (want !== h) { const r = await setDown(); if (r !== true) return r; h = null; }
+  }
   if (!h) { const t = ref(step.of); if (!t) return 'there is no thing "' + step.of + '" in the listing'; clickOn(t); await handSettle(); h = inHand(); if (h !== t) return 'it did not come to the hand'; }
   if (h.userData.panel) return 'a panel has no panel of its own';
   if (h.__panelTray) return true;
@@ -26972,11 +26993,19 @@ function handNormalize(step, things) {
 let handPrevDo = null;
 async function handStep(step0, things, names) {
   const step = handNormalize(step0, things);
-  try { return await handStepDo(step, things, names); } finally { handPrevDo = step.do; }
+  try {
+    const r = await handStepDo(step, things, names);
+    // WHAT THE PLAN MAKES JOINS THE LISTING: a fresh box is #N+1, which is
+    // the label a brain naturally writes for it (the tester's "#2", "#8")
+    const h = inHand();
+    if (r === true && h && !things.includes(h)) things.push(h);
+    return r;
+  } finally { handPrevDo = step.do; }
 }
 async function handStepDo(step, things, names) {
   const ref = (r) => {
     if (typeof r === 'string' && names.has(r)) return names.get(r);
+    if (typeof r === 'string' && names.has(r.trim().replace(/^#/, ''))) return names.get(r.trim().replace(/^#/, ''));   // "#b" for the name b
     if (typeof r === 'string' && /^#\d+$/.test(r.trim())) r = +r.trim().slice(1);
     if (typeof r === 'string' && !/^\d+$/.test(r.trim())) {
       // a thing's OWN kind first ("bird" is the bird, not the nest she came with)
@@ -27007,6 +27036,7 @@ async function handStepDo(step, things, names) {
   if (step.do === 'take') {
     const id = String(step.from || '');
     if (!id) return 'a take needs a stack: numbers, boxes, texts, minis (robots), nests, scales, dice or rooms';
+    if (inHand() && mode === 'world') { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one hand: set down first
     if (!STACK_IDS.includes(id)) return 'there is no stack called "' + id + '" \u2014 the stacks are numbers, boxes, texts, minis, nests, scales, dice, rooms';
     if (mode === 'training' && id === 'minis') return 'a robot cannot make robots — leave the thought bubble to take one';
     if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
@@ -27039,6 +27069,11 @@ async function handStepDo(step, things, names) {
   }
   if (step.do === 'copy') {
     if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
+    if (!inHand()) {
+      // "copy it" with nothing in the hand: the thing named, or the one on the desk (the tester's E1)
+      const t = step.what != null ? ref(step.what) : stations.stand?.occupant;
+      if (t) { const r = await handStep({ do: 'pickup', what: step.what ?? 'desk' }, things, names); if (r !== true) return r; }
+    }
     if (!inHand()) return 'nothing is in the hand to copy';
     if (stations.copyIn.occupant) return 'something is already on Mimi\u2019s platform \u2014 pick it up first ("platform")';
     const orig = inHand();
@@ -27074,6 +27109,7 @@ async function handStepDo(step, things, names) {
     const t = ref(step.what);
     if (!t) return 'there is no thing "' + step.what + '" in the listing' + (step.what === 'desk' ? ' \u2014 the desk is empty' : '');
     if (!stillHere(t)) return 'that thing is gone';
+    if (inHand() && inHand() !== t && mode === 'world') { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one hand: set down first
     if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     clickOn(t);
     await handSettle();
@@ -27200,7 +27236,14 @@ async function handStepDo(step, things, names) {
     if (step.to != null) {
       const t = ref(step.to);
       if (!t) return 'there is no thing "' + step.to + '" in the listing';
+      if (t.userData.kind === 'bird') {
+        // a bird is given something by dropping it on her: she flies it to her nest
+        clickOn(t); await handSettle();
+        if (inHand() === it) return 'the bird did not take it';
+        return true;
+      }
       if (t.userData.kind !== 'robot') return handThingText(t) + ' is not a robot';
+      if (t === activeBot?.node && stations.stand?.occupant) return 'the robot\u2019s desk already holds ' + handThingText(stations.stand.occupant) + ' \u2014 take that first ("desk")';
       clickOn(t);
     } else if (activeBot) {
       if (stations.stand?.occupant) return 'the robot\u2019s desk already holds ' + handThingText(stations.stand.occupant) + ' \u2014 take that first ("desk")';
@@ -27286,7 +27329,7 @@ async function handStepDo(step, things, names) {
       return 'the hand is at the table already';
     }
     if (to === 'panel') {
-      const r = await handPanelOut(step, ref, clickOn);
+      const r = await handPanelOut(step, ref, clickOn, () => handStep({ do: 'drop' }, things, names));
       if (r !== true) return r;
       const X = inHand();
       const tray = X?.__panelTray;
@@ -27328,8 +27371,8 @@ async function handStepDo(step, things, names) {
     return true;
   }
   if (step.do === 'open') {
-    const had = inHand();
-    const r = await handPanelOut(step, ref, clickOn);
+    const had = step.of == null || ref(step.of) === inHand() ? inHand() : null;
+    const r = await handPanelOut(step, ref, clickOn, () => handStep({ do: 'drop' }, things, names));
     if (r !== true) return r;
     // it was picked up only to reach its panel: set it back down (the tester's I7)
     if (!had && inHand()) { const r2 = await handStep({ do: 'drop' }, things, names); if (r2 !== true) return r2; }
@@ -27352,8 +27395,14 @@ async function handStepDo(step, things, names) {
     if (!want) return 'a name is needed';
     const pages = nb.userData.pages || [];
     const slot = pages.findIndex(pg => pg && [pg.label, pg.text, pg.name, pg.value?.n].filter(x => x != null).some(x => String(x).toLowerCase() === want));
-    if (slot < 0) return 'nothing filed under "' + step.name + '" \u2014 the notebook has ' + pages.filter(Boolean).length + ' entries';
-    handleClick({ kind: 'nbItem', nb, slot }); await handSettle();
+    let slot2 = slot;
+    if (slot2 < 0) {
+      const kind = HAND_KIND_OF[HAND_STACK_WORDS[handWord(step.name)]] ?? handWord(step.name).replace(/s$/, '');
+      const same = pages.map((pg, i) => pg && pg.kind === kind ? i : -1).filter(i => i >= 0);
+      if (same.length === 1) slot2 = same[0];
+    }
+    if (slot2 < 0) return 'nothing filed under "' + step.name + '" \u2014 the notebook has ' + pages.filter(Boolean).length + ' entries';
+    handleClick({ kind: 'nbItem', nb, slot: slot2 }); await handSettle();
     if (!inHand()) return 'the copy did not come out of the notebook';
     if (step.as) names.set(String(step.as), inHand());
     return true;
@@ -27451,7 +27500,7 @@ async function handStepDo(step, things, names) {
         }
         if (interim) inp.value = (pile ? pile + ' ' : '') + interim.trim();
       };
-      rec.onerror = (e) => { if (e.error === 'no-speech' || e.error === 'aborted') return; sayAttn('The microphone said: ' + (e.error || 'no')); if (e.error === 'not-allowed') stop(); };
+      rec.onerror = (e) => { if (e.error === 'no-speech' || e.error === 'aborted') return; sayAttn(micRefusedWords(e.error)); if (e.error === 'not-allowed' || e.error === 'service-not-allowed') stop(); };
       rec.onend = () => { if (on && !deaf) { try { rec.start(); } catch { stop(); } } };
       try { rec.start(); } catch { stop(); return; }
       on = true; pile = '';
@@ -28225,7 +28274,7 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
           martyAskNow();
         }
       };
-      rec.onerror = (e) => { martySay('The microphone said: ' + (e.error || 'no')); };
+      rec.onerror = (e) => { martySay(micRefusedWords(e.error)); };
       rec.onend = () => { mic.textContent = '\u{1F3A4}'; listening = null; };
       try { rec.start(); } catch { mic.textContent = '\u{1F3A4}'; listening = null; }
     };
