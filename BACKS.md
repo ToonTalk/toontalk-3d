@@ -8788,3 +8788,33 @@ hole-things (the 3 out of hole 1 onto the 1: 4,-), desk-drop (the desk
 reads 2), full-desk (refused, "take that first"), riders-survive (1/1
 through a bubble). One run wrote no verdict: the dev server had died
 with the app restart, not the check.
+
+## The hand by word with Gemini Nano: a forgiving hand
+
+Claude in Chrome drove the next build with Chrome's built-in Gemini Nano as
+the brain (23 Sep): 1 sentence in 25 worked. Nano never wrote "take": it
+wrote "pickup boxes", "take" with "what", "vacuum boxes" -- meaning the
+right thing, in the wrong words -- and never used the listing's numbers.
+Its failed plans went into the history and became the next call's example.
+Marty, as the door to the hand, passed "put" (his own paraphrase), then the
+reply format's placeholder word "sentence" on a question. And the prompt
+had "types on the inHand() thing": the round that renamed held to inHand()
+in the module renamed it in the brain's instructions too. Now: THE HAND
+FORGIVES (handNormalize before every step): a stack's own name after
+pickup is a take ("pickup boxes"), a kind's name is the one thing of that
+kind in the listing and a take when there is none ("pickup number", "drop
+on box", "vacuum box"), take with "what" is take with "from", "#3" is
+thing 3, and an empty take says which stacks there are. THE HISTORY KEEPS
+ONLY WHAT WORKED, and five worked examples sit in the prompt instead. THE
+LISTING LABELS THINGS #1, #2 (a bare 1 could be the number one); in the
+yard it says the ground, and that the notebook stayed inside. MARTY'S
+"hand" IS A BOOLEAN: true hands over the visitor's own sentence, never his
+words, and his card then says how it went (✓/✗ and the hand's line), not
+only his promise. The keyless model question (Ken): a published artifact
+asks for a TIER (quick) and Anthropic chooses the model behind it; the
+chat-preview route names claude-sonnet-5, as built. handByWordCheck:
+forgiving (a box by "pickup boxes", a 12 by "take what numbers", the 12
+into the box by "pickup number" and "on box", "vacuum box", the empty
+take's message, the #N listing) and placeholder-still (hand:"sentence" on
+a question moves nothing). Whether Nano is enough after this is for the
+next tester's run to say.

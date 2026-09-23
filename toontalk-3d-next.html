@@ -25264,7 +25264,7 @@ const martyActivityText = () => {
 };
 
 const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits APPENDS to what it shows — a fresh 1 typed 2 reads 12 — so press Backspace first to clear it; the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, press Backspace, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more — erasing never starts it: a robot runs only when Run what it learned is pressed, and it repeats round after round for as long as its thought still fits what is on its desk, until Stop or the Rounds limit, so a robot that adds one to "any number" counts on and on rather than adding one once; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
-If the visitor tells you to pick up, take, fetch, put, drop, type on or move something ("put a box on the table", "give the robot a 3"): when the context says the hand-by-word switch is ON, put their instruction in "hand", word for word, and in "say" one short line such as "Your hand is on it." -- the workshop's own hand makes the moves, not you, and it reports for itself. When the switch is OFF, say plainly that you cannot move their hand and that "Move my hand by word" in the \u22ee menu will let their own hand do it. Never say a thing is on the table unless this very reply fetched it.
+If the visitor tells you to pick up, take, fetch, put, drop, type on or move something ("put a box on the table", "give the robot a 3"): when the context says the hand-by-word switch is ON, set "hand" to true and "say" to one short line such as "Your hand is on it." -- the workshop's own hand is given their sentence and makes the moves, not you, and it reports for itself. For anything else "hand" is false. When the switch is OFF, say plainly that you cannot move their hand and that "Move my hand by word" in the \u22ee menu will let their own hand do it. Never say a thing is on the table unless this very reply fetched it.
 
 Rules for you:
 - The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
@@ -25276,7 +25276,7 @@ Rules for you:
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
 - Demos are FIXED scripts — the blurb after each name says exactly what it covers. Offer one ONLY if its blurb covers what was asked; if nothing covers it, set demo to null and say so plainly ("I have no demonstration of that, but here is how it works…"). Never promise a demo will use the visitor's own numbers or words, and never offer a demo you have already given for the same question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
-- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null", "hand": "sentence-or-null"} — "hand" is null unless the hand-by-word switch is ON and the visitor is telling you to move something (see above); "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
+- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null", "hand": false} — "hand" is true only when the hand-by-word switch is ON and the visitor is telling you to move something (see above); "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
 // Marty answers from THE MANUAL, not from what a model imagines a workshop
 // like this might do -- that is what had him inventing ways to type a fraction
 // and denying that numbers show decimals at all. A live copy is preferred, so
@@ -25347,7 +25347,7 @@ const martyReplySchema = () => ({
   properties: { say: { type: 'string' },
                 demo: { enum: [...Object.keys(MARTY_DEMOS), null] },
                 fetch: { enum: [...MARTY_FETCHABLE, null] },
-                hand: { type: 'string' } },
+                hand: { type: 'boolean' } },
   required: ['say'],
   additionalProperties: false,
 });
@@ -25884,7 +25884,7 @@ async function askMarty(q) {
     try {
       const m = reply.match(/\{[\s\S]*\}/);
       const j = JSON.parse(m ? m[0] : reply);
-      text = j.say; demo = j.demo; fetchId = j.fetch; handSay = typeof j.hand === 'string' ? j.hand.trim() : null;
+      text = j.say; demo = j.demo; fetchId = j.fetch; handSay = (j.hand === true || j.hand === 'true') ? q : null;   // the visitor's own words, never his paraphrase
     } catch {
       // a reply cut off mid-JSON must still read as Marty talking, not as
       // machinery: pull the words out of whatever arrived
@@ -25898,7 +25898,7 @@ async function askMarty(q) {
     }
   }
   martyHistory.push({ role: 'user', content: q },
-                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null, fetch: fetchId ?? null, hand: handSay || null }) });
+                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null, fetch: fetchId ?? null, hand: !!handSay }) });
   if (martyHistory.length > 12) martyHistory = martyHistory.slice(-12);
   if (text) martySay(text);
   // A NEW ANSWER SUPERSEDES THE OLD OFFER: the Show-me button of an earlier
@@ -25912,7 +25912,10 @@ async function askMarty(q) {
   // ...and a sentence for the HAND, said to him by mistake or on purpose: with
   // the switch on, either box and either microphone move the hand the same
   // way (Ken: "does it matter if I use the workshop or Marty's microphone?")
-  if (handSay && handWordsOn() && handBrainReady()) await handDo(handSay);
+  if (handSay && handWordsOn() && handBrainReady()) {
+    const r = await handDo(handSay);
+    if (r?.say) martySay((r.ok ? '\u2713 ' : '\u2717 ') + r.say);   // his card says how it went, not only his promise
+  }
 }
 
 // --- Marty makes THINGS ------------------------------------------------------
@@ -26550,16 +26553,16 @@ const HAND_SYSTEM = `You move a person's HAND in ToonTalk 3D, a workshop where p
 
 The hand holds ONE thing at a time. Steps, in order:
 {"do":"take","from":S} takes a FRESH thing from stack S: "numbers" (a 1), "texts" (a blank pad), "boxes" (a box with 2 holes), "minis" (a robot), "scales" (a scale, two pans), "nests" (a nest), "dice" (a die), "rooms" (a house). The hand must be empty.
-{"do":"pickup","what":N} picks up thing N from the listing. The hand must be empty.
-{"do":"type","text":T} types on the inHand() thing. A number becomes T ("100", "-5"; "+" "-" "*" "/" "^" typed on it choose what it does when dropped on another number: add, subtract, multiply, divide, power). A pad gets T written on it. A box gets T holes ("3"). A die gets T faces.
-{"do":"drop"} sets the inHand() thing down on the table.
+{"do":"pickup","what":"#N"} picks up thing #N from the listing (a thing ALREADY there; a fresh one is "take"). The hand must be empty.
+{"do":"type","text":T} types on the held thing. A number becomes T ("100", "-5"; "+" "-" "*" "/" "^" typed on it choose what it does when dropped on another number: add, subtract, multiply, divide, power). A pad gets T written on it. A box gets T holes ("3"). A die gets T faces.
+{"do":"drop"} sets the held thing down on the table.
 {"do":"drop","on":N} drops it ON thing N: onto a number it combines; onto a robot it gives the robot the thing; onto a pad it rides on it.
 {"do":"drop","on":N,"hole":K} puts it into hole K of box or scale N, counting from 0 on the left; a scale's left pan is hole 0, its right pan hole 1.
-{"do":"drop","on":N,"side":"left"|"right"} joins a inHand() pad onto pad N's side.
+{"do":"drop","on":N,"side":"left"|"right"} joins a held pad onto pad N's side.
 {"do":"give"} hands it to the robot at the bench, or, with none there, to the only robot on the table; {"do":"give","to":N} names the robot. Giving an untrained robot something opens its thought bubble.
 {"do":"pickup","what":"desk"} takes what is on the bench robot's desk. Inside a robot's thought bubble the hand is the robot's claw, the thing it was given starts in the claw, and the stacks and Mimi work there; {"do":"leave"} steps out when the lesson is done.
 {"do":"run"} presses Run so the robot at the bench works.
-{"do":"copy"} puts the inHand() thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. Mimi is also called the copier or the copy machine.
+{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. Mimi is also called the copier or the copy machine.
 {"do":"vacuum","what":N} has Dusty the vacuum remove thing N from the table for good. The hand must be empty (drop first).
 {"do":"name","text":T} names the held thing (a bird, nest, box, scale, die, robot...) -- pads and numbers take "type" instead.
 {"do":"erase","path":[...]} has Ruby make a part of the robot's thought one step more general (a 3 becomes any number); {"do":"remove","path":[...]} has Dusty make it anything at all. Only inside a thought bubble; the path is hole numbers from the given thing, [] for the whole.
@@ -26567,7 +26570,16 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"file"} files the held thing in the notebook; {"do":"lookup","name":T} takes a copy of what is filed under that name.
 Any take, pickup, copy, lookup or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
 
-Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 0 of 2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 0. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.`;
+Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 0 of 2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 0. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.
+
+Things in the listing are labelled #1, #2...; in a step write "#2" for thing #2 (never a bare 2, which could be read as the number two).
+
+Examples (the listing, what was said, the reply):
+The table is empty. The hand is empty. / "put a box on the table" -> {"steps":[{"do":"take","from":"boxes"},{"do":"drop"}],"say":"A box on the table."}
+The table is empty. The hand is empty. / "make a 12" -> {"steps":[{"do":"take","from":"numbers"},{"do":"type","text":"12"},{"do":"drop"}],"say":"A 12 on the table."}
+On the table: #1: a box with 2 holes (empty). The hand is empty. / "put a 3 in the box" -> {"steps":[{"do":"take","from":"numbers"},{"do":"type","text":"3"},{"do":"drop","on":"#1","hole":0}],"say":"A 3 in the box."}
+On the table: #1: a box with 2 holes (hole 0: the number 3); #2: the number 3 (in hole 0 of #1). The hand is empty. / "pick up the 3" -> {"steps":[{"do":"pickup","what":"#2"}],"say":"The 3 is in your hand."}
+The table is empty. The hand is empty. / "what is a nest?" -> {"steps":[],"say":"I only move things \u2014 Marty answers questions."}`;
 const handReplySchema = () => ({
   type: 'object',
   properties: {
@@ -26632,10 +26644,11 @@ function handListing() {
   for (let i = 0; i < top; i++) {
     const hs = things[i].userData.holes;
     if (!hs) continue;
-    hs.forEach((hh, k) => { if (hh.thing) { things.push(hh.thing); where.push(' (in hole ' + k + ' of ' + (i + 1) + ')'); } });
+    hs.forEach((hh, k) => { if (hh.thing) { things.push(hh.thing); where.push(' (in hole ' + k + ' of #' + (i + 1) + ')'); } });
   }
-  const lines = things.map((t, i) => (i + 1) + ': ' + handThingText(t) + where[i]);
-  let text = lines.length ? 'On the table: ' + lines.join('; ') + '.' : 'The table is empty.';
+  const lines = things.map((t, i) => '#' + (i + 1) + ': ' + handThingText(t) + where[i]);
+  const place = yardIn ? 'the ground' : 'the table';
+  let text = lines.length ? 'On ' + place + ': ' + lines.join('; ') + '.' : (yardIn ? 'The ground is empty.' : 'The table is empty.');
   if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk ("desk")' : ', its desk empty') + '.';
   if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): the hand is the robot\u2019s own claw, and what is done here is what the robot learns. The stacks and Mimi work in here (no new robots); "leave" steps out when the lesson is done.';
   const here = [];
@@ -26645,7 +26658,8 @@ function handListing() {
   text += h ? (mode === 'training' ? ' In the robot\u2019s claw: ' : ' In the hand: ') + handThingText(h) + '.' : (mode === 'training' ? ' The claw is empty.' : ' The hand is empty.');
   if (mode === 'training' && condition) text += ' The robot\u2019s thought (what it must be given to act): ' + condText(condition) + '. A part is named by its path of hole numbers from the given thing ([] is the whole).';
   const nb = mainNotebook();
-  if (nb && nb.parent === benchRoot) {
+  if (yardIn && nb && (yardIn.things || []).includes(nb)) text += ' The notebook stayed inside, with the table.';
+  else if (nb && nb.parent === benchRoot) {
     const names = (nb.userData.pages || []).filter(Boolean).map(pg => pg.label || pg.text || (pg.value ? ratShort(rat(BigInt(pg.value.n), BigInt(pg.value.d || 1))) : null) || pg.kind).slice(0, 12);
     text += names.length ? ' The notebook has: ' + names.map(n => '"' + String(n).slice(0, 24) + '"').join(', ') + '.' : ' The notebook is empty.';
   }
@@ -26734,8 +26748,6 @@ async function handDo(sentence) {
       console.warn('[hand] not a plan:', String(raw).slice(0, 2000));
       return handReport(false, 'That came back as something the hand could not follow \u2014 the console has it.');
     }
-    handHistory.push({ role: 'user', content: q }, { role: 'assistant', content: JSON.stringify(plan) });
-    while (handHistory.length > 8) handHistory.shift();
     if (!plan.steps.length) return handReport(false, plan.say || 'The brain found nothing for the hand to do.');
     handStatus('moving\u2026');
     const names = new Map();
@@ -26753,6 +26765,8 @@ async function handDo(sentence) {
     // or the next sentence's "take a number" fails for no visible reason
     const entered = mode === 'training' && mode0 !== 'training'
       ? ' — you are inside the robot’s thought bubble now: show it what to do, then leave.' : '';
+    handHistory.push({ role: 'user', content: q }, { role: 'assistant', content: JSON.stringify(plan) });
+    while (handHistory.length > 8) handHistory.shift();
     return handReport(true, (plan.say || 'Done.') + entered, done);
   } finally { handBusy = false; handStatus(''); }
 }
@@ -26768,9 +26782,44 @@ async function handPanelOut(step, ref, clickOn) {
   if (!inHand()?.__panelTray) return 'the panel did not come out';
   return true;
 }
-async function handStep(step, things, names) {
+// WHAT A WEAKER BRAIN WRITES, read the way it meant it (Gemini Nano, 23
+// Sep: "pickup boxes" for a fresh box, "take" with "what", "vacuum boxes"
+// with one box on the table). A stack's own name is the stack; a kind's
+// name is the one thing of that kind in the listing.
+const HAND_STACK_WORDS = { box: 'boxes', boxes: 'boxes', number: 'numbers', numbers: 'numbers', one: 'numbers',
+  robot: 'minis', robots: 'minis', mini: 'minis', minis: 'minis', nest: 'nests', nests: 'nests', bird: 'nests', birds: 'nests', egg: 'nests',
+  scale: 'scales', scales: 'scales', die: 'dice', dice: 'dice', pad: 'texts', pads: 'texts', text: 'texts', texts: 'texts',
+  room: 'rooms', rooms: 'rooms', house: 'rooms', houses: 'rooms', sound: 'sounds', sounds: 'sounds' };
+const HAND_KIND_OF = { boxes: 'box', numbers: 'number', minis: 'robot', nests: 'nest', scales: 'scale', dice: 'die', texts: 'text', rooms: 'room', sounds: 'sound' };
+const handWord = (w) => String(w ?? '').trim().toLowerCase().replace(/^(a|an|the|fresh|new)\s+/, '').replace(/\s+stack$/, '');
+function handNormalize(step, things) {
+  const st = { ...step };
+  if (st.do === 'take' && !st.from && st.what != null) { st.from = st.what; delete st.what; }
+  if (st.do === 'take' && st.from != null) st.from = HAND_STACK_WORDS[handWord(st.from)] ?? st.from;
+  if (st.do === 'pickup' && typeof st.what === 'string' && !/^#?\d+$/.test(st.what.trim())
+      && !['desk', 'platform', 'tray', 'hand', 'held', 'claw'].includes(st.what)) {
+    const w = handWord(st.what), stack = HAND_STACK_WORDS[w];
+    if (stack) {
+      const same = things.filter(t => t.parent && t.userData.kind === HAND_KIND_OF[stack]);
+      // the stack's own name ("boxes") is the stack; a thing's name ("box") is that thing when there is just one
+      if (w === stack || w === 'minis' || !same.length) return { ...st, do: 'take', from: stack, what: undefined };
+    }
+  }
+  return st;
+}
+async function handStep(step0, things, names) {
+  const step = handNormalize(step0, things);
   const ref = (r) => {
     if (typeof r === 'string' && names.has(r)) return names.get(r);
+    if (typeof r === 'string' && /^#\d+$/.test(r.trim())) r = +r.trim().slice(1);
+    if (typeof r === 'string' && !/^\d+$/.test(r.trim())) {
+      // a kind's name: the one thing of that kind
+      const stack = HAND_STACK_WORDS[handWord(r)];
+      if (stack) {
+        const same = things.filter(t => t.parent && t.userData.kind === HAND_KIND_OF[stack]);
+        if (same.length === 1) return same[0];
+      }
+    }
     if (r === 'desk') return stations.stand?.occupant ?? null;
     if (r === 'platform') return stations.copyIn?.occupant ?? null;
     if (r === 'tray') return stations.copyOut?.occupant ?? null;
@@ -26786,7 +26835,8 @@ async function handStep(step, things, names) {
     : handleClick(point ? { kind: 'thing', thing: t, point } : { kind: 'thing', thing: t });
   if (step.do === 'take') {
     const id = String(step.from || '');
-    if (!STACK_IDS.includes(id)) return 'there is no stack called "' + id + '"';
+    if (!id) return 'a take needs a stack: numbers, boxes, texts, minis (robots), nests, scales, dice or rooms';
+    if (!STACK_IDS.includes(id)) return 'there is no stack called "' + id + '" \u2014 the stacks are numbers, boxes, texts, minis, nests, scales, dice, rooms';
     if (mode === 'training' && id === 'minis') return 'a robot cannot make robots — leave the thought bubble to take one';
     if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     if (!stations[id]) return 'the ' + id + ' stack is not in this workshop';
