@@ -58,7 +58,11 @@ model. The same instructions work for any provider.
 4. ⋮ menu → **☑ 🖐 Move my hand by word**. A line appears at the top centre
    ("Tell your hand what to do…"). If it does not appear, the brain is not
    ready yet.
-5. Hand the tab to the tester. The switch stays on across reloads.
+5. Set **Speed** on the bar to **8×** (or **Instant**), so the claw's and
+   the birds' animations don't dominate the timings — inside a thought
+   bubble at 1× they take most of each sentence's 10–30 seconds.
+6. Hand the tab to the tester. The switch stays on across reloads (set the
+   speed again after each `?fresh` reload if it goes back to 1×).
 
 ## What the tester may and may not do
 
@@ -219,6 +223,10 @@ Tick the switch again afterwards.
 | I13 | `put a 7 on the pad`, then (log the listing) | the listing shows the 7 as a thing of its own, "riding on" the pad |
 | I14 | `open the pad's panel` (log the listing) | the tray is listed as "the panel (tray) of a pad…", not "a room" |
 | I15 | `make a 7`, `copy the 7`, then `vacuum the 7 on the table` | the hand ends empty after each sentence, and Dusty takes the 7 without a refusal |
+| I16 | `put a robot on the table`, `give it a 3`, `erase the 3 so it works for any number`, `leave`, then `give it a 5` | the robot keeps a lesson of doing nothing: given the 5, it recognises it and nothing happens (the log says it was trained to do nothing) |
+| I17 | `put a nest on the table`, `give the bird a 1`, then `vacuum the 1` | the 1 on the nest is listed ("on top of the nest") and Dusty takes it |
+| I18 | `vacuum the nest`, then `give the bird a 7` | with no nest, the bird flies off with the 7 and comes back without it — no complaint |
+| I19 | `put a nest on the table`, `call the bird posty and file her in the notebook`, `take posty out of the notebook`, then `give posty a 1` | a new nest grows for her; the 1 lands in the new nest only, the first nest stays empty |
 
 ## What to report
 

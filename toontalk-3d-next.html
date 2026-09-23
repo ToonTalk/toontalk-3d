@@ -11109,12 +11109,10 @@ function birdDeliver(bird, carried, fromClaw = false) {
     }
   }
   if (!nest || !inScene(nest)) {
-    const thing = carried;
-    // in a background world, and in the robot's claw, there is no hand to take
-    // it back into: it goes down on the table instead
-    if (thing && (fromClaw || worldStack.length)) { putOnBench(thing, benchSpot()); return; }
-    if (thing) takeIntoHand(thing);
-    return say('Her nest is gone — she has nowhere to take it.');
+    // NO NEST: she flies off with it, it is gone, and she comes back (Ken,
+    // 23 Sep: "not report a problem"). A letter posted to nowhere is lost.
+    if (carried) birdFlyAway(bird, carried, fromClaw);
+    return;
   }
   // A bird carrying mail out of the house she lives in: the house runs in an
   // instant, but the flight across your table is worth seeing, so it is handed
@@ -11227,6 +11225,55 @@ function birdDeliver(bird, carried, fromClaw = false) {
       else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
       refreshUI();
       // ...and what waited for her goes next, one flight at a time
+      const next = bird.__pending?.shift();
+      if (next) birdDeliver(bird, next.carried, next.fromClaw);
+    },
+  });
+}
+
+function birdFlyAway(bird, thing, fromClaw) {
+  clearUndo();
+  busy = true;
+  sfx('chirp');
+  const wasAt = bird.getWorldPosition(new THREE.Vector3());
+  const originHole = holeContaining(bird);
+  const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
+  detach(bird);
+  WROOT.attach(bird);
+  bird.__flying = true;
+  { const ghost = ghostBird(bird);
+    if (originHole) putInHole(originHole, ghost);
+    else if (originSt) putOnStation(originSt, ghost);
+    else putOnBench(ghost, { x: wasAt.x, z: wasAt.z });
+    bird.__ghost = ghost; }
+  detach(thing);
+  bird.add(thing);
+  thing.position.set(0, -0.02, 0.16);
+  thing.quaternion.identity();
+  thing.scale.setScalar(0.5);
+  // away over the far side of the room, up and out of sight, and back
+  const away = new THREE.Vector3(wasAt.x * 0.5, wasAt.y + 2.2, wasAt.z - 4.5);
+  if (!fromClaw && !offstage()) say('She has no nest \u2014 she flies off with it, and it is gone.');
+  enqueueNext({
+    dur: 0.9,
+    update(t) {
+      const e = ease(t);
+      bird.position.set(lerp(wasAt.x, away.x, e), lerp(wasAt.y, away.y, e) + 0.3 * Math.sin(Math.PI * e), lerp(wasAt.z, away.z, e));
+    },
+  }, doNow(() => { bird.remove(thing); detach(thing); thing.removeFromParent(); }), {
+    dur: 0.8,
+    update(t) {
+      const e = ease(t);
+      bird.position.set(lerp(away.x, wasAt.x, e), lerp(away.y, wasAt.y, e) + 0.3 * Math.sin(Math.PI * e), lerp(away.z, wasAt.z, e));
+    },
+    end() {
+      bird.__flying = false;
+      const ghost = bird.__ghost;
+      if (ghost) { bird.__ghost = null; detach(ghost); ghost.removeFromParent(); }
+      if (originHole && !originHole.thing) putInHole(originHole, bird);
+      else if (originSt && !originSt.occupant) putOnStation(originSt, bird);
+      else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
+      refreshUI();
       const next = bird.__pending?.shift();
       if (next) birdDeliver(bird, next.carried, next.fromClaw);
     },
@@ -15789,6 +15836,10 @@ function runRefusal(target) {
         end() { nest2.scale.setScalar(1); },
       });
       t.__nest = nest2;
+      // HER NEW NEST ONLY: she kept the address of the nest she was filed
+      // away from, and every nest answering to it got the delivery too (Ken)
+      t.userData.nestGuid = nest2.userData.guid;
+      t.__nestId = nest2.userData.id;
       say('Her new nest grows beside the notebook.');
     }
     scene.add(t);
@@ -17615,6 +17666,7 @@ function runStep(step) {
   else if (step.type === 'panel') actionPanel();
   else if (step.type === 'fold') actionFold(step.at);
   else if (step.type === 'speak') actionSpeak();
+  else if (step.type === 'nothing') { /* trained to do nothing: a placeholder */ }
   else if (step.type === 'teach') actionTeach(step.at);
   else if (step.type === 'taught') {
     if (step.step?.type === 'erase') enqueue(doNow(() => replayErase(step.step.path)));
@@ -19480,6 +19532,7 @@ function enterTraining() {
   const given = stations.stand.occupant;
   if (!given) return;
   condition = condFromSpec(specOf(given));   // exact at first; Dusty loosens it
+  condAtEntry = condText(condition);        // to know, on the way out, whether it was loosened
   // remember the very thing it was shown -- a copy can be taken from the
   // bubble. Live things serialise faithfully now (guid pairing), so even a
   // box holding a bird or a robot is remembered.
@@ -19519,9 +19572,20 @@ function enterTraining() {
 }
 // Leaving the bubble rewinds the world: what happened in the daydream was never
 // real. The robot keeps only the actions it learned.
+let condAtEntry = null;
 function leaveTraining(restore = true) {
   undoDreamTeaching();
   clearUndo();
+  // A LESSON OF ERASURES ONLY IS A LESSON (Ken, 23 Sep): a robot whose thought
+  // was loosened and shown nothing to do is trained -- to do nothing. It may
+  // be a placeholder to replace later, and on a team its erasures matter;
+  // the original works this way. One explicit step says so, and everything
+  // that asks "is it trained?" (the program's length) agrees.
+  if (activeBot && !program.length && condition && condAtEntry != null && condText(condition) !== condAtEntry) {
+    program = [{ type: 'nothing' }];
+    syncBot();
+  }
+  condAtEntry = null;
   mode = 'world';
   if (activeBot && program.length) activeBot.taughtHere = true;   // the button says "Run what it learned"
 
@@ -19810,6 +19874,10 @@ function nextIteration() {
       return;
     }
     return done();
+  }
+  if (member.program.length && member.program.every(st => st.type === 'nothing')) {
+    finishRun();
+    return say(`${member === activeBot ? 'It' : 'A robot on the team'} recognises what it was given \u2014 and was trained to do nothing, so nothing happens.`);
   }
   if (runCount >= maxIter) {
     return finishRun(`Stopped after ${maxIter} rounds — the “Rounds” limit, not its condition.`);
@@ -20713,6 +20781,7 @@ function describe(s) {
        : s.type === 'fold' ? `put away the panel on ${holeName(s.at)}, back inside its thing`
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
        : s.type === 'speak' ? 'read aloud what it holds'
+       : s.type === 'nothing' ? 'do nothing (its thought was loosened, and nothing more was shown)'
        : s.type === 'teach' ? `give it to the little robot in ${holeName(s.at)} and teach it:`
        : s.type === 'taught' ? `· ${s.step ? describe(s.step) : '?'}`
        : s.type === 'endTeach' ? '· and that is its lesson'
@@ -26643,6 +26712,10 @@ function handListing() {
   // for want of a way to name them)
   const top = things.length;
   for (let i = 0; i < top; i++) {
+    const pile = things[i].userData.kind === 'nest' ? (things[i].userData.pile || []) : [];
+    for (let k = pile.length - 1; k >= 0; k--) {
+      if (pile[k]?.parent) { things.push(pile[k]); where.push(k === pile.length - 1 ? ' (on top of the nest #' + (i + 1) + ')' : ' (in the nest #' + (i + 1) + ', under what is on top)'); }
+    }
     for (const r of (things[i].__subs || [])) {
       if (r.parent && r.visible && !r.userData.ghost && !r.__gone) { things.push(r); where.push(' (riding on #' + (i + 1) + ')'); }
     }
@@ -26824,6 +26897,10 @@ async function handStep(step0, things, names) {
     if (typeof r === 'string' && names.has(r)) return names.get(r);
     if (typeof r === 'string' && /^#\d+$/.test(r.trim())) r = +r.trim().slice(1);
     if (typeof r === 'string' && !/^\d+$/.test(r.trim())) {
+      // a thing's OWN kind first ("bird" is the bird, not the nest she came with)
+      const w = handWord(r), one = w.replace(/s$/, '');
+      const direct = things.filter(t => t.parent && (t.userData.kind === w || t.userData.kind === one));
+      if (direct.length === 1) return direct[0];
       // a kind's name: the one thing of that kind
       const stack = HAND_STACK_WORDS[handWord(r)];
       if (stack) {

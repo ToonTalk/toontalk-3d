@@ -8865,3 +8865,33 @@ dot-stops, set-down-for-dusty, riders+tray-listed. Not changed: the claw's
 animation dominates the time inside a bubble (11-28 s); a sentence sent
 to Marty with his card closed did not show in his history later
 (unreproduced).
+
+## Ken's rulings: a do-nothing lesson, the nestless bird, the notebook bird
+
+Ken (23 Sep), on the questions from the hand reports. A LESSON OF ERASURES
+ONLY IS A LESSON: "The robot should end up trained (to do nothing). Perhaps
+a user wants it as a placeholder to replace later. If part of a team then
+the erasures matter. This is how the original works too." Leaving a bubble
+whose thought was loosened (condText differs from the one on entry,
+condAtEntry) but shown no action records one step, {type:'nothing'} --
+"do nothing (its thought was loosened, and nothing more was shown)" -- so
+every "is it trained?" in the app (the program's length, 51 of them)
+agrees without a new flag, and it saves and loads as a step. A run whose
+chosen robot has only that step stops after the match and says it was
+trained to do nothing, rather than spinning on a world that never changes.
+A BIRD WITH NO NEST, given something, "should fly off, destroy the thing,
+and return -- not report a problem": birdFlyAway, the delivery flight's
+shape aimed up and away over the far side, the thing removed out there,
+her stand-in keeping her place, what waited for her taken next. A LONE
+BIRD FROM THE NOTEBOOK got a fresh nest but kept the address of the nest
+she was filed from, and deliveries go to every nest answering to it
+(allNestsByGuid), so the old nest was fed too; she answers to the new
+nest's guid now. Double labeling (the bird hatches with the nest's name)
+and filing a bird's only nest are fine as they are (Ken). And from the
+hand: what is on a nest is listed ("#3: the number 1 (on top of the nest
+#1)") -- Ken's "vacuum another" found no second 1 because a nest's pile
+was invisible; and "bird" named in a step is the bird, not her nest (the
+forgiving reading mapped bird to the nests stack first). The testing doc
+asks for 8x or Instant, since the claw's animation was most of each
+sentence inside a bubble. handByWordCheck: nothing-lesson, nest-pile,
+no-nest-flies, notebook-bird (-:0 posty:1).
