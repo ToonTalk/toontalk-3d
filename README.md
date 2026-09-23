@@ -310,6 +310,14 @@ become the release when it is ready. What it has that the release does not:
   out. Things can be named ("call it orders"), filed in the notebook and
   taken back out by name, and the hand can go out to the yard, into the
   panel on the back of a thing, and back.
+- **For someone using voice alone.** The brain is told where each thing is
+  on the screen as the person sees it -- left, middle or right, front or
+  back, or out of view -- so "the box on the left" works. The camera moves
+  by word: turn left or right, look from higher or lower, come closer or
+  go farther, slide, "look at the robot", and "reset the view". A question
+  about what is here ("what's on the table?", "what am I holding?") is
+  answered from the listing. And when a sentence was spoken, its answer is
+  spoken back (a setting reads the answers aloud always).
 
 The suite runs against it with `tests/regress.html?app=../toontalk-3d-next.html`;
 `handByWord` is its check.

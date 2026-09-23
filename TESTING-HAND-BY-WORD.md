@@ -233,6 +233,18 @@ Tick the switch again afterwards.
 | I18 | `vacuum the nest`, then `give the bird a 7` | with no nest, the bird flies off with the 7 and comes back without it — no complaint |
 | I19 | `put a nest on the table`, `call the bird posty and file her in the notebook`, `take posty out of the notebook`, then `give posty a 1` | a new nest grows for her; the 1 lands in the new nest only, the first nest stays empty |
 
+### Section J — voice alone: places, the camera, answers (reload with `?fresh`, then put a box and a robot on the table)
+
+| # | Sentence | Expected |
+|---|---|---|
+| J1 | `what is on the table?` | answered (✓), naming where things are: left, middle, right, front, back |
+| J2 | `put a 1 in the box on the left` | the 1 goes into the box on the left of the screen |
+| J3 | `turn the view to the left`, then `look from higher`, then `come closer` | the view turns, rises, comes in — each a ✓ |
+| J4 | `look at the robot` | the view centres on the robot |
+| J5 | `reset the view` | back to the usual view of the table |
+| J6 | `what am I holding?` | answered from the listing; nothing moves |
+| J7 | (a person, with the microphone) say `put a box on the table` | the answer is read aloud as well as shown |
+
 ## What to report
 
 1. Provider and model tested (as shown on Marty's card; never a key).

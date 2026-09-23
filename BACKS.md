@@ -8915,3 +8915,29 @@ a drop to "go" or "leave" (H4 left the nest in the yard; I9 taught the
 robot a drop). I4's expectation follows the prompt (clear the desk, then
 give). run-trained and open-empty-hand in handByWordCheck. The chat build
 is rebuilt from it.
+
+## The hand by word, for voice alone: places, the camera, spoken answers
+
+Ken (23 Sep): could someone unable to use a pointing device use the app by
+voice alone? Three of the gaps, closed. PLACES: each thing in the listing
+carries where it is on the screen, as seen -- [left|middle|right] and
+[front|back], or [out of view] -- from its centre projected through the
+camera (handWhere), so "the box on the left" resolves. THE CAMERA BY WORD:
+a "camera" step turns round the table (the demo's _mCam turn), tilts up or
+down round the camera's sideways axis (kept between 7 degrees and nearly
+overhead), comes closer or goes farther, slides, looks at a thing (target
+glides to it, at a distance its size wants), and resets (homeView); each is
+the person's own hand on the camera -- camYield and the orbit's start/end,
+so the smart camera does not take it back. ANSWERS: a question about what
+is HERE is answered from the listing ("answer": true, no steps, a ✓), and
+questions about ToonTalk stay Marty's. SPOKEN: when the sentence came from
+the microphone its answer is read aloud (speakText, the workshop's voice),
+and a failure is spoken as its reason ("That did not work: nothing is in
+the hand to drop"); a setting reads them always; with the workshop's own
+read-aloud on, say() already speaks and nothing is doubled. The
+microphone's own guard keeps it from hearing the answer. handByWordCheck:
+screen-places, camera (higher, looked, turned, home), spoken (typed stays
+quiet; spoken answers and reasons). Not done: the buttons off the table
+(Run, Speed, menus, the name card, puzzle buttons, levers) -- the
+operating system's voice control can press labelled buttons, and that is
+the next thing to check with a person.
