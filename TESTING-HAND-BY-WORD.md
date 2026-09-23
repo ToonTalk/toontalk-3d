@@ -7,6 +7,11 @@ proves the hand's own moves with a stand-in brain; what only a real brain
 can test is **whether the brain turns sentences into the right plan**.
 That is what this is for.
 
+**Check the provider before starting:** the last run meant for Nano ran on
+OpenAI because that was what the browser had selected. The person setting
+up must choose the brain under How Marty thinks; the tester should report
+the model it sees in the requests.
+
 **This version is for the Gemini Nano rerun** (23 September). The first
 Nano run got 1 sentence in 25 right; the hand has changed since (below),
 and the question now is how far those changes carry a small on-device
@@ -211,7 +216,7 @@ Tick the switch again afterwards.
 | I1 | `create a pad with ToonTalk on it`, then `put a box on the table`, then `make a 12` | three separate things: the 12 does not ride on the pad and the box does not join anything. If the table is crowded, the hand says where it landed instead of ✓ |
 | I2 | `put a 7 on the pad` | the 7 rides on the pad ("It rides on the pad now") |
 | I3 | `put a robot on the table`, `give it a 1`, then `leave` | the pad still carries its 7 after leaving (the rewind used to drop riders) |
-| I4 | `give the robot a 5` (the 1 still on its desk) | refused before anything moves: the desk already holds the number 1, take that first |
+| I4 | `give the robot a 5` (the 1 still on its desk) | the brain is told to clear the desk first, so expect: the 1 set down, then the 5 given (the robot, untrained, starts a new lesson). If the brain gives without clearing, the hand refuses before anything moves |
 | I5 | `take what is on the desk and put it on the table` | the 1 from the desk on the table; the desk empty |
 | I6 | `put a 1 and a 3 in a box`, then `put the 3 on the 1` | the box holds 4 and an empty hole |
 | I7 | `open the pad's panel` | the pad's panel comes out as a tray on the table |

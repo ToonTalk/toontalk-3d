@@ -8895,3 +8895,23 @@ forgiving reading mapped bird to the nests stack first). The testing doc
 asks for 8x or Instant, since the claw's animation was most of each
 sentence inside a bubble. handByWordCheck: nothing-lesson, nest-pile,
 no-nest-flies, notebook-bird (-:0 posty:1).
+
+## The hand by word: run crashed on a trained robot
+
+A fourth report (Claude in Chrome, 23 Sep) -- meant as the Claude-artifact
+test, run on the site with OpenAI gpt-6-sol, as the browser was set: 31 of
+31 in the like-for-like sections, 15 of 16 in C-E, first move in 0.9-3.5 s
+at 8x. The one real bug: RUN ON A TRAINED ROBOT THREW -- the run step
+compared the desk before and after through JSON.stringify(specOf(...)), and
+a number's value is a BigInt, so it threw, and handDo had a finally and no
+catch: no ✓, no ✗, the robot never started. The suite tested run's
+refusals and never a run by the hand. Now the comparison has a BigInt
+replacer, any step that throws becomes a ✗ that says so, a plan that ends
+with the robot still running says "say stop to stop it", "open" puts the
+thing back down if it was picked up only to reach its panel, a bare drop
+right after "go" or "open" is no failure (the door or panel set it down),
+riders of a held thing are listed, and the empty-hand rule no longer adds
+a drop to "go" or "leave" (H4 left the nest in the yard; I9 taught the
+robot a drop). I4's expectation follows the prompt (clear the desk, then
+give). run-trained and open-empty-hand in handByWordCheck. The chat build
+is rebuilt from it.
