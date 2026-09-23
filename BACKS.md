@@ -8941,3 +8941,20 @@ quiet; spoken answers and reasons). Not done: the buttons off the table
 (Run, Speed, menus, the name card, puzzle buttons, levers) -- the
 operating system's voice control can press labelled buttons, and that is
 the next thing to check with a person.
+
+## The hand by word: Mimi's platform, and the notebook as a place
+
+Ken (23 Sep). "put the other one on the one", with the original on Mimi's
+platform: the workshop refuses any drop there ("Take the original off the
+platform first"), and at the table the listing only MENTIONED what stood on
+the platform, with no number to point at. Now what stands on the platform,
+in the tray and on the bench robot's desk is a numbered thing at the table
+too, and a drop onto the platform's thing takes it off first: the hand
+sets down what it holds, takes the original onto the table, picks its own
+thing up again, and drops. "zoom into the notebook": the notebook is
+furniture and was not in the listing; now the listing says where it is,
+and "look" also takes the notebook, Mimi, Dusty, the desk and the stacks
+by name (handPlace). "a room on the table, give the robot the one" did
+what it said -- the room went down and the robot, untrained, began a
+lesson -- and what Ken expected is asked. handByWordCheck: platform-drop
+(2, platform empty), look-notebook.

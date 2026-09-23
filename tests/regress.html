@@ -1734,6 +1734,8 @@ async function handByWordCheck(D, w) {
     'v: reset the view': { steps: [ { do: 'camera', move: 'reset' } ], say: 'Back home.' },
     'v: what is here': { steps: [], answer: true, say: 'A box on the left and a robot on the right.' },
     'v: drop nothing': { steps: [ { do: 'drop' } ], say: 'Dropped.' },
+    'pl: copy the 1': { steps: [ { do: 'take', from: 'numbers' }, { do: 'copy' }, { do: 'drop' } ], say: 'Copied.' },
+    'pl: zoom into the notebook': { steps: [ { do: 'camera', look: 'notebook' } ], say: 'The notebook.' },
     'drop it on thing 99': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 99 } ], say: 'Dropped.' },
     'the 1': null,   // filled in below, from the listing the brain is given
   };
@@ -1763,6 +1765,10 @@ async function handByWordCheck(D, w) {
     if (/k: vacuum what is on the nest/.test(said)) {
       const m = q.match(/#(\d+): the number 1 \(on top of the nest/);
       return JSON.stringify(m ? { steps: [ { do: 'vacuum', what: '#' + m[1] } ], say: 'Gone.' } : { steps: [], say: 'nothing on the nest' });
+    }
+    if (/pl: put the other one on the one/.test(said)) {
+      const onPlat = q.match(/#(\d+): the number 1 \(on Mimi/), loose = q.match(/#(\d+): the number 1 \[/);
+      return JSON.stringify(onPlat && loose ? { steps: [ { do: 'pickup', what: '#' + loose[1] }, { do: 'drop', on: '#' + onPlat[1] } ], say: 'On the one.' } : { steps: [], say: 'the platform 1 is not listed' });
     }
     if (/put the 3 on the 1/.test(said)) {
       const three = q.match(/(\d+): the number 3 \(in hole/), one = q.match(/(\d+): the number 1 \(in hole/);
@@ -2150,13 +2156,28 @@ async function handByWordCheck(D, w) {
     if (synth) synth.speak = realSpeak;
     const ok56 = r56.ok && /on the left/.test(r56.say) && typedQuiet && spoke[0] === 'A box on the left and a robot on the right.'
       && /^That did not work: nothing is in the hand to drop/.test(spoke[1] || '');
+    // 57. a drop onto what stands on Mimi's platform takes it off first; the notebook is a place to look at (Ken, 23 Sep)
+    D.demoNotebook({ kind: 'notebook', v: 4, pages: [{ kind: 'number', value: { n: '7', d: '1' } }], page: 0, at: { x: 0.95, z: 1.33 } });
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    handStage = 'r57';
+    await driven(D.hand('pl: copy the 1'));
+    const r57 = await driven(D.hand('pl: put the other one on the one'));
+    const nums57 = bench().filter(t => t.userData.kind === 'number').map(t => String(t.userData.value.n)).join(',');
+    const ok57 = r57.ok && nums57 === '2' && !D.stations.copyIn?.occupant;
+    const t58 = D.orbit.target.clone();
+    const r58 = await driven(D.hand('pl: zoom into the notebook'));
+    const nb58 = bench().find(t => t.userData.kind === 'notebook')?.getWorldPosition(new D.THREE.Vector3());
+    const ok58 = r58.ok && !!nb58 && Math.hypot(D.orbit.target.x - nb58.x, D.orbit.target.z - nb58.z) < 0.15 && t58.distanceTo(D.orbit.target) > 0.3;
+    D.demoNotebook(null);
     const saidBtn = !!D.doc.getElementById('saidLogBtn');
     const wsLines = [...D.doc.getElementById('handLog').children].filter(c => /\bws\b/.test(c.className)).length;
     const logN = D.doc.getElementById('handLog').children.length;
-    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && saidBtn && wsLines > 5 && logN >= 18;
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && ok57 && ok58 && saidBtn && wsLines > 5 && logN >= 18;
     put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too; Mimi copies and Dusty removes; give finds the table robot and the claw copies inside the bubble; names, the notebook, the yard, Ruby and Dusty on the thought, the panel door'
-      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
-    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r52, r53, r54, r55, r56]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' platform-drop=' + ok57 + ' (' + nums57 + ') look-notebook=' + ok58 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
+    if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r52, r53, r54, r55, r56, r57, r58]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
     if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
     if (!ok56) put('ERR   spoken: ' + JSON.stringify(spoke).slice(0, 300), 'dim');
     if (!ok19) put('ERR   thoughts: ' + [t19, t20, t21].join(' | ').slice(0, 300), 'dim');
