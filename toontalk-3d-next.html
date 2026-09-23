@@ -3245,12 +3245,14 @@ function setVolume(v, muted) {
 // twice). Every utterance counts itself in and out here, and the hand's
 // microphone drops whatever arrives while one is speaking or just after.
 let pageSpeaking = 0, pageSpokeAt = -1e9;
+// the hand's microphone, told when the page starts talking (set when the bar is built)
+let handMicDeaf = null;
 const pageTalking = () => pageSpeaking > 0 || !!window.speechSynthesis?.speaking
   || performance.now() - pageSpokeAt < 1500;
 function utterance(said) {
   const u = new SpeechSynthesisUtterance(said);
   u.volume = sndMuted ? 0 : sndVol;
-  u.addEventListener('start', () => { pageSpeaking++; });
+  u.addEventListener('start', () => { pageSpeaking++; try { handMicDeaf?.(); } catch (e) {} });
   const out = () => { pageSpeaking = Math.max(0, pageSpeaking - 1); pageSpokeAt = performance.now(); };
   u.addEventListener('end', out); u.addEventListener('error', out);
   return u;
@@ -27399,9 +27401,30 @@ async function handStepDo(step, things, names) {
   if (!SR) mic.style.display = 'none';
   else {
     let rec = null, on = false, pile = '';
-    const stop = () => { on = false; if (rec) { try { rec.stop(); } catch {} } mic.classList.remove('on'); mic.textContent = '\u{1F3A4}'; mic.title = 'Listen (stays on until pressed again)'; handStatus(''); };
+    let deaf = false, deafTimer = 0;
+    const stop = () => { on = false; deaf = false; clearTimeout(deafTimer); if (rec) { try { rec.stop(); } catch {} } mic.classList.remove('on'); mic.textContent = '\u{1F3A4}'; mic.title = 'Listen (stays on until pressed again)'; handStatus(''); };
+    // DEAF WHILE THE PAGE SPEAKS: whatever the recognizer has half-heard is
+    // thrown away (abort, not stop, which would deliver it), and listening
+    // starts again only once the page has been quiet a moment
+    const listenAgain = () => {
+      clearTimeout(deafTimer);
+      deafTimer = setTimeout(() => {
+        if (!on || !deaf) return;
+        if (pageTalking()) return listenAgain();
+        deaf = false;
+        try { rec.start(); } catch (e) {}
+        mic.textContent = '\u{1F534}';
+      }, 300);
+    };
+    handMicDeaf = () => {
+      if (!on || !rec) return;
+      deaf = true; pile = ''; inp.value = '';
+      try { rec.abort(); } catch (e) {}
+      mic.textContent = '\u{1F507}';   // muted while the workshop talks
+      listenAgain();
+    };
     const start = () => {
-      rec = new SR();
+      rec = new (window.__handSR || SR)();   // a stand-in recognizer, for a check
       rec.lang = navigator.language || 'en-US';
       rec.continuous = true;
       rec.interimResults = true;
@@ -27429,7 +27452,7 @@ async function handStepDo(step, things, names) {
         if (interim) inp.value = (pile ? pile + ' ' : '') + interim.trim();
       };
       rec.onerror = (e) => { if (e.error === 'no-speech' || e.error === 'aborted') return; sayAttn('The microphone said: ' + (e.error || 'no')); if (e.error === 'not-allowed') stop(); };
-      rec.onend = () => { if (on) { try { rec.start(); } catch { stop(); } } };
+      rec.onend = () => { if (on && !deaf) { try { rec.start(); } catch { stop(); } } };
       try { rec.start(); } catch { stop(); return; }
       on = true; pile = '';
       mic.classList.add('on'); mic.textContent = '\u{1F534}';

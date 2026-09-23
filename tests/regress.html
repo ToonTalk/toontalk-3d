@@ -2171,12 +2171,36 @@ async function handByWordCheck(D, w) {
     const nb58 = bench().find(t => t.userData.kind === 'notebook')?.getWorldPosition(new D.THREE.Vector3());
     const ok58 = r58.ok && !!nb58 && Math.hypot(D.orbit.target.x - nb58.x, D.orbit.target.z - nb58.z) < 0.15 && t58.distanceTo(D.orbit.target) > 0.3;
     D.demoNotebook(null);
+    // 59. the microphone is deaf while the page speaks (Ken: "I didn't say 'a room on the table' -- the app did")
+    const micLog = [];
+    let micRec = null;
+    w.__handSR = class { constructor() { micRec = this; } start() { micLog.push('start'); } abort() { micLog.push('abort'); } stop() { micLog.push('stop'); } };
+    const synth59 = w.speechSynthesis, realSpeak59 = synth59 && synth59.speak;
+    if (synth59) synth59.speak = (u) => { micLog.push('speak'); setTimeout(() => u.dispatchEvent(new Event('start')), 20); setTimeout(() => u.dispatchEvent(new Event('end')), 600); };
+    D.mute(false);
+    const micBtn = D.doc.getElementById('handMic');
+    let ok59 = true;
+    if (micBtn && micBtn.style.display !== 'none' && synth59) {
+      micBtn.onclick();                                   // listening
+      await driven(D.hand('v: what is here', { voice: true }));   // its answer is spoken
+      await driven(new Promise(r => setTimeout(r, 150)));
+      const deafNow = micLog.includes('abort') && micBtn.textContent === '\u{1F507}';
+      micRec?.onresult?.({ resultIndex: 0, results: [ Object.assign([{ transcript: 'a robot on the table' }], { isFinal: true }) ] });
+      const droppedEcho = D.doc.getElementById('handIn').value === '';
+      await driven(new Promise(r => setTimeout(r, 2800)));
+      const listening = micLog.filter(x => x === 'start').length === 2 && micBtn.textContent === '\u{1F534}';
+      micBtn.onclick();                                   // off again
+      ok59 = deafNow && droppedEcho && listening;
+    } else put('SKIP the microphone going deaf: no recognizer in this browser', 'dim');
+    D.mute(true);
+    if (synth59) synth59.speak = realSpeak59;
+    w.__handSR = null;
     const saidBtn = !!D.doc.getElementById('saidLogBtn');
     const wsLines = [...D.doc.getElementById('handLog').children].filter(c => /\bws\b/.test(c.className)).length;
     const logN = D.doc.getElementById('handLog').children.length;
-    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && ok57 && ok58 && saidBtn && wsLines > 5 && logN >= 18;
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && ok57 && ok58 && ok59 && saidBtn && wsLines > 5 && logN >= 18;
     put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too; Mimi copies and Dusty removes; give finds the table robot and the claw copies inside the bubble; names, the notebook, the yard, Ruby and Dusty on the thought, the panel door'
-      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' platform-drop=' + ok57 + ' (' + nums57 + ') look-notebook=' + ok58 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' platform-drop=' + ok57 + ' (' + nums57 + ') look-notebook=' + ok58 + ' mic-deaf-while-speaking=' + ok59 + ' (' + micLog.join('>') + ') said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
     if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r52, r53, r54, r55, r56, r57, r58]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
     if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
     if (!ok56) put('ERR   spoken: ' + JSON.stringify(spoke).slice(0, 300), 'dim');

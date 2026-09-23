@@ -8958,3 +8958,22 @@ by name (handPlace). "a room on the table, give the robot the one" did
 what it said -- the room went down and the robot, untrained, began a
 lesson -- and what Ken expected is asked. handByWordCheck: platform-drop
 (2, platform empty), look-notebook.
+
+## The microphone heard the workshop
+
+Ken (23 Sep): "▸ a room on the table give the robot the one" -- "I didn't
+say 'a room on the table', the app did." The spoken answer to his previous
+sentence, "A robot on the table.", went into the microphone left on, and
+the recognizer joined its tail to Ken's next words in ONE final result,
+delivered after the page had stopped talking -- past the filter that
+dropped results arriving while it talked. Filtering after the fact cannot
+split a joined result, so the microphone now stops LISTENING: every
+utterance's start calls handMicDeaf, which aborts the recognizer (abort,
+not stop, which would deliver what it half-heard), empties the pile and
+shows 🔇; it listens again only after the page has been quiet a moment
+(pageTalking, 1.5 s after the last word, then 300 ms). Marty's voice and
+the workshop's read-aloud go through the same utterance(), so neither can
+be overheard. A seam, window.__handSR, lets a check hand the line a
+stand-in recognizer: handByWordCheck's mic-deaf-while-speaking listens,
+has an answer spoken, sees abort and 🔇, feeds the echo and finds it
+dropped, and sees listening start again (start>speak>abort>start>stop).
