@@ -26633,11 +26633,12 @@ The hand holds ONE thing at a time. Steps, in order:
 {"do":"give"} hands it to the robot at the bench, or, with none there, to the only robot on the table; {"do":"give","to":N} names the robot. Giving an untrained robot something opens its thought bubble.
 {"do":"pickup","what":"desk"} takes what is on the bench robot's desk. Inside a robot's thought bubble the hand is the robot's claw, the thing it was given is on its desk ("desk"), and the stacks and Mimi work there; {"do":"leave"} steps out when the lesson is done.
 {"do":"run"} presses Run so the robot at the bench works.
-{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. After a copy, "put it back" or "put the 1 back" means the ORIGINAL, back where it came from: {"do":"pickup","what":"platform"}, then {"do":"drop","on":"desk"} if it came off the desk (set down what the hand holds first). {"do":"drop","on":"desk"} puts the held thing on an empty desk; "work area" and "workspace" mean the desk too. Mimi is also called the copier or the copy machine.
+{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. After a copy, "put it back" with the copy in the hand means the copy goes where the original came from ({"do":"drop","on":"desk"} if that was the desk); with the hand empty it means the ORIGINAL: {"do":"pickup","what":"platform"}, then {"do":"drop","on":"desk"}. {"do":"drop","on":"desk"} puts the held thing on an empty desk; "work area" and "workspace" mean the desk too. Mimi is also called the copier or the copy machine.
 {"do":"vacuum","what":N} has Dusty the vacuum remove thing N from the table for good. The hand must be empty (drop first).
 {"do":"name","text":T} names the held thing (a bird, nest, box, scale, die, robot...) -- pads and numbers take "type" instead.
 {"do":"erase","path":[...]} has Ruby make a part of the robot's thought one step more general (a 3 becomes any number); {"do":"remove","path":[...]} has Dusty make it anything at all. Inside a thought bubble, or at the bench on the robot there (a robot that stopped because its desk no longer fits its thought is loosened this way); the path is hole numbers (from 1) into the given thing, [] for the whole.
 {"do":"go","to":"yard"} goes out through the back door; {"do":"go","to":"back"} comes back to the table (from the yard, or out of a panel); {"do":"open","of":N} brings out the panel of thing N as a tray on the table (its behaviours live there); {"do":"go","to":"panel","of":N} also walks in through the tray's door, so the hand is inside that thing's own little world.
+{"do":"speed","to":S} sets how fast robots move, the Speed on the bar: S is "0.5", "1", "2", "4", "8", "instant", "faster" or "slower" ("speed up" is "faster"; "8 times as fast" is "8"). It is never done with numbers on the table. {"do":"pause"} and {"do":"resume"} hold the robots still and let them go on; {"do":"stop"} stops a running robot. While a robot is RUNNING (the listing says so) only speed, pause, resume, stop and camera may be used.
 {"do":"camera","move":M} moves the view: M is "left" or "right" (turn round the table), "up" or "down" (tilt), "closer" or "farther", "slide left", "slide right", "forward", "backward", or "reset"; add "how":"a lot" for a bigger move. {"do":"camera","look":"#N"} comes in on thing N; "look" may also be "notebook", "Mimi", "Dusty", "desk" or a stack's name ("robots", "numbers"...). "Zoom into", "show me", "look at" all mean look. Only move the camera when asked to look, turn, zoom or see something.
 {"do":"file"} files the held thing in the notebook; {"do":"lookup","name":T} takes a copy of what is filed under that name.
 Any take, pickup, copy, lookup or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
@@ -26658,7 +26659,7 @@ const handReplySchema = () => ({
   type: 'object',
   properties: {
     steps: { type: 'array', items: { type: 'object', properties: {
-      do: { enum: ['take', 'pickup', 'type', 'drop', 'give', 'run', 'copy', 'vacuum', 'leave', 'name', 'erase', 'remove', 'go', 'open', 'file', 'lookup', 'camera'] },
+      do: { enum: ['take', 'pickup', 'type', 'drop', 'give', 'run', 'copy', 'vacuum', 'leave', 'name', 'erase', 'remove', 'go', 'open', 'file', 'lookup', 'camera', 'speed', 'pause', 'resume', 'stop'] },
       move: { type: 'string' }, look: {}, how: { type: 'string' },
       to: {}, of: {}, name: { type: 'string' }, path: { type: 'array', items: { type: 'integer' } },
       from: { type: 'string' }, what: {}, on: {}, hole: { type: 'integer' },
@@ -26752,6 +26753,8 @@ function handListing() {
   const place = yardIn ? 'the ground' : worldTrail.length ? 'your table (it came with you through the door; the things marked "on the desk", "on the perch" or on a spot belong to this panel)' : 'the table';
   let text = lines.length ? 'On ' + place + ': ' + lines.join('; ') + '.' : (yardIn ? 'The ground is empty.' : 'The table is empty.');
   if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk ("desk")' : ', its desk empty') + '.';
+  if (mode === 'replay') text += ' That robot is RUNNING now: until it stops, only "speed", "pause", "resume", "stop" and "camera" can be done.';
+  text += ' The speed is ' + ($('speed')?.selectedOptions?.[0]?.textContent || '1\u00d7') + (simPaused ? ', and the robots are PAUSED' : '') + '.';
   if (mode === 'training' && stations.stand && !stations.stand.occupant) text += ' The robot\u2019s desk ("desk") is empty: {"do":"drop","on":"desk"} puts the held thing back there.';
   if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): the hand is the robot\u2019s own claw, and what is done here is what the robot learns. The stacks and Mimi work in here (no new robots); "leave" steps out when the lesson is done.';
   const here = [];
@@ -26921,21 +26924,23 @@ let handVoiceNow = false;
 const HAND_SPEAK = 'hand-speak';
 async function handDo(sentence, opts = {}) {
   handVoiceNow = !!opts.voice;
-  const s = String(sentence || '').trim();
+  // "PRESS ENTER" IS A KEY, NOT WORDS: Voice Access typed it into the line
+  // along with the sentence ("run press Enter"), so "stop press Enter" was
+  // not a stop and the robot ran on (Ken, 23 Sep)
+  const s = String(sentence || '').replace(/[\s,.;]*\bpress (enter|return)\b[.!]*/gi, ' ').replace(/\s+/g, ' ').trim();
   if (!s) return { ok: false, say: '', done: 0 };
-  if (/^(\.|stop|stop it|stop the robot|halt)[.!]*$/i.test(s)) {
+  handLog('you', s);   // every sentence, refused or not
+  if (/^(\.|halt)[.!]*$/i.test(s) || /^(please )?stop\b/i.test(s) && (mode === 'replay' || /^(please )?stop( it| the robot| running| now| please)*[.!]*$/i.test(s))) {
     // the key "." on the page stops a run; typed into the line it did not (the tester's D5 and H8)
     if (mode !== 'replay') return handReport(false, 'Nothing is running to stop.');
-    handLog('you', s);
     $('runBtn').onclick();
     return handReport(true, 'Stopping \u2014 the robot finishes the round it is in.');
   }
   if (handBusy) return handReport(false, 'One thing at a time \u2014 the hand is still busy.');
   if (!handBrainReady()) return handReport(false, 'Moving the hand by words needs a brain \u2014 a key under \u201cHow Marty thinks\u201d.');
-  if (mode !== 'world' && mode !== 'training') return handReport(false, 'Wait for the robot to finish.');
-  if (busy) return handReport(false, 'Wait for what is moving to settle.');
+  if (mode !== 'world' && mode !== 'training' && mode !== 'replay') return handReport(false, 'Wait for the robot to finish.');
+  if (busy && mode !== 'replay') return handReport(false, 'Wait for what is moving to settle.');
   handBusy = true;
-  handLog('you', s);
   handStatus('thinking\u2026');
   const lineHadIt = document.activeElement?.id === 'handIn';
   if (!lineHadIt && document.activeElement?.blur) document.activeElement.blur();   // its keys must not read as typing in a field
@@ -26956,6 +26961,10 @@ async function handDo(sentence, opts = {}) {
     }
     if (!plan.steps.length && plan.answer && plan.say) return handReport(true, plan.say);   // a question about what is here, answered
     if (!plan.steps.length) return handReport(false, plan.say || 'The brain found nothing for the hand to do.');
+    const RUNNING_OK = ['speed', 'pause', 'resume', 'stop', 'camera'];
+    if (mode === 'replay' && plan.steps.some(st => !RUNNING_OK.includes(st.do))) {
+      return handReport(false, 'The robot is running \u2014 while it runs the hand only changes the speed, pauses, stops it, or moves the camera. Say \u201cstop\u201d first.');
+    }
     handStatus('moving\u2026');
     const names = new Map();
     const mode0 = mode;
@@ -27096,7 +27105,7 @@ async function handStepDo(step, things, names) {
   }
   if (step.do === 'pickup' && step.what === 'platform') {
     if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
-    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
+    if (inHand() && mode === 'training') { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one claw: set down first
     if (!stations.copyIn.occupant) return 'nothing is on Mimi\u2019s platform';
     handleClick({ kind: 'station', id: 'copyIn' });
     await handSettle();
@@ -27146,7 +27155,7 @@ async function handStepDo(step, things, names) {
     const t = ref(step.what);
     if (!t) return 'there is no thing "' + step.what + '" in the listing' + (step.what === 'desk' ? ' \u2014 the desk is empty' : '');
     if (!stillHere(t)) return 'that thing is gone';
-    if (inHand() && inHand() !== t && mode === 'world') { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one hand: set down first
+    if (inHand() && inHand() !== t && (mode === 'world' || mode === 'training')) { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one hand (or claw): set down first
     if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
     clickOn(t);
     await handSettle();
@@ -27454,6 +27463,33 @@ async function handStepDo(step, things, names) {
     handleClick({ kind: 'nbItem', nb, slot: slot2 }); await handSettle();
     if (!inHand()) return 'the copy did not come out of the notebook';
     if (step.as) names.set(String(step.as), inHand());
+    return true;
+  }
+  if (step.do === 'speed') {
+    // THE WORKSHOP'S SPEED, the select on the bar: never a number made on the table
+    const sel = $('speed');
+    const opts = [...sel.options].map(o => o.value);
+    const want = String(step.to ?? step.how ?? '').toLowerCase().replace(/[\u00d7x\s]|times/g, '');
+    let v = null;
+    const at = opts.indexOf(sel.value);
+    if (/^(faster|up|more|quicker)$/.test(want)) v = opts[Math.min(opts.length - 1, at + 1)];
+    else if (/^(slower|down|less)$/.test(want)) v = opts[Math.max(0, at - 1)];
+    else if (/^(instant|inf|infinity|fastest|max)$/.test(want)) v = 'inf';
+    else if (/^(normal|1|one|usual)$/.test(want)) v = '1';
+    else if (/^(half|0\.5|\u00bd)$/.test(want)) v = '0.5';
+    else if (opts.includes(want)) v = want;
+    if (!v) return 'the speeds are \u00bd\u00d7, 1\u00d7, 2\u00d7, 4\u00d7, 8\u00d7 and Instant, not "' + (step.to ?? step.how ?? '') + '"';
+    sel.value = v;
+    pickSpeed(v);
+    return true;
+  }
+  if (step.do === 'pause' || step.do === 'resume') {
+    if ((step.do === 'pause') !== simPaused) $('pauseBtn').onclick();
+    return true;
+  }
+  if (step.do === 'stop') {
+    if (mode !== 'replay') return 'nothing is running to stop';
+    $('runBtn').onclick();
     return true;
   }
   return 'the hand does not know how to "' + step.do + '"';

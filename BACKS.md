@@ -9068,3 +9068,26 @@ there. The line kept the cursor through the run (measured): a speech
 recognizer that stopped during a run is most likely Windows voice typing
 (Windows+H), which turns itself off after some seconds of silence; Voice
 Access stays on. handByWordCheck: erase-at-bench (cursor-after-run).
+
+## A running robot, by words: speed, pause, stop -- and "press Enter"
+
+Ken (23 Sep), with Voice Access: the loosened robot ran and could not be
+stopped by words, and "speed up by 8" made the number on the robot's desk
+disappear. Voice Access had typed "press Enter" into the line as words
+along with each sentence ("run press Enter"), so "stop press Enter" was not
+the stop sentence, and while the robot ran every other sentence was
+refused before it was even logged ("Wait for the robot to finish" three
+times, with no sentence above it). "Press Enter" / "press Return" is now
+taken out of a sentence as the key it is; every sentence is logged; while a
+robot runs, anything beginning "stop" stops it. There was no way to name
+the workshop's Speed, so the brain made one out of numbers: took an 8,
+picked up the desk's number, and so on, until a step failed. Now there are
+steps for it -- speed (0.5, 1, 2, 4, 8, instant, faster, slower: the select
+on the bar), pause, resume and stop -- the listing says the speed, whether
+the robots are paused, and when a robot is RUNNING, and while one runs the
+hand takes a plan only if it is made of those and the camera; anything else
+is refused before a step is made. Inside the bubble, "put it back" with the
+copy in the claw was refused (the pickup of the original wanted an empty
+claw); the claw now sets down first, as the hand does at the table, and the
+prompt reads "put it back" with the copy in hand as the copy going to the
+desk. handByWordCheck: run-speed-stop, put-back-holding-copy.

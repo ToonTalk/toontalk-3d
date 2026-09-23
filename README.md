@@ -322,6 +322,9 @@ become the release when it is ready. What it has that the release does not:
   about what is here ("what's on the table?", "what am I holding?") is
   answered from the listing. And when a sentence was spoken, its answer is
   spoken back (a setting reads the answers aloud always).
+  While a robot runs, the hand changes the speed ("speed up", "8 times as
+  fast", "instant"), pauses, resumes or stops it ("stop"), and moves the
+  camera -- nothing that would touch what the robot is working on.
 
 The suite runs against it with `tests/regress.html?app=../toontalk-3d-next.html`;
 `handByWord` is its check.

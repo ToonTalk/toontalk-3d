@@ -247,6 +247,8 @@ Tick the switch again afterwards.
 | J8 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the one back on your work area`, `put the original back` | inside the bubble: the copy goes on the robot's desk, then the original comes off Mimi's platform (the copy is set aside first) |
 | J9 | type a sentence, press Enter, then type another without clicking | the cursor is still in the line after the first one finishes |
 | J10 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the copy back on the desk`, `put the other one on top`, `leave`, `run`, then when it stops: `erase the 1 in its thought` | the thought becomes any number at the bench, without going back into the bubble; run again and it keeps adding |
+| J11 | after J10, while the robot runs: `speed up to 8`, then `put a box on the table`, then `stop` | Speed shows 8×; the box is refused while it runs (nothing on the table changes); the robot stops at the end of its round |
+| J12 | (with Voice Access) say a sentence and then "press Enter" | the log shows the sentence without the words "press Enter" |
 
 ## What to report
 
