@@ -23,12 +23,18 @@ model. The same instructions work for any provider.
   worked are kept as context, and five worked examples sit in the prompt.
 - **The listing labels things `#1, #2…`**, so a thing cannot be confused
   with the number one. Things in a box's holes get labels of their own
-  ("in hole 0 of #1"). In the yard it says "the ground", and that the
+  ("in hole 1 of #1"; holes count from 1, left to right, as the robot's own steps do). In the yard it says "the ground", and that the
   notebook stayed inside.
 - **Marty passes your own sentence to the hand**, not his paraphrase, and
   his card then shows how it went (✓ or ✗ and the hand's line). A question
   to him never moves anything.
 - **The prompt no longer contains the stray word "inHand()".**
+- **Two bugs from the first GPT run are fixed:** typing "+" on a fresh 1
+  no longer turns it into +0 (B5 and D3 added nothing, reported as done),
+  and "run" now fails with ✗ when nothing can run — inside a bubble, an
+  untrained robot, an empty desk — instead of reporting ✓.
+- The prompt now tells the brain to do only what was said (the first GPT
+  run's D3 added a "leave" nobody asked for).
 - Also new since the first run (tested in Section I): a set-down finds
   clear table and says so if it lands on something; things riding on a
   pad survive a thought bubble; "desk", "platform" and "tray" are places;
@@ -208,6 +214,8 @@ Tick the switch again afterwards.
 | I8 | `go into the pad's panel`, then `come back out` | inside the pad's own little world, then back at the table |
 | I9 | `put a robot on the table`, `give it a 1`, `take a number`, then `leave` | leaving works with the claw holding something; back at the table, hand empty |
 | I10 | press **What was said** on the title card | a log of the workshop's lines and every sentence and answer, scrollable |
+| I11 | `put a robot on the table`, `give it a 1`, then `run the robot` | ✗: the hand is inside the robot's thought bubble — leave it first (never ✓) |
+| I12 | `leave`, then `run the robot` | ✗: the robot has not been trained yet (nothing was taught, so leaving kept nothing) |
 
 ## What to report
 

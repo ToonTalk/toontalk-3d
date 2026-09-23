@@ -8818,3 +8818,28 @@ into the box by "pickup number" and "on box", "vacuum box", the empty
 take's message, the #N listing) and placeholder-still (hand:"sentence" on
 a question moves nothing). Whether Nano is enough after this is for the
 next tester's run to say.
+
+## The hand by word with GPT: "+" and "run" said done and did nothing
+
+The second tester's report (Claude in Chrome, 23 Sep, on the build before
+the forgiving round): Nano as before (every Nano point already fixed), and
+gpt-5.6-terra 42 of 46 right -- the brain side sound. Two hand bugs, both
+a ✓ over nothing. "+" ZEROED A NUMBER: the type step cleared a number to 0
+before typing, digits or not, so "+" on a fresh 1 made +0; "take a 1 and
+add it to the 4" left 4 with a ✓, and a robot taught that way learned
+"make it 0" and repeated for ever (1+0 still fits "the number 1"). Only
+digits clear now, and an operation typed alone that changes the value is
+refused; the prompt says a number dropped on a number already adds. RUN
+REPORTED ✓ WITHOUT RUNNING: it pressed the button and returned. Now it
+refuses inside a bubble, for an untrained robot, and with an empty desk,
+and otherwise needs the run to start (mode replay) or the desk to change;
+it waits four seconds at most, so a repeating robot does not hold the
+line. HOLES COUNT FROM 1 in the hand's listing, steps and paths, as the
+robot's own step list does ("hole 1" was the left hole there and the right
+one in the plan). The prompt said the given thing starts in the claw; it
+is on the desk. "Do ONLY what was said" (D3 added a leave). Two questions
+for Ken, not changed: an erase-only lesson is dropped on leave ("not been
+trained yet"), so Ruby's work is lost unless a step was taught; and
+naming a nest names its bird, filing the nest leaves the bird. The
+suite's plans moved to 1-based holes; plus-keeps (4 + a 1 typed "+" is 5)
+and run-refuses (in a bubble, untrained) are new.
