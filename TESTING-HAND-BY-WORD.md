@@ -84,6 +84,7 @@ model. The same instructions work for any provider.
   plan for every failure in the report.
 - Do **not** touch Settings → How Marty thinks, a key box, or the provider
   selector. Do not use the microphone; everything here is typed.
+- In a claude.ai artifact there is no `?fresh`: reloading the artifact's page gives a clean table (the notebook stays).
 - Between sections, reload with `?fresh` added to the address
   (`toontalk-3d-next.html?fresh`) so each section begins with a clean
   table; the name and the switch are remembered.
@@ -218,7 +219,7 @@ Tick the switch again afterwards.
 | I3 | `put a robot on the table`, `give it a 1`, then `leave` | the pad still carries its 7 after leaving (the rewind used to drop riders) |
 | I4 | `give the robot a 5` (the 1 still on its desk) | the brain is told to clear the desk first, so expect: the 1 set down, then the 5 given (the robot, untrained, starts a new lesson). If the brain gives without clearing, the hand refuses before anything moves |
 | I5 | `take what is on the desk and put it on the table` | the 1 from the desk on the table; the desk empty |
-| I6 | `put a 1 and a 3 in a box`, then `put the 3 on the 1` | the box holds 4 and an empty hole |
+| I6 | (reload first: I5 leaves a loose 1 on the table) `put a 1 and a 3 in a box`, then `put the 3 on the 1` | the box holds 4 and an empty hole |
 | I7 | `open the pad's panel` | the pad's panel comes out as a tray on the table |
 | I8 | `go into the pad's panel`, then `come back out` | inside the pad's own little world, then back at the table |
 | I9 | `put a robot on the table`, `give it a 1`, `take a number`, then `leave` | leaving works with the claw holding something; back at the table, hand empty |
@@ -227,7 +228,7 @@ Tick the switch again afterwards.
 | I12 | `leave`, then `run the robot` | ✗: the robot has not been trained yet (nothing was taught, so leaving kept nothing) |
 | I13 | `put a 7 on the pad`, then (log the listing) | the listing shows the 7 as a thing of its own, "riding on" the pad |
 | I14 | `open the pad's panel` (log the listing) | the tray is listed as "the panel (tray) of a pad…", not "a room" |
-| I15 | `make a 7`, `copy the 7`, then `vacuum the 7 on the table` | the hand ends empty after each sentence, and Dusty takes the 7 without a refusal |
+| I15 | (reload first, for a clean table) `make a 7`, `copy the 7`, then `vacuum the 7 on the table` | the hand ends empty after each sentence, and Dusty takes the 7 without a refusal |
 | I16 | `put a robot on the table`, `give it a 3`, `erase the 3 so it works for any number`, `leave`, then `give it a 5` | the robot keeps a lesson of doing nothing: given the 5, it recognises it and nothing happens (the log says it was trained to do nothing) |
 | I17 | `put a nest on the table`, `give the bird a 1`, then `vacuum the 1` | the 1 on the nest is listed ("on top of the nest") and Dusty takes it |
 | I18 | `vacuum the nest`, then `give the bird a 7` | with no nest, the bird flies off with the 7 and comes back without it — no complaint |
@@ -244,11 +245,16 @@ Tick the switch again afterwards.
 | J5 | `reset the view` | back to the usual view of the table |
 | J6 | `what am I holding?` | answered from the listing; nothing moves |
 | J7 | (a person, with the microphone) say `put a box on the table` | the answer is read aloud as well as shown |
-| J8 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the one back on your work area`, `put the original back` | inside the bubble: the copy goes on the robot's desk, then the original comes off Mimi's platform (the copy is set aside first) |
+| J8 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the one back on your work area`, `put the original back` | inside the bubble: the copy goes on the robot's desk; then the original is dropped on it and they ADD — the answer must say the number on the desk now reads 2 |
 | J9 | type a sentence, press Enter, then type another without clicking | the cursor is still in the line after the first one finishes |
 | J10 | (reload with `?fresh`) `give a robot a 1`, `give the one to Mimi`, `put the copy back on the desk`, `put the other one on top`, `leave`, `run`, then when it stops: `erase the 1 in its thought` | the thought becomes any number at the bench, without going back into the bubble; run again and it keeps adding |
 | J11 | after J10, while the robot runs: `speed up to 8`, then `put a box on the table`, then `stop` | Speed shows 8×; the box is refused while it runs (nothing on the table changes); the robot stops at the end of its round |
 | J12 | (with Voice Access) say a sentence and then "press Enter" | the log shows the sentence without the words "press Enter" |
+| J13 | (reload) `put a box on the table and then drop it on thing 99` | ✗, and the answer says the steps before it were undone: no box is left on the table |
+| J14 | type two sentences quickly, the second while the first is still "thinking…" | the second waits its turn (the log says so) and is then done; nothing typed is lost |
+| J15 | (reload) `put a robot on the table`, `give it a 1`, `leave`, then `give the robot a 5` | the 1 goes from the desk to the table first, then the robot gets the 5 — the answer says so |
+| J16 | `take a nest and call it orders`, `put it down`, then `put a 1 on orders` | the 1 goes to the nest called orders, found by its name |
+| J17 | (switch unticked) say to Marty `put a box on the table` | Marty says the switch is off and where it is; nothing moves |
 
 ## What to report
 

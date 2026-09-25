@@ -9103,3 +9103,52 @@ relative to the speed shown (the steps are 2x apart: 8x doubled is
 Instant), and the prompt names "go faster", "slow down", "full speed" as
 speed and "return it" as "put it back". handByWordCheck: run-speed-stop
 now also doubles 8x to Instant.
+
+## The Claude-artifact test of 25 September
+
+Claude in Chrome ran TESTING-HAND-BY-WORD.md against the published artifact
+(keyless Claude): 22 of the 29 scorecard items right, and a list of what
+went wrong. What changed:
+
+- **Nothing typed is lost.** Read-only while the hand worked, the line
+  swallowed what was typed -- the tester's first "stop" and first "speed up
+  to 8" vanished without a trace. The line stays open now; a sentence that
+  comes while the hand is busy is logged, waits its turn and is done after;
+  "stop" acts at once. After "stop", a plan that needs the table waits for
+  the robot to finish its round instead of being refused (D6).
+- **A failed plan is undone.** The steps before the one that failed are
+  taken back with the workshop's own undo (the snapshot on top when the
+  plan began), so a half-done plan leaves no debris (A2's stray 3, I4's
+  5 in the hand) and nothing half-shown stays in a lesson (D3's "pick up
+  what it was given", which then ran for 33 rounds). The answer says so:
+  "the 2 steps before it were undone, so nothing changed". Not across a
+  mode change (a give that opened a bubble).
+- **The answer says what a drop made.** A number dropped on a number adds,
+  and the brain's own words hid it ("the original is back on the desk" over
+  a desk reading 2, J8; "a 1 is added" over two additions, H7b). A drop that
+  adds now appends "the number it landed on, on the desk, now reads 2".
+- **A full desk is cleared, a full claw sets down.** "Give the robot a 5"
+  with a 1 on its desk puts the 1 on the table first and says so (the brain
+  was told to clear it, and did not, three times out of three). Inside a
+  bubble a take with the claw full sets down first, as the hand does at the
+  table (D3, E2) -- one rule everywhere.
+- **Names and numbers.** A thing answers to its name in any step ("posty"
+  once set down, I19; a nest and her bird share a name: a gift goes to the
+  bird, anything else to the nest). "#5" past the end of the listing is the
+  number 5 (I16).
+- **"Leave"** leaves a panel or the yard too (I8b). **"Give … to Mimi"** is a
+  copy on every path (C5). **Marty with the switch off** no longer says "Your
+  hand is on it": he says the switch is off and where it is (G3).
+- **The prompt** has worked examples for what the brain kept getting
+  wrong: a 3-hole box, a scale with 1 and 100, a full desk, a full claw,
+  giving to Mimi; and rules that "make a 7" is always fresh, that a place
+  word fitting nothing still means the only thing of that kind, and that a
+  name names a thing.
+
+Not reproduced: H1's name not sticking on an unhatched nest -- named in the
+hand it keeps the name through hatching, filing and lookup (measured). The
+script: I6 and I15 now say to reload first; an artifact has no ?fresh, and
+reloading its page gives a clean table; J13-J17 added. handByWordCheck:
+undone-at-table, undone-in-bubble, waits-its-turn, by-name,
+number-not-label, leave-yard, give-to-mimi; bad (undone), desk-drop (reads
+2), full-desk (cleared first), off-says-switch (Marty names it).
