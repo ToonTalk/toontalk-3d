@@ -9091,3 +9091,15 @@ copy in the claw was refused (the pickup of the original wanted an empty
 claw); the claw now sets down first, as the hand does at the table, and the
 prompt reads "put it back" with the copy in hand as the copy going to the
 desk. handByWordCheck: run-speed-stop, put-back-holding-copy.
+
+## "Double the speed", "return the one"
+
+Ken (25 Sep) ran a copy from before the previous round (the log still had
+"run press Enter" in it, and the refusals without their sentences), so its
+"return the one", "Wait for the robot to finish" and "Stop" were already
+answered there. Still missing on the new build: "double the speed" -- the
+speed step knew exact speeds, faster and slower. Double and halve are now
+relative to the speed shown (the steps are 2x apart: 8x doubled is
+Instant), and the prompt names "go faster", "slow down", "full speed" as
+speed and "return it" as "put it back". handByWordCheck: run-speed-stop
+now also doubles 8x to Instant.
