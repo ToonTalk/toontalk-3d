@@ -9237,3 +9237,28 @@ Chrome on an NVIDIA Ampere card:
 So: labelled experimental in the panel, with the numbers, before anyone
 downloads gigabytes. About 6 in 10 is not enough for a person to rely on;
 it is enough to watch newer small models against, with the same scorecard.
+
+## Thinking first, for the model in the browser: tried, taken back
+
+Ken (26 Sep) asked whether the 9B's worse score had a reason and whether
+letting the model think would help. The 9B's 21 against the 4B's 23 is
+within the noise of 38 linked sentences: its one early slip with names (A2)
+was copied through section B by the running conversation, a slip the 4B
+happened not to make. Thinking was tried on the 4B (Qwen's enable_thinking
+only stops WebLLM forbidding it; the model thought only when asked, with
+"/think" and an instruction in the question):
+
+- **Free thinking**: the first sentence took 230 s and spent its whole
+  2,500-token budget thinking, never reaching the plan -- the card writes
+  about 11 tokens a second.
+- **Thinking in at most three sentences**: 8 of 17 on sections A, B and D,
+  against 12 of 17 without, and ~9 s a sentence against ~5. The reasoning
+  was fluent and wrong where it mattered ("'leave' is not a valid action in
+  this context").
+
+So the thinking code was taken back out; the model in the browser stays
+experimental, at about 6 in 10. Other WebLLM models of this size (Qwen 3 8B,
+Llama 3.1 8B, Phi-4 mini, Gemma 2 9B) are of the same class or older, and
+larger ones need more graphics memory than most machines have -- not worth
+another round until a clearly stronger small model appears, when
+tests/hand-scorecard.js can measure it in a few minutes.
