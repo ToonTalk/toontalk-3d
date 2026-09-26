@@ -9262,3 +9262,21 @@ Llama 3.1 8B, Phi-4 mini, Gemma 2 9B) are of the same class or older, and
 larger ones need more graphics memory than most machines have -- not worth
 another round until a clearly stronger small model appears, when
 tests/hand-scorecard.js can measure it in a few minutes.
+
+## Released: your hand, by words (26 September)
+
+Ken (26 Sep): "let's release this version (so it's at
+https://toontalk.github.io/toontalk-3d/) and update the manual". The release
+had not changed since the next build was copied from it (21 Sep, 11:34 and
+21:16), so the next build became `toontalk-3d.html` as it stood. The manual
+gained **Your hand, by words** (turning it on, "a 1" and "the 1", what it can
+do, what happens when it cannot, speaking to it -- the microphone, dictation
+in an artifact, Marty -- voice alone, and which brain), Marty's section a
+paragraph on the model in the browser, and his microphone the artifact's
+dictation advice. The manual lives twice -- manual.html, which a served page
+reads live, and a text copy inside the app for builds that cannot fetch
+(embed_manual.py), which the chat pack is made from -- so the copy was
+re-embedded before the single-file build, the chat build and the pack
+(114 KB of manual now) were rebuilt. The full suite stalled at copy700 as
+before and was run in batches instead. `toontalk-3d-next.html` stays, the
+same file for now, as the place for work in progress.

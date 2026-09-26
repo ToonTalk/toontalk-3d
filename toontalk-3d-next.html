@@ -1711,6 +1711,17 @@ have without handing out a key. Being small, it cannot hold the whole manual at
 once, so he is handed the sections your question is about rather than all of
 them — he is likelier to say he is unsure than the larger brains are.
 
+A model in this browser is the experimental choice: an open model
+(Qwen, Llama or Phi) runs on your computers own graphics card, so again
+there is no key and nothing leaves the machine. It needs a browser with WebGPU
+and a graphics card with several gigabytes of memory; the panel lists the
+models with their sizes, and a button downloads the one you pick (a few
+gigabytes, once) and loads it, which takes a minute or so each time the page
+opens. It is not offered in a Claude artifact. It is marked experimental
+because it is much less reliable than the brains over the network: tried on
+the hands test sentences it got about six in ten right, where they get
+nearly all.
+
 The others — Claude, ChatGPT and the full Gemini — talk
 to their companies over the network, so each wants that provider's API key
 pasted in; the key is kept only in this browser, and a network is needed to
@@ -1774,7 +1785,11 @@ and whether the messages under the title are read aloud, belong to
 whoever is signed in — like the notebook, they are kept under your
 name, so picking a voice does not change it for everybody else who uses this
 browser. The 🎤 button lets you ask by voice, where the browser
-offers a microphone — where it does not, the button simply is not shown. The sound slider in the menu sets how loud every voice is as well as the
+offers a microphone — where it does not, the button simply is not shown. A
+Claude artifact is never given the microphone, so there a press of it puts the
+cursor in his question box and says how to start your computers own
+dictation instead (below, under Speaking to your
+hand). The sound slider in the menu sets how loud every voice is as well as the
 effects, and the mute button beside it silences them all.
 
 Asking Marty for a toy
@@ -1845,6 +1860,109 @@ invent a toy, and he says so rather than pretending. Everything he sends back
 is checked before it is built: only boxes, balls, tubes and cones, only real
 colours, and always a size your hand can pick up, so a strange answer makes a
 strange toy and never a broken workshop.
+
+## Your hand, by words
+
+You can tell your own hand what to do. Say or type pick up a 1
+and put it in a 3-hole box, make a pad that says
+ToonTalk or give a robot a scale with 1 and 100 on
+it, and your hand does it — the same clicks and key presses
+you would have made yourself. That is the point: it is not Marty doing
+things for you, it is another way of moving your hand, so
+Undo takes a step back as always, a puzzles rules still apply,
+and inside a thought bubble the hand is the robots claw and what it
+does is what the robot learns.
+
+It needs a brain — any of the choices under How Marty
+thinks. With one chosen, the ⋮ menu has Move my hand by
+words (and the Settings card has the same switch); tick it and a line
+appears at the top of the screen: Tell your hand what to do. Type a
+sentence and press Enter. Esc gives the keyboard back to the table.
+
+A 1 and the 1
+The brain is shown what is here, numbered: the things on the table, what
+sits in each hole or rides on each thing, what is on the robots desk
+and Mimis platform, what is in your hand, and where each thing is on
+the screen — left or right, at the front or the back. It decides what
+your words mean from that, the way a person would: a 1 is a fresh
+one from the stack, the 1 is the one already on the table;
+the box on the left is the one you can see on the left. After Mimi has
+copied something, it knows which is the copy and which the original.
+
+What it can do
+Anything you can do with your hand, more or less: take things from the
+stacks and type on them; put them on the table, into a hole, on another
+thing (a number dropped on a number adds, as always); give something to a
+robot, or to a bird, who flies it to her nest; have Mimi copy something and
+Dusty vacuum it; name a thing (call it orders) and use
+the name later; file a thing in your notebook and take it out again by name;
+go out to the yard, into the panel on the back of a thing, and back.
+Inside a thought bubble it trains: add a 1 to the number on the
+desk, then leave. It can have Ruby loosen
+a part of a robots thought (erase the 3 so it works for any
+number) inside the bubble, or at the bench after a run stops
+because the robots desk no longer fits its thought. It can run the
+robot, and while one is running it can stop it, pause and
+resume, and change the speed (double the speed,
+8 times as fast, instant)
+— but nothing else touches the table until you say stop. It moves the
+camera too: turn left, look from higher, come
+closer, look at the robot, reset the view. And a
+question about what is here — what is on the
+table?, what am I holding? — is
+answered without anything moving. Questions about how ToonTalk works are for
+Marty.
+
+When it cannot
+Every step is checked before the next is tried. If one cannot be done, the
+line says which step and why, and the steps before it are undone, so
+nothing is left half-done — not on the table, and not in a lesson a
+robot is being taught. If part of what you asked is impossible, nothing is
+done at all. A tick (✓) means it was done; the answer says what a drop
+made (the number it landed on now reads 4), so you
+never have to take its word for it. A cross (✗) means nothing
+changed. A sentence you say while the hand is still busy waits its turn;
+stop never waits.
+
+The small ▾ at the end of the line opens a log of what you said
+and what came back; What was said on the title card shows the same log
+with the workshops own messages in it too. Neither opens by itself.
+
+Speaking to your hand
+The 🎤 on the line listens until you press it again. A pause sends
+what you said; or, on the Settings card, give it a go phrase
+(do it) and what you say piles up until you end with
+it. It stops listening while the workshop is speaking, so it never hears its
+own voice. When you speak, the answer is read aloud as well as shown;
+Read your hands answers aloud on the Settings card does that
+for typed sentences too.
+
+In a Claude artifact the page is never given the microphone, so the
+🎤 there puts the cursor in the line and tells you how to start your
+computers own dictation, which types into whatever has the cursor:
+Windows+H on Windows (with Voice Access you can say press
+Enter to send), the Fn (Globe) key twice on a Mac,
+Search+D on a Chromebook, the microphone on a phones keyboard.
+The line keeps the cursor from one sentence to the next, and the words
+press Enter, if dictation types them, are left out.
+
+Said to Marty instead, with the switch on, a sentence asking to
+move things goes to your hand just the same; with it off, he tells you where
+the switch is.
+
+Someone who works by voice alone can get a long way: the brain is told
+where each thing is on the screen, the camera moves by words, and every answer
+can be heard. Buttons that are not on the table — the menus, Run and
+Speed on the bar, a puzzles buttons — are for your
+computers own voice control.
+
+Which brain
+The brains over the network — Claude, ChatGPT, Gemini, and Claude
+with no key in a Claude artifact — get nearly every sentence right, in a
+few seconds. The small ones that run on your own computer — Gemini Nano
+inside Chrome, and a model in this browser — get many wrong, and are
+there to experiment with. Whichever you use, nothing half-done is left
+behind.
 
 ## The yard
 

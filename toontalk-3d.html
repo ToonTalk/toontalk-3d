@@ -23,6 +23,33 @@
   .card { position: fixed; background: var(--panel); border: 1px solid var(--edge);
           border-radius: 12px; backdrop-filter: blur(8px); padding: 12px 14px; }
   #title { top: 14px; left: 14px; max-width: 300px; }
+  /* YOUR HAND, BY WORD: one line at the top, centre, where nothing else sits */
+  #handBar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+             display: none; align-items: center; gap: 6px; z-index: 39;
+             padding: 6px 8px; max-width: calc(100vw - 660px); }
+  #handBar.on { display: flex; }
+  #handIn { font: inherit; font-size: 13px; color: var(--ink); width: min(460px, 60vw);
+            background: rgba(255,255,255,.07); border: 1px solid var(--edge);
+            border-radius: 8px; padding: 6px 10px; }
+  #handIn:disabled { opacity: .6; }
+  #handStatus { font-size: 12px; color: var(--dim); white-space: nowrap; }
+  #handLog { display: none; position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
+             max-height: 150px; overflow: auto; font-size: 12px; line-height: 1.4;
+             padding: 6px 10px; background: rgba(18,22,30,.94); border: 1px solid var(--edge);
+             border-radius: 8px; color: var(--ink); }
+  #handLog.on { display: block; }
+  #handLog .you { color: var(--dim); margin-top: 4px; }
+  #handLog .you:first-child { margin-top: 0; }
+  #handLog .no { color: #f0a091; }
+  #handLog .ok { color: #9ddc9d; }
+  #handLog .ws { color: var(--dim); font-style: italic; }
+  #handLog .ws.attn { color: var(--accent); }
+  #handLog { position: fixed; top: 74px; left: auto; right: 14px; transform: none; width: min(420px, 92vw); max-height: 40vh; z-index: 41; }
+  #handLog.free { left: 14px; top: auto; bottom: calc(var(--barh, 0px) + 10px); transform: none; width: min(520px, 92vw); max-height: 45vh; }
+  @media (max-width: 1000px) { #handLog:not(.free) { top: auto; bottom: calc(var(--barh, 0px) + 62px); } }
+  #handMic.on { filter: drop-shadow(0 0 4px #f66); }
+  @media (max-width: 1000px) { #handBar { top: auto; bottom: calc(var(--barh, 0px) + 10px);
+                                          max-width: calc(100vw - 28px); } }
   /* FOLDED: the first line and the hint only. On a short viewport the whole
      card covered the back door (ChatGPT, 800x450); it folds itself there. */
   #title.min > :not(h1):not(#hint):not(#titleMin) { display: none; }
@@ -206,6 +233,8 @@
   <p id="whoLine" style="margin-top:6px;font-size:11.5px;color:var(--dim)"></p>
   <button id="titleMin" title="Fold this card to its first line, or open it again."
     style="position:absolute;top:8px;right:8px;padding:0 8px;line-height:1.3">–</button>
+  <button id="saidLogBtn" title="Everything said so far: the workshop's lines under the table, and what your hand was told and answered. Scroll for older ones."
+    style="margin-top:8px">&#x1F4DC; What was said</button>
   <button id="againBtn" style="display:none;margin-top:8px"
     title="Put this puzzle back exactly as it began.">Start this puzzle over</button>
   <button id="nextBtn" class="go" style="display:none;margin-top:8px"
@@ -1682,6 +1711,17 @@ have without handing out a key. Being small, it cannot hold the whole manual at
 once, so he is handed the sections your question is about rather than all of
 them — he is likelier to say he is unsure than the larger brains are.
 
+A model in this browser is the experimental choice: an open model
+(Qwen, Llama or Phi) runs on your computers own graphics card, so again
+there is no key and nothing leaves the machine. It needs a browser with WebGPU
+and a graphics card with several gigabytes of memory; the panel lists the
+models with their sizes, and a button downloads the one you pick (a few
+gigabytes, once) and loads it, which takes a minute or so each time the page
+opens. It is not offered in a Claude artifact. It is marked experimental
+because it is much less reliable than the brains over the network: tried on
+the hands test sentences it got about six in ten right, where they get
+nearly all.
+
 The others — Claude, ChatGPT and the full Gemini — talk
 to their companies over the network, so each wants that provider's API key
 pasted in; the key is kept only in this browser, and a network is needed to
@@ -1745,7 +1785,11 @@ and whether the messages under the title are read aloud, belong to
 whoever is signed in — like the notebook, they are kept under your
 name, so picking a voice does not change it for everybody else who uses this
 browser. The 🎤 button lets you ask by voice, where the browser
-offers a microphone — where it does not, the button simply is not shown. The sound slider in the menu sets how loud every voice is as well as the
+offers a microphone — where it does not, the button simply is not shown. A
+Claude artifact is never given the microphone, so there a press of it puts the
+cursor in his question box and says how to start your computers own
+dictation instead (below, under Speaking to your
+hand). The sound slider in the menu sets how loud every voice is as well as the
 effects, and the mute button beside it silences them all.
 
 Asking Marty for a toy
@@ -1816,6 +1860,109 @@ invent a toy, and he says so rather than pretending. Everything he sends back
 is checked before it is built: only boxes, balls, tubes and cones, only real
 colours, and always a size your hand can pick up, so a strange answer makes a
 strange toy and never a broken workshop.
+
+## Your hand, by words
+
+You can tell your own hand what to do. Say or type pick up a 1
+and put it in a 3-hole box, make a pad that says
+ToonTalk or give a robot a scale with 1 and 100 on
+it, and your hand does it — the same clicks and key presses
+you would have made yourself. That is the point: it is not Marty doing
+things for you, it is another way of moving your hand, so
+Undo takes a step back as always, a puzzles rules still apply,
+and inside a thought bubble the hand is the robots claw and what it
+does is what the robot learns.
+
+It needs a brain — any of the choices under How Marty
+thinks. With one chosen, the ⋮ menu has Move my hand by
+words (and the Settings card has the same switch); tick it and a line
+appears at the top of the screen: Tell your hand what to do. Type a
+sentence and press Enter. Esc gives the keyboard back to the table.
+
+A 1 and the 1
+The brain is shown what is here, numbered: the things on the table, what
+sits in each hole or rides on each thing, what is on the robots desk
+and Mimis platform, what is in your hand, and where each thing is on
+the screen — left or right, at the front or the back. It decides what
+your words mean from that, the way a person would: a 1 is a fresh
+one from the stack, the 1 is the one already on the table;
+the box on the left is the one you can see on the left. After Mimi has
+copied something, it knows which is the copy and which the original.
+
+What it can do
+Anything you can do with your hand, more or less: take things from the
+stacks and type on them; put them on the table, into a hole, on another
+thing (a number dropped on a number adds, as always); give something to a
+robot, or to a bird, who flies it to her nest; have Mimi copy something and
+Dusty vacuum it; name a thing (call it orders) and use
+the name later; file a thing in your notebook and take it out again by name;
+go out to the yard, into the panel on the back of a thing, and back.
+Inside a thought bubble it trains: add a 1 to the number on the
+desk, then leave. It can have Ruby loosen
+a part of a robots thought (erase the 3 so it works for any
+number) inside the bubble, or at the bench after a run stops
+because the robots desk no longer fits its thought. It can run the
+robot, and while one is running it can stop it, pause and
+resume, and change the speed (double the speed,
+8 times as fast, instant)
+— but nothing else touches the table until you say stop. It moves the
+camera too: turn left, look from higher, come
+closer, look at the robot, reset the view. And a
+question about what is here — what is on the
+table?, what am I holding? — is
+answered without anything moving. Questions about how ToonTalk works are for
+Marty.
+
+When it cannot
+Every step is checked before the next is tried. If one cannot be done, the
+line says which step and why, and the steps before it are undone, so
+nothing is left half-done — not on the table, and not in a lesson a
+robot is being taught. If part of what you asked is impossible, nothing is
+done at all. A tick (✓) means it was done; the answer says what a drop
+made (the number it landed on now reads 4), so you
+never have to take its word for it. A cross (✗) means nothing
+changed. A sentence you say while the hand is still busy waits its turn;
+stop never waits.
+
+The small ▾ at the end of the line opens a log of what you said
+and what came back; What was said on the title card shows the same log
+with the workshops own messages in it too. Neither opens by itself.
+
+Speaking to your hand
+The 🎤 on the line listens until you press it again. A pause sends
+what you said; or, on the Settings card, give it a go phrase
+(do it) and what you say piles up until you end with
+it. It stops listening while the workshop is speaking, so it never hears its
+own voice. When you speak, the answer is read aloud as well as shown;
+Read your hands answers aloud on the Settings card does that
+for typed sentences too.
+
+In a Claude artifact the page is never given the microphone, so the
+🎤 there puts the cursor in the line and tells you how to start your
+computers own dictation, which types into whatever has the cursor:
+Windows+H on Windows (with Voice Access you can say press
+Enter to send), the Fn (Globe) key twice on a Mac,
+Search+D on a Chromebook, the microphone on a phones keyboard.
+The line keeps the cursor from one sentence to the next, and the words
+press Enter, if dictation types them, are left out.
+
+Said to Marty instead, with the switch on, a sentence asking to
+move things goes to your hand just the same; with it off, he tells you where
+the switch is.
+
+Someone who works by voice alone can get a long way: the brain is told
+where each thing is on the screen, the camera moves by words, and every answer
+can be heard. Buttons that are not on the table — the menus, Run and
+Speed on the bar, a puzzles buttons — are for your
+computers own voice control.
+
+Which brain
+The brains over the network — Claude, ChatGPT, Gemini, and Claude
+with no key in a Claude artifact — get nearly every sentence right, in a
+few seconds. The small ones that run on your own computer — Gemini Nano
+inside Chrome, and a model in this browser — get many wrong, and are
+there to experiment with. Whichever you use, nothing half-done is left
+behind.
 
 ## The yard
 
@@ -3210,9 +3357,22 @@ function setVolume(v, muted) {
 // own engine, not the gain node, so every utterance is made here at the
 // slider's setting (muted: a robot's speak action says nothing at all, see
 // speakText; the hints and Marty keep their own switches and go quiet).
+// WHEN THE PAGE IS TALKING -- a hint read aloud, Marty, a robot reading a
+// pad -- a microphone left on hears it and would send it back as the
+// visitor's next sentence (Ken's log: "there is no thing one in the list",
+// twice). Every utterance counts itself in and out here, and the hand's
+// microphone drops whatever arrives while one is speaking or just after.
+let pageSpeaking = 0, pageSpokeAt = -1e9;
+// the hand's microphone, told when the page starts talking (set when the bar is built)
+let handMicDeaf = null;
+const pageTalking = () => pageSpeaking > 0 || !!window.speechSynthesis?.speaking
+  || performance.now() - pageSpokeAt < 1500;
 function utterance(said) {
   const u = new SpeechSynthesisUtterance(said);
   u.volume = sndMuted ? 0 : sndVol;
+  u.addEventListener('start', () => { pageSpeaking++; try { handMicDeaf?.(); } catch (e) {} });
+  const out = () => { pageSpeaking = Math.max(0, pageSpeaking - 1); pageSpokeAt = performance.now(); };
+  u.addEventListener('end', out); u.addEventListener('error', out);
   return u;
 }
 function tone(freq, dur, { type = 'sine', at = 0, slide = 0, gain = 0.25 } = {}) {
@@ -5590,7 +5750,7 @@ let martyCommentBusy = false;
 function martyCanThink() {
   if (brainStandIn) return true;
   const p2 = martyProv();
-  return p2 === 'nano' || p2 === 'here' || (!!p2 && !!martyKeyOf(p2));
+  return p2 === 'nano' || p2 === 'here' || (p2 === 'local' && !!navigator.gpu) || (!!p2 && !!martyKeyOf(p2));
 }
 // Says a line, and answers with the words said -- how long the run has to
 // wait before he is quiet enough for the steps to be narrated.
@@ -5661,6 +5821,10 @@ function nameTag(always = false) {
 let martyNewcomer = false;     // a name signed in here for the first time
 function setUser(name) {
   currentUser = String(name || '').trim().slice(0, 40);
+  // the hand-by-words switch is kept under this name: the line at the top
+  // follows the name, or it stays hidden until something else refreshes it
+  // (Ken: "the workshop microphone button isn't always available")
+  setTimeout(() => { try { handBarRefresh(); } catch (e) {} }, 0);
   try {
     const known = knownUsers();
     // A NAME HE HAS NOT MET is offered the look-around lesson at once (Ken,
@@ -11065,12 +11229,10 @@ function birdDeliver(bird, carried, fromClaw = false) {
     }
   }
   if (!nest || !inScene(nest)) {
-    const thing = carried;
-    // in a background world, and in the robot's claw, there is no hand to take
-    // it back into: it goes down on the table instead
-    if (thing && (fromClaw || worldStack.length)) { putOnBench(thing, benchSpot()); return; }
-    if (thing) takeIntoHand(thing);
-    return say('Her nest is gone — she has nowhere to take it.');
+    // NO NEST: she flies off with it, it is gone, and she comes back (Ken,
+    // 23 Sep: "not report a problem"). A letter posted to nowhere is lost.
+    if (carried) birdFlyAway(bird, carried, fromClaw);
+    return;
   }
   // A bird carrying mail out of the house she lives in: the house runs in an
   // instant, but the flight across your table is worth seeing, so it is handed
@@ -11183,6 +11345,55 @@ function birdDeliver(bird, carried, fromClaw = false) {
       else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
       refreshUI();
       // ...and what waited for her goes next, one flight at a time
+      const next = bird.__pending?.shift();
+      if (next) birdDeliver(bird, next.carried, next.fromClaw);
+    },
+  });
+}
+
+function birdFlyAway(bird, thing, fromClaw) {
+  clearUndo();
+  busy = true;
+  sfx('chirp');
+  const wasAt = bird.getWorldPosition(new THREE.Vector3());
+  const originHole = holeContaining(bird);
+  const originSt = Object.values(stations).find(st2 => st2.occupant === bird);
+  detach(bird);
+  WROOT.attach(bird);
+  bird.__flying = true;
+  { const ghost = ghostBird(bird);
+    if (originHole) putInHole(originHole, ghost);
+    else if (originSt) putOnStation(originSt, ghost);
+    else putOnBench(ghost, { x: wasAt.x, z: wasAt.z });
+    bird.__ghost = ghost; }
+  detach(thing);
+  bird.add(thing);
+  thing.position.set(0, -0.02, 0.16);
+  thing.quaternion.identity();
+  thing.scale.setScalar(0.5);
+  // away over the far side of the room, up and out of sight, and back
+  const away = new THREE.Vector3(wasAt.x * 0.5, wasAt.y + 2.2, wasAt.z - 4.5);
+  if (!fromClaw && !offstage()) say('She has no nest \u2014 she flies off with it, and it is gone.');
+  enqueueNext({
+    dur: 0.9,
+    update(t) {
+      const e = ease(t);
+      bird.position.set(lerp(wasAt.x, away.x, e), lerp(wasAt.y, away.y, e) + 0.3 * Math.sin(Math.PI * e), lerp(wasAt.z, away.z, e));
+    },
+  }, doNow(() => { bird.remove(thing); detach(thing); thing.removeFromParent(); }), {
+    dur: 0.8,
+    update(t) {
+      const e = ease(t);
+      bird.position.set(lerp(away.x, wasAt.x, e), lerp(away.y, wasAt.y, e) + 0.3 * Math.sin(Math.PI * e), lerp(away.z, wasAt.z, e));
+    },
+    end() {
+      bird.__flying = false;
+      const ghost = bird.__ghost;
+      if (ghost) { bird.__ghost = null; detach(ghost); ghost.removeFromParent(); }
+      if (originHole && !originHole.thing) putInHole(originHole, bird);
+      else if (originSt && !originSt.occupant) putOnStation(originSt, bird);
+      else putOnBench(bird, { x: wasAt.x, z: wasAt.z });
+      refreshUI();
       const next = bird.__pending?.shift();
       if (next) birdDeliver(bird, next.carried, next.fromClaw);
     },
@@ -14249,6 +14460,7 @@ function runDuplicate() {
         return;
       }
       WROOT.add(copy);
+      copy.__copyOf = inSt.occupant;   // for the hand's listing: which 1 is the copy, which the original
       from = inSt.occupant.getWorldPosition(new THREE.Vector3());
       copy.position.copy(from);
       copy.scale.setScalar(0.01);
@@ -15745,6 +15957,10 @@ function runRefusal(target) {
         end() { nest2.scale.setScalar(1); },
       });
       t.__nest = nest2;
+      // HER NEW NEST ONLY: she kept the address of the nest she was filed
+      // away from, and every nest answering to it got the delivery too (Ken)
+      t.userData.nestGuid = nest2.userData.guid;
+      t.__nestId = nest2.userData.id;
       say('Her new nest grows beside the notebook.');
     }
     scene.add(t);
@@ -17571,6 +17787,7 @@ function runStep(step) {
   else if (step.type === 'panel') actionPanel();
   else if (step.type === 'fold') actionFold(step.at);
   else if (step.type === 'speak') actionSpeak();
+  else if (step.type === 'nothing') { /* trained to do nothing: a placeholder */ }
   else if (step.type === 'teach') actionTeach(step.at);
   else if (step.type === 'taught') {
     if (step.step?.type === 'erase') enqueue(doNow(() => replayErase(step.step.path)));
@@ -19368,8 +19585,11 @@ function snapshotWorld() {
   // its open tray orphaned (the sweep then folds it away mid-daydream). Bench
   // things cannot change during a daydream -- robots cannot reach the table --
   // so the reference is safe.
+  // ...and a thing with RIDERS on it goes by reference too: a spec has no
+  // riders, so a pad carrying two numbers came back from a daydream bare
+  // (the tester's finding 2, 22 Sep: "the 12 and the -5 had vanished")
   snap.bench = benchThings.map(t =>
-    ['robot', 'nest', 'bird', 'room'].includes(t.userData.kind) || t.__panelTray
+    ['robot', 'nest', 'bird', 'room'].includes(t.userData.kind) || t.__panelTray || (t.__subs && t.__subs.length)
     ? { bot: t, at: { x: t.position.x, z: t.position.z } }
     : { spec: specOf(t, true), at: { x: t.position.x, z: t.position.z } });
   snap.piles = allNests.filter(n => n.parent)
@@ -19433,6 +19653,7 @@ function enterTraining() {
   const given = stations.stand.occupant;
   if (!given) return;
   condition = condFromSpec(specOf(given));   // exact at first; Dusty loosens it
+  condAtEntry = condText(condition);        // to know, on the way out, whether it was loosened
   // remember the very thing it was shown -- a copy can be taken from the
   // bubble. Live things serialise faithfully now (guid pairing), so even a
   // box holding a bird or a robot is remembered.
@@ -19472,9 +19693,20 @@ function enterTraining() {
 }
 // Leaving the bubble rewinds the world: what happened in the daydream was never
 // real. The robot keeps only the actions it learned.
+let condAtEntry = null;
 function leaveTraining(restore = true) {
   undoDreamTeaching();
   clearUndo();
+  // A LESSON OF ERASURES ONLY IS A LESSON (Ken, 23 Sep): a robot whose thought
+  // was loosened and shown nothing to do is trained -- to do nothing. It may
+  // be a placeholder to replace later, and on a team its erasures matter;
+  // the original works this way. One explicit step says so, and everything
+  // that asks "is it trained?" (the program's length) agrees.
+  if (activeBot && !program.length && condition && condAtEntry != null && condText(condition) !== condAtEntry) {
+    program = [{ type: 'nothing' }];
+    syncBot();
+  }
+  condAtEntry = null;
   mode = 'world';
   if (activeBot && program.length) activeBot.taughtHere = true;   // the button says "Run what it learned"
 
@@ -19763,6 +19995,10 @@ function nextIteration() {
       return;
     }
     return done();
+  }
+  if (member.program.length && member.program.every(st => st.type === 'nothing')) {
+    finishRun();
+    return say(`${member === activeBot ? 'It' : 'A robot on the team'} recognises what it was given \u2014 and was trained to do nothing, so nothing happens.`);
   }
   if (runCount >= maxIter) {
     return finishRun(`Stopped after ${maxIter} rounds — the “Rounds” limit, not its condition.`);
@@ -20588,7 +20824,9 @@ function addToHint(extra) {
   return sayAttn(now ? now + ' ' + extra : extra);
 }
 let lastSayText = null;     // what say() was last asked to show, offstage included (a probe)
+let saidLast = '';   // the last line logged, so a repeated say() is one entry
 function say(msg, hold = 2800, attn = false) {
+  if (msg && msg !== saidLast) { saidLast = msg; try { handLog(attn ? 'ws attn' : 'ws', String(msg)); } catch (e) {} }
   lastSayText = msg;
   if (offstage()) return;
   if (attnHeld && !attn) return;
@@ -20664,6 +20902,7 @@ function describe(s) {
        : s.type === 'fold' ? `put away the panel on ${holeName(s.at)}, back inside its thing`
        : s.type === 'vacuum' ? `have Dusty vacuum ${holeName(s.at)}`
        : s.type === 'speak' ? 'read aloud what it holds'
+       : s.type === 'nothing' ? 'do nothing (its thought was loosened, and nothing more was shown)'
        : s.type === 'teach' ? `give it to the little robot in ${holeName(s.at)} and teach it:`
        : s.type === 'taught' ? `· ${s.step ? describe(s.step) : '?'}`
        : s.type === 'endTeach' ? '· and that is its lesson'
@@ -21418,7 +21657,7 @@ const typingInAField = () => {
     || ['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName);
 };
 addEventListener('keydown', (e) => {
-  if (typingInAField()) return;
+  if (typingInAField() && !e.__hand) return;
   // Ctrl+V WITH AN EMPTY HAND reads a thing off the clipboard -- the text
   // Ctrl+C with a thing in hand writes -- into the hand, the way a dropped
   // file arrives
@@ -23249,6 +23488,27 @@ loadModel('robot_v4.glb', (gltf) => {
       refreshUI();
     };
     menu.appendChild(nbb);
+    // YOUR HAND, BY WORD: the switch here in the menu, not only on the
+    // settings card (Ken typed his sentences to Marty and nothing moved).
+    // Shown only while a brain is there; the module that knows is defined
+    // later in this script, so nothing here calls it before load ends.
+    const hwb = document.createElement('button');
+    hwb.id = 'handWordsBtn';
+    hwb.title = 'Say or type what your hand should do \u2014 \u201cpick up a 1 and put it in a 3-hole box\u201d \u2014 on a line at the top of the screen, and your own hand does it. Thinks with the brain chosen under \u201cHow Marty thinks\u201d.';
+    const hwbText = () => {
+      hwb.textContent = (handWordsOn() ? '\u2611' : '\u2610') + ' \u{1F590} Move my hand by words';
+      hwb.style.display = handBrainReady() ? '' : 'none';
+    };
+    hwb.onclick = () => {
+      document.getElementById('moreMenu').classList.remove('on');
+      mineSet(HAND_WORDS, handWordsOn() ? '0' : '1');
+      handBarRefresh(); hwbText();
+      if (handWordsOn()) { say('Your hand listens \u2014 say or type what it should do, on the line at the top.', 5000); setTimeout(() => document.getElementById('handIn')?.focus(), 50); }
+      else say('Moving your hand by words is off.');
+    };
+    menu.appendChild(hwb);
+    setTimeout(hwbText, 0);
+    { const prev = menuRefresh; menuRefresh = () => { prev(); hwbText(); }; }
     // WHAT IS HERE: Marty, the helpers, the stacks and the back door, each
     // with a box to tick -- a general way to take anything out of the
     // workshop when it is not wanted, and to bring it back (Ken). Remembered
@@ -25056,6 +25316,9 @@ function martyWorldText() {
   const lines = [];
   if (loadedWorldName) lines.push('The visitor has loaded the world file: ' + loadedWorldName);
   lines.push('Mode: ' + (mode === 'training' ? "inside a robot's thought (training)" : mode));
+  lines.push('The hand-by-words switch is ' + (handWordsOn() && handBrainReady()
+    ? 'ON: an instruction to move things goes in "hand", and the visitor\'s own hand makes the moves.'
+    : 'OFF: it is "Move my hand by words" in the \u22ee menu.'));
   if (held) lines.push("In the visitor's hand: " + d(held));
   if (activeBot) lines.push(`Robot at the bench: ${activeBot.name || '(unnamed)'} — ${activeBot.program.length} steps, runs on ${condText(activeBot.condition)}, team of ${activeBot.team.length + 1}${activeBot.waiting ? ', dozing on a bare nest' : ''}.`);
   if (stations.stand?.occupant) lines.push('On its desk: ' + d(stations.stand.occupant));
@@ -25191,6 +25454,7 @@ const martyActivityText = () => {
 };
 
 const MARTY_SYSTEM = `You are Marty the Martian, the friendly green helper who lives in ToonTalk 3D — a 3D workshop where children build programs out of toys. The pieces: NUMBERS (the stack gives 1s; while HOLDING a number, typing digits APPENDS to what it shows — a fresh 1 typed 2 reads 12 — so press Backspace first to clear it; the minus key negates, and * / ^ — or the words mod and set — choose what it DOES when dropped on another number; there is NO way to type a fraction directly: to make p/q, hold a fresh number, press Backspace, type q then /, and drop it on a number showing p — the result is exactly p/q, no rounding), PADS (write by typing; join by dropping on an edge), BOXES (holes hold anything; a box with no holes is a mould), DICE (re-roll a number), SCALES (lean toward the larger; robots can match the lean; words weigh alphabetically), BIRDS & NESTS (give a bird anything and she flies it to her nest; robots doze on a bare nest), ROBOTS (train one by giving it something and doing the job once; it remembers the steps; Ruby erases parts of its thought to make it accept more — erasing never starts it: a robot runs only when Run what it learned is pressed, and it repeats round after round for as long as its thought still fits what is on its desk, until Stop or the Rounds limit, so a robot that adds one to "any number" counts on and on rather than adding one once; drop one robot on another to form a team that takes turns), ROOMS (little worlds that work on their own; lever runs, roof toggles glass, door walks in), MIMI the copier, DUSTY the vacuum, RUBY the eraser, and the NOTEBOOK (file things; robots can look programs up by name).
+If the visitor tells you to pick up, take, fetch, put, drop, type on or move something ("put a box on the table", "give the robot a 3"): when the context says the hand-by-words switch is ON, set "hand" to true and "say" to one short line such as "Your hand is on it." -- the workshop's own hand is given their sentence and makes the moves, not you, and it reports for itself. For anything else "hand" is false. When the switch is OFF, say plainly that you cannot move their hand and that "Move my hand by words" in the \u22ee menu will let their own hand do it. Never say a thing is on the table unless this very reply fetched it.
 
 Rules for you:
 - The MANUAL below is the truth about this workshop. Answer from it. If it does not say, say you are not sure rather than inventing — you are describing a real program the visitor is looking at.
@@ -25202,7 +25466,7 @@ Rules for you:
 - Set "demo" ONLY when the visitor asks to be shown, or asks how something works and words alone would not do. If your words already answer the question, use null — never pick a demo merely because the topic matches. The visitor gets a button to start it, and it plays one narrated step at a time.
 - Demos are FIXED scripts — the blurb after each name says exactly what it covers. Offer one ONLY if its blurb covers what was asked; if nothing covers it, set demo to null and say so plainly ("I have no demonstration of that, but here is how it works…"). Never promise a demo will use the visitor's own numbers or words, and never offer a demo you have already given for the same question.
 - When showing genuinely beats telling, pick exactly ONE demonstration from this list (use the name on the left): ${Object.entries(MARTY_DEMOS).map(([k, v]) => k + ' — ' + v.blurb).join('; ')}.
-- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null"} — "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
+- Reply with ONLY a JSON object, no other text: {"say": "your words", "demo": "name-or-null", "fetch": "stack-or-null", "hand": false} — "hand" is true only when the hand-by-words switch is ON and the visitor is telling you to move something (see above); "fetch" is null unless you are the visitor's building partner and have been asked to do a step yourself; then it names a stack (minis, numbers, boxes, nests, scales, dice, texts) and one fresh thing from it is set on the table.`;
 // Marty answers from THE MANUAL, not from what a model imagines a workshop
 // like this might do -- that is what had him inventing ways to type a fraction
 // and denying that numbers show decimals at all. A live copy is preferred, so
@@ -25258,7 +25522,7 @@ let sampleFn = null;
 (async () => { try { sampleFn = (await window.claude?.use?.('sample')) ?? null; } catch { sampleFn = null; } })();
 // the size complaint of any brain, told apart from the rest: the built-in
 // model's quota, the sample route's 64 KiB
-const tooMuchFor = (e) => nanoTooMuch(e) || e?.code === 'prompt_too_large' || /exceed|64 KiB/i.test(e?.message || '');
+const tooMuchFor = (e) => nanoTooMuch(e) || e?.code === 'prompt_too_large' || /exceed|64 KiB|context ?window/i.test(e?.message || '');
 const SAMPLE_MANUAL_BUDGET = 40000;
 // "you gave me more than I can hold", however this build of Chrome says it
 const nanoTooMuch = (e) => e?.name === 'QuotaExceededError'
@@ -25272,7 +25536,8 @@ const martyReplySchema = () => ({
   type: 'object',
   properties: { say: { type: 'string' },
                 demo: { enum: [...Object.keys(MARTY_DEMOS), null] },
-                fetch: { enum: [...MARTY_FETCHABLE, null] } },
+                fetch: { enum: [...MARTY_FETCHABLE, null] },
+                hand: { type: 'boolean' } },
   required: ['say'],
   additionalProperties: false,
 });
@@ -25410,6 +25675,113 @@ async function nanoThink(sys, q, history = martyHistory, schema = null) {
     }
   } finally { session.destroy?.(); }
 }
+// A MODEL IN THIS BROWSER (WebLLM, Ken 26 Sep). An open model runs on this
+// computer's graphics card through WebGPU: no key, no account, nothing leaves
+// the machine -- but a download of gigabytes, once (the browser caches it),
+// and a capable GPU. The library comes from jsDelivr the first time it is
+// wanted; the model only on a click of its own button, never set off by a
+// question. It runs in a worker, so the workshop keeps moving while it thinks.
+const LOCAL_LIB = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm';
+const LOCAL_MODELS = [
+  { id: 'Qwen3.5-4B-q4f16_1-MLC', name: 'Qwen 3.5 (4B)', gb: 2.4, gpu: 4 },
+  { id: 'Qwen3.5-9B-q4f16_1-MLC', name: 'Qwen 3.5 (9B)', gb: 5.2, gpu: 7 },
+  { id: 'Qwen3-8B-q4f16_1-MLC', name: 'Qwen 3 (8B)', gb: 4.6, gpu: 6 },
+  { id: 'Llama-3.1-8B-Instruct-q4f16_1-MLC', name: 'Llama 3.1 (8B)', gb: 4.5, gpu: 5 },
+  { id: 'Phi-4-mini-instruct-q4f16_1-MLC', name: 'Phi-4 mini (3.8B)', gb: 2.2, gpu: 4 },
+];
+const LOCAL_CONTEXT = 8192;   // the hand's rules and listing are ~3,500 tokens; the models' default is 4,096
+const localModel = () => { const m = localStorage.getItem('tt3d.marty-model.local'); return LOCAL_MODELS.some(x => x.id === m) ? m : LOCAL_MODELS[0].id; };
+const localSpec = (id = localModel()) => LOCAL_MODELS.find(x => x.id === id) ?? LOCAL_MODELS[0];
+let localLib = null, localEngine = null, localLoaded = '', localLoading = null, localNote = '';
+async function localLibrary() { return localLib ??= await import(LOCAL_LIB); }
+// WHERE THE BROWSER KEEPS IT: its Cache storage, or IndexedDB where that
+// refuses ("Failed to execute 'add' on 'Cache': Unexpected internal error",
+// two thirds of the way through a 2.4 GB download, in an embedded Chromium)
+const localIDB = () => { try { return localStorage.getItem('tt3d.local-idb') === '1'; } catch (e) { return false; } };
+const localAppConfig = (w, idb = localIDB()) => ({ ...w.prebuiltAppConfig, cacheBackend: idb ? 'indexeddb' : 'cache' });
+async function localCached(id = localModel()) {
+  try { const w = await localLibrary(); return await w.hasModelInCache(id, localAppConfig(w)); } catch (e) { return false; }
+}
+function localProgress(r) {
+  localNote = r?.text ? String(r.text).replace(/\s+/g, ' ').slice(0, 160) : '';
+  const el = document.getElementById('martyLocalNote');
+  if (el) el.textContent = localNote;
+  if (handBusy && typeof r?.progress === 'number') handStatus('loading the model\u2026 ' + Math.round(r.progress * 100) + '%');
+}
+async function localLoad(id = localModel()) {
+  if (localEngine && localLoaded === id) return localEngine;
+  while (localLoading) { try { await localLoading; } catch (e) {} if (localEngine && localLoaded === id) return localEngine; }
+  localLoading = (async () => {
+    const w = await localLibrary();
+    if (localEngine) { try { await localEngine.unload(); } catch (e) {} localEngine = null; localLoaded = ''; }
+    const chat = { context_window_size: LOCAL_CONTEXT };
+    const make = async () => {
+      const opts = { initProgressCallback: localProgress, appConfig: localAppConfig(w) };
+      let worker = null;
+      try {
+        // in a worker, so the 3D view is not held up while it thinks
+        const src = `import * as w from '${LOCAL_LIB}'; const h = new w.WebWorkerMLCEngineHandler(); self.onmessage = (m) => h.onmessage(m);`;
+        worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })), { type: 'module' });
+      } catch (e) { console.warn('[local] no worker, so on the page itself:', e); }
+      return worker ? await w.CreateWebWorkerMLCEngine(worker, id, opts, chat) : await w.CreateMLCEngine(id, opts, chat);
+    };
+    let eng = null;
+    try { eng = await make(); }
+    catch (e) {
+      if (localIDB() || !/Cache|internal error/i.test(String(e?.message || e))) throw e;
+      console.warn('[local] the Cache storage refused; IndexedDB instead:', e);
+      try { localStorage.setItem('tt3d.local-idb', '1'); } catch (e2) {}
+      try { await w.deleteModelAllInfoInCache(id, localAppConfig(w, false)); } catch (e2) {}   // the half in Cache storage
+      eng = await make();
+    }
+    localEngine = eng; localLoaded = id;
+    return eng;
+  })();
+  try { return await localLoading; } finally { localLoading = null; }
+}
+// THE HAND'S CONVERSATION, kept whole: WebLLM reuses what it has already
+// read when a request only adds to the last one, so the ~3,000 tokens of
+// rules are read once, not every sentence (28 s a sentence without this)
+let localConv = null;
+const localTok = (t) => Math.ceil(String(t || '').length / 3.3);
+async function localThink(sys, q, history = martyHistory, schema = null) {
+  if (!navigator.gpu) return null;
+  const id = localModel();
+  if (!(localEngine && localLoaded === id)) {
+    if (!(await localCached(id))) {
+      martySay('The model for this browser is not downloaded yet \u2014 there is a button for it under \u201cHow Marty thinks\u201d.');
+      return null;
+    }
+    await localLoad(id);
+  }
+  const keep = history === handHistory;
+  if (keep && (!localConv || localConv.sys !== sys || localConv.id !== id || localConv.tokens + localTok(q) > LOCAL_CONTEXT - 1400)) {
+    localConv = { sys, id, msgs: [], tokens: localTok(sys) };   // a fresh start: the rules are read again
+  }
+  const req = {
+    messages: [{ role: 'system', content: sys },
+      ...(keep ? localConv.msgs : history.slice(-2).map(m => ({ role: m.role, content: m.content }))),
+      { role: 'user', content: q }],
+    temperature: 0.2, max_tokens: 800,
+    // the reply is held to the shape asked for, token by token
+    response_format: { type: 'json_object', schema: JSON.stringify(schema ?? martyReplySchema()) },
+    extra_body: { enable_thinking: false },   // Qwen's "thinking" would spend the budget before the answer
+  };
+  const t0 = performance.now();
+  let res;
+  try { res = await localEngine.chat.completions.create(req); }
+  catch (e) {
+    if (keep) localConv = null;   // whatever went wrong, start the conversation afresh next time
+    if (!/thinking|extra_body/i.test(e?.message || '')) throw e;
+    delete req.extra_body;
+    res = await localEngine.chat.completions.create(req);
+  }
+  console.info('[local]', id, Math.round(performance.now() - t0) + ' ms', res.usage || '');
+  const content = res.choices?.[0]?.message?.content ?? '';
+  if (keep) { localConv.msgs.push({ role: 'user', content: q }, { role: 'assistant', content }); localConv.tokens += localTok(q) + localTok(content); }
+  window.__localLast = { ms: Math.round(performance.now() - t0), usage: res.usage || null };
+  return content;
+}
 const MARTY_PROVIDERS = {
   // the cheap, current model of each (Ken, 21 Sep 2026); marty-models.json on
   // the site overrides these after a release without a rebuild -- see below
@@ -25418,6 +25790,8 @@ const MARTY_PROVIDERS = {
   gemini: { label: 'Gemini', say: 'Gemini', model: 'gemini-3.8-flash' },
   nano: { label: 'Gemini Nano (in Chrome, no key)', say: 'the Gemini inside Chrome',
           model: '', keyless: true },
+  local: { label: 'A model in this browser (WebLLM)', say: 'the model running in this browser',
+           model: '', keyless: true },
   // Inside a published Claude artifact the messages endpoint answers WITHOUT a
   // key: the page borrows the claude.ai session of whoever is reading it. That
   // makes it the only brain that costs a visitor nothing to set up -- and the
@@ -25496,6 +25870,12 @@ function martyBrainText() {
       : 'his phrasebook — this browser has no built-in model. Desktop Chrome has one; '
         + 'elsewhere he needs a key, or pick another brain below';
   }
+  if (p === 'local') {
+    return navigator.gpu
+      ? localSpec().name + ', running on this computer\u2019s graphics card \u2014 no key, and nothing you type leaves this machine'
+        + (localEngine && localLoaded === localModel() ? '' : ' (once it is downloaded and loaded: the button is below)')
+      : 'his phrasebook \u2014 this browser has no WebGPU, which a model in the browser needs';
+  }
   return martyKeyOf(p) ? `${MARTY_PROVIDERS[p].label}, model ${martyModelOf(p)}`
     : 'his phrasebook only — replies are canned lines until you add a key. '
       + 'The two brains at the top of the list need no key at all';
@@ -25561,6 +25941,7 @@ async function askBrain(sys, q, history = martyHistory, cap = 900, schema = null
   const prov = martyProv();
   if (prov === 'here') return await hereThink(sys, q, history, cap);
   if (prov === 'nano') return await nanoThink(sys, q, history, schema);
+  if (prov === 'local') return await localThink(sys, q, history, schema);
   const key = martyKeyOf(prov);
   if (!key) return null;
   const model = martyModelOf(prov);
@@ -25623,7 +26004,7 @@ async function askBrain(sys, q, history = martyHistory, cap = 900, schema = null
 }
 async function martyThink(q) {
   const prov = martyProv();
-  const nano = prov === 'nano';
+  const nano = prov === 'nano' || prov === 'local';   // a small context: the parts of the manual the question is about
   const whole = await martyManualText();
   const sysAt = (budget) => {
     const manual = manualFor(whole, q, budget);
@@ -25701,7 +26082,7 @@ function martyThinkingStart() {
   // The model inside Chrome has to be read off disk the first time it is used,
   // which is slow enough that a silent wait reads as a hang. Say so, but only
   // once the wait is long enough to need explaining.
-  const local = martyProv() === 'nano' && !window.claude?.complete;
+  const local = (martyProv() === 'nano' || martyProv() === 'local') && !window.claude?.complete;
   let n = 0;
   const t0 = performance.now();
   const tick = () => {
@@ -25796,7 +26177,7 @@ async function askMarty(q) {
     reply = null;
   }
   finally { doneThinking(); }
-  let text = null, demo = null, fetchId = null;
+  let text = null, demo = null, fetchId = null, handSay = null;
   if (reply == null) {
     const off = martyOffline(q);
     text = off.say; demo = off.demo;
@@ -25809,7 +26190,7 @@ async function askMarty(q) {
     try {
       const m = reply.match(/\{[\s\S]*\}/);
       const j = JSON.parse(m ? m[0] : reply);
-      text = j.say; demo = j.demo; fetchId = j.fetch;
+      text = j.say; demo = j.demo; fetchId = j.fetch; handSay = (j.hand === true || j.hand === 'true') ? q : null;   // the visitor's own words, never his paraphrase
     } catch {
       // a reply cut off mid-JSON must still read as Marty talking, not as
       // machinery: pull the words out of whatever arrived
@@ -25822,8 +26203,12 @@ async function askMarty(q) {
       if (say && !/[.!?…]$/.test(text)) text += '…';
     }
   }
+  if (handSay && !(handWordsOn() && handBrainReady())) {
+    text = 'I can’t move your hand: “Move my hand by words” is off. It is in the ⋮ menu — tick it and say that again.';
+    handSay = null;
+  }
   martyHistory.push({ role: 'user', content: q },
-                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null, fetch: fetchId ?? null }) });
+                    { role: 'assistant', content: JSON.stringify({ say: text, demo: demo ?? null, fetch: fetchId ?? null, hand: !!handSay }) });
   if (martyHistory.length > 12) martyHistory = martyHistory.slice(-12);
   if (text) martySay(text);
   // A NEW ANSWER SUPERSEDES THE OLD OFFER: the Show-me button of an earlier
@@ -25834,6 +26219,13 @@ async function askMarty(q) {
   // ...and the one thing he can DO for a building partner: set a fresh thing
   // from a stack on the table -- said only once it is there
   if (fetchId && MARTY_FETCHABLE.includes(fetchId) && martyHelp() === 'plan') await martyFetch(fetchId);
+  // ...and a sentence for the HAND, said to him by mistake or on purpose: with
+  // the switch on, either box and either microphone move the hand the same
+  // way (Ken: "does it matter if I use the workshop or Marty's microphone?")
+  if (handSay && handWordsOn() && handBrainReady()) {
+    const r = await handDo(handSay);
+    if (r?.say) martySay((r.ok ? '\u2713 ' : '\u2717 ') + r.say);   // his card says how it went, not only his promise
+  }
 }
 
 // --- Marty makes THINGS ------------------------------------------------------
@@ -26457,6 +26849,1139 @@ async function martyDraw(want) {
 }
 
 // --- his panel --------------------------------------------------------------
+// ===================== YOUR HAND, BY WORD =====================
+// Ken (21 Sep): "an alternative way of controlling one's hand" -- say or type
+// what the hand should do, and a brain turns it into the clicks and keys you
+// would have made yourself. Marty is not involved. It is only offered when a
+// brain is there (a key, the built-in one, or a published artifact's), and
+// the brain decides "a 1" (a fresh one off the stack) against "the 1" (the
+// one on the table) from the listing it is given, not from a rule here.
+// Every step goes through handleClick and the keyboard handler, so a
+// puzzle's rules, undo and training all see exactly what a hand would do.
+const HAND_WORDS = 'hand-words';
+const HAND_SYSTEM = `You move a person's HAND in ToonTalk 3D, a workshop where programs are things on a table. Turn what they said into steps for the hand. Reply with ONLY a JSON object {"steps":[...],"say":"..."}: "say" is one short line of what was done, or why nothing could be (then "steps" is []).
+
+The hand holds ONE thing at a time. Steps, in order:
+{"do":"take","from":S} takes a FRESH thing from stack S: "numbers" (a 1), "texts" (a blank pad), "boxes" (a box with 2 holes), "minis" (a robot), "scales" (a scale, two pans), "nests" (a nest), "dice" (a die), "rooms" (a house). The hand must be empty.
+{"do":"pickup","what":"#N"} picks up thing #N from the listing (a thing ALREADY there; a fresh one is "take"). The hand must be empty.
+{"do":"type","text":T} types on the held thing. A number becomes T ("100", "-5"; "+" "-" "*" "/" "^" typed on it choose what it does when dropped on another number: add, subtract, multiply, divide, power). A pad gets T written on it. A box gets T holes ("3"). A die gets T faces.
+{"do":"drop"} sets the held thing down on the table.
+{"do":"drop","on":N} drops it ON thing N: onto a number it combines; onto a robot it gives the robot the thing; onto a pad it rides on it.
+{"do":"drop","on":N,"hole":K} puts it into hole K of box or scale N, counting from 1 on the left; a scale's left pan is hole 1, its right pan hole 2.
+{"do":"drop","on":N,"side":"left"|"right"} joins a held pad onto pad N's side.
+{"do":"give"} hands it to the robot at the bench, or, with none there, to the only robot on the table; {"do":"give","to":N} names the robot. Giving an untrained robot something opens its thought bubble.
+{"do":"pickup","what":"desk"} takes what is on the bench robot's desk. Inside a robot's thought bubble the hand is the robot's claw, the thing it was given is on its desk ("desk"), and the stacks and Mimi work there; {"do":"leave"} steps out when the lesson is done.
+{"do":"run"} presses Run so the robot at the bench works.
+{"do":"copy"} puts the held thing on Mimi the copier's platform and takes the COPY into the hand; the original stays on her platform, and {"do":"pickup","what":"platform"} takes it back. After a copy, "put it back" or "return it" with the copy in the hand means the copy goes where the original came from ({"do":"drop","on":"desk"} if that was the desk); with the hand empty it means the ORIGINAL: {"do":"pickup","what":"platform"}, then {"do":"drop","on":"desk"}. {"do":"drop","on":"desk"} puts the held thing on an empty desk; "work area" and "workspace" mean the desk too. Mimi is also called the copier or the copy machine.
+{"do":"vacuum","what":N} has Dusty the vacuum remove thing N from the table for good. The hand must be empty (drop first).
+{"do":"name","text":T} names the held thing (a bird, nest, box, scale, die, robot...) -- pads and numbers take "type" instead.
+{"do":"erase","path":[...]} has Ruby make a part of the robot's thought one step more general (a 3 becomes any number); {"do":"remove","path":[...]} has Dusty make it anything at all. Inside a thought bubble, or at the bench on the robot there (a robot that stopped because its desk no longer fits its thought is loosened this way); the path is hole numbers (from 1) into the given thing, [] for the whole.
+{"do":"go","to":"yard"} goes out through the back door; {"do":"go","to":"back"} comes back to the table (from the yard, or out of a panel); {"do":"open","of":N} brings out the panel of thing N as a tray on the table (its behaviours live there); {"do":"go","to":"panel","of":N} also walks in through the tray's door, so the hand is inside that thing's own little world.
+{"do":"speed","to":S} sets how fast robots move, the Speed on the bar: S is "0.5", "1", "2", "4", "8", "instant", "faster", "slower", "double" or "halve" ("speed up" is "faster"; "double the speed" is "double"; "8 times as fast" is "8"; "go faster", "slow down" and "full speed" are speed too). It is never done with numbers on the table. {"do":"pause"} and {"do":"resume"} hold the robots still and let them go on; {"do":"stop"} stops a running robot. While a robot is RUNNING (the listing says so) only speed, pause, resume, stop and camera may be used.
+{"do":"camera","move":M} moves the view: M is "left" or "right" (turn round the table), "up" or "down" (tilt), "closer" or "farther", "slide left", "slide right", "forward", "backward", or "reset"; add "how":"a lot" for a bigger move. {"do":"camera","look":"#N"} comes in on thing N; "look" may also be "notebook", "Mimi", "Dusty", "desk" or a stack's name ("robots", "numbers"...). "Zoom into", "show me", "look at" all mean look. Only move the camera when asked to look, turn, zoom or see something.
+{"do":"file"} files the held thing in the notebook; {"do":"lookup","name":T} takes a copy of what is filed under that name.
+Any take, pickup, copy, lookup or drop may carry "as":"name"; later steps may then use that name instead of a number for the thing.
+
+"Make a 7" or "a 7" is always a fresh one, whatever 7s are already there. A place word that fits nothing ("the box on the left" when the only box is in the middle) still means the one thing of that kind. "3-hole" and "with 1 and 100 on it" describe what to build, they are not numbers to make. A thing’s name ("orders", "posty") names it in a step. Rules: "it" is the thing just handled, or the one thing the sentence can mean from the listing -- on the desk, on the table, or in the hand -- never a number that is not listed. What sits in a hole is listed with a number of its own ("in hole 1 of #2"): pick it up by that number to take it out. "desk", "platform" and "tray" may stand for the thing on the bench robot's desk, on Mimi's platform, in her tray. To give a bird something, drop it on the bird ("drop","on" the bird): she flies it to her nest. A bird comes with a nest: take nests and the nest's bird is yours too; there is no bird stack. A robot's desk holds one thing: before giving the bench robot something, pick up what is on its desk and set it down. "Give it to Mimi", "put it in the copier": that is "copy". A fresh number is 1, so "a 3" is take numbers, type "3". A number dropped on a number already ADDS: to add, just drop it; type "*", "/", "^" or "-" only to do something else. ALL OR NOTHING: if any part of what was said cannot be done from the listing (a thing that is not there, a hole a box does not have), return NO steps and say why -- never do the possible part and leave the rest out. Do ONLY what was said: never add a "leave", "give", "run" or "copy" the sentence did not ask for. End with the hand EMPTY (drop what it holds) unless the sentence says to take, hold or pick up something -- but never add a drop to "go" or "leave": a person going through a door or out of a thought bubble carries what they hold. Things "(riding on #N)" ride on thing N; a panel's things are marked by where they stand in it. "A 1" or "a box" usually means a fresh one; "the 1" or "the box" means one already on the table -- decide from the listing and the sentence. To put a fresh 1 in a 3-hole box: take boxes as "b"; type "3"; drop; take numbers; drop on "b" hole 1. A fraction is a number with "/" typed on it dropped on another. Nothing here can be spoken to; you only move the hand.
+
+Each thing's place ON THE SCREEN, as the person sees it, is in brackets: [left], [middle] or [right], and [front] or [back]; [out of view] when the camera does not show it -- use it for "the box on the left", "the robot at the back". Things in the listing are labelled #1, #2...; in a step write "#2" for thing #2 (never a bare 2, which could be read as the number two).
+
+Examples (the listing, what was said, the reply):
+The table is empty. The hand is empty. / "put a box on the table" -> {"steps":[{"do":"take","from":"boxes"},{"do":"drop"}],"say":"A box on the table."}
+The table is empty. The hand is empty. / "make a 12" -> {"steps":[{"do":"take","from":"numbers"},{"do":"type","text":"12"},{"do":"drop"}],"say":"A 12 on the table."}
+On the table: #1: a box with 2 holes (empty). The hand is empty. / "put a 3 in the box" -> {"steps":[{"do":"take","from":"numbers"},{"do":"type","text":"3"},{"do":"drop","on":"#1","hole":1}],"say":"A 3 in the box."}
+The table is empty. The hand is empty. / "pick up a 1 and put it in a 3-hole box" -> {"steps":[{"do":"take","from":"boxes","as":"b"},{"do":"type","text":"3"},{"do":"drop"},{"do":"take","from":"numbers"},{"do":"drop","on":"b","hole":1}],"say":"A 1 in a 3-hole box."}
+The table is empty. The hand is empty. / "give a robot a scale with 1 and 100 on it" -> {"steps":[{"do":"take","from":"scales","as":"s"},{"do":"drop"},{"do":"take","from":"numbers"},{"do":"drop","on":"s","hole":1},{"do":"take","from":"numbers"},{"do":"type","text":"100"},{"do":"drop","on":"s","hole":2},{"do":"take","from":"minis","as":"r"},{"do":"drop"},{"do":"pickup","what":"s"},{"do":"give","to":"r"}],"say":"The robot has the scale."}
+On the table: #1: a robot trained ... A robot is at the bench, with the number 1 on its desk ("desk"). The hand is empty. / "give the robot a 5" -> {"steps":[{"do":"pickup","what":"desk"},{"do":"drop"},{"do":"take","from":"numbers"},{"do":"type","text":"5"},{"do":"give"}],"say":"The 1 is off the desk and the robot has a 5."}
+... In the robot's claw: the number 1. / "put a 2 in a box" -> {"steps":[{"do":"drop"},{"do":"take","from":"boxes","as":"b"},{"do":"drop"},{"do":"take","from":"numbers"},{"do":"type","text":"2"},{"do":"drop","on":"b","hole":1}],"say":"A 2 in a box."}
+On the table: #1: the number 7. The hand is empty. / "give the 7 to Mimi" -> {"steps":[{"do":"copy","what":"#1"},{"do":"drop"}],"say":"A copy of the 7."}
+On the table: #1: a box with 2 holes (hole 1: the number 3); #2: the number 3 (in hole 1 of #1). The hand is empty. / "pick up the 3" -> {"steps":[{"do":"pickup","what":"#2"}],"say":"The 3 is in your hand."}
+The table is empty. The hand is empty. / "what is a nest?" -> {"steps":[],"say":"I only move things \u2014 Marty answers questions."}
+On the table: #1: a box with 2 holes (empty) [left]; #2: a robot with no training [middle, back]. The hand is empty. / "what is on the table?" -> {"steps":[],"answer":true,"say":"An empty box on the left, and an untrained robot in the middle at the back."}
+A question about what is HERE -- what is on the table, what the hand holds, where something is -- is answered in "say" from the listing, with "answer": true and no steps. Questions about how ToonTalk works are for Marty.`;
+const handReplySchema = () => ({
+  type: 'object',
+  properties: {
+    steps: { type: 'array', items: { type: 'object', properties: {
+      do: { enum: ['take', 'pickup', 'type', 'drop', 'give', 'run', 'copy', 'vacuum', 'leave', 'name', 'erase', 'remove', 'go', 'open', 'file', 'lookup', 'camera', 'speed', 'pause', 'resume', 'stop'] },
+      move: { type: 'string' }, look: {}, how: { type: 'string' },
+      to: {}, of: {}, name: { type: 'string' }, path: { type: 'array', items: { type: 'integer' } },
+      from: { type: 'string' }, what: {}, on: {}, hole: { type: 'integer' },
+      side: { enum: ['left', 'right'] }, text: { type: 'string' }, as: { type: 'string' },
+    }, required: ['do'] } },
+    say: { type: 'string' },
+    answer: { type: 'boolean' },
+  },
+  required: ['steps', 'say'],
+});
+const handWordsOn = () => mineGet(HAND_WORDS) === '1';
+const HAND_GO = 'hand-go';
+const handGoPhrase = () => (mineGet(HAND_GO) || '').trim();
+// A brain the hand can use: the same one Marty thinks with.
+const handBrainReady = () => {
+  if (brainStandIn) return true;
+  const p = martyProv();
+  if (p === 'here') return hasAiHook();
+  if (p === 'nano') return !!nanoAPI();
+  if (p === 'local') return !!navigator.gpu;
+  return !!martyKeyOf(p);
+};
+// WHAT THE BRAIN IS TOLD: the table, numbered, then the bench and the hand.
+function handThingText(t) {
+  const u = t.userData;
+  if (u.panel && t.__owner) return 'the panel (tray) of ' + handThingText(t.__owner);
+  const label = u.label ? ` called "${u.label}"` : '';
+  const inHoles = (hs) => hs.map((h, i) => h.thing ? `hole ${i + 1}: ${handThingText(h.thing)}` : null).filter(Boolean);
+  if (u.kind === 'number') return 'the number ' + ratShort(u.value) + (u.op && u.op !== '+' ? ' with ' + u.op + ' on it' : '') + label;
+  if (u.kind === 'text') return (u.img ? 'a pad with a picture on it' : u.text ? `a pad saying "${u.text.slice(0, 40)}"` : 'a blank pad') + label;
+  if (u.kind === 'box' || u.kind === 'scale') {
+    const hs = u.holes || [];
+    const inside = inHoles(hs);
+    return (u.kind === 'scale' ? 'a scale' : `a box with ${hs.length} hole${hs.length === 1 ? '' : 's'}`) + label
+      + (inside.length ? ' (' + inside.join(', ') + ')' : (u.kind === 'scale' ? ' (both pans empty)' : hs.length ? ' (empty)' : ''));
+  }
+  if (u.kind === 'robot') return (t.__bot?.name ? `the robot "${t.__bot.name}"` : 'a robot') + (t.__bot?.program?.length ? ' that has been trained' : ' with no training');
+  if (u.kind === 'die') return `a die of ${u.faces} faces` + label;
+  return 'a ' + u.kind + label;
+}
+const handToolHere = (id) => (worldRules?.tools ?? TOOL_IDS).includes(id)
+  && (id === 'mimi' ? !!stations.copyIn && !!stations.copyOut : true);
+// WHERE IT IS ON THE SCREEN, in the words a person looking at it would use
+// ("the box on the left", "the robot at the back"): the thing's centre seen
+// through the camera. Out of view is said too, so "look at it" makes sense.
+// Five columns and three rows: two boxes visibly apart were both "[middle,
+// front]" and "the box on the left" could not be told (the tester's J2)
+const handScreen = (t) => {
+  if (!t?.getWorldPosition || !camera) return null;
+  const v = t.getWorldPosition(new THREE.Vector3()).project(camera);
+  return (!(v.z < 1) || Math.abs(v.x) > 1.05 || Math.abs(v.y) > 1.05) ? null : v;
+};
+function handWhere(t) {
+  if (!t?.getWorldPosition || !camera) return '';
+  const v = handScreen(t);
+  if (!v) return ' [out of view]';
+  const h = v.x < -0.55 ? 'far left' : v.x < -0.18 ? 'left' : v.x > 0.55 ? 'far right' : v.x > 0.18 ? 'right' : 'middle';
+  const d = v.y < -0.25 ? 'front' : v.y > 0.2 ? 'back' : '';
+  return ' [' + h + (d ? ', ' + d : '') + ']';
+}
+// among things of one kind, which is which: "the leftmost of 2 boxes, the one farther back"
+function handAmong(things, where) {
+  const tags = things.map(() => '');
+  const byKind = new Map();
+  things.forEach((t, i) => {
+    if (where[i]) return;   // on a station, a hole, a pile: already placed by its words
+    const v = handScreen(t); if (!v) return;
+    const k = t.userData.kind;
+    if (!byKind.has(k)) byKind.set(k, []);
+    byKind.get(k).push({ i, v });
+  });
+  const ord = ['', 'second', 'third', 'fourth', 'fifth'];
+  for (const [k, g] of byKind) {
+    if (g.length < 2 || g.length > 5) continue;
+    const plural = k === 'box' ? 'boxes' : k + 's';
+    const xs = [...g].sort((a, b) => a.v.x - b.v.x);
+    const ys = [...g].sort((a, b) => b.v.y - a.v.y);   // screen-up is farther back
+    xs.forEach((e, n) => {
+      const lr = n === 0 ? 'the leftmost' : n === xs.length - 1 ? 'the rightmost' : 'the ' + ord[n] + ' from the left';
+      const fb = e === ys[0] ? ', the one farthest back' : e === ys[ys.length - 1] ? ', the one nearest the front' : '';
+      tags[e.i] = ' (' + lr + ' of the ' + g.length + ' ' + plural + fb + ')';
+    });
+  }
+  return tags;
+}
+function handListing() {
+  const h = inHand();
+  const things = [], where = [];
+  for (const t of benchThings) if (!t.userData.main && t !== h) { things.push(t); where.push(''); }
+  {
+    // the robot's own containers (inside a panel, the room's): its desk, the copier, the perch, the scratch spots.
+    // At the table only Mimi's platform and tray, and the bench robot's desk: what stands there is a thing
+    // a sentence may name ("put the other one on the one", the one being on her platform -- Ken, 23 Sep)
+    const inside = mode === 'training' || worldTrail.length;
+    for (const [id, st] of Object.entries(stations)) {
+      const t = st?.occupant;
+      if (!t || t === h || st.kind === 'stack' || things.includes(t)) continue;
+      if (!inside && !['copyIn', 'copyOut', 'stand'].includes(id)) continue;
+      things.push(t);
+      where.push(id === 'stand' ? ' (on the robot\u2019s desk, "desk")' : id === 'copyIn' ? ' (on Mimi\u2019s platform, "platform")'
+        : id === 'copyOut' ? ' (in Mimi\u2019s tray)' : id === 'perch' ? ' (on the perch)'
+        : st.kind === 'scratch' ? ' (on ' + (st.label || 'a spot of its own') + ')' : '');
+    }
+  }
+  // THE ROBOT AT THE BENCH is not on the table, and was named only in prose:
+  // a brain that gave "to" it by number hit whatever held that number
+  if (activeBot?.node && !things.includes(activeBot.node)) { things.push(activeBot.node); where.push(' (the robot at the bench; its desk is "desk")'); }
+  // what sits in a hole is a thing of its own, with its own number (the
+  // tester's finding 3: "put the 3 on the 1" with both in a box was refused
+  // for want of a way to name them)
+  const top = things.length;
+  for (let i = 0; i < top; i++) {
+    const pile = things[i].userData.kind === 'nest' ? (things[i].userData.pile || []) : [];
+    for (let k = pile.length - 1; k >= 0; k--) {
+      if (pile[k]?.parent) { things.push(pile[k]); where.push(k === pile.length - 1 ? ' (on top of the nest #' + (i + 1) + ')' : ' (in the nest #' + (i + 1) + ', under what is on top)'); }
+    }
+    for (const r of (things[i].__subs || [])) {
+      if (r.parent && r.visible && !r.userData.ghost && !r.__gone) { things.push(r); where.push(' (riding on #' + (i + 1) + ')'); }
+    }
+    const hs = things[i].userData.holes;
+    if (!hs) continue;
+    hs.forEach((hh, k) => { if (hh.thing) { things.push(hh.thing); where.push(' (in hole ' + (k + 1) + ' of #' + (i + 1) + ')'); } });
+  }
+  const among = handAmong(things, where);
+  // THE COPY AND THE ORIGINAL are told apart: two identical 1s after Mimi, and
+  // "put the one back" moved the original where the copy was meant (J8)
+  const copyTag = (t) => {
+    const k = things.indexOf(t.__copyOf);
+    if (t.__copyOf && (k >= 0 || t.__copyOf === h)) return ' (the copy Mimi made' + (k >= 0 ? ' of #' + (k + 1) : ' of what is in the hand') + ')';
+    const c = things.findIndex(u => u.__copyOf === t);
+    if (c >= 0 || (h && h.__copyOf === t)) return ' (the original Mimi copied' + (c >= 0 ? ' into #' + (c + 1) : '') + ')';
+    return '';
+  };
+  const lines = things.map((t, i) => '#' + (i + 1) + ': ' + handThingText(t) + copyTag(t) + where[i] + (where[i] ? '' : handWhere(t) + among[i]));
+  const place = yardIn ? 'the ground' : worldTrail.length ? 'your table (it came with you through the door; the things marked "on the desk", "on the perch" or on a spot belong to this panel)' : 'the table';
+  let text = lines.length ? 'On ' + place + ': ' + lines.join('; ') + '.' : (yardIn ? 'The ground is empty.' : 'The table is empty.');
+  if (activeBot) text += ' A robot is at the bench' + (stations.stand?.occupant ? ', with ' + handThingText(stations.stand.occupant) + ' on its desk ("desk")' : ', its desk empty') + '.';
+  if (mode === 'replay') text += ' That robot is RUNNING now: until it stops, only "speed", "pause", "resume", "stop" and "camera" can be done.';
+  text += ' The speed is ' + ($('speed')?.selectedOptions?.[0]?.textContent || '1\u00d7') + (simPaused ? ', and the robots are PAUSED' : '') + '.';
+  if (mode === 'training' && stations.stand && !stations.stand.occupant) text += ' The robot\u2019s desk ("desk") is empty: {"do":"drop","on":"desk"} puts the held thing back there.';
+  if (mode === 'training') text += ' The hand is INSIDE that robot\u2019s thought bubble (training): the hand is the robot\u2019s own claw, and what is done here is what the robot learns. The stacks and Mimi work in here (no new robots); "leave" steps out when the lesson is done.';
+  const here = [];
+  if (handToolHere('mimi')) here.push('Mimi the copier' + (stations.copyIn?.occupant ? ' (on her platform: ' + handThingText(stations.copyIn.occupant) + ')' : ''));
+  if (handToolHere('dusty')) here.push('Dusty the vacuum');
+  text += here.length ? ' Here too: ' + here.join('; ') + '.' : ' Neither Mimi nor Dusty is in this workshop.';
+  const hr = h ? (h.__subs || []).filter(r => r.parent && r.visible && !r.userData.ghost && !r.__gone) : [];
+  text += h ? (mode === 'training' ? ' In the robot\u2019s claw: ' : ' In the hand: ') + handThingText(h) + copyTag(h)
+    + (hr.length ? ', carrying ' + hr.map(handThingText).join(' and ') + ' riding on it' : '') + '.'
+    : (mode === 'training' ? ' The claw is empty.' : ' The hand is empty.');
+  if (mode === 'training' && condition) text += ' The robot\u2019s thought (what it must be given to act): ' + condText(condition) + '. A part is named by its path of hole numbers from the given thing ([] is the whole).';
+  else if (mode === 'world' && activeBot && condition) {
+    let fits = null; try { if (stations.stand?.occupant) fits = matchState(condition, specOf(stations.stand.occupant)) !== 'no'; } catch (e) {}
+    text += ' The bench robot\u2019s thought (what it must be given to act): ' + condText(condition) + '.'
+      + (fits === false ? ' What is on its desk does NOT fit that thought, so a run stops; "erase" or "remove" loosens the thought here at the bench.' : '')
+      + ' A part is named by its path of hole numbers from the given thing ([] is the whole).';
+  }
+  const nb = mainNotebook();
+  if (yardIn && nb && (yardIn.things || []).includes(nb)) text += ' The notebook stayed inside, with the table.';
+  else if (nb && nb.parent === benchRoot) {
+    text += ' Your notebook ("notebook") is on the table' + handWhere(nb) + '.';
+    const names = (nb.userData.pages || []).filter(Boolean).map(pg => pg.label || pg.text || (pg.value ? ratShort(rat(BigInt(pg.value.n), BigInt(pg.value.d || 1))) : null) || pg.kind).slice(0, 12);
+    text += names.length ? ' The notebook has: ' + names.map(n => '"' + String(n).slice(0, 24) + '"').join(', ') + '.' : ' The notebook is empty.';
+  }
+  if (yardIn) text += ' The hand is out in the yard.';
+  else if (worldTrail.length) text += ' The hand is inside a panel (a room), ' + worldTrail.length + ' door' + (worldTrail.length === 1 ? '' : 's') + ' deep; the tall door leads back out.';
+  return { text, things };
+}
+function handPlanFrom(raw) {
+  const whole = firstJsonObject(String(raw ?? ''));
+  if (!whole) return null;
+  let j = null;
+  try { j = JSON.parse(whole); } catch { return null; }
+  if (!j || !Array.isArray(j.steps)) return null;
+  return { steps: j.steps.filter(st => st && typeof st === 'object' && typeof st.do === 'string'),
+           say: typeof j.say === 'string' ? j.say.trim() : '', answer: j.answer === true };
+}
+const handStepText = (st) => st.do + (st.from ? ' ' + st.from : '') + (st.what != null ? ' ' + st.what : '')
+  + (st.text != null ? ' "' + st.text + '"' : '') + (st.on != null ? ' on ' + st.on : '')
+  + (st.hole != null ? ' hole ' + st.hole : '') + (st.side ? ' ' + st.side : '');
+let handBusy = false;
+const handHistory = [];
+const handSettle = () => new Promise((res) => {
+  const t0 = performance.now();
+  const iv = setInterval(() => {
+    if ((!busy && !queue.length && !current) || performance.now() - t0 > 15000) { clearInterval(iv); res(); }
+  }, 60);
+});
+// A change that is not "busy" -- a walk through a door -- is waited for by itself
+const handUntil = (test, ms = 8000) => new Promise((res) => {
+  const t0 = performance.now();
+  const iv = setInterval(() => {
+    if ((test() && !busy && !queue.length && !current) || performance.now() - t0 > ms) { clearInterval(iv); res(); }
+  }, 60);
+});
+// Tilt the view: round the camera's own sideways axis, kept off the floor and short of overhead
+function handCamTilt(a) {
+  return new Promise((res) => {
+    const t0 = orbit.target.clone(), off0 = camera.position.clone().sub(t0);
+    const axis = new THREE.Vector3(-off0.z, 0, off0.x).normalize();
+    const cur = Math.asin(Math.max(-1, Math.min(1, off0.y / off0.length())));
+    const want = Math.max(0.12, Math.min(1.45, cur + a));
+    const da = want - cur;
+    const step = { __visual: true, dur: 0.8,
+      update(t) { const o = off0.clone().applyAxisAngle(axis, da * ease(t)); camera.position.copy(t0).add(o); camera.lookAt(t0); },
+      end() { step.update(1); orbit.update(); res(); } };
+    enqueue(step);
+  });
+}
+// Places that are not things in the listing: the notebook, Mimi, Dusty, a stack, the desk
+function handPlace(w) {
+  const x = String(w ?? '').trim().toLowerCase().replace(/^(the|my)\s+/, '');
+  if (/notebook/.test(x)) { const nb = mainNotebook(); return nb ? nb : null; }
+  if (/mimi|copier|copy machine/.test(x)) return stations.copyIn?.point ? { at: stations.copyIn.point } : null;
+  if (/dusty|vacuum/.test(x)) return dustyHome ? { at: dustyHome } : null;
+  if (/desk|bench/.test(x)) return stations.stand?.point ? { at: stations.stand.point } : null;
+  const stack = HAND_STACK_WORDS[x.replace(/\s+stack$/, '')];
+  if (stack && stations[stack]?.point) return { at: stations[stack].point };
+  return null;
+}
+// Come in on a thing: the view centred on it, at a distance its size wants
+function handCamLook(t) {
+  return new Promise((res) => {
+    const p = t.at ? new THREE.Vector3(t.at.x, t.at.y ?? 0.8, t.at.z) : t.getWorldPosition(new THREE.Vector3());
+    const t0 = orbit.target.clone(), c0 = camera.position.clone();
+    const off = c0.clone().sub(t0).normalize();
+    const size = t.at ? 0.5 : Math.max(0.3, (t.userData?.width ?? 0.3) * (t.scale?.x ?? 1));
+    const c1 = p.clone().addScaledVector(off, Math.max(1.4, size * 4));
+    const step = { __visual: true, dur: 0.9,
+      update(k) { const e = ease(k); orbit.target.lerpVectors(t0, p, e); camera.position.lerpVectors(c0, c1, e); camera.lookAt(orbit.target); },
+      end() { step.update(1); orbit.update(); res(); } };
+    enqueue(step);
+  });
+}
+// THE MICROPHONE REFUSED: in a claude.ai artifact the frame is never granted
+// it, and no page can change that -- but the computer's own dictation types
+// into whatever text field has focus, in any page, so say how (Ken, 23 Sep)
+// MAY THIS PAGE USE THE MICROPHONE AT ALL? A claude.ai artifact's frame is
+// never granted it, and the browser says so before anything is tried; a
+// check may say otherwise through window.__micAllowed
+function micAllowed() {
+  if (typeof window.__micAllowed === 'boolean') return window.__micAllowed;
+  const pol = document.permissionsPolicy || document.featurePolicy;
+  try { return pol?.allowsFeature ? pol.allowsFeature('microphone') : true; } catch (e) { return true; }
+}
+// THE COMPUTER'S OWN SPEECH RECOGNITION types into whatever text field has
+// focus, in any page: how to start it, for the system this is
+function dictationHow() {
+  const ua = navigator.userAgent || '', plat = navigator.userAgentData?.platform || navigator.platform || '';
+  if (/Android|iPhone|iPad/i.test(ua)) return 'tap the microphone on your keyboard, and speak';
+  if (/Mac/i.test(plat) || /Mac OS X/.test(ua)) return 'press the Fn (Globe) key twice to start Dictation, speak, then press Return';
+  if (/CrOS/.test(ua)) return 'press Search+D to start dictation, speak, then press Enter';
+  return 'press Windows+H to start voice typing, speak, then press Enter (with Voice Access you can say \u201cpress Enter\u201d)';
+}
+// A MICROPHONE THAT MAY NOT LISTEN: the advice, and the cursor put in the
+// line the words should land in, so dictation starts in the right place
+function micAdvice(field, where) {
+  try { field?.focus(); } catch (e) {}
+  return 'This page can\u2019t use the microphone itself' + (window.top !== window ? ' \u2014 a Claude artifact isn\u2019t given one' : '')
+    + '. Your computer\u2019s own speech recognition works instead: the cursor is in ' + where + ' \u2014 ' + dictationHow() + '.';
+}
+function micRefusedWords(err) {
+  if (err !== 'not-allowed' && err !== 'service-not-allowed') return 'The microphone said: ' + (err || 'no');
+  return 'This page is not allowed to use the microphone' + (window.top !== window ? ' (a page inside another page, such as a Claude artifact, is not given one)' : '')
+    + '. Your computer\u2019s own speech recognition can type what you say: click the line, then ' + dictationHow() + '.';
+}
+// A key the hand "presses": the same listener a real key reaches.
+// It is marked as the hand's, so it reaches the workshop even while the
+// hand's own line has the cursor (a spoken line keeps it, for the next one).
+const handKey = (key) => { const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }); e.__hand = true; window.dispatchEvent(e); };
+function handStatus(text) {
+  const el = document.getElementById('handStatus');
+  if (el) el.textContent = text;
+  const inp = document.getElementById('handIn');
+  // THE LINE STAYS OPEN while the hand works. Disabled, it lost the cursor
+  // (Ken's dictation had nowhere to type); read-only, it silently swallowed
+  // what was typed -- the tester's first "stop" and first "speed up to 8".
+  // A sentence that arrives now waits its turn (handDo), and "stop" acts at once.
+}
+// WHAT WAS SAID AND WHAT CAME BACK, kept under the line so an older
+// exchange can be scrolled back to (Ken)
+function handLog(cls, text) {
+  const el = document.getElementById('handLog');
+  if (!el) return;
+  const d = document.createElement('div');
+  d.className = cls;
+  d.textContent = (cls === 'you' ? '\u25B8 ' : cls === 'ok' ? '\u2713 ' : cls.startsWith('ws') ? '\u00B7 ' : '\u2717 ') + text;
+  el.appendChild(d);
+  while (el.children.length > 200) el.firstChild.remove();
+  // it opens only when asked for (the \u25BE on the line, or \u201cWhat was said\u201d): Ken
+  el.scrollTop = el.scrollHeight;
+}
+function handReport(ok, text, done = 0) {
+  if (ok) say(text, 5000); else sayAttn(text);
+  // SPOKEN, for someone who is not looking at the line: always when the
+  // sentence came from the microphone, and on request otherwise -- unless
+  // the workshop already reads its messages aloud, which says() just did
+  if ((handVoiceNow || mineGet(HAND_SPEAK) === '1') && !hintSayOn && text) {
+    try { speakText(ok ? text : 'That did not work: ' + text.replace(/^Step \d+ \([^)]*\) did not work: /, '')); } catch (e) {}
+  }
+  handLog(ok ? 'ok' : 'no', text);
+  const el = document.getElementById('handStatus');
+  if (el) { el.textContent = ok ? '\u2713' : '\u2717'; setTimeout(() => { if (el.textContent === (ok ? '\u2713' : '\u2717')) el.textContent = ''; }, 4000); }
+  return { ok, say: text, done };
+}
+let handVoiceNow = false;
+let handStopAsked = false;   // "stop" was said: the robot is finishing its round
+const handQueue = [];        // sentences that came while the hand was busy
+let handNotes = [];          // what the hand saw happen, added to the answer (a number a drop added to)
+const HAND_SPEAK = 'hand-speak';
+async function handDo(sentence, opts = {}) {
+  handVoiceNow = !!opts.voice;
+  // "PRESS ENTER" IS A KEY, NOT WORDS: Voice Access typed it into the line
+  // along with the sentence ("run press Enter"), so "stop press Enter" was
+  // not a stop and the robot ran on (Ken, 23 Sep)
+  const s = String(sentence || '').replace(/[\s,.;]*\bpress (enter|return)\b[.!]*/gi, ' ').replace(/\s+/g, ' ').trim();
+  if (!s) return { ok: false, say: '', done: 0 };
+  if (!opts.__queued) handLog('you', s);   // every sentence, refused or not (a waiting one was logged when it came)
+  attnHeld = false;   // a new sentence: the last refusal on the hint line has been read
+  if (mode !== 'replay') handStopAsked = false;
+  if (/^(\.|halt)[.!]*$/i.test(s) || /^(please )?stop\b/i.test(s) && (mode === 'replay' || /^(please )?stop( it| the robot| running| now| please)*[.!]*$/i.test(s))) {
+    // the key "." on the page stops a run; typed into the line it did not (the tester's D5 and H8)
+    if (mode !== 'replay') return handReport(false, 'Nothing is running to stop.');
+    const res = handReport(true, 'Stopping \u2014 the robot finishes the round it is in.');   // said before its "Stopped after N rounds"
+    if (!handStopAsked) $('runBtn').onclick();
+    handStopAsked = true;
+    return res;
+  }
+  if (handBusy) {
+    handQueue.push([sentence, opts]);
+    handLog('ws', 'That waits its turn \u2014 the hand is still busy with the one before.');
+    return { ok: false, say: 'waiting its turn', done: 0, queued: true };
+  }
+  if (!handBrainReady()) return handReport(false, 'Moving the hand by words needs a brain \u2014 a key under \u201cHow Marty thinks\u201d.');
+  if (mode !== 'world' && mode !== 'training' && mode !== 'replay') return handReport(false, 'Wait for the robot to finish.');
+  if (busy && mode !== 'replay') return handReport(false, 'Wait for what is moving to settle.');
+  handBusy = true;
+  handStatus('thinking\u2026');
+  const lineHadIt = document.activeElement?.id === 'handIn';
+  if (!lineHadIt && document.activeElement?.blur) document.activeElement.blur();   // its keys must not read as typing in a field
+  try {
+    const before = handListing();
+    const q = before.text + '\nThe person said: "' + s.replace(/"/g, '\u201d') + '"';
+    let raw = null;
+    try { raw = await askBrain(HAND_SYSTEM, q, handHistory, 700, handReplySchema()); }
+    catch (e) {
+      console.error('[hand] the brain refused:', martyProv(), martyModelOf(martyProv()), e);
+      return handReport(false, 'The brain did not answer \u2014 ' + (e.message || e.name));
+    }
+    if (raw == null) return handReport(false, martyProv() === 'local'
+      ? 'The model for this browser is not downloaded yet \u2014 the button is under \u201cHow Marty thinks\u201d.'
+      : 'No brain answered \u2014 give one a key under \u201cHow Marty thinks\u201d.');
+    const plan = handPlanFrom(raw);
+    window.__handLastPlan = { said: s, raw: String(raw ?? '').slice(0, 4000) };   // what the brain sent back, for a tester
+    if (!plan) {
+      console.warn('[hand] not a plan:', String(raw).slice(0, 2000));
+      return handReport(false, 'That came back as something the hand could not follow \u2014 the console has it.');
+    }
+    // AN ANSWER IS FOR A QUESTION. A smaller brain answered "leave" with "The
+    // lesson is over" and no steps, and the tick said it was done (WebLLM, 26 Sep)
+    const asked = /\?\s*$/.test(s) || /^(what|where|which|who|how|is|are|am|do|does|did|can|could|was|were|will|would|should|have|has|tell me|list)\b/i.test(s);
+    if (!plan.steps.length && plan.answer && plan.say && asked) return handReport(true, plan.say);   // a question about what is here, answered
+    if (!plan.steps.length && plan.answer && plan.say) return handReport(false, plan.say + ' (Nothing was done.)');
+    if (!plan.steps.length) return handReport(false, plan.say || 'The brain found nothing for the hand to do.');
+    const RUNNING_OK = ['speed', 'pause', 'resume', 'stop', 'camera'];
+    if (mode === 'replay' && handStopAsked && plan.steps.some(st => !RUNNING_OK.includes(st.do))) {
+      handStatus('waiting for the robot to finish its round\u2026');
+      await handUntil(() => mode !== 'replay', 60000);
+      handStatus('moving\u2026');
+    }
+    if (mode === 'replay' && plan.steps.some(st => !RUNNING_OK.includes(st.do))) {
+      return handReport(false, 'The robot is running \u2014 while it runs the hand only changes the speed, pauses, stops it, or moves the camera. Say \u201cstop\u201d first.');
+    }
+    handStatus('moving\u2026');
+    const names = new Map();
+    const mode0 = mode;
+    let done = 0;
+    handNotes = [];
+    // THE UNDO MARK: the snapshot on top now is the world before the plan;
+    // every step the plan makes pushes one after it
+    const undoMark = undoStack[undoStack.length - 1] ?? null;
+    for (const step of plan.steps) {
+      let r;
+      try { r = await handStep(step, before.things, names); }
+      catch (e) { console.error('[hand] a step threw:', step, e); r = 'something went wrong in the workshop (' + (e.message || e.name) + ')'; }
+      if (r !== true) {
+        // A HALF-DONE PLAN IS UNDONE: the steps before the one that failed
+        // are taken back, so no debris is left and nothing half-shown stays
+        // in a lesson -- when the plan stayed on one side of a mode change
+        let undone = false;
+        const first = undoMark ? undoStack.indexOf(undoMark) + 1 : 0;
+        if (done && mode === mode0 && (undoMark === null || first > 0) && undoStack.length > first && undoStack[first].mode === mode) {
+          try { undoStack.length = first + 1; undo(); undone = true; } catch (e) { console.warn('[hand] could not undo the plan', e); }
+        }
+        return handReport(false, 'Step ' + (done + 1) + ' (' + handStepText(step) + ') did not work: ' + r
+          + (!done ? '' : undone ? ' \u2014 the ' + (done === 1 ? 'step' : done + ' steps') + ' before it ' + (done === 1 ? 'was' : 'were') + ' undone, so nothing changed.'
+            : ' \u2014 ' + done + ' step' + (done === 1 ? '' : 's') + ' before it did.'), undone ? 0 : done);
+      }
+      done++;
+    }
+    // giving an untrained robot something opens its thought bubble: say so,
+    // or the next sentence's "take a number" fails for no visible reason
+    const entered = mode === 'training' && mode0 !== 'training'
+      ? ' — you are inside the robot’s thought bubble now: show it what to do, then leave.' : '';
+    handHistory.push({ role: 'user', content: q }, { role: 'assistant', content: JSON.stringify(plan) });
+    while (handHistory.length > 8) handHistory.shift();
+    const going = mode === 'replay' ? ' \u2014 the robot is still running; say \u201cstop\u201d to stop it.' : '';
+    const seen = handNotes.length ? ' (' + handNotes.join('; ') + ')' : '';
+    return handReport(true, (plan.say || 'Done.') + seen + entered + going, done);
+  } finally {
+    handBusy = false; handStatus('');
+    if (lineHadIt && handWordsOn()) { try { document.getElementById('handIn').focus(); } catch (e) {} }
+    if (handQueue.length) { const [q1, o1] = handQueue.shift(); setTimeout(() => handDo(q1, { ...o1, __queued: true }), 0); }
+  }
+}
+// THE PANEL OF A THING comes out as a tray on the table (Ctrl+P): the thing
+// is picked up if it is not in the hand, and the tray is there afterwards.
+async function handPanelOut(step, ref, clickOn, setDown) {
+  let h = inHand();
+  if (!h && step.of == null) return 'pick the thing up first, or say whose panel ("of": its number)';
+  // the panel of THAT thing, not of whatever the hand happens to hold (the
+  // tester's I7: the number's panel opened, and the hand said the pad's had)
+  if (h && step.of != null) {
+    const want = ref(step.of);
+    if (!want) return 'there is no thing "' + step.of + '" in the listing';
+    if (want !== h) { const r = await setDown(); if (r !== true) return r; h = null; }
+  }
+  if (!h) { const t = ref(step.of); if (!t) return 'there is no thing "' + step.of + '" in the listing'; clickOn(t); await handSettle(); h = inHand(); if (h !== t) return 'it did not come to the hand'; }
+  if (h.userData.panel) return 'a panel has no panel of its own';
+  if (h.__panelTray) { handNotes.push('its panel was already out'); return true; }
+  openHeldPanel(); await handSettle();
+  if (!inHand()?.__panelTray) return 'the panel did not come out';
+  return true;
+}
+// WHAT A WEAKER BRAIN WRITES, read the way it meant it (Gemini Nano, 23
+// Sep: "pickup boxes" for a fresh box, "take" with "what", "vacuum boxes"
+// with one box on the table). A stack's own name is the stack; a kind's
+// name is the one thing of that kind in the listing.
+const HAND_STACK_WORDS = { box: 'boxes', boxes: 'boxes', number: 'numbers', numbers: 'numbers', one: 'numbers',
+  robot: 'minis', robots: 'minis', mini: 'minis', minis: 'minis', nest: 'nests', nests: 'nests', bird: 'nests', birds: 'nests', egg: 'nests',
+  scale: 'scales', scales: 'scales', die: 'dice', dice: 'dice', pad: 'texts', pads: 'texts', text: 'texts', texts: 'texts',
+  room: 'rooms', rooms: 'rooms', house: 'rooms', houses: 'rooms', sound: 'sounds', sounds: 'sounds' };
+const HAND_KIND_OF = { boxes: 'box', numbers: 'number', minis: 'robot', nests: 'nest', scales: 'scale', dice: 'die', texts: 'text', rooms: 'room', sounds: 'sound' };
+const handWord = (w) => String(w ?? '').trim().toLowerCase().replace(/^(a|an|the|fresh|new)\s+/, '').replace(/\s+stack$/, '');
+function handNormalize(step, things) {
+  const st = { ...step };
+  if (st.do === 'take' && !st.from && st.what != null) { st.from = st.what; delete st.what; }
+  if (st.do === 'take' && st.from != null) st.from = HAND_STACK_WORDS[handWord(st.from)] ?? st.from;
+  if (st.do === 'pickup' && typeof st.what === 'string' && !/^#?\d+$/.test(st.what.trim())
+      && !['desk', 'platform', 'tray', 'hand', 'held', 'claw'].includes(st.what)) {
+    const w = handWord(st.what), stack = HAND_STACK_WORDS[w];
+    if (stack) {
+      const same = things.filter(t => t.parent && t.userData.kind === HAND_KIND_OF[stack]);
+      // the stack's own name ("boxes") is the stack; a thing's name ("box") is that thing when there is just one
+      if (w === stack || w === 'minis' || !same.length) return { ...st, do: 'take', from: stack, what: undefined };
+    }
+  }
+  return st;
+}
+let handPrevDo = null;
+async function handStep(step0, things, names) {
+  const step = handNormalize(step0, things);
+  try {
+    const r = await handStepDo(step, things, names);
+    // WHAT THE PLAN MAKES JOINS THE LISTING: a fresh box is #N+1, which is
+    // the label a brain naturally writes for it (the tester's "#2", "#8")
+    const h = inHand();
+    if (r === true && h && !things.includes(h)) things.push(h);
+    return r;
+  } finally { handPrevDo = step.do; }
+}
+async function handStepDo(step, things, names) {
+  const ref = (r) => {
+    if (typeof r === 'string' && names.has(r)) return names.get(r);
+    if (typeof r === 'string' && names.has(r.trim().replace(/^#/, ''))) return names.get(r.trim().replace(/^#/, ''));   // "#b" for the name b
+    if (typeof r === 'string' && !/^#?\d+$/.test(r.trim())) {
+      const w0 = r.trim().replace(/^#/, '').replace(/^(the|a|an) /i, '').toLowerCase();
+      const named = things.filter(t => t.parent && (t.userData.label || '').toLowerCase() === w0);
+      // a nest and her bird share a name: a gift goes to the bird, anything else means the nest
+      if (named.length) return named.find(t => (t.userData.kind === 'bird') === ['give', 'drop'].includes(step.do)) ?? named[0];
+    }
+    if (typeof r === 'string' && /^#\d+$/.test(r.trim())) r = +r.trim().slice(1);
+    if (typeof r === 'string' && !/^\d+$/.test(r.trim())) {
+      // a thing's OWN kind first ("bird" is the bird, not the nest she came with)
+      const w = handWord(r), one = w.replace(/s$/, '');
+      const direct = things.filter(t => t.parent && (t.userData.kind === w || t.userData.kind === one));
+      if (direct.length === 1) return direct[0];
+      // a kind's name: the one thing of that kind
+      const stack = HAND_STACK_WORDS[handWord(r)];
+      if (stack) {
+        const same = things.filter(t => t.parent && t.userData.kind === HAND_KIND_OF[stack]);
+        if (same.length === 1) return same[0];
+      }
+    }
+    if (r === 'desk') return stations.stand?.occupant ?? null;
+    if (typeof r === 'string' && /^(the )?(my )?notebook$/i.test(r.trim())) return mainNotebook() ?? null;
+    if (r === 'platform') return stations.copyIn?.occupant ?? null;
+    if (r === 'tray') return stations.copyOut?.occupant ?? null;
+    if (r === 'hand' || r === 'held' || r === 'claw') return inHand();
+    const n = typeof r === 'number' ? r : parseInt(r, 10);
+    if (Number.isFinite(n) && n >= 1 && n <= things.length) return things[n - 1];
+    if (Number.isFinite(n) && n > things.length) {
+      // past the end of the listing, "#5" was the number 5 (the tester's I16)
+      const same = things.filter(t => t.parent && t.userData.kind === 'number' && t.userData.value?.d === 1n && t.userData.value?.n === BigInt(n));
+      if (same.length === 1) return same[0];
+    }
+    return null;
+  };
+  const stillHere = (t) => !!t?.parent;
+  // a robot on the table answers to its own click target, as the pointer's does
+  const clickOn = (t, point) => (t.userData.kind === 'robot' && t.__bot)
+    ? handleClick({ kind: 'botThing', bot: t.__bot })
+    : handleClick(point ? { kind: 'thing', thing: t, point } : { kind: 'thing', thing: t });
+  if (step.do === 'take') {
+    const id = String(step.from || '');
+    if (!id) return 'a take needs a stack: numbers, boxes, texts, minis (robots), nests, scales, dice or rooms';
+    if (inHand() && (mode === 'world' || mode === 'training')) { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one hand (or claw): set down first
+    if (!STACK_IDS.includes(id)) return 'there is no stack called "' + id + '" \u2014 the stacks are numbers, boxes, texts, minis, nests, scales, dice, rooms';
+    if (mode === 'training' && id === 'minis') return 'a robot cannot make robots — leave the thought bubble to take one';
+    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
+    if (!stations[id]) return 'the ' + id + ' stack is not in this workshop';
+    handleClick({ kind: 'station', id });
+    await handSettle();
+    if (!inHand()) return 'nothing came off the stack';
+    if (step.as) names.set(String(step.as), inHand());
+    return true;
+  }
+  if (step.do === 'pickup' && step.what === 'desk') {
+    const t = stations.stand?.occupant;
+    if (!t) return 'nothing is on the robot\u2019s desk';
+    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
+    clickOn(t);
+    await handSettle();
+    if (inHand() !== t) return 'it did not come off the desk';
+    if (step.as) names.set(String(step.as), inHand());
+    return true;
+  }
+  if (step.do === 'pickup' && step.what === 'platform') {
+    if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
+    if (inHand() && mode === 'training') { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one claw: set down first
+    if (!stations.copyIn.occupant) return 'nothing is on Mimi\u2019s platform';
+    handleClick({ kind: 'station', id: 'copyIn' });
+    await handSettle();
+    if (!inHand()) return 'it did not come off the platform';
+    if (step.as) names.set(String(step.as), inHand());
+    return true;
+  }
+  if (step.do === 'copy') {
+    if (!handToolHere('mimi')) return 'Mimi the copier is not in this workshop';
+    if (!inHand()) {
+      // "copy it" with nothing in the hand: the thing named, or the one on the desk (the tester's E1)
+      const t = step.what != null ? ref(step.what) : stations.stand?.occupant;
+      if (t) { const r = await handStep({ do: 'pickup', what: step.what ?? 'desk' }, things, names); if (r !== true) return r; }
+    }
+    if (!inHand()) return 'nothing is in the hand to copy';
+    if (stations.copyIn.occupant) return 'something is already on Mimi\u2019s platform \u2014 pick it up first ("platform")';
+    const orig = inHand();
+    handleClick({ kind: 'station', id: 'copyIn' });
+    await handSettle();
+    if (inHand() === orig) return 'Mimi did not take it';
+    handleClick({ kind: 'station', id: 'copyOut' });
+    await handSettle();
+    if (!inHand() || inHand() === orig) return 'no copy came out of the tray';
+    if (step.as) names.set(String(step.as), inHand());
+    return true;
+  }
+  if (step.do === 'vacuum') {
+    if (!handToolHere('dusty')) return 'Dusty is not in this workshop';
+    const t = ref(step.what);
+    if (t && inHand() && inHand() !== t) {
+      // Dusty takes from the table: the hand sets down what it holds first (the tester's C4)
+      const r = await handStep({ do: 'drop' }, things, names);
+      if (r !== true) return 'set down what the hand holds first \u2014 ' + r;
+    }
+    if (t && inHand() === t) { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }
+    if (!t) return 'there is no thing "' + step.what + '" in the listing';
+    if (!stillHere(t)) return 'that thing is gone already';
+    if (!dustyActive) { handleClick({ kind: 'dusty' }); await handSettle(); }
+    if (!dustyActive) return 'Dusty would not wake';
+    clickOn(t);
+    await handSettle();
+    if (dustyActive) { handleClick({ kind: 'dusty' }); await handSettle(); }   // and settles again
+    if (benchThings.includes(t) && t.parent) return 'Dusty left it where it was';
+    return true;
+  }
+  if (step.do === 'pickup') {
+    const t = ref(step.what);
+    if (!t) return 'there is no thing "' + step.what + '" in the listing' + (step.what === 'desk' ? ' \u2014 the desk is empty' : '');
+    if (!stillHere(t)) return 'that thing is gone';
+    if (inHand() && inHand() !== t && (mode === 'world' || mode === 'training')) { const r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r; }   // one hand (or claw): set down first
+    if (inHand()) return 'the hand is already holding ' + handThingText(inHand());
+    clickOn(t);
+    await handSettle();
+    if (inHand() !== t) return 'it did not come to the hand';
+    if (step.as) names.set(String(step.as), inHand());
+    return true;
+  }
+  if (step.do === 'type') {
+    if (!inHand()) return 'nothing is in the hand to type on';
+    const text = String(step.text ?? '');
+    const kind = inHand().userData.kind;
+    if (kind === 'number' || kind === 'die') {
+      // digits REPLACE what was there: a fresh 1 typed 3 would read 13, and
+      // nobody asking for "a 3" wants that
+      if (kind === 'number' && worldRules?.typing?.numbers === false) return 'in this puzzle the keyboard does not reach numbers';
+      const digits = text.replace(/[^0-9]/g, '');
+      // only DIGITS replace the value: "+" alone on a fresh 1 made it +0 (the
+      // tester's B5 -- a 1 "added" to a 4 that stayed 4, reported as done)
+      if (digits) for (let i = 0; i < 24 && (kind === 'die' || inHand().userData.value.n !== 0n || inHand().userData.value.d !== 1n); i++) handKey('Backspace');
+      for (const ch of digits) handKey(ch);
+      if (/-/.test(text) && digits) handKey('-');
+      const before = kind === 'number' ? ratShort(inHand().userData.value) : null;
+      for (const ch of text.replace(/[0-9\-\s]/g, '')) handKey(ch);
+      refreshUI();
+      if (kind === 'number' && !digits && ratShort(inHand().userData.value) !== before) return 'typing "' + text + '" changed the number to ' + ratShort(inHand().userData.value);
+      if (kind === 'number' && digits && !/[^0-9\-\s]/.test(text)) {
+        const v = inHand().userData.value;
+        const want = (/-/.test(text) ? '-' : '') + String(BigInt(digits));
+        if (v.d !== 1n || String(v.n) !== want) return 'the number reads ' + ratShort(v) + ', not ' + want;
+      }
+      return true;
+    }
+    if (kind === 'box') {
+      const n = parseInt(text, 10);
+      if (!Number.isFinite(n) || n < 0) return 'a box takes a number of holes, not "' + text + '"';
+      // the box in hand is a NEW node after a resize: a name given to the
+      // old one follows it, or the plan's next step finds "that thing is gone"
+      const old = inHand();
+      if (n < 10) handKey(String(n)); else { pushUndo(); resizeHeldBox(n); }
+      await handSettle();
+      if (!inHand() || inHand().userData.holes.length !== n) return 'the box did not take ' + n + ' holes';
+      if (inHand() !== old) for (const [k, v] of names) if (v === old) names.set(k, inHand());
+      return true;
+    }
+    if (kind === 'text') {
+      if (worldRules?.typing?.pads === false) return 'in this puzzle the keyboard does not reach pads';
+      const before = inHand().userData.text || '';
+      for (const ch of text) handKey(ch === '\n' ? 'Enter' : ch);
+      if (inHand().userData.text !== before + text) { pushUndo(); inHand().setText(before + text); }
+      refreshUI();
+      return true;
+    }
+    return 'typing on ' + kind + ' names it, which the hand cannot do by words yet';
+  }
+  if (step.do === 'drop') {
+    if (!inHand() && (step.on == null || step.on === '' || step.on === 'table') && (handPrevDo === 'go' || handPrevDo === 'open')) return true;   // the door (or the panel) set it down already
+    if (!inHand()) return 'nothing is in the hand to drop';
+    const it = inHand();
+    let deskWasEmpty = false, onto = null;
+    if (step.on == null || step.on === '' || step.on === 'table') {
+      if (mode === 'training') {
+        // inside the bubble the claw sets things down on the robot's own
+        // scratch spots, never on the bench: the first free spot, or a new one
+        let spot = null;
+        for (let k = 0; k < 12 && !spot; k++) { const st = stationOf('s' + k); if (st && !st.occupant) spot = st; }
+        if (!spot) return 'no free spot among the robot\u2019s things';
+        handleClick({ kind: 'station', id: spot.id });
+      } else {
+        // CLEAR TABLE, not the nearest gap: a bench click beside a pad rides
+        // on it and a box set down against a box joins it, so the tester's
+        // 2-hole box became a 5-hole box and two numbers rode on the pad,
+        // all reported as done. Wide clearance, and the landing is checked.
+        const sp = freeSpotNear(benchSpot(), 0.9);
+        handleClick({ kind: 'bench', point: new THREE.Vector3(sp.x, 0, sp.z) });
+      }
+    } else if ((deskWasEmpty = step.on === 'desk' && !stations.stand?.occupant && (mode === 'training' || !!activeBot))) {
+      // THE EMPTY DESK IS A PLACE: "put the one back on your desk" after Mimi
+      // copied it (Ken, 23 Sep) found no thing called "desk", as the desk was
+      // empty. Inside the bubble it is the robot's "put it where I was
+      // given it"; at the bench it is giving the robot something.
+      handleClick({ kind: 'station', id: 'stand' });
+    } else if (step.on === 'platform' && !stations.copyIn?.occupant) {
+      return handStep({ do: 'copy', as: step.as }, things, names);
+    } else {
+      let t = ref(step.on);
+      if (!t) return 'there is no thing "' + step.on + '" in the listing';
+      if (!stillHere(t)) return 'that thing is gone';
+      if (t === inHand()) return 'it cannot be dropped on itself';
+      onto = t;
+      // ON MIMI'S PLATFORM nothing can be dropped (the workshop: "Take the
+      // original off the platform first"). The hand does just that: sets down
+      // what it holds, takes the original off onto the table, and picks its
+      // own thing up again (Ken's "put the other one on the one")
+      if (t === stations.copyIn?.occupant) {   // inside a bubble too: the claw sets its thing on a spot of its own
+        const mine = inHand();
+        let r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r;
+        handleClick({ kind: 'station', id: 'copyIn' }); await handSettle();
+        if (inHand() !== t) return 'the original would not come off the platform';
+        r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r;
+        clickOn(mine); await handSettle();
+        if (inHand() !== mine) return 'could not pick it up again after clearing the platform';
+      }
+      if (step.hole != null) {
+        const hs = t.userData.holes;
+        if (!hs) return handThingText(t) + ' has no holes';
+        const k = (step.hole | 0) - 1;   // hole 1 is the left one, as the robot's own steps say
+        if (k < 0 || k >= hs.length) return 'it has holes 1 to ' + hs.length + ', not ' + step.hole;
+        handleClick({ kind: 'hole', box: t, index: k });
+      } else if (step.side) {
+        const p = t.getWorldPosition(new THREE.Vector3());
+        p.x += step.side === 'left' ? -0.15 : 0.15;
+        clickOn(t, p);
+      } else {
+        clickOn(t);
+      }
+    }
+    await handSettle();
+    if (inHand() === it) return 'that drop was refused \u2014 the hand still holds it';
+    if (step.on == null || step.on === '' || step.on === 'table') {
+      // set down on the table means ON THE TABLE: not joined into a neighbour, not riding on one
+      const spot = mode === 'training' ? Object.values(stations).some(st => st?.occupant === it) : benchThings.includes(it);
+      if (!it.parent) return 'it joined what stood beside it \u2014 the table is crowded there';
+      if (!spot) {
+        const host = benchThings.find(t => (t.__subs || []).includes(it));
+        return host ? 'it landed on ' + handThingText(host) + ' and rides on it \u2014 the table is crowded there' : 'it did not stay on the table';
+      }
+    }
+    if (deskWasEmpty && mode === 'training' && stations.stand?.occupant !== it) return 'it did not go on the desk';
+    // WHAT THE DROP MADE, in the answer: the brain's own words said "the original is back on the desk"
+    // over a desk that read 2 (the tester's J8), and "a 1 is added" over two additions (H7b)
+    if (onto && step.hole == null && onto.parent && onto.userData.kind === 'number' && it.userData.kind === 'number' && !it.parent) {
+      handNotes.push('the number it landed on' + (onto === stations.stand?.occupant ? ', on the desk,' : '') + ' now reads ' + ratShort(onto.userData.value));
+    }
+    if (step.as) names.set(String(step.as), it);
+    return true;
+  }
+  if (step.do === 'give') {
+    if (step.to != null && /mimi|copier|copy machine/i.test(String(step.to))) return handStep({ do: 'copy', what: step.what, as: step.as }, things, names);
+    if (!inHand()) return 'nothing is in the hand to give';
+    const it = inHand();
+    // A FULL DESK IS CLEARED FIRST, as a person would: what is on it goes on
+    // the table, and the gift goes on. The brain was told to and did not,
+    // three times out of three.
+    const clearDesk = async () => {
+      if (mode !== 'world' || !stations.stand?.occupant) return true;
+      const was = stations.stand.occupant;
+      let r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r;
+      clickOn(was); await handSettle();
+      if (inHand() !== was) return 'what is on the robot\u2019s desk would not come off';
+      r = await handStep({ do: 'drop' }, things, names); if (r !== true) return r;
+      clickOn(it); await handSettle();
+      if (inHand() !== it) return 'could not pick it up again after clearing the desk';
+      handNotes.push(handThingText(was) + ' from the desk went on the table first');
+      return true;
+    };
+    if (step.to != null) {
+      const t = ref(step.to);
+      if (!t) return 'there is no thing "' + step.to + '" in the listing';
+      if (t.userData.kind === 'bird') {
+        // a bird is given something by dropping it on her: she flies it to her nest
+        clickOn(t); await handSettle();
+        if (inHand() === it) return 'the bird did not take it';
+        return true;
+      }
+      if (t.userData.kind !== 'robot') return handThingText(t) + ' is not a robot';
+      if (t === activeBot?.node && stations.stand?.occupant) { const r = await clearDesk(); if (r !== true) return r; }
+      if (t === activeBot?.node && stations.stand?.occupant) return 'the robot\u2019s desk already holds ' + handThingText(stations.stand.occupant) + ' \u2014 take that first ("desk")';
+      clickOn(t);
+    } else if (activeBot) {
+      if (stations.stand?.occupant) { const r = await clearDesk(); if (r !== true) return r; }
+      if (stations.stand?.occupant) return 'the robot\u2019s desk already holds ' + handThingText(stations.stand.occupant) + ' \u2014 take that first ("desk")';
+      handleClick({ kind: 'station', id: 'stand' });
+    } else {
+      // no robot at the bench: the only robot on the table is the one meant
+      // (Ken: "put a robot on the table" then "give it a 1")
+      const bots = benchThings.filter(t => t.userData.kind === 'robot' && t.__bot);
+      if (!bots.length) return 'no robot is here to give it to \u2014 take one from the robots stack first';
+      if (bots.length > 1) return bots.length + ' robots are on the table \u2014 say which ("to": its number)';
+      clickOn(bots[0]);
+    }
+    await handSettle();
+    if (inHand() === it) return 'the robot did not take it';
+    return true;
+  }
+  if (step.do === 'leave') {
+    // out of wherever the hand is: a thought bubble, a panel, the yard
+    if (mode !== 'training' && (worldTrail.length || yardIn)) return handStep({ do: 'go', to: 'back' }, things, names);
+    if (mode !== 'training') return 'the hand is not inside a thought bubble, a panel or the yard';
+    $('exitBtn').onclick();
+    await handSettle();
+    if (mode === 'training') return 'could not leave the thought bubble';
+    return true;
+  }
+  if (step.do === 'run') {
+    // NOTHING SUCCEEDS WITHOUT DOING SOMETHING: the tester's H8 read "Ran the
+    // robot with a 5" over a robot that had just opened a fresh bubble
+    if (mode === 'training') return 'the hand is inside the robot\u2019s thought bubble \u2014 leave it first, then run';
+    if (!activeBot) return 'no robot is at the bench to run';
+    if (!activeBot.program?.length) return 'the robot has not been trained yet \u2014 give it something and show it what to do';
+    if (!stations.stand?.occupant) return 'the robot has nothing on its desk to work on';
+    if (inHand()) return 'set down what the hand holds first';
+    const specStr = (t) => JSON.stringify(specOf(t), (k, v) => typeof v === 'bigint' ? v.toString() + 'n' : v);   // a number's value is a BigInt
+    const was = specStr(stations.stand.occupant);
+    $('runBtn').onclick();
+    await handUntil(() => mode === 'replay', 2000);
+    const started = mode === 'replay';
+    // a run may repeat for a long while: wait a little, not for ever
+    await handUntil(() => mode !== 'replay', 4000);
+    const changed = specStr(stations.stand.occupant) !== was;
+    if (!started && !changed) return 'the robot did not start \u2014 what is on its desk does not fit its thought';
+    return true;
+  }
+  if (step.do === 'name') {
+    const h = inHand();
+    if (!h) return 'nothing is in the hand to name';
+    const text = String(step.text ?? '').trim();
+    if (!text) return 'a name is needed';
+    if (h.userData.kind === 'text' || h.userData.kind === 'number') return 'a pad or a number takes typing, not a name \u2014 use "type"';
+    pushUndo();
+    setThingLabel(h, text);
+    refreshUI();
+    if ((h.userData.label || '') !== text) return 'the name did not take';
+    return true;
+  }
+  if (step.do === 'erase' || step.do === 'remove') {
+    // Ruby makes a part of the thought one step more general; Dusty makes it anything at all
+    // AT THE BENCH TOO: a robot that stopped because its desk no longer fits
+    // its thought is loosened there, with Ruby, as the workshop itself says
+    if (mode !== 'training' && !(mode === 'world' && activeBot)) return 'no robot is at the bench, and the hand is not inside a thought bubble';
+    if (!condition) return 'the robot has no thought yet';
+    const path = Array.isArray(step.path) ? step.path.map(n => (n | 0) - 1) : [];   // counted from 1, like holes
+    const helper = step.do === 'erase' ? 'ruby' : 'dusty';
+    const awake = () => helper === 'ruby' ? rubyActive : dustyActive;
+    if (!awake()) { handleClick({ kind: helper }); await handSettle(); }
+    if (!awake()) return (helper === 'ruby' ? 'Ruby' : 'Dusty') + ' would not wake';
+    const before = condText(condition);
+    handleClick({ kind: 'cond', path, outer: !path.length });
+    await handSettle();
+    if (awake()) { handleClick({ kind: helper }); await handSettle(); }
+    if (condText(condition) === before) return 'the thought did not change at ' + JSON.stringify(path);
+    return true;
+  }
+  if (step.do === 'go') {
+    const to = String(step.to || '').toLowerCase();
+    if (to === 'yard' || to === 'out' || to === 'outside') {
+      if (yardIn) return 'the hand is in the yard already';
+      if (!yardDoor || !yardDoor.visible) return 'there is no back door in this workshop';
+      handleClick({ kind: 'yardDoor' }); await handUntil(() => !!yardIn);
+      if (!yardIn) return 'the back door did not open';
+      return true;
+    }
+    if (to === 'in' || to === 'inside' || to === 'back' || to === 'table' || to === 'workshop') {
+      if (yardIn) { handleClick({ kind: 'yardDoor' }); await handUntil(() => !yardIn); if (yardIn) return 'could not come back in'; return true; }
+      if (worldTrail.length) { const depth = worldTrail.length; handleClick({ kind: 'exitDoor' }); await handUntil(() => worldTrail.length < depth); if (worldTrail.length >= depth) return 'could not come back out through the tall door'; return true; }
+      return 'the hand is at the table already';
+    }
+    if (to === 'panel') {
+      const r = await handPanelOut(step, ref, clickOn, () => handStep({ do: 'drop' }, things, names));
+      if (r !== true) return r;
+      const X = inHand();
+      const tray = X?.__panelTray;
+      if (!tray) return 'the panel is out but its door was not found';
+      if (X) { const sp = benchSpot(); handleClick({ kind: 'bench', point: new THREE.Vector3(sp.x, 0, sp.z) }); await handSettle(); }   // set it down: nobody walks in carrying the room
+      const depth = worldTrail.length;
+      handleClick({ kind: 'roomDoor', room: tray });
+      await handUntil(() => worldTrail.length > depth);   // the walk in is not "busy": wait for the world to change
+      if (worldTrail.length === depth) return 'the panel\u2019s door did not open';
+      return true;
+    }
+    return 'the hand can go to the yard, back, or into a panel \u2014 not "' + to + '"';
+  }
+  if (step.do === 'camera') {
+    // the person's own hand on the camera: the smart camera leaves it be
+    camYield = true;
+    try { orbit.dispatchEvent({ type: 'start' }); } catch (e) {}
+    const mv = String(step.move || '').toLowerCase();
+    const big = /more|lot|far|much/.test(String(step.how || '')) ? 2 : 1;
+    if (step.look != null) {
+      const t = ref(step.look) ?? handPlace(step.look);
+      if (!t) return 'there is no thing or place "' + step.look + '" to look at';
+      await handCamLook(t);
+    } else if (mv === 'left' || mv === 'right') await _mCam('turn', (mv === 'left' ? 1 : -1) * 0.5 * big, 0.8);
+    else if (mv === 'up' || mv === 'down') await handCamTilt((mv === 'up' ? 1 : -1) * 0.25 * big);
+    else if (mv === 'closer' || mv === 'in') await _mCam('zoom', Math.pow(0.7, big), 0.8);
+    else if (mv === 'farther' || mv === 'out' || mv === 'back') await _mCam('zoom', Math.pow(1 / 0.7, big), 0.8);
+    else if (/^slide /.test(mv) || ['pan left', 'pan right', 'forward', 'backward'].includes(mv)) {
+      const dir = mv.replace(/^(slide|pan) /, '');
+      const off = camera.position.clone().sub(orbit.target); off.y = 0; off.normalize();
+      const side = new THREE.Vector3(-off.z, 0, off.x);
+      const d = (dir === 'left' ? side.clone().multiplyScalar(0.6) : dir === 'right' ? side.clone().multiplyScalar(-0.6)
+        : dir === 'forward' ? off.clone().multiplyScalar(-0.6) : off.clone().multiplyScalar(0.6)).multiplyScalar(big);
+      await _mCam('slide', { x: d.x, z: d.z }, 0.8);
+    }
+    else if (mv === 'reset' || mv === 'home') { homeView(); await handSettle(); camYield = true; }
+    else { try { orbit.dispatchEvent({ type: 'end' }); } catch (e) {} return 'the camera turns left or right, tilts up or down, comes closer or goes farther, slides, looks at a thing, or resets \u2014 not "' + mv + '"'; }
+    try { orbit.dispatchEvent({ type: 'end' }); } catch (e) {}
+    return true;
+  }
+  if (step.do === 'open') {
+    const had = step.of == null || ref(step.of) === inHand() ? inHand() : null;
+    const r = await handPanelOut(step, ref, clickOn, () => handStep({ do: 'drop' }, things, names));
+    if (r !== true) return r;
+    // it was picked up only to reach its panel: set it back down (the tester's I7)
+    if (!had && inHand()) { const r2 = await handStep({ do: 'drop' }, things, names); if (r2 !== true) return r2; }
+    return true;
+  }
+  if (step.do === 'file') {
+    const h = inHand();
+    if (!h) return 'nothing is in the hand to file';
+    const nb = mainNotebook();
+    if (!nb || nb.parent !== benchRoot) return 'the notebook is not on the table';
+    clickOn(nb); await handSettle();
+    if (inHand() === h) return 'the notebook did not take it';
+    return true;
+  }
+  if (step.do === 'lookup') {
+    if (inHand()) return 'the hand must be empty to take a copy from the notebook';
+    const nb = mainNotebook();
+    if (!nb || nb.parent !== benchRoot) return 'the notebook is not on the table';
+    const want = String(step.name ?? '').trim().toLowerCase();
+    if (!want) return 'a name is needed';
+    const pages = nb.userData.pages || [];
+    const slot = pages.findIndex(pg => pg && [pg.label, pg.text, pg.name, pg.value?.n].filter(x => x != null).some(x => String(x).toLowerCase() === want));
+    let slot2 = slot;
+    if (slot2 < 0) {
+      const kind = HAND_KIND_OF[HAND_STACK_WORDS[handWord(step.name)]] ?? handWord(step.name).replace(/s$/, '');
+      const same = pages.map((pg, i) => pg && pg.kind === kind ? i : -1).filter(i => i >= 0);
+      if (same.length === 1) slot2 = same[0];
+    }
+    if (slot2 < 0) return 'nothing filed under "' + step.name + '" \u2014 the notebook has ' + pages.filter(Boolean).length + ' entries';
+    handleClick({ kind: 'nbItem', nb, slot: slot2 }); await handSettle();
+    if (!inHand()) return 'the copy did not come out of the notebook';
+    if (step.as) names.set(String(step.as), inHand());
+    return true;
+  }
+  if (step.do === 'speed') {
+    // THE WORKSHOP'S SPEED, the select on the bar: never a number made on the table
+    const sel = $('speed');
+    const opts = [...sel.options].map(o => o.value);
+    const want = String(step.to ?? step.how ?? '').toLowerCase().replace(/[\u00d7x\s]|times/g, '');
+    let v = null;
+    const at = opts.indexOf(sel.value);
+    // DOUBLE AND HALVE are relative to the speed now (Ken: "double the speed"); the steps are 2x apart
+    if (/^(double|twice|doubled)$/.test(want)) v = opts[Math.min(opts.length - 1, at + 1)];
+    else if (/^(halve|halved)$/.test(want)) v = opts[Math.max(0, at - 1)];
+    else if (/^(faster|up|more|quicker)$/.test(want)) v = opts[Math.min(opts.length - 1, at + 1)];
+    else if (/^(slower|down|less)$/.test(want)) v = opts[Math.max(0, at - 1)];
+    else if (/^(instant|inf|infinity|fastest|max)$/.test(want)) v = 'inf';
+    else if (/^(normal|1|one|usual)$/.test(want)) v = '1';
+    else if (/^(half|0\.5|\u00bd)$/.test(want)) v = '0.5';
+    else if (opts.includes(want)) v = want;
+    if (!v) return 'the speeds are \u00bd\u00d7, 1\u00d7, 2\u00d7, 4\u00d7, 8\u00d7 and Instant, not "' + (step.to ?? step.how ?? '') + '"';
+    sel.value = v;
+    pickSpeed(v);
+    return true;
+  }
+  if (step.do === 'pause' || step.do === 'resume') {
+    if ((step.do === 'pause') !== simPaused) $('pauseBtn').onclick();
+    return true;
+  }
+  if (step.do === 'stop') {
+    if (mode !== 'replay') return 'nothing is running to stop';
+    if (!handStopAsked) $('runBtn').onclick();
+    handStopAsked = true;
+    return true;
+  }
+  return 'the hand does not know how to "' + step.do + '"';
+}
+// THE BAR: one line at the top, a microphone beside it, shown only while the
+// option is on and a brain is there.
+{
+  const bar = document.createElement('div');
+  bar.id = 'handBar';
+  bar.className = 'card';
+  bar.innerHTML = '<input id="handIn" autocomplete="off" placeholder="Tell your hand what to do \u2014 \u201cpick up a 1 and put it in a 3-hole box\u201d" '
+    + 'title="Say or type what your hand should do. The brain chosen under \u201cHow Marty thinks\u201d turns it into the moves; Esc puts the keyboard back on the table.">'
+    + '<button id="handMic" title="Say it" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px 4px">\u{1F3A4}</button>'
+    + '<span id="handStatus"></span>'
+    + '<button id="handLogBtn" title="Show or hide what was said and what the hand answered" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 4px;color:var(--dim)">\u25BE</button>';
+  document.body.appendChild(bar);
+  const logEl = document.createElement('div');
+  logEl.id = 'handLog';
+  document.body.appendChild(logEl);
+  bar.querySelector('#handLogBtn').onclick = () => { logEl.classList.remove('free'); logEl.classList.toggle('on'); logEl.scrollTop = logEl.scrollHeight; };
+  // the title card's button shows the same log, free-standing, whether or not the line is on
+  const sl = document.getElementById('saidLogBtn');
+  if (sl) sl.onclick = () => {
+    const free = !bar.classList.contains('on');
+    logEl.classList.toggle('free', free);
+    logEl.classList.toggle('on');
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  const inp = bar.querySelector('#handIn');
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { const t = inp.value.trim(); inp.value = ''; if (t) handDo(t); }
+    else if (e.key === 'Escape') inp.blur();
+    e.stopPropagation();
+  });
+  // THE MICROPHONE STAYS ON until pressed again (Ken: "is there a way to
+  // keep the microphone on?"). Each pause ends an utterance, and an
+  // utterance is sent as it ends -- unless a GO PHRASE is set ("do it"),
+  // in which case what was said piles up until an utterance ends with the
+  // phrase, and the pile minus the phrase is sent. Chrome stops listening
+  // by itself after a while; while the switch is on it is started again.
+  const mic = bar.querySelector('#handMic');
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) mic.style.display = 'none';
+  else {
+    let rec = null, on = false, pile = '';
+    let deaf = false, deafTimer = 0;
+    const stop = () => { on = false; deaf = false; clearTimeout(deafTimer); if (rec) { try { rec.stop(); } catch {} } mic.classList.remove('on'); mic.textContent = '\u{1F3A4}'; mic.title = 'Listen (stays on until pressed again)'; handStatus(''); };
+    // DEAF WHILE THE PAGE SPEAKS: whatever the recognizer has half-heard is
+    // thrown away (abort, not stop, which would deliver it), and listening
+    // starts again only once the page has been quiet a moment
+    const listenAgain = () => {
+      clearTimeout(deafTimer);
+      deafTimer = setTimeout(() => {
+        if (!on || !deaf) return;
+        if (pageTalking()) return listenAgain();
+        deaf = false;
+        try { rec.start(); } catch (e) {}
+        mic.textContent = '\u{1F534}';
+      }, 300);
+    };
+    handMicDeaf = () => {
+      if (!on || !rec) return;
+      deaf = true; pile = ''; inp.value = '';
+      try { rec.abort(); } catch (e) {}
+      mic.textContent = '\u{1F507}';   // muted while the workshop talks
+      listenAgain();
+    };
+    const start = () => {
+      rec = new (window.__handSR || SR)();   // a stand-in recognizer, for a check
+      rec.lang = navigator.language || 'en-US';
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
+      rec.onresult = (e) => {
+        if (pageTalking()) { pile = ''; inp.value = ''; return; }   // the page's own voice, not the visitor's
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const r = e.results[i];
+          const t = (r[0]?.transcript || '').trim();
+          if (!t) continue;
+          if (!r.isFinal) { interim += ' ' + t; continue; }
+          const go = handGoPhrase();
+          if (!go) { inp.value = ''; handDo(t, { voice: true }); continue; }
+          pile = (pile + ' ' + t).trim();
+          const low = pile.toLowerCase(), g = go.toLowerCase();
+          const at = low.lastIndexOf(g);
+          if (at >= 0 && at >= low.length - g.length - 2) {
+            const said = pile.slice(0, at).replace(/[\s,.;:!?]+$/, '').trim();
+            pile = '';
+            inp.value = '';
+            if (said) handDo(said, { voice: true }); else handStatus('say what to do, then \u201c' + go + '\u201d');
+          } else inp.value = pile;
+        }
+        if (interim) inp.value = (pile ? pile + ' ' : '') + interim.trim();
+      };
+      rec.onerror = (e) => { if (e.error === 'no-speech' || e.error === 'aborted') return; sayAttn(micRefusedWords(e.error)); if (e.error === 'not-allowed' || e.error === 'service-not-allowed') stop(); };
+      rec.onend = () => { if (on && !deaf) { try { rec.start(); } catch { stop(); } } };
+      try { rec.start(); } catch { stop(); return; }
+      on = true; pile = '';
+      mic.classList.add('on'); mic.textContent = '\u{1F534}';
+      mic.title = 'Listening \u2014 press to stop. ' + (handGoPhrase() ? 'Say \u201c' + handGoPhrase() + '\u201d when the sentence is complete.' : 'A pause sends what was said.');
+    };
+    mic.onclick = () => {
+      if (on) return stop();
+      if (!micAllowed()) { const t = micAdvice(inp, 'the line at the top'); sayAttn(t); handLog('ws attn', t); return; }
+      start();
+    };
+    if (!micAllowed()) mic.title = 'Speak: in this page your computer\u2019s own speech recognition does the listening \u2014 click for how';
+  }
+}
+function handBarRefresh() {
+  const bar = document.getElementById('handBar');
+  if (bar) bar.classList.toggle('on', handWordsOn() && handBrainReady());
+  const b = document.getElementById('handWordsBtn');
+  if (b) {
+    b.style.display = handBrainReady() ? '' : 'none';
+    b.textContent = (handWordsOn() ? '\u2611' : '\u2610') + ' \u{1F590} Move my hand by words';
+  }
+}
+// the switch follows the key: when one is typed into Marty's card, the bar can appear
+document.addEventListener('change', (e) => { if (/^marty(Prov|Key|Model)$/.test(e.target?.id || '')) setTimeout(handBarRefresh, 50); });
+document.addEventListener('input', (e) => { if (e.target?.id === 'martyKey') setTimeout(handBarRefresh, 50); });
+setTimeout(handBarRefresh, 0);
+window.__handHeld = () => inHand();
+
 const martyUI = document.createElement('div');
 martyUI.id = 'martyPanel';
 // MARTY'S SIDE OF THE ROOM. It sat bottom-RIGHT, on top of Ruby, who lives
@@ -26500,12 +28025,14 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<select id="martyProv" autocomplete="off" style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit;box-sizing:border-box">'
   + '<option value="here">Claude \u2014 no key, in a Claude artifact</option>'
   + '<option value="nano">Gemini Nano \u2014 no key, in Chrome</option>'
+  + '<option value="local">A model in this browser \u2014 experimental, a big download</option>'
   + '<option value="claude">Claude \u2014 with an API key</option>'
   + '<option value="openai">ChatGPT (OpenAI)</option>'
   + '<option value="gemini">Gemini</option></select>'
   + '<input id="martyModel" placeholder="model" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '<div id="martyNano" style="margin-top:6px;display:none"></div>'
+  + '<div id="martyLocal" style="margin-top:6px;display:none"></div>'
   + '<div id="martyHere" style="margin-top:6px;display:none"></div>'
   + '<div style="margin-top:8px">Help: <select id="martyHelp" title="How far Marty goes. Hints and demonstrations keep the building yours; the second lets him plan a program when asked, step by step, in the workshop’s own gestures; the third has him plan and build one WITH you — asking what it should do, handing you the next move, and doing a step himself when you are stuck." '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
@@ -26638,6 +28165,7 @@ function martyModeLine() {
   if (!el) return;
   el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
   martyNanoRow();
+  martyLocalRow();
   martyHereRow();
   // Whether the built-in model is ready is only knowable by asking, and asking
   // takes a moment -- so the line is written first and corrected if need be.
@@ -26757,6 +28285,76 @@ addEventListener('focus', () => hereRecheck());
 // Chrome will not begin the download except from a real click, and it is a
 // download of gigabytes -- so it gets a button of its own, with the size said
 // out loud, rather than happening because a child asked a question.
+// THE MODEL IN THIS BROWSER: which one, how big, and a button that fetches it
+// (once) and wakes it. Nothing is downloaded until that button is pressed.
+async function martyLocalRow() {
+  const el = document.getElementById('martyLocal');
+  if (!el) return;
+  if (martyProv() !== 'local' || !navigator.gpu) { el.style.display = 'none'; el.textContent = ''; return; }
+  el.style.display = '';
+  el.textContent = '';
+  const box = 'width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit;box-sizing:border-box';
+  const sel = document.createElement('select');
+  sel.id = 'martyLocalModel';
+  sel.style.cssText = box;
+  for (const m of LOCAL_MODELS) {
+    const o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.name + ' \u2014 about ' + m.gb + ' GB, ' + m.gpu + ' GB of graphics memory';
+    sel.appendChild(o);
+  }
+  sel.value = localModel();
+  const note = document.createElement('div');
+  note.id = 'martyLocalNote';
+  note.style.cssText = 'font-size:11px;color:#9aa6bb;margin-top:4px;min-height:1em';
+  const b = document.createElement('button');
+  b.style.cssText = 'background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer;font:inherit;margin-top:6px';
+  const drop = document.createElement('button');
+  drop.textContent = 'Delete the download';
+  drop.style.cssText = 'background:none;border:1px solid #3a4356;border-radius:8px;color:#9aa6bb;padding:5px 9px;cursor:pointer;font:inherit;margin:6px 0 0 6px';
+  const state = async () => {
+    const id = sel.value;
+    const loaded = localEngine && localLoaded === id;
+    const cached = loaded || await localCached(id);
+    b.textContent = loaded ? 'Loaded \u2014 ready' : cached ? 'Load it (already downloaded)' : 'Download it (about ' + localSpec(id).gb + ' GB, once) and load it';
+    b.disabled = !!loaded || !!localLoading;
+    drop.style.display = cached ? '' : 'none';
+    note.textContent = localNote || (loaded ? 'It runs on this computer; the first answer after loading is the slowest.'
+      : cached ? 'Downloaded: loading takes a little while each time the page opens.'
+      : 'Downloaded from Hugging Face the first time and kept by this browser. It needs a graphics card with about ' + localSpec(id).gpu + ' GB of memory.');
+  };
+  sel.onchange = () => { localStorage.setItem('tt3d.marty-model.local', sel.value); localNote = ''; martyModeLine(); };
+  b.onclick = async () => {
+    b.disabled = true; localNote = ''; note.textContent = 'Starting\u2026';
+    try {
+      await localLoad(sel.value);
+      localNote = '';
+      martySay('I am thinking with ' + localSpec(sel.value).name + ' now, right here on this computer.');
+    } catch (e) {
+      console.error('[local] could not load', e);
+      localNote = 'It stopped: ' + (e?.message || e?.name || e).toString().slice(0, 200) + ' — press the button again: what was already downloaded is kept.';
+      note.textContent = localNote;
+    }
+    martyModeLine();
+  };
+  drop.onclick = async () => {
+    try {
+      const w = await localLibrary();
+      if (localEngine && localLoaded === sel.value) { try { await localEngine.unload(); } catch (e) {} localEngine = null; localLoaded = ''; }
+      await w.deleteModelAllInfoInCache(sel.value, localAppConfig(w));
+      localNote = 'Deleted from this browser.';
+    } catch (e) { localNote = 'Could not delete it: ' + (e?.message || e); }
+    martyModeLine();
+  };
+  // WHAT WAS MEASURED (26 Sep, the hand scorecard, sections A-F and H): Qwen
+  // 3.5 4B got 23 of 38 right at about 5 s a sentence, 9B 21 of 38 at about
+  // 7 s; a cloud model gets nearly all. Say so before anyone downloads gigabytes.
+  const warn = document.createElement('div');
+  warn.style.cssText = 'font-size:11px;color:#e8c98a;margin-bottom:4px';
+  warn.textContent = 'Experimental. Tried on the hand\u2019s test sentences, these got about 6 in 10 right — a cloud brain gets nearly all of them.';
+  el.append(warn, sel, b, drop, note);
+  await state();
+}
 async function martyNanoRow() {
   const el = document.getElementById('martyNano');
   if (!el) return;
@@ -26897,6 +28495,28 @@ function showSettingsCard(first) {
     const note = document.createElement('div');
     note.style.cssText = 'font-size:11px;color:var(--dim)';
     note.textContent = 'To talk to Marty instead of typing, press the microphone \u{1F3A4} on his card \u2014 it listens while you speak.';
+    card.appendChild(note);
+  }
+  sec('Your hand');
+  if (handBrainReady()) {
+    row('Move your hand by words', 'a line at the top: say or type “pick up a 1 and put it in a 3-hole box” and your hand does it, thinking with the brain chosen under “How Marty thinks”',
+        cb(handWordsOn(), (on) => { mineSet(HAND_WORDS, on ? '1' : '0'); handBarRefresh(); menuRefresh(); }));
+    row('Read your hand\u2019s answers aloud', 'always \u2014 when you speak to it they are read aloud anyway', cb(mineGet(HAND_SPEAK) === '1', (on) => mineSet(HAND_SPEAK, on ? '1' : '0')));
+    // A GO PHRASE is for this page's own microphone. Where the page may not
+    // listen (a Claude artifact) the computer's dictation does, and it has
+    // its own way to send: Enter, or "press Enter" to Voice Access (Ken)
+    if ((window.SpeechRecognition || window.webkitSpeechRecognition) && micAllowed()) {
+      const go = document.createElement('input');
+      go.type = 'text'; go.autocomplete = 'off'; go.value = handGoPhrase(); go.placeholder = 'e.g. do it';
+      go.style.cssText = 'font:inherit;font-size:12px;width:9em;background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:3px 6px';
+      go.onchange = () => mineSet(HAND_GO, go.value.trim());
+      go.addEventListener('keydown', (e) => e.stopPropagation());
+      row('Go phrase for the \u{1F3A4} on the line', 'with the microphone left on, a pause sends each sentence; with a phrase here, what you say piles up until you end with it', go);
+    }
+  } else {
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:11px;color:var(--dim)';
+    note.textContent = 'Moving your hand by words needs a brain: give one a key under “How Marty thinks” on Marty’s card, and a switch appears here.';
     card.appendChild(note);
   }
   sec('Help');
@@ -27172,8 +28792,10 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   if (!SR) mic.style.display = 'none';
   else {
     let listening = null;
+    if (!micAllowed()) mic.title = 'Ask by voice: in this page your computer\u2019s own speech recognition does the listening \u2014 click for how';
     mic.onclick = () => {
       if (listening) { listening.stop(); return; }
+      if (!micAllowed()) { martySay(micAdvice(document.getElementById('martyIn'), 'my question box')); return; }
       const rec = new SR();
       rec.lang = navigator.language || 'en-US';
       rec.interimResults = false;
@@ -27187,7 +28809,7 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
           martyAskNow();
         }
       };
-      rec.onerror = (e) => { martySay('The microphone said: ' + (e.error || 'no')); };
+      rec.onerror = (e) => { martySay(micRefusedWords(e.error)); };
       rec.onend = () => { mic.textContent = '\u{1F3A4}'; listening = null; };
       try { rec.start(); } catch { mic.textContent = '\u{1F3A4}'; listening = null; }
     };
@@ -27200,6 +28822,11 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   // The built-in model is still offered when this browser has none -- so the
   // panel can say why rather than quietly not mentioning it -- but it cannot
   // be chosen there.
+  const localOpt = provEl.querySelector('option[value="local"]');
+  if (localOpt && !navigator.gpu) {
+    localOpt.disabled = true;
+    localOpt.textContent = 'A model in this browser \u2014 needs WebGPU, which this browser lacks';
+  }
   const nanoOpt = provEl.querySelector('option[value="nano"]');
   if (nanoOpt && !nanoAPI()) {
     nanoOpt.disabled = true;
@@ -27217,6 +28844,11 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   // all -- both runtimes are on claudeusercontent.com -- and explains itself
   // if it fails.
   const onArtifactHost = /(^|\.)claudeusercontent\.com$/.test(location.hostname);
+  // an artifact cannot fetch the library or the model: no local brain there
+  if (onArtifactHost || window.top !== window && hasAiHook()) {
+    provEl.querySelector('option[value="local"]')?.remove();
+    if (localStorage.getItem('tt3d.marty-provider') === 'local') localStorage.setItem('tt3d.marty-provider', hasAiHook() ? 'here' : 'claude');
+  }
   if (!hasAiHook() && !onArtifactHost) {
     provEl.querySelector('option[value="here"]')?.remove();
     if (localStorage.getItem('tt3d.marty-provider') === 'here') {
@@ -27442,6 +29074,9 @@ window.__nano = {
   // Marty, for a check: a stand-in for the brain, and the commentary switch
   // that lives in the More menu -- so a narrated run can be watched here.
   brain(fn) { brainStandIn = fn ?? null; },
+  hand(s, o) { return handDo(s, o); },                                           // the hand, by words
+  handHeld() { return held; },                                             // what the hand holds, for a check to set down
+  handOn(v) { if (v !== undefined) { mineSet(HAND_WORDS, v ? '1' : '0'); handBarRefresh(); } return handWordsOn(); },
   help(v) { if (v !== undefined) mineSet(MARTY_HELP, v); return martyHelp(); },     // the help mode, for a check
   martyBusy() { return !!(martyBusyDemo || martyPerforming || martyThinking); },     // still thinking, fetching or demonstrating
   commentary(on) { mineSet(MARTY_COMMENT, on ? '1' : '0'); return martyCommentOn(); },

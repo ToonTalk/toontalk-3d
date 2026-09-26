@@ -280,10 +280,12 @@ To use it unmodified, no setup needed:
 <https://toontalk.github.io/toontalk-3d/gallery.html>. (`toontalk-3d-v1.html`
 is the snapshot of 24 August, kept as history.)
 
-**The next build.** Since 21 September `toontalk-3d.html` is the released
-workshop and stays as it is; new work goes into `toontalk-3d-next.html`
-(<https://toontalk.github.io/toontalk-3d/toontalk-3d-next.html>), which will
-become the release when it is ready. What it has that the release does not:
+**Released 26 September: your hand, by words.** From 21 September the
+released workshop stayed as it was while this was built in a copy,
+`toontalk-3d-next.html`; on 26 September the copy became the release
+(`toontalk-3d.html`, <https://toontalk.github.io/toontalk-3d/>), and the manual
+gained a section on it. The next build carries on as the place for work in
+progress. What the release gained:
 
 - **Your hand, by words.** Under Settings, *Move your hand by words* puts a
   line at the top of the screen: say or type "pick up a 1 and put it in a
