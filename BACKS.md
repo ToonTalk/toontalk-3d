@@ -9280,3 +9280,19 @@ re-embedded before the single-file build, the chat build and the pack
 (114 KB of manual now) were rebuilt. The full suite stalled at copy700 as
 before and was run in batches instead. `toontalk-3d-next.html` stays, the
 same file for now, as the place for work in progress.
+
+## Ken's artifact test after the release: the desk is not the claw, and a robot is not heavy
+
+Ken (26 Sep) tried the released workshop in the Claude artifact: "worked well
+enough". Two refusals were the brain's, not the hand's. Inside the bubble,
+"give the one to Mimi" and even "pick up the one and give it to Mimi" were
+refused with "the 1 is on the desk, not in the claw -- pick it up first",
+though the copy step picks up what it names; and after a run "put the robot
+on the table" and "pick up the robot" were refused, the second as "too
+heavy" -- invented. The hand does both (a click on the robot at the bench
+shrinks it into the hand, and what was on its desk goes on the table). The
+prompt now says a step takes a thing from wherever the listing says it is
+and never needs it in the hand already, that the robot at the bench can be
+picked up and no robot is too heavy, with a worked example of "give the one
+to Mimi" in a bubble; the listing says of the bench robot that picked up it
+shrinks into the hand. handByWordCheck: bench-robot-off.
