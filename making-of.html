@@ -281,8 +281,9 @@
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: .76rem; color: var(--ink-soft); line-height: 1.7;
   }
+  .statwrap { overflow-x: auto; margin: 2rem 0 .6rem; }
   table.stats {
-    width: 100%; border-collapse: collapse; margin: 2rem 0 .6rem;
+    width: 100%; border-collapse: collapse; margin: 0;
     font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .82rem;
   }
   table.stats caption {
@@ -314,49 +315,59 @@
 <header class="top">
   <p class="eyebrow">ToonTalk 3D &middot; a making-of</p>
   <h1>Reading the manual</h1>
-  <p class="standfirst">Twenty-seven working days, 293 commits and one 27,000-line
+  <p class="standfirst">Thirty-two working days, 338 commits and one 29,000-line
     file &mdash; the day the project stopped guessing at ToonTalk and went and
     read it, and everything that followed from the day a picture became a pad:
     panels, games, puzzles, a yard, teams, a narrator, robots that train
-    robots, Hilbert's resort in five problems &mdash; and a third voice at the
-    table, a tester that never slept.</p>
-  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 21 September 2026</p>
+    robots, Hilbert's resort in five problems; a third voice at the table, a
+    tester that never slept &mdash; and, last, a hand you can tell what to do.</p>
+  <p class="byline">Ken Kahn, who wrote ToonTalk, with Claude &middot; 16 August &ndash; 26 September 2026</p>
 </header>
 
+<div class="statwrap">
 <table class="stats">
-  <caption>Two halves of the project, split at the day media arrived: pictures
-    and sounds became things you can hold on 25&nbsp;August, with the line
-    <em>a picture is a pad</em>. Everything after that &mdash; panels,
-    behaviours, games, puzzles, the yard, teams, a narrator, robots that train
-    robots &mdash; is the second column.</caption>
+  <caption>Three parts of the project. The first two split at the day media
+    arrived: pictures and sounds became things you can hold on 25&nbsp;August,
+    with the line <em>a picture is a pad</em>, and everything after that
+    &mdash; panels, behaviours, games, puzzles, the yard, teams, a narrator,
+    robots that train robots &mdash; is the second column. The third is the
+    week of <a href="#telling-the-hand">telling the hand what to do</a>, built
+    in a copy of the workshop so the released one stayed as it was.</caption>
   <thead>
     <tr><th scope="col"></th>
         <th scope="col">Before media<br><span class="when">16&ndash;24 Aug</span></th>
         <th scope="col">Since<br><span class="when">25 Aug&ndash;20 Sep</span></th>
+        <th scope="col">The hand<br><span class="when">21&ndash;26 Sep</span></th>
         <th scope="col">Total</th></tr>
   </thead>
   <tbody>
-    <tr><th scope="row">Working days</th><td>9</td><td>18</td><td>27</td></tr>
-    <tr><th scope="row">Commits</th><td>154</td><td>139</td><td>293</td></tr>
-    <tr><th scope="row">Prompts from Ken<br><span class="when">to 14 Sep</span></th><td>180</td><td>189</td><td>369</td></tr>
-    <tr><th scope="row">Tool calls<br><span class="when">to 14 Sep</span></th><td>5,491</td><td>10,194</td><td>15,685</td></tr>
-    <tr><th scope="row">Lines in the app</th><td>11,959</td><td>+15,724</td><td>27,683</td></tr>
-    <tr><th scope="row">Example worlds</th><td>18</td><td>+48</td><td>66</td></tr>
-    <tr><th scope="row">Puzzles</th><td>&mdash;</td><td>+39</td><td>39</td></tr>
-    <tr><th scope="row">Manual (lines)</th><td>544</td><td>+1,488</td><td>2,032</td></tr>
-    <tr><th scope="row">Regression checks</th><td>&mdash;</td><td>+146</td><td>146</td></tr>
-    <tr><th scope="row">The back of the book (lines)</th><td>577</td><td>+7,900</td><td>8,477</td></tr>
+    <tr><th scope="row">Working days</th><td>9</td><td>18</td><td>5</td><td>32</td></tr>
+    <tr><th scope="row">Commits</th><td>154</td><td>145</td><td>39</td><td>338</td></tr>
+    <tr><th scope="row">Prompts from Ken</th><td>174</td><td>232</td><td>47</td><td>453</td></tr>
+    <tr><th scope="row">Tool calls</th><td>5,491</td><td>13,558</td><td>894</td><td>19,943</td></tr>
+    <tr><th scope="row">Lines in the app</th><td>11,959</td><td>+15,785</td><td>+1,601</td><td>29,345</td></tr>
+    <tr><th scope="row">Example worlds</th><td>18</td><td>+48</td><td>&mdash;</td><td>66</td></tr>
+    <tr><th scope="row">Puzzles</th><td>&mdash;</td><td>+39</td><td>&mdash;</td><td>39</td></tr>
+    <tr><th scope="row">Manual (lines)</th><td>544</td><td>+1,488</td><td>+5</td><td>2,037</td></tr>
+    <tr><th scope="row">Regression checks</th><td>&mdash;</td><td>+146</td><td>+3</td><td>149</td></tr>
+    <tr><th scope="row">The back of the book (lines)</th><td>577</td><td>+7,924</td><td>+763</td><td>9,264</td></tr>
   </tbody>
 </table>
+</div>
 <p class="statnote">A <em>prompt</em> is a message Ken typed; a <em>tool call</em>
   is one action taken in reply &mdash; a file read, an edit, a probe of the
-  running app, a Blender render, a test run. Thirty actions to the prompt
-  before media, fifty-four since: the second half is where measurement got
+  running app, a Blender render, a test run. Thirty-two actions to the prompt
+  before media, fifty-eight in the second part: that is where measurement got
   cheaper than guessing, and most of each round went into proving the fix
-  rather than making it. Both are counted from the session's own transcript
-  (the whole project is one session), with one rule for both halves; the two
-  rows stop at 14 September, when the counting was last done. The other rows
-  are counted from the repository on 20 September.
+  rather than making it. Nineteen in the week of the hand, where most of the
+  testing was done by a tester in another browser and came back as a report.
+  Both rows are counted from the session's own transcript (the whole project
+  is one session) with one rule for all three columns, recounted on
+  26 September; the rule gives the first column's tool calls exactly as they
+  were first counted, and six fewer of its prompts. The other rows are counted
+  from the repository, split at the end of 20 September; the lines in the app
+  are the copy the hand was built in, which is 1,517 lines longer than the
+  released workshop.
   <em>The back of the book</em> is <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md"><code>BACKS.md</code></a>: one entry per round,
   saying what was asked, what was measured and what changed.</p>
 
@@ -395,6 +406,7 @@
     <li><a href="#beyond-the-original"><span class="rail">Beyond the original</span>What was not in ToonTalk</a></li>
     <li><a href="#chatgpt-testing"><span class="rail">A third voice</span>The tester who never slept</a></li>
     <li><a href="#chatgpt-tests-marty"><span class="rail">The narrator, tested</span>ChatGPT tests Marty</a></li>
+    <li><a href="#telling-the-hand"><span class="rail">21&ndash;26 Sep</span>Telling the hand what to do</a></li>
     <li><a href="#what-is-missing"><span class="rail">Still open</span>What is missing, on purpose and not</a></li>
   </ol>
 </nav>
@@ -1922,6 +1934,104 @@ return 0;                 // off-screen: every animation takes 0 ms</code></pre>
         from the site at boot and takes its models unless the visitor has
         typed their own. The round is
         <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md#chatgpt-tests-marty">in the back of the book</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="telling-the-hand">
+  <div class="col">
+    <div class="rail">21&ndash;26 Sep</div>
+    <div class="body">
+      <div class="head">
+        <span class="badge r">&#9758;</span>
+        <h2>Telling the hand what to do</h2>
+        <a class="permalink" href="#telling-the-hand" aria-label="Link to this section">#</a>
+      </div>
+      <p>It began as a question about <em>voice control</em>: could someone
+        say &ldquo;pick up a 1 and put it in a 3-hole box&rdquo; and have it
+        happen? Ken&rsquo;s second thought reshaped it. Not Marty doing things
+        on your behalf, but another way of moving your <em>own</em> hand; and
+        not a grammar of commands, but a language model deciding what
+        &ldquo;a 1&rdquo; and &ldquo;the 1&rdquo; mean from what is on the
+        table &mdash; a fresh one off the stack, or the one already there. It
+        would exist only where a brain did, and the release would not be
+        touched: the work went into a copy,
+        <a href="https://toontalk.github.io/toontalk-3d/toontalk-3d-next.html"><span class="mono">toontalk-3d-next.html</span></a>.</p>
+      <p>The design fits in three sentences. The page writes the brain a
+        numbered list of what is here &mdash; <em>#1: a box with 2 holes
+        (hole 1: the number 3) [left, front]</em> &mdash; and what the hand
+        holds, and where the hand is: at the table, out in the yard, in a
+        panel, or inside a robot&rsquo;s thought bubble, where the hand is the
+        robot&rsquo;s own claw. The brain answers with a plan in the
+        workshop&rsquo;s own verbs &mdash; take, type, drop, give, copy,
+        vacuum, erase, leave. And the hand carries the plan out through the
+        very clicks and key presses a person would make, so undo, a
+        puzzle&rsquo;s rules and a lesson being taught all see ordinary
+        gestures, and every step is checked before the next is tried.</p>
+
+      <h3>A tester, a script, and a scorecard</h3>
+      <p>The rounds ran the way the rest of the project had, with one
+        difference: most of the testing happened somewhere else. Claude, in
+        Ken&rsquo;s Chrome, worked through a written script,
+        <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/TESTING-HAND-BY-WORD.md"><span class="mono">TESTING-HAND-BY-WORD.md</span></a>,
+        against whichever brain Ken had chosen &mdash; typing the sentences,
+        logging what the brain was sent and what came back, and never seeing
+        a key, which Ken always entered himself. Each report came back as a
+        document, and each became a round. GPT managed 42 of 46 at first, then
+        61 of 66. Gemini Nano, the little model inside Chrome, managed 1 of
+        25. Claude, keyless in the published artifact, 22 of 29 on a build a
+        round behind. And on 25 September gpt-6-sol took the scorecard 30 for
+        30, with nearly everything else right too, no errors of the
+        hand&rsquo;s own, and a median of two seconds a sentence.</p>
+
+      <h3>The worst answer is a false tick</h3>
+      <p>Most of what the reports found was not a brain being wrong but the
+        page letting a wrong thing look right. A plan that failed at step
+        seven left six steps done &mdash; a stray 3 on the table, and inside
+        a thought bubble half a lesson, which a robot then ran for thirty-three
+        rounds. A failed plan is now undone, lesson and all, with the
+        workshop&rsquo;s own undo. A number dropped on a number adds, and the
+        brain&rsquo;s words hid it (&ldquo;the original is back on the
+        desk&rdquo;, over a desk reading 2), so the answer now ends with what
+        the drop made. A brain that did the possible half of a sentence and
+        dropped the rest had its tick taken away: all or nothing. A plain
+        &ldquo;leave&rdquo; answered with <em>the lesson is over</em>, and no
+        steps, is no longer a tick either &mdash; only a question may be
+        answered in words. And the list itself grew what the brain kept
+        tripping on: which 1 is Mimi&rsquo;s copy and which the original,
+        which of two boxes is the leftmost, what is riding on what.</p>
+
+      <h3>Speaking to it</h3>
+      <p>Ken tried it by voice, and the voice found its own bugs. A claude.ai
+        artifact is never given the microphone, so there a click on it says
+        how to start the computer&rsquo;s own dictation, and puts the cursor
+        where the words should go. Windows voice typing worked once and then
+        stopped: the line was disabled while the hand worked, and a disabled
+        field loses the cursor. Voice Access typed <em>press Enter</em> into
+        the line as words, so &ldquo;stop press Enter&rdquo; was not a stop,
+        and the robot ran on. And the page&rsquo;s own microphone heard the
+        page: Ken had not said &ldquo;a room on the table&rdquo; &mdash; the
+        app had, aloud. It is deaf now while the page speaks. For someone using
+        voice alone, the list says where each thing is on the screen, the
+        camera turns and zooms by words, answers are spoken back, and a
+        running robot can be sped up, paused or stopped by words while
+        nothing else touches it.</p>
+
+      <h3>A model in the browser</h3>
+      <p>The last question was whether something bigger than Nano, run on the
+        computer&rsquo;s own graphics card and downloaded once, would do. The
+        workshop can now run an open model through WebLLM, and a scorecard,
+        <a href="https://toontalk.github.io/toontalk-3d/tests/hand-scorecard.js"><span class="mono">tests/hand-scorecard.js</span></a>,
+        judges any brain by what ends up on the table rather than by what it
+        says. Qwen 3.5 with 4 billion parameters got 23 of 38; with 9 billion,
+        21. Keeping one running conversation, so the model reads its rules
+        once, took a sentence from twenty-eight seconds to five. Letting the
+        model think first was tried twice and taken back &mdash; free, it
+        thought for four minutes and never reached a plan; told to be brief,
+        it scored lower and took longer. The option stays, marked
+        experimental, with its numbers shown before anyone downloads
+        gigabytes. Every round is in
+        <a href="https://github.com/ToonTalk/toontalk-3d/blob/main/BACKS.md">the back of the book</a>.</p>
     </div>
   </div>
 </section>
