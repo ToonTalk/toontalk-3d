@@ -5632,7 +5632,7 @@ let martyCommentBusy = false;
 function martyCanThink() {
   if (brainStandIn) return true;
   const p2 = martyProv();
-  return p2 === 'nano' || p2 === 'here' || (!!p2 && !!martyKeyOf(p2));
+  return p2 === 'nano' || p2 === 'here' || (p2 === 'local' && !!navigator.gpu) || (!!p2 && !!martyKeyOf(p2));
 }
 // Says a line, and answers with the words said -- how long the run has to
 // wait before he is quiet enough for the steps to be narrated.
@@ -25404,7 +25404,7 @@ let sampleFn = null;
 (async () => { try { sampleFn = (await window.claude?.use?.('sample')) ?? null; } catch { sampleFn = null; } })();
 // the size complaint of any brain, told apart from the rest: the built-in
 // model's quota, the sample route's 64 KiB
-const tooMuchFor = (e) => nanoTooMuch(e) || e?.code === 'prompt_too_large' || /exceed|64 KiB/i.test(e?.message || '');
+const tooMuchFor = (e) => nanoTooMuch(e) || e?.code === 'prompt_too_large' || /exceed|64 KiB|context ?window/i.test(e?.message || '');
 const SAMPLE_MANUAL_BUDGET = 40000;
 // "you gave me more than I can hold", however this build of Chrome says it
 const nanoTooMuch = (e) => e?.name === 'QuotaExceededError'
@@ -25557,6 +25557,113 @@ async function nanoThink(sys, q, history = martyHistory, schema = null) {
     }
   } finally { session.destroy?.(); }
 }
+// A MODEL IN THIS BROWSER (WebLLM, Ken 26 Sep). An open model runs on this
+// computer's graphics card through WebGPU: no key, no account, nothing leaves
+// the machine -- but a download of gigabytes, once (the browser caches it),
+// and a capable GPU. The library comes from jsDelivr the first time it is
+// wanted; the model only on a click of its own button, never set off by a
+// question. It runs in a worker, so the workshop keeps moving while it thinks.
+const LOCAL_LIB = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm';
+const LOCAL_MODELS = [
+  { id: 'Qwen3.5-4B-q4f16_1-MLC', name: 'Qwen 3.5 (4B)', gb: 2.4, gpu: 4 },
+  { id: 'Qwen3.5-9B-q4f16_1-MLC', name: 'Qwen 3.5 (9B)', gb: 5.2, gpu: 7 },
+  { id: 'Qwen3-8B-q4f16_1-MLC', name: 'Qwen 3 (8B)', gb: 4.6, gpu: 6 },
+  { id: 'Llama-3.1-8B-Instruct-q4f16_1-MLC', name: 'Llama 3.1 (8B)', gb: 4.5, gpu: 5 },
+  { id: 'Phi-4-mini-instruct-q4f16_1-MLC', name: 'Phi-4 mini (3.8B)', gb: 2.2, gpu: 4 },
+];
+const LOCAL_CONTEXT = 8192;   // the hand's rules and listing are ~3,500 tokens; the models' default is 4,096
+const localModel = () => { const m = localStorage.getItem('tt3d.marty-model.local'); return LOCAL_MODELS.some(x => x.id === m) ? m : LOCAL_MODELS[0].id; };
+const localSpec = (id = localModel()) => LOCAL_MODELS.find(x => x.id === id) ?? LOCAL_MODELS[0];
+let localLib = null, localEngine = null, localLoaded = '', localLoading = null, localNote = '';
+async function localLibrary() { return localLib ??= await import(LOCAL_LIB); }
+// WHERE THE BROWSER KEEPS IT: its Cache storage, or IndexedDB where that
+// refuses ("Failed to execute 'add' on 'Cache': Unexpected internal error",
+// two thirds of the way through a 2.4 GB download, in an embedded Chromium)
+const localIDB = () => { try { return localStorage.getItem('tt3d.local-idb') === '1'; } catch (e) { return false; } };
+const localAppConfig = (w, idb = localIDB()) => ({ ...w.prebuiltAppConfig, cacheBackend: idb ? 'indexeddb' : 'cache' });
+async function localCached(id = localModel()) {
+  try { const w = await localLibrary(); return await w.hasModelInCache(id, localAppConfig(w)); } catch (e) { return false; }
+}
+function localProgress(r) {
+  localNote = r?.text ? String(r.text).replace(/\s+/g, ' ').slice(0, 160) : '';
+  const el = document.getElementById('martyLocalNote');
+  if (el) el.textContent = localNote;
+  if (handBusy && typeof r?.progress === 'number') handStatus('loading the model\u2026 ' + Math.round(r.progress * 100) + '%');
+}
+async function localLoad(id = localModel()) {
+  if (localEngine && localLoaded === id) return localEngine;
+  while (localLoading) { try { await localLoading; } catch (e) {} if (localEngine && localLoaded === id) return localEngine; }
+  localLoading = (async () => {
+    const w = await localLibrary();
+    if (localEngine) { try { await localEngine.unload(); } catch (e) {} localEngine = null; localLoaded = ''; }
+    const chat = { context_window_size: LOCAL_CONTEXT };
+    const make = async () => {
+      const opts = { initProgressCallback: localProgress, appConfig: localAppConfig(w) };
+      let worker = null;
+      try {
+        // in a worker, so the 3D view is not held up while it thinks
+        const src = `import * as w from '${LOCAL_LIB}'; const h = new w.WebWorkerMLCEngineHandler(); self.onmessage = (m) => h.onmessage(m);`;
+        worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })), { type: 'module' });
+      } catch (e) { console.warn('[local] no worker, so on the page itself:', e); }
+      return worker ? await w.CreateWebWorkerMLCEngine(worker, id, opts, chat) : await w.CreateMLCEngine(id, opts, chat);
+    };
+    let eng = null;
+    try { eng = await make(); }
+    catch (e) {
+      if (localIDB() || !/Cache|internal error/i.test(String(e?.message || e))) throw e;
+      console.warn('[local] the Cache storage refused; IndexedDB instead:', e);
+      try { localStorage.setItem('tt3d.local-idb', '1'); } catch (e2) {}
+      try { await w.deleteModelAllInfoInCache(id, localAppConfig(w, false)); } catch (e2) {}   // the half in Cache storage
+      eng = await make();
+    }
+    localEngine = eng; localLoaded = id;
+    return eng;
+  })();
+  try { return await localLoading; } finally { localLoading = null; }
+}
+// THE HAND'S CONVERSATION, kept whole: WebLLM reuses what it has already
+// read when a request only adds to the last one, so the ~3,000 tokens of
+// rules are read once, not every sentence (28 s a sentence without this)
+let localConv = null;
+const localTok = (t) => Math.ceil(String(t || '').length / 3.3);
+async function localThink(sys, q, history = martyHistory, schema = null) {
+  if (!navigator.gpu) return null;
+  const id = localModel();
+  if (!(localEngine && localLoaded === id)) {
+    if (!(await localCached(id))) {
+      martySay('The model for this browser is not downloaded yet \u2014 there is a button for it under \u201cHow Marty thinks\u201d.');
+      return null;
+    }
+    await localLoad(id);
+  }
+  const keep = history === handHistory;
+  if (keep && (!localConv || localConv.sys !== sys || localConv.id !== id || localConv.tokens + localTok(q) > LOCAL_CONTEXT - 1400)) {
+    localConv = { sys, id, msgs: [], tokens: localTok(sys) };   // a fresh start: the rules are read again
+  }
+  const req = {
+    messages: [{ role: 'system', content: sys },
+      ...(keep ? localConv.msgs : history.slice(-2).map(m => ({ role: m.role, content: m.content }))),
+      { role: 'user', content: q }],
+    temperature: 0.2, max_tokens: 800,
+    // the reply is held to the shape asked for, token by token
+    response_format: { type: 'json_object', schema: JSON.stringify(schema ?? martyReplySchema()) },
+    extra_body: { enable_thinking: false },   // Qwen's "thinking" would spend the budget before the answer
+  };
+  const t0 = performance.now();
+  let res;
+  try { res = await localEngine.chat.completions.create(req); }
+  catch (e) {
+    if (keep) localConv = null;   // whatever went wrong, start the conversation afresh next time
+    if (!/thinking|extra_body/i.test(e?.message || '')) throw e;
+    delete req.extra_body;
+    res = await localEngine.chat.completions.create(req);
+  }
+  console.info('[local]', id, Math.round(performance.now() - t0) + ' ms', res.usage || '');
+  const content = res.choices?.[0]?.message?.content ?? '';
+  if (keep) { localConv.msgs.push({ role: 'user', content: q }, { role: 'assistant', content }); localConv.tokens += localTok(q) + localTok(content); }
+  window.__localLast = { ms: Math.round(performance.now() - t0), usage: res.usage || null };
+  return content;
+}
 const MARTY_PROVIDERS = {
   // the cheap, current model of each (Ken, 21 Sep 2026); marty-models.json on
   // the site overrides these after a release without a rebuild -- see below
@@ -25565,6 +25672,8 @@ const MARTY_PROVIDERS = {
   gemini: { label: 'Gemini', say: 'Gemini', model: 'gemini-3.8-flash' },
   nano: { label: 'Gemini Nano (in Chrome, no key)', say: 'the Gemini inside Chrome',
           model: '', keyless: true },
+  local: { label: 'A model in this browser (WebLLM)', say: 'the model running in this browser',
+           model: '', keyless: true },
   // Inside a published Claude artifact the messages endpoint answers WITHOUT a
   // key: the page borrows the claude.ai session of whoever is reading it. That
   // makes it the only brain that costs a visitor nothing to set up -- and the
@@ -25643,6 +25752,12 @@ function martyBrainText() {
       : 'his phrasebook — this browser has no built-in model. Desktop Chrome has one; '
         + 'elsewhere he needs a key, or pick another brain below';
   }
+  if (p === 'local') {
+    return navigator.gpu
+      ? localSpec().name + ', running on this computer\u2019s graphics card \u2014 no key, and nothing you type leaves this machine'
+        + (localEngine && localLoaded === localModel() ? '' : ' (once it is downloaded and loaded: the button is below)')
+      : 'his phrasebook \u2014 this browser has no WebGPU, which a model in the browser needs';
+  }
   return martyKeyOf(p) ? `${MARTY_PROVIDERS[p].label}, model ${martyModelOf(p)}`
     : 'his phrasebook only — replies are canned lines until you add a key. '
       + 'The two brains at the top of the list need no key at all';
@@ -25708,6 +25823,7 @@ async function askBrain(sys, q, history = martyHistory, cap = 900, schema = null
   const prov = martyProv();
   if (prov === 'here') return await hereThink(sys, q, history, cap);
   if (prov === 'nano') return await nanoThink(sys, q, history, schema);
+  if (prov === 'local') return await localThink(sys, q, history, schema);
   const key = martyKeyOf(prov);
   if (!key) return null;
   const model = martyModelOf(prov);
@@ -25770,7 +25886,7 @@ async function askBrain(sys, q, history = martyHistory, cap = 900, schema = null
 }
 async function martyThink(q) {
   const prov = martyProv();
-  const nano = prov === 'nano';
+  const nano = prov === 'nano' || prov === 'local';   // a small context: the parts of the manual the question is about
   const whole = await martyManualText();
   const sysAt = (budget) => {
     const manual = manualFor(whole, q, budget);
@@ -25848,7 +25964,7 @@ function martyThinkingStart() {
   // The model inside Chrome has to be read off disk the first time it is used,
   // which is slow enough that a silent wait reads as a hang. Say so, but only
   // once the wait is long enough to need explaining.
-  const local = martyProv() === 'nano' && !window.claude?.complete;
+  const local = (martyProv() === 'nano' || martyProv() === 'local') && !window.claude?.complete;
   let n = 0;
   const t0 = performance.now();
   const tick = () => {
@@ -26689,6 +26805,7 @@ const handBrainReady = () => {
   const p = martyProv();
   if (p === 'here') return hasAiHook();
   if (p === 'nano') return !!nanoAPI();
+  if (p === 'local') return !!navigator.gpu;
   return !!martyKeyOf(p);
 };
 // WHAT THE BRAIN IS TOLD: the table, numbered, then the bench and the hand.
@@ -27017,13 +27134,20 @@ async function handDo(sentence, opts = {}) {
       console.error('[hand] the brain refused:', martyProv(), martyModelOf(martyProv()), e);
       return handReport(false, 'The brain did not answer \u2014 ' + (e.message || e.name));
     }
-    if (raw == null) return handReport(false, 'No brain answered \u2014 give one a key under \u201cHow Marty thinks\u201d.');
+    if (raw == null) return handReport(false, martyProv() === 'local'
+      ? 'The model for this browser is not downloaded yet \u2014 the button is under \u201cHow Marty thinks\u201d.'
+      : 'No brain answered \u2014 give one a key under \u201cHow Marty thinks\u201d.');
     const plan = handPlanFrom(raw);
+    window.__handLastPlan = { said: s, raw: String(raw ?? '').slice(0, 4000) };   // what the brain sent back, for a tester
     if (!plan) {
       console.warn('[hand] not a plan:', String(raw).slice(0, 2000));
       return handReport(false, 'That came back as something the hand could not follow \u2014 the console has it.');
     }
-    if (!plan.steps.length && plan.answer && plan.say) return handReport(true, plan.say);   // a question about what is here, answered
+    // AN ANSWER IS FOR A QUESTION. A smaller brain answered "leave" with "The
+    // lesson is over" and no steps, and the tick said it was done (WebLLM, 26 Sep)
+    const asked = /\?\s*$/.test(s) || /^(what|where|which|who|how|is|are|am|do|does|did|can|could|was|were|will|would|should|have|has|tell me|list)\b/i.test(s);
+    if (!plan.steps.length && plan.answer && plan.say && asked) return handReport(true, plan.say);   // a question about what is here, answered
+    if (!plan.steps.length && plan.answer && plan.say) return handReport(false, plan.say + ' (Nothing was done.)');
     if (!plan.steps.length) return handReport(false, plan.say || 'The brain found nothing for the hand to do.');
     const RUNNING_OK = ['speed', 'pause', 'resume', 'stop', 'camera'];
     if (mode === 'replay' && handStopAsked && plan.steps.some(st => !RUNNING_OK.includes(st.do))) {
@@ -27783,12 +27907,14 @@ martyUI.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-
   + '<select id="martyProv" autocomplete="off" style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit;box-sizing:border-box">'
   + '<option value="here">Claude \u2014 no key, in a Claude artifact</option>'
   + '<option value="nano">Gemini Nano \u2014 no key, in Chrome</option>'
+  + '<option value="local">A model in this browser \u2014 experimental, a big download</option>'
   + '<option value="claude">Claude \u2014 with an API key</option>'
   + '<option value="openai">ChatGPT (OpenAI)</option>'
   + '<option value="gemini">Gemini</option></select>'
   + '<input id="martyModel" placeholder="model" '
   + 'style="width:100%;margin-top:6px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 8px;font:inherit;box-sizing:border-box">'
   + '<div id="martyNano" style="margin-top:6px;display:none"></div>'
+  + '<div id="martyLocal" style="margin-top:6px;display:none"></div>'
   + '<div id="martyHere" style="margin-top:6px;display:none"></div>'
   + '<div style="margin-top:8px">Help: <select id="martyHelp" title="How far Marty goes. Hints and demonstrations keep the building yours; the second lets him plan a program when asked, step by step, in the workshop’s own gestures; the third has him plan and build one WITH you — asking what it should do, handing you the next move, and doing a step himself when you are stuck." '
   + 'style="width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit">'
@@ -27921,6 +28047,7 @@ function martyModeLine() {
   if (!el) return;
   el.textContent = 'Right now Marty is using: ' + martyBrainText() + '.';
   martyNanoRow();
+  martyLocalRow();
   martyHereRow();
   // Whether the built-in model is ready is only knowable by asking, and asking
   // takes a moment -- so the line is written first and corrected if need be.
@@ -28040,6 +28167,76 @@ addEventListener('focus', () => hereRecheck());
 // Chrome will not begin the download except from a real click, and it is a
 // download of gigabytes -- so it gets a button of its own, with the size said
 // out loud, rather than happening because a child asked a question.
+// THE MODEL IN THIS BROWSER: which one, how big, and a button that fetches it
+// (once) and wakes it. Nothing is downloaded until that button is pressed.
+async function martyLocalRow() {
+  const el = document.getElementById('martyLocal');
+  if (!el) return;
+  if (martyProv() !== 'local' || !navigator.gpu) { el.style.display = 'none'; el.textContent = ''; return; }
+  el.style.display = '';
+  el.textContent = '';
+  const box = 'width:100%;margin-top:4px;background:#0e1218;border:1px solid #3a4356;border-radius:8px;color:#e6ecf7;padding:6px 6px;font:inherit;box-sizing:border-box';
+  const sel = document.createElement('select');
+  sel.id = 'martyLocalModel';
+  sel.style.cssText = box;
+  for (const m of LOCAL_MODELS) {
+    const o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.name + ' \u2014 about ' + m.gb + ' GB, ' + m.gpu + ' GB of graphics memory';
+    sel.appendChild(o);
+  }
+  sel.value = localModel();
+  const note = document.createElement('div');
+  note.id = 'martyLocalNote';
+  note.style.cssText = 'font-size:11px;color:#9aa6bb;margin-top:4px;min-height:1em';
+  const b = document.createElement('button');
+  b.style.cssText = 'background:#2f6b43;border:none;border-radius:8px;color:#eafff0;padding:6px 10px;cursor:pointer;font:inherit;margin-top:6px';
+  const drop = document.createElement('button');
+  drop.textContent = 'Delete the download';
+  drop.style.cssText = 'background:none;border:1px solid #3a4356;border-radius:8px;color:#9aa6bb;padding:5px 9px;cursor:pointer;font:inherit;margin:6px 0 0 6px';
+  const state = async () => {
+    const id = sel.value;
+    const loaded = localEngine && localLoaded === id;
+    const cached = loaded || await localCached(id);
+    b.textContent = loaded ? 'Loaded \u2014 ready' : cached ? 'Load it (already downloaded)' : 'Download it (about ' + localSpec(id).gb + ' GB, once) and load it';
+    b.disabled = !!loaded || !!localLoading;
+    drop.style.display = cached ? '' : 'none';
+    note.textContent = localNote || (loaded ? 'It runs on this computer; the first answer after loading is the slowest.'
+      : cached ? 'Downloaded: loading takes a little while each time the page opens.'
+      : 'Downloaded from Hugging Face the first time and kept by this browser. It needs a graphics card with about ' + localSpec(id).gpu + ' GB of memory.');
+  };
+  sel.onchange = () => { localStorage.setItem('tt3d.marty-model.local', sel.value); localNote = ''; martyModeLine(); };
+  b.onclick = async () => {
+    b.disabled = true; localNote = ''; note.textContent = 'Starting\u2026';
+    try {
+      await localLoad(sel.value);
+      localNote = '';
+      martySay('I am thinking with ' + localSpec(sel.value).name + ' now, right here on this computer.');
+    } catch (e) {
+      console.error('[local] could not load', e);
+      localNote = 'It stopped: ' + (e?.message || e?.name || e).toString().slice(0, 200) + ' — press the button again: what was already downloaded is kept.';
+      note.textContent = localNote;
+    }
+    martyModeLine();
+  };
+  drop.onclick = async () => {
+    try {
+      const w = await localLibrary();
+      if (localEngine && localLoaded === sel.value) { try { await localEngine.unload(); } catch (e) {} localEngine = null; localLoaded = ''; }
+      await w.deleteModelAllInfoInCache(sel.value, localAppConfig(w));
+      localNote = 'Deleted from this browser.';
+    } catch (e) { localNote = 'Could not delete it: ' + (e?.message || e); }
+    martyModeLine();
+  };
+  // WHAT WAS MEASURED (26 Sep, the hand scorecard, sections A-F and H): Qwen
+  // 3.5 4B got 23 of 38 right at about 5 s a sentence, 9B 21 of 38 at about
+  // 7 s; a cloud model gets nearly all. Say so before anyone downloads gigabytes.
+  const warn = document.createElement('div');
+  warn.style.cssText = 'font-size:11px;color:#e8c98a;margin-bottom:4px';
+  warn.textContent = 'Experimental. Tried on the hand\u2019s test sentences, these got about 6 in 10 right — a cloud brain gets nearly all of them.';
+  el.append(warn, sel, b, drop, note);
+  await state();
+}
 async function martyNanoRow() {
   const el = document.getElementById('martyNano');
   if (!el) return;
@@ -28507,6 +28704,11 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   // The built-in model is still offered when this browser has none -- so the
   // panel can say why rather than quietly not mentioning it -- but it cannot
   // be chosen there.
+  const localOpt = provEl.querySelector('option[value="local"]');
+  if (localOpt && !navigator.gpu) {
+    localOpt.disabled = true;
+    localOpt.textContent = 'A model in this browser \u2014 needs WebGPU, which this browser lacks';
+  }
   const nanoOpt = provEl.querySelector('option[value="nano"]');
   if (nanoOpt && !nanoAPI()) {
     nanoOpt.disabled = true;
@@ -28524,6 +28726,11 @@ document.getElementById('nextBtn').onclick = () => { if (!busy) goToNextWorld();
   // all -- both runtimes are on claudeusercontent.com -- and explains itself
   // if it fails.
   const onArtifactHost = /(^|\.)claudeusercontent\.com$/.test(location.hostname);
+  // an artifact cannot fetch the library or the model: no local brain there
+  if (onArtifactHost || window.top !== window && hasAiHook()) {
+    provEl.querySelector('option[value="local"]')?.remove();
+    if (localStorage.getItem('tt3d.marty-provider') === 'local') localStorage.setItem('tt3d.marty-provider', hasAiHook() ? 'here' : 'claude');
+  }
   if (!hasAiHook() && !onArtifactHost) {
     provEl.querySelector('option[value="here"]')?.remove();
     if (localStorage.getItem('tt3d.marty-provider') === 'here') {

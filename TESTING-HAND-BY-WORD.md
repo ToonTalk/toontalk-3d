@@ -60,6 +60,12 @@ model. The same instructions work for any provider.
    once** and wait until the panel says it is ready (gigabytes, once).
    For a cloud provider instead, choose it and **enter the API key
    yourself** — the tester must never type, read, copy or be told a key.
+   For **a model in this browser (WebLLM)**, choose it, pick the model in
+   the list under it and press **Download it … and load it**: gigabytes
+   the first time (kept by the browser afterwards), then a minute or so to
+   load each time the page opens. Wait until the button says **Loaded —
+   ready**. It needs WebGPU and a graphics card with the memory the list
+   names; it does not work in a claude.ai artifact.
 4. ⋮ menu → **☑ 🖐 Move my hand by words**. A line appears at the top center
    ("Tell your hand what to do…"). If it does not appear, the brain is not
    ready yet.
@@ -255,6 +261,21 @@ Tick the switch again afterwards.
 | J15 | (reload) `put a robot on the table`, `give it a 1`, `leave`, then `give the robot a 5` | the 1 goes from the desk to the table first, then the robot gets the 5 — the answer says so |
 | J16 | `take a nest and call it orders`, `put it down`, then `put a 1 on orders` | the 1 goes to the nest called orders, found by its name |
 | J17 | (switch unticked) say to Marty `put a box on the table` | Marty says the switch is off and where it is; nothing moves |
+
+## A quick machine scorecard (any brain)
+
+`tests/hand-scorecard.js` runs sections A–F and H by itself and checks the
+workshop after every sentence (what is on the table, the desk, Mimi's
+platform and in the hand), not what the brain said. With the brain chosen
+(and loaded) and the switch on, in the browser console:
+
+```js
+await import('./tests/hand-scorecard.js'); const r = await __score('ABCDEFH'); console.log(r.rows.join('
+')); r
+```
+
+It gives a count, a median time per sentence and a line per sentence. It
+does not replace the tester for G (Marty), I and J.
 
 ## What to report
 

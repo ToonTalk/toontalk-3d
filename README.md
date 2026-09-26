@@ -314,6 +314,13 @@ become the release when it is ready. What it has that the release does not:
   out. Things can be named ("call it orders"), filed in the notebook and
   taken back out by name, and the hand can go out to the yard, into the
   panel on the back of a thing, and back.
+- **A model in this browser (experimental).** Under "How Marty thinks", an
+  open model (Qwen 3.5, Llama 3.1, Phi-4 mini) can run on the computer's
+  own graphics card through WebLLM: no key, nothing leaves the machine, a
+  download of a few gigabytes once. Measured with `tests/hand-scorecard.js`
+  it gets about 6 in 10 of the hand's test sentences right, at about 5
+  seconds each, against nearly all for a cloud brain -- so it is marked
+  experimental. Not in a claude.ai artifact.
 - **For someone using voice alone.** The brain is told where each thing is
   on the screen as the person sees it -- left, middle or right, front or
   back, or out of view -- so "the box on the left" works. The camera moves

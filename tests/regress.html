@@ -2210,9 +2210,9 @@ async function handByWordCheck(D, w) {
     const synth = w.speechSynthesis, realSpeak = synth && synth.speak;
     if (synth) synth.speak = (u) => { spoke.push(u.text); };
     D.mute(false);
-    const r56 = await driven(D.hand('v: what is here'));
+    const r56 = await driven(D.hand('v: what is here?'));
     const typedQuiet = spoke.length === 0;
-    await driven(D.hand('v: what is here', { voice: true }));
+    await driven(D.hand('v: what is here?', { voice: true }));
     await driven(D.hand('v: drop nothing', { voice: true }));
     D.mute(true);
     if (synth) synth.speak = realSpeak;
@@ -2244,7 +2244,7 @@ async function handByWordCheck(D, w) {
     let ok59 = true;
     if (micBtn && micBtn.style.display !== 'none' && synth59) {
       micBtn.onclick();                                   // listening
-      await driven(D.hand('v: what is here', { voice: true }));   // its answer is spoken
+      await driven(D.hand('v: what is here?', { voice: true }));   // its answer is spoken
       await driven(new Promise(r => setTimeout(r, 150)));
       const deafNow = micLog.includes('abort') && micBtn.textContent === '\u{1F507}';
       micRec?.onresult?.({ resultIndex: 0, results: [ Object.assign([{ transcript: 'a robot on the table' }], { isFinal: true }) ] });

@@ -9188,3 +9188,52 @@ run-speed-stop check now sets a very high round limit -- the run step waits
 seconds of wall time while the suite races its virtual clock, so 200 rounds
 could finish before "speed" arrived. handByWordCheck: copy-vs-original,
 which-box, hint-clears; run-speed-stop checks the stop's order.
+
+## A model in this browser (WebLLM): the experiment
+
+Ken (26 Sep): would a bigger model than Gemini Nano, run in the browser and
+cached, do well enough to experiment with? A new brain under "How Marty
+thinks": **a model in this browser**. WebLLM 0.2.85 (from jsDelivr, pinned)
+runs an open model on the graphics card through WebGPU, in a worker so the
+workshop keeps moving; the panel picks the model (Qwen 3.5 4B and 9B, Qwen 3
+8B, Llama 3.1 8B, Phi-4 mini, with download and graphics-memory sizes) and a
+button downloads it once and loads it -- nothing is fetched until it is
+pressed; another deletes it. Replies are held to the hand's (or Marty's)
+JSON schema token by token; the context is raised to 8,192 (the hand's rules
+and listing are ~3,500 tokens; the models' default is 4,096); Marty gets the
+cut-down manual Nano gets. Not offered without WebGPU, nor in an artifact
+(no network there).
+
+What was measured, with tests/hand-scorecard.js (sections A-F and H, 38
+sentences, the workshop checked after each, not the brain's words), headless
+Chrome on an NVIDIA Ampere card:
+
+- **Speed.** Read afresh each time, the ~4,500-token prompt took 25-30 s a
+  sentence on the 4B. The hand now keeps ONE running conversation with the
+  local model -- WebLLM reuses what it has already read when a request only
+  adds to the last -- and the 4B answers in about 5 s (the first sentence
+  ~20 s), the 9B in about 7 s (first ~33 s).
+- **Right:** Qwen 3.5 4B 23 of 38; Qwen 3.5 9B 21 of 38. (gpt-6-sol: 30 of
+  30 on the scorecard subset.) The misses are the model's: it copies worked
+  examples too literally (clearing an empty desk), cannot "leave", reads
+  "3-hole" as a number, misuses names ("take a box as b", then drop on b
+  while holding it), refuses plain requests ("I only move things" for "put
+  a robot on the table"). It falls into ruts -- the running conversation
+  carries its last answers -- but starting afresh after each failure was
+  worse (25 s a sentence after every miss, and the same mistakes), so it
+  was measured and taken back out.
+- **Two findings that apply to every brain.** An ANSWER (no steps) is
+  accepted as done only for a question: "leave" answered "The lesson is
+  over" and nothing moved, under a tick. And the raw plan is kept
+  (window.__handLastPlan) for a tester -- the scorecard prints it for
+  every miss.
+- **The embedded browser** (the Claude app's pane) could not store the
+  model: "Failed to execute 'add' on 'Cache': Unexpected internal error" at
+  the same file each time, and IndexedDB stalled at the same point. Real
+  Chrome stored it without trouble. The page falls back to IndexedDB by
+  itself if the Cache storage refuses (WebLLM's option is cacheBackend,
+  not the older useIndexedDBCache, which is silently ignored).
+
+So: labelled experimental in the panel, with the numbers, before anyone
+downloads gigabytes. About 6 in 10 is not enough for a person to rely on;
+it is enough to watch newer small models against, with the same scorecard.
