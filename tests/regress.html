@@ -1737,6 +1737,7 @@ async function handByWordCheck(D, w) {
     'rb: pick up the 5': { steps: [ { do: 'pickup', what: '#5' } ], say: 'The 5.' },
     'rb: leave': { steps: [ { do: 'leave' } ], say: 'Back.' },
     'rb: give the 7 to mimi': { steps: [ { do: 'pickup', what: '#1' }, { do: 'give', to: 'Mimi' } ], say: 'Copied.' },
+    'sm: copy the 7': { steps: [ { do: 'copy', what: '#1' } ], say: 'Copied.' },
     'k: a nest': { steps: [ { do: 'take', from: 'nests' }, { do: 'drop' } ], say: 'A nest.' },
     'k: feed the bird': { steps: [ { do: 'take', from: 'numbers' }, { do: 'drop', on: 'bird' } ], say: 'Fed.' },
     'k: vacuum the nest': { steps: [ { do: 'vacuum', what: 'nest' } ], say: 'Gone.' },
@@ -1788,7 +1789,7 @@ async function handByWordCheck(D, w) {
       return JSON.stringify(m ? { steps: [ { do: 'vacuum', what: '#' + m[1] } ], say: 'Gone.' } : { steps: [], say: 'nothing on the nest' });
     }
     if (/pl: put the other one on the one/.test(said)) {
-      const onPlat = q.match(/#(\d+): the number 1 \(on Mimi/), loose = q.match(/#(\d+): the number 1 \[/);
+      const onPlat = q.match(/#(\d+): the number 1 (?:\([^)]*\) )?\(on Mimi/), loose = q.match(/#(\d+): the number 1 (?:\([^)]*\) )?\[/);   // (the copy / the original tags)
       return JSON.stringify(onPlat && loose ? { steps: [ { do: 'pickup', what: '#' + loose[1] }, { do: 'drop', on: '#' + onPlat[1] } ], say: 'On the one.' } : { steps: [], say: 'the platform 1 is not listed' });
     }
     if (/ar: give the bench robot a 5/.test(said)) {
@@ -2156,7 +2157,7 @@ async function handByWordCheck(D, w) {
     // 72. Ken (23 Sep), Voice Access: "press Enter" came as words, so "stop" did not stop the run; "speed up by 8"
     // became numbers on the table. Now: the words are dropped, a run takes speed and stop, and nothing else
     const speed0 = D.doc.getElementById('speed').value;
-    D.rounds(200);
+    D.rounds(100000);   // the run step waits seconds of WALL time while the suite races its virtual clock
     D.speed(1);   // at Instant the 200 rounds are over before the next sentence arrives
     const r72 = await driven(D.hand('run it now press Enter'));
     const r73 = await driven(D.hand('rn: at eight times'));
@@ -2171,7 +2172,11 @@ async function handByWordCheck(D, w) {
     const r73b = await driven(D.hand('rn: double the speed'));   // after the stop, so Instant cannot race the stop
     const sp73b = D.doc.getElementById('speed').value;   // 8x doubled is the next step up, Instant
     const logged75 = [...D.doc.getElementById('handLog').children].some(c => c.textContent === '\u25B8 stop');
-    const ok72 = r72.ok && r73.ok && running73 && sp73 === '8' && r73b.ok && sp73b === 'inf' && !r74.ok && /robot is running/.test(r74.say) && r75.ok && stopped75 && logged75;
+    // the answer "Stopping" comes before the workshop's "Stopped after N rounds"
+    const logT = [...D.doc.getElementById('handLog').children].map(c => c.textContent);
+    const iStopping = logT.lastIndexOf('\u2713 Stopping \u2014 the robot finishes the round it is in.'), iStopped = logT.findLastIndex(x => /Stopped after/.test(x));
+    const order75 = iStopping >= 0 && (iStopped < 0 || iStopped > iStopping);
+    const ok72 = r72.ok && r73.ok && running73 && sp73 === '8' && r73b.ok && sp73b === 'inf' && !r74.ok && /robot is running/.test(r74.say) && r75.ok && stopped75 && logged75 && order75;
     D.rounds(ROUNDS);
     D.speed(speed0 === 'inf' ? 'inf' : +speed0);
     // 50. open leaves the hand as it was, and a plan's drop after it is no failure
@@ -2386,15 +2391,37 @@ async function handByWordCheck(D, w) {
     const r84 = await driven(D.hand('rb: give the 7 to mimi'));
     const ok84 = r84.ok && String(D.stations.copyIn?.occupant?.userData.value.n) === '7' && String(w.__handHeld()?.userData.value.n) === '7';
     await setDown();
+    // 86-88. the gpt-6-sol report of 25 Sep
+    // the copy and the original are told apart in the listing (J8)
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: 0.2, z: 1.7, thing: { kind: 'number', value: { n: '7', d: '1' } } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    const r86 = await driven(D.hand('sm: copy the 7'));
+    await driven(D.hand('rb: what is here'));
+    const ok86 = r86.ok && /the original Mimi copied/.test(lastQ) && /In the hand: the number 7 \(the copy Mimi made of #\d+\)/.test(lastQ);
+    await setDown();
+    // two boxes apart: which is the leftmost (J2)
+    D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [ { x: -1.1, z: 1.4, thing: { kind: 'box', holes: [ null, null ] } }, { x: 0.9, z: 1.9, thing: { kind: 'box', holes: [ null, null ] } } ] });
+    await slowSettle(D, 1500);
+    D.showStacks(true);
+    D.homeView?.();
+    await driven(D.hand('rb: what is here'));
+    const ok87 = /leftmost of the 2 boxes/.test(lastQ) && /rightmost of the 2 boxes/.test(lastQ);
+    const q87 = lastQ.slice(0, 260);
+    // a refusal on the hint line gives way to the next sentence's answer
+    await driven(D.hand('drop it on thing 99'));
+    const r88 = await driven(D.hand('put a box on the table'));
+    const ok88 = r88.ok && D.doc.getElementById('hint').textContent === r88.say;
     const saidBtn = !!D.doc.getElementById('saidLogBtn');
     const wsLines = [...D.doc.getElementById('handLog').children].filter(c => /\bws\b/.test(c.className)).length;
     const logN = D.doc.getElementById('handLog').children.length;
-    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && ok57 && ok58 && ok59 && ok65 && ok60 && ok61 && ok63 && ok64 && ok66 && ok68 && ok69 && ok70 && ok71 && ok72 && ok77 && ok78 && ok79 && ok80 && ok81 && ok82 && ok83 && ok84 && saidBtn && wsLines > 5 && logN >= 18;
+    const ok = hidden && shown && ok1 && ok2 && ok3 && ok4 && !r5.ok && ok6 && ok7 && ok8 && ok9 && ok10 && ok11 && ok12 && ok13 && ok14 && ok15 && ok16 && ok17 && ok18 && ok19 && ok22 && ok23 && ok24 && ok25 && ok26 && ok27 && ok28 && ok29 && ok30 && ok35 && ok36 && ok37 && ok39 && ok40 && ok41 && ok42 && ok43 && ok44 && ok45 && ok46 && ok47 && ok49 && ok50 && ok51 && ok52 && ok56 && ok57 && ok58 && ok59 && ok65 && ok60 && ok61 && ok63 && ok64 && ok66 && ok68 && ok69 && ok70 && ok71 && ok72 && ok77 && ok78 && ok79 && ok80 && ok81 && ok82 && ok83 && ok84 && ok86 && ok87 && ok88 && saidBtn && wsLines > 5 && logN >= 18;
     put((ok ? 'PASS' : 'FAIL') + ' the hand, by word: a 1 into a 3-hole box, a pad saying ToonTalk, a scale of 1 and 100 to a robot, a bad step stops, the 1 on the table is found by number, and the sentence said to Marty moves it too; Mimi copies and Dusty removes; give finds the table robot and the claw copies inside the bubble; names, the notebook, the yard, Ruby and Dusty on the thought, the panel door'
-      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' platform-drop=' + ok57 + ' (' + nums57 + ') look-notebook=' + ok58 + ' mic-deaf-while-speaking=' + ok59 + ' mic-advice-when-not-allowed=' + ok65 + ' (' + micLog.join('>') + ') open-that-thing=' + ok60 + ' plan-made-labels=' + ok61 + ' give-bird=' + ok63 + ' bench-robot-listed=' + ok64 + ' put-back-on-desk=' + ok66 + ' drop-on-original-in-bubble=' + ok68 + ' (' + spots68 + ') line-keeps-cursor=' + ok69 + (focusTook ? '' : '(no focus here)') + ' log-shut=' + ok70 + ' erase-at-bench=' + ok71 + ' (cursor-after-run=' + cursorAfterRun + ') run-speed-stop=' + ok72 + ' (' + [r72.ok, r73.ok, running73, sp73, sp73b, !r74.ok, r75.ok, stopped75, logged75].join(',') + ') put-back-holding-copy=' + ok77 + ' undone-at-table=' + ok78 + ' undone-in-bubble=' + ok79 + ' waits-its-turn=' + ok80 + ' by-name=' + ok81 + ' number-not-label=' + ok82 + ' leave-yard=' + ok83 + ' give-to-mimi=' + ok84 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
+      + '  (bar=' + hidden + '/' + shown + ' box=' + ok1 + ' pad=' + ok2 + ' scale=' + ok3 + ' pans=' + pans.join(',') + ' desk=' + (desk === scale) + ' bad=' + ok4 + ' none=' + !r5.ok + ' the-1=' + ok6 + ' via-marty=' + ok7 + ' off-says-switch=' + ok8 + ' copy=' + ok9 + ' vacuum=' + ok10 + ' original-back=' + ok11 + ' give-table-robot=' + ok12 + ' copy-in-bubble=' + ok13 + ' (' + occ13 + ') leave-rewinds=' + ok14 + ' name+file=' + ok15 + ' lookup=' + ok16 + ' yard=' + ok17 + '/' + ok18 + ' ruby+dusty=' + ok19 + ' leave-holding=' + ok22 + ' panel=' + ok23 + '/' + ok24 + ' clear-table=' + ok25 + ' (' + boxes25 + ') hole-things=' + ok26 + ' (' + holes26 + ') desk-drop=' + ok27 + ' full-desk=' + ok28 + ' riders-survive=' + ok29 + ' (' + ridersBefore + '/' + ridersAfter + ') forgiving=' + ok30 + ' (hole1=' + in32 + ') placeholder-still=' + ok35 + ' plus-keeps=' + ok36 + ' (' + v36 + ') run-refuses=' + ok37 + ' which-robot=' + ok39 + ' riders+tray-listed=' + ok40a + '/' + ok40 + ' set-down-for-dusty=' + ok41 + ' no-robot-inside=' + ok42 + ' dot-stops=' + ok43 + ' nothing-lesson=' + ok44 + ' nest-pile=' + ok45 + ' no-nest-flies=' + ok46 + ' notebook-bird=' + ok47 + ' (' + piles + ') run-trained=' + ok49 + ' open-empty-hand=' + ok50 + ' screen-places=' + ok51 + ' camera=' + ok52 + ' (' + [higher, looked, turned, home].map(Number).join('') + ') spoken=' + ok56 + ' platform-drop=' + ok57 + ' (' + nums57 + ') look-notebook=' + ok58 + ' mic-deaf-while-speaking=' + ok59 + ' mic-advice-when-not-allowed=' + ok65 + ' (' + micLog.join('>') + ') open-that-thing=' + ok60 + ' plan-made-labels=' + ok61 + ' give-bird=' + ok63 + ' bench-robot-listed=' + ok64 + ' put-back-on-desk=' + ok66 + ' drop-on-original-in-bubble=' + ok68 + ' (' + spots68 + ') line-keeps-cursor=' + ok69 + (focusTook ? '' : '(no focus here)') + ' log-shut=' + ok70 + ' erase-at-bench=' + ok71 + ' (cursor-after-run=' + cursorAfterRun + ') run-speed-stop=' + ok72 + ' (' + [r72.ok, r73.ok, running73, sp73, sp73b, !r74.ok, r75.ok, stopped75, logged75, order75].join(',') + ') put-back-holding-copy=' + ok77 + ' undone-at-table=' + ok78 + ' undone-in-bubble=' + ok79 + ' waits-its-turn=' + ok80 + ' by-name=' + ok81 + ' number-not-label=' + ok82 + ' leave-yard=' + ok83 + ' give-to-mimi=' + ok84 + ' copy-vs-original=' + ok86 + ' which-box=' + ok87 + ' hint-clears=' + ok88 + ' said-button=' + saidBtn + ' ws-lines=' + wsLines + ' log=' + logN + ')', ok ? 'pass' : 'fail');
     if (!ok) for (const r of [r1, r2, r3, r4, r5, r6, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r52, r53, r54, r55, r56, r57, r58, r60, r61, r62, r63, r64, r66, r67, r68, r71, r72, r73, r74, r75, r77, r78, r79, r80, r81, r82, r83, r84]) put('ERR   said: ' + (r.say || '').slice(0, 160) + ' done=' + r.done, 'dim');
     if (!ok6) put('ERR   listing: ' + lastQ.slice(0, 300), 'dim');
     if (!ok72) put('ERR   run log: ' + log73, 'dim');
+    if (!ok87) put('ERR   which box: ' + q87, 'dim');
     if (!ok56) put('ERR   spoken: ' + JSON.stringify(spoke).slice(0, 300), 'dim');
     if (!ok19) put('ERR   thoughts: ' + [t19, t20, t21].join(' | ').slice(0, 300), 'dim');
     return ok;

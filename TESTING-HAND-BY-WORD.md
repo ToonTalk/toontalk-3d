@@ -217,8 +217,8 @@ Tick the switch again afterwards.
 | I1 | `create a pad with ToonTalk on it`, then `put a box on the table`, then `make a 12` | three separate things: the 12 does not ride on the pad and the box does not join anything. If the table is crowded, the hand says where it landed instead of ✓ |
 | I2 | `put a 7 on the pad` | the 7 rides on the pad ("It rides on the pad now") |
 | I3 | `put a robot on the table`, `give it a 1`, then `leave` | the pad still carries its 7 after leaving (the rewind used to drop riders) |
-| I4 | `give the robot a 5` (the 1 still on its desk) | the brain is told to clear the desk first, so expect: the 1 set down, then the 5 given (the robot, untrained, starts a new lesson). If the brain gives without clearing, the hand refuses before anything moves |
-| I5 | `take what is on the desk and put it on the table` | the 1 from the desk on the table; the desk empty |
+| I4 | `give the robot a 5` (the 1 still on its desk) | the 1 goes from the desk to the table first (the hand does this itself if the brain did not), then the 5 is given; the robot, untrained, starts a new lesson, so the hand is now inside its bubble |
+| I5 | `take what is on the desk and put it on the table` | (inside the bubble I4 opened) the 5 from the desk goes on one of the robot's spots, as a lesson step; the desk empty |
 | I6 | (reload first: I5 leaves a loose 1 on the table) `put a 1 and a 3 in a box`, then `put the 3 on the 1` | the box holds 4 and an empty hole |
 | I7 | `open the pad's panel` | the pad's panel comes out as a tray on the table |
 | I8 | `go into the pad's panel`, then `come back out` | inside the pad's own little world, then back at the table |
@@ -234,12 +234,12 @@ Tick the switch again afterwards.
 | I18 | `vacuum the nest`, then `give the bird a 7` | with no nest, the bird flies off with the 7 and comes back without it — no complaint |
 | I19 | `put a nest on the table`, `call the bird posty and file her in the notebook`, `take posty out of the notebook`, then `give posty a 1` | a new nest grows for her; the 1 lands in the new nest only, the first nest stays empty |
 
-### Section J — voice alone: places, the camera, answers (reload with `?fresh`, then put a box and a robot on the table)
+### Section J — voice alone: places, the camera, answers (reload with `?fresh`, then put two boxes, well apart, and a robot on the table)
 
 | # | Sentence | Expected |
 |---|---|---|
 | J1 | `what is on the table?` | answered (✓), naming where things are: left, middle, right, front, back |
-| J2 | `put a 1 in the box on the left` | the 1 goes into the box on the left of the screen |
+| J2 | `put a 1 in the box on the left`, then `put a 2 in the box at the back` | the 1 goes into the box on the left of the screen; the 2 into whichever box is farther back |
 | J3 | `turn the view to the left`, then `look from higher`, then `come closer` | the view turns, rises, comes in — each a ✓ |
 | J4 | `look at the robot` | the view centres on the robot |
 | J5 | `reset the view` | back to the usual view of the table |

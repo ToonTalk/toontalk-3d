@@ -9152,3 +9152,39 @@ reloading its page gives a clean table; J13-J17 added. handByWordCheck:
 undone-at-table, undone-in-bubble, waits-its-turn, by-name,
 number-not-label, leave-yard, give-to-mimi; bad (undone), desk-drop (reads
 2), full-desk (cleared first), off-says-switch (Marty names it).
+
+## The gpt-6-sol test of 25 September: 30 of 30, and the small things
+
+Claude in Chrome ran the script on the GitHub Pages build with OpenAI
+(gpt-6-sol): 30 of 30 on the scorecard sections, nearly all of C, D, E and
+I, no hand errors, a median brain time of 2 s. What was left, and what
+changed:
+
+- **All or nothing (J13).** Asked for a box and then a drop on "thing 99",
+  the brain did the box and said "thing 99 isn't here" under a green tick.
+  The prompt now says: if any part cannot be done, return no steps and say
+  why -- never do the possible part alone. (A plan that fails in the hand
+  was already undone.)
+- **The copy and the original (J8).** After Mimi, two identical 1s; "put the
+  one back" moved the original where the copy was meant. Mimi's copy now
+  remembers what it copies (__copyOf), and the listing says "(the copy Mimi
+  made of #1)" and "(the original Mimi copied into #2)", in the hand too.
+  Things on a robot's spots say which spot ("on spot 1").
+- **Which box (J2).** Two boxes visibly apart were both "[middle, front]".
+  Places are now five columns (far left … far right) by three rows, and
+  where two to five things of a kind are in view each says which it is:
+  "(the leftmost of the 2 boxes, the one farthest back)".
+- **Small things.** A new sentence clears the last refusal from the hint
+  line (it stayed up after later successes: say() ignores ordinary lines
+  while an attention line is held). "Stopping" is answered before the
+  workshop's "Stopped after N rounds". A panel already out says so instead
+  of "Opened". The script's I4/I5 now expect what the hand does, and J1/J2
+  set out two boxes.
+
+Left as they are: the bird "my thing" on a panel's perch is the panel's own
+bird; a robot displaced from the bench leaves what was on its desk on the
+table (the workshop's own behaviour, not the hand's). The suite: the
+run-speed-stop check now sets a very high round limit -- the run step waits
+seconds of wall time while the suite races its virtual clock, so 200 rounds
+could finish before "speed" arrived. handByWordCheck: copy-vs-original,
+which-box, hint-clears; run-speed-stop checks the stop's order.
