@@ -9296,3 +9296,32 @@ and never needs it in the hand already, that the robot at the bench can be
 picked up and no robot is too heavy, with a worked example of "give the one
 to Mimi" in a bubble; the listing says of the bench robot that picked up it
 shrinks into the hand. handByWordCheck: bench-robot-off.
+
+## Error reports, with the visitor's say-so (7 November)
+
+Ken: "make it create Sentry reports if there are any exceptions? Ask the user
+for permission before sending anything." The workshop now does what Ani's site
+does. An uncaught error, a rejected promise, or one of the faults the workshop
+catches itself and carries on from (room work, a hand step that throws, a
+behavior that could not be given, a notebook page or the stored notebook that
+could not be shown or restored) is kept, and a small notice asks: "The
+workshop ran into an error. Send a report to Ken, without your work, your name
+or any key?" [Send] [Don't send] [Don't ask again], with "What would be sent"
+showing the exact report first. Only on Send is Sentry's browser bundle loaded
+(10.50.0, pinned by its integrity hash, as Ani uses) and the report sent: the
+error, where in the code, the page's address without query or fragment, the
+browser. Sentry is started with no integrations of its own, no breadcrumbs, no
+sessions, no personal data, and a beforeSend that drops any event the visitor
+did not send (each Send carries a one-time consent token) and takes out every
+value this browser keeps for the page -- the API keys, the visitor's name,
+notebooks and worlds -- and what is typed in the hand's line and Marty's box.
+The notice is built from text nodes, never markup. "Don't ask again" is kept
+in this browser (tt3d.report), and Settings has "Offer to report errors to
+Ken" to turn it back on. It is on only on toontalk.github.io, in the top
+window, with a DSN filled in: never in a claude.ai artifact (its frame refuses
+Sentry), on localhost or from a file. The DSN is empty until Ken creates the
+ToonTalk 3D project in Sentry; until then every part of it is a no-op. The
+manual says all this under "When something goes wrong". errorReportsCheck:
+off on localhost, asked, preview and sent event scrubbed of a planted key,
+an unconsented event dropped, Don't send sends nothing, a caught fault
+offered, Don't ask again kept and quiet after.

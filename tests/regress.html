@@ -1671,6 +1671,76 @@ async function martyFetchCheck(D, w) {
 // hand makes them through the same clicks and keys a person would. The brain
 // is a stand-in here: the check is of the hand, not the model. Only in the
 // build that has it (toontalk-3d-next.html); elsewhere it is skipped.
+// ERROR REPORTS ASK FIRST (Ken, 7 Nov): off where it should be off; an
+// uncaught error raises the notice and sends nothing by itself; what would be
+// sent, and what Sentry is handed, have every kept value scrubbed out; Don't
+// send sends nothing; Don't ask again is kept and asks no more; a fault the
+// workshop catches itself (a hand step that throws) is offered too.
+async function errorReportsCheck(D, w) {
+  if (!D.report) { put('SKIP error reports: not in this build', 'dim'); return true; }
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  const offHere = D.report().on === false;   // localhost, no DSN: nothing kept, nothing asked
+  const SECRET = 'sk-test-REPORTS-MUST-NOT-CARRY-THIS';
+  w.localStorage.setItem('tt3d.report-check-secret', SECRET);
+  w.localStorage.removeItem('tt3d.report');
+  w.__reportOn = true;
+  const events = [];
+  w.__sentryStub = {
+    withScope(fn) { this._scope = { tags: {}, extra: {}, setTag(k, v) { this.tags[k] = v; }, setExtras(x) { Object.assign(this.extra, x); } }; fn(this._scope); },
+    // what Sentry would hand beforeSend: the error, a user, breadcrumbs, the scope's tags and extras
+    captureException(e) {
+      const ev = { tags: { ...this._scope.tags }, extra: { ...this._scope.extra }, user: { ip_address: '10.0.0.1' }, breadcrumbs: [{ message: 'x' }],
+        exception: { values: [{ type: e.name, value: e.message, stacktrace: String(e.stack) }] }, request: { url: w.location.href } };
+      events.push(D.reportScrub(ev));
+    },
+    flush() { return Promise.resolve(true); },
+  };
+  const box = () => D.doc.getElementById('reportAsk');
+  const press = (what) => box()?.querySelector('button[data-report="' + what + '"]')?.click();
+  try {
+    // 1. an uncaught error: the notice, nothing sent until Send, the secret scrubbed in the preview
+    w.setTimeout(new w.Function('throw new Error(' + JSON.stringify('check error carrying ' + SECRET) + ')'), 0);   // made in the frame: it throws into the frame's window
+    await wait(400);
+    const asked = D.report().held === 1 && box()?.style.display !== 'none' && events.length === 0;
+    const preview = box()?.querySelector('pre')?.textContent || '';
+    const previewClean = !preview.includes(SECRET) && /\[removed\]/.test(preview);
+    press('send');
+    await wait(400);
+    const ev = events[0];
+    const sentClean = events.length === 1 && ev && !JSON.stringify(ev).includes(SECRET) && !ev.user && !ev.breadcrumbs
+      && ev.tags.kind === 'error-sent-by-visitor' && !('consent' in (ev.extra || {})) && !/[?#]/.test(ev.request?.url || '');
+    // 2. an event nobody consented to is dropped by beforeSend
+    const unasked = D.reportScrub({ tags: { kind: 'error-sent-by-visitor' }, extra: { consent: 'forged' } }) === null;
+    // 3. Don't send: nothing goes
+    w.setTimeout(new w.Function('throw new Error(' + JSON.stringify('second check error') + ')'), 0);   // made in the frame: it throws into the frame's window
+    await wait(400);
+    press('no');
+    await wait(200);
+    const notSent = events.length === 1 && D.report().held === 0;
+    // 4. a fault the workshop catches itself is offered: a hand step that throws
+    D.reportFault('a hand step (check)', new Error('a caught fault'));
+    await wait(200);
+    const faultOffered = D.report().held === 1 && /a hand step \(check\)/.test(box()?.querySelector('pre')?.textContent || '');
+    press('never');
+    await wait(200);
+    // 5. Don't ask again is kept, and nothing more is asked
+    const kept = w.localStorage.getItem('tt3d.report') === 'never';
+    w.setTimeout(new w.Function('throw new Error(' + JSON.stringify('third check error') + ')'), 0);   // made in the frame: it throws into the frame's window
+    await wait(400);
+    const quiet = D.report().held === 0 && box()?.style.display === 'none';
+    const ok = offHere && asked && previewClean && sentClean && unasked && notSent && faultOffered && kept && quiet;
+    put((ok ? 'PASS' : 'FAIL') + ' error reports ask first and carry nothing kept  (off-on-localhost=' + offHere + ' asked=' + asked
+      + ' preview-scrubbed=' + previewClean + ' sent-scrubbed=' + sentClean + ' unconsented-dropped=' + unasked + ' dont-send=' + notSent
+      + ' caught-fault-offered=' + faultOffered + ' never-kept=' + kept + ' then-quiet=' + quiet + ')', ok ? 'pass' : 'fail');
+    if (!ok) put('ERR   preview: ' + preview.slice(0, 300) + ' | sent: ' + JSON.stringify(ev || null).slice(0, 300), 'dim');
+    return ok;
+  } finally {
+    w.__reportOn = false; w.__sentryStub = null;
+    w.localStorage.removeItem('tt3d.report-check-secret'); w.localStorage.removeItem('tt3d.report');
+    if (box()) box().style.display = 'none';
+  }
+}
+
 async function handByWordCheck(D, w) {
   if (!D.hand) { put('SKIP the hand, by word: not in this build', 'dim'); return true; }
   D.worldIn({ kind: 'world', v: 4, stations: {}, active: null, bench: [] });
@@ -8595,6 +8665,9 @@ async function runOne(D, spec) {
   let hbwOK = true;
   try { hbwOK = want('handByWord') ? await handByWordCheck(D, frame.contentWindow) : true; }
   catch (e) { hbwOK = false; put('FAIL the hand, by word  ' + e.message, 'fail'); }
+  let erOK = true;
+  try { erOK = want('errorReports') ? await errorReportsCheck(D, frame.contentWindow) : true; }
+  catch (e) { erOK = false; put('FAIL error reports  ' + e.message, 'fail'); }
   let mfcOK = true;
   try { mfcOK = want('martyFetch') ? await martyFetchCheck(D, frame.contentWindow) : true; }
   catch (e) { mfcOK = false; put('FAIL Marty sets one thing on the table  ' + e.message, 'fail'); }
@@ -8784,7 +8857,7 @@ async function runOne(D, spec) {
                         && shelfOK && bindOK && inexOK && turtleOK && pgOK && stopOK && sceneOK
                         && deadOK && keepOK && spareOK && nestOK && picOK && wholeOK && t3dOK && mtOK
                         && zenoOK && shapeOK && houseOK && flyOK && postOK && mdOK
-                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK && rtsOK && rdOK && mfcOK && hbwOK
+                        && twinOK && nbOK && dstOK && wigOK && panOK && sortOK && bwOK && pairOK && camOK && tvOK && mnOK && rvOK && cdOK && vgOK && rsOK && mpOK && tcOK && dlOK && ydOK && hpOK && dcOK && gpOK && lvOK && ptOK && ygOK && whOK && poOK && gsOK && gdOK && whmOK && wnOK && cgOK && dhOK && fpOK && mfOK && zhOK && mhOK && psOK && phOK && plOK && ypdOK && trOK && siOK && pcOK && cnOK && rnOK && toOK && ntOK && hsOK && tchOK && nrOK && fuOK && cwOK && pvOK && mdlOK && yhOK && ptOK2 && rbOK && ovOK && ypOK && apOK && zkOK && bhOK && dgOK && rsrtOK && cmpOK && prchOK && mtchOK && lwOK && tbOK && swOK && rtOK && vvOK && ehOK && rlOK && shOK && rtcOK && cdxOK && krOK && fpjOK && exlOK && mplOK && ioOK && raOK && inkOK && lsnOK && hnbOK && pwOK && kbxOK && rcOK && kpOK && posOK && hawOK && bawOK && fhOK && rmOK && mlOK && rtsOK && rdOK && mfcOK && hbwOK && erOK
                         // EVERY FLAG, not the ones that existed when this line was
                         // written: a run said ok:true over a FAIL line for a day
                         && waitOK && postOffOK && drawOK && faceOK && pileOK && makerOK

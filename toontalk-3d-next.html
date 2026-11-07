@@ -402,6 +402,18 @@ exactly as *, / and - do.
 Everything in the manual's little windows below is the real
 workshop — click things, carry them, try it.
 
+When something goes wrong
+If the workshop itself runs into an error, a small notice in the top
+right corner says so and asks whether to send Ken a report.
+Nothing is sent unless you press Send. What would be sent
+shows the whole report first: the error, where in the workshops code it
+happened, the pages address and your browser — never your work,
+your name, a key, or anything else the page keeps in your browser.
+Dont send sends nothing; Dont ask again stops the
+notice for good in this browser, and Offer to report errors to Ken on
+the Settings card turns it back on. The notice appears only on the workshops
+own site, never in a Claude artifact.
+
 Your first project: a robot that counts
 Ten minutes, and it meets everything that matters. You will teach a robot
 one step, watch it stop, and loosen its thought so it never stops. The
@@ -2494,6 +2506,196 @@ front.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// ---------------------------------------------------------------- telling Ken what went wrong
+// AN ERROR IS REPORTED ONLY WITH THE VISITOR'S SAY-SO (Ken, 7 Nov: "create
+// Sentry reports if there are any exceptions? Ask the user for permission
+// before sending anything"), the way Ani's site does it. An error the page
+// does not catch, a promise left rejected, or one of the few failures it
+// catches that are faults in the workshop itself (reportFault) is kept here,
+// and a small notice asks: "The workshop ran into an error. Send a report to
+// Ken?" [Send] [Don't send] [Don't ask again], with what would be sent a click
+// away. Only on Send is Sentry's own browser bundle loaded -- until then
+// nothing of Sentry's is asked for -- and the report sent: the error's message
+// and where in the workshop's code it happened, the page's address and the
+// browser, and nothing else: no IP address or other personal data, no
+// breadcrumbs, no sessions, and, taken out of whatever is sent, every value
+// this browser keeps for the page (the API keys and the visitor's name among
+// them) and what is typed in the hand's line or Marty's box. "Don't ask again"
+// is kept in this browser (REPORT_KEY); Settings turns the offer back on. It
+// is on only on the published site with a DSN filled in: not in a claude.ai
+// artifact (whose frame refuses Sentry), not on localhost (the suite says so
+// with window.__reportOn), not from a file.
+const SENTRY_DSN = '';   // Ken's ToonTalk 3D project in Sentry: paste its DSN here
+// Sentry's own browser bundle (errors only), the version Ani uses, checked against its hash
+const SENTRY_SDK = { src: 'https://browser.sentry-cdn.com/10.50.0/bundle.min.js', integrity: 'sha384-9cVKNfUSoIRWDL3QQHe0fgJboGyb51IyiAv8x+KeuylA5GArkSaqyGFFm14hqajd' };
+const REPORT_KEY = 'tt3d.report';
+const report = {
+  get on() { return !!(window.__reportOn || (SENTRY_DSN && location.hostname === 'toontalk.github.io' && window.top === window)); },
+  sdk: null, consent: new Set(), held: [], open: false, sent: 0,
+};
+const reportNever = () => { try { return localStorage.getItem(REPORT_KEY) === 'never'; } catch (e) { return false; } };
+function reportSentry() {
+  if (window.__sentryStub) return Promise.resolve(window.__sentryStub);   // a check's stand-in
+  if (report.sdk) return report.sdk;
+  report.sdk = new Promise((resolve) => {
+    const sc = document.createElement('script');
+    Object.assign(sc, { src: SENTRY_SDK.src, integrity: SENTRY_SDK.integrity, crossOrigin: 'anonymous' });
+    sc.onload = () => {
+      const S = window.Sentry;
+      try {
+        S.init({
+          dsn: SENTRY_DSN, sendDefaultPii: false, defaultIntegrations: false, sendClientReports: false, maxBreadcrumbs: 0,
+          integrations: [S.linkedErrorsIntegration()],   // no handlers of its own: only what the visitor sends goes
+          beforeBreadcrumb: () => null,
+          beforeSend: reportScrubbed,
+          initialScope: { tags: { app: 'toontalk-3d', build: /next/.test(location.pathname) ? 'next' : 'release' } },
+        });
+        resolve(S);
+      } catch (e) { resolve(null); }
+    };
+    sc.onerror = () => resolve(null);
+    document.head.appendChild(sc);
+  });
+  return report.sdk;
+}
+// keep an error, and ask about it
+function reportKeep(err, where = null) {
+  if (!report.on || reportNever() || !err) return;
+  const e = err instanceof Error ? err : new Error(typeof err === 'string' ? err : (() => { try { return JSON.stringify(err); } catch (e2) { return String(err); } })());
+  // a browser's own noise, and a script of somebody else's with nothing to show
+  if (/ResizeObserver loop|^Script error\.?$/.test(e.message || '')) return;
+  if (where) e.__where = where;
+  // the same error twice is one report, and a page in trouble asks about at most ten
+  if (report.held.some(x => x.message === e.message && x.stack === e.stack) || report.held.length >= 10) return;
+  report.held.push(e);
+  reportAsk();
+}
+// a fault the workshop catches itself (it carries on), reported like an uncaught one
+const reportFault = (where, e) => { try { reportKeep(e, where); } catch (e2) {} };
+window.addEventListener('error', (ev) => reportKeep(ev.error || ev.message));
+window.addEventListener('unhandledrejection', (ev) => reportKeep(ev.reason));
+// WHAT MUST NEVER LEAVE: every value this browser keeps for the page (and
+// every string inside one kept as JSON) -- the API keys, the visitor's name,
+// notebooks, worlds -- and what is typed in the hand's line and Marty's box;
+// longest first
+function reportSecrets() {
+  const out = new Set();
+  const add = (v, least = 12) => { if (typeof v === 'string' && v.trim().length >= least) out.add(v.trim()); };
+  const leaves = (x) => { if (typeof x === 'string') add(x); else if (x && typeof x === 'object') Object.values(x).forEach(leaves); };
+  try {
+    for (let k = 0; k < localStorage.length; k++) {
+      const v = localStorage.getItem(localStorage.key(k));
+      add(v);
+      try { leaves(JSON.parse(v)); } catch (e) {}
+    }
+  } catch (e) {}
+  try { add(localStorage.getItem('tt3d.user'), 2); } catch (e) {}   // a name is short
+  for (const id of ['handIn', 'martyIn', 'martyKey']) add(document.getElementById(id)?.value, 2);
+  return [...out].sort((a, b) => b.length - a.length);
+}
+function reportScrubOut(x, hide) {
+  if (typeof x === 'string') return hide.reduce((t, h) => t.split(h).join('[removed]'), x);
+  if (Array.isArray(x)) return x.map(y => reportScrubOut(y, hide));
+  if (x && typeof x === 'object') { for (const k of Object.keys(x)) x[k] = reportScrubOut(x[k], hide); return x; }
+  return x;
+}
+// what a report of an error has in it, as it will be sent (and shown before it is)
+function reportOf(e) {
+  return reportScrubOut({
+    error: (e.name || 'Error') + ': ' + e.message,
+    ...(e.__where ? { during: e.__where } : {}),
+    where: String(e.stack || '').split('\n').slice(1, 8).map(l => l.trim()).filter(Boolean),
+    page: location.origin + location.pathname,
+    browser: navigator.userAgent,
+  }, reportSecrets());
+}
+// Sentry's beforeSend: only what the visitor sent (its consent noted when they
+// pressed Send), with no user, no breadcrumbs, the page's address without its
+// query or fragment, and no kept value anywhere in it. Anything else is dropped.
+function reportScrubbed(event) {
+  const ok = event.tags?.kind === 'error-sent-by-visitor' && event.extra && report.consent.delete(event.extra.consent);
+  if (!ok) return null;
+  delete event.user;
+  delete event.breadcrumbs;
+  delete event.extra.consent;
+  event.request = { url: location.origin + location.pathname, headers: { 'User-Agent': navigator.userAgent } };
+  return reportScrubOut(event, reportSecrets());
+}
+// THE NOTICE: small, top right, gone once answered. Built from text nodes,
+// never markup, since an error's message is not to be trusted as HTML.
+function reportAsk() {
+  if (!report.held.length || reportNever()) return;
+  let box = document.getElementById('reportAsk');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'reportAsk';
+    box.className = 'card';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', 'Report an error to Ken');
+    box.style.cssText = 'top:74px;right:14px;width:min(360px,92vw);z-index:80;font-size:13px;line-height:1.45;display:flex;flex-direction:column;gap:8px';
+    (document.body || document.documentElement).appendChild(box);
+  }
+  const n = report.held.length;
+  box.textContent = '';
+  const p = document.createElement('div');
+  p.textContent = (n > 1 ? 'The workshop ran into ' + n + ' errors.' : 'The workshop ran into an error.')
+    + ' Send a report to Ken, without your work, your name or any key?';
+  const det = document.createElement('details');
+  const sum = document.createElement('summary');
+  sum.textContent = 'What would be sent';
+  sum.style.cursor = 'pointer';
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'max-height:180px;overflow:auto;white-space:pre-wrap;font-size:11px;margin:6px 0 0';
+  pre.textContent = JSON.stringify(report.held.map(reportOf), null, 2);
+  const note = document.createElement('div');
+  note.style.cssText = 'font-size:11px;opacity:.75;margin-top:4px';
+  note.textContent = 'Sent to Ken\u2019s error reports (Sentry) only if you press Send: nothing about you, and nothing this page keeps in your browser.';
+  det.append(sum, pre, note);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center';
+  const btn = (label, what) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label; b.dataset.report = what;
+    b.style.cssText = 'font:inherit;cursor:pointer;border-radius:8px;padding:4px 10px;border:1px solid var(--edge,#3a4356);'
+      + (what === 'send' ? 'background:#2f6b43;color:#eafff0' : 'background:none;color:inherit');
+    b.onclick = () => reportAnswer(what);
+    return b;
+  };
+  row.append(btn('Send', 'send'), btn('Don\u2019t send', 'no'), btn('Don\u2019t ask again', 'never'));
+  box.append(p, det, row);
+  box.style.display = 'flex';
+  report.open = true;
+}
+async function reportAnswer(what) {
+  const box = document.getElementById('reportAsk');
+  const held = report.held.splice(0);
+  report.open = false;
+  if (what === 'never') { try { localStorage.setItem(REPORT_KEY, 'never'); } catch (e) {} }
+  if (what !== 'send') { if (box) box.style.display = 'none'; return; }
+  if (box) box.textContent = 'Sending\u2026';
+  const S = await reportSentry();
+  let sent = false;
+  if (S) {
+    for (const err of held) {
+      const consent = Date.now() + '-' + Math.random().toString(36).slice(2);
+      report.consent.add(consent);
+      S.withScope((scope) => {
+        scope.setTag('kind', 'error-sent-by-visitor');
+        if (err.__where) scope.setTag('during', err.__where);
+        scope.setExtras({ consent });
+        S.captureException(err);
+      });
+    }
+    sent = await S.flush(5000).catch(() => false);
+    if (sent) report.sent += held.length;
+  }
+  // (unless another error came while it was sent, and is being asked about)
+  if (box && !report.open) {
+    box.textContent = sent ? 'Sent. Thank you \u2014 Ken will see it with the workshop\u2019s other reports.' : 'It couldn\u2019t be sent from here just now.';
+    setTimeout(() => { if (!report.open) box.style.display = 'none'; }, 4000);
+  }
+}
 
 const DEG = Math.PI / 180;
 const ease = t => t * t * (3 - 2 * t);
@@ -5950,6 +6152,7 @@ function renderNotebook(nb) {
     try { t = buildFromRec(rec); }
     catch (e) {
       console.error('a notebook page could not be shown:', e);
+      reportFault('showing a notebook page', e);
       t = makeText('(a page too big to show \u2014 Dusty can take it away)');
     }
     if (!t) continue;
@@ -12891,7 +13094,7 @@ const pendingBinds = [];
 function runPendingBinds() {
   while (pendingBinds.length) {
     const f = pendingBinds.shift();
-    try { f(); } catch (e) { console.error('[bind] could not give the behaviour:', e); }
+    try { f(); } catch (e) { console.error('[bind] could not give the behaviour:', e); reportFault('giving a behavior', e); }
   }
 }
 function sweepYard(now) {
@@ -13970,6 +14173,7 @@ function advanceWorldClocks(dt, worldRuns = true) {
     try { processDirtyRooms(); }
     catch (err) {
       console.error('room work failed:', err);
+      reportFault('room work', err);
       // stop retrying the room that just blew up
       const bad = benchThings.find(t2 => t2.userData.kind === 'room' && t2.userData.dirty);
       if (bad) bad.userData.dirty = false;
@@ -23631,6 +23835,7 @@ loadModel('robot_v4.glb', (gltf) => {
   try { ensureMainNotebook(); }
   catch (e) {
     console.error('the stored notebook could not be restored:', e);
+    reportFault('restoring the notebook', e);
     try {
       const raw = localStorage.getItem(nbKey());
       if (raw != null) { localStorage.setItem(nbKey() + '.rescued.' + Date.now(), raw); localStorage.removeItem(nbKey()); }
@@ -27288,7 +27493,7 @@ async function handDo(sentence, opts = {}) {
     for (const step of plan.steps) {
       let r;
       try { r = await handStep(step, before.things, names); }
-      catch (e) { console.error('[hand] a step threw:', step, e); r = 'something went wrong in the workshop (' + (e.message || e.name) + ')'; }
+      catch (e) { console.error('[hand] a step threw:', step, e); reportFault('a hand step (' + step.do + ')', e); r = 'something went wrong in the workshop (' + (e.message || e.name) + ')'; }
       if (r !== true) {
         // A HALF-DONE PLAN IS UNDONE: the steps before the one that failed
         // are taken back, so no debris is left and nothing half-shown stays
@@ -28521,6 +28726,7 @@ function showSettingsCard(first) {
     card.appendChild(note);
   }
   sec('Help');
+  if (report.on) row('Offer to report errors to Ken', 'when the workshop runs into an error, a notice asks whether to send Ken a report — nothing is sent without your Send', cb(!reportNever(), (on) => { try { if (on) localStorage.removeItem(REPORT_KEY); else localStorage.setItem(REPORT_KEY, 'never'); } catch (e) {} }));
   row('Drop hints', 'while you carry something, the tooltip says first what letting go here will do', cb(dropHints, (on) => { dropHints = on; try { localStorage.setItem('nano-toontalk.drophints', on ? '1' : '0'); } catch {} menuRefresh(); }));
   row('Smart camera', 'in a lesson or a run the camera comes in on what the robot works on; off, it stays where you put it', cb(smartCam, (on) => { setSmartCam(on); menuRefresh(); }));
   row('Marty comments on runs', 'what a robot is up to as it works \u2014 the idea, not the steps (needs a brain)', cb(martyCommentOn(), (on) => { mineSet(MARTY_COMMENT, on ? '1' : '0'); const c2 = document.getElementById('martyCommentCb'); if (c2) c2.checked = on; }));
@@ -28954,6 +29160,9 @@ function picDigest(src) {
   return src.length + ':' + (h >>> 0).toString(36);
 }
 window.__nano = {
+  report() { return { on: report.on, held: report.held.length, open: report.open, sent: report.sent }; },   // the error reports, for a check
+  reportScrub(ev) { return reportScrubbed(ev); },                                   // Sentry's beforeSend, for a check
+  reportFault(where, e) { reportFault(where, e); },                                  // a caught fault, as the workshop reports one
   THREE, scene, camera, renderer, stations, benchRoot, orbit,
   worldOut, worldIn, setThingLabel, martyActivityText,
   get activityN() { return activityN; },

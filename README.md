@@ -280,6 +280,12 @@ To use it unmodified, no setup needed:
 <https://toontalk.github.io/toontalk-3d/gallery.html>. (`toontalk-3d-v1.html`
 is the snapshot of 24 August, kept as history.)
 
+**Error reports (7 November).** When the workshop runs into an error, a small
+notice asks whether to send Ken a report (Sentry); nothing is sent unless the
+visitor presses Send, and the report never carries their work, name, keys or
+anything else the page keeps. On only on toontalk.github.io with `SENTRY_DSN`
+set in `toontalk-3d.html`; never in an artifact.
+
 **Released 26 September: your hand, by words.** From 21 September the
 released workshop stayed as it was while this was built in a copy,
 `toontalk-3d-next.html`; on 26 September the copy became the release
