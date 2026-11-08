@@ -2526,7 +2526,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // is on only on the published site with a DSN filled in: not in a claude.ai
 // artifact (whose frame refuses Sentry), not on localhost (the suite says so
 // with window.__reportOn), not from a file.
-const SENTRY_DSN = '';   // Ken's ToonTalk 3D project in Sentry: paste its DSN here
+const SENTRY_DSN = 'https://701f8e82b87fcd21979bc423bdb7f9f0@o61153.ingest.us.sentry.io/4512394608836608';   // Ken's toontalk-3d project in Sentry (public; it only accepts reports)
 // Sentry's own browser bundle (errors only), the version Ani uses, checked against its hash
 const SENTRY_SDK = { src: 'https://browser.sentry-cdn.com/10.50.0/bundle.min.js', integrity: 'sha384-9cVKNfUSoIRWDL3QQHe0fgJboGyb51IyiAv8x+KeuylA5GArkSaqyGFFm14hqajd' };
 const REPORT_KEY = 'tt3d.report';

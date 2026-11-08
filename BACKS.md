@@ -9325,3 +9325,7 @@ manual says all this under "When something goes wrong". errorReportsCheck:
 off on localhost, asked, preview and sent event scrubbed of a planted key,
 an unconsented event dropped, Don't send sends nothing, a caught fault
 offered, Don't ask again kept and quiet after.
+
+On 8 November Ken made the toontalk-3d project in Sentry (org ken-kahn,
+the same as Ani's) and the DSN went in, read from the loader script he pasted.
+errorReportsCheck still passes: still off on localhost.
